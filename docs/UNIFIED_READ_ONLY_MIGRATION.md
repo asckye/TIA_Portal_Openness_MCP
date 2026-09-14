@@ -1,4 +1,4 @@
-# WinCC Unified 只读迁移采集（V21，v2.7.5 / FileVersion 2.7.5.0）
+# WinCC Unified 只读迁移采集（V21，v2.7.6 / FileVersion 2.7.6.0）
 
 文档中的 `Example_Project`、`HMI_1`、模块名称和库路径都是示例，调用时替换为目标工程的实际值。
 本次新增接口只读取工程；不保存、编译、下载、创建事件、实例化库类型、写变量或关闭博途。原生导出只写入服务进程的独立临时目录，读取后删除；不会覆盖用户文件。
@@ -67,7 +67,13 @@
 
 面板原生 YAML/XML 的属性、接口类型、对象、动态属性、事件和依赖以实际文件路径、节点路径和原文返回。实例与库版本的关系必须由官方 `LibraryTypeInstanceInfo` 的 GUID 证据确认；若 API 对该对象不提供服务，就无法证明关系，不进行默认版本回退。原生定义值仍需按接口准确名称建立内部引用关系；本版本不把未经核实的自动匹配称为完整追溯。
 
-库导出先查询所选类型的官方格式列表，使用 API 返回的第一个格式，原样记录在 `nativeExportPlan.supportedFormats` / `selectedFormat`；不向库脚本强传 WinCCML，也不尝试编辑、实例化或转换类型。无支持格式时明确返回 `Unsupported`。`ExportAsDocuments` 使用 `LibraryExportOptions.None`，只导出领域文件。
+库导出先查询所选类型的官方格式列表，使用 API 返回的第一个格式，原样记录在 `nativeExportPlan.supportedFormats` / `selectedFormat`；不向库脚本强传 WinCCML，也不尝试编辑、实例化或转换类型。`ExportAsDocuments` 使用 `LibraryExportOptions.None`，只导出领域文件。
+
+v2.7.6 对没有文档格式的非脚本库类型补充独立的官方 `LibraryTypeVersion.Export(FileInfo, ExportOptions.WithReadOnly)` 路径，方法在计划、状态和摘要的 `method` 中标明。`selectedFormat=null` 忠实记录原查询结果；XML 动作不接受文档格式参数，不把 XML 填成 API 返回的格式。只调用一次，文档导出已开始后发生异常不会触发这条路径。脚本保持原生 JS/YAML 路径。
+
+`exportAttempted=false` 表示未调用导出，`nativeExportStatus.status=notAttempted`；这时不会额外报 `NativeExportEmpty`。已调用但没有文件才报空导出，且明确不是内部对象/变量为空的证据。`internalObjectCount` / `internalTagCount` 未核对时为 null。
+
+XML 文件按原文、SHA-256 及 XML 节点路径返回；`nativeFilesComplete` 只验证文件获取与解析。库版本 XML 可能仅有版本、GUID、注释等元数据，不能证明内部接口、对象、事件或绑定已全部导出。备用 XML 路径保留 `LibraryXmlContentUnverified` 和 `dataComplete=false`，即使文件读取成功；须核查原文并逐项完成内部映射后另行验收。
 
 先读取 `ExportTransferResult.TransferResultState`，按 V21 官方示例仅在非 Success 结果下访问 `Messages[*].Message`。Success 的 `diagnosticsStatus=notRequiredOnSuccess` 表示成功路径不要求枚举诊断，不能解读为枚举到了零条。全部结果检查在返回首条导出记录前完成或停止；`nativeExportPlan` 出现在分页中不表示尚未执行导出。
 
@@ -93,6 +99,8 @@ v2.7.4 增加分类修复、按类型查询格式、导出诊断与文件清单�
 
 v2.7.5 修正上述结果读取和分页生命周期并补充阶段日志。已在真实编译的 .NET Framework 4.8 程序中模拟 FileInfo 透明代理及 IPC 失效；这不是实际博途导出验收，也不足以证明异常退出已解决。
 
+v2.7.6 增加 XML 备用路径、未执行状态及仅元数据防误判检查；新增路径尚未在真实工程部署验证。空格式列表是文档导出能力信息，不表示类型内部为空，也不足以单独断言所有官方读取路径都不支持。
+
 如博途无弹窗退出，在虚拟机完整包目录的 CMD 执行 `scripts\Collect-TiaExitEvidence.cmd`，只读提取最近 24 小时内最多 100 条应用崩溃/.NET/WER 事件、当前博途进程列表和本版原生导出日志。输出位置会显示在控制台；空事件不等于没有异常。先在本地检查后再分享，日志和事件可能包含私有路径。该命令不连接、启动或关闭博途。
 
 部署后仍需逐项验收：
@@ -111,5 +119,6 @@ v2.7.5 修正上述结果读取和分页生命周期并补充阶段日志。已�
 - [V21 库类型版本](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-on-libraries/accessing-type-versions)
 - [V21 查询所选库类型的支持格式](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-on-libraries/retrieving-supported-export-formats-for-library)
 - [V21 库版本导出、诊断及返回文件清单](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-on-libraries/exporting-library-type-version-as-document)
+- [V21 库版本 XML 导出及可导出的版本信息](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-on-libraries/accessing-blocks-located-in-library)
 
 第三方解析器许可证：[Esprima BSD-3-Clause](licenses/Esprima-3.0.5.txt)。

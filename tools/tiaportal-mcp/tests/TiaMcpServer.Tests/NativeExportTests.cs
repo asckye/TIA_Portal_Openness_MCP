@@ -29,7 +29,7 @@ namespace TiaMcpServer.Tests
             public object Messages { get { MessageReads++; if (MessagesError != null) throw MessagesError; return MessageCollection ?? MessageItems; } }
         }
         public sealed class BrokenMessageCount { public int Count => throw new InvalidOperationException("Unexpected exception - no exception message available."); }
-        public sealed class Version
+        public class Version
         {
             public object TypeObject { get; set; } = new LibraryType();
             public int Calls;
@@ -40,6 +40,21 @@ namespace TiaMcpServer.Tests
                 if (name != "Type" || options != ExportOptions.None) throw new Exception("Unexpected export options");
                 Calls++; Format = format; Output = directory.FullName;
                 return Behavior?.Invoke(directory) ?? new Result { ExportedDocuments = LazyFiles(directory) };
+            }
+        }
+        public enum XmlExportOptions { None, WithReadOnly }
+        public sealed class XmlVersion : Version
+        {
+            public int XmlCalls;
+            public Exception? Error;
+            public bool Empty;
+            public XmlVersion() { TypeObject = new LibraryType { Formats = Array.Empty<string>() }; }
+            public void Export(FileInfo file, XmlExportOptions options)
+            {
+                XmlCalls++; Output = file.DirectoryName;
+                if (options != XmlExportOptions.WithReadOnly) throw new Exception("Readonly metadata must be included");
+                if (Error != null) throw Error;
+                if (!Empty) File.WriteAllText(file.FullName, "<Document><LibraryTypeVersion><AttributeList><VersionNumber>5.0.0</VersionNumber></AttributeList></LibraryTypeVersion></Document>");
             }
         }
         private static IEnumerable<FileInfo> LazyFiles(DirectoryInfo directory)
@@ -66,6 +81,22 @@ namespace TiaMcpServer.Tests
             check(Summary(empty)["apiCallSuccess"]!.GetValue<bool>() && !Summary(empty)["dataComplete"]!.GetValue<bool>(), "Success state with zero native files is incomplete");
             var unsupported = new Version { TypeObject = new LibraryType { Formats = Array.Empty<string>() } }; var noFormat = Read(unsupported);
             check(unsupported.Calls == 0 && noFormat.Any(r => r["code"]?.ToString() == "Unsupported") && !Summary(noFormat)["apiCallSuccess"]!.GetValue<bool>(), "no advertised format returns explicit unsupported without guessing or mutating a type");
+            check(!Summary(noFormat)["exportAttempted"]!.GetValue<bool>() && !noFormat.Any(r => r["code"]?.ToString() == "NativeExportEmpty")
+                && noFormat.Single(r => r["kind"]?.ToString() == "nativeExportStatus")["status"]!.ToString() == "notAttempted", "unavailable export is not attempted, not a zero-content result");
+            var xmlVersion = new XmlVersion(); var xmlRows = Read(xmlVersion); var xmlSummary = Summary(xmlRows);
+            check(xmlVersion.XmlCalls == 1 && xmlVersion.Calls == 0 && xmlRows.Any(r => r["kind"]?.ToString() == "nativeFile"), "empty document formats select the separate official XML action once");
+            check(xmlSummary["exportAttempted"]!.GetValue<bool>() && xmlSummary["nativeFilesComplete"]!.GetValue<bool>()
+                && !xmlSummary["dataComplete"]!.GetValue<bool>() && xmlSummary["internalObjectCount"] == null
+                && xmlRows.Any(r => r["code"]?.ToString() == "LibraryXmlContentUnverified"), "metadata-only XML retains evidence without fabricating internal objects or complete bindings");
+            check(xmlRows.Any(r => r["kind"]?.ToString() == "nativeValue" && r["value"]?.ToString() == "5.0.0")
+                && !Directory.Exists(xmlVersion.Output), "XML fallback parses returned evidence and cleans only its own directory");
+            var xmlEmpty = new XmlVersion { Empty = true }; var xmlEmptyRows = Read(xmlEmpty);
+            check(xmlEmptyRows.Any(r => r["code"]?.ToString() == "NativeExportEmpty") && !Summary(xmlEmptyRows)["nativeFilesComplete"]!.GetValue<bool>(), "void XML action returning without a file is an explicit export gap");
+            var xmlFailed = new XmlVersion { Error = new ObjectDisposedException("version") }; var xmlFailedRows = Read(xmlFailed);
+            check(xmlFailed.XmlCalls == 1 && xmlFailed.Calls == 0 && Summary(xmlFailedRows)["connectionUnavailable"]!.GetValue<bool>()
+                && Summary(xmlFailedRows)["failurePhase"]!.ToString() == "invokeLibraryXmlExport", "XML IPC failure stops after one exact-version attempt and preserves its phase");
+            var documentsFailed = new XmlVersion { TypeObject = new LibraryType(), Behavior = _ => throw new InvalidOperationException("document failure") }; Read(documentsFailed);
+            check(documentsFailed.Calls == 1 && documentsFailed.XmlCalls == 0, "a failed advertised document call never triggers a second XML export");
             var script = new Version { TypeObject = new global::Siemens.Engineering.HmiUnified.Library.ScriptModuleType(), Behavior = d => new Result { ExportedDocuments = ScriptFiles(d) } };
             var scripts = Read(script);
             check(script.Format == "ScriptNative" && scripts.Any(r => r["bodyReadSuccess"]?.GetValue<bool>() == true) && Summary(scripts)["dataComplete"]!.GetValue<bool>(), "library ScriptModuleType chooses its supported native format and returns actual JS body");

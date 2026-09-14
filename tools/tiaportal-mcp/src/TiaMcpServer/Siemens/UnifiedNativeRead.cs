@@ -123,9 +123,10 @@ namespace TiaMcpServer.Siemens
                     if (error != null) { complete = false; yield return error; }
                 }
                 yield return new JsonObject { ["path"] = scope, ["kind"] = "nativeFileInventory", ["status"] = "ok", ["outputDirectory"] = directory.FullName,
+                    ["exportAttempted"] = capture.ExportAttempted, ["countScope"] = "local native files only; not a count of internal objects or tags",
                     ["reportedCount"] = reported.Count, ["actualCount"] = exported.Count,
                     ["files"] = new JsonArray(exported.Values.Select(f => (JsonNode?)new JsonObject { ["relativePath"] = RelativeFile(directory, f), ["reportedByApi"] = reported.Any(r => string.Equals(r, f.FullName, StringComparison.OrdinalIgnoreCase)) }).ToArray()) };
-                if (exported.Count == 0) { complete = false; yield return MigrationRead.Failure(scope, "NativeExportEmpty", reason: "No native file was found in the returned document list or the unique export directory and its subdirectories."); }
+                if (exported.Count == 0) { complete = false; if (capture.ExportAttempted) yield return MigrationRead.Failure(scope, "NativeExportEmpty", reason: "Export was invoked but no native file was found. This is not evidence that the selected type has no internal objects or tags."); }
                 int scripts = 0, filesRead = 0;
                 foreach (var file in exported.Values)
                 {
@@ -153,8 +154,17 @@ namespace TiaMcpServer.Siemens
                     else foreach (var row in Document(raw!, path, file.Extension)) { if (Failed(row)) complete = false; yield return row; }
                 }
                 if (script && scripts == 0) { complete = false; yield return MigrationRead.Failure(scope, "ScriptBodyNotExported", reason: "Native export returned no readable .js file; module names or YAML alone are not body-read success."); }
+                bool nativeFilesComplete = complete;
+                if (capture.LibraryXml && filesRead > 0)
+                {
+                    complete = false;
+                    yield return MigrationRead.Failure(scope, "LibraryXmlContentUnverified", reason: "The official library XML was read and retained. This action can export version information alone; XML presence or metadata is not proof of internal interfaces, objects, bindings, events or scripts. Review the raw XML evidence before treating internal migration coverage as complete.");
+                }
                 yield return new JsonObject { ["path"] = scope, ["kind"] = "nativeExportSummary", ["status"] = complete ? "ok" : "failed",
                     ["operationId"] = capture.OperationId, ["apiCallSuccess"] = callSuccess, ["dataComplete"] = complete, ["nativeState"] = state,
+                    ["exportAttempted"] = capture.ExportAttempted, ["method"] = capture.Method, ["nativeFilesComplete"] = nativeFilesComplete,
+                    ["internalContentStatus"] = capture.LibraryXml ? "unverified" : "seeNativeEvidence",
+                    ["internalObjectCount"] = null, ["internalTagCount"] = null,
                     ["resultInspectionComplete"] = capture.InspectionComplete, ["failurePhase"] = capture.FailurePhase,
                     ["connectionUnavailable"] = capture.ConnectionUnavailable,
                     ["fileCount"] = exported.Count, ["filesRead"] = filesRead, ["scriptFileCount"] = scripts,

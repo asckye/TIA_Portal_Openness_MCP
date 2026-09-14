@@ -36,6 +36,19 @@ internal static class NativeExportRemotingTests
             return new Result { ExportedDocuments = new[] { (FileInfo)Proxy.GetTransparentProxy() } };
         }
     }
+    public enum XmlOptions { WithReadOnly }
+    public sealed class NoFormats { public string[] GetSupportedExportFormats() => Array.Empty<string>(); }
+    public sealed class XmlVersion
+    {
+        public NoFormats TypeObject => new NoFormats();
+        public int Calls;
+        public void Export(FileInfo file, XmlOptions options)
+        {
+            Calls++;
+            if (options != XmlOptions.WithReadOnly) throw new Exception("Unexpected XML options");
+            File.WriteAllText(file.FullName, "<Document><LibraryTypeVersion VersionNumber='1.0.0'/></Document>");
+        }
+    }
     internal sealed class FileProxy : RealProxy
     {
         private readonly FileInfo local;
@@ -54,7 +67,7 @@ internal static class NativeExportRemotingTests
     internal static void Run(Assembly server, Action<bool, string> check)
     {
         var method = server.GetType("TiaMcpServer.Siemens.UnifiedNativeRead", true)!.GetMethod("Export", BindingFlags.NonPublic | BindingFlags.Static)!;
-        IEnumerator Start(Version version) => ((IEnumerable)method.Invoke(null, new object[] { version, "/Type/Versions/1.0.0", true })!).GetEnumerator();
+        IEnumerator Start(object version) => ((IEnumerable)method.Invoke(null, new object[] { version, "/Type/Versions/1.0.0", true })!).GetEnumerator();
         Dictionary<string, object> Row(object value) => Json.Deserialize<Dictionary<string, object>>(value.ToString());
         var version = new Version(); var iterator = Start(version);
         var rows = new List<Dictionary<string, object>>();
@@ -74,5 +87,11 @@ internal static class NativeExportRemotingTests
         var failure = rows.Single(r => r.ContainsKey("code") && (string)r["code"] == "NativeFileListFailed");
         check((string)failure["phase"] == "snapshotExportedDocuments" && (bool)failure["connectionUnavailable"], "manifest IPC failure is attributed to path capture and marked unavailable");
         check(unavailable.Proxy!.Calls == 1 && rows.Any(r => (string)r["kind"] == "nativeFile") && !(bool)rows.Single(r => (string)r["kind"] == "nativeExportSummary")["dataComplete"], "IPC failure is never re-accessed in catch; disk evidence is retained with an explicit incomplete summary");
+        var xml = new XmlVersion(); iterator = Start(xml); rows.Clear();
+        try { while (iterator.MoveNext()) rows.Add(Row(iterator.Current)); }
+        finally { (iterator as IDisposable)?.Dispose(); }
+        var summary = rows.Single(r => (string)r["kind"] == "nativeExportSummary");
+        check(xml.Calls == 1 && rows.Any(r => (string)r["kind"] == "nativeFile") && (bool)summary["nativeFilesComplete"], "actual net48 executable invokes the separate XML action when document formats are empty");
+        check(!(bool)summary["dataComplete"] && summary["internalObjectCount"] == null && rows.Any(r => r.ContainsKey("code") && (string)r["code"] == "LibraryXmlContentUnverified"), "actual executable never accepts metadata-only XML as complete faceplate bindings");
     }
 }
