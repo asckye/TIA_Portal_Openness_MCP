@@ -16,6 +16,7 @@ using System.Threading;
 using System.Xml;
 using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
+using McpProtocol = global::ModelContextProtocol.Protocol;
 
 namespace TiaMcpServer
 {
@@ -24,6 +25,30 @@ namespace TiaMcpServer
         private static readonly string DiagLogPath = Path.Combine(Path.GetTempPath(), "TiaMcpServer.log");
         private static readonly string DiagLogPathLocal = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.startup.log");
         private delegate void StructuredTextLine(StringBuilder st, params string[] parts);
+
+        private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)
+        {
+            // Engineering data is exposed through tools. The MCP resource catalog
+            // is empty; register both list handlers so discovery succeeds on either
+            // transport. The SDK advertises resources without subscriptions or
+            // list-change notifications when these handlers are registered.
+            builder.WithListResourcesHandler((request, cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return new ValueTask<McpProtocol.ListResourcesResult>(new McpProtocol.ListResourcesResult
+                {
+                    Resources = Array.Empty<McpProtocol.Resource>()
+                });
+            });
+            builder.WithListResourceTemplatesHandler((request, cancellationToken) =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return new ValueTask<McpProtocol.ListResourceTemplatesResult>(new McpProtocol.ListResourceTemplatesResult
+                {
+                    ResourceTemplates = Array.Empty<McpProtocol.ResourceTemplate>()
+                });
+            });
+        }
 
         public static async Task Main(string[] args)
         {
@@ -625,6 +650,7 @@ namespace TiaMcpServer
                             ? ModelContextProtocol.McpServer.GetLiteTools()
                             : ModelContextProtocol.McpServer.GetAllTools()));
                     mcp.WithPromptsFromAssembly();
+                    ConfigureResourceDiscovery(mcp);
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
@@ -722,6 +748,7 @@ namespace TiaMcpServer
                             ? ModelContextProtocol.McpServer.GetLiteTools()
                             : ModelContextProtocol.McpServer.GetAllTools()));
                     mcpHttp.WithPromptsFromAssembly();
+                    ConfigureResourceDiscovery(mcpHttp);
 
                     builder.Services.AddSingleton<TiaMcpServer.Siemens.Portal>();
 

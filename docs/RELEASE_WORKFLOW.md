@@ -15,7 +15,7 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/Build-Release.ps1 -V20ReferenceRoot "D:\TIA20\PublicAPI\V20" -V21ReferenceRoot "D:\TIA21\PublicAPI\V21\net48"
 ```
 
-用 `-ReleaseDate 20260913` 指定发布日期（默认使用本机日期）；例如 `TIA_MCP_Delivery_v2.7.3_20260913.zip`，包内始终包含 V20/V21。可用 `-Dotnet` 指定 SDK 可执行文件、`-NuGetConfig` 指定 NuGet 配置；依赖已恢复时可用 `-NoRestore`。脚本从工程文件读取版本，编译 V20/V21，执行离线回归、两版实际 EXE 的 HTTP/HMI 检查和新增采集接口的程序集检查，更新 `runtime`、工具清单、构建校验清单和包元数据。结果写入 `bin-build/releases/v<版本>/`。这些检查不会启动或修改 TIA 工程。
+用 `-ReleaseDate 20260913` 指定发布日期（默认使用本机日期）；例如 `TIA_MCP_Delivery_v2.7.4_20260913.zip`，包内始终包含 V20/V21。可用 `-Dotnet` 指定 SDK、`-Python` 指定 Python 可执行文件、`-NuGetConfig` 指定 NuGet 配置；依赖已恢复时可用 `-NoRestore`。脚本从工程文件读取版本，编译 V20/V21，执行离线回归、两版实际 EXE 的 HTTP/HMI 检查、HTTP/STDIO 两种模式及完整/精简配置的资源发现协议测试和采集接口的程序集检查，更新 `runtime`、工具清单、构建校验清单和包元数据。资源协议测试使用独立测试程序加载 EXE 的实际服务入口，不改变系统 Openness 用户组。结果写入 `bin-build/releases/v<版本>/`。这些检查不会启动或修改 TIA 工程。
 
 3. 审查并提交两版运行文件、源码、测试、说明和清单，推送 `master`。工作区必须干净。
 4. 生成完整包：

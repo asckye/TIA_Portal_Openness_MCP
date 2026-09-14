@@ -18,7 +18,9 @@ namespace TiaMcpServer.Siemens
             internal string Scope = "", Id = "";
             internal IEnumerator<JsonObject>? Iterator;
             internal DateTime Used;
-            internal int Sequence, Total, Failures;
+            internal long Access;
+            internal WeakReference? ProjectIdentity;
+            internal int Sequence, Total, Failures, ReadFailures, ClassificationFailures;
             internal int? Expected;
             internal JsonObject? Last;
         }
@@ -27,10 +29,13 @@ namespace TiaMcpServer.Siemens
         private readonly Func<DateTime> now;
         private readonly Timer timer;
         private bool disposed;
+        private long access;
+        private const int ActiveCapacity = 16, ReplayCapacity = 32;
+        private static readonly TimeSpan ActiveLifetime = TimeSpan.FromMinutes(30), ReplayLifetime = TimeSpan.FromMinutes(10);
         internal MigrationPages(Func<DateTime>? clock = null)
         {
             now = clock ?? (() => DateTime.UtcNow);
-            timer = new Timer(_ => { lock (gate) { foreach (var id in sessions.Where(p => now() - p.Value.Used > TimeSpan.FromMinutes(30)).Select(p => p.Key).ToArray()) { Release(sessions[id]); sessions.Remove(id); } } }, null, 60000, 60000);
+            timer = new Timer(_ => { lock (gate) { Expire(); } }, null, 60000, 60000);
         }
         internal JsonObject Read(object project, string scope, string cursor, int pageSize, int budgetMs,
             Func<IEnumerable<JsonObject>> factory, int? expected = null)
@@ -40,14 +45,15 @@ namespace TiaMcpServer.Siemens
             lock (gate)
             {
                 if (disposed) throw new ObjectDisposedException(nameof(MigrationPages));
-                foreach (var id in sessions.Where(p => now() - p.Value.Used > TimeSpan.FromMinutes(30)
-                    || (p.Value.Project != null && !ReferenceEquals(p.Value.Project, project))).Select(p => p.Key).ToArray())
+                Expire();
+                foreach (var id in sessions.Where(p => !ReferenceEquals(p.Value.ProjectIdentity?.Target, project)).Select(p => p.Key).ToArray())
                 { Release(sessions[id]); sessions.Remove(id); }
                 Session s;
                 if (string.IsNullOrEmpty(cursor))
                 {
-                    if (sessions.Count >= 16) throw new InvalidOperationException("CursorCapacity: release a collection cursor or wait for expiry (30 minutes).");
-                    s = new Session { Project = project, Scope = scope, Id = Guid.NewGuid().ToString("N"), Used = now(), Expected = expected };
+                    if (sessions.Values.Count(p => p.Iterator != null) >= ActiveCapacity)
+                        throw new InvalidOperationException("CursorCapacity: 16 collections are still active. Complete or release an unfinished collection; completed replay caches do not consume active capacity.");
+                    s = new Session { Project = project, ProjectIdentity = new WeakReference(project), Scope = scope, Id = Guid.NewGuid().ToString("N"), Used = now(), Expected = expected };
                     // The factory must be lazy; no traversal before the first page.
                     s.Iterator = factory().GetEnumerator(); sessions.Add(s.Id, s);
                 }
@@ -59,6 +65,7 @@ namespace TiaMcpServer.Siemens
                     if (s.Scope != scope || (s.Project != null && !ReferenceEquals(s.Project, project)))
                         throw new InvalidOperationException("CursorScopeMismatch: use the same tool, project and arguments.");
                     s.Used = now();
+                    s.Access = ++access;
                     if (sequence == s.Sequence - 1 && s.Last != null) return (JsonObject)s.Last.DeepClone();
                     if (sequence != s.Sequence || s.Iterator == null)
                         throw new InvalidOperationException("CursorConsumedOrInvalid: only the most recently requested page can be replayed.");
@@ -75,7 +82,11 @@ namespace TiaMcpServer.Siemens
                     {
                         rows.Add(row); s.Total++; chars += row.ToJsonString().Length;
                         if (row["status"]?.ToString() == "failed" || row["status"]?.ToString() == "unsupported")
-                        { s.Failures++; failures.Add(row.DeepClone()); }
+                        {
+                            s.Failures++; failures.Add(row.DeepClone());
+                            if (row["kind"]?.ToString() == "tagSource") s.ClassificationFailures++;
+                            else s.ReadFailures++;
+                        }
                     }
                     if (finished) break;
                 }
@@ -84,6 +95,9 @@ namespace TiaMcpServer.Siemens
                     ["schemaVersion"] = 1, ["scope"] = JsonNode.Parse(scope), ["readOnly"] = true,
                     ["collectionId"] = s.Id, ["pageIndex"] = s.Sequence, ["pageCursor"] = inputCursor,
                     ["apiCallSuccess"] = !aborted, ["dataComplete"] = finished && s.Failures == 0,
+                    ["readComplete"] = finished && !aborted && s.ReadFailures == 0,
+                    ["classificationComplete"] = finished && !aborted && s.ClassificationFailures == 0,
+                    ["readFailureCount"] = s.ReadFailures, ["classificationFailureCount"] = s.ClassificationFailures,
                     ["traversalComplete"] = finished && !aborted, ["truncated"] = !finished || aborted,
                     ["expectedCount"] = s.Expected.HasValue ? JsonValue.Create(s.Expected.Value) : null,
                     ["countUnit"] = "evidence records (not tags or screens)", ["expectedCountReason"] = s.Expected.HasValue ? "known before traversal" : "unknown until traversal completes; collection records carry local counts",
@@ -93,11 +107,20 @@ namespace TiaMcpServer.Siemens
                     ["elapsedMs"] = watch.ElapsedMilliseconds,
                     ["consistency"] = "live read; not an atomic snapshot; do not edit the project during collection",
                     ["budgetNote"] = "Time budget is checked between reads; a synchronous Openness call cannot be interrupted.",
+                    ["releaseCursor"] = s.Id,
+                    ["cursorPolicy"] = "ReleaseUnifiedReadCursor(releaseCursor) after persisting all pages. Active: 16 collections / 30 min idle. Completed: latest page only, 32 collections LRU / 10 min idle; may be evicted earlier for capacity. Expired cursors never silently restart.",
                     ["records"] = rows
                 };
-                s.Sequence++; s.Last = (JsonObject)result.DeepClone(); s.Used = now();
+                s.Sequence++; s.Last = (JsonObject)result.DeepClone(); s.Used = now(); s.Access = ++access;
+                foreach (var id in sessions.Values.Where(p => p.Iterator == null).OrderByDescending(p => p.Access).Skip(ReplayCapacity).Select(p => p.Id).ToArray())
+                    sessions.Remove(id);
                 return result;
             }
+        }
+        private void Expire()
+        {
+            foreach (var id in sessions.Where(p => now() - p.Value.Used > (p.Value.Iterator == null ? ReplayLifetime : ActiveLifetime)).Select(p => p.Key).ToArray())
+            { Release(sessions[id]); sessions.Remove(id); }
         }
         internal bool Cancel(string cursor)
         {

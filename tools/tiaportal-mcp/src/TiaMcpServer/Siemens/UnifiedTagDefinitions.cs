@@ -46,6 +46,7 @@ namespace TiaMcpServer.Siemens
             try
             {
                 var own = new JsonObject();
+                int fieldsRead = 0;
                 yield return new JsonObject { ["path"] = path, ["kind"] = "tag", ["status"] = "ok", ["rootPath"] = rootPath,
                     ["tablePath"] = table, ["groupPath"] = table == null ? null : table.Substring(0, table.LastIndexOf("/TagTables/", StringComparison.Ordinal)),
                     ["type"] = tag.GetType().FullName, ["evidence"] = evidence };
@@ -57,22 +58,40 @@ namespace TiaMcpServer.Siemens
                     if (failure != null) { yield return failure; continue; }
                     if (MigrationRead.IsScalar(value))
                     {
+                        fieldsRead++;
                         var row = MigrationRead.Scalar(path + "/" + field, value, "tagField"); row["origin"] = "ownApiValue";
                         own[field] = row["value"]?.DeepClone(); yield return row;
                     }
-                    else foreach (var row in MigrationRead.Graph(value, path + "/" + field)) yield return row;
+                    else
+                    {
+                        bool completeField = true;
+                        foreach (var row in MigrationRead.Graph(value, path + "/" + field))
+                        {
+                            if (row["status"]?.ToString() == "failed" || row["status"]?.ToString() == "unsupported") completeField = false;
+                            yield return row;
+                        }
+                        if (completeField) fieldsRead++;
+                    }
                 }
-                var source = new JsonObject { ["path"] = path + "/$source", ["kind"] = "tagSource", ["status"] = "ok", ["own"] = own.DeepClone() };
+                var source = new JsonObject { ["path"] = path + "/$source", ["kind"] = "tagSource", ["status"] = "ok", ["own"] = own.DeepClone(),
+                    ["definitionFieldCount"] = fieldsRead, ["expectedDefinitionFieldCount"] = Fields.Length, ["definitionFieldsComplete"] = fieldsRead == Fields.Length };
                 string conn = own["Connection"]?.ToString() ?? "";
+                // Exact localized sentinel observed in the official Connection
+                // property. Preserve the original string in own and tagField.
+                bool internalMarker = string.Equals(conn.Trim(), "<内部变量>", StringComparison.Ordinal);
                 bool hasPlc = !string.IsNullOrWhiteSpace(own["PlcName"]?.ToString()) || !string.IsNullOrWhiteSpace(own["PlcTag"]?.ToString());
                 bool isInternal = own.ContainsKey("Connection") && own.ContainsKey("PlcName") && own.ContainsKey("PlcTag") && string.IsNullOrEmpty(conn) && !hasPlc;
-                string origin = hasPlc ? "PLC" : isInternal ? "internal" : "unresolvedConnection";
+                bool conflictingSource = internalMarker && hasPlc;
+                string origin = conflictingSource ? "unresolvedConnection" : internalMarker ? "internal" : hasPlc ? "PLC" : isInternal ? "internal" : "unresolvedConnection";
                 // Empty member fields do not prove internal storage. Root-origin
                 // inheritance is a separately labelled inference, never a replacement.
                 if (inherited != null && !hasPlc && string.IsNullOrEmpty(conn))
                 { source["origin"] = inherited["origin"]?.DeepClone(); source["originBasis"] = "inferredFromRoot"; source["inheritedFrom"] = rootPath; source["rootSourceEvidence"] = inherited.DeepClone(); }
-                else { source["origin"] = origin; source["originBasis"] = "ownApiValues"; }
+                else { source["origin"] = origin; source["originBasis"] = internalMarker && !conflictingSource ? "ownConnectionMarker" : "ownApiValues"; }
+                source["classificationComplete"] = source["origin"]?.ToString() != "unresolvedConnection";
+                source["classificationStatus"] = conflictingSource ? "conflictingEvidence" : source["classificationComplete"]!.GetValue<bool>() ? "resolved" : "unresolved";
                 if (source["origin"]?.ToString() == "unresolvedConnection") { source["status"] = "unsupported"; source["reason"] = "Connection is not proof of a PLC source; inspect the referenced connection. No PLC symbol or address has been fabricated."; }
+                if (conflictingSource) source["reason"] = "Connection marks an internal tag but PlcName or PlcTag is nonempty. Raw definition fields were retained; source classification requires review.";
                 yield return source;
                 if ((own["TagType"]?.ToString() ?? "").IndexOf("Array", StringComparison.OrdinalIgnoreCase) >= 0)
                 {

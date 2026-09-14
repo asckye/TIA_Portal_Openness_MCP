@@ -2,6 +2,7 @@
     [Parameter(Mandatory=$true)][string]$V20ReferenceRoot,
     [Parameter(Mandatory=$true)][string]$V21ReferenceRoot,
     [string]$Dotnet='dotnet',
+    [string]$Python='python',
     [string]$NuGetConfig='',
     [ValidatePattern('^\d{8}$')][string]$ReleaseDate=(Get-Date -Format 'yyyyMMdd'),
     [switch]$NoRestore
@@ -69,8 +70,13 @@ foreach($major in @(20,21)) {
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')
     $hmi=[regex]::Match((Get-Content (Join-Path $out "hmi-v$major.log") -Raw),'(\d+) HMI traversal assertions, 0 failed')
     if(!$http.Success -or !$hmi.Success){throw 'Runtime regression did not report complete success'}
+    # Exercise the actual host methods with SDK dispatch and transports, without
+    # changing this machine's Openness group or connecting to a TIA process.
+    Run $Python @((Join-Path $PSScriptRoot 'Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "resources-v$major.log"
+    $resources=[regex]::Match((Get-Content (Join-Path $out "resources-v$major.log") -Raw),'COMPLETE: (\d+) resource discovery checks passed')
+    if(!$resources.Success){throw 'Resource discovery validation did not report complete success'}
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
-    $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
+    $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     if($major -eq 21){
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
     }

@@ -321,6 +321,24 @@ internal static class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length >= 3 && args[1] == "protocol-host") {
+                // Load the EXE's real host methods in a test process. This avoids
+                // changing the machine's Openness group or adding a production
+                // bypass; the protocol test never calls Connect or opens a project.
+                string api=Path.GetFullPath(args[2]);
+                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
+                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
+                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
+                };
+                Console.InputEncoding=new UTF8Encoding(false);
+                Console.OutputEncoding=new UTF8Encoding(false);
+                var cli=Server.GetType("TiaMcpServer.CliOptions",true)!;
+                var options=cli.GetMethod("ParseArgs",All)!.Invoke(null,new object[]{args.Skip(3).ToArray()});
+                var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
+                var program=Server.GetType("TiaMcpServer.Program",true)!;
+                await (Task)program.GetMethod(transport=="http"?"RunHttpHost":"RunStdioHost",All)!.Invoke(null,new[]{options})!;
+                return 0;
+            }
             if(args.Skip(1).Contains("hmi-only")) {
                 var refs=Server.GetReferencedAssemblies().Where(x=>x.Name!.StartsWith("Siemens.Engineering")).ToArray();
                 int major = int.Parse(args[2]);

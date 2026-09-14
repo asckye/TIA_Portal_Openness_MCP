@@ -1,6 +1,13 @@
 # Change Log
 
-## [Unreleased] — 独立仓库维护
+## [2.7.4] - 2026-09-13
+
+- HTTP / STDIO 补齐 `resources/list` 与 `resources/templates/list`，无 MCP 资源时返回空列表和正确的能力声明，消除资源发现的 MethodNotFound 告警。
+- 识别 Unified 变量 Connection 字段中的准确 `<内部变量>` 标记，保留原始字段、成员自身属性和根来源推导；与 PLC 字段冲突时明确报告，不强行分类。
+- 分页结果分开报告 `readComplete` / `classificationComplete`、读取失败数与分类未完成数；变量来源记录保留 17 个定义字段的实际读取数量。
+- 库导出查询所选类型支持的原生格式，补齐官方 Messages、ExportedDocuments、子目录文件核验与独立导出摘要；Warning、空导出、脚本无正文均保留缺口。
+- 已完成采集不再占用 16 个活动名额，末页重放使用 32 项 / 10 分钟的独立缓存，增加显式 releaseCursor；未完成采集保留 30 分钟闲置期限。
+- 完整 V20/V21 包统一为 FileVersion `2.7.4.0`，保留现有 HTTP 鉴权、工具调用、HMI 递归与只读迁移接口。
 
 - 建立独立 Git 根历史，保留原始 MIT 许可证及 NOTICE.md 来源声明。
 - 统一维护、插件发布、安全报告和问题反馈入口；只维护本仓库 master。

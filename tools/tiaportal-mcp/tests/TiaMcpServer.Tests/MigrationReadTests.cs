@@ -63,6 +63,25 @@ namespace TiaMcpServer.Tests
             check(Throws(() => pages.Read(new object(), "{}", changed["nextCursor"]!.ToString(), 1, 5000, () => Rows(5))), "project replacement invalidates pending iterator");
             var cancel = pages.Read(project, "{}", "", 1, 5000, () => Rows(5, null, () => disposals++));
             check(pages.Cancel(cancel["nextCursor"]!.ToString()) && disposals == 2, "explicit cursor release cleans up without project action");
+            using (var capacity = new MigrationPages(() => now))
+            {
+                int closed = 0;
+                var active = Enumerable.Range(0, 16).Select(_ => capacity.Read(project, "{}", "", 1, 5000, () => Rows(3, null, () => closed++))).ToList();
+                check(Throws(() => capacity.Read(project, "{}", "", 1, 5000, () => Rows(3))), "16 unfinished collections still enforce active capacity");
+                var oldest = capacity.Read(project, "{}", active[0]["nextCursor"]!.ToString(), 10, 5000, () => throw new Exception());
+                check(closed == 1 && oldest["nextCursor"] == null && oldest["releaseCursor"] != null, "completion immediately releases the live iterator and returns an explicit release handle");
+                var retained = capacity.Read(project, "{}", "", 10, 5000, () => Rows(1));
+                for (int i = 0; i < 30; i++) capacity.Read(project, "{}", "", 10, 5000, () => Rows(1));
+                var retainedReplay = capacity.Read(project, "{}", retained["pageCursor"]!.ToString(), 10, 5000, () => throw new Exception());
+                check(retainedReplay.ToJsonString() == retained.ToJsonString(), "completed page replays identically alongside 15 unfinished collections");
+                for (int i = 0; i < 10; i++) capacity.Read(project, "{}", "", 10, 5000, () => Rows(1));
+                check(Throws(() => capacity.Read(project, "{}", oldest["pageCursor"]!.ToString(), 10, 5000, () => Rows(0))) && capacity.Read(project, "{}", retained["pageCursor"]!.ToString(), 10, 5000, () => throw new Exception()).ToJsonString() == retained.ToJsonString(), "completed LRU evicts old replay pages while retaining recently replayed pages");
+                check(capacity.Read(project, "{}", active[1]["nextCursor"]!.ToString(), 1, 5000, () => throw new Exception())["records"]![0]!["path"]!.ToString() == "/1", "completed cache pressure never evicts or restarts active iterators");
+                now = now.AddMinutes(11);
+                check(Throws(() => capacity.Read(project, "{}", retained["pageCursor"]!.ToString(), 10, 5000, () => Rows(0))), "completed replay expires after 10 idle minutes");
+                check(capacity.Read(project, "{}", active[2]["nextCursor"]!.ToString(), 1, 5000, () => throw new Exception())["records"]![0]!["path"]!.ToString() == "/1", "active cursors retain their independent 30 minute idle lifetime");
+            }
+            NativeExportTests.Run(check);
             var graph = Drain(pages, project, () => MigrationRead.Graph(new Broken(), "/item"), out var broken);
             check(broken["apiCallSuccess"]!.GetValue<bool>() && !broken["dataComplete"]!.GetValue<bool>() && broken["failureCount"]!.GetValue<int>() == 1 && graph.Any(r => r["value"]?.ToString() == "kept"), "failed property is recorded while sibling values remain readable");
             check(!graph.Any(r => r["path"]!.ToString().Contains("Parent")), "owner backlinks are excluded before invocation");
@@ -80,6 +99,45 @@ namespace TiaMcpServer.Tests
             var memberSource = tags.First(r => r["kind"]?.ToString() == "tagSource" && r["path"]!.ToString().Contains("Members"));
             check(memberSource["origin"]!.ToString() == "PLC" && memberSource["originBasis"]!.ToString() == "inferredFromRoot" && memberSource["own"]!["PlcTag"]!.ToString() == "", "member own fields stay empty; root source inference is explicit");
             check(tags.Count(r => r["kind"]?.ToString() == "tagAlias") == 1, "table/root duplicate is recorded as alias");
+            var markerHmi = new Hmi();
+            var internalRoot = new Tag { Name = "InternalRoot", Connection = "<内部变量>" };
+            internalRoot.Members.Add(new Tag { Name = "member" });
+            var plcRoot = new Tag { Name = "PlcRoot", Connection = "PLC_Connection", PlcTag = "DB.Value" };
+            plcRoot.Members.Add(new Tag { Name = "localMember", Connection = "<内部变量>" });
+            markerHmi.Tags.AddRange(new[] { internalRoot, plcRoot,
+                new Tag { Name = "Whitespace", Connection = " \t<内部变量> " },
+                new Tag { Name = "NearMarker", Connection = "<内部变量>_PLC" },
+                new Tag { Name = "Unknown", Connection = "Connection_A" },
+                new Tag { Name = "Conflict", Connection = "<内部变量>", PlcTag = "DB.Value" } });
+            var markerRows = Drain(pages, project, () => UnifiedTagDefinitions.Read(markerHmi), out var markerPage, 11);
+            JsonObject Source(string path) => markerRows.Single(r => r["kind"]?.ToString() == "tagSource" && r["path"]?.ToString() == path + "/$source");
+            var internalSource = Source("/Tags/InternalRoot");
+            check(internalSource["origin"]!.ToString() == "internal" && internalSource["originBasis"]!.ToString() == "ownConnectionMarker" && internalSource["classificationComplete"]!.GetValue<bool>(), "localized internal connection marker proves internal origin");
+            check(Source("/Tags/Whitespace")["origin"]!.ToString() == "internal" && Source("/Tags/Whitespace")["own"]!["Connection"]!.ToString() == " \t<内部变量> ", "marker comparison tolerates surrounding whitespace without changing evidence");
+            check(markerRows.Single(r => r["path"]?.ToString() == "/Tags/InternalRoot/Connection")["value"]!.ToString() == "<内部变量>", "raw connection tagField preserves localized marker exactly");
+            var inheritedInternal = Source("/Tags/InternalRoot/Members/member");
+            check(inheritedInternal["origin"]!.ToString() == "internal" && inheritedInternal["originBasis"]!.ToString() == "inferredFromRoot" && inheritedInternal["own"]!["Connection"]!.ToString() == "", "blank member inherits root origin without fabricating member connection");
+            check(Source("/Tags/PlcRoot/Members/localMember")["originBasis"]!.ToString() == "ownConnectionMarker" && Source("/Tags/PlcRoot/Members/localMember")["origin"]!.ToString() == "internal", "explicit member internal marker overrides PLC root inference");
+            check(Source("/Tags/NearMarker")["origin"]!.ToString() == "unresolvedConnection" && Source("/Tags/Unknown")["origin"]!.ToString() == "unresolvedConnection", "ordinary connection names and near matches are not internal markers");
+            check(Source("/Tags/Conflict")["classificationStatus"]!.ToString() == "conflictingEvidence" && Source("/Tags/Conflict")["own"]!["PlcTag"]!.ToString() == "DB.Value", "contradictory internal marker and PLC symbol remain explicit raw evidence");
+            check(markerPage["readComplete"]!.GetValue<bool>() && !markerPage["classificationComplete"]!.GetValue<bool>() && markerPage["readFailureCount"]!.GetValue<int>() == 0 && markerPage["classificationFailureCount"]!.GetValue<int>() == 3 && !markerPage["dataComplete"]!.GetValue<bool>(), "unresolved classification does not mean definition fields were unread");
+            check(markerRows.Where(r => r["kind"]?.ToString() == "tagSource").All(r => r["definitionFieldsComplete"]!.GetValue<bool>() && r["definitionFieldCount"]!.GetValue<int>() == 17), "all 17 definition fields remain complete even when source classification is unresolved");
+            check(!broken["readComplete"]!.GetValue<bool>() && broken["readFailureCount"]!.GetValue<int>() == 1 && broken["classificationFailureCount"]!.GetValue<int>() == 0, "real property failures are counted separately from classification failures");
+            // Synthetic regression at the reported volume; this is not a field-project verification.
+            var largeHmi = new Hmi(); var largeRoot = new Tag { Name = "Root", PlcTag = "DB.Structure", Connection = "PLC_Connection" }; largeHmi.Tags.Add(largeRoot);
+            for (int i = 1; i < 4341; i++) largeRoot.Members.Add(new Tag { Name = "m" + i, Connection = i <= 113 ? "<内部变量>" : "" });
+            using var largePages = new MigrationPages(); string largeCursor = ""; int tagCount = 0, fieldCount = 0, internalCount = 0, pageCount = 0; JsonObject largePage;
+            do {
+                largePage = largePages.Read(project, "{}", largeCursor, 500, 20000, () => UnifiedTagDefinitions.Read(largeHmi));
+                foreach (var row in largePage["records"]!.AsArray()) {
+                    if (row!["kind"]?.ToString() == "tag") tagCount++;
+                    if (row["kind"]?.ToString() == "tagField") fieldCount++;
+                    if (row["kind"]?.ToString() == "tagSource" && row["origin"]?.ToString() == "internal") internalCount++;
+                }
+                largeCursor = largePage["nextCursor"]?.ToString() ?? "";
+                if (++pageCount > 1000) throw new Exception("Non-progressing tag pagination");
+            } while (largeCursor != "");
+            check(tagCount == 4341 && fieldCount == 4341 * 17 && internalCount == 113 && largePage["dataComplete"]!.GetValue<bool>() && !largePage["truncated"]!.GetValue<bool>() && pageCount > 1, "4341 synthetic definitions retain all 17 fields and classify 113 internal members through pagination");
             var bounds = UnifiedTagDefinitions.Bounds("Array[-2..3, 1..7] of Bool");
             check(bounds["dimensions"]!.AsArray().Count == 2 && bounds["dimensions"]![0]!["lower"]!.GetValue<long>() == -2, "array signed bounds and dimensions retain declared range");
             check(UnifiedTagDefinitions.Bounds("UserArrayType")["status"]!.ToString() == "unsupported", "unknown bounds are not guessed from count");
