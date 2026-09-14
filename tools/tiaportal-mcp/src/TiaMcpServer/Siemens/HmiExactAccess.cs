@@ -54,8 +54,28 @@ namespace TiaMcpServer.Siemens
         private static string Segment(object value) => Uri.EscapeDataString(Get(value,"Name") as string
             ?? throw new InvalidOperationException("Object name unavailable."));
         internal static object Screen(object software, string nameOrPath)
-            => Unique(Screens(software).Where(x => string.Equals(nameOrPath.StartsWith("/") ? x.Path : Get(x.Value,"Name") as string,
-                nameOrPath,StringComparison.OrdinalIgnoreCase)).Select(x=>x.Value).ToList(),nameOrPath);
+        {
+            if (string.IsNullOrWhiteSpace(nameOrPath))
+                throw new PortalException(PortalErrorCode.InvalidParams, "Screen name/path is required.");
+            if (!nameOrPath.StartsWith("/"))
+                return Unique(Screens(software).Where(x => string.Equals(Get(x.Value,"Name") as string,
+                    nameOrPath,StringComparison.OrdinalIgnoreCase)).Select(x=>x.Value).ToList(),nameOrPath);
+
+            // An exact path must not enumerate every screen/subtree before selecting one.
+            var parts = nameOrPath.Substring(1).Split('/');
+            if (parts.Length > 65 || parts.Any(string.IsNullOrEmpty))
+                throw new PortalException(PortalErrorCode.InvalidParams, "Invalid absolute screen path.");
+            object current = Get(software, "ScreenFolder") ?? software;
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                var groups = Get(current, "ScreenGroups") ?? Get(current, "Groups") ?? Get(current, "Folders")
+                    ?? throw new PortalException(PortalErrorCode.NotFound, "Screen group collection unavailable: " + nameOrPath);
+                current = Named(groups, Uri.UnescapeDataString(parts[i]));
+            }
+            return Named(Get(current, "Screens")
+                ?? throw new PortalException(PortalErrorCode.NotFound, "Screens unavailable: " + nameOrPath),
+                Uri.UnescapeDataString(parts[parts.Length - 1]));
+        }
         internal static object Group(object software,string path)
         {
             if (!path.StartsWith("/") || path == "/" || path.EndsWith("/")) throw new PortalException(PortalErrorCode.InvalidParams,"Use an absolute group path such as /Folder/Subfolder; root cannot be deleted.");
@@ -90,8 +110,12 @@ namespace TiaMcpServer.Siemens
         }
         internal static string Token(string scope, JsonNode data)
         {
+            // Inspection timing is diagnostic metadata, not guarded engineering content.
+            var content = data.DeepClone();
+            if (content is JsonObject snapshot && snapshot["kind"]?.ToString() == "InspectionSnapshot")
+                snapshot.Remove("elapsedMs");
             using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(scope+"\n"+data.ToJsonString()))).Replace("-", "").ToLowerInvariant();
+            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(scope+"\n"+content.ToJsonString()))).Replace("-", "").ToLowerInvariant();
         }
         internal static void Delete(object value)
         {

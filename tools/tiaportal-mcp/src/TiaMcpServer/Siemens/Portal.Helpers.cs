@@ -615,6 +615,12 @@ namespace TiaMcpServer.Siemens
             public void Dispose() { _detach?.Invoke(); _detach = null; }
         }
 
+        private void InvalidateHmiSoftwareCache()
+        {
+            _softwareContainerCache.Clear();
+            _softwareCacheProject = null;
+        }
+
         private SoftwareContainer? GetSoftwareContainer(string softwarePath)
         {
             // 清空点必须在这里、不能放到 ResolveSoftwareContainerUncached 里：下面有缓存，
@@ -1606,6 +1612,16 @@ namespace TiaMcpServer.Siemens
                     if (string.IsNullOrWhiteSpace(softwarePath)) return null;
                     return GetType(softwarePath, objectPath);
 
+                case "hmiscriptmodule":
+                case "hmi_script_module":
+                case "hmi-script-module":
+                    return UnifiedScriptAccess.Resolve(ResolveHmiSoftwareOrThrow, objectPath, softwarePath, false);
+
+                case "hmiscripts":
+                case "hmi_scripts":
+                case "hmi-scripts":
+                    return UnifiedScriptAccess.Resolve(ResolveHmiSoftwareOrThrow, objectPath, softwarePath, true);
+
                 case "hmiscreen":
                 case "hmi_screen":
                 case "hmi-screen":
@@ -2017,6 +2033,8 @@ namespace TiaMcpServer.Siemens
                     if (pt == typeof(long)) { converted[i] = Convert.ToInt64(av); continue; }
                     if (pt == typeof(double)) { converted[i] = Convert.ToDouble(av); continue; }
                     if (pt == typeof(bool)) { converted[i] = Convert.ToBoolean(av); continue; }
+                    if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(directory); continue; }
+                    if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(file); continue; }
                     if (pt == typeof(object)
                         && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase)
                         && i == 1

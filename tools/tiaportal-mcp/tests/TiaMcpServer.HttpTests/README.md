@@ -18,3 +18,15 @@ $tests = 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/Htt
 Use the V20 executable and `hmi-only 20 2.7.2.4` to check a V20 build.
 No TIA process is started and no engineering project is modified by these tests.
 Actual project connection and nested HMI screen reads require separate TIA validation.
+
+`hmi-snapshot-only` exercises the actual EXE's bounded snapshot against a net48
+transparent proxy that fails mid-read. It verifies partial evidence, failure
+status, exact path and absence of later proxy/enumerator calls. The release
+builder runs this mode for both V20 and V21. It does not connect to TIA.
+
+`global-script-only <PublicAPI-directory>` checks the actual EXE's directory/file
+argument conversion, write gates, exact indexed Scripts lookup and registration
+of `UpdateUnifiedGlobalScript` with preview defaults. The V21 build additionally
+checks the real Siemens DLL's native Import/Export signatures. The V20 build's
+bridge checks do not establish native Unified script support. No native import
+or live TIA connection is performed by this harness.

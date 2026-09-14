@@ -78,8 +78,18 @@ foreach($major in @(20,21)) {
     Run $harness @($exe,'native-export-only') "native-export-v$major.log"
     $nativeExport=[regex]::Match((Get-Content (Join-Path $out "native-export-v$major.log") -Raw),'COMPLETE: (\d+) native export remoting checks passed')
     if(!$nativeExport.Success){throw 'Native export remoting validation did not report complete success'}
+    Run $harness @($exe,'hmi-snapshot-only') "hmi-snapshot-v$major.log"
+    $snapshot=[regex]::Match((Get-Content (Join-Path $out "hmi-snapshot-v$major.log") -Raw),'COMPLETE: (\d+) HMI snapshot remoting checks passed')
+    if(!$snapshot.Success){throw 'HMI snapshot remoting validation did not report complete success'}
+    Run $harness @($exe,'global-script-only',$api) "global-script-v$major.log"
+    $globalScript=[regex]::Match((Get-Content (Join-Path $out "global-script-v$major.log") -Raw),'COMPLETE: (\d+) global script bridge checks passed')
+    if(!$globalScript.Success){throw 'Global script bridge validation did not report complete success'}
+    if($major -eq 21 -and [int]$globalScript.Groups[1].Value -ne 8){throw 'V21 native script API signatures were not verified'}
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
+    $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
+    $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
+    $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
     if($major -eq 21){
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
     }

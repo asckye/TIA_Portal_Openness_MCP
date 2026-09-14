@@ -11,50 +11,126 @@ namespace TiaMcpServer.Siemens
 {
     internal static class HmiSnapshot
     {
-        internal static JsonObject Capture(object root, int maxDepth = 6, int maxNodes = 2000, int maxString = 65536)
+        internal static JsonObject Capture(object root, int maxDepth = 6, int maxNodes = 2000, int maxString = 65536,
+            Action<string, string, Exception?>? trace = null)
         {
-            maxDepth=Math.Max(1,Math.Min(12,maxDepth)); maxNodes=Math.Max(1,Math.Min(10000,maxNodes));
-            var rows=new JsonArray();var seen=new Dictionary<object,string>(ReferenceComparer.Instance);
-            var timer=Stopwatch.StartNew();bool incomplete=false; int omitted=0;
-            Walk(root,"$",0);
-            return new JsonObject { ["kind"]="InspectionSnapshot", ["restorableBackup"]=false,
-                ["coverage"]="Public readable properties/collections within limits; Parent and indexers excluded; no hidden engineering attributes or library internals promised",
-                ["incomplete"]=incomplete, ["omittedCount"]=omitted, ["nodeCount"]=rows.Count,
-                ["maxDepth"]=maxDepth, ["maxNodes"]=maxNodes, ["maxStringLength"]=maxString, ["nodes"]=rows };
-            void Walk(object? value,string path,int depth)
+            maxDepth = Math.Max(1, Math.Min(12, maxDepth)); maxNodes = Math.Max(1, Math.Min(10000, maxNodes));
+            maxString = Math.Max(1, maxString);
+            var rows = new JsonArray(); var seen = new Dictionary<object, string>(ReferenceComparer.Instance);
+            var timer = Stopwatch.StartNew(); bool incomplete = false, aborted = false, limited = false;
+            int omitted = 0, failures = 0, quarantined = 0;
+            string? lastAttempted = null, lastCompleted = null, failurePath = null;
+            Walk(root, "$", 0);
+            return new JsonObject { ["kind"] = "InspectionSnapshot", ["restorableBackup"] = false,
+                ["coverage"] = "Public readable properties/collections within limits; Parent/indexers excluded; quarantined getters explicitly reported; no hidden attributes or library internals promised",
+                ["apiCallSuccess"] = !aborted, ["dataComplete"] = !incomplete,
+                ["completenessScope"] = "The declared public-property snapshot scope only; not the entire HMI project or faceplate internals",
+                ["incomplete"] = incomplete, ["truncated"] = limited || aborted, ["traversalComplete"] = !limited && !aborted,
+                ["connectionUnavailable"] = aborted, ["remoteInspectionStopped"] = aborted, ["failurePath"] = failurePath,
+                ["readFailureCount"] = failures, ["quarantinedCount"] = quarantined,
+                ["lastAttemptedPath"] = lastAttempted, ["lastCompletedPath"] = lastCompleted,
+                ["omittedCount"] = omitted, ["omittedCountIsExact"] = false,
+                ["expectedCount"] = null, ["actualCount"] = rows.Count, ["nodeCount"] = rows.Count, ["countUnit"] = "evidence nodes, not screens or objects",
+                ["nextCursor"] = null, ["resumable"] = false,
+                ["maxDepth"] = maxDepth, ["maxNodes"] = maxNodes, ["maxStringLength"] = maxString,
+                ["elapsedMs"] = timer.ElapsedMilliseconds, ["timeBudgetMs"] = 30000,
+                ["budgetNote"] = "Checked between synchronous reads; an in-progress Openness call cannot be interrupted.", ["nodes"] = rows };
+
+            bool CanRead()
             {
-                if(rows.Count>=maxNodes || timer.ElapsedMilliseconds>30000) { incomplete=true;omitted++;return; }
-                var row=new JsonObject { ["path"]=path, ["type"]=value?.GetType().FullName, ["status"]="Read" };rows.Add(row);
-                if(value==null) { row["value"]=null; return; }
-                var type=value.GetType();
-                if(value is string str) { row["value"]=str.Length<=maxString?str:str.Substring(0,maxString);if(str.Length>maxString){row["status"]="Truncated";incomplete=true;} return; }
-                if(type.IsPrimitive || type.IsEnum || value is decimal || value is DateTime || value is Guid || value is TimeSpan)
-                { row["value"]=value.ToString();return; }
-                if(seen.TryGetValue(value,out var previous)) {row["referencePath"]=previous;return;}
-                seen[value]=path;
-                if(depth>=maxDepth) {row["status"]="DepthLimit";incomplete=true;return;}
-                if(value is IEnumerable enumerable)
+                if (aborted) return false;
+                if (rows.Count < maxNodes && timer.ElapsedMilliseconds <= 30000) return true;
+                incomplete = limited = true; omitted++; return false;
+            }
+            object? Read(string path, Func<object?> action)
+            {
+                lastAttempted = path; trace?.Invoke("before", path, null);
+                var value = action(); lastCompleted = path; trace?.Invoke("after", path, null); return value;
+            }
+            void Failed(JsonObject row, string path, Exception ex)
+            {
+                var cause = MigrationRead.Cause(ex);
+                row["status"] = "ReadFailed"; row["error"] = cause.Message;
+                row["exceptionType"] = cause.GetType().FullName; row["exception"] = ex.ToString();
+                incomplete = true; failures++; trace?.Invoke("failed", path, ex);
+                if (HmiReadSafety.ConnectionUnavailable(ex))
                 {
-                    int index=0;
-                    try { foreach(var child in enumerable) { if(rows.Count>=maxNodes || timer.ElapsedMilliseconds>30000){incomplete=true;omitted++;break;} Walk(child,path+"/"+index++,depth+1); } }
-                    catch(Exception ex){row["status"]="ReadFailed";row["error"]=(ex.InnerException??ex).Message;incomplete=true;}
+                    aborted = true; failurePath = path;
+                    row["connectionUnavailable"] = true;
+                }
+            }
+            void Walk(object? value, string path, int depth)
+            {
+                if (!CanRead()) return;
+                var row = new JsonObject { ["path"] = path, ["status"] = "Read" }; rows.Add(row);
+                if (value == null) { row["value"] = null; return; }
+                Type type;
+                try { type = (Type)Read(path + "/$type", () => value.GetType())!; row["type"] = type.FullName; }
+                catch (Exception ex) { Failed(row, path + "/$type", ex); return; }
+                if (value is string str)
+                {
+                    row["value"] = str.Length <= maxString ? str : str.Substring(0, maxString);
+                    if (str.Length > maxString) { row["status"] = "Truncated"; incomplete = limited = true; }
                     return;
                 }
-                foreach(var property in type.GetProperties(BindingFlags.Public|BindingFlags.Instance).OrderBy(x=>x.Name,StringComparer.Ordinal))
+                if (type.IsPrimitive || type.IsEnum || value is decimal || value is DateTime || value is Guid || value is TimeSpan || value is Version)
+                { row["value"] = value.ToString(); return; }
+                if (seen.TryGetValue(value, out var previous)) { row["referencePath"] = previous; return; }
+                seen[value] = path;
+                if (depth >= maxDepth) { row["status"] = "DepthLimit"; incomplete = limited = true; return; }
+                if (value is IEnumerable enumerable)
                 {
-                    if(property.Name=="Parent" || !property.CanRead || property.GetIndexParameters().Length!=0) {omitted++;continue;}
-                    var childPath=path+"/"+Uri.EscapeDataString(property.Name);
-                    if(rows.Count>=maxNodes || timer.ElapsedMilliseconds>30000){incomplete=true;omitted++;break;}
-                    try {Walk(property.GetValue(value),childPath,depth+1);}
-                    catch(Exception ex){rows.Add(new JsonObject{["path"]=childPath,["status"]="ReadFailed",["error"]=(ex.InnerException??ex).Message});incomplete=true;}
+                    if (!CanRead()) return;
+                    IEnumerator? iterator = null; int index = 0;
+                    try
+                    {
+                        iterator = (IEnumerator)Read(path + "/$enumerator", () => enumerable.GetEnumerator())!;
+                        while (CanRead())
+                        {
+                            var itemPath = path + "/" + index;
+                            if (!(bool)Read(itemPath + "/$moveNext", () => iterator.MoveNext())!) break;
+                            if (!CanRead()) break;
+                            var child = Read(itemPath + "/$current", () => iterator.Current);
+                            Walk(child, itemPath, depth + 1); index++;
+                        }
+                    }
+                    catch (Exception ex) { Failed(row, lastAttempted ?? path, ex); }
+                    finally
+                    {
+                        // A remote enumerator is another engineering handle. Do not call it again
+                        // after a connection failure, even just to Dispose it while unwinding.
+                        if (!aborted && iterator is IDisposable disposable)
+                            try { Read(path + "/$disposeEnumerator", () => { disposable.Dispose(); return null; }); }
+                            catch (Exception ex) { Failed(row, path + "/$disposeEnumerator", ex); }
+                    }
+                    return;
+                }
+                foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance).OrderBy(x => x.Name, StringComparer.Ordinal))
+                {
+                    if (property.Name == "Parent" || property.GetMethod == null || !property.GetMethod.IsPublic || property.GetIndexParameters().Length != 0)
+                    { omitted++; continue; }
+                    if (!CanRead()) break;
+                    var childPath = path + "/" + Uri.EscapeDataString(property.Name);
+                    var skip = HmiReadSafety.SkipReason(type, property.Name);
+                    if (skip != null)
+                    {
+                        rows.Add(new JsonObject { ["path"] = childPath, ["type"] = property.PropertyType.FullName,
+                            ["status"] = "Quarantined", ["reason"] = skip, ["readAttempted"] = false });
+                        incomplete = true; quarantined++; trace?.Invoke("quarantined", childPath, null); continue;
+                    }
+                    try { var child = Read(childPath, () => property.GetValue(value)); Walk(child, childPath, depth + 1); }
+                    catch (Exception ex)
+                    {
+                        var failedRow = new JsonObject { ["path"] = childPath }; rows.Add(failedRow); Failed(failedRow, childPath, ex);
+                    }
                 }
             }
         }
-        private sealed class ReferenceComparer:IEqualityComparer<object>
+        private sealed class ReferenceComparer : IEqualityComparer<object>
         {
-            internal static readonly ReferenceComparer Instance=new ReferenceComparer();
-            public new bool Equals(object? x,object? y)=>ReferenceEquals(x,y);
-            public int GetHashCode(object value)=>RuntimeHelpers.GetHashCode(value);
+            internal static readonly ReferenceComparer Instance = new ReferenceComparer();
+            public new bool Equals(object? x, object? y) => ReferenceEquals(x, y);
+            public int GetHashCode(object value) => RuntimeHelpers.GetHashCode(value);
         }
     }
 }

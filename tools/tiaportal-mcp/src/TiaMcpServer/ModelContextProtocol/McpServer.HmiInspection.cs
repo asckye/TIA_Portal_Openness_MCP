@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage DeleteEmptyUnifiedHmiScreenGroup(string softwarePath,string groupPath,bool dryRun=true)
             =>Portal.DeleteEmptyUnifiedHmiScreenGroup(softwarePath,groupPath,dryRun);
 
-        [McpServerTool(Name="ReadHmiScreenSnapshot"),Description("[L2][HMI]Read a bounded screen object graph with per-node status, paths, limits and coverage. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use the existing GetExport mechanism.")]
+        [McpServerTool(Name="ReadHmiScreenSnapshot"),Description("[L2][HMI]Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachToOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExport.")]
         public static ResponseMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
             =>Portal.ReadHmiScreenSnapshot(softwarePath,screenPath,maxDepth,maxNodes);
 

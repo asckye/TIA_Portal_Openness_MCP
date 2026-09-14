@@ -321,6 +321,21 @@ internal static class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length >= 3 && args[1] == "global-script-only") {
+                string api=Path.GetFullPath(args[2]);
+                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
+                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
+                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
+                };
+                GlobalScriptBridgeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                Console.WriteLine("COMPLETE: " + Passed + " global script bridge checks passed");
+                return 0;
+            }
+            if(args.Skip(1).Contains("hmi-snapshot-only")) {
+                HmiSnapshotRemotingTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                Console.WriteLine("COMPLETE: " + Passed + " HMI snapshot remoting checks passed");
+                return 0;
+            }
             if(args.Skip(1).Contains("native-export-only")) {
                 NativeExportRemotingTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
                 Console.WriteLine("COMPLETE: " + Passed + " native export remoting checks passed");

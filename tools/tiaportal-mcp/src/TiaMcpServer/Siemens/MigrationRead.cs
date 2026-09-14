@@ -19,6 +19,7 @@ namespace TiaMcpServer.Siemens
                 ["code"] = code, ["reason"] = reason ?? (ex == null ? code : Cause(ex).GetType().Name + ": " + Cause(ex).Message) };
         internal static object? Get(object target, string name)
         {
+            HmiReadSafety.RequireReadable(target.GetType(), name);
             if (name == "Parent") throw new ArgumentException("Parent navigation is outside the collection scope.");
             var p = target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
             if (p == null || p.GetIndexParameters().Length != 0 || p.GetMethod == null)
@@ -27,6 +28,7 @@ namespace TiaMcpServer.Siemens
         }
         internal static object? Attribute(object target, string name)
         {
+            HmiReadSafety.RequireReadable(target.GetType(), name);
             var i = target.GetType().GetInterface("Siemens.Engineering.IEngineeringObject");
             var m = i?.GetMethod("GetAttribute", new[] { typeof(string) }) ?? target.GetType().GetMethod("GetAttribute", new[] { typeof(string) });
             if (m == null) throw new NotSupportedException("Official GetAttribute API is unavailable.");

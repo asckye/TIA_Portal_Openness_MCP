@@ -590,6 +590,8 @@ namespace TiaMcpServer.Siemens
                         {
                             _session = s;
                             _project = p;
+                            InvalidateHmiSoftwareCache();
+                            ResetHmiReadHealth();
                             return true;
                         }
                     }
@@ -604,6 +606,8 @@ namespace TiaMcpServer.Siemens
                         {
                             _session = null;
                             _project = p;
+                            InvalidateHmiSoftwareCache();
+                            ResetHmiReadHealth();
                             return true;
                         }
                     }

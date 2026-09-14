@@ -12,11 +12,20 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         internal object? FixtureRoot;
+        internal Exception? FixtureResolutionError;
+        internal int FixtureResolveCalls, FixtureCacheClears;
+        internal void FixtureResetReadHealth() => ResetHmiReadHealth();
+        private void InvalidateHmiSoftwareCache() { FixtureCacheClears++; }
         internal object? CurrentProject=>FixtureRoot;
         private bool IsProjectNull()=>FixtureRoot==null;
         private IDisposable AcquireHmiEditAccess()=>new FixtureLease();
         private sealed class FixtureLease:IDisposable { public void Dispose(){} }
-        private object ResolveHmiSoftwareOrThrow(string path)=>FixtureRoot??throw new PortalException(PortalErrorCode.NotFound,path);
+        private object ResolveHmiSoftwareOrThrow(string path)
+        {
+            FixtureResolveCalls++;
+            if (FixtureResolutionError != null) throw FixtureResolutionError;
+            return FixtureRoot ?? throw new PortalException(PortalErrorCode.NotFound,path);
+        }
     }
 }
 namespace TiaMcpServer.ModelContextProtocol

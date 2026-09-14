@@ -105,8 +105,36 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
             => RunHmiStepTool("ReadHmiScreenSnapshot",meta=>{
                 meta["softwarePath"]=softwarePath;meta["screenPath"]=screenPath;
-                meta["snapshot"]=HmiSnapshot.Capture(HmiExactAccess.Screen(ResolveHmiSoftwareOrThrow(softwarePath),screenPath),maxDepth,maxNodes);
-                return "Read-only screen snapshot; inspect coverage/incomplete. This is not an importable native backup.";
+                meta["readOnly"] = true;
+                var trace = new HmiReadTrace();
+                trace.Step("start", softwarePath + ":" + screenPath);
+                try
+                {
+                    trace.Step("before", "resolveSoftware:" + softwarePath);
+                    var software = ResolveHmiSoftwareOrThrow(softwarePath);
+                    trace.Step("after", "resolveSoftware:" + softwarePath);
+                    trace.Step("before", "resolveScreen:" + screenPath);
+                    var screen = HmiExactAccess.Screen(software, screenPath);
+                    trace.Step("after", "resolveScreen:" + screenPath);
+                    var snapshot = HmiSnapshot.Capture(screen, maxDepth, maxNodes, 65536, trace.Step);
+                    meta["snapshot"] = snapshot;
+                    foreach (var key in new[] { "apiCallSuccess", "dataComplete", "traversalComplete", "truncated", "readFailureCount", "quarantinedCount", "connectionUnavailable", "expectedCount", "actualCount", "nextCursor" })
+                        meta[key] = snapshot[key]?.DeepClone();
+                    meta["operationSuccess"] = snapshot["apiCallSuccess"]?.DeepClone();
+                    trace.AddTo(meta);
+                    if (snapshot["connectionUnavailable"]!.GetValue<bool>())
+                    {
+                        meta["failurePhase"] = trace.Phase;
+                        meta["failurePath"] = snapshot["failurePath"]?.DeepClone();
+                        RecordHmiReadFault(meta);
+                    }
+                    trace.Step("complete", "apiCallSuccess=" + snapshot["apiCallSuccess"] + ";dataComplete=" + snapshot["dataComplete"]);
+                    return snapshot["connectionUnavailable"]!.GetValue<bool>()
+                        ? "HMI connection became unavailable; partial evidence retained and further snapshot reads blocked. No automatic retry or rebind."
+                        : "Read-only screen snapshot; inspect dataComplete, quarantine and coverage. This is not an importable native backup.";
+                }
+                catch (Exception ex) { trace.Step("failed", trace.LastAttemptedPath ?? screenPath, ex); throw; }
+                finally { trace.AddTo(meta); }
             });
         public ResponseMessage ListHmiScreenPaths(string softwarePath,int offset=0,int limit=100)
             => RunHmiStepTool("ListHmiScreenPaths",meta=>{

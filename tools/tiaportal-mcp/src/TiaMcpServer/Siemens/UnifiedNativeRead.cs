@@ -38,7 +38,7 @@ namespace TiaMcpServer.Siemens
         }
         internal static IEnumerable<JsonObject> Script(object hmi, string moduleName)
         {
-            var module = MigrationRead.Named(MigrationRead.Get(hmi, "Scripts")!, moduleName);
+            var module = UnifiedScriptAccess.Module(hmi, moduleName);
             var path = "/Scripts/" + MigrationRead.Segment(moduleName);
             foreach (var row in ScriptIdentity(module, path)) yield return row;
             foreach (var row in Export(module, path, false)) yield return row;

@@ -559,11 +559,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "DescribeObject"), Description("[L2][Reflection]Describe an Openness object via reflection. Use this first when a natural-language TIA operation has no direct MCP tool. objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem")]
+        [McpServerTool(Name = "DescribeObject"), Description("[L2][Reflection]Describe an Openness object via reflection. Use this first when a natural-language TIA operation has no direct MCP tool. objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")]
         public static ResponseObjectDescribe DescribeObject(
-            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem")] string objectKind,
-            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "",
+            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
         {
             try
@@ -584,10 +584,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetObjectProperty"), Description("[L2][Reflection]Get an Openness object property by dotted path. Use after DescribeObject/DescribeObjectProperty to safely inspect current state before writing.")]
         public static ResponseObjectValue GetObjectProperty(
-            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem")] string objectKind,
-            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
+            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
             [Description("Property path, e.g. Name or BlockGroup.Groups")] string propertyPath,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "")
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "")
         {
             try
             {
@@ -607,10 +607,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "ListObjectChildren"), Description("[L2][Reflection]List child items from an enumerable Openness property, e.g. Devices, DeviceItems, Connections, Screens, Blocks. Use to discover paths instead of guessing.")]
         public static ResponseObjectChildren ListObjectChildren(
-            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem")] string objectKind,
-            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
+            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
             [Description("Enumerable property name/path, e.g. Devices, DeviceItems, BlockGroup.Blocks")] string collectionProperty,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "",
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max child items to return")] int limit = 200)
         {
             try
@@ -631,11 +631,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "InvokeObject"), Description("[L2][Reflection]Invoke an Openness method via reflection. Default is read-oriented; set allowWrite=true only after DescribeObject confirms the target method/signature. This is the generic bridge for public API operations not yet wrapped by MCP.")]
         public static ResponseObjectValue InvokeObject(
-            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem")] string objectKind,
-            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
+            [Description("Object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScreen|HmiTag|HmiScreenItem|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
             [Description("Method name (case-insensitive)")] string methodName,
-            [Description("JSON array of args, e.g. [\"AttrName\"]. Empty for no args.")] System.Text.Json.JsonElement[]? args = null,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "",
+            [Description("JSON array of args, e.g. [\"AttrName\"]. Empty for no args. DirectoryInfo/FileInfo parameters accept path strings on the MCP machine.")] System.Text.Json.JsonElement[]? args = null,
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false)
             => InvokeObject(objectKind, objectPath, methodName, ToArgsArray(args), softwarePath, allowWrite);
 
@@ -660,10 +660,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "DescribeService"), Description("[L2][Reflection]GetService bridge: describe a service object (by type name suffix) from a target object.")]
         public static ResponseObjectDescribe DescribeService(
-            [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type")] string objectKind,
-            [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
+            [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
             [Description("Service type suffix, e.g. CrossReferenceService or ICompilable")] string serviceTypeSuffix,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "",
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
         {
             try
@@ -684,12 +684,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "InvokeService"), Description("[L2][Reflection]GetService bridge: invoke a method on a service object (by type name suffix) from a target object.")]
         public static ResponseObjectValue InvokeService(
-            [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type")] string objectKind,
-            [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath.")] string objectPath,
+            [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
+            [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
             [Description("Service type suffix, e.g. CrossReferenceService or ICompilable")] string serviceTypeSuffix,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, empty for no args")] System.Text.Json.JsonElement[]? args = null,
-            [Description("softwarePath required for Block/Type")] string softwarePath = "",
+            [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Allow write/dangerous methods. Default false.")] bool allowWrite = false)
         {
             try

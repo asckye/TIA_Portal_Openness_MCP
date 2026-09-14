@@ -219,6 +219,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
+                            ["hmiReadHealth"] = Portal.GetHmiReadHealth(),
                             ["success"] = true
                         }
                     };

@@ -27,9 +27,14 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\JavaScriptEvidence.cs" Link="JavaScriptEvidence.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeExportCapture.cs" Link="NativeExportCapture.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedScriptAccess.cs" Link="UnifiedScriptAccess.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedGlobalScriptEdit.cs" Link="UnifiedGlobalScriptEdit.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.GlobalScriptEdit.cs" Link="Portal.GlobalScriptEdit.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\McpServer.GlobalScriptEdit.cs" Link="McpServer.GlobalScriptEdit.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HmiSnapshot.cs" Link="HmiSnapshot.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\HmiReadSafety.cs" Link="HmiReadSafety.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.HmiInspection.cs" Link="Portal.HmiInspection.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.HmiOperation.cs" Link="Portal.HmiOperation.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\McpServer.HmiInspection.cs" Link="McpServer.HmiInspection.cs" />
