@@ -3400,12 +3400,13 @@ namespace TiaMcpServer.Siemens
         private object ResolveHmiSoftwareOrThrow(string hmiSoftwarePath)
         {
             var sc = GetSoftwareContainer(hmiSoftwarePath);
-            if (sc?.Software == null)
+            var software = sc?.Software;
+            if (software == null)
             {
                 throw new InvalidOperationException($"HMI software not found at '{hmiSoftwarePath}'.");
             }
 
-            return sc.Software;
+            return software;
         }
 
         private object ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName)
