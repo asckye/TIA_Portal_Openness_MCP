@@ -1,0 +1,628 @@
+{
+  "build": "2.7.2-asckye.5-multilingual.1",
+  "fileVersion": "2.7.2.5",
+  "baselineCommit": "2b4f70c",
+  "liveAcceptance": "NOT PERFORMED",
+  "files": [
+    {
+      "tiaVersion": 20,
+      "file": "v20/BouncyCastle.Crypto.dll",
+      "sha256": "E51721DC0647F4838B1ABC592BD95FD8CB924716E8A64F83D4B947821FA1FA42"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Bcl.AsyncInterfaces.dll",
+      "sha256": "EEFA2BA91E57D2F3DFEEC47227CE4669792AC5E6BB7ADADE943E75733CE7D862"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Bcl.Memory.dll",
+      "sha256": "8C7B5FDE88D75D154554F935A0C94CD059BB33B3CFF87315A397D45B8C2C092E"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.AI.Abstractions.dll",
+      "sha256": "52A3C35288CFF2AA770644300C3E824F5F423F4B8C545F2B0320F0002390F5B8"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.Abstractions.dll",
+      "sha256": "B395047CB2EFCA69CE9D24569364E50DE8F605FB5133C06BCA06C61DBDFFC419"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.Binder.dll",
+      "sha256": "2CAF61876B57BC5F889687785172FFF44B0A710CC2A90CAAF9F54F7ADAAECED4"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.CommandLine.dll",
+      "sha256": "89B33060BAA74743109227B99C9941CDEBB5C5484B07870DDBEC517940B82C7B"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.dll",
+      "sha256": "E7B3FD4DF39C2EE409431B24BB416BE31B6FB0E9C468BCC1026C1D11DC1071DD"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+      "sha256": "A532DFF5C61480B840B956A4B2A7BB463FE0ECECBD8FE7192A68598EDEC47D33"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.FileExtensions.dll",
+      "sha256": "0AEA637366F3487A6DF4D1700EE88D51641228A0B36560CB5D97E8E5233F94E0"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.Json.dll",
+      "sha256": "5E70E6BE0A4D23E991C63F96D790E179FFA67F10D4F21EC1A2CE13EBC3763F1E"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Configuration.UserSecrets.dll",
+      "sha256": "D6C37F785A4055F94B770498CD28FEFCB544F63EA91CF9706B7FBF6FDDCA0350"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+      "sha256": "573D638C03B01E0CAEA67943ED0E6284888F4FAC26487FED40E71BAFB043AEF1"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.DependencyInjection.dll",
+      "sha256": "AE10ED0EBEC9CFEDEB7835E38EA88E0502E3236898F7A8030E04DABD5869BF16"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+      "sha256": "E95DF7BB57215D27C02D7E5D94CC6ECFDD39FB5FF902C454AD77BFB1B50B86D4"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Diagnostics.dll",
+      "sha256": "D9E1088BCC483E398D280CC3C9B7B4EF749160FB5518EBA0C184445607729F78"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "sha256": "06C60C16002C0A1773C92DB15AA8352885AC446B258918EF66281A4A0B08DA37"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.FileProviders.Physical.dll",
+      "sha256": "9355A4BB2961AE6D5F7D1727525E7784E8DD9FA0C4CCEF8EB5428F83D2C01B50"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "sha256": "B614B9BE31A610BA9320F76317E8F94EE60408A944D7302FE3EB19A7158FC931"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Hosting.Abstractions.dll",
+      "sha256": "CE2D4888CDB49BFE14866C9AD81B29BE16374A86FBE0CD97DB28298CF4CCDEA8"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Hosting.dll",
+      "sha256": "E7A397A82E2FF7AF34EDC453550820AF41A3B18AE08E9217F3D8A2F5CF3AF617"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.Abstractions.dll",
+      "sha256": "8CB86695EE91C941F34C0FC29586EE34A4654804675C68F100EC8B7F9E1ED6A6"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.Configuration.dll",
+      "sha256": "ADBD4DF15A075283E4275FB58BEC0547DD56ADFE31539D5891A9E20660C34294"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.Console.dll",
+      "sha256": "AF655D4EB8F10E34F1308A953D87C66E8DB9355391CB02C8AD6C4419D65F5FF7"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.Debug.dll",
+      "sha256": "284F9362B5BB77C994B86F7D1A1D0EF6114FE9FDA7FC79AF3B33E0A2BE48AFE4"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.dll",
+      "sha256": "CA227F7AC39D1976D01AA9DD1608FFCED92FBE75BAB4E752444B8DC83063B164"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.EventLog.dll",
+      "sha256": "56CC26099387D2D447AA8BC37566452FEA89FB04FD5501AEDA36CED9F477CB28"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Logging.EventSource.dll",
+      "sha256": "0A008C563C557E76628D0E366D982CD494B26308EECF4F98FB33E03686D56162"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+      "sha256": "C588F7176DFD2ED747FA2C2C038025945FFB3E6E297D472FF9917C987A7BB46F"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Options.dll",
+      "sha256": "2D6D7D29815953B1827D04793ED5DCD70D26D42FCBB2425D7C1497DB1CC521C2"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.Extensions.Primitives.dll",
+      "sha256": "662B712C2F1989479C55B1E7503A3397AA7F57BD0B40D79E08A9B889D65A062C"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Microsoft.IO.RecyclableMemoryStream.dll",
+      "sha256": "2559C95D063F6C241E8F0647FF5E919FC4E8966E2F511361AFF7947FE161501B"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/ModelContextProtocol.Core.dll",
+      "sha256": "F9E57AE996279161B024DE6DBBA470324FF8A276DCD2FB723C73173A41DE3173"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/ModelContextProtocol.dll",
+      "sha256": "0A5675C0AD71670F09D102EFF4303103E5D4286B5B5FFABCC02A0D7D09A7AE60"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Sharp7.dll",
+      "sha256": "414EAA3470C30FE2FC8C03D6975D25BA818F8862CF94A80F6F5BA244C21B124F"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.CoreExtensions.dll",
+      "sha256": "697091A7984D9C5B8BD3D7F4974CE27E1F310E126182DA92574027AE8BFDE540"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.dll",
+      "sha256": "816251DEA01F62F799228869FDD71318037A16439407570C5210FAA8F82C411A"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.Logging.dll",
+      "sha256": "50D16FA2E2B63D29DDD24C46C882B80B6782F8587B323E6CB4B77E15FF003106"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.OperatingSystem.Windows.dll",
+      "sha256": "E4D33AED2BB89CE3FAD45B6E01699AF1709427A12B31745A30A1E1BF9C7C889E"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.TiaPortal.Openness.Resolver.dll",
+      "sha256": "EF93B5E6CF277BF7C527C60A3AC111699489BA7DA77E3F79779DAF3B93A11881"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Siemens.Collaboration.Net.Windows.Authentication.dll",
+      "sha256": "14462E7BAF8E8C18D59558D2A14139AD83BA80071D7918AEB11B6A637C28301D"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Buffers.dll",
+      "sha256": "2D78D770C9CB997199154AE8C018B9F1D1EFBC86729F7264DDE6DBAD2A12CAC3"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.CodeDom.dll",
+      "sha256": "E8C88B0448083663910587EFEACB6A1977749FE3FFE83B263FC01F7B63D7DFD2"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Diagnostics.DiagnosticSource.dll",
+      "sha256": "C1F22C056E2791EB52905E9E1330B685D0E5F4C4C2B95EF18BA2C34095A266AB"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.IO.FileSystem.AccessControl.dll",
+      "sha256": "E6026501AD4056FF2F1655B0AFDFE8923BC6E8FBAD67E1E9EF56E3002F49FBB9"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.IO.Pipelines.dll",
+      "sha256": "C358218BBB25121BA500C3EC60B6A5CE8BD44420F4EDEB683798A81D330B5B24"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Memory.dll",
+      "sha256": "D5E8E4866F9CFA66F7765660F84B210198893E55335487AFE5EBDA342C0E913D"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Net.ServerSentEvents.dll",
+      "sha256": "D0D2B8C355F647AA801E7F1FFA7815D88D083ABF86B2036F3FE9B16C0F009747"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Numerics.Vectors.dll",
+      "sha256": "20C2FA81B8C70D651099D762954F285FD4F942E63B2D7217C145DAB8D4B2F4C9"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Reactive.dll",
+      "sha256": "EA69AE3AF1CFFD5E895C79E8FBED7AB0885911DF63F187FF2069C6B8E2236FCE"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Runtime.CompilerServices.Unsafe.dll",
+      "sha256": "08CBD7278B66F1E68425A82D4B97181A4130D93E3DD91831407ABA7212CCDACF"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Security.AccessControl.dll",
+      "sha256": "FF14C5F628B9A6798D173AEFBBA0A43D61E66F715108E2576AC0D3DFAB9071D0"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Security.Principal.Windows.dll",
+      "sha256": "B4D8E15ADC235D0E858E39B5133E5D00A4BAA8C94F4F39E3B5E791B0F9C0C806"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Text.Encodings.Web.dll",
+      "sha256": "A42FFB08025897082888682F5EF1FF7E2F7DFB4F190F988BB6EC081E90F71733"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Text.Json.dll",
+      "sha256": "48DE94B800B91CCFBCDF4EABAA667D94946F6ADBAFA161412AF1968DC9741915"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Threading.Channels.dll",
+      "sha256": "A42E45A1BB8E6528D244F8611CF1E3E731CAB481A67928C1BE815E635FFE8EC7"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Threading.Tasks.Dataflow.dll",
+      "sha256": "AED34B711290FF0BE80895CAFD2F4DFC477FDA406AAB0160BBD4B912F5502D3E"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/System.Threading.Tasks.Extensions.dll",
+      "sha256": "AF4E13EF418FD89B432DE20CD1DFB7FA10A7179C8DD049C9856316E50C5949CA"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/TiaMcpServer.exe",
+      "sha256": "D72256C56EA3CB5E54148D8D5167DA1AA1C3536158D524C8F2DE878DFBBACEAE"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/TiaMcpServer.exe.config",
+      "sha256": "3B1A2DD946AA0A359C493936857B43832F44243922BC3FAC52F51763C5A6087A"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/Workstation.UaClient.dll",
+      "sha256": "B3C0BCB458BA9B29AE56DC90CDF51E264BC113FD271799E1806476427B5C5D52"
+    },
+    {
+      "tiaVersion": 20,
+      "file": "v20/YamlDotNet.dll",
+      "sha256": "C45D2E9F2B05B82E7A1B72BE99507CD08A5F251BD9AEF8C3786BAC7789D5849E"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/BouncyCastle.Crypto.dll",
+      "sha256": "E51721DC0647F4838B1ABC592BD95FD8CB924716E8A64F83D4B947821FA1FA42"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Bcl.AsyncInterfaces.dll",
+      "sha256": "EEFA2BA91E57D2F3DFEEC47227CE4669792AC5E6BB7ADADE943E75733CE7D862"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Bcl.Memory.dll",
+      "sha256": "8C7B5FDE88D75D154554F935A0C94CD059BB33B3CFF87315A397D45B8C2C092E"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.AI.Abstractions.dll",
+      "sha256": "52A3C35288CFF2AA770644300C3E824F5F423F4B8C545F2B0320F0002390F5B8"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.Abstractions.dll",
+      "sha256": "B395047CB2EFCA69CE9D24569364E50DE8F605FB5133C06BCA06C61DBDFFC419"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.Binder.dll",
+      "sha256": "2CAF61876B57BC5F889687785172FFF44B0A710CC2A90CAAF9F54F7ADAAECED4"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.CommandLine.dll",
+      "sha256": "89B33060BAA74743109227B99C9941CDEBB5C5484B07870DDBEC517940B82C7B"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.dll",
+      "sha256": "E7B3FD4DF39C2EE409431B24BB416BE31B6FB0E9C468BCC1026C1D11DC1071DD"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+      "sha256": "A532DFF5C61480B840B956A4B2A7BB463FE0ECECBD8FE7192A68598EDEC47D33"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.FileExtensions.dll",
+      "sha256": "0AEA637366F3487A6DF4D1700EE88D51641228A0B36560CB5D97E8E5233F94E0"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.Json.dll",
+      "sha256": "5E70E6BE0A4D23E991C63F96D790E179FFA67F10D4F21EC1A2CE13EBC3763F1E"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Configuration.UserSecrets.dll",
+      "sha256": "D6C37F785A4055F94B770498CD28FEFCB544F63EA91CF9706B7FBF6FDDCA0350"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+      "sha256": "573D638C03B01E0CAEA67943ED0E6284888F4FAC26487FED40E71BAFB043AEF1"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.DependencyInjection.dll",
+      "sha256": "AE10ED0EBEC9CFEDEB7835E38EA88E0502E3236898F7A8030E04DABD5869BF16"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+      "sha256": "E95DF7BB57215D27C02D7E5D94CC6ECFDD39FB5FF902C454AD77BFB1B50B86D4"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Diagnostics.dll",
+      "sha256": "D9E1088BCC483E398D280CC3C9B7B4EF749160FB5518EBA0C184445607729F78"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "sha256": "06C60C16002C0A1773C92DB15AA8352885AC446B258918EF66281A4A0B08DA37"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.FileProviders.Physical.dll",
+      "sha256": "9355A4BB2961AE6D5F7D1727525E7784E8DD9FA0C4CCEF8EB5428F83D2C01B50"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "sha256": "B614B9BE31A610BA9320F76317E8F94EE60408A944D7302FE3EB19A7158FC931"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Hosting.Abstractions.dll",
+      "sha256": "CE2D4888CDB49BFE14866C9AD81B29BE16374A86FBE0CD97DB28298CF4CCDEA8"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Hosting.dll",
+      "sha256": "E7A397A82E2FF7AF34EDC453550820AF41A3B18AE08E9217F3D8A2F5CF3AF617"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.Abstractions.dll",
+      "sha256": "8CB86695EE91C941F34C0FC29586EE34A4654804675C68F100EC8B7F9E1ED6A6"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.Configuration.dll",
+      "sha256": "ADBD4DF15A075283E4275FB58BEC0547DD56ADFE31539D5891A9E20660C34294"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.Console.dll",
+      "sha256": "AF655D4EB8F10E34F1308A953D87C66E8DB9355391CB02C8AD6C4419D65F5FF7"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.Debug.dll",
+      "sha256": "284F9362B5BB77C994B86F7D1A1D0EF6114FE9FDA7FC79AF3B33E0A2BE48AFE4"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.dll",
+      "sha256": "CA227F7AC39D1976D01AA9DD1608FFCED92FBE75BAB4E752444B8DC83063B164"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.EventLog.dll",
+      "sha256": "56CC26099387D2D447AA8BC37566452FEA89FB04FD5501AEDA36CED9F477CB28"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Logging.EventSource.dll",
+      "sha256": "0A008C563C557E76628D0E366D982CD494B26308EECF4F98FB33E03686D56162"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+      "sha256": "C588F7176DFD2ED747FA2C2C038025945FFB3E6E297D472FF9917C987A7BB46F"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Options.dll",
+      "sha256": "2D6D7D29815953B1827D04793ED5DCD70D26D42FCBB2425D7C1497DB1CC521C2"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.Extensions.Primitives.dll",
+      "sha256": "662B712C2F1989479C55B1E7503A3397AA7F57BD0B40D79E08A9B889D65A062C"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Microsoft.IO.RecyclableMemoryStream.dll",
+      "sha256": "2559C95D063F6C241E8F0647FF5E919FC4E8966E2F511361AFF7947FE161501B"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/ModelContextProtocol.Core.dll",
+      "sha256": "F9E57AE996279161B024DE6DBBA470324FF8A276DCD2FB723C73173A41DE3173"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/ModelContextProtocol.dll",
+      "sha256": "0A5675C0AD71670F09D102EFF4303103E5D4286B5B5FFABCC02A0D7D09A7AE60"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Sharp7.dll",
+      "sha256": "414EAA3470C30FE2FC8C03D6975D25BA818F8862CF94A80F6F5BA244C21B124F"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.CoreExtensions.dll",
+      "sha256": "697091A7984D9C5B8BD3D7F4974CE27E1F310E126182DA92574027AE8BFDE540"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.dll",
+      "sha256": "816251DEA01F62F799228869FDD71318037A16439407570C5210FAA8F82C411A"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.Logging.dll",
+      "sha256": "50D16FA2E2B63D29DDD24C46C882B80B6782F8587B323E6CB4B77E15FF003106"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.OperatingSystem.Windows.dll",
+      "sha256": "E4D33AED2BB89CE3FAD45B6E01699AF1709427A12B31745A30A1E1BF9C7C889E"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.TiaPortal.Openness.Resolver.dll",
+      "sha256": "EF93B5E6CF277BF7C527C60A3AC111699489BA7DA77E3F79779DAF3B93A11881"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Siemens.Collaboration.Net.Windows.Authentication.dll",
+      "sha256": "14462E7BAF8E8C18D59558D2A14139AD83BA80071D7918AEB11B6A637C28301D"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Buffers.dll",
+      "sha256": "2D78D770C9CB997199154AE8C018B9F1D1EFBC86729F7264DDE6DBAD2A12CAC3"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.CodeDom.dll",
+      "sha256": "E8C88B0448083663910587EFEACB6A1977749FE3FFE83B263FC01F7B63D7DFD2"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Diagnostics.DiagnosticSource.dll",
+      "sha256": "C1F22C056E2791EB52905E9E1330B685D0E5F4C4C2B95EF18BA2C34095A266AB"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.IO.FileSystem.AccessControl.dll",
+      "sha256": "E6026501AD4056FF2F1655B0AFDFE8923BC6E8FBAD67E1E9EF56E3002F49FBB9"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.IO.Pipelines.dll",
+      "sha256": "C358218BBB25121BA500C3EC60B6A5CE8BD44420F4EDEB683798A81D330B5B24"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Memory.dll",
+      "sha256": "D5E8E4866F9CFA66F7765660F84B210198893E55335487AFE5EBDA342C0E913D"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Net.ServerSentEvents.dll",
+      "sha256": "D0D2B8C355F647AA801E7F1FFA7815D88D083ABF86B2036F3FE9B16C0F009747"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Numerics.Vectors.dll",
+      "sha256": "20C2FA81B8C70D651099D762954F285FD4F942E63B2D7217C145DAB8D4B2F4C9"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Reactive.dll",
+      "sha256": "EA69AE3AF1CFFD5E895C79E8FBED7AB0885911DF63F187FF2069C6B8E2236FCE"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Runtime.CompilerServices.Unsafe.dll",
+      "sha256": "08CBD7278B66F1E68425A82D4B97181A4130D93E3DD91831407ABA7212CCDACF"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Security.AccessControl.dll",
+      "sha256": "FF14C5F628B9A6798D173AEFBBA0A43D61E66F715108E2576AC0D3DFAB9071D0"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Security.Principal.Windows.dll",
+      "sha256": "B4D8E15ADC235D0E858E39B5133E5D00A4BAA8C94F4F39E3B5E791B0F9C0C806"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Text.Encodings.Web.dll",
+      "sha256": "A42FFB08025897082888682F5EF1FF7E2F7DFB4F190F988BB6EC081E90F71733"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Text.Json.dll",
+      "sha256": "48DE94B800B91CCFBCDF4EABAA667D94946F6ADBAFA161412AF1968DC9741915"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Threading.Channels.dll",
+      "sha256": "A42E45A1BB8E6528D244F8611CF1E3E731CAB481A67928C1BE815E635FFE8EC7"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Threading.Tasks.Dataflow.dll",
+      "sha256": "AED34B711290FF0BE80895CAFD2F4DFC477FDA406AAB0160BBD4B912F5502D3E"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/System.Threading.Tasks.Extensions.dll",
+      "sha256": "AF4E13EF418FD89B432DE20CD1DFB7FA10A7179C8DD049C9856316E50C5949CA"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/TiaMcpServer.exe",
+      "sha256": "5BCD1FB7860CC52A230A1C55359F1D2FBA8C23D1ED3F1E6D8C2A8749887CD047"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/TiaMcpServer.exe.config",
+      "sha256": "3B1A2DD946AA0A359C493936857B43832F44243922BC3FAC52F51763C5A6087A"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/Workstation.UaClient.dll",
+      "sha256": "B3C0BCB458BA9B29AE56DC90CDF51E264BC113FD271799E1806476427B5C5D52"
+    },
+    {
+      "tiaVersion": 21,
+      "file": "v21/YamlDotNet.dll",
+      "sha256": "C45D2E9F2B05B82E7A1B72BE99507CD08A5F251BD9AEF8C3786BAC7789D5849E"
+    }
+  ]
+}

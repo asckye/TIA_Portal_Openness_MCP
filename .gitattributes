@@ -1,0 +1,2 @@
+# Runtime checksums must survive checkout unchanged, including EXE configuration files.
+runtime/** -text

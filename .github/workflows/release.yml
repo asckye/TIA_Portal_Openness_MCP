@@ -1,0 +1,38 @@
+name: Publish complete release
+
+on:
+  workflow_dispatch:
+    inputs:
+      archive_legacy:
+        description: 'Move historical releases with fork/feature suffixes to drafts'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: complete-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/master'
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate and package complete V20/V21 delivery
+        shell: pwsh
+        run: python scripts/Package-Release.py
+      - name: Publish verified assets and optionally archive legacy releases
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const publish = require('./scripts/Publish-Release.cjs');
+            await publish({github, context, core});

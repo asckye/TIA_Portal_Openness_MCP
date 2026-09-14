@@ -1,0 +1,649 @@
+{
+  "build": "2.7.2-asckye.6-defects.1",
+  "fileVersion": "2.7.2.6",
+  "baselineCommit": "61a0509",
+  "sourceStatus": "Committed source identified by release tag v2.7.2-asckye.6-defects.1",
+  "generatedAt": "2026-09-14T00:42:09.235868+00:00",
+  "validation": {
+    "offlinePassed": 416,
+    "httpActualExePassed": {
+      "V20": 28,
+      "V21": 28
+    },
+    "recursiveHmiActualExePassed": {
+      "V20": 18,
+      "V21": 18
+    },
+    "realTiaProject": {
+      "V20": "NOT PERFORMED",
+      "V21": "NOT PERFORMED"
+    },
+    "deployed": false,
+    "archiveRetrievalTested": false,
+    "vmHealthProbe": "RemoteDisconnected; no running version obtained",
+    "toolRoster": "compiled EXE reflection; CLI requires Openness user group on host"
+  },
+  "runtimeFiles": [
+    {
+      "path": "runtime/v20/BouncyCastle.Crypto.dll",
+      "length": 3316968,
+      "sha256": "e51721dc0647f4838b1abc592bd95fd8cb924716e8a64f83d4b947821fa1fa42"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Bcl.AsyncInterfaces.dll",
+      "length": 27416,
+      "sha256": "eefa2ba91e57d2f3dfeec47227ce4669792ac5e6bb7adade943e75733ce7d862"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Bcl.Memory.dll",
+      "length": 51472,
+      "sha256": "8c7b5fde88d75d154554f935a0c94cd059bb33b3cff87315a397d45b8c2c092e"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.AI.Abstractions.dll",
+      "length": 343608,
+      "sha256": "52a3c35288cff2aa770644300c3e824f5f423f4b8c545f2b0320f0002390f5b8"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.Abstractions.dll",
+      "length": 31512,
+      "sha256": "b395047cb2efca69ce9d24569364e50de8f605fb5133c06bca06c61dbdffc419"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.Binder.dll",
+      "length": 48440,
+      "sha256": "2caf61876b57bc5f889687785172fff44b0a710cc2a90caaf9f54f7adaaeced4"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.CommandLine.dll",
+      "length": 28984,
+      "sha256": "89b33060baa74743109227b99c9941cdebb5c5484b07870ddbec517940b82c7b"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.dll",
+      "length": 47416,
+      "sha256": "e7b3fd4df39c2ee409431b24bb416be31b6fb0e9c468bcc1026c1d11dc1071dd"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+      "length": 25368,
+      "sha256": "a532dff5c61480b840b956a4b2a7bb463fe0ececbd8fe7192a68598edec47d33"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.FileExtensions.dll",
+      "length": 31512,
+      "sha256": "0aea637366f3487a6df4d1700ee88d51641228a0b36560cb5d97e8e5233f94e0"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.Json.dll",
+      "length": 31032,
+      "sha256": "5e70e6be0a4d23e991c63f96d790e179ffa67f10d4f21ec1a2ce13ebc3763f1e"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Configuration.UserSecrets.dll",
+      "length": 30008,
+      "sha256": "d6c37f785a4055f94b770498cd28fefcb544f63ea91cf9706b7fbf6fddca0350"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+      "length": 64792,
+      "sha256": "573d638c03b01e0caea67943ed0e6284888f4fac26487fed40e71bafb043aef1"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.DependencyInjection.dll",
+      "length": 99616,
+      "sha256": "ae10ed0ebec9cfedeb7835e38ea88e0502e3236898f7a8030e04dabd5869bf16"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+      "length": 35128,
+      "sha256": "e95df7bb57215d27c02d7e5d94cc6ecfdd39fb5ff902c454ad77bfb1b50b86d4"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Diagnostics.dll",
+      "length": 39736,
+      "sha256": "d9e1088bcc483e398d280cc3c9b7b4ef749160fb5518eba0c184445607729f78"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "length": 26912,
+      "sha256": "06c60c16002c0a1773c92db15aa8352885ac446b258918ef66281a4a0b08da37"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.FileProviders.Physical.dll",
+      "length": 51480,
+      "sha256": "9355a4bb2961ae6d5f7d1727525e7784e8dd9fa0c4ccef8eb5428f83d2c01b50"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "length": 48952,
+      "sha256": "b614b9be31a610ba9320f76317e8f94ee60408a944d7302fe3eb19a7158fc931"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Hosting.Abstractions.dll",
+      "length": 58680,
+      "sha256": "ce2d4888cdb49bfe14866c9ad81b29be16374a86fbe0cd97db28298cf4ccdea8"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Hosting.dll",
+      "length": 78648,
+      "sha256": "e7a397a82e2ff7af34edc453550820af41a3b18ae08e9217f3d8a2f5cf3af617"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.Abstractions.dll",
+      "length": 69912,
+      "sha256": "8cb86695ee91c941f34c0fc29586ee34a4654804675c68f100ec8b7f9e1ed6a6"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.Configuration.dll",
+      "length": 33080,
+      "sha256": "adbd4df15a075283e4275fb58bec0547dd56adfe31539d5891a9e20660c34294"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.Console.dll",
+      "length": 86328,
+      "sha256": "af655d4eb8f10e34f1308a953d87c66e8db9355391cb02c8ad6c4419d65f5ff7"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.Debug.dll",
+      "length": 23864,
+      "sha256": "284f9362b5bb77c994b86f7d1a1d0ef6114fe9fda7fc79af3b33e0a2be48afe4"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.dll",
+      "length": 54560,
+      "sha256": "ca227f7ac39d1976d01aa9dd1608ffced92fbe75bab4e752444b8dc83063b164"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.EventLog.dll",
+      "length": 30512,
+      "sha256": "56cc26099387d2d447aa8bc37566452fea89fb04fd5501aeda36ced9f477cb28"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Logging.EventSource.dll",
+      "length": 41264,
+      "sha256": "0a008c563c557e76628d0e366d982cd494b26308eecf4f98fb33e03686d56162"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+      "length": 28952,
+      "sha256": "c588f7176dfd2ed747fa2c2c038025945ffb3e6e297d472ff9917c987a7bb46f"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Options.dll",
+      "length": 69424,
+      "sha256": "2d6d7d29815953b1827d04793ed5dcd70d26d42fcbb2425d7c1497db1cc521c2"
+    },
+    {
+      "path": "runtime/v20/Microsoft.Extensions.Primitives.dll",
+      "length": 51000,
+      "sha256": "662b712c2f1989479c55b1e7503a3397aa7f57bd0b40d79e08a9b889d65a062c"
+    },
+    {
+      "path": "runtime/v20/Microsoft.IO.RecyclableMemoryStream.dll",
+      "length": 63016,
+      "sha256": "2559c95d063f6c241e8f0647ff5e919fc4e8966e2f511361aff7947fe161501b"
+    },
+    {
+      "path": "runtime/v20/ModelContextProtocol.Core.dll",
+      "length": 841216,
+      "sha256": "f9e57ae996279161b024de6dbba470324ff8a276dcd2fb723c73173a41de3173"
+    },
+    {
+      "path": "runtime/v20/ModelContextProtocol.dll",
+      "length": 59392,
+      "sha256": "0a5675c0ad71670f09d102eff4303103e5d4286b5b5ffabcc02a0d7d09a7ae60"
+    },
+    {
+      "path": "runtime/v20/Sharp7.dll",
+      "length": 44544,
+      "sha256": "414eaa3470c30fe2fc8c03d6975d25ba818f8862cf94a80f6f5ba244c21b124f"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.CoreExtensions.dll",
+      "length": 623104,
+      "sha256": "697091a7984d9c5b8bd3d7f4974ce27e1f310e126182da92574027ae8bfde540"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.dll",
+      "length": 23552,
+      "sha256": "816251dea01f62f799228869fdd71318037a16439407570c5210faa8f82c411a"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.Logging.dll",
+      "length": 48128,
+      "sha256": "50d16fa2e2b63d29ddd24c46c882b80b6782f8587b323e6cb4b77e15ff003106"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.OperatingSystem.Windows.dll",
+      "length": 150016,
+      "sha256": "e4d33aed2bb89ce3fad45b6e01699af1709427a12b31745a30a1e1bf9c7c889e"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.TiaPortal.Openness.Resolver.dll",
+      "length": 38912,
+      "sha256": "ef93b5e6cf277bf7c527c60a3ac111699489ba7da77e3f79779daf3b93a11881"
+    },
+    {
+      "path": "runtime/v20/Siemens.Collaboration.Net.Windows.Authentication.dll",
+      "length": 26112,
+      "sha256": "14462e7baf8e8c18d59558d2a14139ad83ba80071d7918aeb11b6a637c28301d"
+    },
+    {
+      "path": "runtime/v20/System.Buffers.dll",
+      "length": 23816,
+      "sha256": "2d78d770c9cb997199154ae8c018b9f1d1efbc86729f7264dde6dbad2a12cac3"
+    },
+    {
+      "path": "runtime/v20/System.CodeDom.dll",
+      "length": 30984,
+      "sha256": "e8c88b0448083663910587efeacb6a1977749fe3ffe83b263fc01f7b63d7dfd2"
+    },
+    {
+      "path": "runtime/v20/System.Diagnostics.DiagnosticSource.dll",
+      "length": 213808,
+      "sha256": "c1f22c056e2791eb52905e9e1330b685d0e5f4c4c2b95ef18ba2c34095a266ab"
+    },
+    {
+      "path": "runtime/v20/System.IO.FileSystem.AccessControl.dll",
+      "length": 28552,
+      "sha256": "e6026501ad4056ff2f1655b0afdfe8923bc6e8fbad67e1e9ef56e3002f49fbb9"
+    },
+    {
+      "path": "runtime/v20/System.IO.Pipelines.dll",
+      "length": 85296,
+      "sha256": "c358218bbb25121ba500c3ec60b6a5ce8bd44420f4edeb683798a81d330b5b24"
+    },
+    {
+      "path": "runtime/v20/System.Memory.dll",
+      "length": 145200,
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d"
+    },
+    {
+      "path": "runtime/v20/System.Net.ServerSentEvents.dll",
+      "length": 50488,
+      "sha256": "d0d2b8c355f647aa801e7f1ffa7815d88d083abf86b2036f3fe9b16c0f009747"
+    },
+    {
+      "path": "runtime/v20/System.Numerics.Vectors.dll",
+      "length": 110344,
+      "sha256": "20c2fa81b8c70d651099d762954f285fd4f942e63b2d7217c145dab8d4b2f4c9"
+    },
+    {
+      "path": "runtime/v20/System.Reactive.dll",
+      "length": 1470416,
+      "sha256": "ea69ae3af1cffd5e895c79e8fbed7ab0885911df63f187ff2069c6b8e2236fce"
+    },
+    {
+      "path": "runtime/v20/System.Runtime.CompilerServices.Unsafe.dll",
+      "length": 19256,
+      "sha256": "08cbd7278b66f1e68425a82d4b97181a4130d93e3dd91831407aba7212ccdacf"
+    },
+    {
+      "path": "runtime/v20/System.Security.AccessControl.dll",
+      "length": 35952,
+      "sha256": "ff14c5f628b9a6798d173aefbba0a43d61e66f715108e2576ac0d3dfab9071d0"
+    },
+    {
+      "path": "runtime/v20/System.Security.Principal.Windows.dll",
+      "length": 18312,
+      "sha256": "b4d8e15adc235d0e858e39b5133e5d00a4baa8c94f4f39e3b5e791b0f9c0c806"
+    },
+    {
+      "path": "runtime/v20/System.Text.Encodings.Web.dll",
+      "length": 87352,
+      "sha256": "a42ffb08025897082888682f5ef1ff7e2f7dfb4f190f988bb6ec081e90f71733"
+    },
+    {
+      "path": "runtime/v20/System.Text.Json.dll",
+      "length": 752952,
+      "sha256": "48de94b800b91ccfbcdf4eabaa667d94946f6adbafa161412af1968dc9741915"
+    },
+    {
+      "path": "runtime/v20/System.Threading.Channels.dll",
+      "length": 74000,
+      "sha256": "a42e45a1bb8e6528d244f8611cf1e3e731cab481a67928c1be815e635ffe8ec7"
+    },
+    {
+      "path": "runtime/v20/System.Threading.Tasks.Dataflow.dll",
+      "length": 181376,
+      "sha256": "aed34b711290ff0be80895cafd2f4dfc477fda406aab0160bbd4b912f5502d3e"
+    },
+    {
+      "path": "runtime/v20/System.Threading.Tasks.Extensions.dll",
+      "length": 27960,
+      "sha256": "af4e13ef418fd89b432de20cd1dfb7fa10a7179c8dd049c9856316e50c5949ca"
+    },
+    {
+      "path": "runtime/v20/TiaMcpServer.exe",
+      "length": 1952768,
+      "sha256": "bfe16ade184e0827624dfcace34b1925367dd06198913d04f1cbeb2846effea4"
+    },
+    {
+      "path": "runtime/v20/TiaMcpServer.exe.config",
+      "length": 5718,
+      "sha256": "3b1a2dd946aa0a359c493936857b43832f44243922bc3fac52f51763c5a6087a"
+    },
+    {
+      "path": "runtime/v20/Workstation.UaClient.dll",
+      "length": 1463296,
+      "sha256": "b3c0bcb458ba9b29ae56dc90cdf51e264bc113fd271799e1806476427b5c5d52"
+    },
+    {
+      "path": "runtime/v20/YamlDotNet.dll",
+      "length": 269824,
+      "sha256": "c45d2e9f2b05b82e7a1b72be99507cd08a5f251bd9aef8c3786bac7789d5849e"
+    },
+    {
+      "path": "runtime/v21/BouncyCastle.Crypto.dll",
+      "length": 3316968,
+      "sha256": "e51721dc0647f4838b1abc592bd95fd8cb924716e8a64f83d4b947821fa1fa42"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Bcl.AsyncInterfaces.dll",
+      "length": 27416,
+      "sha256": "eefa2ba91e57d2f3dfeec47227ce4669792ac5e6bb7adade943e75733ce7d862"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Bcl.Memory.dll",
+      "length": 51472,
+      "sha256": "8c7b5fde88d75d154554f935a0c94cd059bb33b3cff87315a397d45b8c2c092e"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.AI.Abstractions.dll",
+      "length": 343608,
+      "sha256": "52a3c35288cff2aa770644300c3e824f5f423f4b8c545f2b0320f0002390f5b8"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.Abstractions.dll",
+      "length": 31512,
+      "sha256": "b395047cb2efca69ce9d24569364e50de8f605fb5133c06bca06c61dbdffc419"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.Binder.dll",
+      "length": 48440,
+      "sha256": "2caf61876b57bc5f889687785172fff44b0a710cc2a90caaf9f54f7adaaeced4"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.CommandLine.dll",
+      "length": 28984,
+      "sha256": "89b33060baa74743109227b99c9941cdebb5c5484b07870ddbec517940b82c7b"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.dll",
+      "length": 47416,
+      "sha256": "e7b3fd4df39c2ee409431b24bb416be31b6fb0e9c468bcc1026c1d11dc1071dd"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.EnvironmentVariables.dll",
+      "length": 25368,
+      "sha256": "a532dff5c61480b840b956a4b2a7bb463fe0ececbd8fe7192a68598edec47d33"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.FileExtensions.dll",
+      "length": 31512,
+      "sha256": "0aea637366f3487a6df4d1700ee88d51641228a0b36560cb5d97e8e5233f94e0"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.Json.dll",
+      "length": 31032,
+      "sha256": "5e70e6be0a4d23e991c63f96d790e179ffa67f10d4f21ec1a2ce13ebc3763f1e"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Configuration.UserSecrets.dll",
+      "length": 30008,
+      "sha256": "d6c37f785a4055f94b770498cd28fefcb544f63ea91cf9706b7fbf6fddca0350"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.DependencyInjection.Abstractions.dll",
+      "length": 64792,
+      "sha256": "573d638c03b01e0caea67943ed0e6284888f4fac26487fed40e71bafb043aef1"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.DependencyInjection.dll",
+      "length": 99616,
+      "sha256": "ae10ed0ebec9cfedeb7835e38ea88e0502e3236898f7a8030e04dabd5869bf16"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Diagnostics.Abstractions.dll",
+      "length": 35128,
+      "sha256": "e95df7bb57215d27c02d7e5d94cc6ecfdd39fb5ff902c454ad77bfb1b50b86d4"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Diagnostics.dll",
+      "length": 39736,
+      "sha256": "d9e1088bcc483e398d280cc3c9b7b4ef749160fb5518eba0c184445607729f78"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.FileProviders.Abstractions.dll",
+      "length": 26912,
+      "sha256": "06c60c16002c0a1773c92db15aa8352885ac446b258918ef66281a4a0b08da37"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.FileProviders.Physical.dll",
+      "length": 51480,
+      "sha256": "9355a4bb2961ae6d5f7d1727525e7784e8dd9fa0c4ccef8eb5428f83d2c01b50"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.FileSystemGlobbing.dll",
+      "length": 48952,
+      "sha256": "b614b9be31a610ba9320f76317e8f94ee60408a944d7302fe3eb19a7158fc931"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Hosting.Abstractions.dll",
+      "length": 58680,
+      "sha256": "ce2d4888cdb49bfe14866c9ad81b29be16374a86fbe0cd97db28298cf4ccdea8"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Hosting.dll",
+      "length": 78648,
+      "sha256": "e7a397a82e2ff7af34edc453550820af41a3b18ae08e9217f3d8a2f5cf3af617"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.Abstractions.dll",
+      "length": 69912,
+      "sha256": "8cb86695ee91c941f34c0fc29586ee34a4654804675c68f100ec8b7f9e1ed6a6"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.Configuration.dll",
+      "length": 33080,
+      "sha256": "adbd4df15a075283e4275fb58bec0547dd56adfe31539d5891a9e20660c34294"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.Console.dll",
+      "length": 86328,
+      "sha256": "af655d4eb8f10e34f1308a953d87c66e8db9355391cb02c8ad6c4419d65f5ff7"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.Debug.dll",
+      "length": 23864,
+      "sha256": "284f9362b5bb77c994b86f7d1a1d0ef6114fe9fda7fc79af3b33e0a2be48afe4"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.dll",
+      "length": 54560,
+      "sha256": "ca227f7ac39d1976d01aa9dd1608ffced92fbe75bab4e752444b8dc83063b164"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.EventLog.dll",
+      "length": 30512,
+      "sha256": "56cc26099387d2d447aa8bc37566452fea89fb04fd5501aeda36ced9f477cb28"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Logging.EventSource.dll",
+      "length": 41264,
+      "sha256": "0a008c563c557e76628d0e366d982cd494b26308eecf4f98fb33e03686d56162"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Options.ConfigurationExtensions.dll",
+      "length": 28952,
+      "sha256": "c588f7176dfd2ed747fa2c2c038025945ffb3e6e297d472ff9917c987a7bb46f"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Options.dll",
+      "length": 69424,
+      "sha256": "2d6d7d29815953b1827d04793ed5dcd70d26d42fcbb2425d7c1497db1cc521c2"
+    },
+    {
+      "path": "runtime/v21/Microsoft.Extensions.Primitives.dll",
+      "length": 51000,
+      "sha256": "662b712c2f1989479c55b1e7503a3397aa7f57bd0b40d79e08a9b889d65a062c"
+    },
+    {
+      "path": "runtime/v21/Microsoft.IO.RecyclableMemoryStream.dll",
+      "length": 63016,
+      "sha256": "2559c95d063f6c241e8f0647ff5e919fc4e8966e2f511361aff7947fe161501b"
+    },
+    {
+      "path": "runtime/v21/ModelContextProtocol.Core.dll",
+      "length": 841216,
+      "sha256": "f9e57ae996279161b024de6dbba470324ff8a276dcd2fb723c73173a41de3173"
+    },
+    {
+      "path": "runtime/v21/ModelContextProtocol.dll",
+      "length": 59392,
+      "sha256": "0a5675c0ad71670f09d102eff4303103e5d4286b5b5ffabcc02a0d7d09a7ae60"
+    },
+    {
+      "path": "runtime/v21/Sharp7.dll",
+      "length": 44544,
+      "sha256": "414eaa3470c30fe2fc8c03d6975d25ba818f8862cf94a80f6f5ba244c21b124f"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.CoreExtensions.dll",
+      "length": 623104,
+      "sha256": "697091a7984d9c5b8bd3d7f4974ce27e1f310e126182da92574027ae8bfde540"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.dll",
+      "length": 23552,
+      "sha256": "816251dea01f62f799228869fdd71318037a16439407570c5210faa8f82c411a"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.Logging.dll",
+      "length": 48128,
+      "sha256": "50d16fa2e2b63d29ddd24c46c882b80b6782f8587b323e6cb4b77e15ff003106"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.OperatingSystem.Windows.dll",
+      "length": 150016,
+      "sha256": "e4d33aed2bb89ce3fad45b6e01699af1709427a12b31745a30a1e1bf9c7c889e"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.TiaPortal.Openness.Resolver.dll",
+      "length": 38912,
+      "sha256": "ef93b5e6cf277bf7c527c60a3ac111699489ba7da77e3f79779daf3b93a11881"
+    },
+    {
+      "path": "runtime/v21/Siemens.Collaboration.Net.Windows.Authentication.dll",
+      "length": 26112,
+      "sha256": "14462e7baf8e8c18d59558d2a14139ad83ba80071d7918aeb11b6a637c28301d"
+    },
+    {
+      "path": "runtime/v21/System.Buffers.dll",
+      "length": 23816,
+      "sha256": "2d78d770c9cb997199154ae8c018b9f1d1efbc86729f7264dde6dbad2a12cac3"
+    },
+    {
+      "path": "runtime/v21/System.CodeDom.dll",
+      "length": 30984,
+      "sha256": "e8c88b0448083663910587efeacb6a1977749fe3ffe83b263fc01f7b63d7dfd2"
+    },
+    {
+      "path": "runtime/v21/System.Diagnostics.DiagnosticSource.dll",
+      "length": 213808,
+      "sha256": "c1f22c056e2791eb52905e9e1330b685d0e5f4c4c2b95ef18ba2c34095a266ab"
+    },
+    {
+      "path": "runtime/v21/System.IO.FileSystem.AccessControl.dll",
+      "length": 28552,
+      "sha256": "e6026501ad4056ff2f1655b0afdfe8923bc6e8fbad67e1e9ef56e3002f49fbb9"
+    },
+    {
+      "path": "runtime/v21/System.IO.Pipelines.dll",
+      "length": 85296,
+      "sha256": "c358218bbb25121ba500c3ec60b6a5ce8bd44420f4edeb683798a81d330b5b24"
+    },
+    {
+      "path": "runtime/v21/System.Memory.dll",
+      "length": 145200,
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d"
+    },
+    {
+      "path": "runtime/v21/System.Net.ServerSentEvents.dll",
+      "length": 50488,
+      "sha256": "d0d2b8c355f647aa801e7f1ffa7815d88d083abf86b2036f3fe9b16c0f009747"
+    },
+    {
+      "path": "runtime/v21/System.Numerics.Vectors.dll",
+      "length": 110344,
+      "sha256": "20c2fa81b8c70d651099d762954f285fd4f942e63b2d7217c145dab8d4b2f4c9"
+    },
+    {
+      "path": "runtime/v21/System.Reactive.dll",
+      "length": 1470416,
+      "sha256": "ea69ae3af1cffd5e895c79e8fbed7ab0885911df63f187ff2069c6b8e2236fce"
+    },
+    {
+      "path": "runtime/v21/System.Runtime.CompilerServices.Unsafe.dll",
+      "length": 19256,
+      "sha256": "08cbd7278b66f1e68425a82d4b97181a4130d93e3dd91831407aba7212ccdacf"
+    },
+    {
+      "path": "runtime/v21/System.Security.AccessControl.dll",
+      "length": 35952,
+      "sha256": "ff14c5f628b9a6798d173aefbba0a43d61e66f715108e2576ac0d3dfab9071d0"
+    },
+    {
+      "path": "runtime/v21/System.Security.Principal.Windows.dll",
+      "length": 18312,
+      "sha256": "b4d8e15adc235d0e858e39b5133e5d00a4baa8c94f4f39e3b5e791b0f9c0c806"
+    },
+    {
+      "path": "runtime/v21/System.Text.Encodings.Web.dll",
+      "length": 87352,
+      "sha256": "a42ffb08025897082888682f5ef1ff7e2f7dfb4f190f988bb6ec081e90f71733"
+    },
+    {
+      "path": "runtime/v21/System.Text.Json.dll",
+      "length": 752952,
+      "sha256": "48de94b800b91ccfbcdf4eabaa667d94946f6adbafa161412af1968dc9741915"
+    },
+    {
+      "path": "runtime/v21/System.Threading.Channels.dll",
+      "length": 74000,
+      "sha256": "a42e45a1bb8e6528d244f8611cf1e3e731cab481a67928c1be815e635ffe8ec7"
+    },
+    {
+      "path": "runtime/v21/System.Threading.Tasks.Dataflow.dll",
+      "length": 181376,
+      "sha256": "aed34b711290ff0be80895cafd2f4dfc477fda406aab0160bbd4b912f5502d3e"
+    },
+    {
+      "path": "runtime/v21/System.Threading.Tasks.Extensions.dll",
+      "length": 27960,
+      "sha256": "af4e13ef418fd89b432de20cd1dfb7fa10a7179c8dd049c9856316e50c5949ca"
+    },
+    {
+      "path": "runtime/v21/TiaMcpServer.exe",
+      "length": 1952768,
+      "sha256": "45a076f71868270a7542420d7fc56b3e170c8f82acc3409952fa93567b8858fd"
+    },
+    {
+      "path": "runtime/v21/TiaMcpServer.exe.config",
+      "length": 5718,
+      "sha256": "3b1a2dd946aa0a359c493936857b43832f44243922bc3fac52f51763c5a6087a"
+    },
+    {
+      "path": "runtime/v21/Workstation.UaClient.dll",
+      "length": 1463296,
+      "sha256": "b3c0bcb458ba9b29ae56dc90cdf51e264bc113fd271799e1806476427b5c5d52"
+    },
+    {
+      "path": "runtime/v21/YamlDotNet.dll",
+      "length": 269824,
+      "sha256": "c45d2e9f2b05b82e7a1b72be99507cd08a5f251bd9aef8c3786bac7789d5849e"
+    }
+  ],
+  "bundleValidation": "Strict validation passed"
+}
