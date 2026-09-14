@@ -321,6 +321,11 @@ internal static class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Skip(1).Contains("native-export-only")) {
+                NativeExportRemotingTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                Console.WriteLine("COMPLETE: " + Passed + " native export remoting checks passed");
+                return 0;
+            }
             if(args.Length >= 3 && args[1] == "protocol-host") {
                 // Load the EXE's real host methods in a test process. This avoids
                 // changing the machine's Openness group or adding a production

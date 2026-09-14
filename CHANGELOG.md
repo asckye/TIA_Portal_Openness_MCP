@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.5] - 2026-09-14
+
+- 原生库导出先读取 TransferResultState；Success 时不访问 Messages，非成功结果才读取有限的官方诊断。
+- 在一次结果检查中提取远程 FileInfo 路径字符串，后续分页只使用本地文件对象。结果检查异常后停止继续访问远程结果，不自动重试、重连或关闭博途。
+- 分开报告原生调用状态、结果检查完整性及文件/正文完整性；异常携带 operationId、阶段、类型、HResult 和有明确截断标志的调用栈，日志持久化到临时目录。
+- 同一已绑定项目的游标分页和重放不再重复读取远程项目名称；更换项目绑定仍使旧游标失效。
+- 增加实际 net48 EXE 的 FileInfo 透明代理故障测试及只读 Windows 退出诊断采集命令。
+- 完整 V20/V21 包为 FileVersion 2.7.5.0；博途异常退出的具体原因及本版真实工程验收仍待确认。
+
 ## [2.7.4] - 2026-09-13
 
 - HTTP / STDIO 补齐 `resources/list` 与 `resources/templates/list`，无 MCP 资源时返回空列表和正确的能力声明，消除资源发现的 MethodNotFound 告警。

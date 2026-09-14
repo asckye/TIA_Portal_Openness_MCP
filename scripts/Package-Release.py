@@ -69,6 +69,7 @@ def main():
         checks = metadata['validation']['runtimes'][f'V{major}']
         require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
         require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
+        require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
         require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
     required = ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat', '开始使用.md',
                 'scripts/预热.bat', 'scripts/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',

@@ -17,12 +17,26 @@ namespace TiaMcpServer.Siemens
             {
                 if (CurrentProject == null) throw new InvalidOperationException("No open project.");
                 var project = CurrentProject;
-                var projectName = MigrationRead.Get(project, "Name")?.ToString(); scope["project"] = projectName;
-                if (string.IsNullOrWhiteSpace(expectedProject) || projectName != expectedProject) throw new InvalidOperationException("Exact expectedProject mismatch; collection was not started.");
+                if (string.IsNullOrWhiteSpace(expectedProject)) throw new InvalidOperationException("An exact expectedProject is required.");
                 if (string.IsNullOrWhiteSpace(softwarePath)) throw new ArgumentException("An explicit HMI software path is required.");
-                var hmi = ResolveHmiSoftwareOrThrow(softwarePath);
-                if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
-                result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi));
+                scope["project"] = expectedProject;
+                if (!string.IsNullOrEmpty(cursor))
+                {
+                    // Scope and bound project identity are validated by the cursor
+                    // store. Do not touch a remote Name/HMI handle just to replay
+                    // a page or read an already captured native export from disk.
+                    // A live traversal still reports its own handle failure.
+                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs,
+                        () => throw new InvalidOperationException("A continuation cannot start a new collection."));
+                }
+                else
+                {
+                    var projectName = MigrationRead.Get(project, "Name")?.ToString();
+                    if (projectName != expectedProject) throw new InvalidOperationException("Exact expectedProject mismatch; collection was not started.");
+                    var hmi = ResolveHmiSoftwareOrThrow(softwarePath);
+                    if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
+                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi));
+                }
             }
             catch (Exception ex)
             {

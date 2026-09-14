@@ -75,8 +75,11 @@ foreach($major in @(20,21)) {
     Run $Python @((Join-Path $PSScriptRoot 'Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "resources-v$major.log"
     $resources=[regex]::Match((Get-Content (Join-Path $out "resources-v$major.log") -Raw),'COMPLETE: (\d+) resource discovery checks passed')
     if(!$resources.Success){throw 'Resource discovery validation did not report complete success'}
+    Run $harness @($exe,'native-export-only') "native-export-v$major.log"
+    $nativeExport=[regex]::Match((Get-Content (Join-Path $out "native-export-v$major.log") -Raw),'COMPLETE: (\d+) native export remoting checks passed')
+    if(!$nativeExport.Success){throw 'Native export remoting validation did not report complete success'}
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
-    $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
+    $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     if($major -eq 21){
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
     }

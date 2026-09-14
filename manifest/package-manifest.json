@@ -1,10 +1,10 @@
 {
   "schemaVersion": "2026-05-25",
-  "bundleVersion": "2.7.4",
-  "packageName": "TIA_MCP_Delivery_v2.7.4_20260913",
+  "bundleVersion": "2.7.5",
+  "packageName": "TIA_MCP_Delivery_v2.7.5_20260914",
   "packageType": "tia-portal-mcp-complete-offline-delivery-bundle",
   "generatedAt": "2026-05-31T05:30:00-07:00",
-  "refreshedAt": "2026-09-14T06:31:17.0406842+00:00",
+  "refreshedAt": "2026-09-14T07:00:25.0798156+00:00",
   "target": {
     "tiaPortalMajorVersion": [
       20,
@@ -138,6 +138,6 @@
       "Run scripts/Validate-Bundle.ps1 from bundle root for offline file/JSON checks; tools/list when server runs is authoritative for tool roster."
     ]
   },
-  "fileVersion": "2.7.4.0",
+  "fileVersion": "2.7.5.0",
   "validationStatus": "Both runtimes compiled and tested locally; new real-project acceptance remains pending"
 }

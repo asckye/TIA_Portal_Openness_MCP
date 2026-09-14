@@ -1,4 +1,4 @@
-# WinCC Unified 只读迁移采集（V21，v2.7.4 / FileVersion 2.7.4.0）
+# WinCC Unified 只读迁移采集（V21，v2.7.5 / FileVersion 2.7.5.0）
 
 文档中的 `Example_Project`、`HMI_1`、模块名称和库路径都是示例，调用时替换为目标工程的实际值。
 本次新增接口只读取工程；不保存、编译、下载、创建事件、实例化库类型、写变量或关闭博途。原生导出只写入服务进程的独立临时目录，读取后删除；不会覆盖用户文件。
@@ -69,7 +69,17 @@
 
 库导出先查询所选类型的官方格式列表，使用 API 返回的第一个格式，原样记录在 `nativeExportPlan.supportedFormats` / `selectedFormat`；不向库脚本强传 WinCCML，也不尝试编辑、实例化或转换类型。无支持格式时明确返回 `Unsupported`。`ExportAsDocuments` 使用 `LibraryExportOptions.None`，只导出领域文件。
 
-读取 `ExportTransferResult.Messages[*].Message` 和 `ExportedDocuments`，先消费可能延迟执行的文件枚举，再扫描本次独立临时目录及子目录。`nativeFileInventory` 记录 API 清单数量、实际文件及相对路径；清单中的缺失文件、目录外文件、重解析点均明确报告，不读取任意目录。`nativeExportStatus` 保留官方状态与调用状态；末尾 `nativeExportSummary` 分别报告调用成功、文件读取数、JS 正文和本次原生导出完整性。Warning、空导出、读取/解析失败、脚本没有 JS 正文均不能成为 `dataComplete=true`。库内绑定和迁移关系仍须独立验证。
+先读取 `ExportTransferResult.TransferResultState`，按 V21 官方示例仅在非 Success 结果下访问 `Messages[*].Message`。Success 的 `diagnosticsStatus=notRequiredOnSuccess` 表示成功路径不要求枚举诊断，不能解读为枚举到了零条。全部结果检查在返回首条导出记录前完成或停止；`nativeExportPlan` 出现在分页中不表示尚未执行导出。
+
+立即消费 `ExportedDocuments` 并把可能属于 .NET Remoting 代理的 FileInfo 转成本地路径字符串，后续只读取本次独立临时目录及子目录，不再跨页访问远程文件对象。任何结果检查异常均停止继续访问远程结果，不自动重试导出、不重连、不保存、不关闭项目或 Portal。已落盘文件仍可回收为部分证据。
+
+`nativeExportStatus` 描述原生调用和结果检查，`apiCallSuccess` 表示原生方法是否返回，`nativeState` 保留原始状态，`resultInspectionComplete` 单独报告检查完整性；`failurePhase` 给出失败阶段。例如原生返回 Success 后读取文件清单失败，原始 Success 仍保留，但明确标注结果检查失败，不能据此宣布完整。该阶段 `dataComplete=null`，文件与正文完整性以末尾 `nativeExportSummary.dataComplete` 为准。Warning、空导出、读取/解析失败、脚本没有 JS 正文均不完整。
+
+原生异常保留 `operationId`、`phase`、异常类型、HResult、原文与调用栈；响应中长异常文本有 `textTruncated` 标志，超过八层异常有 `exceptionChainTruncated` 标志。完整异常及每个远程读取阶段写入 `%TEMP%\TiaMcpServer.native-export.log`，不记录连接密钥或脚本正文。`connectionUnavailable` 表示观察到对象释放或远程通信异常，不能仅凭它断言博途已退出或确定根因。
+
+同一绑定项目的续页和末页重放按游标范围及项目对象身份校验，不重复读取远程项目名称或重新定位 HMI，因此已采集的原生文件可在句柄失效后继续回收。需要远程对象的未完成遍历仍会明确失败；新建采集仍验证实际项目名称。重新绑定，即使名称相同，也会令旧游标失效，不能把新旧集合混合为同一快照。
+
+`nativeFileInventory` 保留清单数量与实际相对路径。缺失文件、目录外文件、重解析点均报缺口，不读取任意目录。正文和 SHA-256 来自同一次有大小上限的文件读取，不把哈希错误或文件消失变成静默丢失。库内绑定和迁移关系仍须独立验证。
 
 数组遍历官方 `Members` 实际集合，不根据长度制造元素。`DataType` 若包含官方返回的 `Array[a..b,c..d] of ...` 文本，则标记为从该原始文本解析的上下界；若未暴露范围，返回明确缺口。不能将成员数推断成从零开始的上下界。
 
@@ -81,11 +91,15 @@
 
 v2.7.4 增加分类修复、按类型查询格式、导出诊断与文件清单、完成缓存回收和资源发现接口。离线回归与真实编译后服务入口测试只证明本地代码和协议行为；**未在真实博途工程上完成本版复测，不证明库内部文件已成功取得。**
 
+v2.7.5 修正上述结果读取和分页生命周期并补充阶段日志。已在真实编译的 .NET Framework 4.8 程序中模拟 FileInfo 透明代理及 IPC 失效；这不是实际博途导出验收，也不足以证明异常退出已解决。
+
+如博途无弹窗退出，在虚拟机完整包目录的 CMD 执行 `scripts\Collect-TiaExitEvidence.cmd`，只读提取最近 24 小时内最多 100 条应用崩溃/.NET/WER 事件、当前博途进程列表和本版原生导出日志。输出位置会显示在控制台；空事件不等于没有异常。先在本地检查后再分享，日志和事件可能包含私有路径。该命令不连接、启动或关闭博途。
+
 部署后仍需逐项验收：
 
 1. 检查 `<内部变量>` 分类、成员自身字段与根来源继承，分别核对根数量与含成员总数。连续完成超过 16 个集合后继续采集，验证保存后释放和末页重放。
 2. 按实际库路径和准确版本读取库脚本，验证返回的支持格式及原生 JS/YAML 正文。无正文仍为缺口。
-3. 只对页面实际引用的准确面板版本逐一导出，保存 `ExportResult/Messages` 和文件清单。若官方 API 仍不支持，保留明确缺口；接口传值、内部绑定及嵌套依赖需逐项核对。
+3. 只对页面实际引用的准确面板版本逐一导出，保存非成功结果的 `ExportResult/Messages` 及文件清单。若官方 API 仍不支持，保留明确缺口；接口传值、内部绑定及嵌套依赖需逐项核对。
 4. 补读旧页面快照的属性事件、阈值、报警列、工具栏及触发变量。
 5. 将全局脚本静态引用对应到调用页面，建立页面到全局函数调用链；运行时拼接名称保留原表达式和待解析状态。不能由接口返回成功推断迁移全部核对通过或可原生导入。
 

@@ -18,10 +18,17 @@ namespace TiaMcpServer.Tests
         public sealed class DiagnosticMessage { public string MessageText = ""; public string Message => MessageText; }
         public sealed class Result
         {
-            public string TransferResultState { get; set; } = "Success";
-            public IEnumerable<FileInfo> ExportedDocuments { get; set; } = Array.Empty<FileInfo>();
-            public List<DiagnosticMessage> Messages { get; } = new List<DiagnosticMessage>();
+            private string state = "Success";
+            private IEnumerable<FileInfo> files = Array.Empty<FileInfo>();
+            public Exception? StateError, FilesError, MessagesError;
+            public int StateReads, FileReads, MessageReads;
+            public string TransferResultState { get { StateReads++; if (StateError != null) throw StateError; return state; } set => state = value; }
+            public IEnumerable<FileInfo> ExportedDocuments { get { FileReads++; if (FilesError != null) throw FilesError; return files; } set => files = value; }
+            public readonly List<DiagnosticMessage> MessageItems = new List<DiagnosticMessage>();
+            public object? MessageCollection;
+            public object Messages { get { MessageReads++; if (MessagesError != null) throw MessagesError; return MessageCollection ?? MessageItems; } }
         }
+        public sealed class BrokenMessageCount { public int Count => throw new InvalidOperationException("Unexpected exception - no exception message available."); }
         public sealed class Version
         {
             public object TypeObject { get; set; } = new LibraryType();
@@ -50,7 +57,7 @@ namespace TiaMcpServer.Tests
             check(version.Calls == 1 && version.Format == "DomainSpecificNative" && rows.Single(r => r["kind"]?.ToString() == "nativeExportPlan")["selectedFormat"]!.ToString() == version.Format, "native export uses exactly the format advertised by the selected type");
             check(rows.Count(r => r["kind"]?.ToString() == "nativeFile") == 1 && rows.Any(r => r["kind"]?.ToString() == "nativeValue" && r["value"]?.ToString() == "Interface.Speed") && Summary(rows)["dataComplete"]!.GetValue<bool>(), "lazy returned file list is consumed before recursive scan; nested native bindings are read once");
             check(version.Output != null && !Directory.Exists(version.Output), "native export temporary directory is removed after collection completes");
-            var warning = new Version { Behavior = d => { var r = new Result { TransferResultState = "Warning" }; r.Messages.Add(new DiagnosticMessage { MessageText = "Selected faceplate version cannot be exported: domain reason" }); return r; } };
+            var warning = new Version { Behavior = d => { var r = new Result { TransferResultState = "Warning" }; r.MessageItems.Add(new DiagnosticMessage { MessageText = "Selected faceplate version cannot be exported: domain reason" }); return r; } };
             var warnings = Read(warning);
             check(warnings.Any(r => r["value"]?.ToString() == "Selected faceplate version cannot be exported: domain reason") && warnings.Any(r => r["code"]?.ToString() == "NativeExportEmpty") && Summary(warnings)["apiCallSuccess"]!.GetValue<bool>() && !Summary(warnings)["dataComplete"]!.GetValue<bool>(), "Warning and empty export preserve Siemens diagnostics and never claim complete data");
             var partial = Read(new Version { Behavior = d => new Result { TransferResultState = "Warning", ExportedDocuments = LazyFiles(d) } });
@@ -70,8 +77,41 @@ namespace TiaMcpServer.Tests
             check(outside.Any(r => r["code"]?.ToString() == "NativeFileLocationRejected") && !outside.Any(r => r["kind"]?.ToString() == "nativeFile"), "reported paths outside this export are diagnosed without reading arbitrary files");
             var threw = Read(new Version { Behavior = _ => throw new InvalidOperationException("domain exception") });
             check(threw.Any(r => r["reason"]?.ToString().Contains("domain exception") == true) && !Summary(threw)["apiCallSuccess"]!.GetValue<bool>(), "native invocation exception retains its original cause and failed call status");
-            var manyMessages = Read(new Version { Behavior = d => { var r = new Result { ExportedDocuments = LazyFiles(d) }; for (int i = 0; i < 1001; i++) r.Messages.Add(new DiagnosticMessage { MessageText = "message" }); return r; } });
+            var manyMessages = Read(new Version { Behavior = d => { var r = new Result { TransferResultState = "Warning", ExportedDocuments = LazyFiles(d) }; for (int i = 0; i < 1001; i++) r.MessageItems.Add(new DiagnosticMessage { MessageText = "message" }); return r; } });
             check(manyMessages.Any(r => r["code"]?.ToString() == "NativeDiagnosticLimit") && !Summary(manyMessages)["dataComplete"]!.GetValue<bool>(), "diagnostic capacity is bounded and never silently reports complete");
+            var successResult = new Result { MessagesError = new InvalidOperationException("Success diagnostics must not be accessed") };
+            var successRows = Read(new Version { Behavior = d => { successResult.ExportedDocuments = LazyFiles(d); return successResult; } });
+            check(successResult.MessageReads == 0 && Summary(successRows)["dataComplete"]!.GetValue<bool>() && successRows.Single(r => r["kind"]?.ToString() == "nativeExportStatus")["diagnosticsStatus"]!.ToString() == "notRequiredOnSuccess", "native Success never accesses the Messages getter, following the official success path");
+            var brokenResult = new Result { FilesError = new ObjectDisposedException("native result") };
+            var brokenRows = Read(new Version { Behavior = d => { LazyFiles(d).ToList(); return brokenResult; } });
+            var status = brokenRows.Single(r => r["kind"]?.ToString() == "nativeExportStatus");
+            check(status["nativeState"]!.ToString() == "Success" && status["nativeStateSuccess"]!.GetValue<bool>() && !status["resultInspectionComplete"]!.GetValue<bool>() && status["failurePhase"]!.ToString() == "snapshotExportedDocuments" && status["reason"]!.ToString().Contains("result inspection failed"), "raw native Success and result inspection failure have separate explicit meanings");
+            check(brokenResult.MessageReads == 0 && brokenRows.Any(r => r["kind"]?.ToString() == "nativeFile") && !Summary(brokenRows)["dataComplete"]!.GetValue<bool>() && !brokenRows.Any(r => r["code"]?.ToString() == "NativeExportFailed"), "disposed result stops remote inspection but retains local files without relabeling the native invocation");
+            var brokenState = new Result { StateError = new ObjectDisposedException("native state") };
+            var stateRows = Read(new Version { Behavior = _ => brokenState });
+            check(brokenState.FileReads == 0 && brokenState.MessageReads == 0 && stateRows.Any(r => r["code"]?.ToString() == "NativeStatusReadFailed"), "failed native state read stops all further result access");
+            var countRows = Read(new Version { Behavior = d => new Result { TransferResultState = "Warning", ExportedDocuments = LazyFiles(d), MessageCollection = new BrokenMessageCount() } });
+            var failure = countRows.Single(r => r["code"]?.ToString() == "NativeDiagnosticsReadFailed");
+            check(failure["phase"]!.ToString() == "readMessageCount" && failure["exceptions"]!.AsArray().Count >= 1 && failure["exceptions"]!.AsArray().Any(e => e!["type"]!.ToString() == "System.InvalidOperationException" && e["stackTrace"]!.ToString().Contains("BrokenMessageCount")) && countRows.Any(r => r["kind"]?.ToString() == "nativeExportSummary"), "message count exception keeps phase, original type and stack and still reaches inventory and summary");
+            ContinuationTests(check);
+        }
+        private static void ContinuationTests(Action<bool, string> check)
+        {
+            var root = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
+            var portal = new Portal { FixtureRoot = root };
+            var first = portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", pageSize: 2).Meta!;
+            check(first["records"]!.AsArray().Any(r => r!["kind"]!.ToString() == "nativeExportStatus"), "native result is captured before export file pagination starts");
+            string cursor = first["nextCursor"]!.ToString();
+            root.Disposed = true;
+            check(portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", first["pageCursor"]!.ToString(), 2).Meta!.ToJsonString() == first.ToJsonString(), "last page replays without accessing a disposed project Name");
+            var mismatch = portal.ReadUnifiedGlobalScript("HMI_1", "Other_Project", "Navigation", cursor).Meta!;
+            check(!mismatch["apiCallSuccess"]!.GetValue<bool>(), "skipping remote preflight never bypasses cursor project and argument validation");
+            JsonObject last; int bodies = 0;
+            do { last = portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", cursor, 2).Meta!; bodies += last["records"]!.AsArray().Count(r => r!["kind"]?.ToString() == "nativeFile"); cursor = last["nextCursor"]?.ToString() ?? ""; } while (cursor != "");
+            check(bodies == 2 && last["dataComplete"]!.GetValue<bool>(), "captured export finishes from local files after project handle disposal without another Openness access");
+            check(!portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation").Meta!["apiCallSuccess"]!.GetValue<bool>(), "new collection still validates the live project handle");
+            portal.FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
+            check(!portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", last["pageCursor"]!.ToString()).Meta!["apiCallSuccess"]!.GetValue<bool>(), "rebind to same named project still invalidates the old collection");
         }
         private static IEnumerable<FileInfo> ScriptFiles(DirectoryInfo directory)
         {
@@ -80,6 +120,16 @@ namespace TiaMcpServer.Tests
             var yaml = new FileInfo(Path.Combine(directory.FullName, "Module.yml")); File.WriteAllText(yaml.FullName, "ScriptModule:\n  Name: helper\n");
             yield return yaml;
         }
+    }
+}
+
+namespace Siemens.Engineering.HmiUnified
+{
+    internal sealed class HmiSoftware
+    {
+        public bool Disposed;
+        public string Name => Disposed ? throw new ObjectDisposedException("project") : "Project_A";
+        public List<TiaMcpServer.Tests.MigrationReadTests.Module> Scripts { get; } = new List<TiaMcpServer.Tests.MigrationReadTests.Module> { new TiaMcpServer.Tests.MigrationReadTests.Module() };
     }
 }
 

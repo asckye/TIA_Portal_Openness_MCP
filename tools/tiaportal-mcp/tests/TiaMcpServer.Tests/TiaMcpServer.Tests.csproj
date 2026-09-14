@@ -25,6 +25,7 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationRead.cs" Link="MigrationRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedTagDefinitions.cs" Link="UnifiedTagDefinitions.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\JavaScriptEvidence.cs" Link="JavaScriptEvidence.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeExportCapture.cs" Link="NativeExportCapture.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HmiExactAccess.cs" Link="HmiExactAccess.cs" />
