@@ -1,0 +1,257 @@
+﻿#Requires -Version 5.1
+<#
+.SYNOPSIS
+    Offline validation: required files, JSON parse, blueprint bundle list, tool roster count.
+.DESCRIPTION
+    Run from any directory. Default bundle root = parent of this script's folder (the delivery package root).
+    Does not start TiaMcpServer or TIA Portal.
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Validate-Bundle.ps1
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Validate-Bundle.ps1 -BundleRoot "D:\kits\TIA_MCP_交付包"
+#>
+param(
+    [Parameter(Mandatory = $false)]
+    [string]$BundleRoot = "",
+    [switch]$Strict
+)
+
+$ErrorActionPreference = "Stop"
+
+function Resolve-BundleRoot {
+    if ($BundleRoot -and (Test-Path -LiteralPath $BundleRoot)) {
+        return (Resolve-Path -LiteralPath $BundleRoot).Path
+    }
+    return (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
+}
+
+$root = Resolve-BundleRoot
+$failures = New-Object System.Collections.Generic.List[string]
+
+function Fail([string]$msg) {
+    [void]$failures.Add($msg)
+    Write-Host "[FAIL] $msg" -ForegroundColor Red
+}
+
+function Ok([string]$msg) {
+    Write-Host "[ OK ] $msg" -ForegroundColor Green
+}
+
+Write-Host "Bundle root: $root"
+
+# 交付 zip 布局在 tools\...\bin\Release\net48；git clone 布局在 runtime\v21。两处任一存在即可。
+$exeCandidates = @(
+    (Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\bin\Release\net48\TiaMcpServer.exe"),
+    (Join-Path $root "runtime\v21\TiaMcpServer.exe")
+)
+$exe = $exeCandidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+if (-not $exe) { Fail "Missing server exe (checked: $($exeCandidates -join ' ; '))" } else { Ok "TiaMcpServer.exe present ($exe)" }
+
+# Sentinel: every launcher must point at an engine that actually exists in this checkout.
+# The .cmd/.bat files and this script drifted apart once already — the validator checked one
+# path while every user ran another — so the launchers are now parsed and verified here.
+$launchers = @('tia.cmd','tia-v20.cmd','配置MCP.bat','配置MCP-v20.bat',
+               'scripts\预热.bat','scripts\生成工程.bat')
+foreach ($rel in $launchers) {
+    $lp = Join-Path $root $rel
+    if (-not (Test-Path -LiteralPath $lp)) { Fail ("Missing launcher: " + $rel); continue }
+    $ldir = Split-Path -Parent $lp
+    $text = Get-Content -LiteralPath $lp -Raw -Encoding UTF8
+    $refs = @([regex]::Matches($text, '%~dp0([^"%]*TiaMcpServer\.exe)') |
+              ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
+    if ($refs.Count -eq 0) { Fail ($rel + ': references no TiaMcpServer.exe path'); continue }
+    $anyPresent = $false
+    foreach ($r in $refs) { if (Test-Path -LiteralPath (Join-Path $ldir $r)) { $anyPresent = $true } }
+    if ($anyPresent) { Ok ($rel + ' -> an engine present in this checkout') }
+    elseif ($rel -match 'v20') {
+        # A git clone ships the V21 runtime only; the V20 launchers say so themselves and point
+        # at the release zip, so a missing V20 engine here is expected, not a defect.
+        Write-Host ("[WARN] " + $rel + ": no V20 engine in this checkout (expected for a git clone; the launcher tells the user to fetch the release zip)") -ForegroundColor Yellow
+    }
+    else { Fail ($rel + ' points at no engine present here: ' + ($refs -join ' ; ')) }
+}
+
+# The engine ships the trimmed lite roster by default, so it MUST carry the FindTools/CallTool
+# bridge — an engine with the small roster but without the bridge is the one genuinely broken
+# combination: ~155 tools become unreachable with no way to discover them.
+# Binary marker scan on purpose, so the gate never depends on being able to start the engine.
+# Key on 'FindTools': 'CallTool' also occurs inside the MCP SDK ("CallToolRequest") and would
+# pass on an engine that never defined the bridge at all.
+if ($exe) {
+    $bytes = [System.IO.File]::ReadAllBytes($exe)
+    if ([System.Text.Encoding]::ASCII.GetString($bytes).Contains('FindTools') -or
+        [System.Text.Encoding]::Unicode.GetString($bytes).Contains('FindTools')) {
+        Ok 'Engine carries the FindTools/CallTool bridge'
+    }
+    else {
+        Fail ('Engine has NO FindTools bridge - it predates the lite-by-default change and ' +
+              'would hide ~155 tools with no way to reach them. Rebuild it.')
+    }
+}
+
+$readme = Join-Path $root "README.md"
+if (-not (Test-Path -LiteralPath $readme)) { Fail "Missing README.md" } else { Ok "README.md present" }
+
+$skill = Join-Path $root "tools\tiaportal-mcp\skill\SKILL.md"
+if (-not (Test-Path -LiteralPath $skill)) { Fail "Missing SKILL.md" } else { Ok "SKILL.md present" }
+
+$blueprintPath = Join-Path $root "templates\project-blueprints\full_plc_hmi_project.json"
+if (-not (Test-Path -LiteralPath $blueprintPath)) {
+    Fail "Missing blueprint JSON"
+}
+else {
+    try {
+        $blueprint = Get-Content -LiteralPath $blueprintPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        Ok "Blueprint JSON parses"
+        if ($blueprint.requiredBundleFiles) {
+            foreach ($rel in $blueprint.requiredBundleFiles) {
+                $p = Join-Path $root ($rel -replace "/", [IO.Path]::DirectorySeparatorChar)
+                if (-not (Test-Path -LiteralPath $p)) {
+                    Fail "Blueprint requiredBundleFiles missing: $rel"
+                }
+            }
+            Ok ("Blueprint requiredBundleFiles all exist ({0} paths)" -f $blueprint.requiredBundleFiles.Count)
+        }
+    }
+    catch {
+        Fail ("Blueprint JSON invalid: " + $_.Exception.Message)
+    }
+}
+
+$manifestPath = Join-Path $root "manifest\package-manifest.json"
+if (Test-Path -LiteralPath $manifestPath) {
+    try {
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        Ok "package-manifest.json parses"
+        $expectedTools = $manifest.capabilities.mcpToolCount
+        $toolsPath = Join-Path $root "manifest\tools-list.json"
+        if (Test-Path -LiteralPath $toolsPath) {
+            $toolsDoc = Get-Content -LiteralPath $toolsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            $n = @($toolsDoc.tools).Count
+            if ($expectedTools -and ($n -ne $expectedTools)) {
+                $msg = "tools-list tool count ($n) != manifest mcpToolCount ($expectedTools)"
+                if ($Strict) { Fail $msg } else { Write-Host "[WARN] $msg" -ForegroundColor Yellow }
+            }
+            else {
+                Ok ("tools-list count matches manifest ({0})" -f $n)
+            }
+        }
+    }
+    catch {
+        Fail ("manifest JSON invalid: " + $_.Exception.Message)
+    }
+}
+else {
+    Fail "Missing manifest\package-manifest.json"
+}
+
+$plcJsonDir = Join-Path $root "templates\plc\plcbuild-json"
+if (Test-Path -LiteralPath $plcJsonDir) {
+    Get-ChildItem -LiteralPath $plcJsonDir -Filter "*.json" -File | ForEach-Object {
+        try {
+            $null = Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        }
+        catch {
+            Fail ("plcbuild-json invalid: $($_.Name) — " + $_.Exception.Message)
+        }
+    }
+    Ok ("All plcbuild-json files parse ({0} files)" -f @((Get-ChildItem -LiteralPath $plcJsonDir -Filter "*.json" -File)).Count)
+}
+
+$hmiDir = Join-Path $root "templates\hmi"
+if (Test-Path -LiteralPath $hmiDir) {
+    Get-ChildItem -LiteralPath $hmiDir -Filter "*.json" -File | ForEach-Object {
+        try {
+            $null = Get-Content -LiteralPath $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        }
+        catch {
+            Fail ("HMI template JSON invalid: $($_.Name) — " + $_.Exception.Message)
+        }
+    }
+    Ok ("All templates/hmi JSON files parse ({0} files)" -f @((Get-ChildItem -LiteralPath $hmiDir -Filter "*.json" -File)).Count)
+}
+
+# ── Version consistency ───────────────────────────────────────────────────────
+# The release version used to live in four places that nobody diffed against each
+# other, so they drifted: csproj said 2.5.0, the manifest said 2.5.1, and the
+# 2.5.1 fix reached the v21 branch but never master, a tag, or a release. The
+# CHANGELOG's newest entry is the source of truth; everything else must match it.
+$changelog = Join-Path $root "CHANGELOG.md"
+$csproj    = Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.csproj"
+$manifest  = Join-Path $root "manifest\package-manifest.json"
+
+if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -and (Test-Path -LiteralPath $manifest)) {
+    $clText = Get-Content -LiteralPath $changelog -Raw -Encoding UTF8
+    $clMatch = [regex]::Match($clText, '(?m)^##\s*\[(?<v>\d+\.\d+\.\d+)\]')
+    if (-not $clMatch.Success) {
+        Fail "CHANGELOG.md: no '## [x.y.z]' entry found — cannot determine the release version"
+    }
+    else {
+        $version = $clMatch.Groups['v'].Value
+        $versionFailures = $failures.Count
+
+        $csText = Get-Content -LiteralPath $csproj -Raw -Encoding UTF8
+        $csMatch = [regex]::Match($csText, '<AssemblyVersion>(?<v>[^<]+)</AssemblyVersion>')
+        if (-not $csMatch.Success) {
+            Fail "TiaMcpServer.csproj: no <AssemblyVersion> element"
+        }
+        elseif ($csMatch.Groups['v'].Value -ne $version) {
+            Fail ("Version mismatch: CHANGELOG says {0}, TiaMcpServer.csproj AssemblyVersion says {1}" -f $version, $csMatch.Groups['v'].Value)
+        }
+
+        $mf = Get-Content -LiteralPath $manifest -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($mf.bundleVersion -ne $version) {
+            Fail ("Version mismatch: CHANGELOG says {0}, manifest bundleVersion says {1}" -f $version, $mf.bundleVersion)
+        }
+        if ($mf.packageName -notmatch ("v{0}[_-]" -f [regex]::Escape($version))) {
+            Fail ("Version mismatch: manifest packageName '{0}' does not carry v{1}" -f $mf.packageName, $version)
+        }
+
+        # The shipped engine is a binary, so a stale runtime/ is invisible in a diff.
+        $exe = Join-Path $root "runtime\v21\TiaMcpServer.exe"
+        if (Test-Path -LiteralPath $exe) {
+            $fileVersion = (Get-Item -LiteralPath $exe).VersionInfo.FileVersion
+            if ($fileVersion -notlike ("{0}*" -f $version)) {
+                Fail ("Version mismatch: CHANGELOG says {0}, runtime\v21\TiaMcpServer.exe reports {1} — rebuild the public engine" -f $version, $fileVersion)
+            }
+        }
+
+        if ($failures.Count -eq $versionFailures) {
+            Ok ("Version is consistent across CHANGELOG / csproj / manifest / runtime engine ({0})" -f $version)
+        }
+    }
+}
+
+if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-build.json'))) {
+    $build = Get-Content -LiteralPath (Join-Path $root 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($major in @(20,21)) {
+        $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
+        if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
+        if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
+        $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.csproj' }
+        [xml]$projectXml = Get-Content -LiteralPath (Join-Path $root "tools/tiaportal-mcp/src/TiaMcpServer/$projectName") -Raw
+        if ($projectXml.Project.PropertyGroup.FileVersion -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
+    }
+    foreach ($row in $build.runtimeFiles) {
+        $file = Join-Path $root $row.path
+        if (!(Test-Path -LiteralPath $file)) { Fail "Runtime dependency missing: $($row.path)" }
+        else {
+            $stream = [IO.File]::OpenRead($file)
+            $algorithm = [Security.Cryptography.SHA256]::Create()
+            try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','') }
+            finally { $stream.Dispose(); $algorithm.Dispose() }
+            if ($digest -ne $row.sha256) { Fail "Runtime hash differs: $($row.path)" }
+        }
+    }
+    if ($failures.Count -eq 0) { Ok 'Both runtime versions and all build manifest hashes match' }
+}
+
+if ($failures.Count -gt 0) {
+    Write-Host ""
+    Write-Host "Validation FAILED ($($failures.Count) issue(s))." -ForegroundColor Red
+    exit 1
+}
+
+Write-Host ""
+Write-Host "Validation PASSED." -ForegroundColor Green
+exit 0
