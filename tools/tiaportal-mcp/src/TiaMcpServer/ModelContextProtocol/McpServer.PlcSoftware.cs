@@ -3956,13 +3956,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
 
-        [McpServerTool(Name = "GetSoftwareTree"), Description("[L1][PLC-Software] Get the full PLC block/type/external-source hierarchy as ASCII tree. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. 'Program blocks/FBs/FB_Motor'). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy.")]
+        [McpServerTool(Name = "GetSoftwareTree"), Description("[L1][PLC-Software] Get the PLC user block/type hierarchy as ASCII tree; system block groups and external sources are excluded. Inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. 'Program blocks/FBs/FB_Motor'). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy.")]
         public static ResponseSoftwareTree GetSoftwareTree(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
             try
             {
-                var tree = Portal.GetSoftwareTree(softwarePath);
+                var tree = Portal.GetSoftwareTree(softwarePath, out var metadata);
 
                 if (!string.IsNullOrEmpty(tree))
                 {
@@ -3970,11 +3970,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Software tree retrieved from '{softwarePath}'",
                         Tree = "```\n" + tree + "\n```",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = metadata
                     };
                 }
                 else
