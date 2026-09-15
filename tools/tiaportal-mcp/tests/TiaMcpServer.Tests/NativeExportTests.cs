@@ -158,6 +158,8 @@ namespace Siemens.Engineering.HmiUnified
 {
     internal sealed class HmiSoftware
     {
+        public object RuntimeSettings { get; set; } = new TiaMcpServer.Tests.RuntimeSettingsTests.Settings();
+        public List<TiaMcpServer.Tests.RuntimeSettingsTests.Group> ScreenGroups { get; } = new List<TiaMcpServer.Tests.RuntimeSettingsTests.Group>();
         public List<TiaMcpServer.Tests.GraphicSelectionTests.Screen> Screens { get; } = new List<TiaMcpServer.Tests.GraphicSelectionTests.Screen>();
         public bool Disposed;
         public string Name => Disposed ? throw new ObjectDisposedException("project") : "Project_A";

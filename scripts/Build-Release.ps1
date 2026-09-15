@@ -88,11 +88,16 @@ foreach($major in @(20,21)) {
     Run $harness @($exe,'graphic-selection-only',$api) "graphic-selection-v$major.log"
     $graphicSelection=[regex]::Match((Get-Content (Join-Path $out "graphic-selection-v$major.log") -Raw),'COMPLETE: (\d+) graphical selection checks passed')
     if(!$graphicSelection.Success -or [int]$graphicSelection.Groups[1].Value -ne 8){throw 'Graphical selection runtime validation did not report complete success'}
+    Run $harness @($exe,'runtime-settings-only',$api) "runtime-settings-v$major.log"
+    $runtimeSettings=[regex]::Match((Get-Content (Join-Path $out "runtime-settings-v$major.log") -Raw),'COMPLETE: (\d+) runtime settings checks passed')
+    $expectedRuntimeChecks=if($major -eq 21){9}else{8}
+    if(!$runtimeSettings.Success -or [int]$runtimeSettings.Groups[1].Value -ne $expectedRuntimeChecks){throw 'Runtime settings validation did not report complete success'}
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
     $checks["V$major"]['graphicSelectionPassed']=[int]$graphicSelection.Groups[1].Value
+    $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
     $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
     if($major -eq 21){
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'

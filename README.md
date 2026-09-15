@@ -2,6 +2,8 @@
 
 > master 新增的 [图形对象选择范围与坐标对比接口](docs/HMI_GRAPHIC_SELECTION.md) 尚未编入上述正式发布包；原生图形组合关系仍有明确的读取缺口。
 
+> master 同时新增 [HMI Runtime 启动画面和运行设置读写](docs/HMI_RUNTIME_SETTINGS.md)，默认预览并验证写后回读；尚未编入正式发布包或在真实工程执行写入验收。
+
 # TIA Portal MCP Server (V20 + V21 · S7DCL · CLI · read-only online monitoring · one-click config · Doctor)
 
 > Current version: see the Release badge below and [CHANGELOG.md](CHANGELOG.md) (this README no longer hardcodes a version).
