@@ -20,6 +20,9 @@
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.MigrationRead.cs" Link="Portal.MigrationRead.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedGraphicSelection.cs" Link="UnifiedGraphicSelection.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.GraphicSelection.cs" Link="Portal.GraphicSelection.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\McpServer.GraphicSelection.cs" Link="McpServer.GraphicSelection.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\McpServer.MigrationRead.cs" Link="McpServer.MigrationRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationPages.cs" Link="MigrationPages.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationRead.cs" Link="MigrationRead.cs" />

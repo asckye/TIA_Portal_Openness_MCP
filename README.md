@@ -1,5 +1,7 @@
 > Release build / 完整发布包：**v2.7.7（V20 + V21，文件版本 2.7.7.0）**。包含运行程序、原版配置、手册、模板、源码与测试，见 [本版说明](docs/releases/v2.7.7.md)。新接口的真实工程验收尚未完成。每次正式发布均须遵循 [完整打包流程](docs/RELEASE_WORKFLOW.md)。
 
+> master 新增的 [图形对象选择范围与坐标对比接口](docs/HMI_GRAPHIC_SELECTION.md) 尚未编入上述正式发布包；原生图形组合关系仍有明确的读取缺口。
+
 # TIA Portal MCP Server (V20 + V21 · S7DCL · CLI · read-only online monitoring · one-click config · Doctor)
 
 > Current version: see the Release badge below and [CHANGELOG.md](CHANGELOG.md) (this README no longer hardcodes a version).

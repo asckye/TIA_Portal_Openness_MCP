@@ -9,7 +9,7 @@ namespace TiaMcpServer.Siemens
     {
         private readonly MigrationPages migrationPages = new MigrationPages();
         private ResponseMessage MigrationPage(string tool, string softwarePath, string expectedProject, JsonObject scope, string cursor, int pageSize, int budgetMs,
-            Func<object, IEnumerable<JsonObject>> read)
+            Func<object, IEnumerable<JsonObject>> read, Action<Exception>? onError = null, int? expectedCount = null)
         {
             scope["tool"] = tool; scope["softwarePath"] = softwarePath; scope["expectedProject"] = expectedProject;
             JsonObject result;
@@ -27,7 +27,7 @@ namespace TiaMcpServer.Siemens
                     // a page or read an already captured native export from disk.
                     // A live traversal still reports its own handle failure.
                     result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs,
-                        () => throw new InvalidOperationException("A continuation cannot start a new collection."));
+                        () => throw new InvalidOperationException("A continuation cannot start a new collection."), expectedCount);
                 }
                 else
                 {
@@ -35,11 +35,12 @@ namespace TiaMcpServer.Siemens
                     if (projectName != expectedProject) throw new InvalidOperationException("Exact expectedProject mismatch; collection was not started.");
                     var hmi = ResolveHmiSoftwareOrThrow(softwarePath);
                     if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
-                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi));
+                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi), expectedCount);
                 }
             }
             catch (Exception ex)
             {
+                onError?.Invoke(ex);
                 result = new JsonObject { ["schemaVersion"] = 1, ["scope"] = scope.DeepClone(), ["readOnly"] = true,
                     ["apiCallSuccess"] = false, ["dataComplete"] = false, ["traversalComplete"] = false, ["truncated"] = true,
                     ["expectedCount"] = null, ["actualCount"] = 0, ["nextCursor"] = null,
