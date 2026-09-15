@@ -98,6 +98,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Logger?.LogInformation($"Starting export of blocks as documents from '{softwarePath}' to '{exportPath}'");
                 
                 var allBlocks = await Task.Run(() => Portal.GetBlocks(softwarePath, regexName));
+                if (allBlocks == null)
+                    throw new McpException("No project is open; document export did not run.", McpErrorCode.InvalidParams);
                 var totalBlocks = allBlocks?.Count ?? 0;
 
                 if (totalBlocks == 0)

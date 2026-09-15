@@ -88,25 +88,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 var responseList = new List<ResponseTypeInfo>();
+                var read = new PlcListingRead();
                 foreach (var type in list)
-                {
-                    if (type != null)
-                    {
-                        var attributes = Helper.GetAttributeList(type);
-
-                        responseList.Add(new ResponseTypeInfo
-                        {
-                            Name = type.Name,
-                            TypeName = type.GetType().Name,
-                            Namespace = type.Namespace,
-                            IsConsistent = type.IsConsistent,
-                            ModifiedDate = type.ModifiedDate,
-                            IsKnowHowProtected = type.IsKnowHowProtected,
-                            Attributes = attributes,
-                            Description = type.ToString()
-                        });
-                    }
-                }
+                    if (type != null) responseList.Add(Helper.ReadTypeInfo(type, read));
 
                 if (list != null)
                 {
@@ -114,11 +98,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Types with regex '{regexName}' retrieved from '{softwarePath}'",
                         Items = responseList,
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = read.Metadata("PLC user data types and user type groups; system type groups excluded")
                     };
                 }
                 else

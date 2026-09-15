@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$V20ReferenceRoot,
     [Parameter(Mandatory=$true)][string]$V21ReferenceRoot,
     [string]$Dotnet='dotnet',
@@ -67,7 +67,7 @@ foreach($major in @(20,21)) {
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
     Run $harness @($exe,'software-lookup-only') "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
-    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 6){throw 'Software lookup validation did not report complete success'}
+    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 15){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')
@@ -135,3 +135,4 @@ $sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-P
 WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Validate-Bundle.ps1'),'-Strict') 'bundle.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/Package-Release.py. Real TIA acceptance is separate."
+

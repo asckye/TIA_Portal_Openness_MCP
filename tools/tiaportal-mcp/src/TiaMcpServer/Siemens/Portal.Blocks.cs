@@ -189,14 +189,9 @@ namespace TiaMcpServer.Siemens
             // 路径解析不到 ≠ 这个 PLC 里没有块。原来两件事都返回空列表，于是把 softwarePath
             // 写错也得到「成功，0 个块」—— 调用方（尤其是模型）会据此认为 PLC 是空的，
             // 转头去建一堆已经存在的块。真机实测过这条：传 'PLC_NOT_EXIST_XYZ' 得到 success=true。
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware)
-            {
-                throw new PortalException(PortalErrorCode.NotFound,
-                    $"GetBlocks: PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix());
-            }
-
-            var group = plcSoftware.BlockGroup;
+            var plcSoftware = ResolvePlcForListing(softwarePath);
+            var read = new PlcListingRead();
+            var group = read.Required(softwarePath + "/BlockGroup", () => plcSoftware.BlockGroup);
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.OpennessError,
@@ -236,25 +231,10 @@ namespace TiaMcpServer.Siemens
                 return null;
             }
 
-            try
-            {
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is PlcSoftware plcSoftware)
-                {
-                    return plcSoftware.BlockGroup ?? throw new PortalException(PortalErrorCode.OpennessError,
-                        $"PLC '{softwarePath}' resolved, but its BlockGroup is unavailable; the hierarchy was not read.");
-                }
-
-                throw new PortalException(PortalErrorCode.NotFound,
-                    $"PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix());
-            }
-            catch (PortalException) { throw; }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error getting block root group");
-                throw new PortalException(PortalErrorCode.OpennessError,
-                    $"Failed to access the block root for '{softwarePath}' ({ex.GetType().Name}): {ex.Message}", null, ex);
-            }
+            var plcSoftware = ResolvePlcForListing(softwarePath);
+            return new PlcListingRead().Required(softwarePath + "/BlockGroup", () => plcSoftware.BlockGroup)
+                ?? throw new PortalException(PortalErrorCode.OpennessError,
+                    $"PLC '{softwarePath}' resolved, but its BlockGroup is unavailable; hierarchy not read.");
         }
 
         /// <summary>同 GetBlocks：没打开项目时返回 null，别把「没查成」伪装成「确实没有」。</summary>
@@ -270,14 +250,8 @@ namespace TiaMcpServer.Siemens
             var list = new List<PlcType>();
 
             // 与 GetBlocks 同因：路径解析不到 ≠ 这个 PLC 没有 UDT。
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware)
-            {
-                throw new PortalException(PortalErrorCode.NotFound,
-                    $"GetTypes: PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix());
-            }
-
-            var group = plcSoftware.TypeGroup;
+            var plcSoftware = ResolvePlcForListing(softwarePath);
+            var group = new PlcListingRead().Required(softwarePath + "/TypeGroup", () => plcSoftware.TypeGroup);
             if (group == null)
             {
                 throw new PortalException(PortalErrorCode.OpennessError,
@@ -1054,16 +1028,9 @@ namespace TiaMcpServer.Siemens
             var exportList = new List<PlcBlock>();
             var failures = new List<string>();
 
-            PlcBlock[] list;
-            try
-            {
-                list = (GetBlocks(softwarePath, regexName) is { } got ? got.ToArray() : []);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, $"Failed to retrieve block list for {softwarePath}");
-                return exportList;
-            }
+            // Resolution/traversal failures must propagate, never appear as a successful empty export.
+            var list = GetBlocks(softwarePath, regexName)?.ToArray()
+                ?? throw new PortalException(PortalErrorCode.InvalidState, "No project is open; document export did not run.");
 
             for (int i = 0; i < list.Count(); i++)
             {

@@ -331,8 +331,12 @@ namespace TiaMcpServer.Siemens
 
         #region GetSoftwareTree ...
 
-        public string GetSoftwareTree(string softwarePath)
+        public string GetSoftwareTree(string softwarePath) => GetSoftwareTree(softwarePath, out _);
+
+        public string GetSoftwareTree(string softwarePath, out JsonObject metadata)
         {
+            var read = new PlcListingRead();
+            metadata = new JsonObject();
             _logger?.LogInformation("Getting software tree for path: {SoftwarePath}", softwarePath);
 
             if (IsProjectNull())
@@ -348,8 +352,8 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is PlcSoftware plcSoftware)
+                var plcSoftware = ResolvePlcForListing(softwarePath);
+                if (plcSoftware != null)
                 {
                     StringBuilder sb = new();
                     sb.AppendLine($"{plcSoftware.Name} [PLC Software]");
@@ -357,23 +361,26 @@ namespace TiaMcpServer.Siemens
                     var ancestorStates = new List<bool>();
                     var sections = new List<Action>();
                     
-                    var hasBlocks = plcSoftware.BlockGroup != null;
-                    var hasTypes = plcSoftware.TypeGroup != null;
+                    var rootBlocks = read.Required(softwarePath + "/BlockGroup", () => plcSoftware.BlockGroup);
+                    if (rootBlocks == null) throw new PortalException(PortalErrorCode.OpennessError, "PLC resolved but BlockGroup is unavailable.");
+                    var hasBlocks = true;
+                    var rootTypes = read.Required(softwarePath + "/TypeGroup", () => plcSoftware.TypeGroup);
+                    var hasTypes = rootTypes != null;
                     
                     // Add blocks section
                     if (hasBlocks)
                     {
-                        var blockGroup = plcSoftware.BlockGroup;
+                        var blockGroup = rootBlocks;
                         if (blockGroup != null)
                         {
-                            sections.Add(() => GetSoftwareTreeBlockGroup(sb, blockGroup, ancestorStates, "Program blocks", !hasTypes));
+                            sections.Add(() => GetSoftwareTreeBlockGroup(sb, blockGroup, ancestorStates, "Program blocks", !hasTypes, read));
                         }
                     }
                     
                     // Add types section
                     if (hasTypes)
                     {
-                        var typeGroup = plcSoftware.TypeGroup;
+                        var typeGroup = rootTypes;
                         if (typeGroup != null)
                         {
                             sections.Add(() => GetSoftwareTreeTypeGroup(sb, typeGroup, ancestorStates, "PLC data types", true));
@@ -387,6 +394,7 @@ namespace TiaMcpServer.Siemens
                         sections[i]();
                     }
 
+                    metadata = read.Metadata(softwarePath + ": user blocks and PLC types; system block groups and external sources excluded");
                     return sb.ToString();
                 }
                 else
@@ -414,7 +422,7 @@ namespace TiaMcpServer.Siemens
             }
         }
         
-        private void GetSoftwareTreeBlockGroup(StringBuilder sb, PlcBlockGroup blockGroup, List<bool> ancestorStates, string groupLabel, bool isLastSection)
+        private void GetSoftwareTreeBlockGroup(StringBuilder sb, PlcBlockGroup blockGroup, List<bool> ancestorStates, string groupLabel, bool isLastSection, PlcListingRead read)
         {
             sb.AppendLine($"{GetTreePrefix(ancestorStates, isLastSection)}{groupLabel}"); // [Collection]
             var newAncestorStates = new List<bool>(ancestorStates) { isLastSection };
@@ -434,7 +442,7 @@ namespace TiaMcpServer.Siemens
                     ? "DB"
                     : block.GetType().Name;
 
-                sb.AppendLine($"{GetTreePrefix(newAncestorStates, isLastBlock)}{block.Name} [{blockTypeName}{block.Number}, {block.ProgrammingLanguage}]");
+                sb.AppendLine($"{GetTreePrefix(newAncestorStates, isLastBlock)}{block.Name} [{blockTypeName}{read.Optional<string?>(block.Name + "/Number", () => block.Number.ToString(), null) ?? "?"}, {read.Optional<string?>(block.Name + "/ProgrammingLanguage", () => block.ProgrammingLanguage.ToString(), null) ?? "unavailable"}]");
             }
             
             // Then, add all subgroups recursively
@@ -446,11 +454,11 @@ namespace TiaMcpServer.Siemens
                 sb.AppendLine($"{GetTreePrefix(newAncestorStates, isLastGroup)}{subGroup.Name}"); // [Block Group]
 
                 var groupAncestorStates = new List<bool>(newAncestorStates) { isLastGroup };
-                GetSoftwareTreeBlockGroupRecursive(sb, subGroup, groupAncestorStates);
+                GetSoftwareTreeBlockGroupRecursive(sb, subGroup, groupAncestorStates, read);
             }
         }
         
-        private void GetSoftwareTreeBlockGroupRecursive(StringBuilder sb, PlcBlockGroup blockGroup, List<bool> ancestorStates)
+        private void GetSoftwareTreeBlockGroupRecursive(StringBuilder sb, PlcBlockGroup blockGroup, List<bool> ancestorStates, PlcListingRead read)
         {
             // Get blocks in this group
             var blocks = blockGroup.Blocks.ToList();
@@ -467,7 +475,7 @@ namespace TiaMcpServer.Siemens
                     ? "DB"
                     : block.GetType().Name;
 
-                sb.AppendLine($"{GetTreePrefix(ancestorStates, isLastBlock)}{block.Name} [{blockTypeName}{block.Number}, {block.ProgrammingLanguage}]");
+                sb.AppendLine($"{GetTreePrefix(ancestorStates, isLastBlock)}{block.Name} [{blockTypeName}{read.Optional<string?>(block.Name + "/Number", () => block.Number.ToString(), null) ?? "?"}, {read.Optional<string?>(block.Name + "/ProgrammingLanguage", () => block.ProgrammingLanguage.ToString(), null) ?? "unavailable"}]");
             }
             
             // Then, add all subgroups recursively
@@ -479,7 +487,7 @@ namespace TiaMcpServer.Siemens
                 sb.AppendLine($"{GetTreePrefix(ancestorStates, isLastGroup)}{subGroup.Name}"); // [Block Group]
 
                 var groupAncestorStates = new List<bool>(ancestorStates) { isLastGroup };
-                GetSoftwareTreeBlockGroupRecursive(sb, subGroup, groupAncestorStates);
+                GetSoftwareTreeBlockGroupRecursive(sb, subGroup, groupAncestorStates, read);
             }
         }
         

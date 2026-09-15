@@ -69,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetBlocks"), Description("[L2][PLC-Software] Get a flat list of all blocks in PLC software. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language.")]
+        [McpServerTool(Name = "GetBlocks"), Description("[L2][PLC-Software] Get a flat list of user-group blocks in PLC software. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language.")]
         public static ResponseBlocks GetBlocks(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
@@ -90,29 +90,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         McpErrorCode.InvalidParams);
                 }
 
+                var read = new PlcListingRead();
                 var responseList = new List<ResponseBlockInfo>();
-                foreach (var block in list)
-                {
-                    if (block != null)
-                    {
-                        var attributes = Helper.GetAttributeList(block);
-
-                        responseList.Add(new ResponseBlockInfo
-                        {
-                            Name = block.Name,
-                            TypeName = block.GetType().Name,
-                            Namespace = block.Namespace,
-                            ProgrammingLanguage = Enum.GetName(typeof(ProgrammingLanguage), block.ProgrammingLanguage),
-                            MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
-                            IsConsistent = block.IsConsistent,
-                            HeaderName = block.HeaderName,
-                            ModifiedDate = block.ModifiedDate,
-                            IsKnowHowProtected = block.IsKnowHowProtected,
-                            Attributes = attributes,
-                            Description = block.ToString()
-                        });
-                    }
-                }
+                foreach (var block in list) responseList.Add(Helper.ReadBlockInfo(block, read));
 
                 if (list != null)
                 {
@@ -120,11 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Blocks with regex '{regexName}' retrieved from '{softwarePath}'",
                         Items = responseList,
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = read.Metadata(softwarePath + ": user block groups; system block groups excluded")
                     };
                 }
                 else
@@ -138,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetBlocksWithHierarchy"), Description("[L2][PLC-Software]Get a list of all blocks with their group hierarchy from the plc software.")]
+        [McpServerTool(Name = "GetBlocksWithHierarchy"), Description("[L2][PLC-Software]Get user blocks with their group hierarchy. System block groups are excluded; inspect meta.dataComplete for unreadable attributes.")]
         public static ResponseBlocksWithHierarchy GetBlocksWithHierarchy(
         [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
@@ -147,16 +123,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 var rootGroup = Portal.GetBlockRootGroup(softwarePath);
                 if (rootGroup != null)
                 {
-                    var hierarchy = Helper.BuildBlockHierarchy(rootGroup);
+                    var read = new PlcListingRead();
+                    var hierarchy = read.Required(softwarePath + "/BlockGroup/Hierarchy", () => Helper.BuildBlockHierarchy(rootGroup, read));
                     return new ResponseBlocksWithHierarchy
                     {
                         Message = $"Block hierarchy retrieved from '{softwarePath}'",
                         Root = hierarchy,
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = read.Metadata(softwarePath + ": user block groups; system block groups excluded")
                     };
                 }
                 else
