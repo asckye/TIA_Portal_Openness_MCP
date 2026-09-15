@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.8_20260914",
-    "generatedAt":  "2026-09-15T06:29:48.5747043+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.9_20260915",
+    "generatedAt":  "2026-09-15T10:27:11.8967167+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.8.0",
-    "exeSha256":  "3ccc3ddc4353ac1725d299ab2d2279fc07111784333c5e22df435b239872391f",
+    "fileVersion":  "2.7.9.0",
+    "exeSha256":  "4aeda8157152cd109426a95b3cc7a07bd544acd67d9d6e7caf5b1da653e883b4",
     "toolCount":  244,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "tools":  [
@@ -67,7 +67,7 @@
                                          "softwarePath",
                                          "regexName"
                                      ],
-                      "description":  "[L2][PLC-Software] Get a flat list of all blocks in PLC software. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language."
+                      "description":  "[L2][PLC-Software] Get a flat list of user-group blocks in PLC software. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language."
                   },
                   {
                       "name":  "GetBlockInfo",
@@ -323,7 +323,7 @@
                       "parameters":  [
                                          "softwarePath"
                                      ],
-                      "description":  "[L2][PLC-Software]Get a list of all blocks with their group hierarchy from the plc software."
+                      "description":  "[L2][PLC-Software]Get user blocks with their group hierarchy. System block groups are excluded; inspect meta.dataComplete for unreadable attributes."
                   },
                   {
                       "name":  "ImportBlocksFromDirectory",
@@ -2254,7 +2254,7 @@
                       "parameters":  [
                                          "softwarePath"
                                      ],
-                      "description":  "[L1][PLC-Software] Get the full PLC block/type/external-source hierarchy as ASCII tree. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. \u0027PLC_1\u0027). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. \u0027Program blocks/FBs/FB_Motor\u0027). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy."
+                      "description":  "[L1][PLC-Software] Get the PLC user block/type hierarchy as ASCII tree; system block groups and external sources are excluded. Inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. \u0027PLC_1\u0027). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. \u0027Program blocks/FBs/FB_Motor\u0027). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy."
                   },
                   {
                       "name":  "AttachToOpenProject",
