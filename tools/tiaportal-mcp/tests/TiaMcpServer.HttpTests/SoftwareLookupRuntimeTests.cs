@@ -12,6 +12,12 @@ internal static class SoftwareLookupRuntimeTests
         public List<object> Children = new List<object>();
         public object BlockGroup => throw new Exception("Unexpected block access");
     }
+    public sealed class BlockGroup
+    {
+        public string Name = "Program blocks";
+        public List<BlockGroup> Groups = new List<BlockGroup>();
+        public List<string> Blocks = new List<string>();
+    }
     internal static void Run(Assembly server, Action<bool, string> check)
     {
         var lookup = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!
@@ -58,6 +64,33 @@ internal static class SoftwareLookupRuntimeTests
         var match = server.GetType("TiaMcpServer.Siemens.Guard", true)!.GetMethod("MatchPlcName")!;
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally before single-PLC fallback");
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" })! == "+S1-K1", "EXE shared single-PLC fallback resolves station alias");
+        var findBlock = server.GetType("TiaMcpServer.Siemens.PlcBlockLookup", true)!.GetMethod("Find", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(BlockGroup), typeof(string));
+        var root = new BlockGroup();
+        root.Groups.Add(new BlockGroup { Name = "03_OPMode", Blocks = new List<string> { "OPMODE01_FC" } });
+        var selectBlock = portal.GetMethod("ResolveSingleByName", BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(string));
+        var uninitialized = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(portal);
+        // Avoid constructing/connecting a Portal; initialize the pure name selector's only field.
+        portal.GetField("_regexChars", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(uninitialized,
+            new[] { '.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|' });
+        string? FindBlock(string path) => (string?)findBlock.Invoke(null, new object[] { root, path,
+            new Func<BlockGroup,string>(g => g.Name), new Func<BlockGroup,IEnumerable<BlockGroup>>(g => g.Groups),
+            new Func<BlockGroup,IEnumerable<string>>(g => g.Blocks),
+            new Func<IEnumerable<string>,string,string?>((items, name) => (string?)selectBlock.Invoke(uninitialized, new object[] {items, name, new Func<string,string>(x => x), "block"})) });
+        foreach (var path in new[] { "03_OPMode/OPMODE01_FC", "Program blocks/03_OPMode/OPMODE01_FC", "程序块/03_OPMode/OPMODE01_FC", @"03_OPMode\OPMODE01_FC", "OPMODE01_FC" })
+            check(FindBlock(path) == "OPMODE01_FC", "EXE resolves grouped block: " + path);
+        check(FindBlock("Wrong/OPMODE01_FC") == null, "EXE does not discard incorrect qualified group");
+        check(FindBlock("Program blocks/OPMODE01_FC") == null, "EXE explicit root does not silently search descendants");
+        root.Groups.Add(new BlockGroup { Name = "Other", Blocks = new List<string> { "OPMODE01_FC", "FB_Motor.V2" } });
+        bool duplicateBlock = false;
+        try { FindBlock("OPMODE01_FC"); } catch (TargetInvocationException ex) { duplicateBlock = ex.ToString().Contains("Ambiguous block"); }
+        check(duplicateBlock, "EXE rejects ambiguous bare block names");
+        check(FindBlock("03_OPMode/OPMODE01_FC") == "OPMODE01_FC", "EXE qualified block remains unique with duplicate elsewhere");
+        check(FindBlock("FB_Motor.V2") == "FB_Motor.V2", "EXE block dot retains literal name priority");
+        var getBlockIl = portal.GetMethod("GetBlock")!.GetMethodBody()!.GetILAsByteArray()!;
+        int rootToken = portal.GetMethod("GetBlockRootGroup")!.MetadataToken;
+        bool sharedRoot = false;
+        for (int i=0; i+4<getBlockIl.Length; i++) if ((getBlockIl[i]==0x28 || getBlockIl[i]==0x6f) && BitConverter.ToInt32(getBlockIl,i+1)==rootToken) sharedRoot=true;
+        check(sharedRoot, "EXE single-block entry uses same root resolver as listings");
         var rt = server.GetType("TiaMcpServer.Siemens.PlcListingRead", true)!;
         var reader = Activator.CreateInstance(rt, true)!;
         var optional = rt.GetMethod("Optional", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));

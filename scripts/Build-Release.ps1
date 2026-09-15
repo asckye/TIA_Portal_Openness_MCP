@@ -67,7 +67,7 @@ foreach($major in @(20,21)) {
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
-    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 18){throw 'Software lookup/listing validation did not report complete success'}
+    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 29){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')

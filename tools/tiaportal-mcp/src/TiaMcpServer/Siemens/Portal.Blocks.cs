@@ -54,11 +54,10 @@ namespace TiaMcpServer.Siemens
         private T? ResolveSingleByName<T>(IEnumerable<T> items, string name, Func<T, string> nameOf, string kind)
             where T : class
         {
-            var exact = items.FirstOrDefault(i => nameOf(i).Equals(name, StringComparison.OrdinalIgnoreCase));
-            if (exact != null)
-            {
-                return exact;
-            }
+            var exact = items.Where(i => nameOf(i).Equals(name, StringComparison.OrdinalIgnoreCase)).Take(2).ToList();
+            if (exact.Count > 1) throw new PortalException(PortalErrorCode.InvalidParams,
+                $"Ambiguous {kind} name '{name}': use its group-qualified path.");
+            if (exact.Count == 1) return exact[0];
 
             if (name.IndexOfAny(_regexChars) < 0)
             {
@@ -102,25 +101,12 @@ namespace TiaMcpServer.Siemens
                 return null;
             }
 
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is PlcSoftware plcSoftware)
-            {
-                var blockGroup = plcSoftware?.BlockGroup;
-
-                if (blockGroup != null)
-                {
-                    var path = blockPath.Contains("/") ? blockPath.Substring(0, blockPath.LastIndexOf("/")) : string.Empty;
-                    var regexName = blockPath.Contains("/") ? blockPath.Substring(blockPath.LastIndexOf("/") + 1) : blockPath;
-
-                    var group = GetPlcBlockGroupByPath(softwarePath, path);
-                    if (group != null)
-                    {
-                        return ResolveSingleByName(group.Blocks.Cast<PlcBlock>(), regexName, b => b.Name, "block");
-                    }
-                }
-            }
-
-            return null;
+            var root = GetBlockRootGroup(softwarePath);
+            if (root == null) return null;
+            return new PlcListingRead().Required(softwarePath + "/BlockGroup/" + blockPath,
+                () => PlcBlockLookup.Find<PlcBlockGroup, PlcBlock>(root, blockPath,
+                    g => g.Name, g => g.Groups, g => g.Blocks,
+                    (items, name) => ResolveSingleByName(items, name, b => b.Name, "block")));
         }
 
         public PlcType? GetType(string softwarePath, string typePath)
