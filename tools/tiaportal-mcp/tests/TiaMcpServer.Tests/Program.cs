@@ -52,6 +52,7 @@ namespace TiaMcpServer.Tests
             UnifiedGlobalScriptEditTests.Run(Check);
             GraphicSelectionTests.Run(Check);
             RuntimeSettingsTests.Run(Check);
+            SoftwareContainerLookupTests.Run(Check);
             UnifiedMultilingualTextTests.Run(Check);
             Console.WriteLine("== 「执行 JSON 检查」不许是复述已知事实的同义反复 ==");
             HmiTemplateLayoutExecutionCheckTests.Run(Check);

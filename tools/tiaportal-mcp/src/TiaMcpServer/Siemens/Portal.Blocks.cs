@@ -241,15 +241,20 @@ namespace TiaMcpServer.Siemens
                 var softwareContainer = GetSoftwareContainer(softwarePath);
                 if (softwareContainer?.Software is PlcSoftware plcSoftware)
                 {
-                    return plcSoftware.BlockGroup;
+                    return plcSoftware.BlockGroup ?? throw new PortalException(PortalErrorCode.OpennessError,
+                        $"PLC '{softwarePath}' resolved, but its BlockGroup is unavailable; the hierarchy was not read.");
                 }
+
+                throw new PortalException(PortalErrorCode.NotFound,
+                    $"PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix());
             }
+            catch (PortalException) { throw; }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error getting block root group");
+                throw new PortalException(PortalErrorCode.OpennessError,
+                    $"Failed to access the block root for '{softwarePath}' ({ex.GetType().Name}): {ex.Message}", null, ex);
             }
-
-            return null;
         }
 
         /// <summary>同 GetBlocks：没打开项目时返回 null，别把「没查成」伪装成「确实没有」。</summary>

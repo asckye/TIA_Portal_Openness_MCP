@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- 修复设备分组内 PLC 的裸软件名称解析：`+S1-K1` 等名称按字面递归匹配，与软件信息接口使用同一基础解析入口；重名明确报歧义，不采用模糊匹配或单 PLC 猜测。保留硬件遍历和块根组访问的异常，避免误报软件/程序块不存在。尚待新版在用户工程上验证。
 - 新增 `ReadUnifiedRuntimeSettings`、`UpdateUnifiedRuntimeSettings`：读取和修改 Unified HMI 启动画面及受支持的根运行设置。默认预览，验证画面完整路径及名称唯一性，使用并发校验令牌并逐项及最终回读；不自动保存、编译、下载或重启。见 [接口说明](docs/HMI_RUNTIME_SETTINGS.md)。
 - 新增 `ReadUnifiedGraphicSelection`：通过准确对象名称列表整体定位选择范围，分页读取原始坐标、尺寸、一层工程归属和可用的关系元数据；句柄失效后停止并阻止后续读取。
 - 新增离线 `CompareUnifiedGraphicSelections`：核对前后完整分页证据并报告各对象坐标变化，拒绝缺页、缺字段和范围混用。

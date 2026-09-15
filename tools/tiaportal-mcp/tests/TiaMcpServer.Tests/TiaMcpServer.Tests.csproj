@@ -17,6 +17,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal.MigrationRead.cs" Link="Portal.MigrationRead.cs" />

@@ -662,6 +662,12 @@ namespace TiaMcpServer.Siemens
                 return null;
             }
 
+            // A bare name is also emitted by GetAllPlcSoftware/GetSoftwareInfo. Resolve it
+            // across ALL device groups, literally and uniquely, before reading any block group.
+            // Do not use the fuzzy single-PLC fallback here: write tools share this resolver.
+            if (!string.IsNullOrEmpty(softwarePath) && softwarePath.IndexOf('/') < 0)
+                return ResolveBareSoftwareContainer(softwarePath);
+
             string[] pathSegments = softwarePath.Split('/');
             int index = 0;
 

@@ -65,6 +65,9 @@ foreach($major in @(20,21)) {
     $payload | Copy-Item -Destination $runtime -Force
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
+    Run $harness @($exe,'software-lookup-only') "software-lookup-v$major.log"
+    $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
+    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 6){throw 'Software lookup validation did not report complete success'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')
@@ -95,6 +98,7 @@ foreach($major in @(20,21)) {
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
+    $checks["V$major"]['softwareLookupPassed']=[int]$softwareLookup.Groups[1].Value
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
     $checks["V$major"]['graphicSelectionPassed']=[int]$graphicSelection.Groups[1].Value
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
