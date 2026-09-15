@@ -38,6 +38,26 @@ internal static class SoftwareLookupRuntimeTests
         try { Resolve("+S1-K1", new object[] { group }, 1); }
         catch (TargetInvocationException ex) { limited = ex.InnerException?.GetType().GetProperty("Code")?.GetValue(ex.InnerException)?.ToString() == "OpennessError"; }
         check(limited, "actual EXE reports incomplete bounded scan as error");
+        var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
+        var listing = portal.GetMethod("ResolvePlcForListing", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        // Required receives a compiler-generated delegate. Check the delegate target's IL too.
+        var targets = new List<MethodInfo>(portal.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
+        foreach (var nested in portal.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Public))
+            targets.AddRange(nested.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
+        int token = portal.GetMethod("GetPlcSoftware", new[] { typeof(string) })!.MetadataToken;
+        bool shared = false;
+        foreach (var method in targets)
+        {
+            if (!method.Name.Contains("ResolvePlcForListing")) continue;
+            var il = method.GetMethodBody()?.GetILAsByteArray();
+            if (il == null) continue;
+            for (int i = 0; i + 4 < il.Length; i++)
+                if ((il[i] == 0x28 || il[i] == 0x6f) && BitConverter.ToInt32(il, i + 1) == token) shared = true;
+        }
+        check(shared, "EXE listing calls shared GetPlcSoftware resolver, including enumeration fallback");
+        var match = server.GetType("TiaMcpServer.Siemens.Guard", true)!.GetMethod("MatchPlcName")!;
+        check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally before single-PLC fallback");
+        check((string)match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" })! == "+S1-K1", "EXE shared single-PLC fallback resolves station alias");
         var rt = server.GetType("TiaMcpServer.Siemens.PlcListingRead", true)!;
         var reader = Activator.CreateInstance(rt, true)!;
         var optional = rt.GetMethod("Optional", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));

@@ -1,5 +1,10 @@
 # Change Log
 
+## [2.7.10] - 2026-09-15
+
+- PLC 列块、列树、列类型及批量导出改为复用 GetSoftwareInfo/GetPlcTagTables 的 GetPlcSoftware 入口，恢复精确解析未命中时的工程级 PLC 枚举与名称匹配后备路径。
+- 保留 2.7.9 的属性完整性和根组错误诊断；本地测试不能代替用户分组 ET 200SP F-CPU 的实际回归。
+
 ## [2.7.9] - 2026-09-15
 
 - PLC 列块/列树及 GetTypes 使用每次调用的新鲜精确解析，避免依赖旧 SoftwareContainer 缓存；解析、Software、BlockGroup/TypeGroup 阶段分别诊断。

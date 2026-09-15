@@ -1,4 +1,4 @@
-> Release build / 完整发布包：**v2.7.9（V20 + V21，文件版本 2.7.9.0）**。包含运行程序、原版配置、手册、模板、源码与测试，见 [本版说明](docs/releases/v2.7.9.md)。新接口的真实工程验收尚未完成。每次正式发布均须遵循 [完整打包流程](docs/RELEASE_WORKFLOW.md)。
+> Release build / 完整发布包：**v2.7.10（V20 + V21，文件版本 2.7.10.0）**。包含运行程序、原版配置、手册、模板、源码与测试，见 [本版说明](docs/releases/v2.7.10.md)。新接口的真实工程验收尚未完成。每次正式发布均须遵循 [完整打包流程](docs/RELEASE_WORKFLOW.md)。
 
 # TIA Portal MCP 完整交付包（V20+V21 + S7DCL + CLI + 在线只读监控 + 一键配置 + Doctor 体检）
 
