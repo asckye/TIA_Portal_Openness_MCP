@@ -91,6 +91,25 @@ internal static class SoftwareLookupRuntimeTests
         bool sharedRoot = false;
         for (int i=0; i+4<getBlockIl.Length; i++) if ((getBlockIl[i]==0x28 || getBlockIl[i]==0x6f) && BitConverter.ToInt32(getBlockIl,i+1)==rootToken) sharedRoot=true;
         check(sharedRoot, "EXE single-block entry uses same root resolver as listings");
+        var exactMatch = server.GetType("TiaMcpServer.Siemens.ExactSoftwareMatch", true)!.GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(Node));
+        var target = new Node { SoftwareName = "+S1-K1" };
+        object? Select(IEnumerable<Node> nodes, string name) => exactMatch.Invoke(null, new object[] { nodes, name, new Func<Node,string>(n => n.SoftwareName) });
+        check(ReferenceEquals(Select(new[] {target}, "+S1-K1"), target), "EXE strict container fallback resolves literal IEC software name");
+        check(Select(new[] {target}, "WrongPLC") == null, "EXE write resolver refuses single-PLC guessing");
+        check(Select(new[] {target}, "S1") == null && Select(new[] {target}, ".*") == null, "EXE write resolver rejects substring and regex guesses");
+        bool duplicateSoftware = false;
+        try { Select(new[] {target, new Node { SoftwareName = "+S1-K1" }}, "+S1-K1"); }
+        catch (TargetInvocationException ex) { duplicateSoftware = ex.ToString().Contains("Ambiguous software"); }
+        check(duplicateSoftware, "EXE write resolver rejects duplicate software names before selection");
+        IEnumerable<Node> BrokenScan() { yield return target; throw new InvalidOperationException("scan interrupted"); }
+        bool scanStopped = false;
+        try { Select(BrokenScan(), "+S1-K1"); } catch (TargetInvocationException ex) { scanStopped = ex.ToString().Contains("scan interrupted"); }
+        check(scanStopped, "EXE write resolver never returns early before uniqueness scan completes");
+        var bareIl = portal.GetMethod("ResolveBareSoftwareContainer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetMethodBody()!.GetILAsByteArray()!;
+        int enumerationToken = portal.GetMethod("EnumerateSoftwareContainersForExactLookup", BindingFlags.Instance | BindingFlags.NonPublic)!.MetadataToken;
+        bool wiredFallback = false;
+        for (int i=0;i+4<bareIl.Length;i++) if ((bareIl[i]==0x28 || bareIl[i]==0x6f) && BitConverter.ToInt32(bareIl,i+1)==enumerationToken) wiredFallback=true;
+        check(wiredFallback, "EXE shared container resolver includes typed group/device enumeration fallback");
         var rt = server.GetType("TiaMcpServer.Siemens.PlcListingRead", true)!;
         var reader = Activator.CreateInstance(rt, true)!;
         var optional = rt.GetMethod("Optional", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));
