@@ -17,6 +17,10 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringGroupOperations.cs" Link="EngineeringGroupOperations.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringScalarProperties.cs" Link="EngineeringScalarProperties.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\WatchTableImportValidation.cs" Link="WatchTableImportValidation.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcListingRead.cs" Link="PlcListingRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />

@@ -14,6 +14,21 @@ namespace TiaMcpServer.ModelContextProtocol
     //     import round-trip, because Openness has no block-reparent API).
     public static partial class McpServer
     {
+        [McpServerTool(Name = "CreatePlcTypeGroup"), Description("[L2][PLC-Software][WRITE] Preview or create nested PLC data type (UDT) user groups. Exact groupPath relative to PLC data types, e.g. Common/Motors. Creates missing parents and reuses existing groups. dryRun defaults to true; pass false to create. Uses exact PLC software resolution. Does not create a UDT, save, compile or download. Errors report already-created parents; no automatic rollback.")]
+        public static ResponseMessage CreatePlcTypeGroup(string softwarePath, string groupPath, bool dryRun = true)
+        {
+            try
+            {
+                return new ResponseMessage
+                {
+                    Message = dryRun ? "PLC type group creation preview; nothing changed." : "PLC type group path ready.",
+                    Meta = Portal.CreatePlcTypeGroup(softwarePath, groupPath, dryRun)
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            { throw new McpException("CreatePlcTypeGroup failed: " + ex.Message, ex, McpErrorCode.InternalError); }
+        }
+
         [McpServerTool(Name="DeleteEmptyPlcBlockGroup"), Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, save, compile, download or automatic GoOffline.")]
         public static ResponseMessage DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
         {

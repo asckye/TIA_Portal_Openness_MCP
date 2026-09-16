@@ -68,6 +68,10 @@ foreach($major in @(20,21)) {
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
+    Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
+    $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
+    $expectedEngineeringChecks=if($major -eq 21){51}else{50}
+    if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')
@@ -99,6 +103,9 @@ foreach($major in @(20,21)) {
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
     $checks["V$major"]['softwareLookupPassed']=[int]$softwareLookup.Groups[1].Value
+    $checks["V$major"]['engineeringApiShapePassed']=[int]$engineeringApi.Groups[1].Value
+    $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
+    $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
     $checks["V$major"]['graphicSelectionPassed']=[int]$graphicSelection.Groups[1].Value
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value

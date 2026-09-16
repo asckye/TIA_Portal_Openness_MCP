@@ -45,6 +45,8 @@ namespace TiaMcpServer.Tests
 
         private static int Main()
         {
+            PlcTypeGroupCreationTests.Run(Check);
+            EngineeringOperationsTests.Run(Check);
             MigrationReadTests.Run(Check);
             EngineeringDefectTests.Run(Check);
             HmiInspectionTests.Run(Check);

@@ -321,12 +321,17 @@ internal static class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
-            if(args.Length >= 3 && args[1] == "software-lookup-only") {
+            if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only")) {
                 string api=Path.GetFullPath(args[2]);
                 AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
                     string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
                     return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
                 };
+                if(args[1] == "engineering-api-only") {
+                    EngineeringApiShapeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                    Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
+                    return 0;
+                }
                 SoftwareLookupRuntimeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
                 Console.WriteLine("COMPLETE: " + Passed + " software lookup checks passed");
                 return 0;
