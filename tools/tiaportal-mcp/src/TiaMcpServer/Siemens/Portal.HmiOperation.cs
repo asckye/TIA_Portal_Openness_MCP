@@ -27,7 +27,7 @@ namespace TiaMcpServer.Siemens
             meta["recovery"] = "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. "
                 + "Only an explicit successful AttachToOpenProject clears the snapshot-read block; it does not establish root cause or fix TIA.";
         }
-        private ResponseMessage RunHmiStepTool(string toolName, Func<JsonObject, string> action)
+        private ResponseMessage RunHmiStepTool(string toolName, Func<JsonObject, string> action, bool requiresProject = true)
         {
             var meta = new JsonObject
             {
@@ -46,7 +46,7 @@ namespace TiaMcpServer.Siemens
                     meta["lastFailure"] = _hmiReadFault.DeepClone();
                     return new ResponseMessage { Message = "HMI operation blocked after a connection failure. Inspect logs before explicitly rebinding; no TIA call attempted.", Meta = meta };
                 }
-                if (IsProjectNull())
+                if (requiresProject && IsProjectNull())
                 {
                     meta["error"] = "Project is null";
                     meta["status"] = "InvalidState";

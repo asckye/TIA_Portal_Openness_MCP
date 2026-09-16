@@ -35,7 +35,8 @@ namespace TiaMcpServer.Siemens
         private static string UnifiedCollection(string category) => category switch {
             "alarmClasses" => "AlarmClasses", "discreteAlarms" => "DiscreteAlarms", "analogAlarms" => "AnalogAlarms",
             "alarmLogs" => "AlarmLogs", "dataLogs" => "DataLogs", "textLists" => "HmiTextLists", "graphicLists" => "HmiGraphicLists",
-            _ => throw new ArgumentException("category must be alarmClasses, discreteAlarms, analogAlarms, alarmLogs, dataLogs, textLists or graphicLists.") };
+            "systemTags" => "SystemTags", "systemTextLists" => "HmiSystemTextLists", "auditTrails" => "AuditTrails", "opcUaAlarmTypes" => "OpcUaAlarmTypes",
+            _ => throw new ArgumentException("Unknown Unified collection category.") };
         public ResponseMessage ReadUnifiedEngineeringObjects(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
             => RunHmiStepTool("ReadUnifiedEngineeringObjects", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
@@ -56,6 +57,7 @@ namespace TiaMcpServer.Siemens
             string propertiesJson = "{}", bool dryRun = true)
             => RunHmiStepTool("ManageUnifiedEngineeringObject", meta => {
                 if (action != "create" && action != "update" && action != "delete") throw new ArgumentException("action must be create, update or delete.");
+                if (category == "systemTags" || category == "systemTextLists") throw new NotSupportedException("System collections are read-only in this adapter.");
                 if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Exact name required.");
                 var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (changes.ContainsKey("Name")) throw new ArgumentException("Name changes are not supported here; supply the exact name parameter.");

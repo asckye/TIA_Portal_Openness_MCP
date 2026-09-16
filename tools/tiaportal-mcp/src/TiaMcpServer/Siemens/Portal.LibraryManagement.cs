@@ -32,8 +32,8 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
             string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)
             => RunHmiStepTool("ManageLibraryTypeVersion", meta => {
-                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances" }.Contains(action)) throw new ArgumentException("Invalid library version action.");
-                bool writing = action != "read" && !dryRun;
+                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action)) throw new ArgumentException("Invalid library version action.");
+                bool writing = action != "read" && action != "findInstances" && !dryRun;
                 using var access = writing ? AcquireHmiEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);
                 var parts = EngineeringGroupOperations.Parts(typePath);
@@ -59,11 +59,20 @@ namespace TiaMcpServer.Siemens
                         ?? throw new NotSupportedException("Selected software does not implement IUpdateProjectScope.");
                     meta["versionSelection"] = "Native LibraryType.UpdateProject chooses applicable released/default versions, not necessarily the version argument. The argument identifies evidence only.";
                 }
+                if (action == "findInstances") {
+                    if (string.IsNullOrWhiteSpace(targetSoftwarePath)) throw new ArgumentException("Exact targetSoftwarePath required; whole project search refused.");
+                    var search = ResolveSoftwareContainerUncached(targetSoftwarePath)?.Software as IInstanceSearchScope ?? throw new NotSupportedException("Selected software does not support instance search.");
+                    var found = EngineeringGroupOperations.Items(selected.FindInstances(search)).ToArray();
+                    meta["instances"] = new JsonArray(found.Select(x => (JsonNode)EngineeringObjectAddress.Read(x)).ToArray());
+                    meta["actualCount"] = found.Length; meta["dataComplete"] = false; meta["truncated"] = false;
+                    return "Native instances found in selected software; scalar result scope only.";
+                }
                 if (!writing) return "Library version read/preview. No modification; native semantic/state checks run only on execution.";
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {
                     case "edit": selected = selected.Edit(); break;
+                    case "discard": selected.Discard(); meta["discardedEditVersion"] = true; break;
                     case "release": selected.Release(mode, releaseVersion!, author, comment); break;
                     case "setDefault": selected.SetAsDefault(); break;
                     case "deleteVersion": selected.Delete();
@@ -71,7 +80,7 @@ namespace TiaMcpServer.Siemens
                         meta["verifiedAbsent"] = true; break;
                     case "updateInstances": type.UpdateProject(scope!); break;
                 }
-                if (action != "deleteVersion") meta["after"] = EngineeringScalarProperties.Read(selected);
+                if (action != "deleteVersion" && action != "discard") meta["after"] = EngineeringScalarProperties.Read(selected);
                 return "Native library operation completed; project/library not explicitly saved. Dependency changes may occur according to the selected native operation.";
             });
 

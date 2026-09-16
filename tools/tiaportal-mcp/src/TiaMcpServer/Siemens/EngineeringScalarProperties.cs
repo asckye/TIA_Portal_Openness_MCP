@@ -10,8 +10,8 @@ namespace TiaMcpServer.Siemens
 {
     internal static class EngineeringScalarProperties
     {
-        internal static bool Scalar(Type type) => type.IsEnum || type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime) || type == typeof(Guid) || type == typeof(Version);
-        internal static JsonNode? Json(object? value) => value == null ? null : value.GetType().IsEnum || value is Version || value is Guid || value is DateTime
+        internal static bool Scalar(Type type) => type.IsEnum || type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(Version);
+        internal static JsonNode? Json(object? value) => value is TimeSpan span ? JsonValue.Create(span.ToString("c", CultureInfo.InvariantCulture)) : value == null ? null : value.GetType().IsEnum || value is Version || value is Guid || value is DateTime
             ? JsonValue.Create(Convert.ToString(value, CultureInfo.InvariantCulture)) : JsonSerializer.SerializeToNode(value);
         internal static object? ConvertValue(JsonNode? node, Type type)
         {
@@ -32,6 +32,7 @@ namespace TiaMcpServer.Siemens
             }
             if (type == typeof(Version)) return Version.Parse(node.GetValue<string>());
             if (type == typeof(Guid)) return Guid.Parse(node.GetValue<string>());
+            if (type == typeof(TimeSpan)) return TimeSpan.ParseExact(node.GetValue<string>(), "c", CultureInfo.InvariantCulture);
             return JsonSerializer.Deserialize(node.ToJsonString(), type);
         }
         internal static List<(PropertyInfo Property, object? Value)> Prepare(Type type, JsonObject changes)
@@ -53,7 +54,7 @@ namespace TiaMcpServer.Siemens
             foreach (var p in target.GetType().GetProperties().OrderBy(p => p.Name))
             {
                 if (p.GetIndexParameters().Length != 0 || p.GetMethod?.IsPublic != true) continue;
-                if (!Scalar(p.PropertyType) && !(p.PropertyType == typeof(object) && p.Name == "Value")) { excluded.Add(p.Name); continue; }
+                if (!Scalar(p.PropertyType) && p.PropertyType != typeof(object)) { excluded.Add(p.Name); continue; }
                 try {
                     var value = p.GetValue(target);
                     if (value != null && !Scalar(value.GetType())) { excluded.Add(p.Name); continue; }

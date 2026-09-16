@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace TiaMcpServer.Tests
@@ -47,6 +47,9 @@ namespace TiaMcpServer.Tests
         {
             PlcTypeGroupCreationTests.Run(Check);
             EngineeringOperationsTests.Run(Check);
+            EngineeringObjectAddressTests.Run(Check);
+            NativeFileOutputTests.Run(Check);
+            ExtendedEngineeringTests.Run(Check);
             MigrationReadTests.Run(Check);
             EngineeringDefectTests.Run(Check);
             HmiInspectionTests.Run(Check);

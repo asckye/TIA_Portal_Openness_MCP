@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <!--
     最小离线自检套件。
 
@@ -17,6 +17,10 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeOutcome.cs" Link="NativeOutcome.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeFileOutput.cs" Link="NativeFileOutput.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringObjectAddress.cs" Link="EngineeringObjectAddress.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringGroupOperations.cs" Link="EngineeringGroupOperations.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringScalarProperties.cs" Link="EngineeringScalarProperties.cs" />

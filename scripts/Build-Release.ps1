@@ -1,4 +1,4 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$V20ReferenceRoot,
     [Parameter(Mandatory=$true)][string]$V21ReferenceRoot,
     [string]$Dotnet='dotnet',
@@ -70,7 +70,7 @@ foreach($major in @(20,21)) {
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){51}else{50}
+    $expectedEngineeringChecks=if($major -eq 21){130}else{115}
     if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
