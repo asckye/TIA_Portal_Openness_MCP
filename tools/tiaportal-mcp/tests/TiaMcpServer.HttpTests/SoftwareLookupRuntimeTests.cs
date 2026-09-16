@@ -110,6 +110,29 @@ internal static class SoftwareLookupRuntimeTests
         bool wiredFallback = false;
         for (int i=0;i+4<bareIl.Length;i++) if ((bareIl[i]==0x28 || bareIl[i]==0x6f) && BitConverter.ToInt32(bareIl,i+1)==enumerationToken) wiredFallback=true;
         check(wiredFallback, "EXE shared container resolver includes typed group/device enumeration fallback");
+        var deletion=server.GetType("TiaMcpServer.Siemens.EmptyPlcGroupDeletion",true)!;
+        var parse=deletion.GetMethod("Parse",BindingFlags.Static|BindingFlags.NonPublic)!;
+        int invalid=0;
+        foreach(var bad in new[]{"", "/", "Program blocks", "程序块", ".", "A/../B"})
+            try { parse.Invoke(null,new object[]{bad}); } catch(TargetInvocationException) { invalid++; }
+        check(invalid==6,"EXE group deletion refuses root and invalid paths");
+        var execute=deletion.GetMethod("Execute",BindingFlags.Static|BindingFlags.NonPublic)!.MakeGenericMethod(typeof(BlockGroup));
+        var empty=new BlockGroup(); bool exists=true; int deletes=0; string online="Offline";
+        object ExecuteDelete(bool preview,Func<BlockGroup,int>? count=null,bool remove=true) => execute.Invoke(null,new object[]{"ZZ_MCP_TEST",preview,
+            new Func<string[],BlockGroup?>(_=>exists?empty:null),count??new Func<BlockGroup,int>(g=>g.Blocks.Count),
+            new Func<BlockGroup,int>(g=>g.Groups.Count),new Func<string>(()=>online),
+            new Action<BlockGroup>(_=>{deletes++;if(remove)exists=false;})})!;
+        bool Refused(Action run) { try {run();return false;}catch(TargetInvocationException){return true;} }
+        ExecuteDelete(true); check(deletes==0 && exists,"EXE group deletion preview never invokes Delete");
+        empty.Blocks.Add("FC1"); check(Refused(()=>ExecuteDelete(false)) && deletes==0,"EXE refuses groups containing blocks"); empty.Blocks.Clear();
+        empty.Groups.Add(new BlockGroup()); check(Refused(()=>ExecuteDelete(false)) && deletes==0,"EXE refuses groups containing subgroups"); empty.Groups.Clear();
+        online="Online";check(Refused(()=>ExecuteDelete(false)) && deletes==0,"EXE refuses online group deletion");
+        online="Unknown";check(Refused(()=>ExecuteDelete(false)) && deletes==0,"EXE unknown online state is not treated as offline");
+        online="Offline";var deletionResult=ExecuteDelete(false).ToString();check(deletes==1 && !exists && deletionResult.Contains("true"),"EXE empty offline deletion verifies target absence");
+        exists=true;check(Refused(()=>ExecuteDelete(false,null,false)) && deletes==2,"EXE does not report success if deleted group remains");
+        int reads=0;check(Refused(()=>ExecuteDelete(false,_=>++reads==1?0:1)) && deletes==2,"EXE rechecks emptiness immediately before deletion");
+        var deleteTool=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("DeleteEmptyPlcBlockGroup")!;
+        check((bool)deleteTool.GetParameters()[2].DefaultValue!,"EXE deletion tool defaults to dryRun=true");
         var rt = server.GetType("TiaMcpServer.Siemens.PlcListingRead", true)!;
         var reader = Activator.CreateInstance(rt, true)!;
         var optional = rt.GetMethod("Optional", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));

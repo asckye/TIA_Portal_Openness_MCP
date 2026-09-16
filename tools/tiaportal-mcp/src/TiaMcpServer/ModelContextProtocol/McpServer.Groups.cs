@@ -1,4 +1,4 @@
-using ModelContextProtocol;
+﻿using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
 using System.ComponentModel;
@@ -14,6 +14,18 @@ namespace TiaMcpServer.ModelContextProtocol
     //     import round-trip, because Openness has no block-reparent API).
     public static partial class McpServer
     {
+        [McpServerTool(Name="DeleteEmptyPlcBlockGroup"), Description("[L2][PLC-Software][WRITE] Preview or delete exactly one empty PLC user block group. dryRun defaults to true. Requires an exact groupPath relative to Program blocks, e.g. ZZ_MCP_TEST or Parent/Child. Root, nonempty, ambiguous targets are refused. Real deletion requires confirmed Offline state and exclusive access, rechecks contents, calls native Delete and verifies absence. No recursive deletion, save, compile, download or automatic GoOffline.")]
+        public static ResponseMessage DeleteEmptyPlcBlockGroup(string softwarePath, string groupPath, bool dryRun=true)
+        {
+            try
+            {
+                var result=Portal.DeleteEmptyPlcBlockGroup(softwarePath,groupPath,dryRun);
+                return new ResponseMessage { Message=dryRun ? "Empty PLC group deletion preview; nothing changed." : "Empty PLC user group deleted and absence verified.", Meta=result };
+            }
+            catch(Exception ex) when (ex is not McpException)
+            { throw new McpException("DeleteEmptyPlcBlockGroup failed: " + ex.Message,ex,McpErrorCode.InternalError); }
+        }
+
         [McpServerTool(Name = "CreatePlcBlockGroup"), Description("[L2][PLC-Software] Create a (nested) program-block group/folder, creating any missing parent groups along the path. Idempotent — returns ok if the group already exists. groupPath uses '/' separators relative to 'Program blocks' root, e.g. '01_手动控制/手动意图'. Requires: Connect + OpenProject. Use this to set up the 手动/手自动接口/自动 layer folders, then MoveBlockToGroup to organize blocks into them.")]
         public static ResponseMessage CreatePlcBlockGroup(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
