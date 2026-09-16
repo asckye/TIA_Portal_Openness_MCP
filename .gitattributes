@@ -1,2 +1,5 @@
 # Runtime checksums must survive checkout unchanged, including EXE configuration files.
 runtime/** -text
+
+# Preserve generated release metadata bytes across browser uploads and checkout.
+manifest/** -text
