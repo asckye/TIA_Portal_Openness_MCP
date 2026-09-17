@@ -16,9 +16,14 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Documentation links and repository entrypoints
+        run: python scripts/checks/Check-Repository.py
       - name: Offline bundle validation
         shell: pwsh
-        run: ./scripts/Validate-Bundle.ps1 -Strict
+        run: ./scripts/checks/Validate-Bundle.ps1 -Strict
       - name: Build and test WPF configurator
         shell: powershell
-        run: ./scripts/Build-Configurator.ps1 -Test
+        run: ./scripts/build/Build-Configurator.ps1 -Test

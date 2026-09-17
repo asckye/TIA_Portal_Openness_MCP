@@ -5,8 +5,10 @@
 | 文件 | 用途 |
 |---|---|
 | `full_plc_hmi_project.json` | 创建 PLC + WinCC Unified 项目的主配方，包含硬件、PLC、HMI、按钮动作、动态化和验收项。 |
+| `scaffold_spec_startstop.json` | CLI 启停工程 spec，先用 `gen --dry-run` 校验。 |
+| `scaffold_spec_motor.json` | CLI 电机工程 spec，引用随包提供的 PLC 源与 HMI 模板。 |
 
-**自检：** 包根目录运行 `scripts\Validate-Bundle.ps1`，确认 `requiredBundleFiles` 所列路径齐全且 JSON 可解析。
+**自检：** 包根目录运行 `scripts\checks\Validate-Bundle.ps1`，确认 `requiredBundleFiles` 所列路径齐全且 JSON 可解析。
 
 使用规则：
 

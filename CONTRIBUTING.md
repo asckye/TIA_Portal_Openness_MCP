@@ -53,16 +53,15 @@ with the original repository. Preserve LICENSE, NOTICE.md and dependency notices
 
 1. Keep it focused. One problem per PR; a 40-line PR gets merged, a 4000-line one
    waits for a weekend that may not come.
-2. Say **how you verified it**. For anything touching the Openness layer, the only
-   verification that counts is a real run against TIA Portal: import the block,
-   run `CompileSoftware`, and report **0 errors / 0 warnings**. "It builds" is not
-   verification — Openness accepts plenty of input that only explodes at compile
+2. Say **how you verified it**. For anything touching the Openness layer, separate offline/API checks from real-project acceptance. For the latter: import the block,
+   run `CompileSoftware`, and report the actual error/warning counts. "It builds" is not
+   real-project acceptance — Openness accepts plenty of input that only explodes at compile
    time.
 3. If you could not test on real hardware or a real TIA install, say so plainly in
-   the PR. An honest "untested on V19" is far more useful than silence.
+   the PR. An honest "untested on real TIA V20/V21" is far more useful than silence.
 4. Match the surrounding style. This is a mixed C# / PowerShell / docs repo; each
    part already has a convention.
-5. Update the docs you invalidate — `docs/`, `手册/`, and
+5. Update the docs you invalidate — `docs/` and
    `tools/tiaportal-mcp/skill/SKILL.md` (the tool spec) are part of the product,
    not an afterthought.
 6. Add a `CHANGELOG.md` entry for user-visible changes.

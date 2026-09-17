@@ -6,8 +6,8 @@ description: Drive Siemens TIA Portal (博途) end-to-end through the TiaMcpServ
 # TIA Portal MCP — Single Skill
 
 This is the operating skill for TIA Portal MCP automation. The
-companion plugin lives at `tools/tiaportal-mcp/`. It exposes on the order of
-**~201** MCP tools (lite profile ~43; exact runtime set: call `tools/list` on the running server) covering
+companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
+**298** MCP tools (default lite profile: 52; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -20,7 +20,7 @@ project, hardware, PLC, HMI, and online operations.
 ```
 
 **交付包内最短路径（仅读包内文件时）**  
-根目录 `README.md`（三步上手）→ `scripts/Validate-Bundle.ps1`（脱机校验）→ 用 `cursor-mcp.example.json` 把 `command` 指到包内 `TiaMcpServer.exe` → 执行顺序见 `docs/full-project-generation-runbook.md` 与 `templates/project-blueprints/full_plc_hmi_project.json`。
+根目录 `README.zh-CN.md` → `TiaMcpConfigurator.exe` 配置连接（手动示例在 `examples/mcp/cursor.json`）→ `scripts/checks/Validate-Bundle.ps1` 脱机校验 → 执行顺序见 `docs/guides/project-generation.md` 与 `templates/project-blueprints/full_plc_hmi_project.json`。
 
 Never guess paths. Never invent SCL/LAD XML. If a tool exists for the task, use
 it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
@@ -28,7 +28,7 @@ it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
 
 ## 0.1 弱模型 / 新手：你一辈子只需要这 15 个工具（其余的先忽略）
 
-This server exposes ~190 tools. **You do NOT need most of them.** A small or
+This server contains 298 tools, with 52 exposed by default. **You do NOT need most of them.** A small or
 non-expert model should pick **only** from this whitelist and ignore everything
 else unless one of these tools' output explicitly tells you to call another:
 
@@ -50,10 +50,9 @@ else unless one of these tools' output explicitly tells you to call another:
 参数名时，照本表/§8 的"精确参数名"抄，不要猜。HMI 美化看 §12，库复用看 §15。
 
 **降门槛三件套(已内置，弱模型友好):**
-- **Lite 工具档位** — 启动 server 时设环境变量 `TIA_MCP_PROFILE=lite`，`tools/list`
-  只暴露 ~42 个 L0/L1 核心工具(而非全部 ~200)，弱模型不会在工具海里选错，VS Code 的
-  128 工具上限也不再爆。默认仍是 full；要全量工具就别设这个变量。一键写入宿主配置：
-  `tia config --lite`。(v2.2.8 实测：full=201 工具含 L2，lite=43 工具无 L2。)
+- **Lite 工具档位** — 默认直接暴露 52 个常用入口，其余经 `FindTools` 查找、`CallTool` 调用。
+  可显式设置 `TIA_MCP_PROFILE=lite`；全量暴露使用 `--profile full` 或 `TIA_MCP_PROFILE=full`。
+  完整静态清单在 `manifest/tools-list.json`，实际运行列表以 `tools/list` 为准。
 - **参数容错** — `softwarePath` 现在容忍多余空格/大小写，单 PLC 工程或唯一匹配时
   传"PLC"也能自动认到 `PLC_1`；找不到时报错会**列出可用 PLC 路径**。少数易错工具
   接受别名(`tableJson`↔`tagTableJson`、`screenJson`↔`designJson`、
@@ -95,7 +94,7 @@ Notes:
 - Critical-step failures (connect/createProject/PLC device) abort and throw; per-element failures are collected in the returned `steps` so you can see exactly what to fix and re-run.
 - For per-session fast connects, keep a warm headless instance running (`_prewarm_tia.py`); see §0.
 
-Only fall back to the manual runbook (`docs/full-project-generation-runbook.md`) when the user needs something `ScaffoldProject` does not cover.
+Only fall back to the manual runbook (`docs/guides/project-generation.md`) when the user needs something `ScaffoldProject` does not cover.
 
 ## 1. Tool layers
 
@@ -201,7 +200,7 @@ These have NO Openness API — do not try to invent reflection workarounds:
 Force/Watch table tools edit the project-side definition; values become
 effective only after the project is online and the table trigger fires.
 
-Full list (this bundle): `手册/openness-limitations.md` (bundle root: same folder as `README.md`).
+Full list (this bundle): `docs/troubleshooting/openness-limitations.md` (bundle root: same folder as `README.md`).
 
 ## 5. Encoding & PowerShell traps (script drivers only)
 
@@ -245,25 +244,25 @@ Full list (this bundle): `手册/openness-limitations.md` (bundle root: same fol
 
 ## 6. Bundle-only docs + copy-paste JSON for `PlcBuildAndImport` / Unified HMI
 
-Paths below are relative to the **delivery bundle root** (the folder that contains `README.md`, `手册/`, and `tools/`).
+Paths below are relative to the **delivery bundle root** (the folder that contains `README.md`, `docs/`, and `tools/`).
 
 ### 6.1 Authoritative files shipped in this bundle
 
 | Need | Path |
 |---|---|
-| Setup + MCP wiring | `手册/quickstart.md` |
-| What Openness cannot do | `手册/openness-limitations.md` |
-| Error model | `手册/error-model.md` |
-| NL → tool sequences (16 scenarios) | `手册/TIA_NL_INTENT_RECIPES.md` |
+| Setup + MCP wiring | `docs/getting-started/configuration.md` |
+| What Openness cannot do | `docs/troubleshooting/openness-limitations.md` |
+| Error model | `docs/troubleshooting/errors.md` |
+| NL → tool sequences (16 scenarios) | `docs/reference/natural-language-recipes.md` |
 | Static tool roster | `manifest/tools-list.json` |
-| Tool capability matrix | `docs/tool-capability-matrix.md` |
+| Tool capability matrix | `docs/reference/tool-matrix.md` |
 | Full PLC+HMI project blueprint | `templates/project-blueprints/full_plc_hmi_project.json` |
-| Full project runbook | `docs/full-project-generation-runbook.md` |
-| Offline bundle validation (no TIA start) | `scripts/Validate-Bundle.ps1` |
-| IDE-neutral MCP + tool list authority | `docs/mcp-ide-and-tool-visibility.md` |
-| HMI↔PLC symbolic / absolute / red-tag troubleshooting | `docs/hmi-plc-tag-binding-and-addressing.md` |
-| Optional `reference/` sample projects (outside bundle) | `docs/optional-reference-materials.md` |
-| PLC network & instruction expansion patterns | `docs/plc-network-patterns-expanded.md` |
+| Full project runbook | `docs/guides/project-generation.md` |
+| Offline bundle validation (no TIA start) | `scripts/checks/Validate-Bundle.ps1` |
+| IDE-neutral MCP + tool list authority | `docs/getting-started/configuration.md` |
+| HMI↔PLC symbolic / absolute / red-tag troubleshooting | `docs/guides/hmi/tag-binding.md` |
+| Optional `reference/` sample projects (outside bundle) | `templates/README.md` |
+| PLC network & instruction expansion patterns | `docs/guides/plc/templates.md` |
 | Importable LAD XML samples | `tools/tiaportal-mcp/skill/lad-cookbook/*.xml` |
 | External SCL sources (UTF-8 BOM on disk) | `tools/tiaportal-mcp/skill/scl-cookbook/*.scl` |
 
@@ -413,7 +412,7 @@ Bootstrap → AttachToOpenProject → GoOnline
 ```
 
 For more scenarios (alarms, OPC UA, multi-language text, Unified HMI pages)
-see `手册/TIA_NL_INTENT_RECIPES.md` (bundle root).
+see `docs/reference/natural-language-recipes.md` (bundle root).
 
 ## 8. Frequently used tools — exact parameter names
 
@@ -1125,7 +1124,7 @@ honest verified-vs-not discipline, and being a real MCP (not a paid license).
 **The ✕ rows are deliberate, not a backlog:** safety F-blocks / PLCSIM / native Git-VCI
 are **intentionally out of scope** — low real benefit for this tool's job (engineering
 automation) and risky on a live machine. Do **not** pitch them as "coming". Rationale in
-`docs/server-maturity-roadmap.md` (bundle root).
+`docs/reference/capabilities.md` (bundle root).
 
 ## 19. Hard rules
 

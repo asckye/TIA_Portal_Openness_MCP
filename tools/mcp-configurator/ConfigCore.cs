@@ -76,7 +76,7 @@ namespace TiaMcpConfigurator
                 Path.Combine(root, "runtime", "v" + version, "TiaMcpServer.exe"),
                 Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version == 20 ? "bin-v20" : "bin", "Release", "net48", "TiaMcpServer.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
-            if (path == null) throw new FileNotFoundException("找不到 V" + version + " 引擎。请将配置程序放在完整 Release 包的根目录，与 tia.cmd 同级。");
+            if (path == null) throw new FileNotFoundException("找不到 V" + version + " 引擎。请将配置程序放在完整 Release 包的根目录，与 runtime 文件夹同级。");
             return path;
         }
 

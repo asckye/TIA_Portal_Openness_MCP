@@ -4,7 +4,7 @@
 
 ## 视觉与参考素材
 
-- 本目录 JSON 为 **脚本友好** 的扁平布局；若要接近西门子 **HMI Template Suite** 的观感，请在 TIA 中打开仓库 `reference` 下样板（见 `docs/optional-reference-materials.md`），把色值、间距、层次抄回 `designJson`。
+- 本目录 JSON 为 **脚本友好** 的扁平布局；若要接近西门子 **HMI Template Suite** 的观感，可另行取得匹配版本的官方样板，在 TIA 中查看后转换色值、间距和层次；参考素材不随包提供，见 [模板索引](../README.md)。
 - `unified_overview_1280x800.json` 已含 **顶栏强调色、侧栏色条、卡片阴影层** 等轻量美化；其它页可按同一手法叠「底层阴影 Rectangle + 上层白底卡片」。
 
 ## 模板一览
@@ -17,7 +17,7 @@
 | `unified_parameter_page_1024x768.json` | 1024 x 768 | 参数页：设定值、上下限、时间、计数预置 |
 | `unified_trend_page_1024x768.json` | 1024 x 768 | 趋势页：趋势区域、图例、实时数值 |
 | `unified_basic_tag_diagnostics_1024x768.json` | 1024 x 768 | 标签诊断：Bool 指示、Real IOField |
-| `hmi_tag_binding_snippets.json` | （人读）符号互连 / 绝对地址示例，配合 `docs/hmi-plc-tag-binding-and-addressing.md` |
+| `hmi_tag_binding_snippets.json` | （人读）符号互连 / 绝对地址示例，配合 `docs/guides/hmi/tag-binding.md` |
 
 1. `EnsureUnifiedHmiConnection`
 2. `EnsureUnifiedHmiTagTable`

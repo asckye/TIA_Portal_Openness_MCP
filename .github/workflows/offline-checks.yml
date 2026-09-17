@@ -32,4 +32,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Descriptions must not name unregistered tools
-        run: python3 scripts/Check-DeadToolReferences.py
+        run: python3 scripts/checks/Check-DeadToolReferences.py

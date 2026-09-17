@@ -1,227 +1,59 @@
-> Release build / 完整发布包：**v2.7.15（V20 + V21，文件版本 2.7.15.0）**。包含运行程序、原版配置、手册、模板、源码与测试，见 [本版说明](docs/releases/v2.7.15.md)。新接口的真实工程验收尚未完成。每次正式发布均须遵循 [完整打包流程](docs/RELEASE_WORKFLOW.md)。
+# TIA Portal Openness MCP
 
-> 本版包含设备分组内 PLC 名称查找修复，以及 [图形对象选择范围与坐标对比接口](docs/HMI_GRAPHIC_SELECTION.md)；原生图形组合关系仍有明确的读取缺口。
+[简体中文](README.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-> 本版包含 [HMI Runtime 启动画面和运行设置读写](docs/HMI_RUNTIME_SETTINGS.md)，默认预览并验证写后回读；尚未在真实工程执行写入验收。
+Connect AI clients to Siemens TIA Portal V20/V21 through the official Openness API. Includes an MCP server, a standalone WPF configurator, a JSON/YAML command-line workflow and reusable PLC / WinCC Unified templates.
 
-# TIA Portal MCP Server (V20 + V21 · S7DCL · CLI · read-only online monitoring · one-click config · Doctor)
+The complete release ZIP includes both runtimes and dependencies. Install Siemens TIA Portal, Openness and licenses separately. The Windows server requires .NET Framework 4.8 and membership in the `Siemens TIA Openness` group.
 
-> Current version: see the Release badge below and [CHANGELOG.md](CHANGELOG.md) (this README no longer hardcodes a version).
+## Start here
 
-**English** · [中文](README.zh-CN.md)
+Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root.
 
-**Windows WPF configuration UI:** double-click `TiaMcpConfigurator.exe` to configure a VM HTTP server and select Claude Code, Claude Desktop, Codex, Cursor, VS Code, Gemini CLI, Windsurf, or Cline. Both remote and same-machine connections are supported; Desktop Chat remote mode needs the Node.js/mcp-remote bridge. No CMD/BAT entry point is needed. See the [configuration guide](docs/gui-configuration.md).
+| Scenario | Configuration |
+|---|---|
+| TIA in a virtual machine | On the VM select **虚拟机服务端**; choose TIA version, installation root, IPv4, port and key; save, configure network permissions and start. |
+| AI on the host | Copy the configurator EXE to the host, select **AI 客户端**, choose clients, enter the VM address and matching key, test and save. TIA is not required on the host. |
+| TIA and AI on one computer | Select TIA version/path, then **本机连接**. Clients launch the matching engine over stdio without HTTP. |
 
-> **v2.0 — the same exe is also a declarative CLI (`tia`).** Any AI emits a
-> YAML/JSON spec, any engineer runs one command (`runtime\v21\TiaMcpServer.exe gen spec.yaml`) — no MCP
-> client required. Verbs: `gen` / `patch` / `compile` / `describe` / `export` /
-> `import` / `prewarm` / `schema` / `version`. Exit code 0/1/2. See
-> `docs/CLI_quickstart.md`. The MCP server behaviour is unchanged.
+Profiles: Claude Code, Codex, Cursor, VS Code / Copilot, Claude Desktop Chat, Gemini CLI, Windsurf and Cline. For official Claude's **Code** page select **Claude Code**; its **Chat** page uses Claude Desktop and an `mcp-remote` bridge for LAN HTTP. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
+Keep the configurator open while it runs the VM service. Restart configured clients and open a new session.
 
-> **Free & open (MIT).** The server runs with **no license key** — there is no
-> license-enforcement code at all.
+## Command line
 
-![Architecture](docs/assets/architecture.svg)
-
-Drive **Siemens TIA Portal V20 or V21** from any **MCP** client (stdio or HTTP):
-create projects, add hardware, generate PLC objects (Tag / UDT / DB / SCL / LAD),
-build **WinCC Unified** screens and events, compile-and-diagnose, and save —
-all through natural-language tool calls. The bundle ships **prebuilt runtimes**,
-a Skill spec, a static tool list, a capability matrix, PLC/HMI templates,
-one-shot project blueprints, and a manual. **No separate source clone required**
-to run.
-
-> Works with any MCP-capable client — Cursor, VS Code, Claude Desktop, or your
-> own HTTP client — using the same `TiaMcpServer.exe`.
-
-## 🆕 v2.5.0 — put a TIA Portal project under Git (Version Control Interface)
-
-TIA Portal projects are binary, so Git cannot diff them — which is why "version
-control" in this field has long meant a pile of dated *Save As* folders.
-The V21 **Version Control Interface** maps a project onto an ordinary folder,
-**one text file per block**, so it can be diffed, committed and reviewed.
-This release wraps the whole round-trip into a few commands — **you never have to
-click anything inside the TIA Portal UI**.
-
-One sentence to your AI client is enough:
-
-```
-Put the current project under Git, use D:\repos\my-plc as the workspace
-```
-
-It creates the workspace → **maps the whole project automatically** (hundreds of
-blocks in one command, no manual ticking) → exports the text, and you `git commit`.
-Later, to see what changed:
-
-```
-GetVersionControlStatus(changedOnly=true)
-→ A3_4_Hoist | Unequal        ← per block, not per file
-```
-
-- **Covered**: FC / FB / OB / DB, PLC tag tables, UDTs — the whole software side.
-  Hardware configuration and know-how-protected blocks are **not** covered by the
-  VCI; the tool reports them explicitly instead of skipping them silently.
-- A block **must compile before it can be exported** (a TIA limitation); change
-  *detection* is unaffected and works even on unsaved edits.
-- Companion `tools/vci-watch/`: after each successful compile it auto-exports,
-  writes the CHANGELOG and runs `git commit` — the engineer does nothing.
-
-📖 Full usage and the three behaviours you must know →
-**[docs/version-control-git.md](docs/version-control-git.md)**
-
-## ⚡ Fastest start (3 steps, no coding — CLI path)
-
-> First time? **No MCP client, no code.** Once TIA is installed, these 3 steps
-> generate your first project in minutes.
-> (Wiring an AI client like Cursor / Claude Desktop over MCP instead? See
-> [Quick Start](#quick-start) below.)
-
-1. **Prepare**: install **TIA Portal V20 or V21** + **.NET Framework 4.8**; add your
-   Windows user to the local **`Siemens TIA Openness`** group and **log off/on once**
-   (the group is not effective until re-login — the single most common blocker).
-   **Use the exe matching your installed version** — the bundle root ships
-   `runtime\v21\TiaMcpServer.exe` (V21) / `runtime\v20\TiaMcpServer.exe` (V20).
-   - **Health-check first**: run `runtime\v21\TiaMcpServer.exe doctor` (V20: `runtime\v20\TiaMcpServer.exe doctor`) once after
-     install — it checks TIA install / exe-version match / Openness group / host
-     registration and prints the exact fix per problem (`--fix` auto-adds the group).
-2. **Prewarm (optional, recommended)**: double-click `scripts\预热.bat` and leave the
-   window open. It keeps one headless TIA resident so every later command connects in
-   **~1s** (without it, each run cold-starts ~3 min). Press `Ctrl+C` to close.
-3. **Generate a project**: drag a ready-made template
-   `templates\project-blueprints\scaffold_spec_motor.json` (or
-   `scaffold_spec_start_stop.json`) **onto `scripts\生成工程.bat`** — it creates the
-   project → adds PLC/HMI → builds blocks → compiles → saves in one shot. Exit code
-   `0` means success.
-   - To customize: have any AI emit a spec per [`docs/AI_spec_prompt.md`](docs/AI_spec_prompt.md)
-     (YAML or JSON), then drag it onto `生成工程.bat`.
-   - CLI equivalent: run `runtime\v21\TiaMcpServer.exe gen <spec>` (start with
-     `--dry-run` for an offline check).
-
-## Highlights
-
-- **Stability-first public generation (v0.0.39).** `PlcBuildAndImport` now returns
-  `CapabilityDecision`, `CapabilityWarnings`, and `RecommendedNextActions`;
-  `ApplyUnifiedHmiScreenDesignJson(strict=true)` fails when any HMI property write
-  fails; `EnsureUnifiedHmiTag(requireVerifiedBinding=true)` requires readback as
-  `SymbolicVerified` or `AbsoluteVerified`.
-- **Dual-version support (V20 + V21).** Two separate executables, not
-  interchangeable: V21 binds the split DLLs (`Siemens.Engineering.Base/Step7/…`),
-  V20 binds the monolithic `Siemens.Engineering.dll`.
-  - V21 → `tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net48/TiaMcpServer.exe`
-  - V20 → `tools/tiaportal-mcp/src/TiaMcpServer/bin-v20/Release/net48/TiaMcpServer.exe`
-- **Version-safe imports.** Generated Openness XML is normalized to the connected
-  portal version on import, so a V20 portal no longer rejects blocks with
-  *"engineering version 'V21' is not supported"*.
-- **S7DCL textual format.** `ExportAsDocuments` / `ExportBlocksAsDocuments` /
-  `ImportFromDocuments` / `ImportBlocksFromDocuments` read/write the diff-friendly
-  SIMATIC SD text format (`.s7dcl` + `.s7res`) on V20+ and are flagged *PREFERRED on
-  V21+*. The SimaticML XML chain remains for backward compatibility.
-- **183 tools** across project, hardware, PLC, HMI, and online operations,
-  layered `[L0]`/`[L1]`/`[L2]` so a normal session only needs L0 + L1.
-
-## Requirements
-
-- Windows + **.NET Framework 4.8**
-- **TIA Portal V20 or V21** installed
-- Current user added to the **`Siemens TIA Openness`** local group (re-login after)
-
-## Quick Start
-
-Double-click **`TiaMcpConfigurator.exe`**. Configure the HTTP service on the TIA machine,
-then select your AI clients on the host PC. For a single computer choose Local connection.
-The GUI supports eight clients; see [GUI setup](docs/gui-configuration.md).
-
-HTTP builds with file version **2.7.2.3** include the response routing fix and recursive HMI
-screen lookup. Requests have a 240-second deadline, including queue time. Configure the
-client timeout to allow at least that long for TIA startup, connection and compilation.
-A 504 does not cancel an operation already executing in TIA; check its state before retrying
-a write. Late replies are discarded and cannot be delivered to another request.
-`GET /mcp/health` reports `fileVersion` and `responseTimeoutSeconds`.
-
-1. **Locate the portal install root** (one of):
-   - pass `--tia-portal-location "D:\app\TIA20\Portal V20"` when launching (recommended for non-default installs);
-   - set the `TiaPortalLocation` user environment variable;
-   - let it auto-read `HKLM\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{20|21}\TIA_Opns\Path`.
-   With multiple versions installed, pass `--tia-major-version 20` (or `21`) explicitly.
-2. **Configure the MCP in the GUI.** Select V20/V21 and the TIA installation root.
-   For a VM, start the HTTP service there and configure the host clients with the same
-   IPv4, port and key. For local stdio, select the clients on the Local connection page.
-   Existing client settings are merged and backed up. Restart the selected clients.
-   Claude Desktop Chat remote access requires Node.js/mcp-remote; Claude Code uses native HTTP.
-   For command-line diagnostics, run `runtime\v21\TiaMcpServer.exe doctor`
-   (V20: `runtime\v20\TiaMcpServer.exe doctor`).
-3. **First call sequence:** `Bootstrap` → `Connect` → `OpenProject` (or
-   `CreateProject`) → `GetProjectTree`, then read the real `PLC_*` / `HMI_RT_*`
-   paths from the tree before continuing.
-
-### Offline validation (no TIA needed)
+From the package root, use the runtime matching your installed TIA version:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Validate-Bundle.ps1
+.\runtime\v21\TiaMcpServer.exe doctor
+.\runtime\v21\TiaMcpServer.exe schema
+.\runtime\v21\TiaMcpServer.exe gen .\templates\project-blueprints\scaffold_spec_motor.json --dry-run
 ```
 
-Checks runtime presence, blueprint file completeness, tool-count consistency, and
-that PLC/HMI JSON parse. Add `-Strict` for tighter manifest/matrix comparison.
+The last command validates the specification offline. Remove `--dry-run` when ready to create the project. V20 uses `runtime/v20/TiaMcpServer.exe`. See the [CLI guide](docs/getting-started/cli.md).
 
-## Build from source
+## Capabilities and limits
 
-The full source lives under `tools/tiaportal-mcp/src/TiaMcpServer` (51 `.cs`).
+The static inventory contains **298 tools**; default **lite** advertises **52**, with the remainder available through `FindTools` / `CallTool`. The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
-```powershell
-# V21 (split DLLs)
-dotnet build tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.csproj -c Release
-# V20 (monolithic DLL) — clean intermediates first if you just built the other target
-dotnet build tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj -c Release
-```
+Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 
-## Capabilities & boundaries
+Delivery and engine versions are independent. [Delivery metadata](manifest/delivery.json) binds the engine and configurator records; [validation documentation](docs/development/validation.md) separates offline, API and real TIA checks.
 
-**Can do:** projects & hardware, PROFINET, declarative PLC import, LAD XML import,
-WinCC Unified connections / tags (absolute addressing) / screens / button
-Down·Up / dynamization, compile-and-diagnose, save.
+## Repository map
 
-**Not bundled:** Siemens install media, field projects, business-specific
-technology. `reference/` is style/instruction reference only. See `notBundled` in
-`manifest/package-manifest.json`. For what Openness **cannot** do, see
-`手册/openness-limitations.md`.
+| Directory | Contents |
+|---|---|
+| [docs](docs/README.md) | Setup, guides, references, troubleshooting, development and history |
+| [runtime](runtime/README.md) | Canonical V20/V21 executables and dependencies |
+| [tools](tools/README.md) | Engine source/tests, AI skill and WPF source |
+| [scripts](scripts/README.md) | Build, checks, generators, diagnostics and operations |
+| [templates](templates/README.md) | PLC/HMI assets and project specifications |
+| [examples](examples/README.md) | Manual client configuration examples |
+| [manifest](manifest/README.md) | Inventory, versions, build receipts and hashes |
 
-## Independent maintenance & contributing
+Root launch/configuration CMD/BAT files were replaced by the GUI. Delivery ZIPs no longer duplicate runtimes into legacy `bin/Release` paths; use `runtime/v20` or `runtime/v21`.
 
-This repository is maintained by **asckye** on a single `master` branch for
-**TIA Portal V20 / V21**. Changes and releases are managed in this repository.
-Use this repository's Issues and Pull Requests for contributions to `master`.
+Read [CONTRIBUTING](CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. See [CHANGELOG](CHANGELOG.md) and [archived release notes](docs/archive/release-notes.md).
 
-The software includes MIT-licensed work from the original project and its
-contributors. Their copyright and permissions remain intact; see [NOTICE.md](NOTICE.md)
-and [LICENSE](LICENSE). Repository independence does not imply original authorship
-of the imported code.
-
-Do not commit TIA customer projects, credentials, build caches, logs or private
-machine configuration. See [CONTRIBUTING.md](CONTRIBUTING.md) and
-[SECURITY.md](SECURITY.md).
-
-## Documentation map
-
-| Path | What |
-|------|------|
-| `tools/tiaportal-mcp/skill/SKILL.md` | **Primary spec**: tool layers, parameter traps, Unified HMI schema, LAD/SCL boundaries |
-| `manifest/tools-list.json` | Static tool names/layers (runtime authority is `tools/list` after connect) |
-| `docs/tool-capability-matrix.md` | Capability matrix |
-| `docs/full-project-generation-runbook.md` | End-to-end project generation |
-| `docs/scl-instruction-library.md` / `docs/lad-instruction-library.md` | SCL / LAD instruction libraries |
-| `docs/hmi-connection-driver-matrix.md` | Communication-driver selection by CPU family |
-| `手册/quickstart.md` | English quick start |
-| `手册/TIA_NL_INTENT_RECIPES.md` | Natural-language → tool-sequence recipes |
-
-## Standard loop (abbreviated)
-
-```text
-Bootstrap → Connect → CreateProject → AddDeviceWithFallback → AddHardwareCatalogDeviceWithProbe
-→ ConnectDeviceNodesToProfinetSubnet → GetProjectTree → ValidateAutomationContext
-→ PlcBuildAndImport(dryRun=true per item) → PlcBuildAndImport(dryRun=false in import order)
-→ CompileAndDiagnosePlc → EnsureUnifiedHmiConnection → EnsureUnifiedHmiTagTable → EnsureUnifiedHmiTag
-→ EnsureUnifiedHmiScreen → ApplyUnifiedHmiScreenDesignJson → BindUnifiedHmiTagDynamization
-→ EnsureUnifiedHmiButtonAction → SaveProject → Disconnect
-```
+Independently maintained by asckye. Provenance and third-party notices remain in [NOTICE](NOTICE.md) and [LICENSE](LICENSE).

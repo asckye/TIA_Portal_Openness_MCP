@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.7.17] - 2026-09-17
+
+- 重整文档、示例及脚本目录，合并重复指南和历史发布说明，删除过期脚本、临时清单及现场原始数据。
+- 中英文 README 统一为入口，更新所有迁移引用、skill、插件及蓝图，新增文档链接与入口校验。
+- 交付包仅保留 runtime/v20 与 runtime/v21，移除旧 bin 路径下的重复运行文件；旧配置可用 GUI 重新保存。
+- 保持引擎 2.7.15.0 与其原验证记录不变，独立验证配置器及完整包。详情见 [v2.7.17](docs/releases/v2.7.17.md)。
+
 ## [2.7.16] - 2026-09-17
 
 - 新增独立 WPF 图形配置程序 `TiaMcpConfigurator.exe`：按参考设计实现深色编号侧栏、浅色内容区、分类客户端卡片和右侧主操作；配置虚拟机 HTTP 服务和本机/远程 AI 客户端，无需手写 CMD/BAT。
@@ -13,7 +20,7 @@
 
 ## [2.7.15] - 2026-09-15
 
-- 新增 38 个 HMI/PLC/工程/选件专用入口，总计 298 个工具；具体边界见 [实现与缺口清单](docs/openness-expansion-progress.md)。
+- 新增 38 个 HMI/PLC/工程/选件专用入口，总计 298 个工具；具体边界见 [实现与缺口清单](docs/reference/capabilities.md)。
 - 新增公开属性定点访问、原生结果失败识别、文件非空/SHA-256 校验及事件预览 token；写入默认预览。
 - 提供完整 V20/V21 交付包。离线与程序集回归通过；真实工程和选件验收待环境，不宣称官方 API 全覆盖。
 
@@ -21,7 +28,7 @@
 
 - 新增 PLC 类型组创建及四类 PLC 用户组管理、工艺对象管理、离线监视表导入、硬件删除/复制/移槽、软件单元与对象发布、库主副本及版本管理、Safety 离线工程管理、证书管理。新增写入工具默认 dryRun 预览，不自动保存或下载。
 - 新增 Unified 画面/变量表组管理，报警类别、离散/模拟报警、报警/数据归档的原生对象管理，以及文本/图形列表原生导入和分页标量属性读取。复杂引用与列表条目不冒充完整读取；V20 图形列表 API 缺失明确失败。
-- 新增离线操作边界测试与 V20/V21 官方 API 形状检查。新工具尚未在真实工程执行写入验收，不宣称覆盖全部 Openness API；详见 docs/engineering-capabilities.md。
+- 新增离线操作边界测试与 V20/V21 官方 API 形状检查。新工具尚未在真实工程执行写入验收，不宣称覆盖全部 Openness API；详见 docs/reference/capabilities.md。
 
 ## [2.7.13] - 2026-09-15
 
@@ -55,11 +62,11 @@
 ## [2.7.8] - 2026-09-14
 
 - 修复设备分组内 PLC 的裸软件名称解析：`+S1-K1` 等名称按字面递归匹配，与软件信息接口使用同一基础解析入口；重名明确报歧义，不采用模糊匹配或单 PLC 猜测。保留硬件遍历和块根组访问的异常，避免误报软件/程序块不存在。尚待新版在用户工程上验证。
-- 新增 `ReadUnifiedRuntimeSettings`、`UpdateUnifiedRuntimeSettings`：读取和修改 Unified HMI 启动画面及受支持的根运行设置。默认预览，验证画面完整路径及名称唯一性，使用并发校验令牌并逐项及最终回读；不自动保存、编译、下载或重启。见 [接口说明](docs/HMI_RUNTIME_SETTINGS.md)。
+- 新增 `ReadUnifiedRuntimeSettings`、`UpdateUnifiedRuntimeSettings`：读取和修改 Unified HMI 启动画面及受支持的根运行设置。默认预览，验证画面完整路径及名称唯一性，使用并发校验令牌并逐项及最终回读；不自动保存、编译、下载或重启。见 [接口说明](docs/guides/hmi/runtime-settings.md)。
 - 新增 `ReadUnifiedGraphicSelection`：通过准确对象名称列表整体定位选择范围，分页读取原始坐标、尺寸、一层工程归属和可用的关系元数据；句柄失效后停止并阻止后续读取。
 - 新增离线 `CompareUnifiedGraphicSelections`：核对前后完整分页证据并报告各对象坐标变化，拒绝缺页、缺字段和范围混用。
-- 普通图形组合的真实成员、整体变换和坐标联动原因仍未验证，明确返回缺口，不将选择范围当作原生组合。见 [接口说明](docs/HMI_GRAPHIC_SELECTION.md)。
-- 完整 V20/V21 运行包包含上述功能，文件版本统一为 2.7.8.0；真实工程验收状态见 [本版说明](docs/releases/v2.7.8.md)。
+- 普通图形组合的真实成员、整体变换和坐标联动原因仍未验证，明确返回缺口，不将选择范围当作原生组合。见 [接口说明](docs/guides/hmi/graphic-selection.md)。
+- 完整 V20/V21 运行包包含上述功能，文件版本统一为 2.7.8.0；真实工程验收状态见 [本版说明](docs/archive/release-notes.md)。
 
 ## [2.7.7] - 2026-09-14
 
@@ -78,7 +85,7 @@
 
 ## 历史版本
 
-- [v2.7.5](docs/releases/v2.7.5.md)
-- [v2.7.4](docs/releases/v2.7.4.md)
-- [v2.7.3](docs/releases/v2.7.3.md)
+- [v2.7.5](docs/archive/release-notes.md)
+- [v2.7.4](docs/archive/release-notes.md)
+- [v2.7.3](docs/archive/release-notes.md)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)

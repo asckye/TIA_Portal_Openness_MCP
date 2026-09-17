@@ -1,40 +1,31 @@
-# 文档导航（新手从这里开始）
+# 文档目录
 
-> 只想跑起来？回到仓库根 [`README.zh-CN.md`](../README.zh-CN.md) 照「⚡ 最快上手（3 步）」做即可，不用读本目录任何文件。
-> 本页给「想多懂一点」的人指路：**按你的角色挑一节看，不必通读。**
+[项目首页](../README.zh-CN.md) · [English](../README.md)
 
-## 我是工程师，想零编程生成/修改工程（CLI 路线）
+## 入门
 
-1. [`CLI_quickstart.md`](CLI_quickstart.md) —— `tia gen / patch / compile / doctor` 全部子命令与退出码
-2. [`AI_spec_prompt.md`](AI_spec_prompt.md) —— 复制给任意 AI，让它产出一份可直接 `tia gen` 的 spec
-3. 模板直接用：`../templates/project-blueprints/`（启停 / 电机两个现成 spec）
+- [配置 TIA 服务与 AI 客户端](getting-started/configuration.md)：虚拟机、宿主机、本机连接，8 种客户端。
+- [CLI 与 AI spec 提示词](getting-started/cli.md)：生成、增量修改、编译、预热和离线校验。
 
-## 我要接 AI 客户端（Cursor / Claude / VS Code，MCP 路线）
+## 操作指南
 
-1. 根 README「上手步骤」——双击 `TiaMcpConfigurator.exe` 选择并配置 8 个 AI 客户端
-2. [`使用说明与介绍.md`](使用说明与介绍.md) —— 各客户端配置文件位置、手动配置、常见问题
-3. [`mcp-ide-and-tool-visibility.md`](mcp-ide-and-tool-visibility.md) —— 「为什么 IDE 里少工具」的解释（客户端缓存/上限，非包裁剪）
+- [完整 PLC + HMI 工程生成](guides/project-generation.md)
+- [版本控制与 Git](guides/version-control.md)
+- [在线实时读值](guides/online-monitoring.md)
+- PLC：[模板及网络模式](guides/plc/templates.md)、[LAD](guides/plc/lad.md)、[SCL](guides/plc/scl.md)、[类型组](guides/plc/type-groups.md)
+- HMI：[画面设计](guides/hmi/design.md)、[连接驱动](guides/hmi/connections.md)、[变量绑定](guides/hmi/tag-binding.md)、[只读迁移](guides/hmi/read-only-migration.md)、[全局脚本](guides/hmi/global-scripts.md)、[图形选择](guides/hmi/graphic-selection.md)、[运行设置](guides/hmi/runtime-settings.md)
+- 工具专题：[PLC 构建](tools/plc-builders.md)、[硬件网络](tools/hardware-network.md)、[HMI 动作](tools/hmi-unified-actions.md)、[HMI 布局](tools/hmi-unified-theme-layout.md)
 
-## 我是驱动本 MCP 的 AI / 想看写码规范
+## 参考与排错
 
-1. `../tools/tiaportal-mcp/skill/SKILL.md` —— **主规范**（工具分层、参数陷阱、LAD/SCL 边界）
-2. [`scl-instruction-library.md`](scl-instruction-library.md) / [`lad-instruction-library.md`](lad-instruction-library.md) —— 指令模板库
-3. [`full-project-generation-runbook.md`](full-project-generation-runbook.md) —— 手工多步流程（一把梭优先用 `ScaffoldProject`，本文是分步排障用的降级路径）
-4. [`hmi-plc-tag-binding-and-addressing.md`](hmi-plc-tag-binding-and-addressing.md) / [`hmi-connection-driver-matrix.md`](hmi-connection-driver-matrix.md) / [`HMI_Unified_画面生成规范与模板.md`](HMI_Unified_画面生成规范与模板.md) —— HMI 三件套
-5. [`在线实时读值_使用指南.md`](在线实时读值_使用指南.md) —— 在线只读监控
+- [工具矩阵](reference/tool-matrix.md)、[能力与验收边界](reference/capabilities.md)、[自然语言配方](reference/natural-language-recipes.md)
+- [错误模型](troubleshooting/errors.md)、[Openness 限制](troubleshooting/openness-limitations.md)、[HMI 快照诊断](troubleshooting/hmi-snapshots.md)
+- [模板索引](../templates/README.md)、[AI 操作 skill](../tools/tiaportal-mcp/skill/SKILL.md)、[清单说明](../manifest/README.md)
 
-## 我在排障
+## 开发与历史
 
-1. 先跑 `runtime\v21\TiaMcpServer.exe doctor`（`--fix` 自动补 Openness 用户组）
-2. [`../手册/error-model.md`](../手册/error-model.md) —— 错误形态说明
-3. [`../手册/openness-limitations.md`](../手册/openness-limitations.md) —— Openness **做不到**的事（别在这些上头硬试）
+- [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)、[界面检查记录](development/design-qa.md)
+- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.17.md)、[v2.7.16](releases/v2.7.16.md)
+- 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)、[多语言修复](archive/multilingual-fix.md)、[v2.7.14 API 覆盖审计](archive/openness-audit-v2.7.14.md)
 
-## 参考与索引（检索用，不必通读）
-
-- [`tool-capability-matrix.md`](tool-capability-matrix.md) —— 全部工具能力矩阵（静态快照；运行时以 `tools/list` 为准）
-- [`../manifest/tools-list.json`](../manifest/tools-list.json) —— 工具清单快照
-- [`basic-plc-template-library.md`](basic-plc-template-library.md) / [`plc-network-patterns-expanded.md`](plc-network-patterns-expanded.md) / [`optional-reference-materials.md`](optional-reference-materials.md)
-- [`../手册/TIA_NL_INTENT_RECIPES.md`](../手册/TIA_NL_INTENT_RECIPES.md) —— 自然语言 → 工具序列索引
-- [`server-maturity-roadmap.md`](server-maturity-roadmap.md) / [`verify-low-barrier-features.md`](verify-low-barrier-features.md) —— 路线图与验证记录
-
-> 历史提示：`../手册/quickstart.md` 与根 README 内容重叠，以**根 README 为准**。
+日常使用以入门和操作指南为准，归档保留当时结论。代码块内以 `docs/`、`runtime/`、`templates/`、`scripts/` 或 `tools/` 开头的路径相对仓库/交付包根目录。
