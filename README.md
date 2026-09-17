@@ -40,7 +40,7 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 ## Capabilities and limits
 
-The static inventory contains **298 tools**; default **lite** advertises **52**, with the remainder available through `FindTools` / `CallTool`. The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+The static inventory contains **350 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **56**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
 Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 
@@ -55,11 +55,10 @@ Delivery and engine versions are independent. [Delivery metadata](manifest/deliv
 | [tools](tools/README.md) | Engine source/tests, AI skill and WPF source |
 | [scripts](scripts/README.md) | Build, checks, generators, diagnostics and operations |
 | [templates](templates/README.md) | PLC/HMI assets and project specifications |
-| [examples](examples/README.md) | Manual client configuration examples |
 | [manifest](manifest/README.md) | Inventory, versions, build receipts and hashes |
 
 Root launch/configuration CMD/BAT files were replaced by the GUI. Delivery ZIPs no longer duplicate runtimes into legacy `bin/Release` paths; use `runtime/v20` or `runtime/v21`.
 
-Read [CONTRIBUTING](CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. See [CHANGELOG](CHANGELOG.md) and [archived release notes](docs/archive/release-notes.md).
+Read [CONTRIBUTING](.github/CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. See [CHANGELOG](CHANGELOG.md) and [archived release notes](docs/archive/release-notes.md).
 
 Independently maintained by asckye. Provenance and third-party notices remain in [NOTICE](NOTICE.md) and [LICENSE](LICENSE).

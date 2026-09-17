@@ -1,30 +1,30 @@
-# 路线图与待办（2026-09-17 审计）
+# 路线图与待办（2026-09-17 审计，2.7.18 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
-本页来自 2026-09-17 对仓库结构、西门子官方 V21 在线文档（发布日期 03/2026）及第三方生态的一次系统审计。分四部分：引擎源码待办（需在装有 TIA PublicAPI 的机器上重建）、官方 API 缺口优先级、第三方工具集成候选、合规事项。所有条目均附证据位置；未核实的明确标注。
+本页来自 2026-09-17 对仓库结构、西门子官方 V21 在线文档（发布日期 03/2026）及第三方生态的一次系统审计，并在同日的 2.7.18 发布后更新状态。分五部分：引擎源码待办状态、官方 API 缺口优先级、第三方工具集成候选、合规事项、已完成项。所有条目均附证据位置；未核实的明确标注。
 
-## 1. 引擎源码待办（下次在 TIA 机器重建时处理）
+## 1. 引擎源码待办 —— 2.7.18 状态
 
-引擎编译依赖本机 TIA PublicAPI，且 `manifest/tools-list.json`、`manifest/release-build.json` 由已编译 EXE 反射生成并带哈希。以下改动**不在无 TIA 的机器上做**，避免源码与 `runtime/` 二进制漂移。
+本机放置 PublicAPI 后引擎可编译，以下项目已在 2.7.18 处理；未处理的注明原因。
 
-| # | 问题 | 位置 | 处理 |
-|---|---|---|---|
-| E1 | 14 个工具的域名标签用大写（`[L2][PROJECT]`、`[LIBRARY]`、`[HARDWARE]`），与其余 284 个工具的 PascalCase 不一致，导致工具矩阵出现 `Project`/`PROJECT` 等重复分节。`FindTools` 匹配已小写化，**不影响检索**。 | `ModelContextProtocol/McpServer.NativeExchange.cs`（6 处）、`McpServer.SpecializedEngineering.cs`（8 处） | 改为 `Project`/`Library`/`Hardware`，重建后重新生成 tools-list 与矩阵 |
-| E2 | 工具 `RunV2PlanCompletionAudit`（含 CLI 标志）审计的文档 `docs/TIA_MCP_常见操作全覆盖方案_V2_二次优化计划.md` 已在 2.7.17 删除；同文件还读取不存在的 `tests/TiaMcpServer.Test`（实际为 `TiaMcpServer.Tests`）和 `reports/offline_release_suite`。工具现在总是在空证据上运行。 | `ModelContextProtocol/V2PlanCompletionAuditor.cs:34,36,37`、`McpServer.PlcSoftware.cs:1219`、`CliOptions.cs:68,430`、`Program.cs:238-240` | 移除该工具、审计器和 CLI 标志（工具数 298→297） |
-| E3 | Doctor 提示 "Run scripts/check-environment.ps1"，脚本不存在 | `ModelContextProtocol/McpServer.cs:900` | 改为 `TiaMcpServer.exe doctor` |
-| E4 | `GetAuthoringGuide` 运行时返回的文本声称存在 `ImportBlockFromScl` / `ImportBlocksFromScl` 别名，实际未注册 | `ModelContextProtocol/McpGuides.cs:58` | 删除该句；同时让 `scripts/checks/Check-DeadToolReferences.py` 扫描 `McpGuides.cs` 与 `SKILL.md`（当前只扫 `[Description]`） |
-| E5 | 源码中残留作者本机绝对路径（CONTRIBUTING 禁止） | `ClassicHmiTemporaryImportPreflightSuite.cs:90-91`、`Program.CliProbes.cs:764`、`TiaMcpServer.V20.csproj:19`（`<TiaPortalLocation>D:\app\TIA20\Portal V20`） | 改为从 `TiaPortalLocation` 环境变量 / `-p:SiemensEngineeringDirectory` 读取，csproj 用 `Condition="'$(TiaPortalLocation)'==''"` 给默认值 |
-| E6 | V21 新增 `ProgrammingLanguage.ST`（SIMATIC AX / TIAX 导入块）。块枚举与语言判断必须容忍该值。 | 所有 `ProgrammingLanguage` 的 switch/比较 | 加默认分支，返回 `unsupportedLanguage` 而非抛异常；需本地 XML 核实枚举名 |
-| E7 | **已确认缺陷（V20+V21）**：`DownloadToPlc` 委托把 `UserManagementDownload` 当复选框调用 `DownloadConfigSetChecked`，但该类型在两版 PublicAPI 中都只有 `CurrentSelection`（枚举 `UserManagementPreDownloadSelections`：KeepOnlineUserManagementData / UpdateUserManagementDataButKeepOnlinePassword / DownloadAllUserManagementDataResetToProject）；`GetProperty("Checked")` 返回 null，提示未应答，按同文件注释的语义下载会中止。此外 V21 共 43 种具体下载提示类型，委托只应答 16 种；未应答的 27 种：`BlockBindingPassword`、`ModuleReadAccessPassword`、`ModuleWriteAccessPassword`、`PlcMasterSecretPassword`（需密码）、`OverwriteOnMemoryCard`、`SwitchBackupToPrimary`、`ResetModule`、`InitializeMemory`、`LoadIdentificationData`、`ProtectionLevelChanged`、`SelectiveDeleteDownload`、`ExpandDownload`、`WaitOnReboot`、`TurnOffSequence`、`UpgradeTargetDevice`、`DowngradeTargetDevice`、`OverwriteTargetLanguages`、`ReplaceDownloadedData`、`TargetForSoftware`、`DownloadWebApplication`、`UpdateWebApplication`、`DeleteWebApplication`、`OverwriteHmiData`、`FitHmiComponents`、`AcceptDownloadOfUnencryptedSensitiveData`、`StartDriveDownloadCheckConfiguration`。（`DataBlockReinitializationOrKeepActualValues` 已由 `keepActualValues` 参数正确处理，早先文档说未处理是错的。） | `Siemens/Portal.Download.cs:486-572` | ① `UserManagementDownload` 改为按 `CurrentSelection` 设置，默认 `KeepOnlineUserManagementData`，暴露 `userManagementMode` 参数；② 为无需密码的提示补默认应答（记录到响应），密码类提示返回明确的 `unhandledPrompt` 错误并列出类型名，而不是静默中止；③ 用 `scripts/diagnostics/Audit-OpennessCoverage.ps1` 的差集作为回归检查 |
-| E8 | 工程文件：`TiaMcpServer.csproj:37-40` 有无对象的 `<Compile Remove="tests\**">` 死项（`src/` 下无 `tests/`）；默认 csproj 实为 V21 但无标记；`HttpTests.csproj` 与目录名 `TiaMcpServer.HttpTests` 不对称。**csproj 在 `Validate-Bundle` 的源码哈希集合内，改动必须伴随重建。** | `TiaMcpServer.csproj`、`tests/TiaMcpServer.HttpTests/HttpTests.csproj` | 删除死项；可选重命名为 `TiaMcpServer.V21.csproj`、`TiaMcpServer.HttpTests.csproj`，同步 `Build-Release.ps1`、`Package-Release.py:62`、`Validate-Bundle.ps1:265` |
-| E9 | `Generate-ToolCapabilityMatrix.ps1` 未被发布流程调用，`tool-matrix.md` 可能与 `tools-list.json` 漂移 | `scripts/build/Build-Release.ps1` | 在生成 tools-list 之后调用矩阵生成器 |
-| E10 | 引擎日志写在 `runtime/v21/TiaMcpServer.startup.log`（EXE 旁），就地运行时污染交付树 | 日志初始化 | 改为 `%LOCALAPPDATA%\TiaMcpServer\` |
-| E11 | 引擎源码 186 个 `.cs` 中 41 个带 BOM、145 个不带；`.gitattributes` 无 `*.cs` 规则 | 全部源码 | 统一为无 BOM UTF-8，`.gitattributes` 增加 `*.cs text eol=lf` |
+| # | 项目 | 状态 |
+|---|---|---|
+| E1 | 14 个大写域名标签 | 已统一为 PascalCase；分类体系见 `ToolTaxonomy` |
+| E2 | `RunV2PlanCompletionAudit` 死工具 | 已移除工具、审计器与 CLI 标志 |
+| E3 | Doctor 提示指向不存在的脚本 | 已改为 `TiaMcpServer.exe doctor` |
+| E4 | `McpGuides.cs` 中不存在的 `ImportBlocksFromScl` 别名 | 已改为 `ImportBlocksFromDocuments` / `ImportFromDocuments` |
+| E5 | 源码硬编码 `D:\app\TIA21` 路径 | 改为 `Engineering.ProbeOpennessAssemblies()` 运行时解析；V20 csproj 的 `TiaPortalLocation` 加 `Condition` 可被覆盖 |
+| E6 | `ProgrammingLanguage.ST` 兼容 | 核实无需改动：所有用法为 `ToString` / `Enum.GetName` |
+| E7 | 下载提示应答缺陷 | 已修复：`DownloadPromptPolicy` 按真实形态应答 43 种提示，未应答项回传 |
+| E8 | csproj 死项 / 命名 | 死 `ItemGroup` 已删除；`TiaMcpServer.V21.csproj` / `TiaMcpServer.HttpTests.csproj` 重命名**未做**（涉及 3 个脚本，收益低） |
+| E9 | 工具矩阵未纳入发布流程 | 已纳入：`Build-Release.ps1` 生成清单后立即重建矩阵 |
+| E10 | 日志写在 EXE 旁 | **保留**：`%TEMP%` 已有副本，EXE 旁的 `startup.log` 便于用户就地查看且已 gitignore |
+| E11 | `.cs` BOM 不一致 / `.gitattributes` | **未做**：41 个文件的 BOM 统一会制造纯噪声 diff 并改变源码哈希集合，留待下一次引擎重建时单独提交 |
 
 ## 2. 官方 Openness API 缺口优先级
 
-基线：[能力与验收边界](../reference/capabilities.md)"尚未完成"清单 + [v2.7.14 覆盖审计](../archive/openness-audit-v2.7.14.md)。2026-09-17 对照官方 V21 在线目录（698 个条目）刷新，并用本机 V21 PublicAPI XML 做了逐成员词法盘点（[官方 API 覆盖清单](../reference/openness-coverage.md)：4,490 个领域成员，方法已引用 169/1,239，类型完全未触及 1,030/1,217——口径与低估原因见该页）。结论：**无 V22**；V21 Update 1/2 不新增 Openness API；下一次核对点为 SPS（11 月）。
+基线：[能力与验收边界](../reference/capabilities.md)"尚未完成"清单 + [v2.7.14 覆盖审计](../archive/openness-audit-v2.7.14.md)。2026-09-17 对照官方 V21 在线目录（698 个条目）刷新，并用本机 V21 PublicAPI XML 做了逐成员词法盘点（[官方 API 覆盖清单](../reference/openness-coverage.md)：4,490 个领域成员，2.7.17 时方法已引用 169/1,239、类型完全未触及 1,030/1,217，2.7.18 后成员已引用 609、类型有专用引用 208——口径与低估原因见该页）。结论：**无 V22**；V21 Update 1/2 不新增 Openness API；下一次核对点为 SPS（11 月）。
 
 ### 2.1 高价值且官方 API 存在——优先实现
 
@@ -64,7 +64,7 @@
 | 9 | **core-engineering/siemens-plc-tools**（MIT，Python） | 从 V21 导出生成文档（MkDocs/Draw.io）、语义 diff、交叉引用 | 子进程 | MIT | 低 | 5 星、4 个月，成熟度未知 |
 | 10 | 文档参考包：Repsay 的 Python 客户端、Siemens 官方 code-snippets、Siemens Open Library（Unified 面板）、Unified-JS-Pro（Unlicense）、TIA-Add-In-ShowScripts、awesome-structured-text | 生态地图；JS 片段种子 | 仅文档链接 | 混合（MIT/Unlicense/Siemens 免版税） | 低 | 链接维护 |
 
-竞品对照（截至 2026-09-17）：Czarnak/tia-portal-mcp（59 星，MIT，预览-应用安全令牌 + 审计日志）、heilingbrunner/vscode-tiaportal-mcp（55 星）、chewcw/tia-portal-openness-mcpserver（37 星，**无许可证**，有 MCP elicitation/sampling）、a4webdev/tiacommander-mcp（闭源，独立 S7 通道 + 事务回滚 + 孤儿 IDB 分析）、feelautom/T-IA Connect（商业，唯一带 PLCSIM Adv 工具）。本项目差异化：298 工具广度、V20+V21 双运行时、WPF 配置器、虚拟机/宿主机分离、Unified 深度、CLI 蓝图。值得吸收的模式：预览-应用令牌、审计日志、独立 S7 在线通道。
+竞品对照（截至 2026-09-17）：Czarnak/tia-portal-mcp（59 星，MIT，预览-应用安全令牌 + 审计日志）、heilingbrunner/vscode-tiaportal-mcp（55 星）、chewcw/tia-portal-openness-mcpserver（37 星，**无许可证**，有 MCP elicitation/sampling）、a4webdev/tiacommander-mcp（闭源，独立 S7 通道 + 事务回滚 + 孤儿 IDB 分析）、feelautom/T-IA Connect（商业，唯一带 PLCSIM Adv 工具）。本项目差异化：350 工具广度、V20+V21 双运行时、WPF 配置器、虚拟机/宿主机分离、Unified 深度、CLI 蓝图。值得吸收的模式：预览-应用令牌、审计日志、独立 S7 在线通道。
 
 **许可证红线（不得引入代码）**：rickgaiser/TiaMcp（AGPL-3.0）、TUM-AIS/IEC611313ANTLRParser（GPL-3.0，唯一的 SCL 专用语法，只能参考设计）、Parozzz/TiaUtilities（GPL-3.0）、node-red-contrib-s7（GPL-3.0）、DotNetSiemensPLCToolBoxLibrary（LGPL-2.1，仅动态链接）、iec-checker / rusty（LGPL-3.0，仅子进程）、OPC Foundation UA-.NETStandard **源码**（非会员 GPL-2.0；NuGet 二进制可用）。
 
@@ -93,6 +93,10 @@
 
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
-## 5. 已在本次整理中完成（无需重建）
 
-删除过期 `手册/`、5 个 `_deprecated` PLC JSON 模板、被取代的 `Generate-ToolsList.py`；`design-qa.md` 归档；修复 14 处过期引用（bug 模板、蓝图文件名、`SetForceTableEntry`/`ImportBlocksFromScl` 等 AI 可见的死工具名、版本号、CHANGELOG 锚点）；`openness-limitations.md` 更正发现扫描断言并补充 RUN/STOP 细节与新下载配置；`capabilities.md` 追加官方对照新缺口并去除与 release-build 重复的计数；补齐第三方许可证清单与原文；`.gitignore` 增加 TIA 工程扩展名；`plugin.json` 内联 MCP 配置并删除根 `.mcp.json`。详见 CHANGELOG。
+## 5. 2.7.18 已完成
+
+- 引擎：E1–E5、E7、E9 处理完毕；新增 52 个官方 Openness 工具、8 个运行时通道工具、3 个离线分析工具与 `ListToolCategories`，共 350 个工具；V20/V21 重建，离线 1158、形状检查 847/758、实际 EXE 回归两版全过；**真实工程验收未执行**。
+- §2.1 中的 P1（下载提示、设备上载/扫描、DB 快照、文件夹下载）与大部分 P2（块保护、`UpdateProgram`、OPC UA 访问控制、UMAC 读写、库/工程比较、报警文本导入、Unified 事件/部件/动态化、通信连接、监视/强制表 Web 访问）已实现；P3 的 ProDiag 对象、多用户会话、Motion 对象模型、经典 HMI 脚本亦已实现。仍未做：SafetyValidation、Teamcenter、Startdrive/SiVArc/DCC 剩余动作、UMC 同步与工程保护启停、硬件杂项（App ID、批量参数、PSC、Logo、CiR、共享设备、I-Device GSD 导出）、库实例清理/更新流程。
+- §3 候选：已落地 —— `Siemens.Simatic.S7.Webserver.API`（#2）、WinCC Unified Open Pipe（S1）、语义 diff（#3/S4，自研实现）、TST/CaX AML 导入（S5，`ImportDeviceAml`）、TODO 扫描与 SCL 自测试模板（S8）、Test Suite（#7，既有工具）。未落地 —— PLCSIM Advanced API（#1，本机无 DLL，需 PLCSIM Adv 环境）、PLCSIM.UnitTest（S2，同上）、TIA Viewer 渲染器（S3，TS 移植量大）、AutoPLC/Agents4PLC 数据（#4/#5，属 skill 调优）、Aml.Engine（#6，AML 生成侧）、tree-sitter/plc-st-review 预检（#8）、siemens-plc-tools（#9）、写保护 hook（S7）。
+- 仓库整理与审计（2.7.17 之后、2.7.18 之前）：删除过期 `手册/`、5 个 `_deprecated` PLC JSON 模板、被取代的 `Generate-ToolsList.py`；`design-qa.md` 归档；修复 14 处过期引用；`openness-limitations.md` 更正发现扫描断言；补齐第三方许可证清单与原文；`.gitignore` 增加 TIA 工程扩展名与本机 PublicAPI 目录；`plugin.json` 内联 MCP 配置并删除根 `.mcp.json`。详见 CHANGELOG。

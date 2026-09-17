@@ -20,7 +20,7 @@ project, hardware, PLC, HMI, and online operations.
 ```
 
 **交付包内最短路径（仅读包内文件时）**  
-根目录 `README.zh-CN.md` → `TiaMcpConfigurator.exe` 配置连接（手动示例在 `examples/mcp/cursor.json`）→ `scripts/checks/Validate-Bundle.ps1` 脱机校验 → 执行顺序见 `docs/guides/project-generation.md` 与 `templates/project-blueprints/full_plc_hmi_project.json`。
+根目录 `README.zh-CN.md` → `TiaMcpConfigurator.exe` 配置连接（手动示例在 `docs/getting-started/cursor.example.json`）→ `scripts/checks/Validate-Bundle.ps1` 脱机校验 → 执行顺序见 `docs/guides/project-generation.md` 与 `templates/project-blueprints/full_plc_hmi_project.json`。
 
 Never guess paths. Never invent SCL/LAD XML. If a tool exists for the task, use
 it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
@@ -96,15 +96,29 @@ Notes:
 
 Only fall back to the manual runbook (`docs/guides/project-generation.md`) when the user needs something `ScaffoldProject` does not cover.
 
-## 1. Tool layers
+## 1. Tool layers and categories
 
-The `Description` of every tool starts with one of three layer tags:
+The `Description` of every tool starts with `[layer][domain][operation]`:
 
 | Tag | Meaning | When to use |
 |---|---|---|
 | `[L0]` | Bootstrap / read-only diagnostics | First call of a session, environment checks |
 | `[L1]` | Common workflow tool | 80% of normal sessions only need L0+L1 |
 | `[L2]` | Domain / advanced tool | Reach for these by name only after L0/L1 fails or when a specific need arises |
+
+The domain tag belongs to one of 7 categories (call `ListToolCategories` for live counts, then `FindTools(category=…)` or `FindTools(domain=…)` to browse one area):
+
+| Category | Domains | What lives there |
+|---|---|---|
+| `session` | Bootstrap, Guide, Meta, Portal, Diagnostics, Reflection, Exports, Reports | connect/attach, self-tests, FindTools/CallTool, generic reflection, export store, reports |
+| `project` | Project, Library, VersionControl, Security, Validation | open/save/archive, texts, libraries, VCI, users/certificates/protection, offline validation and block diff |
+| `plc` | PLC-Software, PLC-Builders, PLC-Alarms, PLC-TechnologyObjects, PLC-OpcUA, Safety | blocks/UDTs/tags/sources/units, SCL/LAD builders, alarm texts, Motion/TO, OPC UA server config, Safety |
+| `plc-online` | PLC-Online | go online/offline, download, memory-card image, station upload, accessible-device scan, online compare |
+| `hardware` | Hardware | devices/modules, catalog, subnets, communication connections, system diagnostics settings, AML, drives/DCC |
+| `hmi` | HMI, HMI-Unified, HMI-Classic, HMI-Library | Unified screens/tags/alarms/logs/scripts/events/dynamization/parts, classic HMI scripts/cycles/lists, shared read/export, library templates, SiVArc |
+| `runtime` | Online-Monitoring | S7 protocol, OPC UA, S7 Web server API and Unified Open Pipe reads plus confirmed writes — no Openness involved |
+
+Operation tags: `READ` (no change), `WRITE` (offline project change, preview by default), `FILE`, `OFFLINE` (no TIA session needed), `ONLINE` (contacts a device, read-only), `ONLINE-WRITE` (changes a live device/runtime), `EXECUTE`, `SESSION`.
 
 Core L0/L1 set:
 
@@ -192,10 +206,12 @@ when you already have hand-crafted XML.
 
 These have NO Openness API — do not try to invent reflection workarounds:
 
-- Read or change CPU operating mode (RUN/STOP/STARTUP) → use OPC UA
-- Read CPU fault/diagnostic buffer → use OPC UA
+- Read or change CPU operating mode (RUN/STOP/STARTUP) as a standalone Openness call → `ReadPlcWebDiagnostics` / `SetPlcWebOperatingMode` (S7 Web server API, runtime channel) or OPC UA; Openness only stops/starts inside a download (`DownloadToPlc` stopBeforeDownload/startAfterDownload)
+- Read CPU fault/diagnostic buffer → OPC UA or the Web server API diagnostics
 - ClearForces / Unforce / per-block selective download
 - Trigger Safety F-CPU compile (must be done in TIA UI manually)
+
+Openness DOES have (and this server now wraps): accessible-device scan (`ScanAccessibleDevices`), station upload (`UploadStationFromPlc`), memory-card image (`DownloadPlcToFolder`), DB snapshots (`ManagePlcDataBlockSnapshot`), block protection, UMAC, communication connections, OPC UA access control — see `ListToolCategories`.
 
 Force/Watch table tools edit the project-side definition; values become
 effective only after the project is online and the table trigger fires.

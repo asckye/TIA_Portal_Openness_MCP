@@ -2,7 +2,7 @@
 
 [文档目录](../README.md)
 
-根目录保留项目说明、治理/许可证、插件配置及 `TiaMcpConfigurator.exe`。源码放在 `tools/`，运行文件放在 `runtime/`，模板放在 `templates/`，清单放在 `manifest/`，示例放在 `examples/`。
+根目录只保留项目说明（README、CHANGELOG）、LICENSE/NOTICE、Git 配置、插件配置及 `TiaMcpConfigurator.exe`。治理文件（CONTRIBUTING、CODE_OF_CONDUCT、SECURITY）在 `.github/`（GitHub 同样识别）；源码放在 `tools/`，运行文件放在 `runtime/`，模板放在 `templates/`，清单放在 `manifest/`；手动客户端配置示例是 `docs/getting-started/cursor.example.json`（原 `examples/` 目录已并入）。本机的 Siemens PublicAPI 副本放在仓库之外（如 `D:\TIA_PublicAPI\`），构建脚本以参数指向它。
 
 ## 文档分类
 

@@ -16,7 +16,7 @@
   因此 UNREFERENCED 表示"没有专用封装"，不表示"完全不可用"。
 
 .PARAMETER PublicApiDirectory
-  含 Siemens.Engineering*.xml 的目录，例如 TIA_V21_PublicAPI\V21\net48。
+  含 Siemens.Engineering*.xml 的目录，例如 D:\TIA_PublicAPI\TIA_V21_PublicAPI\V21\net48（PublicAPI 放在仓库之外，不进 Git）。
 .PARAMETER Version
   标签，如 V21。
 .PARAMETER OutputDirectory

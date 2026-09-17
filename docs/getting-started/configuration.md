@@ -89,4 +89,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 
 使用 Windows 自带 .NET Framework 编译器，XAML 嵌入单个 EXE。测试输出在 `bin-build/configurator-tests`；不修改真实 AI 配置、防火墙或工程。
 
+手动配置示例：[cursor.example.json](cursor.example.json) 是本机 V21 stdio 示例，把 `command` 替换为交付包中 `runtime/v21/TiaMcpServer.exe` 的绝对路径；V20 同时修改路径与版本参数。宿主机连接虚拟机及其他客户端优先使用 `TiaMcpConfigurator.exe`。示例不含现场 IP、密钥或用户配置，不能直接当作已配置文件使用。
+
 配置格式依据：[Claude Code](https://code.claude.com/docs/en/mcp)、[Codex](https://developers.openai.com/codex/mcp)、[Cursor](https://cursor.com/docs/mcp)、[VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)、[Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)、[Windsurf](https://docs.windsurf.com/windsurf/cascade/mcp)、[Cline](https://docs.cline.bot/mcp/mcp-overview)、[mcp-remote](https://github.com/punkpeye/mcp-remote)。

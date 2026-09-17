@@ -1,17 +1,31 @@
 # Change Log
 
-## [Unreleased]
+## [2.7.18] - 2026-09-17
 
-仓库整理与审计，引擎 2.7.15.0 二进制未变。
+引擎 2.7.18.0（V20/V21 均重建），工具 298 → 350，默认 lite 56 项。详见 [v2.7.18](docs/releases/v2.7.18.md)。
+
+- **下载缺陷修复**：`DownloadToPlc` 此前把 `UserManagementDownload`、`AlarmTextLibrariesDownload`、`DownloadCertificate` 当复选框处理，而它们在 V20/V21 都是 `CurrentSelection` 选择型，等于从未应答；另有 27 种下载提示类型完全未处理。现在委托按提示的真实形态（枚举选择 / Checked / SetPassword）应答，调用方 `promptAnswersJson` 优先，内置默认其次（破坏性提示默认 NoAction/NoChange），密码类由专用参数提供，其余提示连同 TIA 提示文本记入 `Meta.promptsUnanswered`。新增 `userManagementMode`、`promptAnswersJson`、`moduleAccessPassword`、`blockBindingPassword`、`masterSecretPassword` 参数。
+- **新增 52 个官方 Openness 工具**（全部默认预览、精确名称、写入需确认参数、V20 缺失成员时明确 NotSupported）：设备传输（可达设备扫描、站上载、参数上载、下载到文件夹/存储卡镜像）；PLC 块服务（块保护、DB 快照/实际值、程序升级、指纹、报警实例文本导入、报警文本列表）；工程安全与协作（UMAC 用户/角色/权限读写、工程保护读取、多用户会话、库比较、离线工程比较、Portal 设置）；硬件服务（通信连接 CRUD、监视/强制表 Web 访问、系统诊断设置交换、OPC UA 访问控制、AML 导入、硬件特性探测）；Unified UI 对象模型（全部事件/属性事件枚举、部件 CRUD、完整动态化类型、画面布局/尺寸/删除、列表定位、报警外观与审计设置读取）；Motion/ProDiag/经典 HMI（轴配置与原生操作、ProDiag 对象、VB 脚本/周期/文本图形列表/全球化/面板）。
+- **新增运行时通道**（不经 Openness）：S7 Web 服务器 API（官方 `Siemens.Simatic.S7.Webserver.API` 3.3.76，MIT）读写变量、诊断、受确认的运行模式切换；WinCC Unified Open Pipe 命名管道读写变量、读报警、原始请求，消息格式按官方手册核实。
+- **新增离线分析**：`ComparePlcBlockDocuments`（剥离时间戳/UId 的语义 diff + 结构差异）、`ScanPlcSourceAnnotations`（TODO/FIXME 扫描）、`ExtractPlcBlockMetrics`；`templates/plc/scl-examples/FB_SelfTest_Template.scl` 自测试骨架。
+- **工具分类**：引擎内 `ToolTaxonomy` 作为唯一事实来源——7 个大类（session / project / plc / plc-online / hardware / hmi / runtime）、26 个域、规范操作类型（SESSION/READ/WRITE/FILE/OFFLINE/ONLINE/ONLINE-WRITE/EXECUTE）；新增 `ListToolCategories`，`FindTools` 支持 `category`/`domain` 筛选；`tools-list.json` 带分类字段，`tool-matrix.md` 改由清单按大类→域生成并纳入发布流程。原裸 `PLC` 域并入 `PLC-Software` / `PLC-TechnologyObjects`，8 种历史操作写法统一。
+- **引擎待办清理**：14 个大写域名标签统一；移除输入已不存在的 `RunV2PlanCompletionAudit` 工具与 CLI 标志；Doctor 提示、授权指南死工具名修正；硬编码开发机路径改为运行时安装根解析；V20 csproj 的 `TiaPortalLocation` 可被覆盖；移除无对象的 csproj 项。
+- **验证**：离线 1158 项通过；官方程序集 API 形状检查 V21 847 / V20 758；实际 EXE HTTP 28、HMI 遍历 18、资源发现 42 等两版全过；配置器 53 项。**真实工程验收未执行**；新工具按 API 形状与离线逻辑验证，状态见能力文档。
+- 许可证：新增 Webserver API、Newtonsoft.Json、MimeMapping 条目与原文。
+
+### 随 2.7.18 发布的仓库整理与审计
+
+以下改动与上面的引擎变更同属 2.7.18。
 
 - 插件配置：`tia-portal` MCP 服务器定义内联进 `.claude-plugin/plugin.json`，删除根目录 `.mcp.json`。`${CLAUDE_PLUGIN_ROOT}` 只在插件上下文展开，根目录文件被 Claude Code 当项目级配置加载时路径不展开、服务器启动失败；直接打开仓库或解压包不再触发该错误。
 - 清理：删除已并入分类却仍随包分发的 `手册/`、5 个标 `_deprecated` 的 `templates/plc/plcbuild-json/fb_*|fc_*.json`（对应 `.scl` 保留）、被 `Generate-ToolsListFromAssembly.ps1` 取代的 `Generate-ToolsList.py`；`design-qa.md` 移入 `docs/archive`；`package-manifest.json` 去掉与 `plcTemplateLibrary` 重复的 `plcNetworkPatterns` 入口。引擎源码与工程文件未改动（受 `Validate-Bundle` 源码哈希约束，相关待办见路线图）。
 - 过期引用：修正 bug 模板的 `bin/Release` 路径与版本示例、蓝图 README 的 `scaffold_spec_start_stop.json` 文件名、HttpTests README 版本参数、CHANGELOG 历史版本锚点；删除 SKILL.md 中不存在的 `ImportBlocksFromScl` 别名说明；`natural-language-recipes.md` 与 `openness-limitations.md` 不再把刻意未注册的 `SetForceTableEntry` 当作可用工具。
 - 官方 API 对照：新增 `scripts/diagnostics/Audit-OpennessCoverage.ps1`，用本机 V21 PublicAPI 的 18 个官方 XML 对引擎源码做逐成员词法盘点，结果与确认缺口写入 `docs/reference/openness-coverage.md`。`openness-limitations.md` 更正"在线设备发现仅限工程配置"的错误（`GetAccessibleDevices()` 存在），补充 RUN/STOP 只能作为下载配置附带发生、下载提示覆盖情况与下载到 Windows 文件夹；`capabilities.md` 追加此前两侧均未记录的缺口（设备上载、可达设备扫描、`WatchAndForceTableAccessManager`、`UpdateProgram`、`ProgrammingLanguage.ST` 兼容义务等），并把与 `release-build.json` 重复的验证计数改为指向。
-- 已确认引擎缺陷（未修，记入路线图 E7）：`DownloadToPlc` 委托把 `UserManagementDownload` 当复选框处理，而该提示在 V20/V21 均为 `CurrentSelection` 选择型，触发时提示未应答导致下载中止；V21 共 43 种下载提示类型，委托只应答 16 种。
+- 审计中确认的下载提示缺陷（`UserManagementDownload` 被当复选框、43 种提示只应答 16 种）已在本版修复，见上。
 - 许可证：新增 `docs/licenses/THIRD-PARTY-NOTICES.md` 逐项列出 `runtime/` 全部第三方程序集的许可证，补齐 Sharp7（MIT）、Workstation.UaClient、YamlDotNet、.NET Foundation、Siemens.Collaboration.Net 原文。Siemens 程序集适用免版税软件条款而非 MIT，再分发边界需维护者评估。
 - 新增 `docs/development/roadmap.md`：11 项需在 TIA 机器重建的引擎待办、官方 API 缺口优先级、第三方集成候选（含许可证红线）、合规事项。
 - 其他：`docs/README.md` 加入语言约定；`tools/README.md` 补 `vci-watch`；`templates/hmi/README.md` 补漏的 `unified_basic_event_log` 行；英文 README 为中文界面按钮加注释；`.gitignore` 增加 TIA 工程/归档扩展名与 `.claude/`。
+- 根目录瘦身：`CONTRIBUTING.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md` 移入 `.github/`（GitHub 同样识别）；`examples/` 目录并入 `docs/getting-started/cursor.example.json` 与配置指南；本机 PublicAPI 副本移出仓库目录（`.gitignore` 保留防护）。根目录只剩说明、许可证、Git/插件配置与配置器 EXE。
 
 ## [2.7.17] - 2026-09-17
 

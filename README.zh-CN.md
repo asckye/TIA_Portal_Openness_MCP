@@ -38,7 +38,7 @@
 
 ## 能力与验证范围
 
-当前静态清单共 **298 个工具**，默认 **lite** 档直接暴露 **52 个**；其余经 `FindTools` 查找、`CallTool` 调用。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+当前静态清单共 **350 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **56 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
 
 覆盖工程/会话、PLC 块/类型/变量、硬件网络、Unified HMI、文件交换、库、版本控制及在线只读监视。详细范围见 [工具矩阵](docs/reference/tool-matrix.md) 和 [能力边界](docs/reference/capabilities.md)。实现工具、API 签名检查与真实工程验收是不同状态，不代表覆盖西门子全部 API。
 
@@ -53,11 +53,10 @@
 | [tools](tools/README.md) | 引擎源码/测试、AI skill、WPF 源码 |
 | [scripts](scripts/README.md) | 构建、检查、生成、诊断和可选操作 |
 | [templates](templates/README.md) | PLC/HMI 模板与工程 spec |
-| [examples](examples/README.md) | 手动客户端配置示例 |
 | [manifest](manifest/README.md) | 文件清单、版本、验证记录及哈希 |
 
 原根目录配置及启动 CMD/BAT 已由 GUI 替代。交付包不再附带 `bin/Release` 引擎副本，统一使用 `runtime/v20`、`runtime/v21`。调整对照见 [仓库结构说明](docs/development/repository-layout.md)。
 
-开发前阅读 [贡献说明](CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
+开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
 
 本项目由 asckye 独立维护，原始来源和依赖声明保留于 [NOTICE](NOTICE.md) 与 [LICENSE](LICENSE)。

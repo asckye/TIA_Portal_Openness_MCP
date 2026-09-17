@@ -27,7 +27,7 @@
 - [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)
 - [路线图与待办](development/roadmap.md)：引擎待重建项、官方 API 缺口优先级、第三方集成候选、合规事项（2026-09-17 审计）
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
-- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.17.md)、[v2.7.16](releases/v2.7.16.md)
+- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.18.md)、[v2.7.17](releases/v2.7.17.md)、[v2.7.16](releases/v2.7.16.md)
 - 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)、[多语言修复](archive/multilingual-fix.md)、[v2.7.14 API 覆盖审计](archive/openness-audit-v2.7.14.md)、[v2.7.16 配置器界面检查记录](archive/design-qa.md)
 
 日常使用以入门和操作指南为准，归档保留当时结论。代码块内以 `docs/`、`runtime/`、`templates/`、`scripts/` 或 `tools/` 开头的路径相对仓库/交付包根目录。

@@ -1,6 +1,21 @@
 # 工程能力与验收边界
 
-本文合并 v2.7.14–v2.7.15 的能力与缺口说明，适用于当前交付沿用的 2.7.15 引擎。静态清单 298 项，默认 lite 暴露 52 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现；新增接口尚未完成真实工程写入验收。
+本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
+
+## 2.7.18 新增工具族
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 下载提示（缺陷修复） | `DownloadToPlc` 新参数 `userManagementMode`、`promptAnswersJson`、`moduleAccessPassword`、`blockBindingPassword`、`masterSecretPassword` | 43 种提示按真实形态应答；破坏性提示默认 NoAction/NoChange，需 `promptAnswersJson` 显式指定；未应答提示回传 `Meta.promptsUnanswered` |
+| 设备传输 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`、`DownloadPlcToFolder` | 扫描为在线网络探测；上载要求 `confirmUpload`，目标地址须与扫描结果精确一致；参数上载 V20 无 API；文件夹下载要求新目录或空目录 |
+| PLC 块服务 | `ManagePlcBlockProtection`、`ManagePlcDataBlockSnapshot`、`UpdatePlcProgram`、`ReadPlcBlockFingerprints`、`ImportPlcAlarmInstanceTexts`、`ManagePlcAlarmTextList` | 保护/取消保护需 `confirmProtectionChange`；快照装载改变 CPU 实际值需 `confirmValueChange`，V20 无 `ValueService`；指纹读取是在线调用；报警文本列表 API 无条目与 `Create(string)`，只有主副本创建/删除 |
+| 工程安全与协作 | `ReadProjectUserManagement`、`ManageProjectUserManagement`、`ReadProjectProtection`、`ManageMultiuserSession`、`CompareLibraries`、`CompareProjects`、`ReadProjectSettings` | UMAC 15 种动作需 `confirmChange`；不启用/停用工程保护、不做 UMC 同步；官方无工程级"已保护"标量；比较接口 V20/V21 命名空间不同，按反射绑定 |
+| 硬件服务 | `ReadCommunicationConnections`、`ManageCommunicationConnection`、`ManageWatchForceTableWebAccess`、`ExchangeSystemDiagnosticsSettings`、`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl`、`ImportDeviceAml`、`ReadHardwareFeatures` | 通信连接与 OPC UA 访问控制 V20 无 API；连接创建要求调用方精确指定拥有 `ConnectionComposition` 的对象；AML 导入需 `confirmImport` 并回传原生日志哈希 |
+| Unified UI 对象模型 | `ReadUnifiedObjectEvents`、`ManageUnifiedObjectParts`、`ManageUnifiedDynamization`、`ManageUnifiedScreenLayout`、`ManageUnifiedListEntries`、`ReadUnifiedAlarmCommon`、`ReadUnifiedAuditSettings` | 阈值/数据网格/报警行列无原生 `Create`；画面复制与布局字段导入导出官方无 API；Unified 列表条目官方无类型，`ManageUnifiedListEntries` 的变更动作明确 NotSupported |
+| Motion / ProDiag / 经典 HMI | `ReadMotionAxisConfiguration`、`ManageMotionAxis`、`ManagePlcSupervision`、`ReadClassicHmiScripts`、`ManageClassicHmiScript`、`ManageClassicHmiCycle`、`ManageClassicHmiTextGraphicList`、`ReadClassicHmiGlobalization`、`ReadClassicHmiFaceplates` | ProDiag 无类型化监督组合，只能经官方动态组合接口；经典 HMI 脚本/周期/列表无 `Create(string)`，新对象只能经原生 XML 导入 |
+| 运行时通道（不经 Openness） | `ReadPlcWebVars`、`WritePlcWebVars`、`ReadPlcWebDiagnostics`、`SetPlcWebOperatingMode`；`ReadUnifiedRuntimeTags`、`WriteUnifiedRuntimeTags`、`ReadUnifiedRuntimeAlarms`、`UnifiedOpenPipeRequest` | 写入与模式切换需 `confirmWrite` / `confirmModeChange`；证书默认校验；Open Pipe 只在本机、需 "SIMATIC HMI" 组；订阅类消息拒绝 |
+| 离线分析 | `ComparePlcBlockDocuments`、`ScanPlcSourceAnnotations`、`ExtractPlcBlockMetrics` | 指标来自导出文档，不是西门子质量判定 |
+| 分类 | `ListToolCategories`；`FindTools(category=…, domain=…)` | 分类来自引擎内 `ToolTaxonomy` |
 
 ## 工具与范围
 
@@ -124,25 +139,14 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 
 ## 尚未完成，不能宣称已加入
 
-以下继续沿用 [官方覆盖核对](../archive/openness-audit-v2.7.14.md) 的缺口状态，本次新增接口不能代替：
+2.7.18 之后仍未实现或官方无 API 的项（全量对照见 [官方 API 覆盖清单](openness-coverage.md)）：
 
-- Unified 全控件/自定义 Web 事件覆盖、所有动态属性类型、复杂引用赋值、完整面板内部内容、完整列表条目校验；经典 HMI 完整功能族。
-- PLC DB 在线快照及实际值装载、完整 ProDiag 和 Motion/Cam、块保护、完整监控/强制表编辑、单元与源的全部操作、PLC 报警文本及 OPC UA 权限族。
-- 全部硬件/网络拓扑、工程用户权限/UMC、完整证书信任和设备安全配置。
-- 库实例清理/更新全部流程和未在上表列出的动作。
-- VCI 增补、多用户、Teamcenter、SafetyValidation；TestSuite、SiVArc、Startdrive、CFC、DCC 未在上表实现的剩余动作。
-- 没有官方入口证据的功能仍为待核实，不能以反射占位工具宣称支持。
-
-2026-09-17 对照官方 V21 在线文档（发布日期 03/2026）新识别、此前"已实现"与"未完成"两侧均未记录的缺口：
-
-- **下载配置族**：下载到 Windows 文件夹生成存储卡镜像（`DownloadProvider.Download(DirectoryInfo, …)`，含 `TargetForSoftware` 可指向 PLCSIM Advanced、`OverwriteOnMemoryCard`、`SafetyProgram`）尚无入口。`DownloadToPlc` 委托只应答 V21 全部 43 种下载提示中的 16 种（`keepActualValues` 已覆盖 `DataBlockReinitialization[OrKeepActualValues]`）；未应答的提示会使下载中止。**已确认缺陷**：`UserManagementDownload` 在 V20/V21 均为 `CurrentSelection` 选择型（KeepOnlineUserManagementData / UpdateUserManagementDataButKeepOnlinePassword / DownloadAllUserManagementDataResetToProject），委托却按复选框 `Checked` 处理，等于未应答。其余 27 种未处理类型（`BlockBindingPassword`、`ModuleRead/WriteAccessPassword`、`PlcMasterSecretPassword`、`OverwriteOnMemoryCard`、`SwitchBackupToPrimary`、`ResetModule`、`InitializeMemory`、`ProtectionLevelChanged`、`Upgrade/DowngradeTargetDevice`、`Download/Update/DeleteWebApplication`、`OverwriteHmiData`、`FitHmiComponents`、`TurnOffSequence`、`WaitOnReboot`、Startdrive 三项等）见路线图 E7。
-- **在线可达设备扫描**：`ConfigurationPcInterface.GetAccessibleDevices()` 返回所选 PC 接口上的在线参与者快照（Name/Address/MAC/DeviceSeries），可为 `StationUpload` 提供目标。此前 `openness-limitations.md` 误记为"仅限工程内配置"，已更正。
-- **Web 服务器监视/强制表访问规则**：`WatchAndForceTableAccessManager` 服务。
-- **程序升级**：`PlcSoftware.UpdateProgram()`（升级指令版本）。
-- **设备/模块杂项**：App ID 设置/读取/移除、批量硬件参数修改、Software Controller 的 PSC 文件创建/导出与资源配置、用户自定义 Logo。
-- **V21 What's-new 中列出但尚未在 API 目录定位到章节页的项**（需以本地 `Siemens.Engineering.Base/Step7.xml` 核实后再规划）：通信连接（FDL、HMI、ISO、ISO-on-TCP、PtP、S7、TCP、UDP）、CiR、I-Device PN-GSD 导出、工程集成共享设备、GSDX 签名状态、向 PLC 下载附加用户文件、Unified 画面布局字段导入导出。
-- **兼容性义务**：V21 新增 `ProgrammingLanguage.ST`（SIMATIC AX / TIAX 导入块），块枚举器必须容忍该值，不得因未知语言值失败。
-- **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`；本地 XML 集合是否包含待核实。
+- **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
+- **选件与协作**：SafetyValidation、Teamcenter、UMC 服务器同步与用户/组创建、启用/停用工程保护、Startdrive/SiVArc/DCC/CFC/TestSuite 未在表中列出的剩余动作、主副本/类型版本的 `DetailedCompareResult` 比较、`Connect(Channel)` 与 V20 `Connect(Telegram, …)` 重载。
+- **硬件杂项**：App ID、批量硬件参数、Software Controller PSC/资源配置、自定义 Logo、CiR、I-Device PN-GSD 导出、共享设备、GSDX 签名状态、向 PLC 下载附加用户文件；`SelectiveDeleteDownload`、`Upgrade/DowngradeTargetDevice`、`TurnOffSequence`、`OverwriteHmiData`、Startdrive 下载提示无内置默认，需经 `promptAnswersJson` 显式指定。
+- **库**：实例清理/更新全部流程、HMI-Library 之外的模板分析。
+- **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`。
+- 没有官方入口证据的功能仍为待核实，不能以反射占位工具宣称支持。`ProgrammingLanguage.ST`（V21，SIMATIC AX 导入块）已核实：引擎对该枚举值只做 `ToString`/`Enum.GetName`，不会失败。
 
 这些能力需要各自的官方参数/生命周期实现和回归验证；选件与真实设备相关功能还需要匹配环境验收。这些构建记录不包含真实虚拟机工程或在线 PLC 的验收。
 

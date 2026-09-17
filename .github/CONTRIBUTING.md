@@ -34,7 +34,7 @@ Please include:
 **Do not attach real customer projects.** If a project is needed to reproduce,
 strip it down to the smallest block that still fails.
 
-Issue templates live in [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE).
+Issue templates live in [`.github/ISSUE_TEMPLATE/`](ISSUE_TEMPLATE).
 
 ---
 
@@ -98,4 +98,4 @@ line.
 ## Licence
 
 By contributing you agree that your contribution is licensed under the
-[MIT Licence](LICENSE), the same as the rest of the project.
+[MIT Licence](../LICENSE), the same as the rest of the project.
