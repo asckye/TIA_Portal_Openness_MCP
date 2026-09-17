@@ -20,8 +20,11 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 | `System.Reactive.dll` | System.Reactive 5.0.0 | MIT | © .NET Foundation and Contributors | 同上 |
 | `Microsoft.IO.RecyclableMemoryStream.dll` | Microsoft.IO.RecyclableMemoryStream 3.0.0 | MIT | © Microsoft Corporation | 同上 |
 | `Siemens.Collaboration.Net.dll`、`.CoreExtensions.dll`、`.Logging.dll`、`.OperatingSystem.Windows.dll`、`.Windows.Authentication.dll`（3.0.1725521661）、`.TiaPortal.Openness.Resolver.dll`（1.1.1725480302） | Siemens.Collaboration.Net.* | **Siemens 免版税软件条款**（见下） | © Siemens AG | [Siemens.Collaboration.Net.md](Siemens.Collaboration.Net.md) |
+| `Siemens.Simatic.S7.Webserver.API.dll`（2.7.18 起，S7 Web 服务器 API 运行时通道） | Siemens.Simatic.S7.Webserver.API 3.3.76 | MIT | © 2023 Siemens Aktiengesellschaft | [Siemens.Simatic.S7.Webserver.API-3.3.76.txt](Siemens.Simatic.S7.Webserver.API-3.3.76.txt) |
+| `Newtonsoft.Json.dll`（2.7.18 起，Webserver API 依赖） | Newtonsoft.Json 13.0.4 | MIT | © 2007 James Newton-King | [Newtonsoft.Json-13.0.4.txt](Newtonsoft.Json-13.0.4.txt) |
+| `MimeMapping.dll`（2.7.18 起，Webserver API 依赖） | MimeMapping 4.0.0 | MIT | Matthew Little | [MimeMapping-4.0.0.txt](MimeMapping-4.0.0.txt) |
 
-`Siemens.Collaboration.Net.TiaPortal.Packages.Openness` 仅在编译时使用，不随包分发。
+`Siemens.Collaboration.Net.TiaPortal.Packages.Openness` 仅在编译时使用，不随包分发。2.7.18 引入 Webserver API 后，`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.DependencyInjection.Abstractions`、`System.Diagnostics.DiagnosticSource` 由传递依赖提升到 10.0.x 正式版（仍为 MIT），其余 Microsoft.Extensions.* 保持 10.0.0-preview.4；以 `manifest/release-build.json` 的逐文件记录为准。
 
 ## 配置器（`TiaMcpConfigurator.exe`）
 
