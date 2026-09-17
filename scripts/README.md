@@ -11,11 +11,11 @@
 | 检查 | [Check-Repository.py](checks/Check-Repository.py)、[Validate-Bundle.ps1](checks/Validate-Bundle.ps1) | 文档/路径与交付内容校验 |
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
-| 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归 |
-| 生成 | [Generate-ToolCapabilityMatrix.ps1](generate/Generate-ToolCapabilityMatrix.ps1) | 从源码生成工具矩阵 |
+| 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归，反射已发布的 V21 EXE；均由 Build-Release 调用（路由测试需 -PublicApiDirectory） |
+| 生成 | [Generate-ToolCapabilityMatrix.ps1](generate/Generate-ToolCapabilityMatrix.ps1) | 从 manifest/tools-list.json 按大类→域生成工具矩阵（由 Build-Release 调用） |
 | 生成 | [Generate-ToolsListFromAssembly.ps1](generate/Generate-ToolsListFromAssembly.ps1) | 从已编译程序集反射生成 `manifest/tools-list.json`（由 Build-Release 调用） |
 | 诊断 | [Audit-OpennessCoverage.ps1](diagnostics/Audit-OpennessCoverage.ps1) | 逐成员对照官方 PublicAPI XML 与引擎源码，生成 [覆盖清单](../docs/reference/openness-coverage.md) 的统计表；需本机 PublicAPI，不加载 DLL |
-| 诊断 | [Audit-OpennessSurface.py](diagnostics/Audit-OpennessSurface.py)、[Sweep-WrongPathHonesty.py](diagnostics/Sweep-WrongPathHonesty.py) | 早期的 XML 标识盘点（仅类型名提示）、错误路径行为；先确认环境和参数 |
+| 诊断 | [Sweep-WrongPathHonesty.py](diagnostics/Sweep-WrongPathHonesty.py) | 手动诊断：给只读工具喂不存在的路径，找出误报成功的工具；需真实工程与 TIA |
 | 诊断 | [Collect-TiaExitEvidence.cmd](diagnostics/Collect-TiaExitEvidence.cmd) | 采集 TIA 退出证据，输出不可直接公开提交 |
 | 操作 | [预热.bat](operations/预热.bat)、[生成工程.bat](operations/生成工程.bat) | 可选 CLI 快捷操作，默认选择包内 V21；V20 请直接调用对应 EXE |
 

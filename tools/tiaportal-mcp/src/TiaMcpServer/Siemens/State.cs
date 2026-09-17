@@ -1,4 +1,4 @@
-﻿namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens
 {
     public class State
     {

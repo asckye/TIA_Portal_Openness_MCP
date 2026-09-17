@@ -1,4 +1,4 @@
-﻿using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
 using System;
 using System.Collections;

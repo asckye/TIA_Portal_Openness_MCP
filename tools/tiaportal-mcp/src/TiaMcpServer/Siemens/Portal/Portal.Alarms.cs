@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
 using Siemens.Engineering.Cax;
 using Siemens.Engineering.Compiler;

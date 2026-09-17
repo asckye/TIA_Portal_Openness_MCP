@@ -21,7 +21,7 @@ This document standardizes how errors are raised in the Siemens portal layer and
 
 ## Portal Layer Pattern
 
-Within `src/TiaMcpServer/Siemens/Portal.cs` methods:
+Within `src/TiaMcpServer/Siemens/Portal/Portal*.cs` methods:
 
 - Throw lightweight `PortalException` with an appropriate `Code` from locations that detect an error (validation, not-found, invalid state).
 - Use a single `catch (Exception ex)` per method and funnel into the canonical wrapping pattern (see `ExportBlock`):

@@ -9,11 +9,10 @@
 | 目录 | 内容 |
 |---|---|
 | `docs/getting-started` | 图形配置、CLI 和 AI spec 提示词 |
-| `docs/guides` | 工程生成、版本控制、在线监视、PLC / HMI 专题 |
+| `docs/guides` | 工程生成、版本控制、在线监视、硬件网络、PLC / HMI 专题（含原 `docs/tools` 的工具族细节，已并入） |
 | `docs/reference` | 工具矩阵、能力和自然语言配方 |
 | `docs/troubleshooting` | 错误、Openness 限制和 HMI 快照诊断 |
 | `docs/development` | 发布、验证、结构与路线图 |
-| `docs/tools` | 按工具族组织的技术细节 |
 | `docs/releases`、`docs/archive` | 当前发布说明和历史记录 |
 | `docs/licenses` | 随包分发的第三方程序集许可证清单与原文 |
 
@@ -25,6 +24,10 @@
 
 旧 Build-DefectFix、Build-MultilingualFix、Package-DefectFix、Package-ReadOnlyV21 和 Python 预热桥接已删除。发布统一见 [发布流程](release-workflow.md)，预热使用原生 CLI；取证、预热和拖放生成仍有用途，保留在相应分类。
 
-交付和 checkout 均使用 `runtime/v20`、`runtime/v21`，不再创建旧 `tools/.../bin[-v20]/Release/net48` 副本。引擎源码/测试与运行二进制未改变，原构建哈希仍可验证。
+交付和 checkout 均使用 `runtime/v20`、`runtime/v21`，不再创建旧 `tools/.../bin[-v20]/Release/net48` 副本。
+
+## 引擎源码布局（2.7.18 起）
+
+`tools/tiaportal-mcp/src/TiaMcpServer/` 按职责分子目录，命名空间不变：`ModelContextProtocol/Tools/`（全部 `McpServer.*.cs` 工具声明）、`ModelContextProtocol/Builders/`（离线 XML/JSON 构造器、分析器、校验套件、`*Logic.cs`）、`ModelContextProtocol/`（响应类型、`ToolTaxonomy`、指南/提示、导出寄存等基础设施）、`Siemens/Portal/`（全部 `Portal.*.cs` 实现）、`Siemens/Hmi/`（`Unified*`、`Hmi*` 访问层）、`Siemens/`（Openness 解析、反射与纯逻辑助手）、`Runtime/`（S7/OPC UA/Web API/Open Pipe 运行时通道）、`Cli/` 与根目录 `Program*.cs`。所有 `.cs` 为无 BOM 的 UTF-8、仓库内 LF（`.gitattributes`）。离线测试项目按相对路径链接其中的纯逻辑文件，新增或移动文件时同步更新 `TiaMcpServer.Tests.csproj`。
 
 `bin-build/` 是被忽略的本机验证/打包目录，不进入公开交付。用户工程、外部素材及客户端配置不属于仓库清理范围。

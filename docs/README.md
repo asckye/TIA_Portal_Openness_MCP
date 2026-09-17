@@ -12,9 +12,9 @@
 - [完整 PLC + HMI 工程生成](guides/project-generation.md)
 - [版本控制与 Git](guides/version-control.md)
 - [在线实时读值](guides/online-monitoring.md)
-- PLC：[模板及网络模式](guides/plc/templates.md)、[LAD](guides/plc/lad.md)、[SCL](guides/plc/scl.md)、[类型组](guides/plc/type-groups.md)
-- HMI：[画面设计](guides/hmi/design.md)、[连接驱动](guides/hmi/connections.md)、[变量绑定](guides/hmi/tag-binding.md)、[只读迁移](guides/hmi/read-only-migration.md)、[全局脚本](guides/hmi/global-scripts.md)、[图形选择](guides/hmi/graphic-selection.md)、[运行设置](guides/hmi/runtime-settings.md)
-- 工具专题：[PLC 构建](tools/plc-builders.md)、[硬件网络](tools/hardware-network.md)、[HMI 动作](tools/hmi-unified-actions.md)、[HMI 布局](tools/hmi-unified-theme-layout.md)
+- 硬件与网络：[硬件网络工具](guides/hardware-network.md)
+- PLC：[模板及网络模式](guides/plc/templates.md)、[LAD](guides/plc/lad.md)、[SCL](guides/plc/scl.md)、[类型组](guides/plc/type-groups.md)、[构建器工具](guides/plc/builders.md)
+- HMI：[画面设计](guides/hmi/design.md)、[连接驱动](guides/hmi/connections.md)、[变量绑定](guides/hmi/tag-binding.md)、[只读迁移](guides/hmi/read-only-migration.md)、[全局脚本](guides/hmi/global-scripts.md)、[图形选择](guides/hmi/graphic-selection.md)、[运行设置](guides/hmi/runtime-settings.md)、[Unified 动作工具](guides/hmi/unified-actions.md)、[Unified 主题与布局](guides/hmi/unified-theme-layout.md)
 
 ## 参考与排错
 

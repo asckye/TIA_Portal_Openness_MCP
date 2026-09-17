@@ -1,4 +1,4 @@
-﻿using ModelContextProtocol;
+using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-﻿using Siemens.Engineering;
+using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
 using System;

@@ -9,6 +9,7 @@
 #
 # Usage:  build the V21 exe, then:  powershell -File scripts\checks\Test-DownloadRouteSelection.ps1
 # Exit code 0 = all pass, 1 = a case failed or the exe is missing.
+param([string]$PublicApiDirectory = '')   # 显式 PublicAPI 目录；未给时回退到注册表
 $ErrorActionPreference = "Stop"
 
 $srcDir = Join-Path $PSScriptRoot "..\..\runtime\v21"
@@ -21,9 +22,9 @@ Copy-Item -LiteralPath $srcDir -Destination $tmp -Recurse -Force
 # Loading the Portal type pulls in Siemens.Engineering, which lives in the TIA install (the build
 # references it, it is never copied local). Probe the copied output first, then the PublicAPI
 # directory recorded in the Openness registry key.
-$publicApi = $null
+$publicApi = if ($PublicApiDirectory -and (Test-Path -LiteralPath $PublicApiDirectory)) { (Resolve-Path -LiteralPath $PublicApiDirectory).Path } else { $null }
 $key = Get-ItemProperty -Path "HKLM:\SOFTWARE\Siemens\Automation\Openness\21.0\PublicAPI\21.0.0.0\net48" -ErrorAction SilentlyContinue
-if ($key -and $key."Siemens.Engineering.Base") { $publicApi = Split-Path -Parent $key."Siemens.Engineering.Base" }
+if (-not $publicApi -and $key -and $key."Siemens.Engineering.Base") { $publicApi = Split-Path -Parent $key."Siemens.Engineering.Base" }
 
 $global:ProbeDirs = @($tmp); if ($publicApi) { $global:ProbeDirs += $publicApi }
 $global:ProbeTried = @{}

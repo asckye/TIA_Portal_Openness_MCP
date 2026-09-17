@@ -111,6 +111,9 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
     $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
     if($major -eq 21){
+        # 两个确定性离线测试直接反射已发布的 V21 EXE：PG/PC 路由选择与 softwarePath 匹配器。
+        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api) 'route-selection-v21.log'
+        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1')) 'match-plc-name-v21.log'
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
         # 工具矩阵与清单同源：清单刚生成就重建矩阵，docs/reference/tool-matrix.md 不再手工维护。
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.ps1'),'-ToolsList',(Join-Path $repo 'manifest/tools-list.json'),'-OutFile',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'

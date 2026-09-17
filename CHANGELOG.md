@@ -27,6 +27,7 @@
 - 新增 `docs/development/roadmap.md`：11 项需在 TIA 机器重建的引擎待办、官方 API 缺口优先级、第三方集成候选（含许可证红线）、合规事项。
 - 其他：`docs/README.md` 加入语言约定；`tools/README.md` 补 `vci-watch`；`templates/hmi/README.md` 补漏的 `unified_basic_event_log` 行；英文 README 为中文界面按钮加注释；`.gitignore` 增加 TIA 工程/归档扩展名与 `.claude/`。
 - 根目录瘦身：`CONTRIBUTING.md`、`CODE_OF_CONDUCT.md`、`SECURITY.md` 移入 `.github/`（GitHub 同样识别）；`examples/` 目录并入 `docs/getting-started/cursor.example.json` 与配置指南；本机 PublicAPI 副本移出仓库目录（`.gitignore` 保留防护）。根目录只剩说明、许可证、Git/插件配置与配置器 EXE。
+- 目录整理：`docs/tools/` 四篇并入 `docs/guides/`；`capabilities.md` 按 2.7.14 / 2.7.15 / 2.7.18 工具族分节；删除被 `Audit-OpennessCoverage.ps1` 取代的 `Audit-OpennessSurface.py`，`Test-DownloadRouteSelection.ps1`（新增 `-PublicApiDirectory`）与 `Test-MatchPlcName.ps1` 接入 `Build-Release`；引擎源码按职责分入 `ModelContextProtocol/Tools|Builders/`、`Siemens/Portal|Hmi/`，命名空间不变，全部 `.cs` 统一为无 BOM UTF-8 并在 `.gitattributes` 固定行尾；CI 死引用检查登记新工具描述里点名的原生 API 成员。
 
 ## [2.7.17] - 2026-09-17
 

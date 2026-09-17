@@ -1,4 +1,4 @@
-﻿namespace TiaMcpServer
+namespace TiaMcpServer
 {
     public class CliOptions
     {

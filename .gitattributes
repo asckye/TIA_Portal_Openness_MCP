@@ -3,3 +3,10 @@ runtime/** -text
 
 # Preserve generated release metadata bytes across browser uploads and checkout.
 manifest/** -text
+# 源码与脚本的行尾/编码约定：仓库内 LF、无 BOM 的 UTF-8；cmd.exe 批处理保持 CRLF
+*.cs text eol=lf
+*.xaml text eol=lf
+*.py text eol=lf
+*.ps1 text
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Siemens.Engineering.HW;
 using System;
 using System.Collections.Generic;

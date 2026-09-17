@@ -1,4 +1,4 @@
-﻿using ModelContextProtocol;
+using ModelContextProtocol;
 using Siemens.Engineering;
 using Siemens.Engineering.SW.Blocks;
 using System;

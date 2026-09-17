@@ -1,4 +1,4 @@
-﻿using Siemens.Collaboration.Net;
+using Siemens.Collaboration.Net;
 using System.Threading.Tasks;
 
 namespace TiaMcpServer.Siemens

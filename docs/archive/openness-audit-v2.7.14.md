@@ -154,7 +154,7 @@ V21 粗略排除集合遍历、通用属性访问和对象基础方法后，剩�
 
 ## 复核材料与来源
 
-机器盘点由 `scripts/diagnostics/Audit-OpennessSurface.py` 生成。输出位于本地 `bin-build/audits/openness-v21-v20-2.7.14/`，包含两版全部成员 CSV、V21 领域方法候选、260 工具清单及带官方 XML SHA-256 的统计 JSON。CSV 的版本差异为精确标识差异，不是支持性判定。
+机器盘点由当时的 `scripts/diagnostics/Audit-OpennessSurface.py` 生成（已被 `Audit-OpennessCoverage.ps1` 取代并删除）。输出位于本地 `bin-build/audits/openness-v21-v20-2.7.14/`，包含两版全部成员 CSV、V21 领域方法候选、260 工具清单及带官方 XML SHA-256 的统计 JSON。CSV 的版本差异为精确标识差异，不是支持性判定。
 
 官方在线资料（2026-09-15 核对）：
 

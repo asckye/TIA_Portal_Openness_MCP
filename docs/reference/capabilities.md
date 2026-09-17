@@ -17,7 +17,7 @@
 | 离线分析 | `ComparePlcBlockDocuments`、`ScanPlcSourceAnnotations`、`ExtractPlcBlockMetrics` | 指标来自导出文档，不是西门子质量判定 |
 | 分类 | `ListToolCategories`；`FindTools(category=…, domain=…)` | 分类来自引擎内 `ToolTaxonomy` |
 
-## 工具与范围
+## 2.7.14 工具族（工具与范围）
 
 | 工具 | 已实现动作 | 参数重点 |
 |---|---|---|
@@ -73,15 +73,11 @@ HMI 七类集合：`alarmClasses`、`discreteAlarms`、`analogAlarms`、`alarmLo
 发布清单中的 engineeringApiShapePassed 只证明被检查的 API 签名、工具暴露及默认预览参数；engineeringLiveEdits 明确标为未测试。真实验证应在可恢复的测试工程中逐类执行，并保存预览、执行结果及读回证据。
 
 
----
+## 2.7.15 工具族
 
+v2.7.15 新增的 38 个入口，按范围与边界列出；同样未经真实工程验收。
 
-
-## 官方能力增补：实现与验收状态
-
-基线：v2.7.14（260 工具）。v2.7.15 新增 38 个入口，静态工具表共 298 个。**不表示官方 API 全覆盖或真实工程验收通过。**
-
-## 已接入源码
+### 已接入源码
 
 | 范围 | 接口 | 精确边界 |
 |---|---|---|
@@ -107,7 +103,7 @@ HMI 七类集合：`alarmClasses`、`discreteAlarms`、`analogAlarms`、`alarmLo
 
 V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别编译适配；不以一个版本的签名推断另一版本。官方项目访问说明：[Plant views](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/plantobjecttags/plantviews/description-plant-view)。实际名称和签名以本地相应版本官方程序集为准。
 
-## 专用选件与原生交换增补
+### 专用选件与原生交换增补
 
 | 接口 | 实现范围与限制 |
 |---|---|
@@ -123,7 +119,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 
 依赖安装版本、许可及选中对象是否提供服务。缺少组件或签名时返回明确不支持，不降级为成功空列表。V21 选件签名已通过本地官方程序集检查；V20 选件行为未获真实工程验证。
 
-## 调用约定
+### 调用约定
 
 全部新增写入/文件操作默认 `dryRun=true`。预览只确认对象、公开签名及输入类型，不表示 TIA 已接受所有业务参数。执行异常可能留下部分改动或文件，通过 `mayHaveChanged` / `mayHaveWrittenFiles` 说明；不自动回滚或保存。保存/另存/关闭全局库是该工具的显式动作，不会附带到其他操作。
 

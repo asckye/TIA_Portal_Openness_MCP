@@ -1,4 +1,4 @@
-﻿using Siemens.Engineering;
+using Siemens.Engineering;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
