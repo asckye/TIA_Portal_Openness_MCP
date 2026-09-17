@@ -1,0 +1,103 @@
+﻿// ============================================================================
+//  FB_SelfTest_Template —— DB 驱动的最小 SCL 自测骨架
+//  ---------------------------------------------------------------------------
+//  功能：把「被测逻辑」放进 RunCase，用一张用例表（预期值/实际值）逐条跑，
+//        统计通过/失败计数，给出 Done/AllPassed。用例表和控制位放在实例 DB
+//        或全局 DB 里，HMI/监控表置 Start 即可触发，不需要在线改程序。
+//  用法：1) 把被测 FC/FB 调用写进 RunCase 区（示例为线性缩放）；
+//        2) 在 Cases[] 里填 Input / Expected；
+//        3) 监控表置 Start := TRUE，读 PassCount / FailCount / FirstFailIndex。
+//  适用：S7-1200 / S7-1500（优化访问）。模式借鉴社区 SCL 单元测试思路，代码全新编写。
+//  注意：这是工程内自检，不是 Siemens 质量判定；上线前仍需 TIA 编译与规范审查。
+//  作者：TIA MCP 示例库     版本：0.1
+// ============================================================================
+FUNCTION_BLOCK "FB_SelfTest_Template"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT
+      Start   : Bool;   // 上升沿启动一轮测试（自动清零计数）
+      Reset   : Bool;   // 清除结果与计数
+      Tol     : Real := 0.001;   // 实数比较容差
+   END_VAR
+
+   VAR_OUTPUT
+      Busy           : Bool;   // 测试进行中
+      Done           : Bool;   // 本轮测试结束
+      AllPassed      : Bool;   // Done 且 FailCount = 0
+      PassCount      : Int;    // 通过用例数
+      FailCount      : Int;    // 失败用例数
+      FirstFailIndex : Int := -1;   // 第一条失败用例下标，-1 表示无
+   END_VAR
+
+   VAR
+      Cases : Array[0..7] of Struct   // 用例表：在 DB 里直接编辑
+         Enabled  : Bool;   // 是否参与本轮测试
+         Input    : Real;   // 送入被测逻辑的输入
+         Expected : Real;   // 预期输出
+         Actual   : Real;   // 实际输出（由 RunCase 写回）
+         Passed   : Bool;   // 本条结果
+      END_STRUCT;
+      CaseIndex  : Int;    // 当前执行到的用例
+      StartEdge  : Bool;   // Start 上升沿记忆
+      Running    : Bool;   // 内部运行标志
+   END_VAR
+
+   VAR_TEMP
+      tmpDiff : Real;
+   END_VAR
+
+BEGIN
+   // --- 复位 ---------------------------------------------------------------
+   IF #Reset THEN
+      #Running := FALSE;
+      #Busy := FALSE;
+      #Done := FALSE;
+      #AllPassed := FALSE;
+      #PassCount := 0;
+      #FailCount := 0;
+      #FirstFailIndex := -1;
+      #CaseIndex := 0;
+   END_IF;
+
+   // --- Start 上升沿：清零并开始一轮 ------------------------------------------
+   IF #Start AND NOT #StartEdge AND NOT #Running THEN
+      #Running := TRUE;
+      #Busy := TRUE;
+      #Done := FALSE;
+      #AllPassed := FALSE;
+      #PassCount := 0;
+      #FailCount := 0;
+      #FirstFailIndex := -1;
+      #CaseIndex := 0;
+   END_IF;
+   #StartEdge := #Start;
+
+   // --- 每个周期跑一条用例，便于在监控表里逐条观察 ---------------------------
+   IF #Running THEN
+      IF #Cases[#CaseIndex].Enabled THEN
+         // ===== RunCase：把被测逻辑放在这里（示例：0..100 -> 0..1000 线性缩放）=====
+         #Cases[#CaseIndex].Actual := #Cases[#CaseIndex].Input * 10.0;
+         // ==========================================================================
+
+         #tmpDiff := ABS(#Cases[#CaseIndex].Actual - #Cases[#CaseIndex].Expected);
+         #Cases[#CaseIndex].Passed := #tmpDiff <= #Tol;
+         IF #Cases[#CaseIndex].Passed THEN
+            #PassCount := #PassCount + 1;
+         ELSE
+            #FailCount := #FailCount + 1;
+            IF #FirstFailIndex < 0 THEN
+               #FirstFailIndex := #CaseIndex;
+            END_IF;
+         END_IF;
+      END_IF;
+
+      IF #CaseIndex >= 7 THEN
+         #Running := FALSE;
+         #Busy := FALSE;
+         #Done := TRUE;
+         #AllPassed := #FailCount = 0;
+      ELSE
+         #CaseIndex := #CaseIndex + 1;
+      END_IF;
+   END_IF;
+END_FUNCTION_BLOCK
