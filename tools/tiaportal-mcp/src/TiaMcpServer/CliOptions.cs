@@ -65,7 +65,6 @@
         public bool RunClassicHmiTemporaryImportPreflight { get; set; }
         public bool RunPlcSymbolManifestProbe { get; set; }
         public bool RunOfflineReleaseSuite { get; set; }
-        public bool RunV2PlanCompletionAudit { get; set; }
         public bool RebuildReleaseHandoff { get; set; }
         public bool RunHmiTemplatePlcSyncPrecheckSuite { get; set; }
         public bool AnalyzeHmiTemplatePlcMapping { get; set; }
@@ -424,10 +423,6 @@
 
                     case "--run-offline-release-suite":
                         options.RunOfflineReleaseSuite = true;
-                        break;
-
-                    case "--run-v2-plan-completion-audit":
-                        options.RunV2PlanCompletionAudit = true;
                         break;
 
                     case "--rebuild-release-handoff":

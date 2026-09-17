@@ -1216,33 +1216,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "RunV2PlanCompletionAudit"), Description("[L2][Validation]Offline-only strict audit for docs/TIA_MCP_常见操作全覆盖方案_V2_二次优化计划.md. It reports verified hard-gate percentage and blocks 100% claims when real TIA/online evidence is missing.")]
-        public static ResponseJsonReport RunV2PlanCompletionAudit(
-            [Description("workspaceRoot: repository/workspace root containing docs, tools, and reports.")] string workspaceRoot,
-            [Description("reportDirectory: directory where V2 audit reports will be written.")] string reportDirectory)
-        {
-            try
-            {
-                var data = V2PlanCompletionAuditor.Run(workspaceRoot, reportDirectory);
-                var ok = data["ok"]?.GetValue<bool>() == true;
-                return new ResponseJsonReport
-                {
-                    Ok = ok,
-                    Message = "V2 plan completion audit finished",
-                    Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
-                };
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error running V2 plan completion audit: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
 
         [McpServerTool(Name = "BuildReleaseDiagnosticReport"), Description("[L2][Reports]Build an offline diagnostic report from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects.")]
         public static ResponseJsonReport BuildReleaseDiagnosticReport(
@@ -3924,7 +3897,12 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("stopBeforeDownload: true=automatically stop CPU before download (required for most downloads), false=attempt online download without stopping")] bool stopBeforeDownload = true,
             [Description("password: optional CPU access password. Required when the CPU has download protection configured. Leave empty for unprotected CPUs.")] string password = "",
             [Description("pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'. Leave empty to auto-pick the adapter that shares a subnet with the CPU. Run CheckDownloadReadiness to see the available names.")] string pgPcInterface = "",
-            [Description("targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several CPU interfaces. Leave empty to auto-pick.")] string targetIpAddress = "")
+            [Description("targetIpAddress: optional CPU IP to download to, e.g. '192.168.0.1'. Disambiguates which route to use when the project has several CPU interfaces. Leave empty to auto-pick.")] string targetIpAddress = "",
+            [Description("userManagementMode: how the UserManagementDownload prompt is answered: keep (default, keeps the online user management data), updateKeepPassword (updates data but keeps online passwords), resetToProject (downloads all user management data and resets to project).")] string userManagementMode = "keep",
+            [Description("promptAnswersJson: optional JSON object of explicit answers for download prompts by type name, e.g. {\"ResetModule\":\"DeleteAll\",\"OverwriteHmiData\":true}. Selection prompts take an enum name, checkbox prompts take true/false. Without an entry, destructive prompts (InitializeMemory, OverwriteOnMemoryCard, OverwriteSystemData, ResetModule, SwitchBackupToPrimary, ProtectionLevelChanged) default to NoAction/NoChange and prompts without a known default stay unanswered; Meta.promptsAnswered / Meta.promptsUnanswered list what happened.")] string promptAnswersJson = "{}",
+            [Description("moduleAccessPassword: optional password for ModuleReadAccessPassword / ModuleWriteAccessPassword prompts; defaults to 'password' when empty. Never logged.")] string moduleAccessPassword = "",
+            [Description("blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.")] string blockBindingPassword = "",
+            [Description("masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.")] string masterSecretPassword = "")
         {
             try
             {
@@ -3936,7 +3914,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     stopBeforeDownload,
                     string.IsNullOrWhiteSpace(password) ? null : password,
                     string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface,
-                    string.IsNullOrWhiteSpace(targetIpAddress) ? null : targetIpAddress);
+                    string.IsNullOrWhiteSpace(targetIpAddress) ? null : targetIpAddress,
+                    string.IsNullOrWhiteSpace(userManagementMode) ? "keep" : userManagementMode,
+                    string.IsNullOrWhiteSpace(promptAnswersJson) ? "{}" : promptAnswersJson,
+                    string.IsNullOrWhiteSpace(moduleAccessPassword) ? null : moduleAccessPassword,
+                    string.IsNullOrWhiteSpace(blockBindingPassword) ? null : blockBindingPassword,
+                    string.IsNullOrWhiteSpace(masterSecretPassword) ? null : masterSecretPassword);
 
                 if (result.Ok == false && result.Errors != null && result.Errors.Length > 0)
                     throw new McpException(

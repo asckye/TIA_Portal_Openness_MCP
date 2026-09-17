@@ -897,7 +897,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "unsupportedtiaversion":
                     return new List<string> { "Confirm TIA Portal V21 is installed.", "Restart the server with --tia-major-version 21.", "Check installed Openness assemblies." };
                 case "opennesspermissiondenied":
-                    return new List<string> { "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.", "Run scripts/check-environment.ps1." };
+                    return new List<string> { "Add the user to Siemens TIA Openness group.", "Sign out or restart after changing group membership.", "Run TiaMcpServer.exe doctor for the full environment report." };
                 case "hardwarecatalognotfound":
                     return new List<string> { "Run SearchHardwareCatalog or SearchInstalledGsdDevices.", "Use MLFB/order number and installed catalog version.", "Do not fall back from third-party hardware to Siemens devices." };
                 case "importschemaerror":

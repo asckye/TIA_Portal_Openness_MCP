@@ -761,7 +761,10 @@ namespace TiaMcpServer
             {
                 try
                 {
-                    var xmlPath = @"D:\app\TIA21\Portal V21\PublicAPI\V21\net48\Siemens.Engineering.WinCC.xml";
+                    var probe = TiaMcpServer.Siemens.Engineering.ProbeOpennessAssemblies();
+                    var apiDir = probe.ResolvedDll != null ? Path.GetDirectoryName(probe.ResolvedDll) : null;
+                    if (apiDir == null) return "WinCC XML doc not found (PublicAPI not resolved: " + (probe.Problem ?? "unknown") + ")";
+                    var xmlPath = Path.Combine(apiDir, "Siemens.Engineering.WinCC.xml");
                     if (!File.Exists(xmlPath)) return "WinCC XML doc not found";
                     var text = File.ReadAllText(xmlPath, Encoding.UTF8);
                     string Slice(string marker, int take = 10)

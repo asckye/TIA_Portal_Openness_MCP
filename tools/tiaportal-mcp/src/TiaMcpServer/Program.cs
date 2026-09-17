@@ -235,12 +235,6 @@ namespace TiaMcpServer
                     return;
                 }
 
-                if (options.RunV2PlanCompletionAudit)
-                {
-                    RunV2PlanCompletionAudit(options);
-                    return;
-                }
-
                 if (options.RebuildReleaseHandoff)
                 {
                     RunRebuildReleaseHandoff(options);

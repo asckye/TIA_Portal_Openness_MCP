@@ -87,8 +87,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static JsonObject BuildEnvironmentPreflight()
         {
-            var publicApi = @"D:\app\TIA21\Portal V21\PublicAPI\V21\net48";
-            var portalExe = @"D:\app\TIA21\Portal V21\Bin\Siemens.Automation.Portal.exe";
+            // 以运行时解析到的安装根为准（CLI 覆盖 > TiaPortalLocation 环境变量 > 注册表 > 默认目录），不再硬编码开发机路径。
+            var probe = TiaMcpServer.Siemens.Engineering.ProbeOpennessAssemblies();
+            var publicApi = probe.ResolvedDll != null ? Path.GetDirectoryName(probe.ResolvedDll) ?? "" : probe.InstallPath != null ? Path.Combine(probe.InstallPath, "PublicAPI") : "";
+            var portalExe = probe.InstallPath != null ? Path.Combine(probe.InstallPath, "Bin", "Siemens.Automation.Portal.exe") : "";
             var currentUser = "";
             var groupNames = Array.Empty<string>();
             try

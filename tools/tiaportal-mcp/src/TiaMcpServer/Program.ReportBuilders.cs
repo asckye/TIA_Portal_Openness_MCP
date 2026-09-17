@@ -512,20 +512,6 @@ namespace TiaMcpServer
             LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunV2PlanCompletionAudit(CliOptions options)
-        {
-            var workspaceRoot = GetWorkspaceRoot();
-            var reportDir = string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteReportDirectory)
-                ? Path.Combine(workspaceRoot, "reports", "v2_plan_completion_audit")
-                : options.OfflineReleaseSuiteReportDirectory!;
-            var root = V2PlanCompletionAuditor.Run(workspaceRoot, reportDir);
-            LogDiag("V2 plan completion audit written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("StrictCompletionPercent: " + root["strictCompletionPercent"]);
-            LogDiag("CanClaimV2Complete: " + root["canClaimV2Complete"]);
-        }
-
         private static void RunRebuildReleaseHandoff(CliOptions options)
         {
             if (string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteJsonPath))

@@ -34,8 +34,4 @@
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Management.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="tests\**" />
-    <None Include="tests\**" />
-  </ItemGroup>
 </Project>

@@ -49,14 +49,30 @@ namespace TiaMcpServer.Siemens
             bool stopBeforeDownload = true,
             string? password = null,
             string? pgPcInterface = null,
-            string? targetIpAddress = null)
+            string? targetIpAddress = null,
+            string userManagementMode = "keep",
+            string promptAnswersJson = "{}",
+            string? moduleAccessPassword = null,
+            string? blockBindingPassword = null,
+            string? masterSecretPassword = null)
         {
             _logger?.LogInformation(
-                "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A}",
-                softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress);
+                "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
+                softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
 
             if (IsProjectNull())
                 return new ResponseDownload { Ok = false, Message = "No project open." };
+
+            DownloadPromptPolicy promptPolicy;
+            try
+            {
+                promptPolicy = BuildDownloadPromptPolicy(consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload,
+                    userManagementMode, promptAnswersJson, moduleAccessPassword ?? password, blockBindingPassword, masterSecretPassword);
+            }
+            catch (ArgumentException ex)
+            {
+                return new ResponseDownload { Ok = false, Message = "Invalid download prompt parameters: " + ex.Message, Errors = new[] { ex.Message } };
+            }
 
             var plcSoftware = GetPlcSoftware(softwarePath);
             if (plcSoftware == null)
@@ -85,22 +101,8 @@ namespace TiaMcpServer.Siemens
 
                 using var passwordScope = AttachPasswordHandler(configuration, password);
 
-                bool capture_keepActualValues = keepActualValues;
-                bool capture_startAfterDownload = startAfterDownload;
-                bool capture_stopBeforeDownload = stopBeforeDownload;
-                bool capture_consistentBlocksOnly = consistentBlocksOnly;
-
-                DownloadConfigurationDelegate preDelegate = (config) =>
-                {
-                    ApplyDefaultDownloadConfig(
-                        config,
-                        capture_keepActualValues,
-                        capture_startAfterDownload,
-                        capture_stopBeforeDownload,
-                        capture_consistentBlocksOnly);
-                };
-
-                DownloadConfigurationDelegate postDelegate = (config) => { };
+                DownloadConfigurationDelegate preDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
+                DownloadConfigurationDelegate postDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
 
                 // V21 fix: ConnectionConfiguration does NOT implement IConfiguration, but a
                 // ConfigurationTargetInterface (Modes -> PcInterfaces -> TargetInterfaces) DOES.
@@ -144,7 +146,7 @@ namespace TiaMcpServer.Siemens
                 if (rawResult is not DownloadResult result)
                     return new ResponseDownload { Ok = false, Message = "Download returned an unexpected result type." };
 
-                return BuildDownloadResponse(result, softwarePath, routeDiagnostics);
+                return BuildDownloadResponse(result, softwarePath, routeDiagnostics, promptPolicy);
             }
             catch (Exception ex)
             {
@@ -168,9 +170,75 @@ namespace TiaMcpServer.Siemens
                 return new ResponseDownload
                 {
                     Ok = false,
-                    Message = $"Download failed: {real.Message}{routeHint}",
-                    Errors = new[] { real.Message }
+                    Message = $"Download failed: {real.Message}{routeHint}{promptPolicy.UnansweredSummary()}",
+                    Errors = new[] { real.Message },
+                    Meta = promptPolicy.Summary()
                 };
+            }
+        }
+
+        private static DownloadPromptPolicy BuildDownloadPromptPolicy(bool consistentBlocksOnly, bool keepActualValues, bool startAfterDownload,
+            bool stopBeforeDownload, string userManagementMode, string promptAnswersJson, string? moduleAccessPassword, string? blockBindingPassword, string? masterSecretPassword)
+        {
+            if (!DownloadPromptPolicy.UserManagementModes.Contains(userManagementMode))
+                throw new ArgumentException("userManagementMode must be keep / updateKeepPassword / resetToProject.");
+            var policy = new DownloadPromptPolicy
+            {
+                ConsistentBlocksOnly = consistentBlocksOnly, KeepActualValues = keepActualValues, StartAfterDownload = startAfterDownload,
+                StopBeforeDownload = stopBeforeDownload, UserManagementMode = userManagementMode,
+                ModuleAccessPassword = moduleAccessPassword, BlockBindingPassword = blockBindingPassword, MasterSecretPassword = masterSecretPassword
+            };
+            foreach (var kv in DownloadPromptPolicy.ParseExplicitAnswers(promptAnswersJson)) policy.Explicit[kv.Key] = kv.Value;
+            return policy;
+        }
+
+        // 每个提示对象按其真实形态应答：枚举型 CurrentSelection、布尔型 Checked 或 SetPassword(SecureString)。
+        // 决策来自 DownloadPromptPolicy；无法应答的提示连同 TIA 的提示文本一起记录，永远不记录密码。
+        private void ApplyDownloadPrompt(object config, DownloadPromptPolicy policy)
+        {
+            var type = config.GetType();
+            var typeName = type.Name;
+            string? message = null;
+            try { message = type.GetProperty("Message")?.GetValue(config) as string; } catch { }
+            _logger?.LogDebug("ApplyDownloadPrompt: {TypeName}", typeName);
+            try
+            {
+                var selection = type.GetProperty("CurrentSelection");
+                var selectionValues = selection != null && selection.PropertyType.IsEnum && selection.CanWrite
+                    ? Enum.GetNames(selection.PropertyType) : Array.Empty<string>();
+                var checkedProp = type.GetProperty("Checked");
+                bool hasChecked = checkedProp != null && checkedProp.CanWrite && checkedProp.PropertyType == typeof(bool);
+                bool hasPassword = type.GetMethod("SetPassword", new[] { typeof(SecureString) }) != null;
+
+                var answer = policy.Decide(typeName, selectionValues, hasChecked, hasPassword);
+                switch (answer.Kind)
+                {
+                    case DownloadPromptPolicy.AnswerKind.Selection:
+                        selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
+                        break;
+                    case DownloadPromptPolicy.AnswerKind.Checked:
+                        checkedProp!.SetValue(config, answer.Value == "true");
+                        break;
+                    case DownloadPromptPolicy.AnswerKind.Password:
+                        var secret = typeName switch
+                        {
+                            "BlockBindingPassword" => policy.BlockBindingPassword,
+                            "PlcMasterSecretPassword" => policy.MasterSecretPassword,
+                            _ => policy.ModuleAccessPassword
+                        };
+                        var secure = new SecureString();
+                        foreach (var c in secret!) secure.AppendChar(c);
+                        secure.MakeReadOnly();
+                        type.GetMethod("SetPassword", new[] { typeof(SecureString) })!.Invoke(config, new object[] { secure });
+                        break;
+                }
+                policy.Record(typeName, message, answer);
+            }
+            catch (Exception ex)
+            {
+                var real = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                _logger?.LogWarning(real, "Download prompt {TypeName} could not be answered", typeName);
+                policy.Record(typeName, message, new DownloadPromptPolicy.Answer { Kind = DownloadPromptPolicy.AnswerKind.Unanswered, Source = "unanswered", Note = "answer failed: " + real.Message });
             }
         }
 
@@ -483,98 +551,11 @@ namespace TiaMcpServer.Siemens
             };
         }
 
-        private void ApplyDefaultDownloadConfig(
-            DownloadConfiguration config,
-            bool keepActualValues,
-            bool startAfterDownload,
-            bool stopBeforeDownload,
-            bool consistentBlocksOnly)
-        {
-            var typeName = config.GetType().Name;
-            _logger?.LogDebug("ApplyDownloadConfig: {TypeName}", typeName);
-
-            switch (typeName)
-            {
-                case "StopModules":
-                    // StopModulesSelections = { NoAction, StopAll } — NOT "StopModule" (verified
-                    // against V21 PublicAPI; the old value parsed to nothing and left the prompt
-                    // "unhandled", which aborted every download).
-                    DownloadConfigSetSelection(config, stopBeforeDownload ? "StopAll" : "NoAction");
-                    break;
-
-                case "StopHSystemOrModule":
-                    DownloadConfigSetSelection(config, stopBeforeDownload ? "StopModule" : "NoAction");
-                    break;
-
-                case "StopHSystem":
-                    DownloadConfigSetSelection(config, stopBeforeDownload ? "StopHSystem" : "NoAction");
-                    break;
-
-                case "StartModules":
-                case "StartBackupModules":
-                    DownloadConfigSetSelection(config, startAfterDownload ? "StartModule" : "NoAction");
-                    break;
-
-                case "DataBlockReinitialization":
-                    DownloadConfigSetSelection(config, keepActualValues ? "KeepActualValues" : "Reinitialize");
-                    break;
-
-                case "DataBlockReinitializationOrKeepActualValues":
-                    DownloadConfigSetSelection(config, keepActualValues ? "KeepActualValues" : "StopPlcAndReinitialize");
-                    break;
-
-                case "ConsistentBlocksDownload":
-                    DownloadConfigSetSelection(config, "ConsistentDownload");
-                    break;
-
-                case "AllBlocksDownload":
-                    if (!consistentBlocksOnly)
-                        DownloadConfigSetSelection(config, "DownloadAllBlocks");
-                    break;
-
-                case "CheckBeforeDownload":
-                case "AlarmTextLibrariesDownload":
-                case "UserManagementDownload":
-                case "DownloadCertificate":
-                    DownloadConfigSetChecked(config, true);
-                    break;
-
-                case "DifferentTargetConfiguration":
-                case "ActiveTestCanBeAborted":
-                case "ActiveTestCanPreventDownload":
-                    DownloadConfigSetSelection(config, "AcceptAll");
-                    break;
-            }
-        }
-
-        private static void DownloadConfigSetSelection(object config, string selectionName)
-        {
-            try
-            {
-                var prop = config.GetType().GetProperty("CurrentSelection");
-                if (prop == null) return;
-                var enumType = prop.PropertyType;
-                if (!enumType.IsEnum) return;
-                var value = Enum.Parse(enumType, selectionName, ignoreCase: true);
-                prop.SetValue(config, value);
-            }
-            catch { }
-        }
-
-        private static void DownloadConfigSetChecked(object config, bool value)
-        {
-            try
-            {
-                var prop = config.GetType().GetProperty("Checked");
-                prop?.SetValue(config, value);
-            }
-            catch { }
-        }
-
         private ResponseDownload BuildDownloadResponse(
             DownloadResult result,
             string softwarePath,
-            DownloadRouteSelection? route)
+            DownloadRouteSelection? route,
+            DownloadPromptPolicy? prompts = null)
         {
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -584,25 +565,29 @@ namespace TiaMcpServer.Siemens
                    || result.State == DownloadResultState.Information
                    || result.State == DownloadResultState.Warning;
 
+            var meta = new JsonObject
+            {
+                ["softwarePath"] = softwarePath,
+                ["timestamp"] = DateTime.Now,
+                ["downloadState"] = result.State.ToString(),
+                // Which PG/PC adapter the download actually left through — the thing you need
+                // to see first when a multi-NIC PC downloads "successfully" to the wrong place.
+                ["pgPcRoute"] = route?.Description ?? string.Empty,
+                ["pgPcRouteCandidates"] = route?.Candidates.Count ?? 0
+            };
+            if (prompts != null)
+                foreach (var kv in prompts.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
+
             return new ResponseDownload
             {
                 Ok = ok,
-                Message = $"Download {result.State}: {result.ErrorCount} error(s), {result.WarningCount} warning(s).",
+                Message = $"Download {result.State}: {result.ErrorCount} error(s), {result.WarningCount} warning(s)." + (prompts?.UnansweredSummary() ?? string.Empty),
                 State = result.State.ToString(),
                 ErrorCount = result.ErrorCount,
                 WarningCount = result.WarningCount,
                 Errors = errors.Count > 0 ? errors.ToArray() : null,
                 Warnings = warnings.Count > 0 ? warnings.ToArray() : null,
-                Meta = new JsonObject
-                {
-                    ["softwarePath"] = softwarePath,
-                    ["timestamp"] = DateTime.Now,
-                    ["downloadState"] = result.State.ToString(),
-                    // Which PG/PC adapter the download actually left through — the thing you need
-                    // to see first when a multi-NIC PC downloads "successfully" to the wrong place.
-                    ["pgPcRoute"] = route?.Description ?? string.Empty,
-                    ["pgPcRouteCandidates"] = route?.Candidates.Count ?? 0
-                }
+                Meta = meta
             };
         }
 
