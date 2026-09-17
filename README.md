@@ -16,9 +16,11 @@ Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github
 
 | Scenario | Configuration |
 |---|---|
-| TIA in a virtual machine | On the VM select **虚拟机服务端**; choose TIA version, installation root, IPv4, port and key; save, configure network permissions and start. |
-| AI on the host | Copy the configurator EXE to the host, select **AI 客户端**, choose clients, enter the VM address and matching key, test and save. TIA is not required on the host. |
-| TIA and AI on one computer | Select TIA version/path, then **本机连接**. Clients launch the matching engine over stdio without HTTP. |
+| TIA in a virtual machine | On the VM select **虚拟机服务端** (VM server); choose TIA version, installation root, IPv4, port and key; save, configure network permissions and start. |
+| AI on the host | Copy the configurator EXE to the host, select **AI 客户端** (AI client), choose clients, enter the VM address and matching key, test and save. TIA is not required on the host. |
+| TIA and AI on one computer | Select TIA version/path, then **本机连接** (local connection). Clients launch the matching engine over stdio without HTTP. |
+
+The configurator UI is Chinese-only; the labels above are its exact button names.
 
 Profiles: Claude Code, Codex, Cursor, VS Code / Copilot, Claude Desktop Chat, Gemini CLI, Windsurf and Cline. For official Claude's **Code** page select **Claude Code**; its **Chat** page uses Claude Desktop and an `mcp-remote` bridge for LAN HTTP. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
 

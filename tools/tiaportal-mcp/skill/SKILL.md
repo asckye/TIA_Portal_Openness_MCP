@@ -619,7 +619,7 @@ ImportFromDocuments(softwarePath="<plc>", groupPath="<group path or empty>",
 CompileAndDiagnosePlc(softwarePath="<plc>")     ← errorCount must be 0
 ```
 - `.s7res` must be present even when titles omitted (minimal: one `MLC_x` with `zh-CN:` + `en-US:`).
-- `ImportBlockFromScl` / `ImportBlocksFromScl` are thin aliases of the two import tools above.
+- There are **no** `ImportBlockFromScl` / `ImportBlocksFromScl` tools; use `ImportPlcExternalSource` + `GenerateBlocksFromExternalSource` (SCL) or `ImportBlocksFromDocuments` (S7DCL/XML) exactly as named above.
 
 > **Boundary (known TIA limitation):** importing **LAD** from SD documents can fail
 > unless every `.s7res` item also has an **`en-US`** tag, not only `zh-CN`. The

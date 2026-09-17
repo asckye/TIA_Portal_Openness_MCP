@@ -1,5 +1,7 @@
 # WPF reference design QA
 
+> 历史记录：v2.7.16 配置器界面对照参考设计的一次性检查结果。所引用的截图和 `bin-build/configurator-tests/` 证据为本机产物，不随仓库分发；当前配置器说明见 [配置指南](../getting-started/configuration.md)。
+
 final result: passed
 
 ## Target and scope

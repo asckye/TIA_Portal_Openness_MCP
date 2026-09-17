@@ -17,6 +17,7 @@
 | `unified_parameter_page_1024x768.json` | 1024 x 768 | 参数页：设定值、上下限、时间、计数预置 |
 | `unified_trend_page_1024x768.json` | 1024 x 768 | 趋势页：趋势区域、图例、实时数值 |
 | `unified_basic_tag_diagnostics_1024x768.json` | 1024 x 768 | 标签诊断：Bool 指示、Real IOField |
+| `unified_basic_event_log_1024x768.json` | 1024 x 768 | 事件列表：状态摘要、处理流程步骤、事件明细行（静态版式，Reset 按钮） |
 | `hmi_tag_binding_snippets.json` | （人读）符号互连 / 绝对地址示例，配合 `docs/guides/hmi/tag-binding.md` |
 
 1. `EnsureUnifiedHmiConnection`

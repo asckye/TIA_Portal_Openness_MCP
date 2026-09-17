@@ -461,7 +461,7 @@ Every recipe ends with a readback step and a clear success criterion.
 ─ 或：执行 DownloadToPlc 会自动清除所有强制
 ```
 
-**成功判断**: `SetForceTableEntry` 返回 Message 中含 "ForceValue set"，TIA Portal 联机后变量显示强制值
+**成功判断**: 强制动作由人在 TIA Portal 中联机执行并确认。`SetForceTableEntry` 自 0.0.38 起**刻意不注册为 MCP 工具**，AI 不能直接强制变量；MCP 只能读取强制表清单（`GetPlcForceTables`），`ImportPlcWatchTableOffline` 也明确拒绝强制表。监视表的修改值可用 `SetWatchTableModifyValue` 设置离线定义。
 
 **安全提醒**:
 - Force 覆盖 PLC 逻辑，机器可能异常动作

@@ -7,9 +7,9 @@ labels: bug
 
 **Environment**
 - TIA Portal version: V20 / V21
-- Executable used: `bin/Release` (V21) / `bin-v20/Release` (V20)
-- MCP client: Cursor / VS Code / Claude Desktop / other
-- Server version (from startup log, e.g. `TiaMcpServer 0.0.30`):
+- Executable used: `runtime/v21` (V21) / `runtime/v20` (V20)
+- MCP client: Claude Code / Claude Desktop / Codex / Cursor / VS Code / Gemini CLI / Windsurf / Cline / other
+- Server version (from startup log, e.g. `TiaMcpServer 2.7.15`):
 
 **What happened**
 A clear description of the bug, including the tool name and the full error text

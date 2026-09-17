@@ -1,5 +1,18 @@
 # Change Log
 
+## [Unreleased]
+
+仓库整理与审计，引擎 2.7.15.0 二进制未变。
+
+- 插件配置：`tia-portal` MCP 服务器定义内联进 `.claude-plugin/plugin.json`，删除根目录 `.mcp.json`。`${CLAUDE_PLUGIN_ROOT}` 只在插件上下文展开，根目录文件被 Claude Code 当项目级配置加载时路径不展开、服务器启动失败；直接打开仓库或解压包不再触发该错误。
+- 清理：删除已并入分类却仍随包分发的 `手册/`、5 个标 `_deprecated` 的 `templates/plc/plcbuild-json/fb_*|fc_*.json`（对应 `.scl` 保留）、被 `Generate-ToolsListFromAssembly.ps1` 取代的 `Generate-ToolsList.py`；`design-qa.md` 移入 `docs/archive`；`package-manifest.json` 去掉与 `plcTemplateLibrary` 重复的 `plcNetworkPatterns` 入口。引擎源码与工程文件未改动（受 `Validate-Bundle` 源码哈希约束，相关待办见路线图）。
+- 过期引用：修正 bug 模板的 `bin/Release` 路径与版本示例、蓝图 README 的 `scaffold_spec_start_stop.json` 文件名、HttpTests README 版本参数、CHANGELOG 历史版本锚点；删除 SKILL.md 中不存在的 `ImportBlocksFromScl` 别名说明；`natural-language-recipes.md` 与 `openness-limitations.md` 不再把刻意未注册的 `SetForceTableEntry` 当作可用工具。
+- 官方 API 对照：新增 `scripts/diagnostics/Audit-OpennessCoverage.ps1`，用本机 V21 PublicAPI 的 18 个官方 XML 对引擎源码做逐成员词法盘点，结果与确认缺口写入 `docs/reference/openness-coverage.md`。`openness-limitations.md` 更正"在线设备发现仅限工程配置"的错误（`GetAccessibleDevices()` 存在），补充 RUN/STOP 只能作为下载配置附带发生、下载提示覆盖情况与下载到 Windows 文件夹；`capabilities.md` 追加此前两侧均未记录的缺口（设备上载、可达设备扫描、`WatchAndForceTableAccessManager`、`UpdateProgram`、`ProgrammingLanguage.ST` 兼容义务等），并把与 `release-build.json` 重复的验证计数改为指向。
+- 已确认引擎缺陷（未修，记入路线图 E7）：`DownloadToPlc` 委托把 `UserManagementDownload` 当复选框处理，而该提示在 V20/V21 均为 `CurrentSelection` 选择型，触发时提示未应答导致下载中止；V21 共 43 种下载提示类型，委托只应答 16 种。
+- 许可证：新增 `docs/licenses/THIRD-PARTY-NOTICES.md` 逐项列出 `runtime/` 全部第三方程序集的许可证，补齐 Sharp7（MIT）、Workstation.UaClient、YamlDotNet、.NET Foundation、Siemens.Collaboration.Net 原文。Siemens 程序集适用免版税软件条款而非 MIT，再分发边界需维护者评估。
+- 新增 `docs/development/roadmap.md`：11 项需在 TIA 机器重建的引擎待办、官方 API 缺口优先级、第三方集成候选（含许可证红线）、合规事项。
+- 其他：`docs/README.md` 加入语言约定；`tools/README.md` 补 `vci-watch`；`templates/hmi/README.md` 补漏的 `unified_basic_event_log` 行；英文 README 为中文界面按钮加注释；`.gitignore` 增加 TIA 工程/归档扩展名与 `.claude/`。
+
 ## [2.7.17] - 2026-09-17
 
 - 重整文档、示例及脚本目录，合并重复指南和历史发布说明，删除过期脚本、临时清单及现场原始数据。
@@ -85,7 +98,7 @@
 
 ## 历史版本
 
-- [v2.7.5](docs/archive/release-notes.md)
-- [v2.7.4](docs/archive/release-notes.md)
-- [v2.7.3](docs/archive/release-notes.md)
+- [v2.7.5](docs/archive/release-notes.md#v275)
+- [v2.7.4](docs/archive/release-notes.md#v274)
+- [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)

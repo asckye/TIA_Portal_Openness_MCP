@@ -133,12 +133,21 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 - VCI 增补、多用户、Teamcenter、SafetyValidation；TestSuite、SiVArc、Startdrive、CFC、DCC 未在上表实现的剩余动作。
 - 没有官方入口证据的功能仍为待核实，不能以反射占位工具宣称支持。
 
+2026-09-17 对照官方 V21 在线文档（发布日期 03/2026）新识别、此前"已实现"与"未完成"两侧均未记录的缺口：
+
+- **下载配置族**：下载到 Windows 文件夹生成存储卡镜像（`DownloadProvider.Download(DirectoryInfo, …)`，含 `TargetForSoftware` 可指向 PLCSIM Advanced、`OverwriteOnMemoryCard`、`SafetyProgram`）尚无入口。`DownloadToPlc` 委托只应答 V21 全部 43 种下载提示中的 16 种（`keepActualValues` 已覆盖 `DataBlockReinitialization[OrKeepActualValues]`）；未应答的提示会使下载中止。**已确认缺陷**：`UserManagementDownload` 在 V20/V21 均为 `CurrentSelection` 选择型（KeepOnlineUserManagementData / UpdateUserManagementDataButKeepOnlinePassword / DownloadAllUserManagementDataResetToProject），委托却按复选框 `Checked` 处理，等于未应答。其余 27 种未处理类型（`BlockBindingPassword`、`ModuleRead/WriteAccessPassword`、`PlcMasterSecretPassword`、`OverwriteOnMemoryCard`、`SwitchBackupToPrimary`、`ResetModule`、`InitializeMemory`、`ProtectionLevelChanged`、`Upgrade/DowngradeTargetDevice`、`Download/Update/DeleteWebApplication`、`OverwriteHmiData`、`FitHmiComponents`、`TurnOffSequence`、`WaitOnReboot`、Startdrive 三项等）见路线图 E7。
+- **在线可达设备扫描**：`ConfigurationPcInterface.GetAccessibleDevices()` 返回所选 PC 接口上的在线参与者快照（Name/Address/MAC/DeviceSeries），可为 `StationUpload` 提供目标。此前 `openness-limitations.md` 误记为"仅限工程内配置"，已更正。
+- **Web 服务器监视/强制表访问规则**：`WatchAndForceTableAccessManager` 服务。
+- **程序升级**：`PlcSoftware.UpdateProgram()`（升级指令版本）。
+- **设备/模块杂项**：App ID 设置/读取/移除、批量硬件参数修改、Software Controller 的 PSC 文件创建/导出与资源配置、用户自定义 Logo。
+- **V21 What's-new 中列出但尚未在 API 目录定位到章节页的项**（需以本地 `Siemens.Engineering.Base/Step7.xml` 核实后再规划）：通信连接（FDL、HMI、ISO、ISO-on-TCP、PtP、S7、TCP、UDP）、CiR、I-Device PN-GSD 导出、工程集成共享设备、GSDX 签名状态、向 PLC 下载附加用户文件、Unified 画面布局字段导入导出。
+- **兼容性义务**：V21 新增 `ProgrammingLanguage.ST`（SIMATIC AX / TIAX 导入块），块枚举器必须容忍该值，不得因未知语言值失败。
+- **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`；本地 XML 集合是否包含待核实。
+
 这些能力需要各自的官方参数/生命周期实现和回归验证；选件与真实设备相关功能还需要匹配环境验收。这些构建记录不包含真实虚拟机工程或在线 PLC 的验收。
 
 ## 本地验证
 
-- V20/V21 Release 编译；原有 OpcUaLiveReader 空引用警告仍存在。
-- 离线逻辑测试：708 项通过，包括路径边界、重复名称、TimeSpan 精度、新文件限制与哈希内容校验。
-- 官方程序集 API 形状及默认预览检查：V20 115 项、V21 130 项（详见 manifest/release-build.json）。仅元数据检查，不代表 TIA 工程实际操作成功。
-- 实际 V20/V21 EXE 的本地 HTTP 回归：28 项通过，使用模拟响应与本地回环，不连接博图。
-- 新增功能尚未进行真实 TIA 工程验收。真实安装环境和测试工程需另行验收；此状态不计作验收通过。
+离线测试、官方程序集 API 形状检查和实际 EXE HTTP 回归的项数与日期以 [manifest/release-build.json](../../manifest/release-build.json) 为准，本页不重复维护快照（口径见[验证说明](../development/validation.md)）。三类检查都是元数据或本地回环级别，不连接博图，不代表 TIA 工程实际操作成功。
+
+新增功能尚未进行真实 TIA 工程验收。真实安装环境和测试工程需另行验收；此状态不计作验收通过。

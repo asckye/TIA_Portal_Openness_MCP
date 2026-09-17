@@ -19,3 +19,22 @@ bin-build/
 
 # python 缓存
 __pycache__/
+
+# TIA Portal 工程与归档（CONTRIBUTING 规定不得提交）
+*.ap1[5-9]
+*.ap2[0-9]
+*.zap1[5-9]
+*.zap2[0-9]
+*.als1[5-9]
+*.als2[0-9]
+*.zal1[5-9]
+*.zal2[0-9]
+
+# 本机 Claude Code 设置与发布产物
+.claude/
+*.sha256
+RELEASE_STATUS.txt
+
+# 本机放置的 Siemens PublicAPI（授权组件，不可分发；供本地编译与 API 盘点）
+TIA_V20_PublicAPI/
+TIA_V21_PublicAPI/

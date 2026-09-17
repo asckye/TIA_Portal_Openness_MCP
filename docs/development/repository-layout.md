@@ -12,9 +12,10 @@
 | `docs/guides` | 工程生成、版本控制、在线监视、PLC / HMI 专题 |
 | `docs/reference` | 工具矩阵、能力和自然语言配方 |
 | `docs/troubleshooting` | 错误、Openness 限制和 HMI 快照诊断 |
-| `docs/development` | 发布、验证、结构和 UI 检查记录 |
+| `docs/development` | 发布、验证、结构与路线图 |
 | `docs/tools` | 按工具族组织的技术细节 |
 | `docs/releases`、`docs/archive` | 当前发布说明和历史记录 |
+| `docs/licenses` | 随包分发的第三方程序集许可证清单与原文 |
 
 原 `手册/` 并入上述分类；“开始使用”和“使用说明与介绍”并入 README 与配置指南；AI spec 提示词并入 CLI，PLC 网络模式并入模板指南，能力增补并入能力参考。v2.7.15 及之前发布说明合并存档。失效路线图、临时验收命令和私人原始采集数据不再作为当前文档保留。
 

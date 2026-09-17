@@ -20,12 +20,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\checks\Validate-Bu
 | `templates/project-blueprints/full_plc_hmi_project.json` | 项目蓝图 |
 | `templates/plc/README.md` | PLC 模板索引 |
 | `templates/hmi/README.md` | HMI 模板索引 |
-| `docs/guides/plc/templates.md` | PLC 指令说明 |
+| `docs/guides/plc/templates.md` | PLC 指令说明、网络模式与扩展写法 |
 | `docs/guides/hmi/design.md` | HMI 画面规范 |
 | `docs/guides/hmi/tag-binding.md` | HMI↔PLC 符号/绝对地址与红字排障 |
 | `docs/getting-started/configuration.md` | MCP 与 IDE 无关、工具列表权威来源 |
 | `templates/README.md` | 模板总览与可选外部参考说明 |
-| `docs/guides/plc/templates.md` | PLC 网络与指令扩展写法 |
 
 ## 一、环境检查
 

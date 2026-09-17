@@ -50,7 +50,6 @@
                         "plcTemplateIndex":  "templates/plc/README.md",
                         "plcTemplateLibrary":  "docs/guides/plc/templates.md",
                         "hmiTemplateGuide":  "docs/guides/hmi/design.md",
-                        "plcNetworkPatterns":  "docs/guides/plc/templates.md",
                         "hmiBindingGuide":  "docs/guides/hmi/tag-binding.md",
                         "mcpIdeNeutral":  "docs/getting-started/configuration.md",
                         "optionalReferenceReadme":  "templates/README.md",

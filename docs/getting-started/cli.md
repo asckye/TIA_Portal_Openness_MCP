@@ -76,7 +76,7 @@ save: true
 - **V20 还是 V21？** 使用与已安装 TIA 大版本匹配的 EXE，仓库和 ZIP 均提供 `runtime/v20`、`runtime/v21`。非默认安装传 `--tia-portal-location "安装根目录"`（不含 Bin）及对应的 `--tia-major-version 20|21`。
 - **要看 GUI？** 加 `--with-ui` 用完整界面启动（较慢）。
 - **工程路径可以写相对的吗？** 可以——`runtime\v21\TiaMcpServer.exe describe/compile/export/import` 和 `runtime\v21\TiaMcpServer.exe patch` 的工程路径
-  现在按你当前所在目录解析（v2.0 修复，之前只认 exe 目录会报 `Projects.Open failed`）。
+  按你当前所在目录解析（早期版本只认 exe 目录，会报 `Projects.Open failed`）。
 - **`runtime\v21\TiaMcpServer.exe prewarm` 怎么停？** 在它运行的那个窗口按 `Ctrl+C` 即可优雅关闭。若是后台/双击启动的，
   `runtime\v21\TiaMcpServer.exe prewarm --stop` 只会关掉那个 headless TIA 实例，预热**进程本身**需手动结束（任务管理器里的 `TiaMcpServer.exe`）。
 

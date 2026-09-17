@@ -129,7 +129,7 @@ Synchronize cannot be called on a workspace mapping that has a compare status of
 ## 想全自动？看 `tools/vci-watch/`
 
 仓库里附了一个小看门狗：**程序一改一编译，自动导出、写 CHANGELOG、`git commit`**，
-工程师什么都不用做。它只用免费档的工具，代码不到 300 行，可以直接抄去改。
+工程师什么都不用做。它只用免费档的工具，单文件 Python 脚本，可以直接抄去改。
 详见 [`tools/vci-watch/README.md`](../../tools/vci-watch/README.md)。
 
 ---

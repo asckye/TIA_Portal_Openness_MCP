@@ -38,8 +38,8 @@ scl-examples/FB_StepSequenceDemo.scl     (外部 SCL 导入)
 > 单变量名的 `condition`/`source`，不能解析 `Setpoint - Actual`、`Disable OR FaultLatch`、
 > `ABS(...)`、`CASE` 等表达式（会编译报 `Tag not defined`）。因此含算术/比较/函数/CASE 的
 > FC/FB 改为 `scl-examples/*.scl` 原生源，经 `ImportPlcExternalSource` +
-> `GenerateBlocksFromExternalSource` 导入。旧 `plcbuild-json/fc_*.json`、`fb_*.json` 已弃用
-> （文件保留并标 `_deprecated`，勿再使用其表达式写法）。
+> `GenerateBlocksFromExternalSource` 导入。旧 `plcbuild-json/fc_*.json`、`fb_*.json` 已移除，
+> 对应实现见 `scl-examples/` 下同名 `.scl` 文件。
 
 `plcbuild-json/*.json`（仅 tagtable/udt/globaldb）每个文件都包含：
 
@@ -105,10 +105,10 @@ scl-examples/FB_StepSequenceDemo.scl     (外部 SCL 导入)
 
 ## 4. 蓝图内已有块与建议增量
 
-| 已有（`templates/plc/plcbuild-json`） | 可增量方向 |
-|----------------------------------------|------------|
-| `fb_timer_counter_demo` | 增加 **CTU 级联**、预置值来自 HMI DB |
-| `fb_step_sequence_demo` | 增加 **互锁步**、超时步、报警步 |
-| `fc_math_compare_demo` | 增加 **Real 比较链** + 死区 `ABS` 模式（SCL 实现） |
+| 已有（`templates/plc/scl-examples`） | 可增量方向 |
+|--------------------------------------|------------|
+| `FB_TimerCounterDemo.scl` | 增加 **CTU 级联**、预置值来自 HMI DB |
+| `FB_StepSequenceDemo.scl` | 增加 **互锁步**、超时步、报警步 |
+| `FC_MathCompareDemo.scl` | 增加 **Real 比较链** + 死区 `ABS` 模式 |
 
 具体 JSON 增量由项目工艺决定；本页只规定 **结构与指令选型** 原则，避免为自动化而生成不可维护的「千行单块」。

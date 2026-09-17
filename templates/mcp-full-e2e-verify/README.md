@@ -9,6 +9,8 @@
 | `templates/mcp-full-e2e-verify/` | 打包验收：相对路径固定，便于脚本或文档引用 |
 | `tools/tiaportal-mcp/skill/lad-cookbook/`、`scl-cookbook/` | SKILL 文档中的同名示例源；内容应与验证块保持一致策略 |
 
+`plc/blocks/` 下的 4 个 `MCPVerify_*_LAD*.xml` 与 `lad-cookbook/` 中同名文件**逐字节相同**，这里刻意保留副本以保证本目录自包含、相对路径固定。修改任一侧时请同步另一侧。`manifest.json` 中的 `plc/types`、`hmi/screens`、`hmi/tags` 为预留目录，当前无内容。
+
 导入 **`ImportBlock`** / **`ImportPlcExternalSource`** 时请使用 **绝对路径**。同一 FC/FB **勿重复导入同名**，否则报名称冲突（可先删外部源或块再导入）。
 
 ## 建议顺序（PLC）
