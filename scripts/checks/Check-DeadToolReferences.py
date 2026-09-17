@@ -47,6 +47,21 @@ ALLOWED = {
     'DeleteGlobalDb': '同上',
     'DeleteFunctionBlock': '同上',
     'ImportInstanceTexts': '描述原文即 "not yet exposed"',
+    # 2.7.18 新工具族描述里点名的原生成员，都在说明底层调用，不是 MCP 工具名
+    'GetAccessibleDevices': 'Openness ConfigurationPcInterface.GetAccessibleDevices()，由 ScanAccessibleDevices 封装',
+    'GetFingerprintData': 'Openness FingerprintDataProvider.GetFingerprintData()，由 ReadPlcBlockFingerprints 封装',
+    'ImportInstanceTextsFromXlsx': 'Openness PlcAlarmTextProvider.ImportInstanceTextsFromXlsx()，由 ImportPlcAlarmInstanceTexts 封装',
+    'GetCreationInfos': 'Openness IEngineeringComposition.GetCreationInfos()，动态组合接口',
+    'CloseAndCommit': 'Openness LocalSession.CloseAndCommit()，由 ManageMultiuserSession 的 commit 动作封装',
+    'ListRange': 'Openness PlcAlarmTextlist.ListRange 属性名',
+    'MoveToParkingLot': 'Openness CaxImportOptions 枚举值',
+    'ReadRolePermissions': 'Openness OPC UA NamespacePermission 布尔属性名',
+    'ReadOperatingMode': 'S7 Web 服务器 API 方法 Plc.ReadOperatingMode，由 ReadPlcWebDiagnostics 封装',
+    'ReadTag': 'WinCC Unified Open Pipe 消息名',
+    'WriteTag': 'WinCC Unified Open Pipe 消息名',
+    'ReadAlarm': 'WinCC Unified Open Pipe 消息名',
+    'ReadConfig': 'WinCC Unified Open Pipe 消息名（仅经 UnifiedOpenPipeRequest 原始请求可达）',
+    'WriteConfig': 'WinCC Unified Open Pipe 消息名（仅经 UnifiedOpenPipeRequest 原始请求可达）',
 }
 
 VERB = re.compile(
