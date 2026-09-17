@@ -71,6 +71,7 @@ namespace TiaMcpConfigurator
                 using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V20 / V21 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
+            Click("DetectTia", delegate { DetectTiaPath(true); });
             Click("GenerateKey", delegate { byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret("Server", Convert.ToBase64String(bytes)); });
             Click("SaveServer", SaveServer);
             Click("StartServer", StartServer);
@@ -87,7 +88,7 @@ namespace TiaMcpConfigurator
                 Guard(LoadServer); Guard(LoadClient);
                 if (!Directory.Exists(Text("TiaPath"))) Find<RadioButton>("ClientNav").IsChecked = true;
             }
-            else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; }
+            else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
             UpdateInstructions(); UpdateLocalSummary();
             Append("就绪。先配置虚拟机服务，再在宿主机选择 AI 客户端。连接测试不修改工程。");
             Window.Closing += OnClosing;
@@ -154,11 +155,18 @@ namespace TiaMcpConfigurator
             foreach (string prefix in new[] { "Server", "Client" }) { string secret = Secret(prefix); if (!String.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]"); }
             Status("需要处理"); Append(message); MessageBox.Show(Window, message, "需要处理", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
+        // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
+        private void DetectTiaPath(bool explicitRequest)
+        {
+            var found = ConfigCore.DetectTia(Version);
+            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + Version + " 安装目录（" + found.Value + "）：" + found.Key); }
+            else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + Version + " 安装根目录。");
+        }
         private void LoadServer()
         {
             Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", "Portal V" + Version);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("Server", "");
-            if (!File.Exists(StatePath)) return;
+            if (!File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
             if (settings.Version != Version) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");

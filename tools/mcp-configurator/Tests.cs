@@ -78,6 +78,22 @@ namespace TiaMcpConfigurator
                 Reject(() => ConfigCore.Prefix("192.0.2.10", 0), "reject invalid port");
                 Reject(() => ConfigCore.Protect(""), "reject empty key");
                 Reject(() => ConfigCore.RemoteEntry("192.0.2.10", 8765, "a\r\nb"), "reject header injection");
+                // 安装目录自动探测：只读且不抛异常；环境变量指向没有 Openness 的目录时必须拒绝，而不是把它当成安装根
+                string savedLocation = Environment.GetEnvironmentVariable("TiaPortalLocation");
+                try
+                {
+                    string fakeRoot = Path.Combine(temp, "Portal V21"); Directory.CreateDirectory(fakeRoot);
+                    Environment.SetEnvironmentVariable("TiaPortalLocation", fakeRoot);
+                    var detected = ConfigCore.DetectTia(21);
+                    Assert(detected.Key != fakeRoot, "env var without PublicAPI is not accepted as V21 install root");
+                    Assert(detected.Key == null || Directory.Exists(Path.Combine(detected.Key, "PublicAPI")), "detected V21 root, if any, carries PublicAPI");
+                    Assert(!string.IsNullOrEmpty(detected.Value), "detection always explains its source or failure");
+                    Directory.CreateDirectory(Path.Combine(fakeRoot, "PublicAPI", "V21", "net48"));
+                    File.WriteAllText(Path.Combine(fakeRoot, "PublicAPI", "V21", "net48", "Siemens.Engineering.Base.dll"), "stub");
+                    Assert(ConfigCore.DetectTia(21).Key == fakeRoot, "env var with a V21 PublicAPI is detected first");
+                    Assert(ConfigCore.DetectTia(20).Key != fakeRoot, "a V21 path is never reported for V20");
+                }
+                finally { Environment.SetEnvironmentVariable("TiaPortalLocation", savedLocation); }
                 string secret = "test spaces % ! & * \\\"中文";
                 string encrypted = ConfigCore.Protect(secret);
                 Assert(encrypted != secret && ConfigCore.Unprotect(encrypted) == secret, "DPAPI roundtrip including special characters");

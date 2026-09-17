@@ -80,6 +80,48 @@ namespace TiaMcpConfigurator
             return path;
         }
 
+        /// <summary>
+        /// 自动探测 Portal V{version} 安装根目录，顺序与引擎 Engineering.GetTiaPortalInstallPath 一致：
+        /// TiaPortalLocation 环境变量（须指向该版本）→ 注册表 HKLM\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{version}\TIA_Opns\Path
+        /// → 默认安装目录。返回 (路径, 来源)；找不到返回 (null, 说明)。只读，不抛异常。
+        /// </summary>
+        public static KeyValuePair<string, string> DetectTia(int version)
+        {
+            string env = Environment.GetEnvironmentVariable("TiaPortalLocation");
+            if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env) && PathMatchesVersion(env, version) && HasOpenness(env, version))
+                return new KeyValuePair<string, string>(env, "TiaPortalLocation 环境变量");
+            try
+            {
+                using (var hklm = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
+                using (var key = hklm.OpenSubKey(@"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP" + version + @"\TIA_Opns"))
+                {
+                    string regPath = key == null ? null : key.GetValue("Path") as string;
+                    if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, version))
+                        return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
+                }
+            }
+            catch (Exception) { }
+            foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
+            {
+                if (string.IsNullOrEmpty(root)) continue;
+                string candidate = Path.Combine(root, "Siemens", "Automation", "Portal V" + version);
+                if (Directory.Exists(candidate) && HasOpenness(candidate, version)) return new KeyValuePair<string, string>(candidate, "默认安装目录");
+            }
+            return new KeyValuePair<string, string>(null, "环境变量、注册表和默认目录都没有 V" + version + " 的 Openness 安装");
+        }
+
+        private static bool PathMatchesVersion(string path, int version)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(path, @"[Vv](\d{2})", System.Text.RegularExpressions.RegexOptions.RightToLeft);
+            int pv;
+            return !m.Success || (int.TryParse(m.Groups[1].Value, out pv) && pv == version);
+        }
+
+        private static bool HasOpenness(string path, int version)
+        {
+            try { ValidateTia(path, version); return true; } catch (Exception) { return false; }
+        }
+
         public static void ValidateTia(string path, int version)
         {
             string api = Path.Combine(path, "PublicAPI");

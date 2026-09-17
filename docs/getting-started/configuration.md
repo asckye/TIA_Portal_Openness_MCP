@@ -5,7 +5,7 @@
 ## 第一步：在虚拟机配置服务
 
 1. 用运行 TIA 的 Windows 用户打开 EXE，选择 **虚拟机服务端**。
-2. 选择 V20/V21，填写 TIA 安装根目录（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
+2. 选择 V20/V21。安装根目录会自动探测（`TiaPortalLocation` 环境变量 → 注册表 `TIAP{版本}\TIA_Opns` → 默认安装目录，与引擎相同顺序），也可点“自动检测”重新探测或用“浏览”手动选择（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
 3. 填虚拟机 IPv4、端口（默认 8765），输入或生成连接密钥。宿主机需填写同一个密钥。
 4. **保存配置 → 配置网络权限 → 启动服务**。网络权限按钮会请求 Windows 管理员授权，只为当前用户预留指定 HTTP 地址，并放行本地子网到该地址/端口的 TCP 访问。
 5. 日志出现 listening 后保持窗口打开。以后打开 EXE，直接点“启动服务”。

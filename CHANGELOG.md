@@ -10,8 +10,9 @@
 - **新增离线分析**：`ComparePlcBlockDocuments`（剥离时间戳/UId 的语义 diff + 结构差异）、`ScanPlcSourceAnnotations`（TODO/FIXME 扫描）、`ExtractPlcBlockMetrics`；`templates/plc/scl-examples/FB_SelfTest_Template.scl` 自测试骨架。
 - **工具分类**：引擎内 `ToolTaxonomy` 作为唯一事实来源——7 个大类（session / project / plc / plc-online / hardware / hmi / runtime）、26 个域、规范操作类型（SESSION/READ/WRITE/FILE/OFFLINE/ONLINE/ONLINE-WRITE/EXECUTE）；新增 `ListToolCategories`，`FindTools` 支持 `category`/`domain` 筛选；`tools-list.json` 带分类字段，`tool-matrix.md` 改由清单按大类→域生成并纳入发布流程。原裸 `PLC` 域并入 `PLC-Software` / `PLC-TechnologyObjects`，8 种历史操作写法统一。
 - **引擎待办清理**：14 个大写域名标签统一；移除输入已不存在的 `RunV2PlanCompletionAudit` 工具与 CLI 标志；Doctor 提示、授权指南死工具名修正；硬编码开发机路径改为运行时安装根解析；V20 csproj 的 `TiaPortalLocation` 可被覆盖；移除无对象的 csproj 项。
-- **验证**：离线 1158 项通过；官方程序集 API 形状检查 V21 847 / V20 758；实际 EXE HTTP 28、HMI 遍历 18、资源发现 42 等两版全过；配置器 53 项。**真实工程验收未执行**；新工具按 API 形状与离线逻辑验证，状态见能力文档。
+- **验证**：离线 1158 项通过；官方程序集 API 形状检查 V21 847 / V20 758；实际 EXE HTTP 28、HMI 遍历 18、资源发现 42 等两版全过；配置器 58 项。**真实工程验收未执行**；新工具按 API 形状与离线逻辑验证，状态见能力文档。
 - 许可证：新增 Webserver API、Newtonsoft.Json、MimeMapping 条目与原文。
+- 配置器：安装目录改为自动探测（TiaPortalLocation 环境变量 → 注册表 TIAP{版本}\TIA_Opns → 默认安装目录，与引擎同一顺序），首次打开与切换版本时自动填入，新增“自动检测”按钮；只接受含对应 Openness DLL 的目录。配置器隔离测试 58 项。
 
 ### 随 2.7.18 发布的仓库整理与审计
 

@@ -82,7 +82,7 @@
       <DockPanel Margin="0,0,0,22"><TextBlock Text="在安装 TIA 的电脑上完成" DockPanel.Dock="Right" Foreground="#8795A6" FontSize="11" VerticalAlignment="Center"/><TextBlock Text="服务设置" FontSize="17" FontWeight="SemiBold"/></DockPanel>
       <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
        <StackPanel><TextBlock Text="TIA 版本" Style="{StaticResource FieldLabel}"/><ComboBox x:Name="Version" SelectedIndex="0"><ComboBoxItem Content="V21"/><ComboBoxItem Content="V20"/></ComboBox></StackPanel>
-       <StackPanel Grid.Column="2"><TextBlock Text="安装目录（不带 Bin）" Style="{StaticResource FieldLabel}"/><DockPanel><Button x:Name="BrowseTia" Content="浏览" DockPanel.Dock="Right" Margin="8,0,0,0"/><TextBox x:Name="TiaPath" FontFamily="Consolas"/></DockPanel></StackPanel>
+       <StackPanel Grid.Column="2"><TextBlock Text="安装目录（不带 Bin）" Style="{StaticResource FieldLabel}"/><DockPanel><Button x:Name="BrowseTia" Content="浏览" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="DetectTia" Content="自动检测" DockPanel.Dock="Right" Margin="8,0,0,0" ToolTip="按环境变量 TiaPortalLocation、注册表和默认安装目录探测"/><TextBox x:Name="TiaPath" FontFamily="Consolas"/></DockPanel></StackPanel>
       </Grid>
       <Grid Margin="0,22,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="170"/></Grid.ColumnDefinitions>
        <StackPanel><TextBlock Text="虚拟机 IPv4 地址" Style="{StaticResource FieldLabel}"/><TextBox x:Name="ServerAddress" Tag="例如 192.0.2.10" FontFamily="Consolas"/></StackPanel>
