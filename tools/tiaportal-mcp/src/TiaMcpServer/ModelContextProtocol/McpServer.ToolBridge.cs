@@ -77,21 +77,85 @@ namespace TiaMcpServer.ModelContextProtocol
             return u.Name;
         }
 
+        [McpServerTool(Name = "ListToolCategories"), Description(
+            "[L0][Meta][READ] The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), " +
+            "their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per category/domain/operation. " +
+            "Call this first to orient, then FindTools(category=… or domain=…) to browse one area.")]
+        public static ResponseStringList ListToolCategories()
+        {
+            try
+            {
+                var all = AllToolMethods();
+                var parsed = all.Select(kv => (Name: kv.Key, Tag: ToolTaxonomy.Parse(ToolDescription(kv.Value)), Op: ToolTaxonomy.OperationOf(kv.Key, ToolDescription(kv.Value)))).ToList();
+                var lines = new List<string>();
+                var categories = new JsonArray();
+                foreach (var c in ToolTaxonomy.Categories)
+                {
+                    var inCategory = parsed.Where(p => ToolTaxonomy.CategoryOf(p.Tag.Domain) == c.Key).ToList();
+                    lines.Add($"{c.Key} — {c.NameZh} / {c.NameEn} ({inCategory.Count} tools): {c.Description}");
+                    var domains = new JsonArray();
+                    foreach (var d in c.Domains)
+                    {
+                        var inDomain = inCategory.Where(p => string.Equals(p.Tag.Domain, d, StringComparison.OrdinalIgnoreCase)).ToList();
+                        lines.Add($"    [{d}] {inDomain.Count} tools; layers " + string.Join("/", inDomain.GroupBy(p => p.Tag.Layer).OrderBy(g => g.Key).Select(g => g.Key + "=" + g.Count())));
+                        domains.Add(new JsonObject { ["domain"] = d, ["tools"] = inDomain.Count,
+                            ["operations"] = new JsonObject(inDomain.GroupBy(p => p.Op.Operation).OrderBy(g => g.Key).Select(g => new KeyValuePair<string, JsonNode?>(g.Key, g.Count()))), ["operationsInferred"] = inDomain.Count(p => p.Op.Inferred) });
+                    }
+                    categories.Add(new JsonObject { ["key"] = c.Key, ["nameZh"] = c.NameZh, ["nameEn"] = c.NameEn, ["description"] = c.Description, ["tools"] = inCategory.Count, ["domains"] = domains });
+                }
+                var unknown = parsed.Where(p => !ToolTaxonomy.IsKnownDomain(p.Tag.Domain)).Select(p => p.Name + "(" + p.Tag.Domain + ")").ToList();
+                var meta = BridgeMeta(true);
+                meta["categories"] = categories;
+                meta["layers"] = new JsonObject(ToolTaxonomy.LayerMeaning.Select(kv => new KeyValuePair<string, JsonNode?>(kv.Key, kv.Value)));
+                meta["operations"] = new JsonObject(ToolTaxonomy.OperationMeaning.Select(kv => new KeyValuePair<string, JsonNode?>(kv.Key, kv.Value)));
+                meta["uncategorized"] = new JsonArray(unknown.Select(u => (JsonNode)u).ToArray());
+                meta["toolCount"] = all.Count;
+                return new ResponseStringList
+                {
+                    Message = $"{all.Count} tools in {ToolTaxonomy.Categories.Count} categories" + (unknown.Count > 0 ? $"; {unknown.Count} tool(s) carry an unregistered domain tag: {string.Join(", ", unknown)}" : "") + ". Use FindTools(category=…) or FindTools(domain=…) to list one area.",
+                    Items = lines,
+                    Meta = meta,
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ResponseStringList { Message = "ListToolCategories failed: " + ex.Message, Meta = BridgeMeta(false) };
+            }
+        }
+
         [McpServerTool(Name = "FindTools"), Description(
-            "[L0][Meta] Search the FULL tool roster (all ~200 tools), including ones not listed in this session. " +
-            "The server ships a ~48-tool 'lite' roster by default so the tool list stays small and every host can load it; " +
-            "everything else is reached through this tool plus CallTool. " +
+            "[L0][Meta][READ] Search the FULL tool roster, including tools not listed in this session. " +
+            "The server ships a small 'lite' roster by default so every host can load it; everything else is reached through this tool plus CallTool. " +
             "USE THIS whenever the visible tools do not cover what you need, before concluding the server cannot do something. " +
             "Search by capability words, not exact names: 'watch table', 'HMI screen', 'download', 'cross reference', 'GSD'. " +
+            "Optionally restrict to one category (session/project/plc/plc-online/hardware/hmi/runtime) or one domain tag (e.g. HMI-Unified, PLC-Online) — see ListToolCategories. " +
             "Returns each match's exact name, parameter signature with defaults, and full description; then invoke it with CallTool.")]
         public static ResponseStringList FindTools(
-            [Description("query: space-separated words matched against tool names and descriptions, e.g. 'export watch table'. Empty lists the whole roster.")] string query = "",
-            [Description("limit: max tools to return (default 12). Raise it for a broad survey.")] int limit = 12)
+            [Description("query: space-separated words matched against tool names and descriptions, e.g. 'export watch table'. Empty lists the whole roster (or the whole category/domain when one is given).")] string query = "",
+            [Description("limit: max tools to return (default 12). Raise it for a broad survey.")] int limit = 12,
+            [Description("category: optional category key from ListToolCategories (session, project, plc, plc-online, hardware, hmi, runtime).")] string category = "",
+            [Description("domain: optional exact domain tag from ListToolCategories, e.g. 'HMI-Unified' or 'PLC-Software'. Case-insensitive.")] string domain = "")
         {
             try
             {
                 var all = AllToolMethods();
                 if (limit <= 0) limit = 12;
+                if (!string.IsNullOrWhiteSpace(category) && ToolTaxonomy.FindCategory(category) == null)
+                    return new ResponseStringList { Message = "Unknown category '" + category + "'. Valid keys: " + string.Join(", ", ToolTaxonomy.Categories.Select(c => c.Key)) + ".", Meta = BridgeMeta(false) };
+                if (!string.IsNullOrWhiteSpace(domain) && !ToolTaxonomy.IsKnownDomain(domain))
+                    return new ResponseStringList { Message = "Unknown domain '" + domain + "'. Call ListToolCategories for the registered domain tags.", Meta = BridgeMeta(false) };
+                if (!string.IsNullOrWhiteSpace(category) || !string.IsNullOrWhiteSpace(domain))
+                {
+                    var filtered = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var kv in all)
+                    {
+                        var tag = ToolTaxonomy.Parse(ToolDescription(kv.Value));
+                        if (!string.IsNullOrWhiteSpace(domain) && !string.Equals(tag.Domain, domain.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!string.IsNullOrWhiteSpace(category) && !string.Equals(ToolTaxonomy.CategoryOf(tag.Domain), category.Trim(), StringComparison.OrdinalIgnoreCase)) continue;
+                        filtered[kv.Key] = kv.Value;
+                    }
+                    all = filtered;
+                }
 
                 var terms = (query ?? "")
                     .Split(new[] { ' ', ',', ';', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)

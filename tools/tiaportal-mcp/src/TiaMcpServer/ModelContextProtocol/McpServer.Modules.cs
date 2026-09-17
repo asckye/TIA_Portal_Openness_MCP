@@ -99,7 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "PlugDeviceItem"), Description(
-            "[L2][Hardware][Destructive] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 "
+            "[L2][Hardware][WRITE] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 "
             + "6ES7221-3BD30-0XB0), signal module (SM), or communication module (CM). This is the 'InsertDeviceItem' / "
             + "'AddSignalBoard' operation — AddDevice only creates whole stations and cannot plug boards into a CPU. "
             + "Defaults to dryRun=true, which runs a REAL TIA feasibility check (CanPlugNew) without writing. "

@@ -5,7 +5,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        [McpServerTool(Name="ArchiveSavedProject"),Description("[L2][Project][FILE-WRITE]Create a native compressed .zap20/.zap21 archive of an already saved project. Default dryRun=true. Rejects unsaved state, unsupported sessions and existing target files. Does not save, change project path, close the project, or test retrieval.")]
+        [McpServerTool(Name="ArchiveSavedProject"),Description("[L2][Project][FILE]Create a native compressed .zap20/.zap21 archive of an already saved project. Default dryRun=true. Rejects unsaved state, unsupported sessions and existing target files. Does not save, change project path, close the project, or test retrieval.")]
         public static ResponseMessage ArchiveSavedProject(string archivePath,bool dryRun=true)
             =>Portal.ArchiveSavedProject(archivePath,dryRun);
         [McpServerTool(Name="ReadUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. screenPath is a unique name or /Group/Screen from ListHmiScreenPaths.")]

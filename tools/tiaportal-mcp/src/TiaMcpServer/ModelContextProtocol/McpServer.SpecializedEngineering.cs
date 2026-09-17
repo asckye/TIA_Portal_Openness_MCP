@@ -4,10 +4,10 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        [McpServerTool(Name="ExchangePlcSupervisions"), Description("[L2][PLC][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import requires offline PLC; output is new and hashed. Default preview; no save/compile/download.")]
+        [McpServerTool(Name="ExchangePlcSupervisions"), Description("[L2][PLC-Software][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import requires offline PLC; output is new and hashed. Default preview; no save/compile/download.")]
         public static ResponseMessage ExchangePlcSupervisions(string softwarePath,string action,string filePath,string importOptions="None",bool dryRun=true)
             => Portal.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun);
-        [McpServerTool(Name="ExchangeCfcCharts"), Description("[L2][PLC][WRITE] CFC ChartProviderS7 native ZIP exchange; explicit modelVersion/filter. deleteAtTarget=false; default preview. Native chart completeness not asserted. Import requires offline PLC; no save/compile/download.")]
+        [McpServerTool(Name="ExchangeCfcCharts"), Description("[L2][PLC-Software][WRITE] CFC ChartProviderS7 native ZIP exchange; explicit modelVersion/filter. deleteAtTarget=false; default preview. Native chart completeness not asserted. Import requires offline PLC; no save/compile/download.")]
         public static ResponseMessage ExchangeCfcCharts(string softwarePath,string action,string filePath,string modelVersion,long filter,bool unattended=true,bool deleteAtTarget=false,bool dryRun=true)
             => Portal.ExchangeCfcCharts(softwarePath,action,filePath,modelVersion,filter,unattended,deleteAtTarget,dryRun);
         [McpServerTool(Name="ReadTestSuiteCases"), Description("[L2][Project][READ] Siemens Test Suite styleGuide/application/system case or rule-set scalar read. Exact name or live offset pagination. Does not execute tests.")]
@@ -19,10 +19,10 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="RunTestSuiteCase"), Description("[L2][Project][EXECUTE] Execute one exact Siemens Test Suite rule set/case. Default preview; application/system require confirmExternalExecution=true because configured simulation or servers may be affected. Returns actual testPassed and native diagnostics.")]
         public static ResponseMessage RunTestSuiteCase(string category,string name,bool confirmExternalExecution=false,bool dryRun=true)
             => Portal.RunTestSuiteCase(category,name,confirmExternalExecution,dryRun);
-        [McpServerTool(Name="ExchangeMotionCamData"), Description("[L2][PLC][WRITE] Native cam text/binary/point-list export and text/binary import. Explicit native format/separator, new output file, default preview. Import requires Offline. No drive/motion command.")]
+        [McpServerTool(Name="ExchangeMotionCamData"), Description("[L2][PLC-TechnologyObjects][WRITE] Native cam text/binary/point-list export and text/binary import. Explicit native format/separator, new output file, default preview. Import requires Offline. No drive/motion command.")]
         public static ResponseMessage ExchangeMotionCamData(string softwarePath,string objectPath,string action,string filePath,string format="",string separator="",int pointCount=0,bool dryRun=true)
             => Portal.ExchangeMotionCamData(softwarePath,objectPath,action,filePath,format,separator,pointCount,dryRun);
-        [McpServerTool(Name="ConfigureMotionHardwareConnection"), Description("[L2][PLC][WRITE] Offline axis actor/sensor/torque hardware mapping read/connect/disconnect. Addresses are BIT addresses. Explicit sensor index; default preview. Native readback, no live drive or motion command.")]
+        [McpServerTool(Name="ConfigureMotionHardwareConnection"), Description("[L2][PLC-TechnologyObjects][WRITE] Offline axis actor/sensor/torque hardware mapping read/connect/disconnect. Addresses are BIT addresses. Explicit sensor index; default preview. Native readback, no live drive or motion command.")]
         public static ResponseMessage ConfigureMotionHardwareConnection(string softwarePath,string objectPath,string interfaceKind,string action,int inputBitAddress=0,int outputBitAddress=0,string connectOption="Default",int sensorIndex=0,bool dryRun=true)
             => Portal.ConfigureMotionHardwareConnection(softwarePath,objectPath,interfaceKind,action,inputBitAddress,outputBitAddress,connectOption,sensorIndex,dryRun);
         [McpServerTool(Name="ManageUnifiedEvent"), Description("[L2][HMI-Unified][WRITE] Exact screen/control event or property event read/create/update/delete. Object JSON path. Updates preserve omitted script fields. Mutations need preview token. No Script SyntaxCheck, script execution, save/compile/download.")]

@@ -20,9 +20,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // model in lite was instructed to call ImportFromDocuments and couldn't see it).
         private static readonly HashSet<string> LiteToolNames = new HashSet<string>(StringComparer.Ordinal)
         {
-            // L0 — the bridge to everything not listed here. Without these two, lite is a
-            // dead end: the model cannot even discover that the other ~160 tools exist.
-            "FindTools", "CallTool",
+            // L0 — the bridge to everything not listed here. Without these, lite is a
+            // dead end: the model cannot even discover that the other ~300 tools exist.
+            "FindTools", "CallTool", "ListToolCategories",
             // L0 — orientation / diagnostics
             "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
             "GenerateAcceptanceReport", "GenerateErrorReport",

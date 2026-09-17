@@ -20,6 +20,10 @@ $resolver=[ResolveEventHandler]{param($sender,$eventArgs)
 try {
     $assembly=[Reflection.Assembly]::LoadFrom($exePath)
     $type=$assembly.GetType('TiaMcpServer.ModelContextProtocol.McpServer',$true)
+    # 分类的唯一事实来源在引擎里（ToolTaxonomy）；这里经反射取大类与操作类型，避免脚本与二进制各存一份分类表。
+    $taxonomy=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
+    $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('Parse'); $operationOf=$taxonomy.GetMethod('OperationOf')
+    $categories=@(foreach($c in $taxonomy.GetField('Categories').GetValue($null)){[ordered]@{key=$c.Key;nameZh=$c.NameZh;nameEn=$c.NameEn;description=$c.Description;domains=@($c.Domains)}})
     $rows=@(foreach($method in $type.GetMethods([Reflection.BindingFlags]'Public,Static')){
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
         $tool=$attributes | Where-Object { $_.AttributeType.Name -eq 'McpServerToolAttribute' } | Select-Object -First 1
@@ -28,17 +32,22 @@ try {
         foreach($arg in $tool.NamedArguments){if($arg.MemberName -eq 'Name'){$name=[string]$arg.TypedValue.Value}}
         $desc=$attributes | Where-Object { $_.AttributeType.FullName -eq 'System.ComponentModel.DescriptionAttribute' } | Select-Object -First 1
         $description=if($desc){[string]$desc.ConstructorArguments[0].Value}else{''}
-        $layer=if($description -match '\[(L\d)\]'){$Matches[1]}else{'L2'}
-        $domain=if($description -match '\[L\d\]\[(?:Category:)?([^\]]+)\]'){$Matches[1]}else{''}
-        [ordered]@{name=$name;layer=$layer;domain=$domain;method=$method.Name;returnType=$method.ReturnType.Name;
+        $tag=$parseTag.Invoke($null,@($description))
+        $layer=[string]$tag.Item1; $domain=[string]$tag.Item2
+        $op=$operationOf.Invoke($null,@($name,$description)); $operation=[string]$op.Item1; $operationInferred=[bool]$op.Item2
+        $category=[string]$categoryOf.Invoke($null,@($domain))
+        [ordered]@{name=$name;layer=$layer;category=$category;domain=$domain;operation=$operation;operationInferred=$operationInferred;method=$method.Name;returnType=$method.ReturnType.Name;
             parameters=@($method.GetParameters() | ForEach-Object Name);description=$description}
     })
+    $uncategorized=@($rows | Where-Object { $_.category -eq 'uncategorized' } | ForEach-Object { $_.name })
+    if($uncategorized.Count){throw "Tools with an unregistered domain tag (register the domain in ToolTaxonomy or fix the description prefix): $($uncategorized -join ', ')"}
     $data=[ordered]@{
         package=$PackageName;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');
         source='Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed';
         fileVersion=(Get-Item -LiteralPath $exePath).VersionInfo.FileVersion;
         exeSha256=(Get-FileHash -LiteralPath $exePath -Algorithm SHA256).Hash.ToLowerInvariant();
         toolCount=$rows.Count;note='Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.';
+        categories=$categories;
         tools=@($rows | Sort-Object name)
     }
     [IO.File]::WriteAllText($OutputPath,($data|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))

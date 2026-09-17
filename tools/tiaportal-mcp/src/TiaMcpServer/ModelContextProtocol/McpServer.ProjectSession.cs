@@ -86,8 +86,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (Portal.ProjectIsValid)
                 {
                     Portal.CloseProject();
-                }
-
+                }
+
                 // get project extension
                 string extension = Path.GetExtension(path).ToLowerInvariant();
 
@@ -182,7 +182,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (Portal.ProjectIsValid)
                 {
                     Portal.CloseProject();
-                }
+                }
                 var ok = Portal.CreateProject(directoryPath, projectName, closeForeignProject);
                 if (!ok)
                     throw new McpException($"Failed to create project '{projectName}' in '{directoryPath}'", McpErrorCode.InternalError);

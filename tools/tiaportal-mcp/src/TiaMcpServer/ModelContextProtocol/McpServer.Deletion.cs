@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
         #region delete blocks / tag tables / types
 
         [McpServerTool(Name = "DeletePlcBlock"), Description(
-            "[L2][PLC-Software][Destructive] Preview or delete exactly one PLC block by its exact path, including "
+            "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including "
             + "blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, "
             + "ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / "
             + "DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports "
@@ -92,7 +92,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DeletePlcTagTable"), Description(
-            "[L2][PLC-Software][Destructive] Preview or delete ONE PLC tag table (variable table / tag list) "
+            "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) "
             + "by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what "
             + "the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every "
             + "tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the "
@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DeletePlcType"), Description(
-            "[L2][PLC-Software][Destructive] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
+            "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
             + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it, "
             + "so the preview reports its cross references (GetCrossReferences works at type level) before you "
             + "commit - review them first. Regex and wildcards are rejected. Export the type first with ExportType, "

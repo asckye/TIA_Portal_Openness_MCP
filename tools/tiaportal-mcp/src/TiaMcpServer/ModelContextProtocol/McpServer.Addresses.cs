@@ -97,7 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SetDeviceItemIoAddress"), Description(
-            "[L2][Hardware][Destructive] Preview or change the I/O START ADDRESS of one device item "
+            "[L2][Hardware][WRITE] Preview or change the I/O START ADDRESS of one device item "
             + "(e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. "
             + "startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong "
             + "value does NOT fail compilation — the program silently reads a different module. Read back with "
