@@ -33,6 +33,7 @@
 | `scl-examples/FB_TimerCounterDemo.scl` | fb | TON 定时、上升沿计数、复位 |
 | `scl-examples/FB_StepSequenceDemo.scl` | fb | CASE 步序状态机 |
 | `scl-examples/FC_InstructionGallery.scl` | fc | SCL 指令参考示例 |
+| `scl-examples/FB_SelfTest_Template.scl` | fb | DB 驱动的最小自测骨架：Start 触发、用例表预期/实际、通过/失败计数 |
 
 > 旧 `plcbuild-json/fc_*.json`、`fb_*.json` 已移除；FC/FB 一律使用 `scl-examples/` 下的 `.scl` 外部源导入，不要用 DSL 表达式写法。
 
