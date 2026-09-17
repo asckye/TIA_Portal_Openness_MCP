@@ -87,6 +87,7 @@
          而崩溃路径本来就少见 —— 判错了也悄无声息，属于只有会失败的用例盯得住的那类。 -->
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolTaxonomy.cs" Link="ToolTaxonomy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\DownloadPromptPolicy.cs" Link="DownloadPromptPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
