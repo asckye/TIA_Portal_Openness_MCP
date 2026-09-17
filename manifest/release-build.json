@@ -3,7 +3,7 @@
     "releaseDate":  "20260917",
     "fileVersion":  "2.7.19.0",
     "package":  "TIA_MCP_Delivery_v2.7.19_20260917",
-    "generatedAt":  "2026-09-17T21:52:52.1759219+00:00",
+    "generatedAt":  "2026-09-17T22:00:00.4746956+00:00",
     "validation":  {
                        "offlinePassed":  1273,
                        "runtimes":  {
@@ -357,7 +357,7 @@
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
                              "length":  2868736,
-                             "sha256":  "61b2357ce233318590aa1fe5d884a71a1c079162a77a87ec2338bf1b13addb09"
+                             "sha256":  "b613bda531801c4586d3ff28a09d783a7d80c853a96cc6a60dee872ea6f7abd1"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -687,7 +687,7 @@
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
                              "length":  2868736,
-                             "sha256":  "a7506b6603b2912213c798a9802ccbd2b593ecfad556724bf0ee06ce7f1de4dc"
+                             "sha256":  "56440d51a85aecb515ab5e756934e22dcd4c5bff7871e749b8f18589a30f2f4e"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -1140,7 +1140,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedLogic.cs",
-                            "sha256":  "cb91d7996d0ea1be327c688cc88cf6f8b8ed44c28f01d43f33a541187c34ca72"
+                            "sha256":  "bd735a1a766a8ccac1d0145bcc4a13bbae85655b64a8e3e0d93fdfd9f92d3ebb"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/RuntimeChannelsLogic.cs",
@@ -1744,7 +1744,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PlcSimAdvancedTests.cs",
-                            "sha256":  "2a315ed274e45200be1e7f6cce5baf5de107e338fc8c53a6d0ee88832af18d78"
+                            "sha256":  "35beb6e045705aa5e5719f609f6be0ceaa0ec2af0e16570168e4209eb72377ae"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PlcTypeGroupCreationTests.cs",

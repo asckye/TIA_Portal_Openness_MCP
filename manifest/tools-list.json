@@ -1,9 +1,9 @@
 {
     "package":  "TIA_MCP_Delivery_v2.7.19_20260917",
-    "generatedAt":  "2026-09-17T21:52:49.4270427+00:00",
+    "generatedAt":  "2026-09-17T21:59:57.6815026+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "2.7.19.0",
-    "exeSha256":  "a7506b6603b2912213c798a9802ccbd2b593ecfad556724bf0ee06ce7f1de4dc",
+    "exeSha256":  "56440d51a85aecb515ab5e756934e22dcd4c5bff7871e749b8f18589a30f2f4e",
     "toolCount":  359,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
