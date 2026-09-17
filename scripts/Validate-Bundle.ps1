@@ -37,6 +37,13 @@ function Ok([string]$msg) {
     Write-Host "[ OK ] $msg" -ForegroundColor Green
 }
 
+function FileHash([string]$path) {
+    $stream = [IO.File]::OpenRead($path)
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try { return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-','') }
+    finally { $stream.Dispose(); $algorithm.Dispose() }
+}
+
 Write-Host "Bundle root: $root"
 
 foreach ($guiFile in @('TiaMcpConfigurator.exe', 'docs\gui-configuration.md', 'scripts\Build-Configurator.ps1')) {
@@ -238,11 +245,11 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
 if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-build.json'))) {
     $delivery = Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     foreach ($entry in @(@('manifest/release-build.json',$delivery.engineBuildSha256),@('manifest/configurator-build.json',$delivery.configuratorBuildSha256))) {
-        if ((Get-FileHash -LiteralPath (Join-Path $root $entry[0])).Hash -ne $entry[1]) { Fail "Build record changed: $($entry[0])" }
+        if ((FileHash (Join-Path $root $entry[0])) -ne $entry[1]) { Fail "Build record changed: $($entry[0])" }
     }
     $gui = Get-Content (Join-Path $root 'manifest/configurator-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($gui.testsPassed -le 0) { Fail 'Configurator test result missing' }
-    if ((Get-FileHash -LiteralPath (Join-Path $root $gui.executable.path)).Hash -ne $gui.executable.sha256) { Fail 'Configurator EXE changed after validation' }
+    if ((FileHash (Join-Path $root $gui.executable.path)) -ne $gui.executable.sha256) { Fail 'Configurator EXE changed after validation' }
     $licensePath = Join-Path $root 'LICENSE'
     if (!(Test-Path -LiteralPath (Join-Path $root 'NOTICE.md'))) { Fail 'Source and copyright notice missing: NOTICE.md' }
     if (!(Test-Path -LiteralPath $licensePath) -or
