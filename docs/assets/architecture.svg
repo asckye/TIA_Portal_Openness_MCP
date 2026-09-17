@@ -39,9 +39,9 @@
     <rect width="217" height="6" rx="3" fill="#0E8F8A"/>
     <text x="108.5" y="34" class="h2" text-anchor="middle">MCP Client</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">Cursor &#183; VS Code</tspan>
-      <tspan x="108.5" dy="1.7em">Claude Desktop</tspan>
-      <tspan x="108.5" dy="1.7em">or any HTTP client</tspan>
+      <tspan x="108.5" dy="0">Claude Code &#183; Codex</tspan>
+      <tspan x="108.5" dy="1.7em">Cursor &#183; VS Code &#183; Claude Desktop</tspan>
+      <tspan x="108.5" dy="1.7em">and other MCP clients</tspan>
     </text>
   </g>
 
@@ -51,8 +51,8 @@
     <rect width="217" height="6" rx="3" fill="#1F4E89"/>
     <text x="108.5" y="34" class="h2" text-anchor="middle">TiaMcpServer.exe</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">V21 &#8594; bin/Release</tspan>
-      <tspan x="108.5" dy="1.7em">V20 &#8594; bin-v20/Release</tspan>
+      <tspan x="108.5" dy="0">V21 &#8594; runtime/v21</tspan>
+      <tspan x="108.5" dy="1.7em">V20 &#8594; runtime/v20</tspan>
       <tspan x="108.5" dy="1.7em">L0 / L1 / L2 tools</tspan>
     </text>
   </g>

@@ -2,7 +2,11 @@
 
 [English](README.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
+
 通过西门子官方 Openness API，让 AI 客户端连接 TIA Portal V20 / V21。包含 MCP 服务、WPF 图形配置器、JSON/YAML 命令行工程生成流程及通用 PLC / WinCC Unified 模板。
+
+![TIA Portal MCP 架构图](docs/assets/architecture.svg)
 
 完整 ZIP 包含 V20、V21 运行时和依赖。TIA Portal、Openness 和许可证需自行安装；服务端需要 Windows、.NET Framework 4.8，并将运行用户加入 `Siemens TIA Openness` 组，加入后注销重登。
 

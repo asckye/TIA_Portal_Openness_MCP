@@ -2,7 +2,11 @@
 
 [简体中文](README.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
+
 Connect AI clients to Siemens TIA Portal V20/V21 through the official Openness API. Includes an MCP server, a standalone WPF configurator, a JSON/YAML command-line workflow and reusable PLC / WinCC Unified templates.
+
+![TIA Portal MCP architecture](docs/assets/architecture.svg)
 
 The complete release ZIP includes both runtimes and dependencies. Install Siemens TIA Portal, Openness and licenses separately. The Windows server requires .NET Framework 4.8 and membership in the `Siemens TIA Openness` group.
 
