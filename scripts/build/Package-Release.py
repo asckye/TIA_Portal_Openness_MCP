@@ -58,7 +58,7 @@ def main():
     require(re.fullmatch(r'\d{8}', date) is not None, 'Release date must be YYYYMMDD')
     datetime.strptime(date, '%Y%m%d')
     require(package == f'TIA_MCP_Delivery_v{release}_{date}', 'Use TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD for the complete V20/V21 delivery')
-    for project in ('TiaMcpServer.csproj', 'TiaMcpServer.V20.csproj'):
+    for project in ('TiaMcpServer.V21.csproj', 'TiaMcpServer.V20.csproj'):
         xml = ET.fromstring(files[f'tools/tiaportal-mcp/src/TiaMcpServer/{project}'])
         require(xml.findtext('.//FileVersion') == version and xml.findtext('.//InformationalVersion') == metadata['release'], 'Source version differs from validated build')
     runtime_names = {n for n in files if n.startswith(('runtime/v20/', 'runtime/v21/'))}

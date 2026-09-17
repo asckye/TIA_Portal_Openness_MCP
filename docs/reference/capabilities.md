@@ -2,6 +2,18 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.19 新增工具族
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| PLCSIM Advanced（`Simulation` 域） | `ReadPlcSimAdvancedInstances`、`ManagePlcSimAdvancedInstance`、`ReadPlcSimAdvancedTags`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario` | 官方 `Siemens.Simatic.Simulation.Runtime` API 运行时定位并反射调用，DLL 不随包分发；未安装返回 `ApiNotFound`。实例变更 / 写值 / 场景默认预览，需 `confirmInstanceChange` / `confirmWrite` / `confirmRun`。**本机无 PLCSIM Advanced，未做真实运行验证**：API 成员名按官方 V4–V7 文档，版本差异（如 `UpdateTagList` 重载）已做回退，仍可能在真实环境暴露差异 |
+| 离线文档 | `RenderPlcBlockDocument`、`GeneratePlcDocumentation` | Mermaid 图按导出连线生成，不是梯形图版式；SCL 由令牌还原，不可回导；手册最多 2000 个文档 |
+| SCL 预检 | `LintPlcSclSource` | 13 条启发式规则，"无发现"不等于可编译；`CompileSoftware` 是判决 |
+| AML 生成 | `BuildDeviceAmlDocument` | 推荐传 `referenceAmlPath`（`ExportDeviceAml` 导出）复用版本匹配的头部与角色类库；内置骨架**未经真实导入验证**，`Meta.importVerified=false` |
+| 写保护钩子 | `hooks/tia-write-guard.ps1`（Claude Code PreToolUse） | 审计非只读调用、拒绝真实 ONLINE-WRITE；只对 Claude Code 插件生效，其他 MCP 客户端仍靠工具自身的 `dryRun` + `confirm*` |
+
+分类修正：6 个运行时/上载写入工具由 WRITE 改为 ONLINE-WRITE。
+
 ## 2.7.18 新增工具族
 
 | 族 | 工具 | 边界 |

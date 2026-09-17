@@ -183,7 +183,7 @@ if (Test-Path -LiteralPath $hmiDir) {
 # 2.5.1 fix reached the v21 branch but never master, a tag, or a release. The
 # CHANGELOG's newest entry is the source of truth; everything else must match it.
 $changelog = Join-Path $root "CHANGELOG.md"
-$csproj    = Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.csproj"
+$csproj    = Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.V21.csproj"
 $manifest  = Join-Path $root "manifest\package-manifest.json"
 
 if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -and (Test-Path -LiteralPath $manifest)) {
@@ -205,7 +205,7 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
         $csText = Get-Content -LiteralPath $csproj -Raw -Encoding UTF8
         $csMatch = [regex]::Match($csText, '<AssemblyVersion>(?<v>[^<]+)</AssemblyVersion>')
         if (-not $csMatch.Success) {
-            Fail "TiaMcpServer.csproj: no <AssemblyVersion> element"
+            Fail "TiaMcpServer.V21.csproj: no <AssemblyVersion> element"
         }
         elseif ($csMatch.Groups['v'].Value -ne $engineVersion) {
             Fail ("Engine version mismatch: validated build says {0}, source says {1}" -f $engineVersion, $csMatch.Groups['v'].Value)
@@ -262,7 +262,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
         if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
         if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
-        $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.csproj' }
+        $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.V21.csproj' }
         [xml]$projectXml = Get-Content -LiteralPath (Join-Path $root "tools/tiaportal-mcp/src/TiaMcpServer/$projectName") -Raw
         if ($projectXml.Project.PropertyGroup.FileVersion -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
     }

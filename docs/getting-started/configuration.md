@@ -79,6 +79,22 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 地址必须是该电脑实际持有的 IPv4，前缀保留末尾 `/`。客户端连接使用相同地址端口下的 `/mcp` 端点和相同密钥。优先通过图形页配置网络权限；若出现 `OperationCanceledException`，不能仅凭此判断是用户取消，须检查原始监听错误、端口占用及 URL 授权。
 
+## Claude Code 写保护钩子与审计日志
+
+作为 Claude Code 插件使用时（`.claude-plugin/plugin.json` → `hooks/hooks.json`），每次调用 `tia-portal` 工具前都会经过 `hooks/tia-write-guard.ps1`：
+
+- 非只读调用（WRITE / FILE / ONLINE / ONLINE-WRITE / EXECUTE，含经 `CallTool` 桥接的目标）追加记录到 `%LOCALAPPDATA%\TiaMcpServer\audit\tool-calls.jsonl`，`password` / `secret` / `token` 类参数写为 `<redacted>`；
+- 真实 ONLINE-WRITE 调用（`DownloadToPlc`、站/参数上载、S7 Web / Unified 运行时写值与模式切换、PLCSIM Advanced 实例变更与写值）被拒绝并说明原因；带 `dryRun` 的工具在未显式传 `dryRun=false` 时视为预览放行。
+
+| 环境变量 | 作用 |
+|---|---|
+| `TIA_MCP_ALLOW_ONLINE_WRITE=1` | 放行在线写入（仍审计）。在 Claude Code 的 `settings.json` `env` 中设置，或只在需要下载的会话里设置 |
+| `TIA_MCP_WRITE_GUARD=0` | 完全关闭钩子（不审计、不拒绝） |
+| `TIA_MCP_GUARD_DENY_OPERATIONS=EXECUTE,WRITE` | 追加要拒绝的操作类型 |
+| `TIA_MCP_AUDIT_LOG` | 审计文件路径 |
+
+钩子只对 Claude Code 生效；其他客户端仍依赖工具自身的 `dryRun=true` 默认值与 `confirm*` 参数。自检：`scripts/checks/Test-WriteGuard.ps1`。
+
 ## 开发
 
 源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 8 个客户端适配。

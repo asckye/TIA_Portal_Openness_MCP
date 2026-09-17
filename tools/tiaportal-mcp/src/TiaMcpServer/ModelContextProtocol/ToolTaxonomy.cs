@@ -45,9 +45,9 @@ namespace TiaMcpServer.ModelContextProtocol
             new Category("hmi", "HMI 人机界面", "HMI",
                 "WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。",
                 "HMI", "HMI-Unified", "HMI-Classic", "HMI-Library"),
-            new Category("runtime", "运行时监视", "Runtime monitoring",
-                "不经 Openness 的运行时通道：S7 协议、OPC UA、S7 Web 服务器 API、Unified Open Pipe 的读值、报警与受确认的写入。",
-                "Online-Monitoring"),
+            new Category("runtime", "运行时监视与仿真", "Runtime monitoring & simulation",
+                "不经 Openness 的运行时通道：S7 协议、OPC UA、S7 Web 服务器 API、Unified Open Pipe 的读值、报警与受确认的写入；PLCSIM Advanced 虚拟 CPU 的实例管理、读写与闭环测试场景。",
+                "Online-Monitoring", "Simulation"),
         };
 
         private static readonly Dictionary<string, Category> DomainIndex = Categories
@@ -109,9 +109,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool Has(params string[] parts) => parts.Any(p => name.IndexOf(p, StringComparison.Ordinal) >= 0);
             if (SessionNames.Contains(name)) return ("SESSION", true);
             if (Starts("Compile", "Run") || Has("SelfTest", "ValidationSuite", "PrecheckSuite")) return ("EXECUTE", true);
-            if (Starts("Download", "Upload", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags")) return ("ONLINE-WRITE", true);
-            if (Starts("GoOnline", "GoOffline", "ScanAccessible") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe")) return ("ONLINE", true);
-            if (Starts("Build", "Compose", "Plan", "Analyze", "Compare", "Scan", "Extract")) return ("OFFLINE", true);
+            if (Starts("Download", "Upload", "SetPlcWebOperatingMode", "WritePlcWebVars", "WriteUnifiedRuntimeTags", "WritePlcSimAdvanced", "ManagePlcSimAdvanced")) return ("ONLINE-WRITE", true);
+            if (Starts("GoOnline", "GoOffline", "ScanAccessible") || Has("Online", "Live", "WebVars", "WebDiagnostics", "RuntimeTags", "RuntimeAlarms", "OpenPipe", "PlcSimAdvanced")) return ("ONLINE", true);
+            if (Starts("Build", "Compose", "Plan", "Analyze", "Compare", "Scan", "Extract", "Render", "Lint")) return ("OFFLINE", true);
             if (Starts("Export", "Archive", "Write", "Generate", "Save", "Rebuild", "GetExport", "ListExports", "ClearExports", "DeleteExport")) return ("FILE", true);
             if (Starts("Import", "Ensure", "Apply", "Create", "Set", "Update", "Manage", "Delete", "Remove", "Add", "Plug", "Bind", "Rename", "Move", "Copy", "Assign", "Protect", "Release", "Exchange", "Configure", "Retrieve", "Sync", "Clear", "Invoke", "Migrate", "Restore", "Register", "Normalize", "Enable", "Disable", "Attach", "PlcBuild", "Repair", "Connect", "Seed", "Scaffold")) return ("WRITE", true);
             if (Starts("Get", "List", "Read", "Describe", "Probe", "Validate", "Check", "Dump", "Inspect", "Find", "Search", "Preview", "Resolve", "Diff", "Verify", "Count", "Enumerate", "Show", "Query", "Fetch", "Is", "Has", "Lookup", "Match", "Test", "Audit", "Trace")) return ("READ", true);

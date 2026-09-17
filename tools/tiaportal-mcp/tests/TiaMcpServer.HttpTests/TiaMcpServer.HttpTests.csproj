@@ -5,6 +5,8 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>HttpTests</AssemblyName>
+    <RootNamespace>HttpTests</RootNamespace>
   </PropertyGroup>
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcpServer.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>

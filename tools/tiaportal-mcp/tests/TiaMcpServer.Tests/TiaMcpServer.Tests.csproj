@@ -96,5 +96,9 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\RuntimeChannelsLogic.cs" Link="RuntimeChannelsLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedLogic.cs" Link="PlcSimAdvancedLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentationLogic.cs" Link="PlcDocumentationLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareAmlLogic.cs" Link="HardwareAmlLogic.cs" />
   </ItemGroup>
 </Project>

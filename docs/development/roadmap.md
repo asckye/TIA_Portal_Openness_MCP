@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.18 更新）
+# 路线图与待办（2026-09-17 审计，2.7.19 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -17,10 +17,10 @@
 | E5 | 源码硬编码 `D:\app\TIA21` 路径 | 改为 `Engineering.ProbeOpennessAssemblies()` 运行时解析；V20 csproj 的 `TiaPortalLocation` 加 `Condition` 可被覆盖 |
 | E6 | `ProgrammingLanguage.ST` 兼容 | 核实无需改动：所有用法为 `ToString` / `Enum.GetName` |
 | E7 | 下载提示应答缺陷 | 已修复：`DownloadPromptPolicy` 按真实形态应答 43 种提示，未应答项回传 |
-| E8 | csproj 死项 / 命名 | 死 `ItemGroup` 已删除；`TiaMcpServer.V21.csproj` / `TiaMcpServer.HttpTests.csproj` 重命名**未做**（涉及 3 个脚本，收益低） |
+| E8 | csproj 死项 / 命名 | 死 `ItemGroup` 已删除；2.7.19 完成重命名 `TiaMcpServer.V21.csproj` / `TiaMcpServer.HttpTests.csproj`（程序集名不变） |
 | E9 | 工具矩阵未纳入发布流程 | 已纳入：`Build-Release.ps1` 生成清单后立即重建矩阵 |
 | E10 | 日志写在 EXE 旁 | **保留**：`%TEMP%` 已有副本，EXE 旁的 `startup.log` 便于用户就地查看且已 gitignore |
-| E11 | `.cs` BOM 不一致 / `.gitattributes` | **未做**：41 个文件的 BOM 统一会制造纯噪声 diff 并改变源码哈希集合，留待下一次引擎重建时单独提交 |
+| E11 | `.cs` BOM 不一致 / `.gitattributes` | 已做（2.7.18 目录整理提交）：全部 `.cs` 无 BOM UTF-8 + LF，`.gitattributes` 固定行尾 |
 
 ## 2. 官方 Openness API 缺口优先级
 
@@ -94,7 +94,14 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.18 已完成
+## 5. 2.7.19 已完成
+
+- 引擎：E8、E11 完成，全部 11 项引擎待办处理完毕（E10 保留为设计决定）。新增 9 个工具（共 359）：PLCSIM Advanced 通道 5 个（#1 与 S2 的场景式单元测试，反射后期绑定，**未在真实 PLCSIM Advanced 上验证**）、离线文档 2 个（S3 的块可视化，自研 Markdown/Mermaid 渲染，不移植 TS 渲染器）、SCL 预检 1 个（#8，自研启发式规则，不引入 tree-sitter/Node）、AML 生成 1 个（#6 的生成半边，不引入 Aml.Engine，配合已有 `ImportDeviceAml`）。
+- 程序文档（#9）由 `GeneratePlcDocumentation` 覆盖（索引、调用交叉引用、逐块渲染）。写保护钩子与审计日志（S7 及竞品的审计模式）随插件交付。
+- §3 候选中仍未落地：AutoPLC / Agents4PLC 数据（#4/#5，skill 调优素材，只在 [生态与参考资源](../reference/ecosystem.md) 登记）；`Siemens.Collaboration.Net.*` 再分发决策（§4）仍待维护者。
+- 分类修正：6 个运行时/上载写入工具改为 ONLINE-WRITE。
+
+## 5.1 2.7.18 已完成
 
 - 引擎：E1–E5、E7、E9 处理完毕；新增 52 个官方 Openness 工具、8 个运行时通道工具、3 个离线分析工具与 `ListToolCategories`，共 350 个工具；V20/V21 重建，离线 1158、形状检查 847/758、实际 EXE 回归两版全过；**真实工程验收未执行**。
 - §2.1 中的 P1（下载提示、设备上载/扫描、DB 快照、文件夹下载）与大部分 P2（块保护、`UpdateProgram`、OPC UA 访问控制、UMAC 读写、库/工程比较、报警文本导入、Unified 事件/部件/动态化、通信连接、监视/强制表 Web 访问）已实现；P3 的 ProDiag 对象、多用户会话、Motion 对象模型、经典 HMI 脚本亦已实现。仍未做：SafetyValidation、Teamcenter、Startdrive/SiVArc/DCC 剩余动作、UMC 同步与工程保护启停、硬件杂项（App ID、批量参数、PSC、Logo、CiR、共享设备、I-Device GSD 导出）、库实例清理/更新流程。

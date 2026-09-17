@@ -12,6 +12,7 @@
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
 | 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归，反射已发布的 V21 EXE；均由 Build-Release 调用（路由测试需 -PublicApiDirectory） |
+| 检查 | [Test-WriteGuard.ps1](checks/Test-WriteGuard.ps1) | Claude Code 写保护钩子 `hooks/tia-write-guard.ps1` 的拒绝/放行/审计自检；由 Build-Release 调用 |
 | 生成 | [Generate-ToolCapabilityMatrix.ps1](generate/Generate-ToolCapabilityMatrix.ps1) | 从 manifest/tools-list.json 按大类→域生成工具矩阵（由 Build-Release 调用） |
 | 生成 | [Generate-ToolsListFromAssembly.ps1](generate/Generate-ToolsListFromAssembly.ps1) | 从已编译程序集反射生成 `manifest/tools-list.json`（由 Build-Release 调用） |
 | 诊断 | [Audit-OpennessCoverage.ps1](diagnostics/Audit-OpennessCoverage.ps1) | 逐成员对照官方 PublicAPI XML 与引擎源码，生成 [覆盖清单](../docs/reference/openness-coverage.md) 的统计表；需本机 PublicAPI，不加载 DLL |

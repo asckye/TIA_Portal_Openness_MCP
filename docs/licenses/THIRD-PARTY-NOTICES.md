@@ -24,6 +24,8 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 | `Newtonsoft.Json.dll`（2.7.18 起，Webserver API 依赖） | Newtonsoft.Json 13.0.4 | MIT | © 2007 James Newton-King | [Newtonsoft.Json-13.0.4.txt](Newtonsoft.Json-13.0.4.txt) |
 | `MimeMapping.dll`（2.7.18 起，Webserver API 依赖） | MimeMapping 4.0.0 | MIT | Matthew Little | [MimeMapping-4.0.0.txt](MimeMapping-4.0.0.txt) |
 
+`Siemens.Simatic.Simulation.Runtime.Api.x64.dll`（S7-PLCSIM Advanced API，2.7.19 起的 `Simulation` 域工具）同样不随包分发：引擎在运行时从本机 PLCSIM Advanced 安装目录定位并经反射调用，未安装时工具返回 `ApiNotFound`。
+
 `Siemens.Collaboration.Net.TiaPortal.Packages.Openness` 仅在编译时使用，不随包分发。2.7.18 引入 Webserver API 后，`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.DependencyInjection.Abstractions`、`System.Diagnostics.DiagnosticSource` 由传递依赖提升到 10.0.x 正式版（仍为 MIT），其余 Microsoft.Extensions.* 保持 10.0.0-preview.4；以 `manifest/release-build.json` 的逐文件记录为准。
 
 ## 配置器（`TiaMcpConfigurator.exe`）

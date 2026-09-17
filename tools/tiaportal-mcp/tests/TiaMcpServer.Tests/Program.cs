@@ -89,6 +89,11 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== 运行时通道：S7 Web 服务器 API 与 Unified Open Pipe 的请求构造、响应解析与拒绝路径 ==");
             RuntimeChannelsTests.Run(Check);
 
+            Console.WriteLine("== 2.7.19 新增：离线文档/SCL 预检、PLCSIM Advanced 纯逻辑、AML 生成 ==");
+            PlcDocumentationTests.Run(Check);
+            PlcSimAdvancedTests.Run(Check);
+            HardwareAmlTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

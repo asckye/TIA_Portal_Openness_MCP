@@ -1,5 +1,18 @@
 # Change Log
 
+## [2.7.19] - 2026-09-17
+
+引擎 2.7.19.0（V20/V21 均重建），工具 350 → 359，默认 lite 56 项不变。详见 [v2.7.19](docs/releases/v2.7.19.md)。
+
+- **PLCSIM Advanced 通道**（路线图 #1 / S2）：`ReadPlcSimAdvancedInstances`、`ManagePlcSimAdvancedInstance`（register/powerOn/run/stop/powerOff/memoryReset/unregister）、`ReadPlcSimAdvancedTags`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario`（写输入 → 单步推进周期 → 断言输出的闭环场景）。官方 `Siemens.Simatic.Simulation.Runtime` API 在运行时定位（`apiPath` → `PLCSIMADV_API_PATH` → 安装目录最新版本）并经反射调用，与 Openness 同样不随包分发；未安装时明确返回 `ApiNotFound`。改变实例/写值/跑场景默认预览且需确认参数。新增分类域 `Simulation`（runtime 大类）。**本机无 PLCSIM Advanced，未做真实运行验证**。
+- **离线文档与预检**（S3 / #8 / #9）：`RenderPlcBlockDocument`（SimaticML/SCL → Markdown：接口表、SCL 网络由 StructuredText 令牌还原、LAD/FBD 网络给出部件清单 + Mermaid 流程图）、`GeneratePlcDocumentation`（导出目录 → 单文件手册：索引表、调用交叉引用、逐块渲染）、`LintPlcSclSource`（13 条启发式规则：块关键字配对、括号、`=`/`:=`、缺分号、GOTO、WHILE TRUE、嵌套深度、行长、空白、`;;`、未闭合注释、TODO 标记）。均不需要 TIA 会话；lint 结论不是编译判决。
+- **AML 生成**（#6 / S5 的生成半边）：`BuildDeviceAmlDocument` 由 JSON 规格生成 CAEX 2.15 硬件描述供 `ImportDeviceAml` 使用；推荐传入 `ExportDeviceAml` 导出的参考文件以逐字复用版本匹配的头部与角色类库，未传参考时使用内置骨架并标记 `importVerified=false`。
+- **写保护钩子与审计日志**（S7）：插件新增 `hooks/tia-write-guard.ps1`（PreToolUse）。按 `tools-list.json` 的操作类型审计所有非只读调用到 `%LOCALAPPDATA%\TiaMcpServer\audit\tool-calls.jsonl`（密码类参数脱敏），并拒绝真实 ONLINE-WRITE 调用（下载、上载、运行时写值、PLCSIM 变更；预览调用放行），除非设置 `TIA_MCP_ALLOW_ONLINE_WRITE=1`；`TIA_MCP_WRITE_GUARD=0` 关闭。自检脚本 `scripts/checks/Test-WriteGuard.ps1`（16 项）接入 `Build-Release`。
+- **分类修正**：`WritePlcWebVars`、`WriteUnifiedRuntimeTags`、`SetPlcWebOperatingMode`、`UnifiedOpenPipeRequest`、`UploadStationFromPlc`、`UploadDeviceParameters` 的操作标签由 WRITE 改为 ONLINE-WRITE（它们改变真实运行时/设备，2.7.18 标错）；ONLINE-WRITE 工具现为 10 个。
+- **E8**：`TiaMcpServer.csproj` → `TiaMcpServer.V21.csproj`，`HttpTests.csproj` → `TiaMcpServer.HttpTests.csproj`（程序集名不变），脚本与文档同步。
+- **发布流程**：`Publish complete release` 工作流除手动触发外，推送 `vX.Y.Z` 标签也触发，标签必须等于 `manifest/delivery.json` 的版本。
+- **验证**：离线 1273 项；API 形状检查 V21 902 / V20 813；实际 EXE 回归两版全过；配置器 58 项。**真实工程与真实 PLCSIM Advanced 验收未执行**。
+
 ## [2.7.18] - 2026-09-17
 
 引擎 2.7.18.0（V20/V21 均重建），工具 298 → 350，默认 lite 56 项。详见 [v2.7.18](docs/releases/v2.7.18.md)。

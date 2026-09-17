@@ -9,7 +9,7 @@ shutdown control are absent from the compiled runtime.
 The test HTTP listener binds only to localhost with a temporary test key.
 
 ```powershell
-dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/HttpTests.csproj -c Release
+dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj -c Release
 $tests = 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
 & $tests 'runtime/v21/TiaMcpServer.exe'
 & $tests 'runtime/v21/TiaMcpServer.exe' hmi-only 21 2.7.15.0

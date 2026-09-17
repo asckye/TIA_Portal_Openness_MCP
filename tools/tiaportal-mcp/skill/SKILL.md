@@ -7,7 +7,7 @@ description: Drive Siemens TIA Portal (博途) end-to-end through the TiaMcpServ
 
 This is the operating skill for TIA Portal MCP automation. The
 companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
-**298** MCP tools (default lite profile: 52; exact runtime set: call `tools/list` on the running server) covering
+**359** MCP tools (default lite profile: 56; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -111,14 +111,16 @@ The domain tag belongs to one of 7 categories (call `ListToolCategories` for liv
 | Category | Domains | What lives there |
 |---|---|---|
 | `session` | Bootstrap, Guide, Meta, Portal, Diagnostics, Reflection, Exports, Reports | connect/attach, self-tests, FindTools/CallTool, generic reflection, export store, reports |
-| `project` | Project, Library, VersionControl, Security, Validation | open/save/archive, texts, libraries, VCI, users/certificates/protection, offline validation and block diff |
+| `project` | Project, Library, VersionControl, Security, Validation | open/save/archive, texts, libraries, VCI, users/certificates/protection, offline validation, block diff, Markdown/Mermaid block rendering, program handbook, SCL lint |
 | `plc` | PLC-Software, PLC-Builders, PLC-Alarms, PLC-TechnologyObjects, PLC-OpcUA, Safety | blocks/UDTs/tags/sources/units, SCL/LAD builders, alarm texts, Motion/TO, OPC UA server config, Safety |
 | `plc-online` | PLC-Online | go online/offline, download, memory-card image, station upload, accessible-device scan, online compare |
 | `hardware` | Hardware | devices/modules, catalog, subnets, communication connections, system diagnostics settings, AML, drives/DCC |
 | `hmi` | HMI, HMI-Unified, HMI-Classic, HMI-Library | Unified screens/tags/alarms/logs/scripts/events/dynamization/parts, classic HMI scripts/cycles/lists, shared read/export, library templates, SiVArc |
-| `runtime` | Online-Monitoring | S7 protocol, OPC UA, S7 Web server API and Unified Open Pipe reads plus confirmed writes — no Openness involved |
+| `runtime` | Online-Monitoring, Simulation | S7 protocol, OPC UA, S7 Web server API and Unified Open Pipe reads plus confirmed writes; PLCSIM Advanced instances, tag reads/writes and closed-loop test scenarios — no Openness involved |
 
-Operation tags: `READ` (no change), `WRITE` (offline project change, preview by default), `FILE`, `OFFLINE` (no TIA session needed), `ONLINE` (contacts a device, read-only), `ONLINE-WRITE` (changes a live device/runtime), `EXECUTE`, `SESSION`.
+Operation tags: `READ` (no change), `WRITE` (offline project change, preview by default), `FILE`, `OFFLINE` (no TIA session needed), `ONLINE` (contacts a device, read-only), `ONLINE-WRITE` (changes a live device/runtime/simulation), `EXECUTE`, `SESSION`.
+
+In Claude Code the plugin's PreToolUse hook (`hooks/tia-write-guard.ps1`) audits every non-read call to `%LOCALAPPDATA%\TiaMcpServer\audit\tool-calls.jsonl` and denies real `ONLINE-WRITE` calls (preview calls pass) unless `TIA_MCP_ALLOW_ONLINE_WRITE=1` is set; `TIA_MCP_WRITE_GUARD=0` disables it.
 
 Core L0/L1 set:
 

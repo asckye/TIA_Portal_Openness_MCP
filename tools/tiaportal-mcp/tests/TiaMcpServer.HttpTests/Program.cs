@@ -337,6 +337,7 @@ internal static class Program
                     UnifiedUiModelShapeChecks.Run(Server, shapeCheck);
                     MotionProDiagClassicHmiShapeChecks.Run(Server, shapeCheck);
                     RuntimeChannelsShapeChecks.Run(Server, shapeCheck);
+                    SimulationDocumentationShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

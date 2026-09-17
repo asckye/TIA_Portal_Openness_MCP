@@ -10,7 +10,7 @@
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $source=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer'
-[xml]$projectXml=Get-Content (Join-Path $source 'TiaMcpServer.csproj') -Raw
+[xml]$projectXml=Get-Content (Join-Path $source 'TiaMcpServer.V21.csproj') -Raw
 $version=[string]$projectXml.Project.PropertyGroup.FileVersion
 $release=[string]$projectXml.Project.PropertyGroup.InformationalVersion
 if($release -notmatch '^\d+\.\d+\.\d+$'){throw 'Public release version must be X.Y.Z without fork or feature suffixes'}
@@ -43,14 +43,14 @@ Run $Dotnet @('run','--project',$offline,'-c','Release','--no-restore') 'offline
 $match=[regex]::Match((Get-Content (Join-Path $out 'offline.log') -Raw),'(\d+) passed, 0 failed, 0 skipped')
 if(!$match.Success){throw 'Offline suite did not report complete success'}
 $offlinePassed=[int]$match.Groups[1].Value
-$harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/HttpTests.csproj'
+$harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj'
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
 $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe'
 $checks=[ordered]@{}
 foreach($major in @(20,21)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
-    $project=Join-Path $source $(if($major -eq 20){'TiaMcpServer.V20.csproj'}else{'TiaMcpServer.csproj'})
+    $project=Join-Path $source $(if($major -eq 20){'TiaMcpServer.V20.csproj'}else{'TiaMcpServer.V21.csproj'})
     [xml]$xml=Get-Content $project -Raw
     if($xml.Project.PropertyGroup.FileVersion -ne $version -or $xml.Project.PropertyGroup.InformationalVersion -ne $release){throw 'V20/V21 source versions differ'}
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
@@ -70,7 +70,7 @@ foreach($major in @(20,21)) {
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){847}else{758}
+    $expectedEngineeringChecks=if($major -eq 21){902}else{813}
     if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
@@ -114,6 +114,7 @@ foreach($major in @(20,21)) {
         # 两个确定性离线测试直接反射已发布的 V21 EXE：PG/PC 路由选择与 softwarePath 匹配器。
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-DownloadRouteSelection.ps1'),'-PublicApiDirectory',$api) 'route-selection-v21.log'
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MatchPlcName.ps1')) 'match-plc-name-v21.log'
+        Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-WriteGuard.ps1')) 'write-guard.log'
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolsListFromAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api,'-OutputPath',(Join-Path $repo 'manifest/tools-list.json'),'-PackageName',$package) 'tools-list.log'
         # 工具矩阵与清单同源：清单刚生成就重建矩阵，docs/reference/tool-matrix.md 不再手工维护。
         Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/generate/Generate-ToolCapabilityMatrix.ps1'),'-ToolsList',(Join-Path $repo 'manifest/tools-list.json'),'-OutFile',(Join-Path $repo 'docs/reference/tool-matrix.md')) 'tool-matrix.log'

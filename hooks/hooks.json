@@ -1,0 +1,17 @@
+{
+  "description": "TIA write guard: audits every project-changing / online tool call of the tia-portal MCP and blocks real online writes (download, upload, runtime writes, PLCSIM changes) unless TIA_MCP_ALLOW_ONLINE_WRITE=1. Disable with TIA_MCP_WRITE_GUARD=0.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__tia-portal__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/tia-write-guard.ps1\"",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}
