@@ -17,21 +17,24 @@ namespace TiaMcpServer.Tests
         {
             bool Fails(Action action) { try { action(); return false; } catch { return true; } }
 
-            // ---- probing order
-            var root = Path.Combine("C:\\", "Common Files", "Siemens", "PLCSIMADV", "API");
+            // ---- probing order (paths built with the platform separator: the suite also runs on Linux)
+            var temp = Path.GetTempPath();
+            var root = Path.Combine(temp, "Common Files", "Siemens", "PLCSIMADV", "API");
             var roots = new[] { new KeyValuePair<string, IEnumerable<string>>(root, new[] { Path.Combine(root, "4.0"), Path.Combine(root, "5.0"), Path.Combine(root, "6.0"), Path.Combine(root, "old") }) };
-            var probe = PlcSimAdvancedLogic.CandidateApiPaths("D:\\api", "E:\\env\\" + PlcSimAdvancedLogic.ApiFileName, roots);
-            check(probe[0] == Path.Combine("D:\\api", PlcSimAdvancedLogic.ApiFileName), "explicit folder first, DLL name appended");
-            check(probe[1] == "E:\\env\\" + PlcSimAdvancedLogic.ApiFileName, "environment file second");
+            var explicitDir = Path.Combine(temp, "api");
+            var envFile = Path.Combine(temp, "env", PlcSimAdvancedLogic.ApiFileName);
+            var probe = PlcSimAdvancedLogic.CandidateApiPaths(explicitDir, envFile, roots);
+            check(probe[0] == Path.Combine(explicitDir, PlcSimAdvancedLogic.ApiFileName), "explicit folder first, DLL name appended");
+            check(probe[1] == envFile, "environment file second");
             check(probe[2].Contains("6.0") && probe[3].Contains("5.0") && probe[4].Contains("4.0") && probe[5].Contains("old"), "installed folders newest first: " + string.Join(" | ", probe.Skip(2)));
             check(PlcSimAdvancedLogic.CandidateApiPaths(null, null, roots).Count == 4, "no explicit/env -> only installed candidates");
-            check(PlcSimAdvancedLogic.CandidateApiPaths("D:\\api", "D:\\api\\", roots).Count == 5, "duplicates collapse");
+            check(PlcSimAdvancedLogic.CandidateApiPaths(explicitDir, explicitDir + Path.DirectorySeparatorChar, roots).Count == 5, "duplicates collapse");
             check(PlcSimAdvancedLogic.VersionKey("6.0") > PlcSimAdvancedLogic.VersionKey("5.1") && PlcSimAdvancedLogic.VersionKey("x") == new Version(0, 0), "version folder ordering");
 
             // ---- actions / names
             check(PlcSimAdvancedLogic.NormalizeAction("POWERON") == "powerOn", "actions are case-insensitive");
             check(Fails(() => PlcSimAdvancedLogic.NormalizeAction("reboot")), "[sentinel] unknown action refused");
-            check(Fails(() => PlcSimAdvancedLogic.RequireInstanceName("a\\b")) && PlcSimAdvancedLogic.RequireInstanceName(" PLC_1 ") == "PLC_1", "instance name validation");
+            check(Fails(() => PlcSimAdvancedLogic.RequireInstanceName("a\\b")) && Fails(() => PlcSimAdvancedLogic.RequireInstanceName("a/b")) && PlcSimAdvancedLogic.RequireInstanceName(" PLC_1 ") == "PLC_1", "instance name validation");
 
             // ---- value map / name list
             var map = PlcSimAdvancedLogic.ParseValueMap("{\"\\\"Start\\\"\": true, \"\\\"DB\\\".Speed\": 50}", "valuesJson");

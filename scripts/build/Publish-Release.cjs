@@ -22,8 +22,11 @@ module.exports = async ({github, context, core}) => {
   let release = releases.find(item => item.tag_name === tag);
   try {
     const ref = await github.rest.git.getRef({owner, repo, ref: `tags/${tag}`});
-    // Release tags created here are lightweight. Never silently repoint any existing tag.
-    if (ref.data.object.type !== 'commit' || ref.data.object.sha !== context.sha) throw new Error('Existing tag points elsewhere; use a new version');
+    // Tags created here are lightweight; a pushed annotated tag is accepted when it points at this
+    // commit (dereference the tag object). Never silently repoint any existing tag.
+    let target = ref.data.object;
+    if (target.type === 'tag') target = (await github.rest.git.getTag({owner, repo, tag_sha: target.sha})).data.object;
+    if (target.type !== 'commit' || target.sha !== context.sha) throw new Error('Existing tag points elsewhere; use a new version');
   } catch (error) {
     if (error.status !== 404) throw error;
     await github.rest.git.createRef({owner, repo, ref: `refs/tags/${tag}`, sha: context.sha});

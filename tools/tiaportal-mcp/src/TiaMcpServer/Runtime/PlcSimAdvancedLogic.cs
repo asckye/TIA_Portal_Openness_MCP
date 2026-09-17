@@ -67,7 +67,8 @@ namespace TiaMcpServer.Runtime
         {
             var n = (name ?? "").Trim();
             if (n.Length == 0) throw new ArgumentException("instanceName is empty.");
-            if (n.Length > 64 || n.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) throw new ArgumentException("instanceName must be 1..64 characters without path separators.");
+            // Explicit set: Path.GetInvalidFileNameChars() differs per OS and the offline suite also runs on Linux.
+            if (n.Length > 64 || n.IndexOfAny(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\0' }) >= 0) throw new ArgumentException("instanceName must be 1..64 characters without path separators or wildcard characters.");
             return n;
         }
 
