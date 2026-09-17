@@ -75,6 +75,20 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== HMI 画面列表和按名称查找必须覆盖所有子文件夹 ==");
             HmiScreenTraversalTests.Run(Check);
 
+            Console.WriteLine("== 下载/上载提示按真实形态应答；UserManagementDownload 不再被当复选框 ==");
+            DownloadPromptPolicyTests.Run(Check);
+
+            Console.WriteLine("== 新工具族纯逻辑：块服务、硬件服务、工程安全、Unified UI、Motion/ProDiag/经典 HMI、离线分析 ==");
+            PlcBlockServicesTests.Run(Check);
+            HardwareServicesTests.Run(Check);
+            ProjectSecurityTests.Run(Check);
+            UnifiedUiModelTests.Run(Check);
+            MotionProDiagClassicHmiTests.Run(Check);
+            OfflineAnalysisTests.Run(Check);
+
+            Console.WriteLine("== 运行时通道：S7 Web 服务器 API 与 Unified Open Pipe 的请求构造、响应解析与拒绝路径 ==");
+            RuntimeChannelsTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

@@ -86,5 +86,14 @@
          它埋在依赖 Siemens.Engineering 的大文件里时，没装博途的机器一行都测不到，
          而崩溃路径本来就少见 —— 判错了也悄无声息，属于只有会失败的用例盯得住的那类。 -->
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
+    <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\DownloadPromptPolicy.cs" Link="DownloadPromptPolicy.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Runtime\RuntimeChannelsLogic.cs" Link="RuntimeChannelsLogic.cs" />
   </ItemGroup>
 </Project>

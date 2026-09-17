@@ -328,7 +328,15 @@ internal static class Program
                     return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
                 };
                 if(args[1] == "engineering-api-only") {
-                    EngineeringApiShapeTests.Run(Server, (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                    Action<bool,string> shapeCheck = (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); };
+                    EngineeringApiShapeTests.Run(Server, shapeCheck);
+                    DeviceTransferShapeChecks.Run(Server, shapeCheck);
+                    PlcBlockServicesShapeChecks.Run(Server, shapeCheck);
+                    HardwareServicesShapeChecks.Run(Server, shapeCheck);
+                    ProjectSecurityShapeChecks.Run(Server, shapeCheck);
+                    UnifiedUiModelShapeChecks.Run(Server, shapeCheck);
+                    MotionProDiagClassicHmiShapeChecks.Run(Server, shapeCheck);
+                    RuntimeChannelsShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

@@ -45,7 +45,8 @@ namespace TiaMcpServer.Tests
             check(e1.Source == "explicit" && e1.Value == "DeleteAll", "explicit answer overrides the conservative default and is normalised to the native enum casing");
             var e2 = explicitPolicy.Decide("OverwriteHmiData", none, true, false);
             check(e2.Kind == DownloadPromptPolicy.AnswerKind.Checked && e2.Value == "true", "explicit boolean answers checkbox prompts");
-            check(Fails(() => explicitPolicy.Decide("StopModules", new[] { "NoAction", "StopAll" }, false, false) == null), "explicit map without the prompt does not throw") == false, "sentinel: a prompt absent from the explicit map still uses defaults");
+            var fallback = explicitPolicy.Decide("StopModules", new[] { "NoAction", "StopAll" }, false, false);
+            check(fallback.Source == "builtin" && fallback.Value == "StopAll", "sentinel: a prompt absent from the explicit map still uses its built-in default");
             var bad = new DownloadPromptPolicy(); bad.Explicit["ResetModule"] = "Explode";
             check(Fails(() => bad.Decide("ResetModule", new[] { "NoAction", "DeleteAll" }, false, false)), "explicit value outside the enum is rejected");
             check(Fails(() => DownloadPromptPolicy.ParseExplicitAnswers("[1,2]")), "promptAnswersJson must be an object");
