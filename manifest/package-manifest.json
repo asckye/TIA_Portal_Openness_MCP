@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "2.7.17",
-    "packageName":  "TIA_MCP_Delivery_v2.7.17_20260917",
+    "bundleVersion":  "2.7.18",
+    "packageName":  "TIA_MCP_Delivery_v2.7.18_20260917",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-09-17T14:45:18.9236863+00:00",
+    "refreshedAt":  "2026-09-17T18:14:52.8183430+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -41,7 +41,7 @@
                         "readme":  "README.md",
                         "skill":  "tools/tiaportal-mcp/skill/SKILL.md",
                         "mcpServerExe":  "runtime/v21/TiaMcpServer.exe",
-                        "cursorExample":  "examples/mcp/cursor.json",
+                        "cursorExample":  "docs/getting-started/cursor.example.json",
                         "toolRoster":  "manifest/tools-list.json",
                         "toolMatrix":  "docs/reference/tool-matrix.md",
                         "fullProjectBlueprint":  "templates/project-blueprints/full_plc_hmi_project.json",
@@ -84,11 +84,11 @@
                               }
             },
     "capabilities":  {
-                         "mcpToolCount":  298,
+                         "mcpToolCount":  350,
                          "mcpToolLayers":  {
-                                               "L0":  11,
-                                               "L1":  45,
-                                               "L2":  242
+                                               "L2":  293,
+                                               "L0":  12,
+                                               "L1":  45
                                            },
                          "hmiTemplateJsonCount":  8,
                          "plcTemplateJsonCount":  9,
@@ -115,8 +115,8 @@
                                              "note":  "All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "2.7.15.0",
-    "validationStatus":  "Delivery 2.7.17; engine 2.7.15 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "2.7.18.0",
+    "validationStatus":  "Delivery 2.7.18; engine 2.7.18 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",
