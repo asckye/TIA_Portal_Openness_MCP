@@ -1,5 +1,5 @@
-// Run only through the manually dispatched release workflow with its ephemeral GITHUB_TOKEN.
-// Never delete assets, move existing tags, or use personal connection credentials.
+// Run through the release workflow (manual dispatch or vX.Y.Z tag push) with its ephemeral GITHUB_TOKEN.
+// Never move existing tags or touch assets of a published release; only stale assets of the draft this workflow owns are replaced.
 module.exports = async ({github, context, core}) => {
   const fs = require('node:fs');
   const path = require('node:path');
@@ -47,6 +47,14 @@ module.exports = async ({github, context, core}) => {
     const name = path.basename(filename);
     const expected = `sha256:${digest(data)}`;
     let asset = assets.find(item => item.name === name);
+    // A re-run after a failed upload finds a stale asset (incomplete state, or a ZIP from an earlier
+    // packaging run with different timestamps). Only while the release is still a draft that this
+    // workflow owns, replace such an asset; assets of a published release are never touched.
+    if (asset && release.draft && (asset.state !== 'uploaded' || asset.size !== data.length || asset.digest !== expected)) {
+      core.warning(`${name}: replacing stale draft asset (state ${asset.state}, ${asset.size} bytes)`);
+      await github.rest.repos.deleteReleaseAsset({owner, repo, asset_id: asset.id});
+      asset = undefined;
+    }
     if (!asset) {
       asset = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id, name, data,
         headers: {'content-type': filename.endsWith('.zip') ? 'application/zip' : 'text/plain', 'content-length': data.length}})).data;
