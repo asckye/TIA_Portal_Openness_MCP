@@ -56,8 +56,21 @@ module.exports = async ({github, context, core}) => {
       asset = undefined;
     }
     if (!asset) {
-      asset = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id, name, data,
-        headers: {'content-type': filename.endsWith('.zip') ? 'application/zip' : 'text/plain', 'content-length': data.length}})).data;
+      // GitHub's upload backend intermittently answers "Error creating asset temp dir" and leaves a
+      // half-created asset behind; retry with backoff, clearing that leftover on the draft first.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          asset = (await github.rest.repos.uploadReleaseAsset({owner, repo, release_id: release.id, name, data,
+            headers: {'content-type': filename.endsWith('.zip') ? 'application/zip' : 'text/plain', 'content-length': data.length}})).data;
+          break;
+        } catch (error) {
+          if (attempt >= 6 || !release.draft) throw error;
+          core.warning(`${name}: upload attempt ${attempt} failed (${error.message}); retrying`);
+          const leftovers = await github.paginate(github.rest.repos.listReleaseAssets, {owner, repo, release_id: release.id, per_page: 100});
+          for (const stale of leftovers.filter(item => item.name === name)) await github.rest.repos.deleteReleaseAsset({owner, repo, asset_id: stale.id});
+          await new Promise(resolve => setTimeout(resolve, 15000 * attempt));
+        }
+      }
     }
     if (asset.state !== 'uploaded' || asset.size !== data.length || asset.digest !== expected) {
       throw new Error(`Asset verification failed for ${name}; retained draft/existing release for inspection`);
