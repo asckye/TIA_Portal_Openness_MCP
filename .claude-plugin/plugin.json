@@ -6,5 +6,10 @@
   "author": { "name": "asckye" },
   "keywords": ["siemens", "tia-portal", "tia-openness", "plc", "hmi", "scl", "s7", "automation", "mcp"],
   "skills": "./tools/tiaportal-mcp",
-  "mcpServers": "./.mcp.json"
+  "mcpServers": {
+    "tia-portal": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/runtime/v21/TiaMcpServer.exe",
+      "args": ["--tia-major-version", "21"]
+    }
+  }
 }
