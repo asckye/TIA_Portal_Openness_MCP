@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "2.7.18",
-    "packageName":  "TIA_MCP_Delivery_v2.7.18_20260917",
+    "bundleVersion":  "2.7.19",
+    "packageName":  "TIA_MCP_Delivery_v2.7.19_20260917",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-09-17T19:41:19.2839039+00:00",
+    "refreshedAt":  "2026-09-17T21:52:56.5265964+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -84,11 +84,11 @@
                               }
             },
     "capabilities":  {
-                         "mcpToolCount":  350,
+                         "mcpToolCount":  359,
                          "mcpToolLayers":  {
-                                               "L2":  293,
-                                               "L0":  12,
-                                               "L1":  45
+                                               "L2":  302,
+                                               "L1":  45,
+                                               "L0":  12
                                            },
                          "hmiTemplateJsonCount":  8,
                          "plcTemplateJsonCount":  9,
@@ -115,8 +115,8 @@
                                              "note":  "All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "2.7.18.0",
-    "validationStatus":  "Delivery 2.7.18; engine 2.7.18 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "2.7.19.0",
+    "validationStatus":  "Delivery 2.7.19; engine 2.7.19 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",
