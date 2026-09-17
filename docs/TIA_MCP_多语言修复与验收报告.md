@@ -1,14 +1,14 @@
 # WinCC Unified 多语言文本修复与验收报告
 
-日期：2026-09-13（宿主机 America/Los_Angeles；现场日志为 2026-09-14 +08:00）。
+日期：2026-09-13。公开版已移除本机路径和现场项目标识；下方路径为占位示例。
 
 **状态：源码已修复，离线回归及 V20/V21 构建通过；虚拟机 MCP 服务尚未替换，实际 TIA 修复版验收未执行。不能据此称当前 MCP 已修复。**
 
 ## 1. 基线、交接来源与范围
 
 - 当前分支：master；基线提交：`2b4f70c`。本报告随修复源码及发布标签交付；以 Git 历史记录实际提交。
-- 已阅读原始交接报告：`C:\Users\asckye\Documents\Project\TIA Portal MCP\artifacts\HMI_Header_ZhCN_20260914\TIA_MCP_多语言缺陷_修复交接报告.md`。
-- 本次源码根目录：`C:\Users\asckye\Documents\Project\TIA_Portal_Openness_MCP`。
+- 已阅读原始多语言缺陷修复交接报告；原报告保存位置不随公开版披露。
+- 源码根目录：本仓库根目录。
 - 原交接源码快照为 `65445e01...`；本次重新检查当前分支，四项问题仍存在。
 - 修复公共文本路径与返回契约，不修改现场画面、Logo、脚本、PLC 变量绑定；本轮现场操作仅 Bootstrap、FindTools、GetObjectProperty 只读请求。
 
@@ -27,7 +27,7 @@ V21 随附文档已核对：`V21-References/PublicAPI/V21/net48/Siemens.Engineer
 
 ## 3. 现场证据与结论边界
 
-原报告现场：V21 / WinCC Unified，工程副本 `AutomaticDipCoatingMachine_HMI_Offline_20260913`，HMI `+S1/+S1-K4/HMI_RT_2`，画面 `02_Header`。报告记载 txtSiemens.Text 为 en-US=SIEMENS、zh-CN=文本框、de-DE=Text box，旧三语言成功回执缺少逐语言回读。该历史观察引用原报告，未重新截图核实。
+原报告环境为 V21 / WinCC Unified 测试工程副本。报告记载一个文本项的三种语言内容不同，旧三语言成功回执缺少逐语言回读。该历史观察引用原报告，未重新截图核实；工程和对象标识在公开版中省略。
 
 本轮新采集证据：
 
@@ -39,7 +39,7 @@ V21 随附文档已核对：`V21-References/PublicAPI/V21/net48/Siemens.Engineer
 请求参数：
 
 ```json
-{"objectKind":"HmiScreenItem","objectPath":"+S1/+S1-K4/HMI_RT_2:02_Header:txtStateHeadline","propertyPath":"Text"}
+{"objectKind":"HmiScreenItem","objectPath":"<已核对HMI路径>:<测试画面>:<测试文本项>","propertyPath":"Text"}
 ```
 
 因此本轮已经验证**旧服务缺陷仍可复现**，没有验证修复版在实际 TIA 上生效。
@@ -109,8 +109,8 @@ CallTool 契约（MCP 协议 isError 与下表不是同一层）：
 
 ```powershell
 ./scripts/Build-MultilingualFix.ps1 `
-  -V20ReferenceRoot 'C:\Users\asckye\Documents\Project\TIA Portal MCP\V20-References' `
-  -V21ReferenceRoot 'C:\Users\asckye\Documents\Project\TIA Portal MCP\V21-References' `
+  -V20ReferenceRoot '<本机V20参考目录>' `
+  -V21ReferenceRoot '<本机V21参考目录>' `
   -Dotnet './bin-build/sdk/dotnet.exe'
 ```
 
@@ -129,7 +129,7 @@ CallTool 契约（MCP 协议 isError 与下表不是同一层）：
 1. 确认目标 VM/TIA 主版本、MCP 真实启动配置与 EXE 路径、现有进程 PID、FileVersion/ProductVersion 和 SHA-256，保存基线。不要猜测交付目录。
 2. 将 ZIP 复制到 VM 新的版本目录，核对 manifest 中对应版本的每个文件 SHA-256。V20 和 V21 不混用；本包不分发 Siemens PublicAPI DLL，运行环境须已有对应 TIA/Openness。
 3. 完成工程备份，正常停止旧 MCP 宿主/连接；不要强杀 TIA，不要依靠重启抹掉未保存状态。
-4. 将 MCP 启动配置指向新版本目录对应 EXE，保持原有参数/连接配置；保留旧目录以便回退。若继续使用 tia.cmd，则先明确其 runtime 优先行为，并备份后更新真正 runtime 目录整套输出，不能只改源码目录。
+4. 将 MCP 启动配置指向新版本目录对应 EXE，保持原有参数/连接配置；保留旧目录以便回退。使用 GUI 时请更新对应 runtime 目录的整套输出，不能只改源码目录。
 5. 重新启动 MCP、重新建立客户端连接；在 VM 检查真实运行进程路径，并对该路径的 EXE 再做版本与 SHA-256 校验。
 6. 用 FindTools 找到 ReadUnifiedHmiTexts；执行下面验收。在全部证据完成前将部署状态记为“已启动，待验收”，不能记为修复完成。
 7. 如失败，记录回执和工程状态，停止新 MCP，恢复旧启动配置/目录。二进制回退不撤销工程写入，工程恢复须基于备份单独处理。

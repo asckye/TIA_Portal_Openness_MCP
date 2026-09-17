@@ -5,7 +5,7 @@ module.exports = async ({github, context, core}) => {
   const path = require('node:path');
   const crypto = require('node:crypto');
   const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
-  const metadata = readJson('manifest/release-build.json');
+  const metadata = readJson('manifest/delivery.json');
   if (!/^\d+\.\d+\.\d+$/.test(metadata.release)) throw new Error('Expected standard release version');
   const tag = `v${metadata.release}`;
   const result = readJson(`bin-build/releases/${tag}/package-result.json`);

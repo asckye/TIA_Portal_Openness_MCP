@@ -39,6 +39,11 @@ function Ok([string]$msg) {
 
 Write-Host "Bundle root: $root"
 
+foreach ($guiFile in @('TiaMcpConfigurator.exe', 'docs\gui-configuration.md', 'scripts\Build-Configurator.ps1')) {
+    if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
+    else { Fail "Missing GUI entry: $guiFile" }
+}
+
 # 交付 zip 布局在 tools\...\bin\Release\net48；git clone 布局在 runtime\v21。两处任一存在即可。
 $exeCandidates = @(
     (Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\bin\Release\net48\TiaMcpServer.exe"),
@@ -50,8 +55,10 @@ if (-not $exe) { Fail "Missing server exe (checked: $($exeCandidates -join ' ; '
 # Sentinel: every launcher must point at an engine that actually exists in this checkout.
 # The .cmd/.bat files and this script drifted apart once already — the validator checked one
 # path while every user ran another — so the launchers are now parsed and verified here.
-$launchers = @('tia.cmd','tia-v20.cmd','配置MCP.bat','配置MCP-v20.bat',
-               'scripts\预热.bat','scripts\生成工程.bat')
+$launchers = @('scripts\预热.bat','scripts\生成工程.bat')
+foreach ($removed in @('tia.cmd','tia-v20.cmd','配置MCP.bat','配置MCP-v20.bat')) {
+    if (Test-Path -LiteralPath (Join-Path $root $removed)) { Fail "Replaced launcher must be removed: $removed" }
+}
 foreach ($rel in $launchers) {
     $lp = Join-Path $root $rel
     if (-not (Test-Path -LiteralPath $lp)) { Fail ("Missing launcher: " + $rel); continue }
@@ -189,14 +196,20 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
     else {
         $version = $clMatch.Groups['v'].Value
         $versionFailures = $failures.Count
+        $build = Get-Content (Join-Path $root 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        $delivery = Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        $engineVersion = $build.release
+        if ($delivery.release -ne $version -or $delivery.engineRelease -ne $engineVersion -or $delivery.fileVersion -ne $build.fileVersion) {
+            Fail 'Delivery version differs from CHANGELOG or engine build record'
+        }
 
         $csText = Get-Content -LiteralPath $csproj -Raw -Encoding UTF8
         $csMatch = [regex]::Match($csText, '<AssemblyVersion>(?<v>[^<]+)</AssemblyVersion>')
         if (-not $csMatch.Success) {
             Fail "TiaMcpServer.csproj: no <AssemblyVersion> element"
         }
-        elseif ($csMatch.Groups['v'].Value -ne $version) {
-            Fail ("Version mismatch: CHANGELOG says {0}, TiaMcpServer.csproj AssemblyVersion says {1}" -f $version, $csMatch.Groups['v'].Value)
+        elseif ($csMatch.Groups['v'].Value -ne $engineVersion) {
+            Fail ("Engine version mismatch: validated build says {0}, source says {1}" -f $engineVersion, $csMatch.Groups['v'].Value)
         }
 
         $mf = Get-Content -LiteralPath $manifest -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -211,18 +224,25 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
         $exe = Join-Path $root "runtime\v21\TiaMcpServer.exe"
         if (Test-Path -LiteralPath $exe) {
             $fileVersion = (Get-Item -LiteralPath $exe).VersionInfo.FileVersion
-            if ($fileVersion -notlike ("{0}*" -f $version)) {
-                Fail ("Version mismatch: CHANGELOG says {0}, runtime\v21\TiaMcpServer.exe reports {1} — rebuild the public engine" -f $version, $fileVersion)
+            if ($fileVersion -ne $build.fileVersion) {
+                Fail ("Engine version mismatch: validated build says {0}, runtime reports {1}" -f $build.fileVersion, $fileVersion)
             }
         }
 
         if ($failures.Count -eq $versionFailures) {
-            Ok ("Version is consistent across CHANGELOG / csproj / manifest / runtime engine ({0})" -f $version)
+            Ok ("Delivery {0} and engine {1} versions match their build records" -f $version, $engineVersion)
         }
     }
 }
 
 if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-build.json'))) {
+    $delivery = Get-Content (Join-Path $root 'manifest/delivery.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($entry in @(@('manifest/release-build.json',$delivery.engineBuildSha256),@('manifest/configurator-build.json',$delivery.configuratorBuildSha256))) {
+        if ((Get-FileHash -LiteralPath (Join-Path $root $entry[0])).Hash -ne $entry[1]) { Fail "Build record changed: $($entry[0])" }
+    }
+    $gui = Get-Content (Join-Path $root 'manifest/configurator-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if ($gui.testsPassed -le 0) { Fail 'Configurator test result missing' }
+    if ((Get-FileHash -LiteralPath (Join-Path $root $gui.executable.path)).Hash -ne $gui.executable.sha256) { Fail 'Configurator EXE changed after validation' }
     $licensePath = Join-Path $root 'LICENSE'
     if (!(Test-Path -LiteralPath (Join-Path $root 'NOTICE.md'))) { Fail 'Source and copyright notice missing: NOTICE.md' }
     if (!(Test-Path -LiteralPath $licensePath) -or
@@ -230,6 +250,15 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         Fail 'Original MIT copyright notice must be preserved'
     }
     $build = Get-Content -LiteralPath (Join-Path $root 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles)) {
+        $file = Join-Path $root $row.path
+        if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
+        $text = [IO.File]::ReadAllText($file).Replace("`r`n", "`n")
+        $algorithm = [Security.Cryptography.SHA256]::Create()
+        try { $digest = [BitConverter]::ToString($algorithm.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','') }
+        finally { $algorithm.Dispose() }
+        if ($digest -ne $row.sha256) { Fail "Source changed after validation: $($row.path)" }
+    }
     foreach ($major in @(20,21)) {
         $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
         if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }

@@ -10,8 +10,10 @@
 
 **English** · [中文](README.zh-CN.md)
 
+**Windows WPF configuration UI:** double-click `TiaMcpConfigurator.exe` to configure a VM HTTP server and select Claude Code, Claude Desktop, Codex, Cursor, VS Code, Gemini CLI, Windsurf, or Cline. Both remote and same-machine connections are supported; Desktop Chat remote mode needs the Node.js/mcp-remote bridge. No CMD/BAT entry point is needed. See the [configuration guide](docs/gui-configuration.md).
+
 > **v2.0 — the same exe is also a declarative CLI (`tia`).** Any AI emits a
-> YAML/JSON spec, any engineer runs one command (`tia gen spec.yaml`) — no MCP
+> YAML/JSON spec, any engineer runs one command (`runtime\v21\TiaMcpServer.exe gen spec.yaml`) — no MCP
 > client required. Verbs: `gen` / `patch` / `compile` / `describe` / `export` /
 > `import` / `prewarm` / `schema` / `version`. Exit code 0/1/2. See
 > `docs/CLI_quickstart.md`. The MCP server behaviour is unchanged.
@@ -80,8 +82,8 @@ GetVersionControlStatus(changedOnly=true)
    Windows user to the local **`Siemens TIA Openness`** group and **log off/on once**
    (the group is not effective until re-login — the single most common blocker).
    **Use the exe matching your installed version** — the bundle root ships
-   `tia.cmd` (V21) / `tia-v20.cmd` (V20); all other paths are auto-resolved.
-   - **Health-check first**: run `tia.cmd doctor` (V20: `tia-v20.cmd doctor`) once after
+   `runtime\v21\TiaMcpServer.exe` (V21) / `runtime\v20\TiaMcpServer.exe` (V20).
+   - **Health-check first**: run `runtime\v21\TiaMcpServer.exe doctor` (V20: `runtime\v20\TiaMcpServer.exe doctor`) once after
      install — it checks TIA install / exe-version match / Openness group / host
      registration and prints the exact fix per problem (`--fix` auto-adds the group).
 2. **Prewarm (optional, recommended)**: double-click `scripts\预热.bat` and leave the
@@ -94,7 +96,7 @@ GetVersionControlStatus(changedOnly=true)
    `0` means success.
    - To customize: have any AI emit a spec per [`docs/AI_spec_prompt.md`](docs/AI_spec_prompt.md)
      (YAML or JSON), then drag it onto `生成工程.bat`.
-   - CLI equivalent: add the bundle root to PATH, then `tia gen <spec>` (start with
+   - CLI equivalent: run `runtime\v21\TiaMcpServer.exe gen <spec>` (start with
      `--dry-run` for an offline check).
 
 ## Highlights
@@ -127,10 +129,9 @@ GetVersionControlStatus(changedOnly=true)
 
 ## Quick Start
 
-Use `配置MCP.bat` to register the server with an AI client on the TIA machine, as
-described below. The client starts the server over stdio. For a separate HTTP
-client, start `TiaMcpServer.exe` manually with `--transport http`; see the
-[HTTP setup instructions](手册/quickstart.md).
+Double-click **`TiaMcpConfigurator.exe`**. Configure the HTTP service on the TIA machine,
+then select your AI clients on the host PC. For a single computer choose Local connection.
+The GUI supports eight clients; see [GUI setup](docs/gui-configuration.md).
 
 HTTP builds with file version **2.7.2.3** include the response routing fix and recursive HMI
 screen lookup. Requests have a 240-second deadline, including queue time. Configure the
@@ -144,35 +145,13 @@ a write. Late replies are discarded and cannot be delivered to another request.
    - set the `TiaPortalLocation` user environment variable;
    - let it auto-read `HKLM\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{20|21}\TIA_Opns\Path`.
    With multiple versions installed, pass `--tia-major-version 20` (or `21`) explicitly.
-2. **Mount the MCP — one command, fully automatic.**
-   Double-click `配置MCP.bat` in the bundle root (V20: `配置MCP-v20.bat`), or run `tia.cmd config`.
-
-   > Engine exe locations by distribution: Release zip →
-   > `tools\tiaportal-mcp\src\TiaMcpServer\bin\Release\net48\` (V21) /
-   > `...\bin-v20\Release\net48\` (V20); git clone → `runtime\v21\`
-   > (V20 runtime is not shipped in git — download the Release zip).
-   > All launcher scripts resolve both layouts automatically.
-
-   It self-discovers everything: its own absolute path, the installed TIA Portal
-   (registry) and version, and the version-matching exe (V20/V21 picked for you) —
-   then writes the `tia-portal` entry into every AI host detected on this machine:
-   **Claude Desktop / Claude Code / Cursor / VS Code** (existing config backed up
-   as `.bak`, other servers preserved). Restart the AI client to load it.
-   Options: `config --host vscode` (or `claude|claude-code|cursor`), `config --print`
-   to copy a snippet manually. The server lists **~55 core tools of 222 by default**
-   (~8,500 instead of ~38,800 tokens of schema per turn) so weaker models are not drowned
-   and VS Code/Copilot's 128-tool cap and Windsurf's 100 never trip. Nothing is lost: the
-   model reaches every other tool on demand with `FindTools("plain words")` +
-   `CallTool(name, argumentsJson)`, and the handshake instructions tell it so. Pass
-   `config --full` to list the whole tool surface instead.
-   If anything fails to connect, run `tia.cmd doctor` (v2.2.8): a one-shot environment
-   check (TIA install, exe/version match, Openness group, host registration) with the
-   exact fix per problem; `--fix` auto-adds the Openness group. Since v2.2.7 the exe also **self-routes**: if it was
-   built for a different TIA major version than the machine has, it transparently
-   re-execs the matching sibling exe — grabbing the "wrong" exe no longer crashes.
-   Manual fallback: copy the snippet from `cursor-mcp.example.json`, replace
-   `REPLACE_ME` with this bundle's root, pick the exe path by TIA version; for
-   non-default installs add `"--tia-portal-location","<root>","--tia-major-version","<20|21>"` to `args`.
+2. **Configure the MCP in the GUI.** Select V20/V21 and the TIA installation root.
+   For a VM, start the HTTP service there and configure the host clients with the same
+   IPv4, port and key. For local stdio, select the clients on the Local connection page.
+   Existing client settings are merged and backed up. Restart the selected clients.
+   Claude Desktop Chat remote access requires Node.js/mcp-remote; Claude Code uses native HTTP.
+   For command-line diagnostics, run `runtime\v21\TiaMcpServer.exe doctor`
+   (V20: `runtime\v20\TiaMcpServer.exe doctor`).
 3. **First call sequence:** `Bootstrap` → `Connect` → `OpenProject` (or
    `CreateProject`) → `GetProjectTree`, then read the real `PLC_*` / `HMI_RT_*`
    paths from the tree before continuing.

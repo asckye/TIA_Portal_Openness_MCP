@@ -1,0 +1,10 @@
+{
+    "release":  "2.7.16",
+    "releaseDate":  "20260917",
+    "package":  "TIA_MCP_Delivery_v2.7.16_20260917",
+    "engineRelease":  "2.7.15",
+    "fileVersion":  "2.7.15.0",
+    "engineBuildSha256":  "02fa4f9aa7c5fa11b901b43e64709898a6ac7fa656da3cf0ae582f6548f58a13",
+    "configuratorBuildSha256":  "89d1bb168bed832f835f1350406ce7312a748c6f83e6465598a466acb44619e5",
+    "generatedAt":  "2026-09-17T14:13:51.9110747+00:00"
+}

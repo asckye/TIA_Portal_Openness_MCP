@@ -140,6 +140,6 @@ $sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-P
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=$digest}
 })
 WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles})
-Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Validate-Bundle.ps1'),'-Strict') 'bundle.log'
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/Package-Release.py. Real TIA acceptance is separate."
 

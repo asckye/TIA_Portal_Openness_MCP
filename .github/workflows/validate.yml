@@ -19,3 +19,6 @@ jobs:
       - name: Offline bundle validation
         shell: pwsh
         run: ./scripts/Validate-Bundle.ps1 -Strict
+      - name: Build and test WPF configurator
+        shell: powershell
+        run: ./scripts/Build-Configurator.ps1 -Test

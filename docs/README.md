@@ -11,7 +11,7 @@
 
 ## 我要接 AI 客户端（Cursor / Claude / VS Code，MCP 路线）
 
-1. 根 README「上手步骤」——双击 `配置MCP.bat` 一键注册四宿主
+1. 根 README「上手步骤」——双击 `TiaMcpConfigurator.exe` 选择并配置 8 个 AI 客户端
 2. [`使用说明与介绍.md`](使用说明与介绍.md) —— 各客户端配置文件位置、手动配置、常见问题
 3. [`mcp-ide-and-tool-visibility.md`](mcp-ide-and-tool-visibility.md) —— 「为什么 IDE 里少工具」的解释（客户端缓存/上限，非包裁剪）
 
@@ -25,7 +25,7 @@
 
 ## 我在排障
 
-1. 先跑 `tia.cmd doctor`（`--fix` 自动补 Openness 用户组）
+1. 先跑 `runtime\v21\TiaMcpServer.exe doctor`（`--fix` 自动补 Openness 用户组）
 2. [`../手册/error-model.md`](../手册/error-model.md) —— 错误形态说明
 3. [`../手册/openness-limitations.md`](../手册/openness-limitations.md) —— Openness **做不到**的事（别在这些上头硬试）
 

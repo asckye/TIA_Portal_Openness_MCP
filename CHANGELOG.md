@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.7.16] - 2026-09-17
+
+- 新增独立 WPF 图形配置程序 `TiaMcpConfigurator.exe`：按参考设计实现深色编号侧栏、浅色内容区、分类客户端卡片和右侧主操作；配置虚拟机 HTTP 服务和本机/远程 AI 客户端，无需手写 CMD/BAT。
+- 三页导航、已选客户端计数、密钥显示与占位提示、服务状态联动；窄窗口自动调整客户端卡片列数，内容可滚动。本机连接显示实际 stdio 传输。
+- 支持多选 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Gemini CLI、Windsurf、Cline；按各客户端 JSON/JSONC/TOML 格式合并并备份。Claude Desktop Chat 远程模式使用需 Node.js 的 mcp-remote 桥接。
+- 支持 V20/V21、密钥生成与隐藏、按 Windows 用户加密保存服务端设置、合并和备份 Claude 配置、授权指定用户监听及局域网防火墙、服务启动/停止与日志、HTTP 鉴权和就绪检查。
+- 图形入口在启动前独立检查 HTTP 监听，直接显示权限/端口错误；原引擎二进制未更改。虚拟机真实 TIA 工程联调待验证。
+
+- 删除被 GUI 替代的根目录配置 BAT 和 tia CMD；CLI 直接调用 runtime 下的 EXE，保留工程生成、预热和取证脚本。
+- 交付包版本 2.7.16，原 V20/V21 引擎保持 2.7.15.0；分别记录 GUI 与引擎的测试日期、输入及二进制哈希，完整包仍包含两版运行依赖。
+
 ## [2.7.15] - 2026-09-15
 
 - 新增 38 个 HMI/PLC/工程/选件专用入口，总计 298 个工具；具体边界见 [实现与缺口清单](docs/openness-expansion-progress.md)。

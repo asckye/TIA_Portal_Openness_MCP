@@ -15,8 +15,8 @@ Most problems on Windows + Openness are environment problems, and the bundle can
 tell you which one:
 
 ```bat
-tia.cmd doctor          :: TIA V21
-tia-v20.cmd doctor      :: TIA V20
+runtime\v21\TiaMcpServer.exe doctor          :: TIA V21
+runtime\v20\TiaMcpServer.exe doctor      :: TIA V20
 ```
 
 It checks the TIA installation, the exe/version match, the local
@@ -26,7 +26,7 @@ for each. Paste its output into the issue — that alone usually settles it.
 Please include:
 
 - TIA Portal version (V20 or V21) and Windows version
-- Which exe / branch you are on (`tia.cmd version`)
+- Which exe / branch you are on (`runtime\v21\TiaMcpServer.exe version`)
 - The MCP client (Cursor, VS Code, Claude Desktop, own HTTP client) or the CLI
   command you ran
 - What you expected, what happened, and the full error text

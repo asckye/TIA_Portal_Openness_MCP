@@ -48,12 +48,12 @@ GetVersionControlStatus(changedOnly=true)
 > 第一次用？**不需要 MCP 客户端、不需要写代码。** 装好 TIA 后照这 3 步，几分钟内生成第一个工程。
 > （想接 Cursor / Claude Desktop 等 AI 客户端走 MCP？跳到下方 [上手步骤](#上手步骤)。）
 
-1. **准备**：装好 **TIA Portal V20 或 V21** + **.NET Framework 4.8**；把当前 Windows 用户加入本地组 **`Siemens TIA Openness`**，**注销重登一次**（不重登组不生效，这是最常见卡点）。**装的是哪个版本就用哪个**——交付包根目录已备好 `tia.cmd`（V21）/ `tia-v20.cmd`（V20），其余路径自动选。
-   - **装完先体检**：跑一次 `tia.cmd doctor`（V20 用 `tia-v20.cmd doctor`）——一次检查 TIA 安装 / exe 版本匹配 / Openness 用户组 / 宿主注册，每项给修法；加 `--fix` 自动补用户组。先体检再干活，能省掉后面 90% 的排障。
+1. **准备**：装好 **TIA Portal V20 或 V21** + **.NET Framework 4.8**；把当前 Windows 用户加入本地组 **`Siemens TIA Openness`**，**注销重登一次**（不重登组不生效，这是最常见卡点）。**装的是哪个版本就用哪个**——使用 `runtime\v21\TiaMcpServer.exe`（V21）或 `runtime\v20\TiaMcpServer.exe`（V20）。
+   - **装完先体检**：跑一次 `runtime\v21\TiaMcpServer.exe doctor`（V20 用 `runtime\v20\TiaMcpServer.exe doctor`）——一次检查 TIA 安装 / exe 版本匹配 / Openness 用户组 / 宿主注册，每项给修法；加 `--fix` 自动补用户组。先体检再干活，能省掉后面 90% 的排障。
 2. **预热（可选但强烈推荐）**：双击 `scripts\预热.bat`，留着这个窗口。它常驻一个无界面 TIA，让之后每条命令 **~1 秒**连上（不预热则每次冷启动约 3 分钟）。用完按 `Ctrl+C` 关闭。
 3. **生成工程**：把现成模板 `templates\project-blueprints\scaffold_spec_motor.json`（或 `scaffold_spec_start_stop.json`）**拖到 `scripts\生成工程.bat` 图标上**——一条龙建项目→加 PLC/HMI→写块→编译→存盘。退出码 `0` 即成功。
    - 想改成自己的需求：让任意 AI 照 [`docs/AI_spec_prompt.md`](docs/AI_spec_prompt.md) 产出一份 spec（YAML/JSON 都行），再拖给 `生成工程.bat`。
-   - 命令行等价写法：把根目录加进 PATH 后，`tia gen <spec>`（先 `--dry-run` 离线校验更稳）。
+   - 命令行等价写法：在包根目录运行 `runtime\v21\TiaMcpServer.exe gen <spec>`（先 `--dry-run` 离线校验更稳）。
 
 ---
 
@@ -61,12 +61,12 @@ GetVersionControlStatus(changedOnly=true)
 
 > **同一个 exe 既是 MCP 服务，也是命令行。** 任意 AI 产出一份 YAML/JSON spec，任意工程师跑一条命令即可从零建/改工程——**不需要 MCP 客户端、不需要安装**。底层完全复用现有引擎。详见 [`docs/CLI_quickstart.md`](docs/CLI_quickstart.md)。
 
-- **`tia gen <spec.yaml|json>`**：一条命令从 spec 建完整工程（= `ScaffoldProject`）。`--dry-run` 离线校验、`--json` 机器可读。
-- **`tia patch <spec>`**：把 spec **增量 upsert 进已有工程**（spec 内 `projectPath` 指向 `.apXX`），未提及的元素不动；`--no-overwrite` 保护手改的 LAD 代码块。
-- 还有 `tia compile / describe / export / import / prewarm / schema / version`。退出码 **0=成功 / 1=有失败步骤 / 2=错误**。
-- **`tia` 命令入口**：交付包根目录的 `tia.cmd`（V21）/ `tia-v20.cmd`（V20）——把根目录加进 PATH 即可随处 `tia gen ...`，不必记忆深层 exe 路径。
+- **`runtime\v21\TiaMcpServer.exe gen <spec.yaml|json>`**：一条命令从 spec 建完整工程（= `ScaffoldProject`）。`--dry-run` 离线校验、`--json` 机器可读。
+- **`runtime\v21\TiaMcpServer.exe patch <spec>`**：把 spec **增量 upsert 进已有工程**（spec 内 `projectPath` 指向 `.apXX`），未提及的元素不动；`--no-overwrite` 保护手改的 LAD 代码块。
+- 还有 `runtime\v21\TiaMcpServer.exe compile / describe / export / import / prewarm / schema / version`。退出码 **0=成功 / 1=有失败步骤 / 2=错误**。
+- **命令行入口**：直接调用 `runtime\v21\TiaMcpServer.exe` 或 `runtime\v20\TiaMcpServer.exe`。
 - **零编程上手**：把 spec 拖到 `scripts\生成工程.bat` 上即可（V21 缺失自动回退 V20）；`scripts\预热.bat` 常驻 headless 实例让后续命令 ~1s 连上。
-- **现成模板开箱即用**：`templates/project-blueprints/` 的启停/电机 spec 直接 `tia gen` 即可，`tia` 自动解析其中 `__BUNDLE__` 为交付包根目录，无需手改路径。
+- **现成模板开箱即用**：`templates/project-blueprints/` 的启停/电机 spec 直接 `runtime\v21\TiaMcpServer.exe gen` 即可，`tia` 自动解析其中 `__BUNDLE__` 为交付包根目录，无需手改路径。
 - **让任意 AI 生成 spec**：见 [`docs/AI_spec_prompt.md`](docs/AI_spec_prompt.md) —— 通用契约「产出一份 spec」，不要求 AI 支持 MCP。
 - **YAML + JSON 双解析**：JSON 首选（零歧义），YAML 便于人读写；同一 spec 两者产出一致。
 
@@ -97,9 +97,9 @@ GetVersionControlStatus(changedOnly=true)
 | 获取方式 | V21 引擎 exe | V20 引擎 exe |
 |---|---|---|
 | **Release 交付 zip**（推荐） | `tools\tiaportal-mcp\src\TiaMcpServer\bin\Release\net48\TiaMcpServer.exe` | `tools\...\bin-v20\Release\net48\TiaMcpServer.exe` |
-| **git clone 本仓库** | `runtime\v21\TiaMcpServer.exe` | 不随仓库分发——请下载 Release zip |
+| **git clone 本仓库** | `runtime\v21\TiaMcpServer.exe` | `runtime\v20\TiaMcpServer.exe` |
 
-根目录的 `配置MCP.bat` / `tia.cmd` / `scripts\*.bat` 会按上表顺序自动找 exe，**无需关心布局**；手动配置参考 `cursor-mcp.example.json`（把 `REPLACE_ME` 换成你的实际目录）。其它文档若出现 `…\PID博途块\…` 等开发机路径，仅为作者构建位置，**不要求**克隆源码仓库。
+图形配置器自动选择对应版本引擎。手动配置参考 `cursor-mcp.example.json`；把 `REPLACE_ME` 换成实际目录。根目录旧配置 BAT 和 tia CMD 已删除，CLI 直接使用 runtime 下的 EXE。
 
 ---
 
@@ -115,6 +115,8 @@ GetVersionControlStatus(changedOnly=true)
 
 ## 上手步骤
 
+**WPF 图形配置（推荐）**：双击 `TiaMcpConfigurator.exe`，配置虚拟机服务，并多选 Claude Code、Claude Desktop、Codex、Cursor、VS Code、Gemini CLI、Windsurf、Cline，支持远程和本机连接，无需 CMD/BAT。Desktop Chat 远程模式需 Node.js 桥接；详见 [图形配置指南](docs/gui-configuration.md)。
+
 1. **环境准备**  
    - .NET Framework **4.8**、**TIA Portal V20 或 V21** 已安装；  
    - 当前用户加入 **`Siemens TIA Openness`** 本地组，注销重登；  
@@ -125,25 +127,11 @@ GetVersionControlStatus(changedOnly=true)
    - 当机器装了多个版本时显式传 `--tia-major-version 20`（或 21）以免自动选最高版；  
    - 首次连接时在 TIA 弹窗中授权 **Openness**。
 
-2. **挂载 MCP（一条命令，全自动）**  
-   **双击根目录的 `配置MCP.bat`**（V20 用 `配置MCP-v20.bat`）即可；命令行等价写法：`tia.cmd config`。
-
-   它会**自动发现一切**：自己的绝对路径、注册表里的博途安装与版本、与版本匹配的 exe（V20/V21 自动选对），然后把 `tia-portal` 条目一次性写进本机检测到的所有 AI 客户端配置——**Claude Desktop / Claude Code / Cursor / VS Code**（原配置自动备份 `.bak`，其它 server 原样保留）。重启 AI 客户端即生效。  
-   - 只配某一个宿主：`config --host vscode`（可选 `claude|claude-code|cursor|vscode`）；  
-   - 只看不写（手动粘贴其它宿主）：`config --print`；  
-   - **工具档位**：默认就是精简档（~55 个核心工具），无需任何参数，见下文《工具档位》；想一次列全 221 个用 `config --full`；  
-   - **连不上 / 报错**：`tia.cmd doctor` 一键体检（TIA 安装 / exe 版本匹配 / Openness 用户组 / 宿主注册状态，每项给修法；`--fix` 自动补用户组，v2.2.8）；  
-   - **拿错 exe 也没关系**：v2.2.7 起 exe 会按实际 TIA 版本**自动转投**正确的兄弟 exe（V21 exe 在纯 V20 机器上照常可用）。  
-   - 手动配置兜底：复制 `cursor-mcp.example.json` 片段，把 `REPLACE_ME` 换成本包根目录；exe 路径按上文「两种获取方式」表选（zip 用 `tools\...\bin[-v20]\Release\net48`，git clone 用 `runtime\v21`）；非标准安装位置在 `args` 加 `--tia-portal-location "<安装根>" --tia-major-version <20|21>`。
-
-   **启动方式：**本机 MCP 客户端按上述配置通过 stdio 启动服务；需要 HTTP 连接时，
-   在安装博途的电脑/虚拟机里手动运行 `TiaMcpServer.exe --transport http`，
-   监听地址、鉴权及客户端配置见[快速入门](手册/quickstart.md)。
-
-   **HTTP 修复版（文件版本 2.7.2.3）：**已包含 HMI 子文件夹修复。服务端等待上限为 240 秒，
-   包括排队时间；客户端超时也需留足博途启动、连接和编译的时间。504 不会取消已在博途中执行的操作，
-   重试写入前先确认操作状态。迟到响应会丢弃，不会交给后续请求。
-   `GET /mcp/health` 返回 `fileVersion` 和 `responseTimeoutSeconds`，可用来核对运行版本。
+2. **在图形界面配置 MCP**
+   双击 `TiaMcpConfigurator.exe`。虚拟机安装博途时，先在虚拟机配置并启动 HTTP 服务，再在宿主机选择 AI 客户端，填写相同地址、端口和密钥。
+   同机使用时选择“本机连接”，客户端通过 stdio 启动引擎。客户端配置会合并并备份，保存后重启客户端。
+   支持 8 个客户端；Claude Desktop Chat 远程模式需 Node.js/mcp-remote。详见 [图形配置指南](docs/gui-configuration.md)。
+   排障可运行 `runtime\v21\TiaMcpServer.exe doctor`（V20 改为 `runtime\v20`）。
 
 3. **首次调用顺序**  
    - `Bootstrap` → `Connect` → `OpenProject`（或 `CreateProject`）→ `GetProjectTree`，从树中读取真实的 `PLC_xxx` / `HMI_RT_xxx` 路径再继续。

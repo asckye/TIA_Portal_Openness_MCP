@@ -43,18 +43,22 @@ def main():
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
     require(sorted(n for n in files if n.endswith('.exe')) ==
-            ['runtime/v20/TiaMcpServer.exe', 'runtime/v21/TiaMcpServer.exe'], 'Both runtime EXEs are required')
+            ['TiaMcpConfigurator.exe', 'runtime/v20/TiaMcpServer.exe', 'runtime/v21/TiaMcpServer.exe'], 'Configurator and both runtime EXEs are required')
 
     metadata = json.loads(files['manifest/release-build.json'].decode('utf-8-sig'))
-    release, version, package = (metadata[k] for k in ('release', 'fileVersion', 'package'))
+    delivery = json.loads(files['manifest/delivery.json'].decode('utf-8-sig'))
+    require(sha(files['manifest/release-build.json']) == delivery['engineBuildSha256'], 'Engine build record changed after delivery preparation')
+    require(sha(files['manifest/configurator-build.json']) == delivery['configuratorBuildSha256'], 'Configurator build record changed after delivery preparation')
+    require(delivery['engineRelease'] == metadata['release'] and delivery['fileVersion'] == metadata['fileVersion'], 'Engine version differs from delivery record')
+    release, version, package = (delivery[k] for k in ('release', 'fileVersion', 'package'))
     require(re.fullmatch(r'\d+\.\d+\.\d+', release) is not None, 'Release version must be X.Y.Z')
-    date = metadata['releaseDate']
+    date = delivery['releaseDate']
     require(re.fullmatch(r'\d{8}', date) is not None, 'Release date must be YYYYMMDD')
     datetime.strptime(date, '%Y%m%d')
     require(package == f'TIA_MCP_Delivery_v{release}_{date}', 'Use TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD for the complete V20/V21 delivery')
     for project in ('TiaMcpServer.csproj', 'TiaMcpServer.V20.csproj'):
         xml = ET.fromstring(files[f'tools/tiaportal-mcp/src/TiaMcpServer/{project}'])
-        require(xml.findtext('.//FileVersion') == version and xml.findtext('.//InformationalVersion') == release, 'Source version differs from validated build')
+        require(xml.findtext('.//FileVersion') == version and xml.findtext('.//InformationalVersion') == metadata['release'], 'Source version differs from validated build')
     runtime_names = {n for n in files if n.startswith('runtime/')}
     require(runtime_names == {r['path'] for r in metadata['runtimeFiles']}, 'Runtime file inventory changed after validation')
     for row in metadata['runtimeFiles']:
@@ -71,7 +75,17 @@ def main():
         require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
         require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
         require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
-    required = ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat', '开始使用.md',
+    gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
+    require(gui['testsPassed'] > 0, 'Missing configurator test result')
+    require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
+    gui_inputs = {n for n in files if n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml')} | {'scripts/Build-Configurator.ps1'}
+    require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
+    for row in gui['sourceFiles']:
+        data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
+        require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
+    require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
+    required = ('开始使用.md',
+                'TiaMcpConfigurator.exe', 'scripts/Build-Configurator.ps1', 'docs/gui-configuration.md',
                 'scripts/预热.bat', 'scripts/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/UNIFIED_READ_ONLY_MIGRATION.md', 'docs/RELEASE_WORKFLOW.md',
                 'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json')
@@ -83,7 +97,9 @@ def main():
             if name.startswith(prefix):
                 files[f'tools/tiaportal-mcp/src/TiaMcpServer/{folder}/Release/net48/' + name[len(prefix):]] = data
     files['RELEASE_STATUS.txt'] = (
-        f'Complete V20/V21 delivery: {release}; FileVersion {version}.\r\n'
+        f'Complete V20/V21 delivery: {release}; engine FileVersion {version}.\r\n'
+        f'Engine build validation date: {metadata["generatedAt"]}; unchanged inputs verified by hashes.\r\n'
+        f'Configurator isolated tests passed: {gui["testsPassed"]}; see manifest/configurator-build.json.\r\n'
         f'Source commit: {commit}\r\n'
         'Both runtime directories and legacy bin paths contain the same validated binaries.\r\n'
         'Use the matching locally installed TIA/Openness and .NET Framework 4.8.\r\n'
