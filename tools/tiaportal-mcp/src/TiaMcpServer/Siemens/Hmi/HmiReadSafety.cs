@@ -21,6 +21,21 @@ namespace TiaMcpServer.Siemens
             return false;
         }
 
+        // True when the only connection-shaped failure in the chain is an Openness "disposed object" error, which TIA also
+        // raises for a proxy it released after Create/Delete (2.7.30 real project: MrpDomain) while the session is fine.
+        internal static bool DisposedObjectOnly(Exception error)
+        {
+            bool disposed = false;
+            for (var e = error; e != null; e = e.InnerException)
+            {
+                var name = e.GetType().Name;
+                if (name == "EngineeringObjectDisposedException") { disposed = true; continue; }
+                if (name == "ObjectDisposedException" || name == "RemotingException" || name.IndexOf("NonRecoverable", StringComparison.Ordinal) >= 0
+                    || e is System.Runtime.InteropServices.COMException) return false;
+            }
+            return disposed;
+        }
+
         internal static string? SkipReason(Type type, string property)
         {
             if (property == "ScriptDiagnosisOverviewText" &&

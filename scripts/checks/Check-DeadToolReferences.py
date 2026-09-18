@@ -73,6 +73,12 @@ ALLOWED = {
     'SyncDomains': 'Openness SyncDomainOwner.SyncDomains 导航器名',
     'SyncDomainComposition': 'Openness HW.SyncDomainComposition 类型名',
     'SyncRole': 'Openness IoController/IoConnector 的动态属性名（SyncRole 枚举）',
+    # 2.7.31 库深层工具族描述里点名的原生成员，都在说明底层调用，不是 MCP 工具名
+    'FindType': 'Openness ILibrary.FindType(Guid)，由 ReadLibraryType 的 guid 参数封装',
+    'FindVersion': 'Openness ILibrary.FindVersion(Guid)，由 ReadLibraryType 的 guid 参数封装',
+    'GetGlobalLibraryInfos': 'Openness GlobalLibraryComposition.GetGlobalLibraryInfos()，由 ManageGlobalLibrary 的 infos 动作封装',
+    'GetSupportedExportFormats': 'Openness LibraryType.GetSupportedExportFormats()，由 ReadLibraryType 读出',
+    'SetForUpdate': 'Openness LibraryType.SetForUpdate 属性名',
 }
 
 VERB = re.compile(

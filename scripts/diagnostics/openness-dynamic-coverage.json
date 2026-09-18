@@ -162,6 +162,12 @@
       "tool": "ManageUnifiedHmiGroup (family=screens) / ManageUnifiedScreenLayout",
       "mechanism": "ScreenGroups composition: Create(name), rename, delete; screens addressed by /Group/Screen path",
       "verified": "shape checks V20/V21; real project 2.7.29 (V21 HMI_RT_1): Create('mcp_tmp_group_2729') then deleteEmpty (childCount 0), group confirmed absent afterwards; rename not exercised"
+    },
+    {
+      "pattern": "Siemens.Engineering.Library.Compare.LibraryCompareResult*",
+      "tool": "CompareLibraries / CompareProjects (library targets)",
+      "mechanism": "ILibrary.CompareToLibrary result walked by reflection (RootElement / Elements / ComparisonResult / DetailedInformation / Left / Right / LeftName / RightName) so the same walker serves software and library compare trees",
+      "verified": "2.7.18 shape checks V20/V21; not yet run on a real project (needs a second open library)"
     }
   ]
 }

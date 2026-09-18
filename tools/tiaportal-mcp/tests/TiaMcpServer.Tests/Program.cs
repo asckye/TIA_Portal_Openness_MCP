@@ -109,6 +109,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== 硬件网络深层纯逻辑：IO 系统/同步域/MRP/传输区/通道/地址/设备用户/端口互连的参数门控、枚举目录、权限标志 ==");
             HardwareNetworkTests.Run(Check);
 
+            Console.WriteLine("== 库深层纯逻辑：选择/范围解析、模式目录、同步/类型/比较请求门控、GUID 与归档名；HmiReadSafety 释放对象分类 ==");
+            LibraryDeepTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

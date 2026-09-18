@@ -1,30 +1,30 @@
-# 接续工作交接（2.7.30 之后，2026-09-18）
+# 接续工作交接（2.7.31 之后，2026-09-18）
 
 [文档目录](../README.md) · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.30 已发布）
+## 1. 现状（2.7.31 已发布）
 
-- 最新 tag `v2.7.30`（2026-09-18，desktop-ivrlcht 构建；ZIP 由 "Publish complete release" 工作流上传）。此前 `b4730ec` 记录了 2.7.29 的真机重跑。
-- 工具 380 个、默认 lite 56；离线套件 1506 项；引擎 API 形状检查 V20 1158 / V21 1255（`Build-Release.ps1` 第 73 行硬编码这两个数）。
-- 审计（V21）：类型 1,217 = 专用引用 269 / 仅类型名 91 / 动态覆盖 322 / 完全未触及 535；未封装功能类型 253 / 1,006（Base 75 / 271、Step7 44 / 140、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 108 / 525，Unified 0）。
+- 最新 tag `v2.7.31`（2026-09-18，desktop-ivrlcht 构建）。
+- 工具 386 个、默认 lite 56；离线套件 1550 项；引擎 API 形状检查 V20 1291 / V21 1388（`Build-Release.ps1` 第 73 行硬编码这两个数）。
+- 审计（V21）：类型 1,217 = 专用引用 288 / 仅类型名 91 / 动态覆盖 325 / 完全未触及 513；未封装功能类型 239 / 929（Base 61 / 194、Step7 44 / 140、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 108 / 525，Unified 0，Library 0）。
+- 阶段 3 ③-② 库深层（2.7.31）：`ReadLibraryOverview` / `ReadLibraryType` / `ManageLibraryType` / `CheckLibraryUpdates` / `SynchronizeLibrary` / `CompareLibraryObjects` + `ManageGlobalLibrary`（infos / openInfo / archive）与 `ImportLibraryTypeDocuments`（版本导入）扩展；2.7.30 的三处真机问题已修（组合刷新、就地捕获已释放代理、通道 accessMode）。**全部未真机验证**。
 - 阶段 3 ③-① 硬件网络深层（2.7.30）：13 个强类型工具（`ReadIoSystems` / `ManageIoSystem`、`ReadNetworkDomains` / `ManageNetworkDomain`、`ReadTransferAreas` / `ManageTransferArea`、`ReadDeviceItemChannels` / `UpdateDeviceItemChannel`、`ReadDeviceAddressing` / `UpdateDeviceAddress`、`ManageDeviceUserGroup`、`ManageDeviceUsers`、`ManagePortInterconnection`）。**2.7.30 真机重跑已于 2026-09-18 完成**：全部到达真实对象，读取与可复原写入通过；暴露两处引擎缺陷（域组合代理在 Create/Delete 后陈旧；`EngineeringObjectDisposedException` 误触发连接失败保护）与一处改进（通道属性名缺 AccessMode），记录见 `docs/releases/v2.7.30.md#真机结果`。
 - 阶段 1 Safety（2.7.25）、阶段 2 WinCC Unified（2.7.26–2.7.29）已收口。**2.7.29 真机重跑已于 2026-09-18 完成**（变量导出核对通过；文本/系统文本列表读取与原生导出、`Validate`、画面组建删通过），登记表 `scripts/diagnostics/openness-dynamic-coverage.json` 已回写；仍未真机验证的只剩 `Cpm.*` 与 `HmiConnections.*`（工程无对象）以及 `HmiOpcUaAlarm` / `LoggingTags` 的 `Create`（组合到达但为空）。记录见 `docs/releases/v2.7.29.md#验证`。
 
 ## 2. 下一步（按顺序）
 
-1. **2.7.31 先修真机暴露的三处问题，再做 ③-② 库**（都在 `Portal.HardwareNetwork.cs` / `HmiReadSafety`）：
-   - `ManageNetworkDomain`（以及同一模式的 `ManageTransferArea` / `ManageDeviceUsers`）：`Create` 后不要对变更前取到的组合按名查找——用 `Create` 返回的代理读 `Name`（TIA 可能规范化）并从 owner 重新导航（`subnet.GetService<MrpDomainOwner>().MrpDomains`）再计数；`Delete` 后同样重新导航再核对缺席，枚举旧代理会撞 `EngineeringObjectDisposedException`。
-   - `HmiReadSafety.ConnectionUnavailable`：`EngineeringObjectDisposedException` 不是连接失败，不应把 `snapshotReadsBlocked` 置为 true 阻断所有步骤工具（真机上要 `AttachToOpenProject` 才解封）。
-   - `ReadDeviceItemChannels` 的 `attributeNames` 改为 `[{name, accessMode}]`（`GetAttributeInfos().AccessMode`），`UpdateDeviceItemChannel` 写前按它拒绝只读属性。
-   - 修完在真机上重跑 `ManageNetworkDomain` mrp create → delete（DNS 安全名，如 `mcptmpmrp2731`）确认按名查回与计数。
+1. **部署 2.7.31 到虚拟机并真机验证**（替换 `runtime/v21/TiaMcpServer.exe` 后**重启服务**，否则仍是旧版；`AttachToOpenProject`）：
+   - 修复验证：`ManageNetworkDomain` `kind=mrp` `create`（DNS 安全名如 `mcptmpmrp2731`）→ 期望 `createdName` 与 `foundByNameAfterCreate` / `countAfter`；再 `delete` → 期望 `verifiedAbsent=true` 且不再阻断后续工具；`ReadDeviceItemChannels`（`+S1-K3`）→ `attributeNames` 带 `accessMode`，`UpdateDeviceItemChannel` 对 `InputDelay` 预期直接拒绝（`readOnlyAttributes`）。
+   - 库：`ReadLibraryOverview`（工程库，看类型树与母版树）、`ReadLibraryType`（任一工程库类型路径，再按其 guid 查一次）、`CheckLibraryUpdates`（工程库，两种 mode）、`ManageGlobalLibrary action=infos`（列出本机认识的全局库；若有用户全局库可 `openInfo` 打开后 `ReadLibraryOverview` / `CompareLibraries` / `CompareLibraryObjects`，用完 `close`）；`SynchronizeLibrary` / `ManageLibraryType` 只做 `dryRun` 预览（`cleanUp` / `harmonizeProject` 会改工程）。
+   - 通过后：`docs/releases/v2.7.31.md` 验证表、`CHANGELOG.md` 2.7.31 条目、登记表 `LibraryCompareResult*` 的 `verified`（若跑了 `CompareLibraries`），提交 `Record the 2.7.31 real-project rerun; ...`。
 2. **阶段 3 剩余子批次**（Base 未封装 75 类型 / 271 成员，全部在 `Siemens.Engineering.Base.dll`，V20/V21 都有）：
    - ~~③-① 硬件网络深层~~ **2.7.30 完成**（HW 里只剩 `CertificateSupportedService`、`Telecontrol*DataPoint`、`WebApplicationConfiguration`、`CatalogEntry`、`HardwareUtility` / `ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`、`Watch/ForceTableAccessRule`、`StructuredData` / `TableData`，可并入 ③-④ 收尾）。
-   - ③-② 库：`GlobalLibrary` 打开/关闭/更新检查（`UpdateCheck`）、类型版本文件夹、`LibraryTypeVersion` 状态、实例/母版复制（官方 "Functions for libraries"）。
+   - ~~③-② 库~~ **2.7.31 完成**（Library 命名空间功能类型归零；`LibraryCompareResult*` 经 `CompareLibraries` 反射到达，登记为动态覆盖，真机待验）。
    - ③-③ 用户管理与安全：`UmcUser` / `UmcUserGroup` / `UmcCredentials`、`SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`（官方 "Functions for security"）。
    - ③-④ `Compare` 结果元素、`CrossReference` 的 `SourceObject` / `ReferenceObject` 深层字段。
-   - 每个子批次一个发布（③-② 与上面三处修复合为 2.7.31）；先在浏览器里把官方章节逐页读完（`https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows`，`get_page_text` 可直接取正文），再对照 `TIA_V21_PublicAPI\V21\net48\Siemens.Engineering.Base.xml` 核成员签名（V21 的 `net48` 目录没有单体 `Siemens.Engineering.dll/.xml`，Base 类型在 `Siemens.Engineering.Base.*`；V20 仍是 `Siemens.Engineering.xml`）。
+   - 每个子批次一个发布（③-③ 为 2.7.32）；先在浏览器里把官方章节逐页读完（`https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows`，`get_page_text` 可直接取正文），再对照 `TIA_V21_PublicAPI\V21\net48\Siemens.Engineering.Base.xml` 核成员签名（V21 的 `net48` 目录没有单体 `Siemens.Engineering.dll/.xml`，Base 类型在 `Siemens.Engineering.Base.*`；V20 仍是 `Siemens.Engineering.xml`）。
 3. 之后按路线图：阶段 4 Step7（软件单元、`PlcDocument*`、校验和/仿真设置提供者）→ 5 经典 WinCC 文件夹层次 → 6 选件包（只做形状检查）。
 
 ## 3. 每个阶段的固定动作

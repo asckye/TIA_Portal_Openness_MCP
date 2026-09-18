@@ -65,6 +65,9 @@ namespace TiaMcpServer.Siemens
                 meta["operationSuccess"] = false;
                 meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = MigrationRead.Cause(ex) is PortalException pex ? pex.Code.ToString() : "ReadOrWriteFailed";
+                // Any lifetime/remoting-shaped failure blocks further remote reads until an explicit AttachToOpenProject
+                // (conservative by design: disposed handles preceded TIA process exits in the V21 HMI captures). Tools that
+                // expect a released proxy — verification right after a native Delete — catch it locally (HmiReadSafety.DisposedObjectOnly).
                 if (HmiReadSafety.ConnectionUnavailable(ex)) RecordHmiReadFault(meta);
                 return new ResponseMessage { Message = $"{toolName} failed", Meta = meta };
             }

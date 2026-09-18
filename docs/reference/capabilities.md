@@ -2,6 +2,19 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.31 新增工具族（阶段 3 ③-② 库深层）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 库总览 / 类型 | `ReadLibraryOverview`、`ReadLibraryType` | 工程库或**已打开**的全局库（不隐式打开）；类型 `Status` / 版本 `Dependencies` / `Dependents` 在 InWork 版本上官方注明可能抛，逐字段捕获；`maxDepth` / `maxItems` 有界 |
+| 类型操作 | `ManageLibraryType` | `SetForUpdate` 在工程库类型与写保护类型上被 TIA 拒绝；`updateLibrary` 目标须是另一个库；`updateProject` 只接受精确软件路径作范围，不做全工程 |
+| 更新检查 / 同步 | `CheckLibraryUpdates`、`SynchronizeLibrary` | 检查只读；同步/协调/清理实做需 `confirmChange`，范围必须显式给出；`HarmonizeProjectOptions.None` 被 TIA 拒绝；全局库源会先同步工程库；清理只删未用且非 in-test 的版本 |
+| 详细比较 | `CompareLibraryObjects` | 只比同类对象；`OriginalLibrary` 官方默认不比较 |
+| 全局库 | `ManageGlobalLibrary`（`infos` / `openInfo` / `archive`） | 系统/企业库只读；归档前必须已保存，`None` / `DiscardRestorableData` 产物不能经 API 检索 |
+| 文档导入 | `ImportLibraryTypeDocuments`（`typePath` 版本导入） | 仅工程库；同名多扩展文件时原生拒绝；`CreateOptions.None` 遇 in-work 版本原生失败 |
+
+**真机待验**；形状检查 V20 1291 / V21 1388 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.30 新增工具族（阶段 3 ③-① 硬件网络深层）
 
 | 族 | 工具 | 边界 |

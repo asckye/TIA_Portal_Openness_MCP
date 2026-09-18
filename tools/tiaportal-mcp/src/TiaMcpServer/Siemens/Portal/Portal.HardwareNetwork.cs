@@ -71,6 +71,24 @@ namespace TiaMcpServer.Siemens
             if (prepared.Count > 0) EngineeringScalarProperties.Apply(target, prepared, meta);
             if (attributes.Count > 0) SetDynamicAttributes((IEngineeringObject)target, attributes, meta);
         }
+        // 2.7.30 real project: a composition proxy fetched before Create/Delete is stale (the new MrpDomain was not found
+        // on it; enumerating it after Delete raised EngineeringObjectDisposedException). Verification therefore always
+        // re-navigates to a fresh composition, and a disposed-proxy error while looking for a deleted object counts as
+        // evidence of its absence rather than as a session failure.
+        private static object? FindOnFresh(Func<object> composition, string name, JsonObject meta, string phase)
+        {
+            try { return EngineeringGroupOperations.Find(composition(), name); }
+            catch (Exception ex) when (HmiReadSafety.DisposedObjectOnly(ex))
+            {
+                meta[phase + "Enumeration"] = "EngineeringObjectDisposedException on the refreshed composition (TIA released a proxy): " + ex.GetBaseException().Message;
+                return null;
+            }
+        }
+        private static int? CountOnFresh(Func<object> composition, JsonObject meta, string key)
+        {
+            try { int n = EngineeringGroupOperations.Items(composition()).Count(); meta[key] = n; return n; }
+            catch (Exception ex) when (HmiReadSafety.DisposedObjectOnly(ex)) { meta[key] = null; meta[key + "Error"] = ex.GetBaseException().Message; return null; }
+        }
         private static JsonObject Page(JsonNode[] all, int offset, int limit, JsonObject meta)
         {
             var rows = all.Skip(offset).Take(limit).ToArray();
@@ -154,13 +172,21 @@ namespace TiaMcpServer.Siemens
                 .Select(p => (JsonNode)new JsonObject { ["name"] = p.Name, ["ownerPath"] = HardwareOwnerPath(p) }).ToArray()),
             ["attributes"] = DynamicAttributes(area, HardwareNetworkLogic.MulticastTransferAreaAttributes)
         };
+        // GetAttributeInfos carries the access mode; the 2.7.30 real project showed ChannelActivated / InputDelay read-only
+        // on ET 200SP DI modules, so the mode is reported and checked before any SetAttribute.
+        private static Dictionary<string, string> ChannelAttributeModes(Channel channel)
+        {
+            var modes = new Dictionary<string, string>(StringComparer.Ordinal);
+            try { foreach (var info in channel.GetAttributeInfos()) modes[info.Name] = info.AccessMode.ToString(); } catch { }
+            return modes;
+        }
         private static JsonObject ChannelRow(Channel channel, string[] extraAttributes)
         {
-            string[] names; try { names = channel.GetAttributeInfos().Select(i => i.Name).ToArray(); } catch { names = Array.Empty<string>(); }
+            var modes = ChannelAttributeModes(channel);
             return new JsonObject
             {
                 ["number"] = channel.Number, ["type"] = channel.Type.ToString(), ["ioType"] = channel.IoType.ToString(),
-                ["attributeNames"] = new JsonArray(names.Select(n => (JsonNode)n).ToArray()),
+                ["attributeNames"] = new JsonArray(modes.Select(m => (JsonNode)new JsonObject { ["name"] = m.Key, ["accessMode"] = m.Value }).ToArray()),
                 ["attributes"] = DynamicAttributes(channel, HardwareNetworkLogic.ChannelAttributes.Concat(extraAttributes).Distinct(StringComparer.Ordinal).ToArray())
             };
         }
@@ -317,29 +343,36 @@ namespace TiaMcpServer.Siemens
                 using var access = dryRun ? null : AcquireHmiEditAccess();
                 var subnet = ExactSubnet(subnetName);
                 meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["name"] = name;
-                object composition = kind == "sync"
-                    ? (subnet.GetService<SyncDomainOwner>() ?? throw new NotSupportedException("Subnet exposes no SyncDomainOwner (not a PROFINET subnet?).")).SyncDomains
-                    : (object)(subnet.GetService<MrpDomainOwner>() ?? throw new NotSupportedException("Subnet exposes no MrpDomainOwner (not a PROFINET subnet?).")).MrpDomains;
-                var target = EngineeringGroupOperations.Find(composition, name);
+                // Every navigation starts from the subnet service again: compositions cached across a Create/Delete are stale.
+                Func<object> composition = kind == "sync"
+                    ? () => (subnet.GetService<SyncDomainOwner>() ?? throw new NotSupportedException("Subnet exposes no SyncDomainOwner (not a PROFINET subnet?).")).SyncDomains
+                    : () => (object)(subnet.GetService<MrpDomainOwner>() ?? throw new NotSupportedException("Subnet exposes no MrpDomainOwner (not a PROFINET subnet?).")).MrpDomains;
+                var target = EngineeringGroupOperations.Find(composition(), name);
                 if ((action == "create") == (target != null)) throw new InvalidOperationException(action == "create" ? "Domain exists: " + name : "Domain not found: " + name);
-                int before = EngineeringGroupOperations.Items(composition).Count(); meta["countBefore"] = before;
+                int before = EngineeringGroupOperations.Items(composition()).Count(); meta["countBefore"] = before;
                 JsonObject Row(object d) => d is SyncDomain s ? SyncDomainRow(s) : MrpDomainRow((MrpDomain)d);
                 if (target != null) meta["before"] = Row(target);
                 if (action == "create")
                 {
                     if (dryRun) return "Domain create preview; nothing changed.";
                     meta["mayHaveChanged"] = true;
-                    target = EngineeringGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name);
-                    if (EngineeringGroupOperations.Find(composition, name) == null) throw new InvalidOperationException("Create returned but the domain cannot be found by name.");
-                    meta["after"] = Row(target); meta["countAfter"] = before + 1;
-                    return "Domain created and read back. No save/compile/download.";
+                    target = EngineeringGroupOperations.Call(composition(), "Create", new[] { typeof(string) }, name);
+                    // The returned proxy is the authority (TIA may normalize the name); the refreshed composition is the cross-check.
+                    var createdName = EngineeringGroupOperations.Get(target, "Name").ToString()!; meta["createdName"] = createdName;
+                    meta["after"] = Row(target);
+                    var found = FindOnFresh(composition, createdName, meta, "postCreate"); meta["foundByNameAfterCreate"] = found != null;
+                    var countAfter = CountOnFresh(composition, meta, "countAfter");
+                    if (found == null && countAfter != before + 1) throw new InvalidOperationException("Create returned a proxy named '" + createdName + "' but the refreshed composition neither lists it nor grew by one.");
+                    return "Domain created; readback from the returned proxy" + (found == null ? " (not yet visible by name on the refreshed composition, count grew by one)" : " and by name on the refreshed composition") + ". No save/compile/download.";
                 }
                 if (action == "delete")
                 {
                     if (dryRun) return "Domain delete preview; nothing changed.";
                     meta["mayHaveChanged"] = true; EngineeringGroupOperations.Call(target!, "Delete", Type.EmptyTypes);
-                    if (EngineeringGroupOperations.Find(composition, name) != null) throw new InvalidOperationException("Delete returned but the domain is still present; do not blindly retry.");
-                    meta["verifiedAbsent"] = true; meta["countAfter"] = before - 1;
+                    var still = FindOnFresh(composition, name, meta, "postDelete");
+                    if (still != null) throw new InvalidOperationException("Delete returned but the domain is still present on the refreshed composition; do not blindly retry.");
+                    meta["verifiedAbsent"] = true; meta["absenceEvidence"] = meta["postDeleteEnumeration"] != null ? "refreshed composition raised a disposed-proxy error for the deleted domain" : "not found by name on the refreshed composition";
+                    CountOnFresh(composition, meta, "countAfter");
                     return "Domain deleted and verified absent. No save/compile/download.";
                 }
                 if (action == "addParticipant")
@@ -351,9 +384,10 @@ namespace TiaMcpServer.Siemens
                     if (dryRun) return "Participant add preview; nothing changed (associations only support Add, removal is not exposed by the API).";
                     meta["mayHaveChanged"] = true;
                     if (target is SyncDomain sync) sync.DomainParticipants.Add(participant); else ((MrpDomain)target!).DomainParticipants.Add(participant);
-                    int after = EngineeringGroupOperations.Items(participants).Count(); meta["participantCountAfter"] = after;
+                    var fresh = FindOnFresh(composition, name, meta, "postAdd") ?? target!;
+                    int after = EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(fresh, "DomainParticipants")).Count(); meta["participantCountAfter"] = after;
                     if (after != count + 1) throw new InvalidOperationException("Add returned but the participant count did not grow by one.");
-                    meta["after"] = Row(target!);
+                    meta["after"] = Row(fresh);
                     return "Participant added and count verified. No save/compile/download.";
                 }
                 ApplyScalarsAndAttributes(target!, propertiesJson, attributesJson, meta, !dryRun);
@@ -397,6 +431,7 @@ namespace TiaMcpServer.Siemens
                 meta["kind"] = kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["interfaceOwnerPath"] = HardwareOwnerPath(network);
                 if (kind == "multicast")
                 {
+                    Func<object> fresh = () => network.MulticastableTransferAreas;
                     var composition = network.MulticastableTransferAreas; var all = EngineeringGroupOperations.Items(composition).Cast<MulticastableTransferArea>().ToArray();
                     meta["countBefore"] = all.Length;
                     var areaType = ParseTransferAreaType(string.IsNullOrEmpty(type) ? "None" : type);
@@ -420,8 +455,8 @@ namespace TiaMcpServer.Siemens
                             if (dryRun) return "Receiver transfer area create preview; nothing changed.";
                             meta["mayHaveChanged"] = true; created = composition.Create(sender, areaType);
                         }
-                        meta["after"] = MulticastRow(created); meta["countAfter"] = EngineeringGroupOperations.Items(composition).Count();
-                        return "Multicast transfer area created and read back. No save/compile/download.";
+                        meta["after"] = MulticastRow(created); meta["createdName"] = created.Name; CountOnFresh(fresh, meta, "countAfter");
+                        return "Multicast transfer area created and read back from the returned proxy. No save/compile/download.";
                     }
                     var target = all.FirstOrDefault(a => string.Equals(a.Name, name, StringComparison.Ordinal)) ?? throw new PortalException(PortalErrorCode.NotFound, "Multicast transfer area not found: " + name);
                     meta["before"] = MulticastRow(target);
@@ -431,8 +466,8 @@ namespace TiaMcpServer.Siemens
                         meta["deleteSemantics"] = "Deleting a sender deletes every receiver; deleting the last receiver also deletes the sender.";
                         if (dryRun) return "Multicast transfer area delete preview; nothing changed.";
                         meta["mayHaveChanged"] = true; target.Delete();
-                        if (EngineeringGroupOperations.Items(composition).Cast<MulticastableTransferArea>().Any(a => string.Equals(a.Name, name, StringComparison.Ordinal))) throw new InvalidOperationException("Delete returned but the transfer area is still present; do not blindly retry.");
-                        meta["verifiedAbsent"] = true; meta["countAfter"] = EngineeringGroupOperations.Items(composition).Count();
+                        if (FindOnFresh(fresh, name, meta, "postDelete") != null) throw new InvalidOperationException("Delete returned but the transfer area is still present on the refreshed composition; do not blindly retry.");
+                        meta["verifiedAbsent"] = true; CountOnFresh(fresh, meta, "countAfter");
                         return "Multicast transfer area deleted and verified absent. No save/compile/download.";
                     }
                     ApplyScalarsAndAttributes(target, propertiesJson, attributesJson, meta, !dryRun);
@@ -440,6 +475,7 @@ namespace TiaMcpServer.Siemens
                     meta["after"] = MulticastRow(target);
                     return "Multicast transfer area written and read back. No save/compile/download.";
                 }
+                Func<object> freshAreas = () => network.TransferAreas;
                 var areas = network.TransferAreas; var existing = EngineeringGroupOperations.Items(areas).Cast<TransferArea>().ToArray();
                 meta["countBefore"] = existing.Length;
                 if (action == "create")
@@ -450,8 +486,8 @@ namespace TiaMcpServer.Siemens
                     meta["mayHaveChanged"] = true;
                     var areaType = ParseTransferAreaType(type);
                     var created = positionNumber >= 0 ? areas.Create(name, areaType, positionNumber) : areas.Create(name, areaType);
-                    meta["after"] = TransferAreaRow(created); meta["countAfter"] = EngineeringGroupOperations.Items(areas).Count();
-                    return "Transfer area created and read back. No save/compile/download.";
+                    meta["after"] = TransferAreaRow(created); meta["createdName"] = created.Name; CountOnFresh(freshAreas, meta, "countAfter");
+                    return "Transfer area created and read back from the returned proxy. No save/compile/download.";
                 }
                 TransferArea? area = positionNumber >= 0
                     ? (extendedPositionNumber >= 0 ? areas.Find(positionNumber, extendedPositionNumber) : areas.Find(positionNumber))
@@ -462,8 +498,9 @@ namespace TiaMcpServer.Siemens
                 {
                     if (dryRun) return "Transfer area delete preview; nothing changed.";
                     meta["mayHaveChanged"] = true; area.Delete();
-                    if (EngineeringGroupOperations.Items(areas).Count() != existing.Length - 1) throw new InvalidOperationException("Delete returned but the transfer area count did not drop by one; do not blindly retry.");
-                    meta["verifiedAbsent"] = true; meta["countAfter"] = existing.Length - 1;
+                    var countAfter = CountOnFresh(freshAreas, meta, "countAfter");
+                    if (countAfter != null && countAfter != existing.Length - 1) throw new InvalidOperationException("Delete returned but the refreshed transfer area count did not drop by one; do not blindly retry.");
+                    meta["verifiedAbsent"] = true;
                     return "Transfer area deleted and count verified. No save/compile/download.";
                 }
                 if (action == "update")
@@ -495,8 +532,9 @@ namespace TiaMcpServer.Siemens
                 {
                     if (dryRun) return "Mapping rule delete preview; nothing changed.";
                     meta["mayHaveChanged"] = true; existingRule.Delete();
-                    if (EngineeringGroupOperations.Items(rules).Count() != ruleList.Length - 1) throw new InvalidOperationException("Delete returned but the rule count did not drop by one.");
-                    meta["ruleCountAfter"] = ruleList.Length - 1; meta["verifiedAbsent"] = true;
+                    var ruleCountAfter = CountOnFresh(() => area.TransferAreaMappingRules, meta, "ruleCountAfter");
+                    if (ruleCountAfter != null && ruleCountAfter != ruleList.Length - 1) throw new InvalidOperationException("Delete returned but the refreshed rule count did not drop by one.");
+                    meta["verifiedAbsent"] = true;
                     return "Mapping rule deleted and count verified. No save/compile/download.";
                 }
                 if (dryRun) return "Mapping rule update preview; nothing changed.";
@@ -534,7 +572,12 @@ namespace TiaMcpServer.Siemens
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(item);
                 var names = attributes.Select(p => p.Key).ToArray();
                 meta["before"] = ChannelRow(channel, names); meta["requestedAttributes"] = attributes.DeepClone();
-                if (dryRun) return "Channel attribute write preview; nothing changed.";
+                var modes = ChannelAttributeModes(channel);
+                var readOnly = names.Where(n => modes.TryGetValue(n, out var mode) && mode != "Write" && mode != "ReadWrite").ToArray();
+                var unknown = names.Where(n => !modes.ContainsKey(n)).ToArray();
+                meta["readOnlyAttributes"] = new JsonArray(readOnly.Select(n => (JsonNode)n).ToArray()); meta["unlistedAttributes"] = new JsonArray(unknown.Select(n => (JsonNode)n).ToArray());
+                if (readOnly.Length > 0) throw new NotSupportedException("Attribute(s) are not writable on this channel per GetAttributeInfos: " + string.Join(", ", readOnly) + ". Nothing was written.");
+                if (dryRun) return "Channel attribute write preview; nothing changed" + (unknown.Length > 0 ? " (attributes not listed by GetAttributeInfos are attempted as-is: " + string.Join(", ", unknown) + ")" : "") + ".";
                 SetDynamicAttributes(channel, attributes, meta);
                 meta["after"] = ChannelRow(channel, names);
                 return "Channel attributes written and read back. No save/compile/download.";
@@ -639,12 +682,13 @@ namespace TiaMcpServer.Siemens
                 var owner = ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["family"] = family; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(owner);
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                object composition = family switch
+                Func<object> fresh = family switch
                 {
-                    "webserver" => RequireHardwareService<WebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
-                    "simpleWebserver" => RequireHardwareService<SimpleWebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
-                    _ => RequireHardwareService<OpcUaUserManagement>(owner, "itemPathJson").OpcUaUsers
+                    "webserver" => () => RequireHardwareService<WebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
+                    "simpleWebserver" => () => (object)RequireHardwareService<SimpleWebserverUserManagement>(owner, "itemPathJson").WebserverUsers,
+                    _ => () => (object)RequireHardwareService<OpcUaUserManagement>(owner, "itemPathJson").OpcUaUsers
                 };
+                object composition = fresh();
                 var users = EngineeringGroupOperations.Items(composition).ToArray(); meta["countBefore"] = users.Length;
                 if (action == "read")
                 {
@@ -666,12 +710,13 @@ namespace TiaMcpServer.Siemens
                             user = family == "webserver"
                                 ? ((WebserverUserComposition)composition).Create(userName, (WebserverUserPermissions)Enum.Parse(typeof(WebserverUserPermissions), joined), secure)
                                 : (object)((OpcUaUserComposition)composition).Create(userName, secure);
-                        if (EngineeringGroupOperations.Items(composition).Count() != users.Length + 1) throw new InvalidOperationException("Create returned but the user count did not grow by one.");
+                        meta["createdName"] = user.GetType().GetProperty("UserName")?.GetValue(user)?.ToString();
+                        if (CountOnFresh(fresh, meta, "countAfter") is int grown && grown != users.Length + 1) throw new InvalidOperationException("Create returned but the refreshed user count did not grow by one.");
                         break;
                     case "delete":
                         EngineeringGroupOperations.Call(user!, "Delete", Type.EmptyTypes);
-                        if (EngineeringGroupOperations.Items(composition).Count() != users.Length - 1) throw new InvalidOperationException("Delete returned but the user count did not drop by one; do not blindly retry.");
-                        meta["verifiedAbsent"] = true; meta["countAfter"] = users.Length - 1;
+                        if (FindUserOnFresh(fresh, userName, meta) != null) throw new InvalidOperationException("Delete returned but the user is still listed on the refreshed composition; do not blindly retry.");
+                        meta["verifiedAbsent"] = true; CountOnFresh(fresh, meta, "countAfter");
                         return "Device user deleted and count verified. No save/compile/download.";
                     case "setPassword":
                         using (var secure = PlcBlockServicesLogic.ToSecureString(password)) EngineeringGroupOperations.Call(user!, "SetPassword", new[] { typeof(System.Security.SecureString) }, secure);
@@ -690,9 +735,15 @@ namespace TiaMcpServer.Siemens
                         if (((SimpleWebserverUser)user).UserName != newName) throw new InvalidOperationException("UserName readback differs.");
                         break;
                 }
-                meta["after"] = UserRow(user!); meta["countAfter"] = EngineeringGroupOperations.Items(composition).Count();
+                meta["after"] = UserRow(user!); if (meta["countAfter"] == null) CountOnFresh(fresh, meta, "countAfter");
                 return "Device user operation completed and read back (password never echoed). No save/compile/download.";
             });
+
+        private static object? FindUserOnFresh(Func<object> composition, string userName, JsonObject meta)
+        {
+            try { return EngineeringGroupOperations.Items(composition()).FirstOrDefault(u => string.Equals(u.GetType().GetProperty("UserName")?.GetValue(u)?.ToString(), userName, StringComparison.Ordinal)); }
+            catch (Exception ex) when (HmiReadSafety.DisposedObjectOnly(ex)) { meta["postDeleteEnumeration"] = ex.GetBaseException().Message; return null; }
+        }
 
         // ---- port interconnections -----------------------------------------------------------------------------------------
         public ResponseMessage ManagePortInterconnection(string devicePathJson, string itemPathJson, string action = "read", string partnerDevicePathJson = "[]", string partnerItemPathJson = "[]", bool dryRun = true)
