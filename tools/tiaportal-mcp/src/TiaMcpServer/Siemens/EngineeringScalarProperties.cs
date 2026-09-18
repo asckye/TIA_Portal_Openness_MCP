@@ -41,7 +41,7 @@ namespace TiaMcpServer.Siemens
             var result = new List<(PropertyInfo, object?)>();
             foreach (var change in changes)
             {
-                var property = type.GetProperty(change.Key);
+                var property = DistinctProperties(type).FirstOrDefault(p => p.Name == change.Key);
                 if (property == null || property.GetIndexParameters().Length != 0 || property.SetMethod?.IsPublic != true)
                     throw new NotSupportedException("Public writable property unavailable: " + type.FullName + "." + change.Key);
                 result.Add((property, ConvertValue(change.Value, property.PropertyType)));
@@ -51,7 +51,7 @@ namespace TiaMcpServer.Siemens
         internal static JsonObject Read(object target)
         {
             var values = new JsonObject(); var failures = new JsonArray(); var excluded = new JsonArray();
-            foreach (var p in target.GetType().GetProperties().OrderBy(p => p.Name))
+            foreach (var p in DistinctProperties(target.GetType()))
             {
                 if (p.GetIndexParameters().Length != 0 || p.GetMethod?.IsPublic != true) continue;
                 if (!Scalar(p.PropertyType) && p.PropertyType != typeof(object)) { excluded.Add(p.Name); continue; }
@@ -65,6 +65,12 @@ namespace TiaMcpServer.Siemens
             return new JsonObject { ["type"] = target.GetType().FullName, ["scope"] = "public scalar properties only",
                 ["values"] = values, ["excludedComplexProperties"] = excluded, ["failures"] = failures,
                 ["dataComplete"] = failures.Count == 0, ["fullObjectComplete"] = excluded.Count == 0 && failures.Count == 0 };
+        }
+        // A property redeclared with `new` on a derived type (HmiSlider.EventHandlers) is reported once, from the most derived type.
+        internal static IEnumerable<PropertyInfo> DistinctProperties(Type type)
+        {
+            int Depth(PropertyInfo p) { int d = 0; for (var t = type; t != null && t != p.DeclaringType; t = t.BaseType) d++; return d; }
+            return type.GetProperties().GroupBy(p => p.Name, StringComparer.Ordinal).Select(g => g.OrderBy(Depth).First()).OrderBy(p => p.Name, StringComparer.Ordinal);
         }
         internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> changes, JsonObject meta)
         {

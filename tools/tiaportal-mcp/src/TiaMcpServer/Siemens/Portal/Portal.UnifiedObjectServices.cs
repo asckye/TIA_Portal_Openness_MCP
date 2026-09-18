@@ -23,9 +23,9 @@ namespace TiaMcpServer.Siemens
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0, limit 1..500 required.");
                 var target = EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath), objectPathJson);
                 var items = target is IEnumerable && target is not string ? EngineeringGroupOperations.Items(target).ToArray() : new[] { target };
-                var rows = new JsonArray(items.Skip(offset).Take(limit).Select(x => (JsonNode)EngineeringObjectAddress.Read(x)).ToArray());
+                var rows = new JsonArray(items.Skip(offset).Take(limit).Select(x => { var row = EngineeringObjectAddress.Read(x); var colors = (JsonObject)UnifiedUiModelLogic.Scalars(x)["values"]!; foreach (var pair in colors) if (row["values"]![pair.Key] == null) ((JsonObject)row["values"]!)[pair.Key] = pair.Value?.DeepClone(); return (JsonNode)row; }).ToArray());
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson);
-                meta["scope"] = "Public scalar values plus property schema. Complex values are excluded; explicitly address their properties in another request. Live pagination.";
+                meta["scope"] = "Public scalar values (colors as #AARRGGBB) plus property schema. Other complex values are excluded; explicitly address their properties in another request. Live pagination.";
                 meta["records"] = rows; meta["expectedCount"] = items.Length; meta["actualCount"] = rows.Count;
                 meta["nextOffset"] = offset + rows.Count < items.Length ? offset + rows.Count : (int?)null;
                 meta["truncated"] = offset + rows.Count < items.Length; meta["apiCallSuccess"] = true;
@@ -41,12 +41,13 @@ namespace TiaMcpServer.Siemens
                 using var access = dryRun ? null : AcquireHmiEditAccess();
                 var target = EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath), objectPathJson);
                 if (target.GetType().Name == "HmiRuntimeSetting") throw new NotSupportedException("Use UpdateUnifiedRuntimeSettings for root settings and its confirmation/readback flow; this adapter only edits nested runtime settings.");
-                var prepared = EngineeringScalarProperties.Prepare(target.GetType(), changes);
+                // Nested parts (alarm class RaisedState, log Settings/Backup/Segment ...) and System.Drawing.Color leaves are accepted; collections still need their dedicated tools.
+                var prepared = UnifiedUiModelLogic.PrepareNested(target.GetType(), changes);
                 meta["softwarePath"] = softwarePath; meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson);
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["before"] = EngineeringObjectAddress.Read(target);
+                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["before"] = UnifiedUiModelLogic.Tree(target, 1);
                 meta["requestedProperties"] = changes.DeepClone();
-                if (!dryRun) { EngineeringScalarProperties.Apply(target, prepared, meta); meta["after"] = EngineeringObjectAddress.Read(target); }
-                return dryRun ? "Nested Unified scalar edit preview; TIA semantics not validated." : "Nested scalar values written and read back. No save, compile or download; partial edits are not rolled back.";
+                if (!dryRun) { UnifiedUiModelLogic.ApplyNested(target, prepared, meta); meta["after"] = UnifiedUiModelLogic.Tree(target, 1); }
+                return dryRun ? "Nested Unified property edit preview (scalars, colors, nested parts); TIA semantics not validated." : "Nested values written and read back. No save, compile or download; partial edits are not rolled back.";
             });
         public ResponseMessage UpdateUnifiedMultilingualProperty(string softwarePath, string objectPathJson, string property, string culture, string rawText, bool dryRun = true)
             => RunHmiStepTool("UpdateUnifiedMultilingualProperty", meta => {

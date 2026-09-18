@@ -166,8 +166,9 @@ namespace TiaMcpServer.Siemens
                     meta["name"] = name;
                     if (dryRun) return "Screen create preview; no native write.";
                     meta["mayHaveChanged"] = true;
-                    var created = EngineeringGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
-                    if (!ReferenceEquals(created, EngineeringGroupOperations.Find(composition, name))) throw new InvalidOperationException("Create returned but the screen is not found exactly once by name.");
+                    EngineeringGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
+                    // Create<T>/Create return a proxy distinct from the one Find() returns; verify by exact name, not by reference.
+                    var created = EngineeringGroupOperations.Find(composition, name) ?? throw new InvalidOperationException("Create returned but the screen is not found by name.");
                     meta["after"] = UnifiedUiModelLogic.Scalars(created);
                     return "Screen created and read back. No save/compile/download.";
                 }

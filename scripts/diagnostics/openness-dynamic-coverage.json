@@ -5,31 +5,37 @@
       "pattern": "Siemens.Engineering.HmiUnified.UI.Shapes.*",
       "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType",
       "mechanism": "Create<T>(name) by resolved CLR type; properties read/written by reflection (scalar, Color, parts, MultilingualText)",
-      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1 (see docs/releases/v2.7.26.md)"
+      "verified": "2.7.26 real project V21 AutomaticDipCoatingMachine HMI_RT_1: HmiCircle update/read/delete (docs/releases/v2.7.27.md)"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Widgets.*",
       "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType",
       "mechanism": "Create<T>(name) by resolved CLR type; properties read/written by reflection (scalar, Color, parts, MultilingualText)",
-      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+      "verified": "2.7.26 real project HMI_RT_1: HmiSlider read/events/delete, HmiGauge nested part update (CurvedScale, Title, Font)"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.RuntimeSettings.*",
+      "tool": "ReadUnifiedObjectProperties / UpdateUnifiedObjectProperties / ReadUnifiedRuntimeSettings",
+      "mechanism": "property path [{property:RuntimeSettings},{property:<SubObject>}]; scalars by reflection, nested parts since 2.7.27",
+      "verified": "2.7.27 real project HMI_RT_1: OpcUaServerRuntimeSettings 23 scalars read (write path shares the nested adapter)"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Controls.*",
       "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts",
       "mechanism": "Create<T>(name[, containedType]); properties by reflection; view/column/trend parts via ManageUnifiedObjectParts",
-      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+      "verified": "2.7.26 shape checks V20/V21 (catalog 15 control types, schema); real-project create/update pending the 2.7.27 rerun"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenWindow",
       "tool": "ManageUnifiedScreenItem",
       "mechanism": "Create<T>(name); Screen/Adaption/zoom/scroll properties by reflection",
-      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+      "verified": "2.7.26 real project HMI_RT_1: Screen=00_EmptyScreen written, ScreenName/ScreenNumber back-filled by TIA"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Base.*",
       "tool": "ManageUnifiedScreenItem",
       "mechanism": "base-class properties of every screen item (Left/Top/Width/Height, Visible, Enabled, TabIndex, Authorization, Opacity, ToolTipText, rotation, LinearMovement part)",
-      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+      "verified": "2.7.26 real project HMI_RT_1: ToolTipText.zh-CN on HmiCircle, Left/Top/Width/Height on HmiGauge and HmiScreenWindow"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Features.*",

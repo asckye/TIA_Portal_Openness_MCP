@@ -140,31 +140,60 @@ namespace TiaMcpServer.Siemens
         internal static JsonArray Catalog(Assembly assembly)
             => new JsonArray(ItemTypes(assembly).Select(t => (JsonNode)new JsonObject { ["name"] = t.Name, ["group"] = Group(t), ["type"] = t.FullName, ["features"] = Features(t) }).ToArray());
 
-        // Splits propertiesJson into nested scalar/color edits (UnifiedUiModelLogic.PrepareNested) and multilingual
-        // text edits {"Text": {"en-US": "Start"}}; a plain string on a MultilingualText property is refused so a
-        // caller cannot accidentally write one language while believing all were set.
-        internal static (JsonObject Plain, List<(string Property, string Culture, string Text)> Texts) SplitProperties(Type type, JsonObject changes)
+        internal sealed class TextEdit
         {
-            var plain = new JsonObject(); var texts = new List<(string, string, string)>();
+            public string[] Path = Array.Empty<string>(); public string Property = ""; public string Culture = ""; public string Text = "";
+            public string Name => string.Join(".", Path.Concat(new[] { Property }));
+        }
+
+        // Splits propertiesJson into nested scalar/color edits (UnifiedUiModelLogic.PrepareNested) and multilingual
+        // text edits {"Text": {"en-US": "Start"}} at any depth ({"Title": {"Text": {...}}} for text parts); a plain
+        // string on a MultilingualText property is refused so a caller cannot write one language believing all were set.
+        internal static (JsonObject Plain, List<TextEdit> Texts) SplitProperties(Type type, JsonObject changes)
+        {
+            var texts = new List<TextEdit>();
+            var plain = SplitTexts(type, changes, Array.Empty<string>(), texts);
+            if (texts.Count > 50) throw new ArgumentException("At most 50 multilingual entries per request.");
+            return (plain, texts);
+        }
+        private static JsonObject SplitTexts(Type type, JsonObject changes, string[] path, List<TextEdit> texts)
+        {
+            if (path.Length > 6) throw new ArgumentException("Nested property depth exceeds 6.");
+            var plain = new JsonObject();
             foreach (var change in changes)
             {
                 var property = UnifiedUiModelLogic.FindProperty(type, change.Key);
+                var name = string.Join(".", path.Concat(new[] { change.Key }));
                 if (property?.PropertyType.Name == "MultilingualText")
                 {
-                    var languages = change.Value as JsonObject ?? throw new ArgumentException(change.Key + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
-                    if (languages.Count == 0) throw new ArgumentException(change.Key + " needs at least one culture entry.");
+                    var languages = change.Value as JsonObject ?? throw new ArgumentException(name + " is a MultilingualText: pass {\"<culture>\": \"text\"} per language.");
+                    if (languages.Count == 0) throw new ArgumentException(name + " needs at least one culture entry.");
                     foreach (var language in languages)
                     {
-                        if (string.IsNullOrWhiteSpace(language.Key) || language.Key.Length > 16) throw new ArgumentException("Culture name required for " + change.Key + ".");
-                        var text = language.Value is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException(change.Key + "." + language.Key + " must be a string (empty clears).");
-                        texts.Add((change.Key, language.Key, text));
+                        if (string.IsNullOrWhiteSpace(language.Key) || language.Key.Length > 16) throw new ArgumentException("Culture name required for " + name + ".");
+                        var text = language.Value is JsonValue v && v.TryGetValue<string>(out var s) ? s : throw new ArgumentException(name + "." + language.Key + " must be a string (empty clears).");
+                        texts.Add(new TextEdit { Path = path, Property = change.Key, Culture = language.Key, Text = text });
                     }
+                    continue;
+                }
+                // Descend into parts so texts nested in Title/Label/Caption parts are split out too; the rest stays a nested edit.
+                if (property != null && change.Value is JsonObject nested && Kind(property) == "part")
+                {
+                    var rest = SplitTexts(property.PropertyType, nested, path.Concat(new[] { change.Key }).ToArray(), texts);
+                    if (rest.Count > 0) plain[change.Key] = rest;
                     continue;
                 }
                 plain[change.Key] = change.Value?.DeepClone();
             }
-            if (texts.Count > 50) throw new ArgumentException("At most 50 multilingual entries per request.");
-            return (plain, texts);
+            return plain;
+        }
+        // Walks the part path of a text edit down from the item; null parts are refused before any setter runs.
+        internal static object ResolveTextOwner(object item, string[] path)
+        {
+            object owner = item;
+            foreach (var step in path)
+                owner = UnifiedUiModelLogic.FindProperty(owner.GetType(), step)?.GetValue(owner) ?? throw new InvalidOperationException("Nested part is null: " + step);
+            return owner;
         }
 
         // Compact list row: identity plus the geometry every visible item shares.

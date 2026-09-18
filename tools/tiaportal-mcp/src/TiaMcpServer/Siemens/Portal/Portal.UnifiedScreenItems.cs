@@ -88,7 +88,7 @@ namespace TiaMcpServer.Siemens
                 var prepared = UnifiedUiModelLogic.PrepareNested(type, plain);
                 if (action == "delete" && type.GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native Delete() unavailable on " + type.FullName);
                 if (existing != null) meta["before"] = ScreenItemSnapshot(existing, Math.Min(depth, 1));
-                if (action != "delete") { meta["requestedProperties"] = plain.DeepClone(); meta["requestedTexts"] = new JsonArray(texts.Select(t => (JsonNode)new JsonObject { ["property"] = t.Property, ["culture"] = t.Culture, ["text"] = t.Text }).ToArray()); }
+                if (action != "delete") { meta["requestedProperties"] = plain.DeepClone(); meta["requestedTexts"] = new JsonArray(texts.Select(t => (JsonNode)new JsonObject { ["property"] = t.Name, ["culture"] = t.Culture, ["text"] = t.Text }).ToArray()); }
                 int countBefore = EngineeringGroupOperations.Items(items).Count(); meta["countBefore"] = countBefore;
                 if (!writing) return "Screen item " + action + " preview; type, property shape and value conversions checked, no native write.";
                 meta["mayHaveChanged"] = true;
@@ -103,15 +103,19 @@ namespace TiaMcpServer.Siemens
                 if (action == "create")
                 {
                     meta["apiCallSuccess"] = true;
-                    if (!ReferenceEquals(item, EngineeringGroupOperations.Find(items, itemName))) throw new InvalidOperationException("Create returned but the item is not found exactly once by name.");
+                    // Openness returns a fresh proxy from Create<T>; Find() yields another proxy for the same object, so identity is checked by exact name and count, never by reference.
+                    item = EngineeringGroupOperations.Find(items, itemName) ?? throw new InvalidOperationException("Create returned but the item is not found by name.");
+                    if (EngineeringGroupOperations.Items(items).Count() != countBefore + 1) throw new InvalidOperationException("Create returned but the item count did not grow by one.");
                 }
                 UnifiedUiModelLogic.ApplyNested(item, prepared, meta);
                 var textResults = new JsonArray(); meta["textResults"] = textResults;
-                foreach (var (property, culture, text) in texts)
+                foreach (var edit in texts)
                 {
-                    var result = UnifiedMultilingualText.WriteDetailed(item, property, text, culture);
+                    var owner = UnifiedScreenItemLogic.ResolveTextOwner(item, edit.Path);
+                    var result = UnifiedMultilingualText.WriteDetailed(owner, edit.Property, edit.Text, edit.Culture);
+                    result["path"] = edit.Name;
                     textResults.Add(result);
-                    if (!result["verified"]!.GetValue<bool>()) throw new InvalidOperationException(property + " culture=" + culture + ": " + result["error"] + ". Earlier edits are not rolled back.");
+                    if (!result["verified"]!.GetValue<bool>()) throw new InvalidOperationException(edit.Name + " culture=" + edit.Culture + ": " + result["error"] + ". Earlier edits are not rolled back.");
                 }
                 meta["apiCallSuccess"] = true; meta["after"] = ScreenItemSnapshot(item, Math.Min(depth, 1)); meta["countAfter"] = EngineeringGroupOperations.Items(items).Count();
                 return "Screen item " + action + " completed and read back (nested properties, colors and texts verified). No save/compile/download; partial edits are not rolled back.";

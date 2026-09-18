@@ -10,6 +10,7 @@ namespace Siemens.Engineering.HmiUnified.UI.Features { public interface IHmiBoxF
 namespace Siemens.Engineering.HmiUnified.UI.Parts
 {
     public sealed class HmiFontPart { public string Name { get; set; } = "Siemens Sans"; public uint Size { get; set; } = 12; public bool Bold { get; set; } }
+    public sealed class HmiTextPart { public bool Visible { get; set; } public TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText Text { get; } = new TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText(); }
     public sealed class HmiTrendPart { public string Name { get; set; } = ""; public byte LineWidth { get; set; } = 1; }
     public sealed class HmiTrendPartComposition : List<HmiTrendPart> { public HmiTrendPart Create(string name) { var t = new HmiTrendPart { Name = name }; Add(t); return t; } }
 }
@@ -25,6 +26,7 @@ namespace Siemens.Engineering.HmiUnified.UI.Shapes
     {
         public Color BackColor { get; set; } = Color.FromArgb(unchecked((int)0xFF112233)); public Base.HmiFillPattern BackFillPattern { get; set; }
         public Parts.HmiFontPart Font { get; } = new Parts.HmiFontPart(); public TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText Text { get; } = new TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText();
+        public Parts.HmiTextPart Caption { get; } = new Parts.HmiTextPart(); public Parts.HmiTextPart? NullPart { get; } = null;
         public Parts.HmiTrendPartComposition Trends { get; } = new Parts.HmiTrendPartComposition();
     }
     public sealed class HmiText : Base.HmiShapeBase { public TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText Text { get; } = new TiaMcpServer.Tests.UnifiedScreenItemFakes.MultilingualText(); }
@@ -109,7 +111,16 @@ namespace TiaMcpServer.Tests
 
             // Property splitting: multilingual texts per culture, everything else stays a nested edit.
             var (plain, texts) = UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Width"] = 20, ["Font"] = new JsonObject { ["Size"] = 14 }, ["Text"] = new JsonObject { ["en-US"] = "Start", ["de-DE"] = "" } });
-            check(plain.Count == 2 && plain.ContainsKey("Font") && texts.Count == 2 && texts[0] == ("Text", "en-US", "Start") && texts[1].Text == "", "split: nested part kept, two cultures split out (empty clears)");
+            check(plain.Count == 2 && plain.ContainsKey("Font") && texts.Count == 2 && texts[0].Name == "Text" && texts[0].Culture == "en-US" && texts[0].Text == "Start" && texts[1].Text == "", "split: nested part kept, two cultures split out (empty clears)");
+            // Texts nested inside a part (HmiGauge.Title.Text on the real API) are split out with their path; the part's other properties stay a nested edit.
+            var (plain2, texts2) = UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Caption"] = new JsonObject { ["Visible"] = true, ["Text"] = new JsonObject { ["de-DE"] = "Start" } } });
+            check(texts2.Count == 1 && texts2[0].Name == "Caption.Text" && texts2[0].Path.SequenceEqual(new[] { "Caption" }) && ((JsonObject)plain2["Caption"]!).Count == 1 && plain2["Caption"]!["Visible"]!.GetValue<bool>(), "split: text nested in a part carries its path; sibling scalar stays nested");
+            var (plain3, texts3) = UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Caption"] = new JsonObject { ["Text"] = new JsonObject { ["de-DE"] = "Start" } } });
+            check(texts3.Count == 1 && plain3.Count == 0, "split: a part that only carried text leaves no empty nested edit behind");
+            check(Fails<ArgumentException>(() => UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Caption"] = new JsonObject { ["Text"] = "Start" } })), "split: plain string on a nested MultilingualText refused");
+            var circleItem = new global::Siemens.Engineering.HmiUnified.UI.Shapes.HmiCircle();
+            check(ReferenceEquals(UnifiedScreenItemLogic.ResolveTextOwner(circleItem, new[] { "Caption" }), circleItem.Caption) && ReferenceEquals(UnifiedScreenItemLogic.ResolveTextOwner(circleItem, Array.Empty<string>()), circleItem), "text owner: part path resolved, empty path is the item");
+            check(Fails<InvalidOperationException>(() => UnifiedScreenItemLogic.ResolveTextOwner(circleItem, new[] { "NullPart" })), "text owner: null part refused before any setter");
             check(Fails<ArgumentException>(() => UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Text"] = "Start" })), "split: plain string on a MultilingualText refused");
             check(Fails<ArgumentException>(() => UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Text"] = new JsonObject() })), "split: empty culture map refused");
             check(Fails<ArgumentException>(() => UnifiedScreenItemLogic.SplitProperties(circle, new JsonObject { ["Text"] = new JsonObject { ["en-US"] = 5 } })), "split: non-string text refused");
@@ -130,6 +141,8 @@ namespace TiaMcpServer.Tests
             var sliderProps = UnifiedScreenItemLogic.Schema(slider).Select(p => p!["name"]!.GetValue<string>()).ToArray();
             check(sliderProps.Count(n => n == "EventHandlers") == 1 && sliderProps.SequenceEqual(sliderProps.OrderBy(n => n, StringComparer.Ordinal)), "hiding: schema lists EventHandlers once, sorted");
             check(UnifiedScreenItemLogic.ListRow(new global::Siemens.Engineering.HmiUnified.UI.Widgets.HmiSlider { Name = "S1" }, 0)["name"]!.GetValue<string>() == "S1", "hiding: list row on a hiding type does not throw");
+            var sliderRead = EngineeringScalarProperties.Read(new global::Siemens.Engineering.HmiUnified.UI.Widgets.HmiSlider { Name = "S1" });
+            check(((JsonArray)sliderRead["excludedComplexProperties"]!).Select(n => n!.GetValue<string>()).Count(n => n == "EventHandlers") == 1, "hiding: scalar read lists the hidden EventHandlers once");
 
             // List rows.
             var row = UnifiedScreenItemLogic.ListRow(item, 3);
