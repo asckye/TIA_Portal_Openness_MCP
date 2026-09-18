@@ -38,3 +38,7 @@ RELEASE_STATUS.txt
 # Siemens PublicAPI 副本（授权组件，不可分发）应放在仓库之外，如 D:\TIA_PublicAPI\；此处仅作误放时的防护
 TIA_V20_PublicAPI/
 TIA_V21_PublicAPI/
+
+# 本机打的交付归档（例如拷去虚拟机的 7z/zip），不入库
+/*.7z
+/*.zip

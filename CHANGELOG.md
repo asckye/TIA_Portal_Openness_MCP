@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.24] - 2026-09-18
+
+引擎 2.7.24.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.24](docs/releases/v2.7.24.md)。
+
+- **真机重跑 2.7.20 的 `DescribeBlockLogic` 修复**（V21 `AutomaticDipCoatingMachine`）：LAD `UNIT_MANAGER_FC` NW5 调用框完整读出（7 个 Bool 输入触点链 + 9 个输出绑定）；SCL `CLOCK_GENERATOR_FB` 的调用与命名常量全部恢复，仅剩位切片 `.%X15` 与 `ENO` 左值两处丢失。
+- **按 `SW.PlcBlocks.Access_v5.xsd` 重写 SCL 的 Access / Symbol 渲染**：SCL 导出的 `Symbol` / `Instance` 内部是 Token 序列（`.`、`%X15`、`[`、`]`），现按序渲染，FlgNet 无 Token 时才合成分隔符与 `SliceAccessModifier`；`ENO` 为 `<PredefinedVariable>` 新增渲染；补齐 `Label` / `Statusword` / `DataType` / `Expression` / `Reference` 分支；`*Attribute` / `TemplateValue` 元数据不再泄漏进正文。
+- **离线文档工具同族修复**：`RenderPlcBlockDocument` / `ComparePlcBlockDocuments` / `GeneratePlcDocumentation` 的渲染器同样漏了命名常量（输出 `:= ;`）、`REGION` 名（`<Text>`）和 `ENO`，一并修复。
+- **验证**：离线 1294 项（新增 7 项）；两版 EXE 回归见 `manifest/release-build.json`。引擎 2.7.24.0 的真机重跑待部署后补记。
+
 ## [2.7.23] - 2026-09-18
 
 交付 2.7.23，引擎沿用已验证的 2.7.20.0，应用界面与 2.7.22 相同。详见 [v2.7.23](docs/releases/v2.7.23.md)。

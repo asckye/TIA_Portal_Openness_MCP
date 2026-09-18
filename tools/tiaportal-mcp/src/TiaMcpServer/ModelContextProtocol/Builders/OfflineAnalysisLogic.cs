@@ -328,6 +328,8 @@ namespace TiaMcpServer.ModelContextProtocol
             switch (Local(e))
             {
                 case "Token": sb.Append((string?)e.Attribute("Text") ?? ""); return;
+                case "Text": sb.Append(e.Value); return;   // REGION names and other raw text at StructuredText level
+                case "PredefinedVariable": sb.Append((string?)e.Attribute("Name") ?? "ENO"); return;   // SCL: ENO := …
                 case "Blank":
                     var num = (string?)e.Attribute("Num");
                     sb.Append(' ', int.TryParse(num, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) && n > 0 ? n : 1);
@@ -359,8 +361,21 @@ namespace TiaMcpServer.ModelContextProtocol
                     sb.Append((string?)e.Attribute("Name") ?? "");
                     foreach (var child in e.Elements()) RenderNode(child, sb, ref comments, scope);
                     return;
+                case "Constant":
+                {
+                    // LocalConstant / GlobalConstant carry only a Name (no ConstantValue): render it as the source does.
+                    var constantName = (string?)e.Attribute("Name");
+                    if (!string.IsNullOrEmpty(constantName))
+                    {
+                        sb.Append(scope == "GlobalConstant" ? "\"" + constantName + "\"" : "#" + constantName);
+                        return;
+                    }
+                    foreach (var child in e.Elements()) RenderNode(child, sb, ref comments, scope);
+                    return;
+                }
                 case "ConstantValue": sb.Append(e.Value.Trim()); return;
                 case "ConstantType": return;
+                case "IntegerAttribute": case "BooleanAttribute": case "StringAttribute": case "DateAttribute": return;   // informative metadata, not source
                 case "CallInfo":
                     var callName = (string?)e.Attribute("Name") ?? "";
                     var blockType = (string?)e.Attribute("BlockType") ?? "";

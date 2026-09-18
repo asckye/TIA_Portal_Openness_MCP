@@ -52,6 +52,28 @@ namespace TiaMcpServer.Tests
 <Comment UId=""94""><Text>block</Text></Comment><NewLine UId=""95"" />
 </StructuredText>";
 
+        // The token-faithful shapes a real V21 SCL export uses (verified against SW.PlcBlocks.Access_v5.xsd and the
+        // AutomaticDipCoatingMachine project): punctuation inside Symbol as Tokens, ENO as PredefinedVariable,
+        // informative attributes inside Parameter.
+        private const string SclTokenBody = @"<StructuredText xmlns=""http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4"">
+<Access Scope=""LocalVariable"" UId=""1""><Symbol UId=""2""><Component Name=""error"" UId=""3"" /></Symbol></Access>
+<Blank UId=""4"" /><Token Text="":="" UId=""5"" /><Blank UId=""6"" />
+<Access Scope=""LocalVariable"" UId=""7""><Symbol UId=""8""><Component Name=""statStatus"" UId=""9"" /><Token Text=""."" UId=""10"" /><Token Text=""%X15"" UId=""11"" /></Symbol></Access>
+<Token Text="";"" UId=""12"" /><NewLine UId=""13"" />
+<Access Scope=""PredefinedVariable"" UId=""14""><PredefinedVariable Name=""ENO"" UId=""15"" /></Access>
+<Blank UId=""16"" /><Token Text="":="" UId=""17"" /><Blank UId=""18"" /><Token Text=""NOT"" UId=""19"" /><Blank UId=""20"" />
+<Access Scope=""LocalVariable"" UId=""21""><Symbol UId=""22""><Component Name=""statStatus"" UId=""23"" /><Token Text=""."" UId=""24"" /><Token Text=""%X15"" UId=""25"" /></Symbol></Access>
+<Token Text="";"" UId=""26"" /><NewLine UId=""27"" />
+<Access Scope=""GlobalVariable"" UId=""28""><Symbol UId=""29""><Component Name=""DB"" UId=""30"" /><Token Text=""."" UId=""31"" /><Component Name=""a"" UId=""32"" /><Token Text=""."" UId=""33"" /><Component Name=""b"" UId=""34"" /></Symbol></Access>
+<Blank UId=""35"" /><Token Text="":="" UId=""36"" /><Blank UId=""37"" />
+<Access Scope=""LocalVariable"" UId=""38""><Symbol UId=""39""><Component Name=""arr"" UId=""40""><Token Text=""["" UId=""41"" /><Access Scope=""LocalVariable"" UId=""42""><Symbol UId=""43""><Component Name=""i"" UId=""44"" /></Symbol></Access><Token Text=""]"" UId=""45"" /></Component></Symbol></Access>
+<Token Text="";"" UId=""46"" /><NewLine UId=""47"" />
+<Access Scope=""LocalVariable"" UId=""48""><Symbol UId=""49""><Component Name=""x"" UId=""50"" /></Symbol></Access>
+<Blank UId=""51"" /><Token Text="":="" UId=""52"" /><Blank UId=""53"" />
+<Access Scope=""Call"" UId=""54""><Instruction Name=""LIMIT"" UId=""55""><Token Text=""("" UId=""56"" /><Parameter Name=""MN"" UId=""57""><StringAttribute Name=""InformativeType"" Informative=""true"">Int</StringAttribute><Token Text="":="" UId=""58"" /><Blank UId=""59"" /><Access Scope=""LiteralConstant"" UId=""60""><Constant UId=""61""><ConstantValue UId=""62"">0</ConstantValue></Constant></Access></Parameter><Token Text="")"" UId=""63"" /></Instruction></Access>
+<Token Text="";"" UId=""64"" /><NewLine UId=""65"" />
+</StructuredText>";
+
         // FB call box with a user-named Bool input driven by contact logic, an operand-bound input, an operand-bound
         // output, EN through a NOT, and a Bool output feeding a coil.
         private const string LadCallBody = @"<FlgNet xmlns=""http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5"">
@@ -121,6 +143,26 @@ namespace TiaMcpServer.Tests
             check(scl.Contains("#arr[#i] := %I1.3;"), "SCL: 数组下标 Access 与绝对地址");
             check(scl.Contains("// header") && scl.Contains("(*block*)"), "SCL: 行注释 // 与块注释 (* *) 分开");
             check(!scl.Contains(":= ;") && !scl.Contains("( ;"), "[哨兵] SCL 输出里不再有空赋值/空实参");
+
+            // 真实 V21 导出的 token 形态（真机 CLOCK_GENERATOR_FB 上发现：切片和 ENO 被丢）。
+            var tok = LadTextRenderer.Render(Wrap("SCL", SclTokenBody));
+            check(tok.Contains("#error := #statStatus.%X15;"), "SCL: Symbol 内的 '.' / '%X15' Token 按序渲染，位切片不再丢  <- " + tok);
+            check(tok.Contains("ENO := NOT #statStatus.%X15;"), "SCL: PredefinedVariable ENO 渲染为左值（原实现输出 ' := NOT …'）");
+            check(tok.Contains("\"DB\".a.b := #arr[#i];"), "SCL: 全局路径的 '.' 由 Token 提供且只给首段加引号；数组下标的 '[' ']' Token 原样保留");
+            check(tok.Contains("#x := LIMIT(MN := 0);") && !tok.Contains("Int"), "SCL: Instruction 调用照常渲染，Parameter 内的 StringAttribute 元数据不泄漏到正文");
+
+            // RenderPlcBlockDocument / ComparePlcBlockDocuments 走的是 OfflineAnalysisLogic 的另一套渲染，同样漏了
+            // 命名常量、REGION 名（Text 节点）和 ENO —— 在真机 CLOCK_GENERATOR_FB 上一并暴露。
+            var offlineXml = System.Xml.Linq.XElement.Parse(@"<StructuredText>
+<Text>REGION </Text><Token Text=""INIT"" /><NewLine />
+<Access Scope=""LocalVariable""><Symbol><Component Name=""s"" /></Symbol></Access><Token Text="":="" /><Access Scope=""LocalConstant""><Constant Name=""STATUS_OK"" /></Access><Token Text="";"" /><NewLine />
+<Access Scope=""PredefinedVariable""><PredefinedVariable Name=""ENO"" /></Access><Token Text="":="" /><Access Scope=""GlobalConstant""><Constant Name=""G_MAX"" /></Access><Token Text="";"" /><NewLine />
+</StructuredText>");
+            int commentLines;
+            var offline = string.Join("\n", OfflineAnalysisLogic.RenderStructuredText(offlineXml, out commentLines));
+            check(offline.Contains("REGION INIT"), "离线文档渲染：REGION 名（Text 节点）不再丢  <- " + offline);
+            check(offline.Contains("#s:=#STATUS_OK;"), "离线文档渲染：LocalConstant 命名常量输出 #NAME（原实现输出 ':=;'）");
+            check(offline.Contains("ENO:=\"G_MAX\";"), "离线文档渲染：ENO 与 GlobalConstant 命名常量");
 
             var lad = LadTextRenderer.Render(Wrap("LAD", LadCallBody));
             check(lad.Contains("当 [NOT(\"Start\")] 时: CALL \"FB_Motor\"[\"FB_Motor_DB\"]("), "LAD: <Call> 被识别为输出元素，EN 经 NOT 回溯  <- " + lad);

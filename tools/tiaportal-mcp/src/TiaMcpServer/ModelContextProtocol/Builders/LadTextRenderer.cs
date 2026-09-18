@@ -445,6 +445,10 @@ namespace TiaMcpServer.ModelContextProtocol
                         RenderStNodes(node.Elements(), sb);
                         if (sb.Length > 0 && sb[sb.Length - 1] != '\n') sb.Append('\n');
                         break;
+                    // Informative metadata carried inside Parameter/CallInfo/Access (NumBLs, template values …):
+                    // not source text, must not leak into the listing.
+                    case "IntegerAttribute": case "BooleanAttribute": case "StringAttribute": case "DateAttribute": case "TemplateValue":
+                        break;
                     default:
                         RenderStNodes(node.Elements(), sb);  // unknown wrapper: never drop what is inside it
                         break;
@@ -455,59 +459,90 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string CommentText(XElement node)
             => string.Concat(node.Descendants("Text").Select(t => t.Value));
 
+        // Access_T (SW.PlcBlocks.Access_v5.xsd) is a choice of Label | Constant | CallInfo | Instruction | Indirect |
+        // Statusword | PredefinedVariable | Expression | Symbol | Address | DataType | Reference, plus an optional comment.
         private static string RenderStAccess(XElement acc)
         {
             var scope = acc.Attribute("Scope")?.Value ?? "";
             var sb = new StringBuilder();
-
-            var callInfo = acc.Element("CallInfo") ?? acc.Element("Instruction");
-            if (callInfo != null)
+            foreach (var child in acc.Elements())
             {
-                RenderStCallInfo(callInfo, sb);
-                RenderStNodes(acc.Elements().Where(e => e != callInfo), sb);  // e.g. trailing tokens
-                return sb.ToString();
+                switch (child.Name.LocalName)
+                {
+                    case "CallInfo":
+                    case "Instruction": RenderStCallInfo(child, sb); break;
+                    case "Symbol":
+                    case "Instance": sb.Append(RenderStSymbol(child, child.Attribute("Scope")?.Value ?? scope)); break;
+                    case "Constant":
+                    {
+                        // literal / typed: <Constant><ConstantValue>…   named (LocalConstant/GlobalConstant): <Constant Name="…"/>
+                        var named = child.Attribute("Name")?.Value;
+                        sb.Append(!string.IsNullOrEmpty(named) ? Qualify(scope, named!) : child.Element("ConstantValue")?.Value?.Trim() ?? "?");
+                        break;
+                    }
+                    case "Address": sb.Append(AddressText(child)); break;
+                    case "PredefinedVariable": sb.Append(child.Attribute("Name")?.Value ?? "ENO"); break;   // SCL only: ENO
+                    case "Label": sb.Append(child.Attribute("Name")?.Value ?? ""); RenderStNodes(child.Elements(), sb); break;
+                    case "Statusword": sb.Append(child.Attribute("Combination")?.Value ?? ""); break;
+                    case "DataType": sb.Append(child.Value.Trim()); break;
+                    default: RenderStNodes(new[] { child }, sb); break;   // Expression, Reference, Indirect, Comment, Token …
+                }
             }
-            var symbol = acc.Element("Symbol");
-            if (symbol != null)
-                return Qualify(scope, symbol.Elements("Component").Select(ComponentText).ToList());
-
-            var constant = acc.Element("Constant");
-            if (constant != null)
-            {
-                var named = constant.Attribute("Name")?.Value;
-                if (!string.IsNullOrEmpty(named)) return Qualify(scope, new List<string> { named! });
-                return constant.Element("ConstantValue")?.Value?.Trim() ?? "?";
-            }
-            var address = acc.Element("Address");
-            if (address != null) return AddressText(address);
-
-            // <Instance Scope="…"><Component …/></Instance> and similar: components directly under the node
-            var direct = acc.Elements("Component").Select(ComponentText).ToList();
-            if (direct.Count > 0) return Qualify(scope, direct);
-
-            RenderStNodes(acc.Elements(), sb);
             return sb.ToString();
         }
 
-        // Local: #a.b   Global: "DB".a.b   (a global symbol quotes only its first component, like the SCL editor)
-        private static string Qualify(string scope, List<string> comps)
+        // Symbol_T / Instance_T are ordered sequences of Component | Address | AbsoluteOffset | Token | Access.
+        // SCL exports carry the punctuation as Tokens ('.', '%X15', '[', ']'); FlgNet exports have bare Components,
+        // so the separators are synthesised only when no Token is present. The scope prefix ('#' local, quotes
+        // around the first component for globals) is never a token and is always added here.
+        private static string RenderStSymbol(XElement symbol, string scope)
         {
-            if (comps.Count == 0) return "";
-            if (scope.StartsWith("Local", StringComparison.OrdinalIgnoreCase)) return "#" + string.Join(".", comps);
-            if (scope.StartsWith("Global", StringComparison.OrdinalIgnoreCase))
-                return "\"" + comps[0] + "\"" + (comps.Count > 1 ? "." + string.Join(".", comps.Skip(1)) : "");
-            return string.Join(".", comps);
+            var sb = new StringBuilder();
+            bool hasTokens = symbol.Elements("Token").Any();
+            bool quotedByTokens = symbol.Elements("Token").Any(t => t.Attribute("Text")?.Value == "\"");
+            bool local = scope.StartsWith("Local", StringComparison.OrdinalIgnoreCase);
+            bool global = scope.StartsWith("Global", StringComparison.OrdinalIgnoreCase) && !quotedByTokens;
+            bool first = true, previousWasComponent = false;
+            foreach (var child in symbol.Elements())
+            {
+                switch (child.Name.LocalName)
+                {
+                    case "Component":
+                        if (!hasTokens && previousWasComponent) sb.Append('.');
+                        if (first) sb.Append(local ? "#" : global ? "\"" : "");
+                        sb.Append(ComponentText(child, hasTokens));
+                        if (first && global) sb.Append('"');
+                        first = false; previousWasComponent = true;
+                        break;
+                    case "Token": sb.Append(child.Attribute("Text")?.Value ?? ""); previousWasComponent = false; break;
+                    case "Access": sb.Append(RenderStAccess(child)); previousWasComponent = false; break;
+                    case "Address": sb.Append(AddressText(child)); previousWasComponent = false; break;
+                    case "AbsoluteOffset": break;   // informative
+                    default: RenderStNodes(new[] { child }, sb); previousWasComponent = false; break;
+                }
+            }
+            return sb.ToString();
         }
 
-        // Component Name="arr" with nested index <Access>es -> arr[#i, #j]; SliceAccessModifier="X0" -> arr.%X0
-        private static string ComponentText(XElement component)
+        // Named constant: #NAME locally, "NAME" globally.
+        private static string Qualify(string scope, string name)
         {
-            var name = component.Attribute("Name")?.Value ?? "";
+            if (scope.StartsWith("Local", StringComparison.OrdinalIgnoreCase)) return "#" + name;
+            if (scope.StartsWith("Global", StringComparison.OrdinalIgnoreCase)) return "\"" + name + "\"";
+            return name;
+        }
+
+        // Component_T: Name plus optional Token / index-Access / Comment children. With tokens the children are
+        // rendered verbatim (arr[#i]); without them the index brackets and a SliceAccessModifier (.%X0) are synthesised.
+        private static string ComponentText(XElement component, bool symbolHasTokens)
+        {
+            var sb = new StringBuilder(component.Attribute("Name")?.Value ?? "");
+            if (component.Elements("Token").Any()) { RenderStNodes(component.Elements(), sb); return sb.ToString(); }
             var indexes = component.Elements("Access").Select(RenderStAccess).ToList();
-            var text = indexes.Count > 0 ? name + "[" + string.Join(", ", indexes) + "]" : name;
+            if (indexes.Count > 0) sb.Append('[').Append(string.Join(", ", indexes)).Append(']');
             var slice = component.Attribute("SliceAccessModifier")?.Value;
-            if (!string.IsNullOrEmpty(slice)) text += ".%" + slice;
-            return text;
+            if (!symbolHasTokens && !string.IsNullOrEmpty(slice) && slice != "undef") sb.Append(".%").Append(slice);
+            return sb.ToString();
         }
 
         // FC / instruction:  Name(params)     FB via instance:  #inst⟨FbName⟩(params)  /  "DB"⟨FbName⟩(params)
@@ -518,7 +553,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var instance = callInfo.Element("Instance");
             if (instance != null)
             {
-                var inst = RenderStAccess(instance);
+                var inst = RenderStSymbol(instance, instance.Attribute("Scope")?.Value ?? "");
                 sb.Append(string.IsNullOrEmpty(inst) ? name : inst + "⟨" + name + "⟩");
             }
             else sb.Append(name);
@@ -530,12 +565,13 @@ namespace TiaMcpServer.ModelContextProtocol
         private static void RenderStParameter(XElement parameter, StringBuilder sb)
         {
             var name = parameter.Attribute("Name")?.Value;
-            var first = parameter.Elements().FirstOrDefault(e => e.Name.LocalName != "Blank");
+            // Informative *Attribute elements may precede the tokens; they are metadata, not the first source token.
+            var first = parameter.Elements().FirstOrDefault(e => e.Name.LocalName != "Blank" && !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal));
             var firstText = first?.Name.LocalName == "Token" ? first.Attribute("Text")?.Value : null;
             if (!string.IsNullOrEmpty(name) && (firstText == ":=" || firstText == "=>"))
             {
                 sb.Append(name);
-                if (parameter.Elements().FirstOrDefault()?.Name.LocalName != "Blank") sb.Append(' ');
+                if (parameter.Elements().FirstOrDefault(e => !e.Name.LocalName.EndsWith("Attribute", StringComparison.Ordinal))?.Name.LocalName != "Blank") sb.Append(' ');
             }
             RenderStNodes(parameter.Elements(), sb);
         }
