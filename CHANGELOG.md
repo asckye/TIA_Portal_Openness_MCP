@@ -6,7 +6,7 @@
 
 - **修复**：`ExchangeUnifiedTags export` 在真实工程上恒失败——`HmiTagComposition.Export(dir, name)` 回报的 `FileInfo` 是 `<dir>\<name>`（无扩展名），而 TIA 实际写出 `<name>.hmi.yml`。原生回报路径不存在时按已知扩展名（`.hmi.yml` / `.hmi.js` / `.yml` / `.js` / `.xlsx` / `.xml`）再按同名前缀解析到实际文件，记录里保留 `reportedPath`；两条导出工具都附 `directoryListing`（TIA 留下的全部文件，含 `NameData.yml` 等副文件）。
 - **登记**：剩余 Unified 类型全部进入动态覆盖登记表（系统变量、阈值、替代值、审计类、连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`Common` / `UIBase` / `IValidator` / `ImportResult`、画面组），`verified` 字段如实区分"真机验证"与"仅形状检查"。审计：完全未触及 599 → 556，动态覆盖 285 → 322，未封装功能类型 288 / 1,185 → 267 / 1,067（Unified 21 → 0）。
-- **验证**：离线 1446 项（新增 5 项：无扩展名回报路径解析、同名前缀解析、不可解析拒绝、目录清单）；形状检查 V20 990 / V21 1087 不变；两版 EXE 回归见 `manifest/release-build.json`。
+- **验证**：离线 1446 项（新增 5 项：无扩展名回报路径解析、同名前缀解析、不可解析拒绝、目录清单）；形状检查 V20 990 / V21 1087 不变；两版 EXE 回归见 `manifest/release-build.json`。真机（V21 `HMI_RT_1`，2026-09-18，引擎 2.7.29.0）：变量导出核对通过（`ShiftModel.hmi.yml` 4,400 B，`reportedPath` 无扩展名，该表无副文件）；文本列表 16 / 系统文本列表 18 读出并各原生导出一个（`<名>.hmi.yml` + `<名>.TextLibrary.hmi.yml`）；`HmiTag.Validate()` 3 行诊断；画面组建删；`opcUaAlarmTypes` / `LoggingTags` 组合到达但工程为空，`Cpm` / `HmiConnections` 仍无对象可验。登记表 `verified` 已回写，详见发布说明。
 
 ## [2.7.28] - 2026-09-18
 

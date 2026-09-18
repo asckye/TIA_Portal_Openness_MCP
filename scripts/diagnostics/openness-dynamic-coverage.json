@@ -107,19 +107,19 @@
       "pattern": "Siemens.Engineering.HmiUnified.HmiOpcUaAlarm.*",
       "tool": "ReadUnifiedEngineeringObjects (category=opcUaAlarmTypes) / ManageUnifiedEngineeringObject",
       "mechanism": "HmiSoftware.OpcUaAlarmTypes composition by reflection",
-      "verified": "2.7.18 shape checks V20/V21 (OpcUaAlarmTypes composition and Create); not yet run on a real project"
+      "verified": "2.7.18 shape checks V20/V21 (OpcUaAlarmTypes composition and Create); real project 2.7.29 (V21 HMI_RT_1): OpcUaAlarmTypes composition read, 0 items (project has no OPC UA connection) - Create not exercised"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.LoggingTags.*",
       "tool": "ManageUnifiedLoggingTag",
       "mechanism": "HmiTag.LoggingTags composition: Create(name), scalars and DataLog binding by reflection",
-      "verified": "2.7.18 shape checks V20/V21 (HmiLoggingTagComposition.Create); not yet run on a real project"
+      "verified": "2.7.18 shape checks V20/V21 (HmiLoggingTagComposition.Create); real project 2.7.29 (V21 HMI_RT_1): LoggingTags composition read on tag ShiftmodelInterfaceHmi_actualTimesDay, 0 items; Create not exercised (project has 0 data logs, a DataLog name is required)"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.TextGraphicList.*",
       "tool": "ReadUnifiedEngineeringObjects (textLists / graphicLists / systemTextLists) / ManageUnifiedEngineeringObject / ExportUnifiedEngineeringList / ImportUnifiedEngineeringList / ManageUnifiedListEntries",
       "mechanism": "HmiTextLists / HmiGraphicLists / HmiSystemTextLists compositions by reflection; native Export(DirectoryInfo,name) / Import; entries are read-only (no official entry API)",
-      "verified": "2.7.18 shape checks V20/V21 (HmiSystemTextLists, list Export/Import); not yet run on a real project"
+      "verified": "2.7.18 shape checks V20/V21 (HmiSystemTextLists, list Export/Import); real project 2.7.29 (V21 HMI_RT_1): 16 HmiTextList + 18 HmiSystemTextList read (graphicLists 0); native Export of HmiTextList 'PowerState' and HmiSystemTextList 'SystemTextList_ConfigErrorAlarmTextLibrary_1' each wrote <Name>.hmi.yml + <Name>.TextLibrary.hmi.yml; Import and entry editing not exercised"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.Cpm.*",
@@ -143,13 +143,13 @@
       "pattern": "Siemens.Engineering.HmiUnified.Common.IValidator",
       "tool": "ValidateUnifiedObject",
       "mechanism": "Validate() on any Unified object by reflection; HmiValidationResult rows",
-      "verified": "2.7.18 shape checks V20/V21 (HmiTag.Validate); not yet run on a real project"
+      "verified": "2.7.18 shape checks V20/V21 (HmiTag.Validate); real project 2.7.29 (V21 HMI_RT_1): HmiTag.Validate() on ShiftmodelInterfaceHmi_actualTimesDay returned 3 results (Connection / DataType / PlcTag), validationPassed=false"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.Common.HmiValidationResult",
       "tool": "ValidateUnifiedObject",
       "mechanism": "result rows of Validate()",
-      "verified": "2.7.18 shape checks V20/V21; not yet run on a real project"
+      "verified": "2.7.18 shape checks V20/V21; real project 2.7.29 (V21 HMI_RT_1): 3 rows with PropertyName and localized Errors (zh-CN), Warnings empty"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.Common.ImportResult",
@@ -161,7 +161,7 @@
       "pattern": "Siemens.Engineering.HmiUnified.UI.ScreenGroup.HmiScreenGroupComposition",
       "tool": "ManageUnifiedHmiGroup (family=screens) / ManageUnifiedScreenLayout",
       "mechanism": "ScreenGroups composition: Create(name), rename, delete; screens addressed by /Group/Screen path",
-      "verified": "shape checks V20/V21; not yet run on a real project"
+      "verified": "shape checks V20/V21; real project 2.7.29 (V21 HMI_RT_1): Create('mcp_tmp_group_2729') then deleteEmpty (childCount 0), group confirmed absent afterwards; rename not exercised"
     }
   ]
 }
