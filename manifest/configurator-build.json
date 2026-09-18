@@ -1,10 +1,10 @@
 {
-    "generatedAt":  "2026-09-17T22:00:04.7803908+00:00",
-    "testsPassed":  58,
+    "generatedAt":  "2026-09-18T01:43:44.2508841+00:00",
+    "testsPassed":  80,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "bb7b0ed17bb6456ef6ba4082bf2905bcef9d8eb4c28027e9c400678409d99369"
+                       "sha256":  "7d1899cf955594d729d4d88700bd8d9dc3b08745c93bc327a121ec6d501d3d97"
                    },
     "sourceFiles":  [
                         {
@@ -13,7 +13,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
-                            "sha256":  "38eb6982ac4058b4cb647024409cc2934ceaa53a8969c7cd80844c3bfc6dd2f6"
+                            "sha256":  "ee2322d5d9a8d663a7cf6b9bac64bd609cf1c56f860d429764c35fa829c80e26"
                         },
                         {
                             "path":  "tools/mcp-configurator/ConfigCore.cs",
@@ -21,7 +21,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "a682c995206a8d4c63ab17a1d25f622277d4a0ae438d583962c932bf19441083"
+                            "sha256":  "ba3a4988e92bd6743b9f6b6a1e36ad7c5b6f747cb4c06ac69bd32e2855fa280c"
                         },
                         {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
@@ -29,7 +29,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Tests.cs",
-                            "sha256":  "14632fbd6ddd71ae8b030aefb37fd37a74745d072c53da3655a9494da1f11249"
+                            "sha256":  "703f3b76c5e777c03c91b3730482e3feb0ae4a04dca4eb0207abeed0da13c564"
                         }
                     ]
 }
