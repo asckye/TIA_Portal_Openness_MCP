@@ -54,6 +54,15 @@ namespace TiaMcpServer.Tests
                 check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles(new[] { empty }, exportDir)), "exchange: empty native file refused");
                 var outside = new FileInfo(Path.Combine(temp, "Outside.hmi.yml")); File.WriteAllText(outside.FullName, "x");
                 check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles(new[] { outside }, exportDir)), "exchange: file outside the export directory refused");
+                // TIA reports "<dir>\\<name>" for a tag export that actually wrote "<name>.hmi.yml" (real project 2.7.28): resolve by known extensions, then by stem.
+                var reported = new FileInfo(Path.Combine(exportDir.FullName, "Table"));
+                var resolved = UnifiedExchangeLogic.VerifyNativeFiles(new[] { reported }, exportDir);
+                check(resolved.Count == 1 && resolved[0]!["path"]!.GetValue<string>().EndsWith("Table.hmi.yml") && resolved[0]!["reportedPath"]!.GetValue<string>() == reported.FullName, "exchange: extension-less reported path resolved to the written .hmi.yml and the reported path kept");
+                File.WriteAllText(Path.Combine(exportDir.FullName, "Module.custom"), "x");
+                check(UnifiedExchangeLogic.ResolveReportedFile(new FileInfo(Path.Combine(exportDir.FullName, "Module")), exportDir)!.Name == "Module.custom", "exchange: unknown extension resolved by stem");
+                check(UnifiedExchangeLogic.ResolveReportedFile(new FileInfo(Path.Combine(exportDir.FullName, "Nothing")), exportDir) == null, "exchange: unresolvable reported path is null");
+                check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles(new[] { new FileInfo(Path.Combine(exportDir.FullName, "Nothing")) }, exportDir)), "exchange: unresolvable native path refused");
+                check(UnifiedExchangeLogic.DirectoryListing(exportDir).Count == 3 && UnifiedExchangeLogic.DirectoryListing(exportDir)[0]!["path"]!.GetValue<string>().EndsWith("Empty.hmi.yml"), "exchange: directory listing shows every file TIA left behind (Table, Empty, Module.custom), sorted");
                 check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles(new FileInfo[0], exportDir)), "exchange: no files refused");
                 check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles("not a sequence", exportDir)), "exchange: non-sequence native result refused");
                 check(Fails<InvalidOperationException>(() => UnifiedExchangeLogic.VerifyNativeFiles(new object[] { 5 }, exportDir)), "exchange: non-FileInfo entry refused");

@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.7.29] - 2026-09-18
+
+引擎 2.7.29.0（V20/V21 均重建），工具 367、默认 lite 56 项不变。详见 [v2.7.29](docs/releases/v2.7.29.md)。WinCC Unified 阶段（路线图 §2.0 阶段 2）收口。
+
+- **修复**：`ExchangeUnifiedTags export` 在真实工程上恒失败——`HmiTagComposition.Export(dir, name)` 回报的 `FileInfo` 是 `<dir>\<name>`（无扩展名），而 TIA 实际写出 `<name>.hmi.yml`。原生回报路径不存在时按已知扩展名（`.hmi.yml` / `.hmi.js` / `.yml` / `.js` / `.xlsx` / `.xml`）再按同名前缀解析到实际文件，记录里保留 `reportedPath`；两条导出工具都附 `directoryListing`（TIA 留下的全部文件，含 `NameData.yml` 等副文件）。
+- **登记**：剩余 Unified 类型全部进入动态覆盖登记表（系统变量、阈值、替代值、审计类、连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`Common` / `UIBase` / `IValidator` / `ImportResult`、画面组），`verified` 字段如实区分"真机验证"与"仅形状检查"。审计：完全未触及 599 → 556，动态覆盖 285 → 322，未封装功能类型 288 / 1,185 → 267 / 1,067（Unified 21 → 0）。
+- **验证**：离线 1446 项（新增 5 项：无扩展名回报路径解析、同名前缀解析、不可解析拒绝、目录清单）；形状检查 V20 990 / V21 1087 不变；两版 EXE 回归见 `manifest/release-build.json`。
+
 ## [2.7.28] - 2026-09-18
 
 引擎 2.7.28.0（V20/V21 均重建），工具 364 → 367，默认 lite 56 项不变。详见 [v2.7.28](docs/releases/v2.7.28.md)。WinCC Unified 阶段子批次 ⑤。
@@ -7,7 +15,7 @@
 - **新工具 3 个**：`ExchangeUnifiedTags`（变量 WinCC ML `.hmi.yml` 导入导出，`HmiTagComposition.Export/Import`，根或任意组内变量表；此前 Unified 变量表导出走 SimaticML 路径报 unsupported）、`ExchangeUnifiedScriptModules`（全局脚本模块整体/单个导出与导入，`IChromDataExchangeExport`）、`ImportUnifiedOpcUaAlarms`（连接上的 `OpcUaAlarm` 服务：显示名、`GetNodeId`、xml 导入）。
 - **登记**：阈值（`ManageUnifiedObjectParts`）、替代值/范围（嵌套写入）、系统变量、驱动属性、审计类、文本/图形列表、记录变量、Cpm、`UIBase`/`HmiBase` 经既有工具到达。
 - **修复**：`Object` 类型属性（变量范围/替代值/阈值 `Value`）写入后读回按跨类型文本/数值比较，不再把已写入的值误报为 "readback differs"。真机确认：`HmiThresholdComposition.Create()` 被 TIA 原生拒绝（"New thresholds are not supported"），替代值只对外部变量可设。
-- **验证**：离线 1441 项（新增 33 项）；形状检查 V20 990 / V21 1087（新增 54 / 55 项）；两版 EXE 回归见 `manifest/release-build.json`。
+- **验证**：离线 1441 项（新增 33 项）；形状检查 V20 990 / V21 1087（新增 54 / 55 项）；两版 EXE 回归见 `manifest/release-build.json`。真机（V21 `HMI_RT_1`，2026-09-18）：脚本模块导出/导入预览、变量导入预览、范围嵌套写入读回、系统变量/审计类/工厂视图读取通过；**变量导出核对失败**（TIA 回报的 `FileInfo` 无 `.hmi.yml` 扩展名，文件本身已写出），2.7.29 修复；`OpcUaAlarm` 因工程无 OPC UA 连接未能验证。详见发布说明。
 
 ## [2.7.27] - 2026-09-18
 

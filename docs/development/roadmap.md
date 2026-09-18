@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.28 更新）
+# 路线图与待办（2026-09-17 审计，2.7.29 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -33,7 +33,7 @@
 | 阶段 | 程序集 / 领域 | 起点缺口（2.7.24） | 状态 |
 |---|---|---|---|
 | 1 | **Safety**（`Siemens.Engineering.Safety`） | 10 类型 / 41 成员 | **2.7.25 完成**：12 类型 / 54 成员全部有专用工具（`ManagePlcSafety` 12 个动作、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`）。剩余仅 `SafetyValidation` 选件（阶段 6） |
-| 2 | **WinCC Unified**（`Siemens.Engineering.HmiUnified`） | 113 类型 / 685 成员 | **进行中**。① 画面对象族 `UI.Shapes` / `Widgets` / `Controls` / `Base` / `Features` / `HmiScreenWindow`（69 类型）——**2.7.26 完成**：`DescribeUnifiedScreenItemType` + `ManageUnifiedScreenItem`（反射自官方 API 的类型目录与属性 schema，任意类型 `Create<T>`；硬编码属性表在 43 个类型 × 数十属性下不可维护，且与 V20/V21 差异冲突，故走"反射 + 形状检查 + 登记表"）；② 报警类 / 离散 / 模拟报警 `HmiAlarm`——**2.7.27 真机验证**（状态视觉颜色经 `UpdateUnifiedObjectProperties` 写入并复原），已登记；③ 报警/数据记录与备份/分段设置 `HmiLogging`——**2.7.27 真机验证**（`Settings.LogMaxSize` 写入并复原），已登记；审计类 `HmiAudit`（1 / 6）待验证；④ 运行时设置嵌套对象 `RuntimeSettings`（10 / 58）——**2.7.27 真机验证**：`ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` 路径 `[{property:RuntimeSettings},{property:OpcUaServerRuntimeSettings}]` 全部标量可读可写，已登记动态覆盖；⑤ **2.7.28**：新增 `ExchangeUnifiedTags`（WinCC ML `.hmi.yml`）、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms`；阈值（`ManageUnifiedObjectParts` 走 `HmiThresholdComposition.Create()`）、替代值/范围（嵌套写入）、系统变量、驱动属性、审计类、列表、记录变量、`Cpm` 经既有工具到达——真机验证后登记，Unified 阶段收口 |
+| 2 | **WinCC Unified**（`Siemens.Engineering.HmiUnified`） | 113 类型 / 685 成员 | **完成（2.7.29 收口）**。① 画面对象族 `UI.Shapes` / `Widgets` / `Controls` / `Base` / `Features` / `HmiScreenWindow`（69 类型）——**2.7.26 完成**：`DescribeUnifiedScreenItemType` + `ManageUnifiedScreenItem`（反射自官方 API 的类型目录与属性 schema，任意类型 `Create<T>`；硬编码属性表在 43 个类型 × 数十属性下不可维护，且与 V20/V21 差异冲突，故走"反射 + 形状检查 + 登记表"）；② 报警类 / 离散 / 模拟报警 `HmiAlarm`——**2.7.27 真机验证**（状态视觉颜色经 `UpdateUnifiedObjectProperties` 写入并复原），已登记；③ 报警/数据记录与备份/分段设置 `HmiLogging`——**2.7.27 真机验证**（`Settings.LogMaxSize` 写入并复原），已登记；审计类 `HmiAudit`（1 / 6）待验证；④ 运行时设置嵌套对象 `RuntimeSettings`（10 / 58）——**2.7.27 真机验证**：`ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` 路径 `[{property:RuntimeSettings},{property:OpcUaServerRuntimeSettings}]` 全部标量可读可写，已登记动态覆盖；⑤ **2.7.28**：新增 `ExchangeUnifiedTags`（WinCC ML `.hmi.yml`）、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms`；**2.7.29**：真机发现并修复变量导出回报路径无扩展名的核对失败；系统变量、阈值（`Create()` 被 TIA 拒绝）、替代值（仅外部变量）、审计类真机到达并登记，连接/驱动属性、OPC UA 报警类型、记录变量、列表、`Cpm`、`IValidator`、画面组以"仅形状检查"登记（该工程无 OPC UA 连接与工厂视图）。Unified 未封装功能类型 21 → 0；剩余真机补跑随下次重跑进行 |
 | 3 | **Base 硬件深层与库**（`Siemens.Engineering.HW` / `Library` / `Umac` / `Security` / `Compare` / `CrossReference`） | 85 类型 / 310 成员 | `TransferArea` / `MrpInstance` / `SyncDomain` / `IoSystem` / `Channel` / `WebserverUser` / `DeviceGroup`；`GlobalLibrary` 与类型版本文件夹 / `UpdateCheck`；`UmcUser*`；`SyslogServer` / `CertificateTemplate` / `PlcPasswordPolicyService`；比较结果元素；跨引用 `SourceObject` / `ReferenceObject` |
 | 4 | **Step7**（`Siemens.Engineering.SW`） | 41 类型 / 136 成员 | 软件单元 `SW.Units` 27、`PlcDocument*`、`PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、报警类导入导出结果、`OpcUaCommunicationGroup`；`PlcForceTableEntry` 保持刻意不注册 |
 | 5 | **经典 WinCC**（`Siemens.Engineering.Hmi`） | 24 类型 / 59 成员 | 弹出/滑入画面与模板的文件夹层次 23、变量文件夹 |
@@ -109,36 +109,40 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.28 已完成
+## 5. 2.7.29 已完成
+
+- 引擎：`ExchangeUnifiedTags export` 回报路径解析修复 + `directoryListing`；剩余 Unified 类型登记（真机 / 仅形状检查如实标注）；完全未触及 599 → 556，未封装功能类型 288 / 1,185 → 267 / 1,067。离线 1446、形状检查 990 / 1087。WinCC Unified 阶段收口，下一阶段为 Base 硬件深层 / 库 / UMC / 安全（§2.0 阶段 3）。
+
+## 5.1 2.7.28 已完成
 
 - 引擎：WinCC Unified 子批次 ⑤：`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms`；其余剩余类型经既有通用工具真机验证并登记。离线 1437、形状检查 990 / 1087。
 
-## 5.1 2.7.27 已完成
+## 5.2 2.7.27 已完成
 
 - 引擎：2.7.26 画面对象族真机重跑；修复创建后代理身份核对（`ManageUnifiedScreenItem` / `ManageUnifiedScreenLayout`）、部件内多语言文本、`UpdateUnifiedObjectProperties` 的颜色与嵌套部件写入；2.7.27 真机重跑全部通过。子批次 ②③④（`HmiAlarm` / `HmiLogging` / `RuntimeSettings`）与 `UI.Controls` 真机验证后登记为动态覆盖：完全未触及 626 → 599，Unified 未封装功能类型 41 → 21。
 
-## 5.2 2.7.26 已完成
+## 5.3 2.7.26 已完成
 
 - 引擎：WinCC Unified 画面对象族（§2.0 阶段 2 子批次 ①）：`DescribeUnifiedScreenItemType`、`ManageUnifiedScreenItem`；隐藏 `EventHandlers` 的四种对象类型的歧义修复。审计脚本新增动态覆盖登记表与"动态覆盖"栏（完全未触及 885 → 626）。离线 1402、形状检查 936 / 1032。
 
-## 5.3 2.7.25 已完成
+## 5.4 2.7.25 已完成
 
 - 引擎：`Siemens.Engineering.Safety` 全量封装（§2.0 阶段 1）。`ManagePlcSafety` 强类型重写并补齐嵌套对象、文档化属性、集体签名（此前从未真正读出）、F-I/O 状态块生成、系统对象清理、F-BaseID、登录/登出/密码设置与撤销；新增 `ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`；下载提示 `SafetyProgram`。离线 1353、形状检查 886 / 982。
 
-## 5.4 2.7.20–2.7.24 已完成
+## 5.5 2.7.20–2.7.24 已完成
 
 - 引擎：`DescribeBlockLogic` 在真实 V21 工程上暴露的渲染丢失全部修复并真机回归（SCL 调用 / 命名常量 / 绝对地址 / 数组下标 / 位切片 / `ENO`，LAD `<Call>` 调用框 / 用户命名引脚 / `Not` / EN 链）；`RenderPlcBlockDocument` / `ComparePlcBlockDocuments` / `GeneratePlcDocumentation` 同族修复。SCL 渲染改为按 `SW.PlcBlocks.Access_v5.xsd` 的全部分支实现。
 - 配置器：重做为单页双栏连接控制台（虚拟机 ↔ 宿主机 / 同一台电脑），客户端卡片按 CLI 在前排列并加入通义千问 / Kimi / 腾讯元宝 / DeepSeek / 智谱清言 / Grok（写各家官方 CLI 或 OpenCode）。
 - 覆盖盘点重跑（2.7.24）：API 封装面较 2.7.18 仅 +12 成员 / +4 类型；去掉壳子类型与动态覆盖后，真实缺口 381 个功能类型 / 1,753 个成员，见[覆盖清单](../reference/openness-coverage.md#缺口结构2724)。据此把 **Safety** 提为第一阶段（§2.0），2.7.25 完成。
 
-## 5.5 2.7.19 已完成
+## 5.6 2.7.19 已完成
 
 - 引擎：E8、E11 完成，全部 11 项引擎待办处理完毕（E10 保留为设计决定）。新增 9 个工具（共 359）：PLCSIM Advanced 通道 5 个（#1 与 S2 的场景式单元测试，反射后期绑定，**未在真实 PLCSIM Advanced 上验证**）、离线文档 2 个（S3 的块可视化，自研 Markdown/Mermaid 渲染，不移植 TS 渲染器）、SCL 预检 1 个（#8，自研启发式规则，不引入 tree-sitter/Node）、AML 生成 1 个（#6 的生成半边，不引入 Aml.Engine，配合已有 `ImportDeviceAml`）。
 - 程序文档（#9）由 `GeneratePlcDocumentation` 覆盖（索引、调用交叉引用、逐块渲染）。写保护钩子与审计日志（S7 及竞品的审计模式）随插件交付。
 - §3 候选中仍未落地：AutoPLC / Agents4PLC 数据（#4/#5，skill 调优素材，只在 [生态与参考资源](../reference/ecosystem.md) 登记）；`Siemens.Collaboration.Net.*` 再分发决策（§4）仍待维护者。
 - 分类修正：6 个运行时/上载写入工具改为 ONLINE-WRITE。
 
-## 5.6 2.7.18 已完成
+## 5.7 2.7.18 已完成
 
 - 引擎：E1–E5、E7、E9 处理完毕；新增 52 个官方 Openness 工具、8 个运行时通道工具、3 个离线分析工具与 `ListToolCategories`，共 350 个工具；V20/V21 重建，离线 1158、形状检查 847/758、实际 EXE 回归两版全过；**真实工程验收未执行**。
 - §2.1 中的 P1（下载提示、设备上载/扫描、DB 快照、文件夹下载）与大部分 P2（块保护、`UpdateProgram`、OPC UA 访问控制、UMAC 读写、库/工程比较、报警文本导入、Unified 事件/部件/动态化、通信连接、监视/强制表 Web 访问）已实现；P3 的 ProDiag 对象、多用户会话、Motion 对象模型、经典 HMI 脚本亦已实现。仍未做：SafetyValidation、Teamcenter、Startdrive/SiVArc/DCC 剩余动作、UMC 同步与工程保护启停、硬件杂项（App ID、批量参数、PSC、Logo、CiR、共享设备、I-Device GSD 导出）、库实例清理/更新流程。

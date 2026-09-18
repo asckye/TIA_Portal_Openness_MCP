@@ -53,20 +53,45 @@ namespace TiaMcpServer.Siemens
         }
 
         // Native Export results are FileInfo sequences; every file must be inside the export directory and nonempty.
+        // HmiTagComposition.Export(dir, name) reports "<dir>\<name>" without the ".hmi.yml" extension TIA actually writes
+        // (real project, 2.7.28), so a reported path that does not exist is resolved to the file TIA created from it.
+        internal static readonly string[] NativeExtensions = { ".hmi.yml", ".hmi.js", ".yml", ".js", ".xlsx", ".xml" };
         internal static JsonArray VerifyNativeFiles(object nativeResult, DirectoryInfo dir)
         {
             if (nativeResult is not IEnumerable sequence || nativeResult is string) throw new InvalidOperationException("Native Export returned no file sequence.");
             var records = new JsonArray(); string prefix = dir.FullName.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
             foreach (var item in sequence)
             {
-                var file = item as FileInfo ?? throw new InvalidOperationException("Unexpected native output entry; export not complete.");
-                file.Refresh();
-                if (!file.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) || !file.Exists || file.Length == 0) throw new InvalidOperationException("Native export file missing, empty or outside the export directory: " + file.FullName);
+                var reported = item as FileInfo ?? throw new InvalidOperationException("Unexpected native output entry; export not complete.");
+                if (!reported.FullName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Native export file outside the export directory: " + reported.FullName);
+                var file = ResolveReportedFile(reported, dir) ?? throw new InvalidOperationException("Native export file missing or empty: " + reported.FullName);
                 using var sha = SHA256.Create(); using var stream = file.OpenRead();
-                records.Add(new JsonObject { ["path"] = file.FullName, ["bytes"] = file.Length, ["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() });
+                var row = new JsonObject { ["path"] = file.FullName, ["bytes"] = file.Length, ["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant() };
+                if (!string.Equals(file.FullName, reported.FullName, StringComparison.OrdinalIgnoreCase)) row["reportedPath"] = reported.FullName;
+                records.Add(row);
             }
             if (records.Count == 0) throw new InvalidOperationException("Native export returned no files.");
             return records;
+        }
+        internal static FileInfo? ResolveReportedFile(FileInfo reported, DirectoryInfo dir)
+        {
+            reported.Refresh();
+            if (reported.Exists && reported.Length > 0) return reported;
+            foreach (var extension in NativeExtensions)
+            {
+                var candidate = new FileInfo(reported.FullName + extension);
+                if (candidate.Exists && candidate.Length > 0) return candidate;
+            }
+            var stem = reported.Name + ".";
+            return dir.Exists ? dir.EnumerateFiles().Where(f => f.Name.StartsWith(stem, StringComparison.OrdinalIgnoreCase) && f.Length > 0).OrderBy(f => f.Name, StringComparer.Ordinal).FirstOrDefault() : null;
+        }
+        // Everything TIA left in the export directory, so side files (NameData.yml, *.def.hmi.yml) are visible even when the native result omits them.
+        internal static JsonArray DirectoryListing(DirectoryInfo dir)
+        {
+            var rows = new JsonArray();
+            foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories).OrderBy(f => f.FullName, StringComparer.Ordinal).Take(500))
+                rows.Add(new JsonObject { ["path"] = file.FullName, ["bytes"] = file.Length });
+            return rows;
         }
 
         // Import(DirectoryInfo) reads *.hmi.yml (tags) / *.js-style module files present in the directory; report what is there so an empty directory is not mistaken for success.

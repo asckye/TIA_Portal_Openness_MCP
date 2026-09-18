@@ -68,7 +68,7 @@ namespace TiaMcpServer.Siemens
                     if (dryRun) return "Unified tag export preview; no file written.";
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = name.Length == 0 ? tags.Export(dir) : tags.Export(dir, name);
-                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["dataComplete"] = false;
+                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] = UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
                     return "Unified tags exported by TIA (WinCC ML) and hashed; content not parsed. No project change.";
                 }
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".hmi.yml" });
@@ -108,7 +108,7 @@ namespace TiaMcpServer.Siemens
                     if (dryRun) return "Unified script module export preview; no file written.";
                     dir.Create(); meta["mayHaveWrittenFiles"] = true;
                     var native = module == null ? modules.Export(dir) : name.Length == 0 ? module.Export(dir) : module.Export(dir, name);
-                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["dataComplete"] = false;
+                    meta["apiCallSuccess"] = true; meta["files"] = UnifiedExchangeLogic.VerifyNativeFiles(native, dir); meta["directoryListing"] = UnifiedExchangeLogic.DirectoryListing(dir); meta["dataComplete"] = false;
                     return "Unified script module(s) exported by TIA and hashed; script content not parsed. No project change.";
                 }
                 meta["importCandidates"] = UnifiedExchangeLogic.ListImportCandidates(dir, new[] { ".js", ".yml", ".json" });

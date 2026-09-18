@@ -72,6 +72,96 @@
       "tool": "ManageUnifiedDynamization",
       "mechanism": "native Dynamizations.Create<T>(propertyName); ValueConverter/MappingTable/Trigger by reflection",
       "verified": "2.7.18 shape checks"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiTags.HmiSystemTag*",
+      "tool": "ReadUnifiedEngineeringObjects (category=systemTags)",
+      "mechanism": "HmiSoftware.SystemTags composition by reflection; read-only (ManageUnifiedEngineeringObject refuses system collections)",
+      "verified": "2.7.28 real project V21 AutomaticDipCoatingMachine HMI_RT_1: @ServerMachineName (WString) and siblings read"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiTags.HmiThreshold*",
+      "tool": "ManageUnifiedObjectParts (collectionProperty=Thresholds)",
+      "mechanism": "HmiTag.Thresholds composition: read/update/delete of TIA-generated thresholds by reflection; native Create() is forwarded as-is",
+      "verified": "2.7.28 real project HMI_RT_1 (engine 2.7.27): composition resolved on Default tag table/MCP_TmpThresholdTag; TIA V21 refused Create() with 'New thresholds are not supported' — thresholds exist only where TIA generates them"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiTags.HmiSubstituteValue",
+      "tool": "ReadUnifiedObjectProperties / UpdateUnifiedObjectProperties",
+      "mechanism": "nested part of HmiTag ({\"SubstituteValue\":{\"Value\":…,\"SubstituteValueUsage\":…}}) beside InitialMinValue/InitialMaxValue ranges",
+      "verified": "2.7.28 real project HMI_RT_1: range parts InitialMinValue/InitialMaxValue/InitialValue written and read back on an internal tag; SubstituteValue write refused by TIA on internal tags (external tags only) — reached, not writable in this project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiAudit.*",
+      "tool": "ReadUnifiedAuditSettings / UpdateUnifiedObjectProperties",
+      "mechanism": "HmiSoftware.AlarmAuditClasses / AuditTrails compositions by reflection; audit class scalars (only Name writable)",
+      "verified": "2.7.28 real project HMI_RT_1: AlarmAuditClasses enumerated (project has none, 0 records) — audit class members not exercised on a real project; AuditTrails read 2.7.27"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiConnections.*",
+      "tool": "ReadUnifiedObjectProperties / ManageUnifiedObjectParts (collectionProperty=DriverProperties) / ImportUnifiedOpcUaAlarms",
+      "mechanism": "HmiSoftware.Connections by name; DriverProperty.Value by reflection; OpcUaAlarm via connection.GetService",
+      "verified": "NOT verified on a real project: 2.7.28 HMI_RT_1 has HmiSoftware.Connections empty (integrated HW connection HMI_Connection_1); shape checks V20/V21 only"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiOpcUaAlarm.*",
+      "tool": "ReadUnifiedEngineeringObjects (category=opcUaAlarmTypes) / ManageUnifiedEngineeringObject",
+      "mechanism": "HmiSoftware.OpcUaAlarmTypes composition by reflection",
+      "verified": "2.7.18 shape checks V20/V21 (OpcUaAlarmTypes composition and Create); not yet run on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.LoggingTags.*",
+      "tool": "ManageUnifiedLoggingTag",
+      "mechanism": "HmiTag.LoggingTags composition: Create(name), scalars and DataLog binding by reflection",
+      "verified": "2.7.18 shape checks V20/V21 (HmiLoggingTagComposition.Create); not yet run on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.TextGraphicList.*",
+      "tool": "ReadUnifiedEngineeringObjects (textLists / graphicLists / systemTextLists) / ManageUnifiedEngineeringObject / ExportUnifiedEngineeringList / ImportUnifiedEngineeringList / ManageUnifiedListEntries",
+      "mechanism": "HmiTextLists / HmiGraphicLists / HmiSystemTextLists compositions by reflection; native Export(DirectoryInfo,name) / Import; entries are read-only (no official entry API)",
+      "verified": "2.7.18 shape checks V20/V21 (HmiSystemTextLists, list Export/Import); not yet run on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.Cpm.*",
+      "tool": "ReadUnifiedPlantObject / ManageUnifiedPlantNode / UpdateUnifiedPlantObject",
+      "mechanism": "PlantViews (V21 PlantViewsProvider / V20 ProjectBase) by property path; PlantViewNodeComposition.Create(name,type), PlantViewNode.Delete, interface/member/logging-tag scalars by reflection",
+      "verified": "shape checks V20/V21 (PlantViewComposition.Create, PlantViewNodeComposition.Create, PlantViewNode.Delete); 2.7.28 real project HMI_RT_1 has no plant view (0 records) — nodes, interfaces and members not exercised on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.Common.HmiBase",
+      "tool": "ManageUnifiedScreenItem / ReadUnifiedObjectProperties",
+      "mechanism": "base class of every Unified engineering object (Name, Parent, Validate)",
+      "verified": "2.7.26–2.7.28 real project HMI_RT_1: Name written/read on screens, items, tags"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.UIBase",
+      "tool": "ManageUnifiedScreenItem / ManageUnifiedScreenLayout",
+      "mechanism": "base class of screens and screen items (Name, Parent, Validate)",
+      "verified": "2.7.26–2.7.27 real project HMI_RT_1: screen and item Name, ScreenItems on MCP_ItemTest"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.Common.IValidator",
+      "tool": "ValidateUnifiedObject",
+      "mechanism": "Validate() on any Unified object by reflection; HmiValidationResult rows",
+      "verified": "2.7.18 shape checks V20/V21 (HmiTag.Validate); not yet run on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.Common.HmiValidationResult",
+      "tool": "ValidateUnifiedObject",
+      "mechanism": "result rows of Validate()",
+      "verified": "2.7.18 shape checks V20/V21; not yet run on a real project"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.Common.ImportResult",
+      "tool": "ExchangeUnifiedTags (import) / ExchangeUnifiedScriptModules (import) / ImportUnifiedEngineeringList",
+      "mechanism": "native Import(DirectoryInfo[, name]) return value reported as-is",
+      "verified": "2.7.28 shape checks V20/V21; real project 2.7.28 ran export + import preview only (no import executed)"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.ScreenGroup.HmiScreenGroupComposition",
+      "tool": "ManageUnifiedHmiGroup (family=screens) / ManageUnifiedScreenLayout",
+      "mechanism": "ScreenGroups composition: Create(name), rename, delete; screens addressed by /Group/Screen path",
+      "verified": "shape checks V20/V21; not yet run on a real project"
     }
   ]
 }
