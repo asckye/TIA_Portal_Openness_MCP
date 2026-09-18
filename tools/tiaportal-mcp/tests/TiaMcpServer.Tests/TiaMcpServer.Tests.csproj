@@ -100,5 +100,8 @@
     <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentationLogic.cs" Link="PlcDocumentationLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareAmlLogic.cs" Link="HardwareAmlLogic.cs" />
+    <!-- DescribeBlockLogic 的渲染器：零依赖（只用 System.Xml.Linq）。原实现把 SCL 里的调用、命名常量、
+         绝对地址和 LAD 里的 <Call> 块调用整段丢掉，而工具照样报 success —— 只有会失败的用例盯得住。 -->
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\LadTextRenderer.cs" Link="LadTextRenderer.cs" />
   </ItemGroup>
 </Project>

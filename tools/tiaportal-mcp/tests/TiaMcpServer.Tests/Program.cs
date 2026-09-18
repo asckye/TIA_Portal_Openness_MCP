@@ -94,6 +94,9 @@ namespace TiaMcpServer.Tests
             PlcSimAdvancedTests.Run(Check);
             HardwareAmlTests.Run(Check);
 
+            Console.WriteLine("== DescribeBlockLogic 文本渲染：SCL 调用/命名常量/地址与 LAD <Call> 不许悄悄丢失 ==");
+            LadTextRendererTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");
