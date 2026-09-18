@@ -3,7 +3,7 @@
     "releaseDate":  "20260918",
     "fileVersion":  "2.7.29.0",
     "package":  "TIA_MCP_Delivery_v2.7.29_20260918",
-    "generatedAt":  "2026-09-18T11:19:27.1419314+00:00",
+    "generatedAt":  "2026-09-18T11:25:12.5068422+00:00",
     "validation":  {
                        "offlinePassed":  1446,
                        "runtimes":  {
@@ -1812,7 +1812,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/SafetyLogicTests.cs",
-                            "sha256":  "808468fa0a4ccdeddff63a0b158ca5186e84b7edd2f100ef40c085a6ebf41c62"
+                            "sha256":  "fe5afbbad2c26842580dbbe4c707f163fb9df7f2367639257535b8c450efe992"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/SoftwareContainerLookupTests.cs",

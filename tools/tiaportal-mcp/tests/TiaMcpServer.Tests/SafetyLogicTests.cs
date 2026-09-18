@@ -70,16 +70,18 @@ namespace TiaMcpServer.Tests
             check(Fails<ArgumentException>(() => SafetyLogic.ParseGlobalSettingChanges("{\"SafetyModeCanBeDisabled\":true}")), "global: PLC-level setting refused at portal level");
             check(Fails<ArgumentException>(() => SafetyLogic.ParseGlobalSettingChanges("{}")), "global: empty change set refused");
 
-            // Printout arguments.
-            var printout = SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.pdf", "MicrosoftPrintToPdf", "All", "");
+            // Printout arguments. Rooted paths are built from the temp directory so the suite also runs on the Linux CI runner
+            // (Path.IsPathRooted("C:\\...") is false there; the suite went red from 2.7.25 to 2.7.29 for that reason).
+            string Out(string name) => System.IO.Path.Combine(System.IO.Path.GetTempPath(), "out", name);
+            var printout = SafetyLogic.ValidatePrintoutRequest(Out("safety.pdf"), "MicrosoftPrintToPdf", "All", "");
             check(printout.Layout == SafetyLogic.DefaultDocumentLayout && printout.Extension == ".pdf", "printout: default layout and pdf extension accepted");
-            check(SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.oxps", "MicrosoftXpsDocumentWriter", "Compact", "DocuInfo_Simple_A4_Portrait_Small_Footer").Layout == "DocuInfo_Simple_A4_Portrait_Small_Footer", "printout: XPS writer with .oxps and explicit layout accepted");
-            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.xps", "MicrosoftPrintToPdf", "All", "")), "printout: pdf printer with .xps extension refused");
-            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.pdf", "MicrosoftXpsDocumentWriter", "All", "")), "printout: XPS writer with .pdf extension refused");
+            check(SafetyLogic.ValidatePrintoutRequest(Out("safety.oxps"), "MicrosoftXpsDocumentWriter", "Compact", "DocuInfo_Simple_A4_Portrait_Small_Footer").Layout == "DocuInfo_Simple_A4_Portrait_Small_Footer", "printout: XPS writer with .oxps and explicit layout accepted");
+            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(Out("safety.xps"), "MicrosoftPrintToPdf", "All", "")), "printout: pdf printer with .xps extension refused");
+            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(Out("safety.pdf"), "MicrosoftXpsDocumentWriter", "All", "")), "printout: XPS writer with .pdf extension refused");
             check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"out\safety.pdf", "MicrosoftPrintToPdf", "All", "")), "printout: relative path refused");
-            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.pdf", "AdobePdf", "All", "")), "printout: printer outside the enum refused");
-            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.pdf", "MicrosoftPrintToPdf", "Full", "")), "printout: option outside the enum refused");
-            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(@"C:\out\safety.pdf", "MicrosoftPrintToPdf", "All", "Layout\"x")), "printout: layout with a quote refused");
+            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(Out("safety.pdf"), "AdobePdf", "All", "")), "printout: printer outside the enum refused");
+            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(Out("safety.pdf"), "MicrosoftPrintToPdf", "Full", "")), "printout: option outside the enum refused");
+            check(Fails<ArgumentException>(() => SafetyLogic.ValidatePrintoutRequest(Out("safety.pdf"), "MicrosoftPrintToPdf", "All", "Layout\"x")), "printout: layout with a quote refused");
 
             // Signature rows and block paths.
             var row = SafetyLogic.SignatureRow("BlockOfflineSignature", 0xDEADBEEFUL);
