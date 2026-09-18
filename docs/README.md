@@ -25,7 +25,7 @@
 ## 开发与历史
 
 - [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)
-- [路线图与待办](development/roadmap.md)：引擎待重建项、官方 API 缺口优先级、第三方集成候选、合规事项（2026-09-17 审计）
+- [路线图与待办](development/roadmap.md)：引擎待重建项、官方 API 缺口优先级（2.7.24 新增 Safety 只读 P1）、第三方集成候选、合规事项（2026-09-17 审计，2026-09-18 更新）
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
 - [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.24.md)、[v2.7.23](releases/v2.7.23.md)、[v2.7.22](releases/v2.7.22.md)、[v2.7.21](releases/v2.7.21.md)、[v2.7.20](releases/v2.7.20.md)
 - 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)、[多语言修复](archive/multilingual-fix.md)、[v2.7.14 API 覆盖审计](archive/openness-audit-v2.7.14.md)、[v2.7.16 配置器界面检查记录](archive/design-qa.md)

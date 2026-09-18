@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.19 更新）
+# 路线图与待办（2026-09-17 审计，2.7.24 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -30,6 +30,7 @@
 
 | 优先级 | 能力 | 官方入口 | 价值说明 |
 |---|---|---|---|
+| **P1（2.7.24 新增）** | **Safety 只读补全**。现状：`ManagePlcSafety(action=read)` 已经反射读取 `SafetyAdministration`（登录/密码状态）、`SafetySettings` 标量、`RuntimeGroup` 标量（主/预/后处理块、I-DB、周期时间、FOB）和 `ProgramSignatures`（F 集体签名）。补：① `SafetySettings.AssignmentOfBlockNumbers`（F FB/FC/DB 块号范围与 `ManagementMode`）、`SafetySettings.SafetySystemVersion.Value` + `GetApplicableSafetySystemVersions()` 这类嵌套对象；② 工程级 `GlobalSettings`（`SafetyModificationsPossible`、`GenerationOfDefaultFailsafeProgram`、`ManagementOfFailsafeInSoftwareUnitsEnvironment`、`UsernameForFChangeHistory`）；③ 逐块 F 签名 `PlcBlock.GetService<SafetySignatureProvider>().Signatures`（`Type` / `Value`），新工具 `ReadSafetyBlockSignatures`；④ 官方安全打印输出 `SafetyPrintout.Print(SafetyPrintoutFilePrinter, FileInfo, …)` 导出为文件，新工具 `ExportSafetyPrintout`；⑤ 以上并入 `GenerateAcceptanceReport`。全部只读；写入（`GenerateGlobalFIOStatusBlock`、`GenerateBaseId`、密码设置/撤销）延后 | `Siemens.Engineering.Safety`（V21 XML 12 类型 / 54 成员；[覆盖清单](../reference/openness-coverage.md#缺口结构2724)） | 安全验收要的是 F 集体签名 + 逐块签名 + F 参数 + 运行组的机读快照和官方打印件；现在逐块签名和打印件只能在 TIA UI 里做。F 编译仍不在 PublicAPI 内，本项不改变这一点 |
 | P1 | **下载配置族**：先修 E7（`UserManagementDownload` 缺陷 + 27 种未应答提示），再补下载到 Windows 文件夹生成存储卡镜像（可指向 PLCSIM Advanced）、`StationUpload` | [Downloading PLC to a Windows folder](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-downloading-data-to-plc-device/downloading-plc-to-a-windows-folder) | CI 式出卡、不擦保持值的下载——调试最常见痛点；镜像可直接喂 PLCSIM Advanced |
 | P1 | **DB 快照 / 实际值往返**：`CreateSnapshot`、`LoadSnapshotAsActualValues`、`LoadStartValuesAsActualValues`、`InterfaceSnapshot.Export` | [Accessing Data blocks](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/accessing-data-blocks) | 下载前后保留配方/设定值 |
 | P1 | **在线可达设备扫描 + 站上载**：`GetAccessibleDevices()`、`StationUpload` | [Accessing accessible devices](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/accessing-configuration-accessible-devices)、[Uploading PLC device](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-downloading-data-to-plc-device/uploading-plc-device) | 棕地"PLC 里到底是什么"工作流 |
@@ -94,14 +95,20 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.19 已完成
+## 5. 2.7.20–2.7.24 已完成
+
+- 引擎：`DescribeBlockLogic` 在真实 V21 工程上暴露的渲染丢失全部修复并真机回归（SCL 调用 / 命名常量 / 绝对地址 / 数组下标 / 位切片 / `ENO`，LAD `<Call>` 调用框 / 用户命名引脚 / `Not` / EN 链）；`RenderPlcBlockDocument` / `ComparePlcBlockDocuments` / `GeneratePlcDocumentation` 同族修复。SCL 渲染改为按 `SW.PlcBlocks.Access_v5.xsd` 的全部分支实现。
+- 配置器：重做为单页双栏连接控制台（虚拟机 ↔ 宿主机 / 同一台电脑），客户端卡片按 CLI 在前排列并加入通义千问 / Kimi / 腾讯元宝 / DeepSeek / 智谱清言 / Grok（写各家官方 CLI 或 OpenCode）。
+- 覆盖盘点重跑（2.7.24）：API 封装面较 2.7.18 仅 +12 成员 / +4 类型；去掉壳子类型与动态覆盖后，真实缺口 381 个功能类型 / 1,753 个成员，见[覆盖清单](../reference/openness-coverage.md#缺口结构2724)。据此把 **Safety 只读** 提为 P1（§2.1）。
+
+## 5.1 2.7.19 已完成
 
 - 引擎：E8、E11 完成，全部 11 项引擎待办处理完毕（E10 保留为设计决定）。新增 9 个工具（共 359）：PLCSIM Advanced 通道 5 个（#1 与 S2 的场景式单元测试，反射后期绑定，**未在真实 PLCSIM Advanced 上验证**）、离线文档 2 个（S3 的块可视化，自研 Markdown/Mermaid 渲染，不移植 TS 渲染器）、SCL 预检 1 个（#8，自研启发式规则，不引入 tree-sitter/Node）、AML 生成 1 个（#6 的生成半边，不引入 Aml.Engine，配合已有 `ImportDeviceAml`）。
 - 程序文档（#9）由 `GeneratePlcDocumentation` 覆盖（索引、调用交叉引用、逐块渲染）。写保护钩子与审计日志（S7 及竞品的审计模式）随插件交付。
 - §3 候选中仍未落地：AutoPLC / Agents4PLC 数据（#4/#5，skill 调优素材，只在 [生态与参考资源](../reference/ecosystem.md) 登记）；`Siemens.Collaboration.Net.*` 再分发决策（§4）仍待维护者。
 - 分类修正：6 个运行时/上载写入工具改为 ONLINE-WRITE。
 
-## 5.1 2.7.18 已完成
+## 5.2 2.7.18 已完成
 
 - 引擎：E1–E5、E7、E9 处理完毕；新增 52 个官方 Openness 工具、8 个运行时通道工具、3 个离线分析工具与 `ListToolCategories`，共 350 个工具；V20/V21 重建，离线 1158、形状检查 847/758、实际 EXE 回归两版全过；**真实工程验收未执行**。
 - §2.1 中的 P1（下载提示、设备上载/扫描、DB 快照、文件夹下载）与大部分 P2（块保护、`UpdateProgram`、OPC UA 访问控制、UMAC 读写、库/工程比较、报警文本导入、Unified 事件/部件/动态化、通信连接、监视/强制表 Web 访问）已实现；P3 的 ProDiag 对象、多用户会话、Motion 对象模型、经典 HMI 脚本亦已实现。仍未做：SafetyValidation、Teamcenter、Startdrive/SiVArc/DCC 剩余动作、UMC 同步与工程保护启停、硬件杂项（App ID、批量参数、PSC、Logo、CiR、共享设备、I-Device GSD 导出）、库实例清理/更新流程。

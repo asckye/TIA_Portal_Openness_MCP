@@ -1,17 +1,32 @@
-# 官方 Openness API 覆盖清单（V21，2.7.18）
+# 官方 Openness API 覆盖清单（V21，2.7.24）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
-本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.18 引擎源码。
+本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.24 引擎源码（2026-09-18）；上一次为 2.7.18。
 
 ## 口径（先读这个，再看数字）
 
 - 分母是 **4,490 个领域成员**（1,239 个方法 + 3,251 个属性），已剔除每个类型都有的 `ToString`/`Equals`/`GetHashCode`/`Parent`/`GetAttribute(s)`/`SetAttribute(s)`/集合枚举等 10,294 个样板成员、构造函数和显式接口实现。
 - 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明"有专用代码路径"，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可以动态到达任何公开成员，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
-- 结果（V21，2.7.18）：领域成员已引用 **609**（2.7.17 为 426）、仅类型名 781、未引用 3,100；有领域成员的类型 1,217 个中有专用引用 **208**（2.7.17 为 136）、仅类型名 113、完全未触及 896。属性侧数字被"通用属性读写"显著低估，方法侧更接近真实封装度。
+- 结果（V21，2.7.24）：领域成员已引用 **621**（2.7.18 为 609，2.7.17 为 426）、仅类型名 776、未引用 3,093；有领域成员的类型 1,217 个中有专用引用 **212**（2.7.18 为 208）、仅类型名 110、完全未触及 895。2.7.19–2.7.24 的改动集中在渲染器、配置器与 PLCSIM Advanced 通道，API 封装面几乎未变。属性侧数字被"通用属性读写"显著低估，方法侧更接近真实封装度。
 
-## 能力域状态（2.7.18）
+## 缺口结构（2.7.24）
+
+895 个"完全未触及"的类型里，`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见。去掉这三类后，**没有专用封装的功能类型为 381 个 / 1,753 个成员**，其中核心程序集（Base / Step7 / WinCC / WinCCUnified / Safety）273 个 / 1,231 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
+
+| 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
+|---|---:|---:|---|
+| WinCCUnified | 113 | 685 | 画面对象属性（`UI.Shapes` 18 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Features` 13）、运行时设置（`HmiOpcUaServerRuntimeSettings` 23、`HmiLanguageAndFont` 9、诊断/报告/登录/遥测）、报警类与离散/模拟报警（`HmiAlarm` 32）、报警/数据记录与审计（`HmiLogging` 38）、文本/图形列表（14）、`HmiScreenWindow`（16）、阈值/替代值/系统变量、`Cpm`（11 类型） |
+| Base | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
+| Step7 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
+| WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
+| Safety | 10 | 41 | 已有的 `ManagePlcSafety(action=read)` 经反射读取 `SafetyAdministration` / `SafetySettings` / `RuntimeGroup` 的标量与 `ProgramSignatures`（词法扫描看不到）。仍缺：`SafetySettings.AssignmentOfBlockNumbers`（F 块号范围）与 `SafetySystemVersion` 等嵌套对象、工程级 `GlobalSettings`、逐块的 `SafetySignatureProvider.Signatures`、官方安全打印输出 `SafetyPrintout.Print`；`GenerateAcceptanceReport` 也未纳入 Safety。见路线图 P1 |
+| 选件包 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
+
+已核实为**官方没有 API** 而保持明确拒绝的项不计入缺口，见下文"已核实为官方无 API 的项"。"未封装"不等于"用不了"：`DescribeObject` / `GetObjectProperty` / `InvokeObject` / `InvokeService` 可到达任何公开成员，只是没有带校验、预览与文档的专用工具。
+
+## 能力域状态（2.7.18，此后无 API 侧变化）
 
 | 能力域 | 官方入口（V21 XML） | 2.7.17 | 2.7.18 |
 |---|---|---|---|
@@ -41,15 +56,15 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.18 源码）
+## 统计表（脚本生成，2.7.24 源码）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|
-| Base | `Siemens.Engineering` | 59 | 13 | 6 | 40 | 185 | 45 |
+| Base | `Siemens.Engineering` | 59 | 13 | 6 | 40 | 185 | 47 |
 | Base | `Siemens.Engineering.AdvancedProtection` | 1 | 1 | 0 | 0 | 3 | 3 |
 | Base | `Siemens.Engineering.Compare` | 3 | 0 | 0 | 3 | 7 | 0 |
 | Base | `Siemens.Engineering.Compiler` | 5 | 2 | 0 | 3 | 14 | 5 |
-| Base | `Siemens.Engineering.Connection` | 14 | 5 | 0 | 9 | 34 | 14 |
+| Base | `Siemens.Engineering.Connection` | 14 | 5 | 0 | 9 | 34 | 15 |
 | Base | `Siemens.Engineering.CrossReference` | 8 | 2 | 0 | 6 | 28 | 6 |
 | Base | `Siemens.Engineering.CustomIdentity` | 2 | 1 | 1 | 0 | 4 | 3 |
 | Base | `Siemens.Engineering.Download` | 5 | 2 | 0 | 3 | 21 | 8 |
@@ -59,7 +74,7 @@
 | Base | `Siemens.Engineering.HW.CommunicationConnections` | 10 | 2 | 8 | 0 | 90 | 3 |
 | Base | `Siemens.Engineering.HW.CustomDataTypes` | 3 | 0 | 0 | 3 | 4 | 0 |
 | Base | `Siemens.Engineering.HW.Extensions` | 1 | 1 | 0 | 0 | 2 | 2 |
-| Base | `Siemens.Engineering.HW.Features` | 43 | 13 | 30 | 0 | 111 | 17 |
+| Base | `Siemens.Engineering.HW.Features` | 43 | 14 | 29 | 0 | 111 | 18 |
 | Base | `Siemens.Engineering.HW.HardwareCatalog` | 1 | 0 | 0 | 1 | 7 | 0 |
 | Base | `Siemens.Engineering.HW.Systemdiagnostics.Settings` | 2 | 1 | 0 | 1 | 3 | 2 |
 | Base | `Siemens.Engineering.HW.Utilities` | 5 | 0 | 0 | 5 | 9 | 0 |
@@ -79,7 +94,7 @@
 | Base | `Siemens.Engineering.Upload.Configurations` | 5 | 0 | 1 | 4 | 6 | 0 |
 | Base | `Siemens.Engineering.VersionControl` | 11 | 5 | 1 | 5 | 36 | 21 |
 | CFC | `Siemens.Engineering.SW.FunctionCharts` | 2 | 0 | 1 | 1 | 8 | 0 |
-| DCC | `Siemens.Engineering.MC.Drives.Dcc` | 25 | 0 | 1 | 24 | 97 | 0 |
+| DCC | `Siemens.Engineering.MC.Drives.Dcc` | 25 | 1 | 1 | 23 | 97 | 3 |
 | DCC | `Siemens.Engineering.MC.Drives.Dcc.DccExceptions` | 39 | 0 | 0 | 39 | 39 | 0 |
 | Safety | `Siemens.Engineering.Safety` | 12 | 1 | 0 | 11 | 54 | 3 |
 | Safety | `Siemens.Engineering.Safety.Download.Configurations` | 1 | 0 | 0 | 1 | 1 | 0 |
@@ -107,7 +122,7 @@
 | Step7 | `Siemens.Engineering.SW.TechnologicalObjects.Ident` | 1 | 1 | 0 | 0 | 2 | 1 |
 | Step7 | `Siemens.Engineering.SW.Types` | 11 | 2 | 1 | 8 | 41 | 15 |
 | Step7 | `Siemens.Engineering.SW.Units` | 8 | 2 | 0 | 6 | 27 | 2 |
-| Step7 | `Siemens.Engineering.SW.WatchAndForceTables` | 11 | 4 | 0 | 7 | 44 | 14 |
+| Step7 | `Siemens.Engineering.SW.WatchAndForceTables` | 11 | 4 | 0 | 7 | 44 | 16 |
 | TeamcenterGateway | `Siemens.Engineering.TeamcenterGateway` | 12 | 0 | 0 | 12 | 51 | 0 |
 | TestSuite | `Siemens.Engineering.TestSuite` | 4 | 0 | 1 | 3 | 15 | 0 |
 | TestSuite | `Siemens.Engineering.TestSuite.ApplicationTest` | 7 | 1 | 0 | 6 | 24 | 5 |
@@ -143,7 +158,7 @@
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization` | 6 | 2 | 2 | 2 | 16 | 5 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing` | 1 | 1 | 0 | 0 | 4 | 1 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Script` | 3 | 1 | 1 | 1 | 12 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Tag` | 7 | 1 | 4 | 2 | 20 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Tag` | 7 | 3 | 2 | 2 | 20 | 4 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Events` | 96 | 0 | 0 | 96 | 243 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Features` | 13 | 0 | 0 | 13 | 75 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Parts` | 85 | 0 | 0 | 85 | 370 | 0 |
