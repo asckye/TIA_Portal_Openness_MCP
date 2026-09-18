@@ -15,17 +15,34 @@
 
 ## 2. 下一步（按顺序）
 
-1. **部署 2.7.31 到虚拟机并真机验证**（替换 `runtime/v21/TiaMcpServer.exe` 后**重启服务**，否则仍是旧版；`AttachToOpenProject`）：
+1. **部署 2.7.31 到虚拟机并真机验证**（替换 `runtime/v21/TiaMcpServer.exe` 后**重启服务**——2.7.30 时换完没重启，自报版本仍是旧的；先 `python scripts/diagnostics/Probe-McpServer.py call GetState` 看 `server: TiaMcpServer 2.7.31.0`，再 `call AttachToOpenProject '{"projectName":"AutomaticDipCoatingMachine"}'`；非 lite 工具一律 `bridge <Tool> @args.json`）：
    - 修复验证：`ManageNetworkDomain` `kind=mrp` `create`（DNS 安全名如 `mcptmpmrp2731`）→ 期望 `createdName` 与 `foundByNameAfterCreate` / `countAfter`；再 `delete` → 期望 `verifiedAbsent=true` 且不再阻断后续工具；`ReadDeviceItemChannels`（`+S1-K3`）→ `attributeNames` 带 `accessMode`，`UpdateDeviceItemChannel` 对 `InputDelay` 预期直接拒绝（`readOnlyAttributes`）。
    - 库：`ReadLibraryOverview`（工程库，看类型树与母版树）、`ReadLibraryType`（任一工程库类型路径，再按其 guid 查一次）、`CheckLibraryUpdates`（工程库，两种 mode）、`ManageGlobalLibrary action=infos`（列出本机认识的全局库；若有用户全局库可 `openInfo` 打开后 `ReadLibraryOverview` / `CompareLibraries` / `CompareLibraryObjects`，用完 `close`）；`SynchronizeLibrary` / `ManageLibraryType` 只做 `dryRun` 预览（`cleanUp` / `harmonizeProject` 会改工程）。
    - 通过后：`docs/releases/v2.7.31.md` 验证表、`CHANGELOG.md` 2.7.31 条目、登记表 `LibraryCompareResult*` 的 `verified`（若跑了 `CompareLibraries`），提交 `Record the 2.7.31 real-project rerun; ...`。
-2. **阶段 3 剩余子批次**（Base 未封装 75 类型 / 271 成员，全部在 `Siemens.Engineering.Base.dll`，V20/V21 都有）：
+2. **阶段 3 剩余子批次**（Base 未封装 61 类型 / 194 成员，全部在 `Siemens.Engineering.Base.dll`，V20/V21 都有）：
    - ~~③-① 硬件网络深层~~ **2.7.30 完成**（HW 里只剩 `CertificateSupportedService`、`Telecontrol*DataPoint`、`WebApplicationConfiguration`、`CatalogEntry`、`HardwareUtility` / `ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`、`Watch/ForceTableAccessRule`、`StructuredData` / `TableData`，可并入 ③-④ 收尾）。
    - ~~③-② 库~~ **2.7.31 完成**（Library 命名空间功能类型归零；`LibraryCompareResult*` 经 `CompareLibraries` 反射到达，登记为动态覆盖，真机待验）。
-   - ③-③ 用户管理与安全：`UmcUser` / `UmcUserGroup` / `UmcCredentials`、`SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`（官方 "Functions for security"）。
-   - ③-④ `Compare` 结果元素、`CrossReference` 的 `SourceObject` / `ReferenceObject` 深层字段。
+   - ③-③ 用户管理与安全（2.7.32，起点已备好）：
+     - 缺口（2.7.31 审计）：`Security` 6 类型 / 23 成员——`SyslogServerProvider.Servers` → `SyslogServerComposition.Create` → `SyslogServer`（Address / Port / Tls / Comment / Name / AssignedModules / Delete）；`CertificateTemplate`（Signature / SubjectCommonName / SubjectAlternativeNames / Usage / ValidFrom / ValidUntil）+ `SubjectAlternativeNameComposition.Create` / `SubjectAlternativeName`（Type / Value / Delete）+ `CertificateComposition.Create(template) / Import`；`PlcPasswordPolicyService.PasswordPolicyEnabled` 与 `LegacyPlcPasswordPolicyService`（MinimumLength 等 5 项）。`Umac` 3 类型 / 10 成员——`UmcUser`（Activate / Deactivate / Delete / DomainId / IsActive / SetName）、`UmcCredentials`（Name / SetPassword）、`SystemDeviceFunctionRight.Comment`；另有仅点名未用的 `UmcServer.GetUserByName / GetUserGroupByName`、`UmcUserComposition.Create / CreateOfflineUmcUser`、`UmcUserGroupComposition.Create / CreateOfflineUmcUserGroup`、`UmcUserInfo` / `UmcUserGroupInfo`、`PasswordPolicyConfigurator`（8 项）、`EngineeringFunctionRightAssociation.Add/Remove`、`RoleAssociation.Add/Remove`、`CustomRoleComposition.Create`。
+     - 已有工具别重做：`ReadProjectUserManagement` / `ManageProjectUserManagement`（工程用户/角色/权利 15 种动作）、`ReadProjectProtection`、`ManagePlcCertificate`（`LocalCertificateManager`）、`ManagePlcBlockProtection`；③-③ 是补 UMC 服务器侧用户/组、Syslog、证书模板、密码策略。
+     - 官方页面（`https://docs.tia.siemens.cloud/api/khub/maps/gpR5ZkKnLSuzVoGX1ovoKg/topics/<id>/content` 直接取正文）："Functions for UMAC Global Users and UMC Server" 目录 `HHAe5KUz11B0PKDlSxUKhw`；Adding an UMC User `RaSbPMQe6yPvxCsBzVctNw`、Adding an UMC User Group `bFz~hPbhWv6kGdzaCDeySA`、Managing offline UMC User And User Groups `hymB8NODTv2Be0KT264V0Q`、Retrieving an UMC User from a UMC Server `EjA_EV4WL9pZS~L~mKJcDA`、Retrieving an UMC User Group `nS5ctWbfgpnlgzOAXC8qiw`、Finding an UMC User `gxlEAZbcmONryfAu~77BmQ`、Finding an UMC User group `j1~yVTInnGjJ4sX14nzROw`、Getting all UMC Users `d2TQ7PskB2Ym0yzvRylVqQ`、Getting all UMC groups `wY7Eq0XFHOvye0hgV0uarQ`、Activating/Deactivating `4c6G7j0mO0bdsl3FCrXNHg`、Checking state `m03R3RCcbujsOfE9ylBx8g`、Deleting `pd0zXQFPZbhoo5A1zcFFMg`、Assigning role to UMC User `zMSK6yo9V17NlHjKnDXsVg` / User Group `ppLE5OTpSkRdXBsfsnl~XA`、Removing role `0klneLoq1N76kAjqK3lReg`、Getting assigned roles `vYH2QmzwcsQkUu1lQ5IqZQ`、Authentication to connect to a UMC Server `PVFJJmFJBQqKACi3rTNi1A`、Synchronizing UMC user `tq6RQzc55iri0FRacjGKMQ`、Setting password policies for UMAC `3MwpthV7Ol6LEUkK8tjfjQ`、Setting password policy for PLC `4Wov24Ut~GV88CySQ3dUVQ`、Accessing Anonymous user `C38M0Qpc12CcZF4hrTJtBQ`、Device Function Rights `_4fXrVoziD4ewTDOgEfG3w`、Engineering Function Rights `izQBWtGgEdJJvfvC~XlxPw`、Managing certificate `cSHjp~ggDchSBvrL2zgyWQ`、Managing dynamic certificate settings `4dAdhWtWlHDplZkfGghnNQ`、Downloading User Management data `KqHGmbijjSjYOaWIBbTUuQ`。Syslog 页面按标题搜不到，用 `clustered-search` 搜正文 "SysLogServerConfiguration"（`HW.Features.SysLogConfigurationManager` 在 2.7.30 真机上 CPU 项有此服务）。
+     - 真机约束：虚拟机工程没有 UMC 服务器，UMC 用户/组只能验 offline 用户（`CreateOfflineUmcUser`）与本地读取；密码走 `PlcBlockServicesLogic.ToSecureString`，绝不回显。
+   - ③-④ Base 收尾：`Compare` 结果元素、`CrossReference` 的 `SourceObject` / `ReferenceObject` 深层字段、下载/上载/在线/编译结果消息与配置类、`TiaPortalSetting(sFolder)`、Multiuser 零头、HW 零头（见 ③-① 行）。
    - 每个子批次一个发布（③-③ 为 2.7.32）；先在浏览器里把官方章节逐页读完（`https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows`，`get_page_text` 可直接取正文），再对照 `TIA_V21_PublicAPI\V21\net48\Siemens.Engineering.Base.xml` 核成员签名（V21 的 `net48` 目录没有单体 `Siemens.Engineering.dll/.xml`，Base 类型在 `Siemens.Engineering.Base.*`；V20 仍是 `Siemens.Engineering.xml`）。
 3. 之后按路线图：阶段 4 Step7（软件单元、`PlcDocument*`、校验和/仿真设置提供者）→ 5 经典 WinCC 文件夹层次 → 6 选件包（只做形状检查）。
+
+剩余缺口一览（2.7.31 审计，未封装功能类型 / 成员；壳子类型不计）：
+
+| 层次 | 剩余 | 内容 |
+|---|---|---|
+| 核心 | 129 / 393 | Base 61 / 194、Step7 44 / 140、经典 WinCC 24 / 59 |
+| ├ ③-③ 安全 / UMC | 9 / 33 | 见上 |
+| ├ ③-④ Base 收尾 | ~52 / 161 | `Siemens.Engineering` 根命名空间 10 / 28（`TiaPortalSession` / `Transaction`、`TiaPortalProduct`、`AttributeConfiguration`、`UmacCredentials`…）、Download / Upload / Online / Compiler 结果消息与配置 17 / 41、Connection 3 / 7、Multiuser 3 / 7、Settings 2 / 5、VersionControl 2 / 2、Compare 1 / 5、CrossReference 2 / 15、HW 零头 13 / 40 |
+| ├ 阶段 4 Step7 | 44 / 140 | `SW.Units` 3 / 18、`SW` 11 / 14（`PlcDocument*`、`PlcChecksumProvider`…）、`SW.ExternalSources` 4 / 13、`SW.Blocks` 4 / 11、TO 映射 3 / 36 等 |
+| └ 阶段 5 经典 WinCC | 24 / 59 | `Hmi.Screen` 17 / 38（弹出/滑入画面文件夹层次）、`Hmi.RuntimeScripting` 3 / 10、`Hmi.Tag` 3 / 8、`Hmi.Globalization` 1 / 3 |
+| WinCC.Extension | 2 / 11 | `ConstValue`、`NullableDateTime` |
+| 选件包（只做形状检查） | 108 / 525 | SiVArc 33 / 198、Startdrive 35 / 127、DCC 14 / 69、SafetyValidation 9 / 43、TestSuite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7 |
+| **合计** | **239 / 929** | 2.7.30 为 253 / 1,006，2.7.29 为 267 / 1,067 |
 
 ## 3. 每个阶段的固定动作
 
@@ -43,24 +60,29 @@
 
 ## 4. 构建与发布闸门（新机器要先满足）
 
-- 需要：Windows、.NET SDK 8（含 net48 目标包）、Python 3.10+、Git，以及**放在仓库根的 PublicAPI 副本**（Siemens 授权组件，不可分发，`.gitignore` 已忽略这两个目录名）：`TIA_V20_PublicAPI\V20`（2000.4.401.2）与 `TIA_V21_PublicAPI\V21\net48`（2100.0.121.1，含 `Siemens.Engineering.Safety.dll`）。不需要安装 TIA Portal。
+- 需要：Windows、.NET SDK 8 或 10（desktop-ivrlcht 用 10.0.401，net48 目标包正常）、Python 3.10+、Git，以及**放在仓库根的 PublicAPI 副本**（Siemens 授权组件，不可分发，`.gitignore` 已忽略这两个目录名）：`TIA_V20_PublicAPI\V20`（2000.4.401.2）与 `TIA_V21_PublicAPI\V21\net48`（2100.0.121.1，含 `Siemens.Engineering.Safety.dll`）。不需要安装 TIA Portal。
 - `dotnet build … -p:SiemensEngineeringDirectory=D:\…` 要在 PowerShell 里跑：Git Bash 会改写反斜杠路径，Openness NuGet 的 targets 找不到目录就回落到 "Package" 解析，结果是 456 个 CS0246。
 - 统一构建：
   ```powershell
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Release.ps1 -V20ReferenceRoot <repo>\TIA_V20_PublicAPI\V20 -V21ReferenceRoot <repo>\TIA_V21_PublicAPI\V21\net48 -Python <python.exe 完整路径>
   ```
-  约 5–15 分钟；它重建两版引擎、跑离线套件与形状检查、重建 `TiaMcpConfigurator.exe`、重生成 `manifest/*.json` 与 `docs/reference/tool-matrix.md`。若后台运行并用 `*>` 记日志，日志是 UTF-16——用 `tr -d '\0'` 再 grep。
+  约 4–15 分钟；它重建两版引擎、跑离线套件与形状检查、重建 `TiaMcpConfigurator.exe`、重生成 `manifest/*.json` 与 `docs/reference/tool-matrix.md`。若后台运行并用 `*>` 记日志，日志是 UTF-16——用 `tr -d '\0'` 再 grep。**构建期间不要再改 `src` / `tests` 里的任何文件**：源码哈希在最后一步（`delivery.log` 的 Validate-Bundle）才算，中途改一行就 "Source changed after validation"，整轮白跑（2.7.30 第一轮就是这样）。
 - 手工单版构建（调试用）：V21 `dotnet build tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj -c Release -p:SiemensEngineeringDirectory=<V21\net48>`；V20 需另给 `-p:SiemensEngineeringDirectory=<V20> -p:BaseIntermediateOutputPath=<src>\obj-v20\ -p:MSBuildProjectExtensionsPath=<src>\obj-v20\`（绝对路径、以 `\` 结尾；在 PowerShell 里跑，Git Bash 会把尾部反斜杠吃掉）。
 - **哈希闸门**：`manifest/release-build.json` 记录 `tools/tiaportal-mcp/src` 与 `tests`（含离线测试 .cs）的源码哈希；任何改动后不重跑 Build-Release，`validate-bundle` CI 与 `Package-Release.py` 都会报 "Source changed after validation"。不要手改哈希。只改文档/登记表不触发。
 - 提交模式：`Release X.Y.Z (1/3)` 源码 + 版本 + CHANGELOG + 发布说明 + 文档；`(2/3)` `runtime/v20/TiaMcpServer.exe`；`(3/3)` `runtime/v21/TiaMcpServer.exe` + `TiaMcpConfigurator.exe` + `manifest/*` + `tool-matrix.md`。然后 `python scripts/build/Package-Release.py --git "<git.exe>"` 本地干跑，`git push origin master`，再推注解 tag `vX.Y.Z` → "Publish complete release" 工作流上传 ZIP。
 - 不要 `git add -A`：仓库根可能有本地大压缩包。提交、PR、Release 正文**不加任何 AI 署名行**（维护者明确要求）。
-- CI 状态无 `gh` 时：`curl -s https://api.github.com/repos/asckye/TIA_Portal_Openness_MCP/actions/runs?per_page=6`。
+- 本地等价于 CI 的检查：`validate` 工作流 = `python scripts/checks/Check-Repository.py` + `./scripts/checks/Validate-Bundle.ps1 -Strict`（PowerShell）+ `Build-Configurator.ps1 -Test`；`offline-checks` = `dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj -c Release` + `python scripts/checks/Check-DeadToolReferences.py`。推 master 前四个都过；推 tag 前确认两条工作流已绿。
+- CI 状态无 `gh` 时：`curl -s https://api.github.com/repos/asckye/TIA_Portal_Openness_MCP/actions/runs?per_page=6`；发布产物：`.../releases/tags/vX.Y.Z`（ZIP + .sha256 两个资产）。
+- 遇到过一次 `.git/refs/heads/master` 被写成 41 个空白字符（`git status` 报 "No commits yet"、push 报 "cannot be resolved to branch"）：提交对象与 reflog 都完好，`rm .git/refs/heads/master` 后 `git update-ref refs/heads/master <reflog 里最后的 sha>` 即恢复，`git fsck` 干净。再遇到照此处理，不要重新 clone。
+- 给 AI 助手：含反斜杠的补丁脚本（Windows 路径、`\"` 转义）不要经 Bash heredoc 传，先用 Write 写到临时目录再执行；文档补丁一律先 `assert s.count(old)==1` 再替换。
 
 ## 5. 真机验证约定
 
 - 虚拟机 HTTP 端口 `8765`（Bearer 鉴权，用户 `SIEMENS`，TIA V21），**地址随宿主机网络变**：一台机器上是 `192.168.0.172`，desktop-ivrlcht 上是 `10.10.10.56`——以本机 `~/.claude.json` 里 `tia-portal-vm` 的 `url` 为准。服务器端路径（`C:\Users\SIEMENS\...`）在虚拟机上，宿主机不可访问。
 - 宿主机若设了 `HTTP_PROXY`（desktop-ivrlcht 是 `127.0.0.1:7897`），MCP 客户端会把局域网请求送进代理，表现为 "Version negotiation probe timed out after 5000ms"（curl 经代理同样 5 秒 502，`--noproxy '*'` 直连立即 401/200）。把虚拟机地址加进 `NO_PROXY`，或临时用直连脚本经 `CallTool` 调用。
-- 默认 lite 只暴露 56 个工具，Unified 等全量工具经 `CallTool(name, argumentsJson)` 调用；大响应（>20,000 字符）会被服务器切成 `GetExport(exportId, offset)` 分页。
+- 默认 lite 只暴露 56 个工具，Unified 等全量工具经 `CallTool(name, argumentsJson)` 调用；大响应（>20,000 字符）会被服务器切成 `GetExport(exportId, offset)` 分页——验证时给小的 `limit`（2–5）而不是翻页。
+- 直连探针（不经 MCP 客户端，绕过代理）：`python scripts/diagnostics/Probe-McpServer.py tools [关键字]` / `call <lite 工具> '{...}'` / `bridge <任意工具> @args.json`，连接信息默认取 `~/.claude.json` 的 `tia-portal-vm`（或 `--url` / `--token`、`TIA_MCP_URL` / `TIA_MCP_TOKEN`）。`bridge` 会把 `CallTool` 包装的内层 JSON 解开打印。每次调用是独立 MCP 会话，引擎的 Portal 状态跨会话保留。
+- 换引擎 exe 后必须重启虚拟机上的服务进程，否则 `server:` 行仍报旧版本。工具返回 "HMI operation blocked after a connection failure"（`GetState` 里 `snapshotReadsBlocked=true`）时，再调一次 `AttachToOpenProject` 即解封；这是 HMI 快照的保守保护，已释放代理在 2.7.31 起由各工具就地处理。
 - 工程 `AutomaticDipCoatingMachine`（V21），PLC `+S1-K1`（1510SP F V4.1），HMI `HMI_RT_1`（Unified）。**永不保存工程**；临时对象（画面、变量、组）用完即删；改过的设置（报警类颜色、记录大小、GlobalSettings）复原；先 `dryRun` 再实做。
 - 工程事实（硬件）：设备 `ET 200SP station_1` 在组 `+S1` 下（`devicePathJson=["ET 200SP station_1"]` 单名即可），CPU 项路径 `["+S1-K1"]`（**不经**机架 `机架_0`），PROFINET 接口 `["+S1-K1","PROFINET 接口_1"]`，其端口 `["+S1-K1","PROFINET 接口_1","端口_3"]` 与 `["BA 2xRJ45","Port_1"]`；IO 模块 `["+S1-K3","+S1-K3"]`（K3 DI16、K4 DQ16、K5 AI2、K6 AI4 RTD）、`F-DI 8x24VDC HF_1`；OPC UA 子模块 `["+S1-K1","OPC UA_1"]`；4 台 SINAMICS G120C（`SINAMICS G_5` → `["+S1-7Q1","PROFINET 接口"]` 等）是 IO 设备；子网 `PN/IE_1`，IO 系统 "PROFINET IO-System" #100；无拓扑互连、无传输区、无 MRP 环。
 - 工程事实：`HmiSoftware.Connections` 为空（集成连接 `HMI_Connection_1` 只在硬件网络里）；无工厂视图；报警审计类为空；语言 en-US / zh-CN / de-DE；变量表 `Default tag table` 可放临时变量（`EnsureUnifiedHmiTag`，参数名是 `hmiSoftwarePath`）。
