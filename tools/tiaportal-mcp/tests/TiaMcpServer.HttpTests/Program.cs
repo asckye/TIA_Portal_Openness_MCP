@@ -340,6 +340,7 @@ internal static class Program
                     SimulationDocumentationShapeChecks.Run(Server, shapeCheck);
                     SafetyShapeChecks.Run(Server, shapeCheck);
                     UnifiedScreenItemShapeChecks.Run(Server, shapeCheck);
+                    UnifiedExchangeShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

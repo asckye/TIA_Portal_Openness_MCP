@@ -60,7 +60,7 @@ namespace TiaMcpServer.Siemens
             return Color.FromArgb(argb);
         }
         internal static object? ConvertValue(JsonNode? node, Type type) => IsColor(type) ? ParseColor(node) : EngineeringScalarProperties.ConvertValue(node, type);
-        internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : Equals(actual, expected);
+        internal static bool SameValue(object? actual, object? expected) => actual is Color a && expected is Color e ? a.ToArgb() == e.ToArgb() : EngineeringScalarProperties.SameValue(actual, expected);
         internal static JsonNode? Json(object? value) => value is Color c ? JsonValue.Create(ColorText(c)) : EngineeringScalarProperties.Json(value);
 
         // Public scalar read plus System.Drawing.Color rendered as #AARRGGBB; Color leaves excludedComplexProperties.

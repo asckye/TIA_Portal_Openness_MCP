@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.28] - 2026-09-18
+
+引擎 2.7.28.0（V20/V21 均重建），工具 364 → 367，默认 lite 56 项不变。详见 [v2.7.28](docs/releases/v2.7.28.md)。WinCC Unified 阶段子批次 ⑤。
+
+- **新工具 3 个**：`ExchangeUnifiedTags`（变量 WinCC ML `.hmi.yml` 导入导出，`HmiTagComposition.Export/Import`，根或任意组内变量表；此前 Unified 变量表导出走 SimaticML 路径报 unsupported）、`ExchangeUnifiedScriptModules`（全局脚本模块整体/单个导出与导入，`IChromDataExchangeExport`）、`ImportUnifiedOpcUaAlarms`（连接上的 `OpcUaAlarm` 服务：显示名、`GetNodeId`、xml 导入）。
+- **登记**：阈值（`ManageUnifiedObjectParts`）、替代值/范围（嵌套写入）、系统变量、驱动属性、审计类、文本/图形列表、记录变量、Cpm、`UIBase`/`HmiBase` 经既有工具到达。
+- **修复**：`Object` 类型属性（变量范围/替代值/阈值 `Value`）写入后读回按跨类型文本/数值比较，不再把已写入的值误报为 "readback differs"。真机确认：`HmiThresholdComposition.Create()` 被 TIA 原生拒绝（"New thresholds are not supported"），替代值只对外部变量可设。
+- **验证**：离线 1441 项（新增 33 项）；形状检查 V20 990 / V21 1087（新增 54 / 55 项）；两版 EXE 回归见 `manifest/release-build.json`。
+
 ## [2.7.27] - 2026-09-18
 
 引擎 2.7.27.0（V20/V21 均重建），工具 364、默认 lite 56 项不变。详见 [v2.7.27](docs/releases/v2.7.27.md)。

@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 03:22:36
-- 引擎文件版本：2.7.27.0
-- 工具数量：364
+- 生成时间：2026-09-18 04:00:42
+- 引擎文件版本：2.7.28.0
+- 工具数量：367
 
 ## 读法
 
@@ -16,8 +16,8 @@
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
 | `READ` | 读取已打开工程，不改动 | 105 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 130 |
-| `FILE` | 导出/导入文件或生成离线产物 | 42 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 131 |
+| `FILE` | 导出/导入文件或生成离线产物 | 44 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 10 |
@@ -34,7 +34,7 @@
 | `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
 | `hardware` | 硬件与网络 / Hardware & network | 40 | `Hardware` (40) |
-| `hmi` | HMI 人机界面 / HMI | 112 | `HMI` (25)、`HMI-Unified` (67)、`HMI-Classic` (14)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 115 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (14)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
 ## session — 会话与基础设施 / Session & infrastructure（34）
@@ -389,7 +389,7 @@
 | `SetDeviceItemIoAddress` | L2 | WRITE | Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompileSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. |
 | `SetPutGetAccess` | L2 | WRITE | [PreCondition:Connect+OpenProject] Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads). This is a hardware-configuration change — you must run DownloadToPlc afterwards for it to take effect on the live CPU. Returns before/after readback evidence. |
 
-## hmi — HMI 人机界面 / HMI（112）
+## hmi — HMI 人机界面 / HMI（115）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
@@ -423,7 +423,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ReadHmiScreenSnapshot` | L2 | READ* | Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachToOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExport. |
 | `ReadSiVArcRules` | L2 | READ | Exact SiVArc rule category and property-only JSON path; live scalar pagination with schema, complex values excluded. No generation. |
 
-### [HMI-Unified]（67）
+### [HMI-Unified]（70）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -453,9 +453,12 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `EnsureUnifiedHmiScreenItem` | L2 | WRITE* | Create or verify a single Unified HMI control (button, lamp, IO field, etc.) on a screen. Requires: Connect + OpenProject + EnsureUnifiedHmiScreen. itemType: Button, Rectangle (lamp/indicator/background — has NO text), Text (static text label = HmiText), IOField (value display/entry), or full CLR type name. For a text caption/label ALWAYS use Text, never Rectangle (a Rectangle has no Text property and renders blank if given text). For a complete screen layout use ApplyUnifiedHmiScreenDesignJson instead. |
 | `EnsureUnifiedHmiTag` | L2 | WRITE* | Create or verify a Unified HMI external tag. For PLC-backed tags pass plcTag and address in the same call; the address must read back in Address/LogicalAddress, e.g. %DB200.DBX0.0. Requires: Connect + OpenProject + EnsureUnifiedHmiConnection + EnsureUnifiedHmiTagTable. |
 | `EnsureUnifiedHmiTagTable` | L2 | WRITE* | Create or verify a Unified HMI tag table exists. Requires: Connect + OpenProject + Unified HMI. Idempotent. Create tag tables before adding tags with EnsureUnifiedHmiTag. Default tag table name is '默认变量表'. |
+| `ExchangeUnifiedScriptModules` | L2 | FILE | Native WinCC Unified global script module exchange: export all modules (HmiScriptModuleComposition.Export) or one exact moduleName (HmiScriptModule.Export(dir[, fileName]), the IChromDataExchangeExport contract) into a NEW absolute directory on the MCP server with every file hashed; import calls Scripts.Import(DirectoryInfo[, fileName]) on an existing directory and lists module names before/after. Default preview; import needs dryRun=false; script bodies are not compared (use ReadUnifiedGlobalScript). No save/compile/download. |
+| `ExchangeUnifiedTags` | L2 | FILE | Native WinCC Unified tag exchange in WinCC ML (YAML): export writes <fileName>.hmi.yml (plus TIA side files) via HmiTagComposition.Export(DirectoryInfo[, name]) into a NEW absolute directory on the MCP server and hashes every file; import calls Import(DirectoryInfo[, name]) on an existing directory and checks expectedTagNamesJson (exact names) afterwards. tagTable = unique table name or /Group/Sub/Table (empty = the device root Tags composition). Default preview; import needs dryRun=false and may also touch other tags in the file; tag properties are not independently compared. No save/compile/download. |
 | `ExportUnifiedEngineeringList` | L2 | FILE | Export exactly named textLists/graphicLists/systemTextLists through native Export when available. New destination directory only; output files nonempty and hashed. Default preview; no project modification; entries not independently verified. |
 | `GetUnifiedCrossReferences` | L2 | READ | Native Unified cross references for exact object. Strict errors; bounded Sources/References/Locations. Does not expand runtime script names or claim all native fields complete. |
 | `ImportUnifiedEngineeringList` | L2 | WRITE | Native import of textLists/graphicLists from a server-side file using Import(DirectoryInfo,string). expectedNamesJson is an array of exact list names checked after import. dryRun=true default. Entire file is imported and may affect additional lists; readback verifies names, not all entries. No explicit save/compile/download. API availability differs by version. |
+| `ImportUnifiedOpcUaAlarms` | L2 | WRITE | Official OpcUaAlarm service of one exact Unified HMI connection (OPC UA connections only): read lists DisplayNames and resolves the node id of an optional displayName (native GetNodeId); import reads OPC UA alarm information from an absolute .xml on the MCP server via Import(xmlPath) (native bool) and lists display names afterwards. Alarm types themselves are bound with ManageUnifiedOpcUaAlarmType. Default preview; no save/compile/download. |
 | `ListUnifiedGlobalScripts` | L2 | READ | Page global script module names only. Names are NOT proof of body acquisition. Exact expectedProject and HMI path required. Resume with identical arguments and nextCursor. |
 | `ListUnifiedHmiApiTypes` | L2 | READ* | List loaded WinCC Unified HMI API types/enums by name filter, useful for discovering event and dynamization types. |
 | `ListUnifiedLibraryFolder` | L2 | READ | Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. |

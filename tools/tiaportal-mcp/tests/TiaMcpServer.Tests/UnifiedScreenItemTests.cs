@@ -144,6 +144,12 @@ namespace TiaMcpServer.Tests
             var sliderRead = EngineeringScalarProperties.Read(new global::Siemens.Engineering.HmiUnified.UI.Widgets.HmiSlider { Name = "S1" });
             check(((JsonArray)sliderRead["excludedComplexProperties"]!).Select(n => n!.GetValue<string>()).Count(n => n == "EventHandlers") == 1, "hiding: scalar read lists the hidden EventHandlers once");
 
+            // Object-typed readback: TIA stores JSON 0 as "0" on LowerRange.Value (real project 2.7.27); compare by text/number across CLR types.
+            check(EngineeringScalarProperties.SameValue("0", 0) && EngineeringScalarProperties.SameValue(100, "100") && EngineeringScalarProperties.SameValue("1.50", 1.5m), "readback: object-typed value compared across CLR types");
+            check(!EngineeringScalarProperties.SameValue("1", 2) && !EngineeringScalarProperties.SameValue("abc", 0) && !EngineeringScalarProperties.SameValue(1, 1.5), "readback: different values still differ");
+            check(EngineeringScalarProperties.SameValue(null, null) && !EngineeringScalarProperties.SameValue(null, 0) && !EngineeringScalarProperties.SameValue("x", "y"), "readback: null and same-type mismatches handled");
+            check(UnifiedUiModelLogic.SameValue("0", 0) && !UnifiedUiModelLogic.SameValue(Color.Red, "0"), "readback: UI model comparison delegates for non-colors");
+
             // List rows.
             var row = UnifiedScreenItemLogic.ListRow(item, 3);
             check(row["name"]!.GetValue<string>() == "Circle_1" && row["type"]!.GetValue<string>() == "HmiCircle" && row["group"]!.GetValue<string>() == "Shapes" && row["width"]!.GetValue<uint>() == 20 && row["visible"]!.GetValue<bool>() && row["index"]!.GetValue<int>() == 3, "list row: identity, group and geometry");

@@ -30,6 +30,7 @@ ALLOWED = {
     'GetService': 'Openness IEngineeringObject.GetService<T>()',
     'GetAttribute': 'Openness IEngineeringObject.GetAttribute()',
     'GetAttributeInfos': 'Openness IEngineeringObject.GetAttributeInfos()',
+    'GetNodeId': 'Openness HmiUnified OpcUaAlarm.GetNodeId(displayName)，由 ImportUnifiedOpcUaAlarms 暴露',
     'GetSupportedFileFormats': 'Openness Workspace.GetSupportedFileFormats()',
     'GenerateLoadable': 'Native PLC loadable-file API method, exposed by GeneratePlcLoadableFile',
     'CreateFromDocuments': 'Native library type composition API method, exposed by ImportLibraryTypeDocuments',

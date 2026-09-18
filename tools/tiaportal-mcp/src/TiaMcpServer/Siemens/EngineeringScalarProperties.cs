@@ -72,6 +72,18 @@ namespace TiaMcpServer.Siemens
             int Depth(PropertyInfo p) { int d = 0; for (var t = type; t != null && t != p.DeclaringType; t = t.BaseType) d++; return d; }
             return type.GetProperties().GroupBy(p => p.Name, StringComparer.Ordinal).Select(g => g.OrderBy(Depth).First()).OrderBy(p => p.Name, StringComparer.Ordinal);
         }
+        // Readback comparison. Object-typed Openness properties (tag ranges, substitute values, thresholds) store the
+        // value in their own representation (JSON 0 comes back as the string "0"), so different CLR types are compared
+        // by invariant text and, when both parse, by numeric value.
+        internal static bool SameValue(object? actual, object? expected)
+        {
+            if (actual == null || expected == null) return actual == null && expected == null;
+            if (Equals(actual, expected)) return true;
+            if (actual.GetType() == expected.GetType()) return false;
+            var a = Convert.ToString(actual, CultureInfo.InvariantCulture) ?? ""; var e = Convert.ToString(expected, CultureInfo.InvariantCulture) ?? "";
+            if (a == e) return true;
+            return decimal.TryParse(a, NumberStyles.Any, CultureInfo.InvariantCulture, out var da) && decimal.TryParse(e, NumberStyles.Any, CultureInfo.InvariantCulture, out var de) && da == de;
+        }
         internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> changes, JsonObject meta)
         {
             var applied = new JsonArray(); meta["appliedProperties"] = applied;
@@ -80,7 +92,7 @@ namespace TiaMcpServer.Siemens
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;
                 change.Property.SetValue(target, change.Value);
                 applied.Add(change.Property.Name);
-                if (!Equals(change.Property.GetValue(target), change.Value)) throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
+                if (!SameValue(change.Property.GetValue(target), change.Value)) throw new InvalidOperationException("Property readback differs: " + change.Property.Name + ". Changes are not rolled back.");
             }
         }
     }

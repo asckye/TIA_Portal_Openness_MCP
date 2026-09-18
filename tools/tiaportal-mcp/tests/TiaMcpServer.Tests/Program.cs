@@ -103,6 +103,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Unified 画面对象：类型目录/解析、属性 schema、多语言拆分、嵌套写入 ==");
             UnifiedScreenItemTests.Run(Check);
 
+            Console.WriteLine("== Unified 原生交换：变量 WinCC ML / 脚本模块 / OPC UA 报警 xml 的目录、文件与结果核对 ==");
+            UnifiedExchangeTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");
