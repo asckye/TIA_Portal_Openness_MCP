@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 01:59:22
-- 引擎文件版本：2.7.25.0
-- 工具数量：362
+- 生成时间：2026-09-18 02:38:24
+- 引擎文件版本：2.7.26.0
+- 工具数量：364
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 104 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 129 |
+| `READ` | 读取已打开工程，不改动 | 105 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 130 |
 | `FILE` | 导出/导入文件或生成离线产物 | 42 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -34,7 +34,7 @@
 | `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
 | `hardware` | 硬件与网络 / Hardware & network | 40 | `Hardware` (40) |
-| `hmi` | HMI 人机界面 / HMI | 110 | `HMI` (25)、`HMI-Unified` (65)、`HMI-Classic` (14)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 112 | `HMI` (25)、`HMI-Unified` (67)、`HMI-Classic` (14)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
 ## session — 会话与基础设施 / Session & infrastructure（34）
@@ -389,7 +389,7 @@
 | `SetDeviceItemIoAddress` | L2 | WRITE | Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompileSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. |
 | `SetPutGetAccess` | L2 | WRITE | [PreCondition:Connect+OpenProject] Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads). This is a hardware-configuration change — you must run DownloadToPlc afterwards for it to take effect on the live CPU. Returns before/after readback evidence. |
 
-## hmi — HMI 人机界面 / HMI（110）
+## hmi — HMI 人机界面 / HMI（112）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
@@ -423,7 +423,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ReadHmiScreenSnapshot` | L2 | READ* | Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachToOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExport. |
 | `ReadSiVArcRules` | L2 | READ | Exact SiVArc rule category and property-only JSON path; live scalar pagination with schema, complex values excluded. No generation. |
 
-### [HMI-Unified]（65）
+### [HMI-Unified]（67）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -443,6 +443,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `DeleteUnifiedHmiButtonEvent` | L2 | WRITE | Delete exactly one button event. Default dryRun=true; real deletion requires a matching expectedToken from read/preview. onlyIfEmpty defaults true. No save, no other event is targeted. |
 | `DeleteUnifiedHmiDynamization` | L2 | WRITE | Delete exactly one property dynamization; default preview only. Real deletion requires expectedToken and complete readback. Does not save or delete events. |
 | `DescribeUnifiedHmiButtonEventScript` | L2 | READ* | Describe a Unified HMI button event handler Script property and its current object members/attributes. |
+| `DescribeUnifiedScreenItemType` | L2 | READ | Typed catalog and schema of WinCC Unified screen item types from the loaded official API (no project needed): empty itemType lists every concrete UI.Shapes / UI.Widgets / UI.Controls / UI.Screens item type with its IHmi*Feature interfaces; a name (HmiCircle, Circle, Widgets.HmiSlider or full CLR name) returns its properties classified as scalar/color/multilingual/part/collection/reference with CLR type, enum values, writability, part sub-properties to depth, event types and Delete availability. Use before ManageUnifiedScreenItem so property names and enums are exact. |
 | `EnsureStartStopUnifiedHmi` | L2 | WRITE* | SHORTCUT for motor start/stop HMI. Ensures HMI_Connection_1 uses the correct PLC driver (1200/1500 vs 300/400 from CPU TypeIdentifier), 4 HMI tags (StartPB/StopPB/EStop/RunOut) with symbolic PLC binding, and a simple styled Main screen. Requires: Connect + OpenProject + PLC + Unified HMI. Call after EnsureUnifiedHmiScreen if you need a fixed screen size. Idempotent. |
 | `EnsureUnifiedHmiButtonAction` | L2 | WRITE* | Generate and apply a deterministic Unified HMI button action. Only set-bit/reset-bit/toggle-bit are applied; high-risk or TODO recipes are rejected. SyntaxCheck is OFF by default (issue #36: it can crash TIA V21). |
 | `EnsureUnifiedHmiButtonEventHandler` | L2 | WRITE* | Ensure a Unified HMI button event handler exists and return its API shape. eventType must match HmiButtonEventType. |
@@ -467,6 +468,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ManageUnifiedObjectParts` | L2 | WRITE | UI.Parts sub-objects (trend areas, trends, axes, thresholds, columns, selection items, help lines, scaling entries, pressed-state tags...) of one exact object path. read without collectionProperty lists collections; read with exact collectionProperty lists parts with partIndex. create uses the native Create(string)/Create() of that composition (partName only for named parts; columns/thresholds have no Create). update writes public scalar/Color (#AARRGGBB) properties via propertiesJson; delete needs exact partName or partIndex plus confirmDelete=true. Default preview; readback verified; no save/compile/download. |
 | `ManageUnifiedOpcUaAlarmType` | L2 | WRITE | Native create/update OPC UA alarm type with NodeId and existing HMI connection. Default preview. Native readback supplied, full binding verification separate. Read/delete via engineering-object tools. |
 | `ManageUnifiedPlantNode` | L2 | WRITE | Exact PlantView/node create/update/delete. Optional native CPM type for child creation. Leaf/empty deletion only. Default preview, no implicit save/compile/download. |
+| `ManageUnifiedScreenItem` | L2 | WRITE | Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial propertiesJson), update, delete (confirmDelete=true). propertiesJson nests parts as objects ({"Font":{"Size":14},"BackColor":"#FF0000FF"}) and multilingual texts per culture ({"Text":{"en-US":"Start"}}); every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. |
 | `ManageUnifiedScreenLayout` | L2 | WRITE | Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete (confirmDelete=true; removes all items). No screen copy/duplicate or layout-field export/import exists in the public V21/V20 API. Default preview; readback verified; no save/compile/download. |
 | `ReadUnifiedAlarmCommon` | L2 | READ | Read-only HmiAlarmCommon dump: alarmClasses with the four AlarmStatusVisuals states (colors as #AARRGGBB, flashing), or discreteAlarms/analogAlarms with AlarmBase scalars and every EventText/InfoText language. Exact optional name; live offset/limit pagination; AlarmParameterTags excluded. |
 | `ReadUnifiedAuditSettings` | L2 | READ | Read-only HmiAudit dump: alarmAuditClasses scalars (comment required, confirmation mode, GMP, function rights) or auditTrails with nested Backup/Segment/Settings and log durations. Exact optional name; live offset/limit pagination; no edit. |

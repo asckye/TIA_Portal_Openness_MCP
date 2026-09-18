@@ -75,6 +75,23 @@ SaveProject
 | `IO_OutputMax` | `ProcessValue` | `HMI_OutputMax` |
 | `IO_CounterPreset` | `ProcessValue` | `HMI_CounterPreset` |
 
+## 任意类型的画面对象（2.7.26）
+
+`ApplyUnifiedHmiScreenDesignJson` 只认 Button / Rectangle / Text / IOField 四类。其它对象（圆、折线、仪表、滑块、开关、报警控件、趋势控件、画面窗口等 43 种）用两个工具：
+
+1. `DescribeUnifiedScreenItemType()`：不带参数得到目录（名称、分组、特性接口）；`DescribeUnifiedScreenItemType(itemType="HmiGauge")` 得到属性 schema——每个属性的分类（scalar / color / multilingual / part / collection）、CLR 类型、枚举值、是否可写，部件（`Font`、`Padding`、`Corners`…）展开子属性。先查 schema 再写，属性名和枚举值必须精确。
+2. `ManageUnifiedScreenItem(softwarePath, screenPath, action, itemName, itemType, propertiesJson)`：
+
+```text
+ManageUnifiedScreenItem("HMI_RT_1", "Main", "create", "Gauge_Speed", "HmiGauge",
+  "{\"Left\":40,\"Top\":80,\"Width\":240,\"Height\":240,\"BackColor\":\"#FFFFFFFF\",\"Title\":{\"Text\":{\"zh-CN\":\"转速\"}}}", dryRun=false)
+ManageUnifiedScreenItem("HMI_RT_1", "Main", "update", "Gauge_Speed", propertiesJson="{\"Font\":{\"Size\":14}}", dryRun=false)
+ManageUnifiedScreenItem("HMI_RT_1", "Main", "read", "Gauge_Speed", depth=2)
+ManageUnifiedScreenItem("HMI_RT_1", "Main", "list")
+```
+
+约定：部件写成嵌套对象；`MultilingualText` 属性必须按 culture 给（`{"Text":{"en-US":"Start"}}`），纯字符串会被拒绝；颜色 `#AARRGGBB` 或 `#RRGGBB`；集合（趋势、列、阈值…）用 `ManageUnifiedObjectParts`，事件用 `ManageUnifiedEvent`，动态化用 `ManageUnifiedDynamization`。面板容器与自定义控件容器创建时给 `containedType`。默认预览，`dryRun=false` 才写，写完不自动保存。
+
 ## 视觉规范
 
 - 顶栏使用深色底，标题白色。

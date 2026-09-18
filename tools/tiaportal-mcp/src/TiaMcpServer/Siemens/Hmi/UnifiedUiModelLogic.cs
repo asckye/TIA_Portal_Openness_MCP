@@ -31,6 +31,24 @@ namespace TiaMcpServer.Siemens
             ["Bitmask"] = DynamizationNamespace + "Tag.MappingTableEntryBitmask",
         };
 
+        // Property lookup that tolerates hiding (HmiSlider/HmiToggleSwitch/HmiCircleSegment/HmiEllipseSegment redeclare
+        // EventHandlers with a narrower composition): the most derived declaration wins instead of AmbiguousMatchException.
+        internal static PropertyInfo? FindProperty(Type type, string name)
+        {
+            PropertyInfo? best = null; int bestDepth = -1;
+            foreach (var p in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                if (p.Name != name || p.GetIndexParameters().Length != 0) continue;
+                int depth = 0; for (var t = type; t != null && t != p.DeclaringType; t = t.BaseType) depth++;
+                if (best == null || depth < bestDepth) { best = p; bestDepth = depth; }
+            }
+            return best;
+        }
+        // Public readable properties with hidden base declarations removed (most derived kept), stable order by name.
+        internal static IEnumerable<PropertyInfo> PublicProperties(Type type)
+            => type.GetProperties(BindingFlags.Instance | BindingFlags.Public).Where(p => p.GetIndexParameters().Length == 0 && p.GetMethod?.IsPublic == true)
+                .GroupBy(p => p.Name, StringComparer.Ordinal).Select(g => FindProperty(type, g.Key)!).OrderBy(p => p.Name, StringComparer.Ordinal);
+
         internal static bool IsColor(Type type) => type == typeof(Color);
         internal static string ColorText(Color color) => "#" + color.ToArgb().ToString("X8", CultureInfo.InvariantCulture);
         internal static Color ParseColor(JsonNode? node)
@@ -70,7 +88,7 @@ namespace TiaMcpServer.Siemens
             foreach (var name in ((JsonArray)row["excludedComplexProperties"]!).Select(n => n!.ToString()).ToArray())
             {
                 if (BackLinks.Contains(name, StringComparer.OrdinalIgnoreCase)) continue;
-                var property = target.GetType().GetProperty(name);
+                var property = FindProperty(target.GetType(), name);
                 object? value;
                 try { value = property?.GetValue(target); }
                 catch (Exception ex) { ((JsonArray)row["failures"]!).Add(new JsonObject { ["property"] = name, ["error"] = ex.GetBaseException().Message }); if (HmiReadSafety.ConnectionUnavailable(ex)) throw; continue; }
@@ -104,7 +122,7 @@ namespace TiaMcpServer.Siemens
             foreach (var change in changes)
             {
                 if (change.Key == "Name" || change.Key == "Parent" || BackLinks.Contains(change.Key, StringComparer.OrdinalIgnoreCase)) throw new ArgumentException("Renaming/backlink edits excluded: " + change.Key);
-                var property = type.GetProperty(change.Key, BindingFlags.Instance | BindingFlags.Public);
+                var property = FindProperty(type, change.Key);
                 if (property == null || property.GetIndexParameters().Length != 0 || property.GetMethod?.IsPublic != true)
                     throw new NotSupportedException("Public property unavailable: " + type.FullName + "." + change.Key);
                 bool leaf = EngineeringScalarProperties.Scalar(property.PropertyType) || IsColor(property.PropertyType) || property.PropertyType == typeof(object);
@@ -127,7 +145,7 @@ namespace TiaMcpServer.Siemens
             foreach (var edit in edits)
             {
                 object owner = target;
-                foreach (var step in edit.Path) owner = owner.GetType().GetProperty(step)!.GetValue(owner) ?? throw new InvalidOperationException("Nested object is null: " + step);
+                foreach (var step in edit.Path) owner = FindProperty(owner.GetType(), step)!.GetValue(owner) ?? throw new InvalidOperationException("Nested object is null: " + step);
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = edit.Name;
                 edit.Property.SetValue(owner, edit.Value);
                 applied.Add(edit.Name);
@@ -152,7 +170,7 @@ namespace TiaMcpServer.Siemens
             var rows = new JsonArray();
             foreach (var source in new[] { "EventHandlers", "PropertyEventHandlers" })
             {
-                var property = target.GetType().GetProperty(source, BindingFlags.Instance | BindingFlags.Public);
+                var property = FindProperty(target.GetType(), source);
                 if (property?.GetMethod?.IsPublic != true) continue;
                 var handlers = property.GetValue(target) ?? throw new InvalidOperationException(source + " is null.");
                 foreach (var handler in EngineeringGroupOperations.Items(handlers))
@@ -172,7 +190,7 @@ namespace TiaMcpServer.Siemens
             var result = new JsonObject();
             foreach (var source in new[] { "EventHandlers", "PropertyEventHandlers" })
             {
-                var property = target.GetType().GetProperty(source, BindingFlags.Instance | BindingFlags.Public);
+                var property = FindProperty(target.GetType(), source);
                 if (property?.GetMethod?.IsPublic != true) { result[source] = null; continue; }
                 var create = property.PropertyType.GetMethods().FirstOrDefault(m => m.Name == "Create" && m.GetParameters().Length > 0 && m.GetParameters().Last().ParameterType.IsEnum);
                 result[source] = new JsonObject { ["compositionType"] = property.PropertyType.FullName,
@@ -187,7 +205,7 @@ namespace TiaMcpServer.Siemens
         internal static object Composition(object owner, string collectionProperty)
         {
             if (string.IsNullOrWhiteSpace(collectionProperty) || !collectionProperty.All(c => char.IsLetterOrDigit(c) || c == '_')) throw new ArgumentException("Exact collection property name required.");
-            var property = owner.GetType().GetProperty(collectionProperty, BindingFlags.Instance | BindingFlags.Public);
+            var property = FindProperty(owner.GetType(), collectionProperty);
             if (property?.GetMethod?.IsPublic != true || property.GetIndexParameters().Length != 0) throw new NotSupportedException("Public collection property unavailable: " + owner.GetType().FullName + "." + collectionProperty);
             var value = property.GetValue(owner) ?? throw new InvalidOperationException("Collection is null: " + collectionProperty);
             if (value is not IEnumerable || value is string) throw new NotSupportedException(collectionProperty + " is not a collection.");

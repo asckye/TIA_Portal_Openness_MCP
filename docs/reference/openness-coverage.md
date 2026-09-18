@@ -1,35 +1,37 @@
-# 官方 Openness API 覆盖清单（V21，2.7.25）
+# 官方 Openness API 覆盖清单（V21，2.7.26）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
-本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.25 引擎源码（2026-09-18）；上一次为 2.7.24（同日）与 2.7.18。
+本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.26 引擎源码（2026-09-18）；上一次为 2.7.25 / 2.7.24（同日）与 2.7.18。
 
 ## 口径（先读这个，再看数字）
 
 - 分母是 **4,490 个领域成员**（1,239 个方法 + 3,251 个属性），已剔除每个类型都有的 `ToString`/`Equals`/`GetHashCode`/`Parent`/`GetAttribute(s)`/`SetAttribute(s)`/集合枚举等 10,294 个样板成员、构造函数和显式接口实现。
 - 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明"有专用代码路径"，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可以动态到达任何公开成员，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
-- 结果（V21，2.7.25）：领域成员已引用 **654**（2.7.24 为 621，2.7.18 为 609）、仅类型名 784、未引用 3,052；有领域成员的类型 1,217 个中有专用引用 **220**（2.7.24 为 212）、仅类型名 112、完全未触及 885。2.7.25 的 +33 成员 / +8 类型全部来自 Safety 程序集的全量封装（[路线图 §2.0](../development/roadmap.md#20-官方-api-全量对齐计划) 阶段 1）；属性侧数字仍被"通用属性读写"低估。
+- **动态覆盖（2.7.26 起）**：类型名从不出现在源码、但由反射/泛型适配器到达的类型，登记在 [scripts/diagnostics/openness-dynamic-coverage.json](../../scripts/diagnostics/openness-dynamic-coverage.json)（模式、工具、机制、真机证据），审计脚本按全名通配匹配后记为 DYNAMIC 并单列一栏。登记的前提是有形状检查或真机验证；没有证据的不登记，仍算"未触及"。
+- 结果（V21，2.7.26）：领域成员已引用 **663**（2.7.25 为 654，2.7.18 为 609）、仅类型名 836、未引用 2,991；有领域成员的类型 1,217 个中有专用引用 **224**、仅类型名 105、**动态覆盖 262**、完全未触及 **626**（2.7.25 为 885）。2.7.26 的变化全部来自 WinCC Unified 画面对象族：`ManageUnifiedScreenItem` / `DescribeUnifiedScreenItemType` 让 `UI.Shapes` / `UI.Widgets` / `UI.Controls` / `UI.Base` / `UI.Features` / `HmiScreenWindow` 进入动态覆盖，2.7.18 已有的 `UI.Events` / `UI.Parts` / `UI.Dynamization` 适配器同时登记。
 
-## 缺口结构（2.7.25）
+## 缺口结构（2.7.26）
 
-885 个"完全未触及"的类型里（2.7.24 为 895），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见。去掉这三类后，**没有专用封装的功能类型为 371 个 / 1,712 个成员**（2.7.24 为 381 / 1,753），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）263 个 / 1,190 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
+626 个"完全未触及"的类型里（2.7.25 为 885，2.7.24 为 895；差额是登记为动态覆盖的 262 个 Unified UI 类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 308 个 / 1,286 个成员**（2.7.25 口径为 371 / 1,712；2.7.26 起所有行统一用审计脚本的壳子规则重算，Base/Step7/选件包的数字因此略有上调），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）198 个 / 750 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
-| WinCCUnified | 113 | 685 | 画面对象属性（`UI.Shapes` 18 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Features` 13）、运行时设置（`HmiOpcUaServerRuntimeSettings` 23、`HmiLanguageAndFont` 9、诊断/报告/登录/遥测）、报警类与离散/模拟报警（`HmiAlarm` 32）、报警/数据记录与审计（`HmiLogging` 38）、文本/图形列表（14）、`HmiScreenWindow`（16）、阈值/替代值/系统变量、`Cpm`（11 类型） |
-| Base | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
-| Step7 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
+| WinCCUnified | 41 | 219 | **2.7.26 画面对象族已封装**（`UI.Shapes` 17 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Base` 9 / `UI.Features` 13 / `HmiScreenWindow`：`ManageUnifiedScreenItem` 任意类型创建/读/改/删 + `DescribeUnifiedScreenItemType` 属性 schema）。仍未封装：运行时设置嵌套对象（`HmiOpcUaServerRuntimeSettings` 23、`HmiLanguageAndFont` 9、诊断/报告/登录/遥测/UPSS/独占操作，10 类型 / 58 成员）、报警类与离散/模拟报警（`HmiAlarm` 3 / 26）、报警/数据记录与备份/分段设置（`HmiLogging` 7 / 17）、审计类（1 / 6）、文本/图形/系统文本列表（3 / 5）、阈值/替代值/系统变量（3 / 9）、记录变量（1 / 20）、`Cpm` 6 / 54、`OpcUaAlarm` / `DriverProperty`（3 / 14）、`Common`（`IChromDataExchangeExport` 等 3 / 6）、`UIBase` 1 / 4——多数已可经 `ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` / `ManageUnifiedEngineeringObject` 等通用路径到达，待真机逐族验证后登记（路线图 §2.0 阶段 2 子批次 ②–⑤） |
+| Base | 89 | 332 | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
+| Step7 | 44 | 140 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
 | WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
 | Safety | 0 | 0 | **2.7.25 全量封装**：`ManagePlcSafety`（12 个动作，强类型）、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`。统计表里 Safety 仍有 2 个"完全未触及"类型（`RuntimeGroupComposition` / `SafetySignatureComposition` 只有 `IsReadOnly` 一类样板外成员）与若干 OWNER_ONLY 属性（经 `EngineeringScalarProperties` 通用读写，词法看不见）。`SafetyValidation` 选件（14 类型）未做，见选件包行 |
-| 选件包 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
+| 选件包 | 110 | 536 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
 
 已核实为**官方没有 API** 而保持明确拒绝的项不计入缺口，见下文"已核实为官方无 API 的项"。"未封装"不等于"用不了"：`DescribeObject` / `GetObjectProperty` / `InvokeObject` / `InvokeService` 可到达任何公开成员，只是没有带校验、预览与文档的专用工具。
 
-## 能力域状态（2.7.18 建表，2.7.25 增补 Safety）
+## 能力域状态（2.7.18 建表，2.7.25 增补 Safety，2.7.26 增补 Unified 画面对象）
 
 | 能力域 | 官方入口（V21 XML） | 2.7.17 | 2.7.18 |
 |---|---|---|---|
+| Unified 画面对象 | `HmiUnified.UI.Shapes/Widgets/Controls/Screens`（43 个具体类型，V20 37）+ `UI.Base` / `UI.Features` | 只有 Button/Rectangle/Text/IOField 别名 + 版式 JSON | **2.7.26**：`DescribeUnifiedScreenItemType`（目录 + 属性 schema）、`ManageUnifiedScreenItem`（任意类型 `Create<T>`，标量/颜色/部件/多语言嵌套写入并读回） |
 | Safety（F 程序） | `Safety.*`（12 类型 / 54 成员） | 反射读标量 | **2.7.25**：`ManagePlcSafety` 强类型 12 动作、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`；F 编译不在 PublicAPI 内 |
 | 下载提示应答 | `Download.Configurations.*` 43 种 | 只应答 16 种，3 种误作复选框 | 全部按真实形态应答，未应答项回传 |
 | 设备上载 / 可达设备扫描 | `Upload.StationUploadProvider`、`Connection.ConfigurationPcInterface.GetAccessibleDevices` | 无 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`（V21） |
@@ -57,116 +59,126 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.25 源码）
+## 统计表（脚本生成，2.7.26 源码；"动态覆盖"栏来自登记表）
 
-| 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 完全未触及 | 成员数 | 已引用成员 |
-|---|---|---:|---:|---:|---:|---:|---:|
-| Base | `Siemens.Engineering` | 59 | 13 | 6 | 40 | 185 | 47 |
-| Base | `Siemens.Engineering.AdvancedProtection` | 1 | 1 | 0 | 0 | 3 | 3 |
-| Base | `Siemens.Engineering.Compare` | 3 | 0 | 0 | 3 | 7 | 0 |
-| Base | `Siemens.Engineering.Compiler` | 5 | 2 | 0 | 3 | 14 | 5 |
-| Base | `Siemens.Engineering.Connection` | 14 | 5 | 0 | 9 | 34 | 15 |
-| Base | `Siemens.Engineering.CrossReference` | 8 | 2 | 0 | 6 | 28 | 6 |
-| Base | `Siemens.Engineering.CustomIdentity` | 2 | 1 | 1 | 0 | 4 | 3 |
-| Base | `Siemens.Engineering.Download` | 5 | 2 | 0 | 3 | 21 | 8 |
-| Base | `Siemens.Engineering.Download.Configurations` | 31 | 3 | 24 | 4 | 32 | 3 |
-| Base | `Siemens.Engineering.FingerprintData` | 4 | 2 | 0 | 2 | 6 | 4 |
-| Base | `Siemens.Engineering.HW` | 63 | 13 | 1 | 49 | 204 | 45 |
-| Base | `Siemens.Engineering.HW.CommunicationConnections` | 10 | 2 | 8 | 0 | 90 | 3 |
-| Base | `Siemens.Engineering.HW.CustomDataTypes` | 3 | 0 | 0 | 3 | 4 | 0 |
-| Base | `Siemens.Engineering.HW.Extensions` | 1 | 1 | 0 | 0 | 2 | 2 |
-| Base | `Siemens.Engineering.HW.Features` | 43 | 14 | 29 | 0 | 111 | 18 |
-| Base | `Siemens.Engineering.HW.HardwareCatalog` | 1 | 0 | 0 | 1 | 7 | 0 |
-| Base | `Siemens.Engineering.HW.Systemdiagnostics.Settings` | 2 | 1 | 0 | 1 | 3 | 2 |
-| Base | `Siemens.Engineering.HW.Utilities` | 5 | 0 | 0 | 5 | 9 | 0 |
-| Base | `Siemens.Engineering.Library` | 11 | 4 | 0 | 7 | 83 | 7 |
-| Base | `Siemens.Engineering.Library.Compare` | 6 | 0 | 0 | 6 | 15 | 0 |
-| Base | `Siemens.Engineering.Library.MasterCopies` | 8 | 2 | 0 | 6 | 20 | 5 |
-| Base | `Siemens.Engineering.Library.Types` | 13 | 3 | 0 | 10 | 65 | 24 |
-| Base | `Siemens.Engineering.Multiuser` | 14 | 5 | 0 | 9 | 47 | 18 |
-| Base | `Siemens.Engineering.Online` | 2 | 1 | 0 | 1 | 15 | 5 |
-| Base | `Siemens.Engineering.Online.Configurations` | 5 | 2 | 0 | 3 | 13 | 2 |
-| Base | `Siemens.Engineering.Online.Security` | 2 | 0 | 1 | 1 | 2 | 0 |
-| Base | `Siemens.Engineering.Private` | 1 | 0 | 0 | 1 | 9 | 0 |
-| Base | `Siemens.Engineering.Security` | 12 | 3 | 0 | 9 | 41 | 6 |
-| Base | `Siemens.Engineering.Settings` | 4 | 0 | 0 | 4 | 7 | 0 |
-| Base | `Siemens.Engineering.Umac` | 31 | 12 | 2 | 17 | 107 | 43 |
-| Base | `Siemens.Engineering.Upload` | 5 | 2 | 0 | 3 | 16 | 3 |
-| Base | `Siemens.Engineering.Upload.Configurations` | 5 | 0 | 1 | 4 | 6 | 0 |
-| Base | `Siemens.Engineering.VersionControl` | 11 | 5 | 1 | 5 | 36 | 21 |
-| CFC | `Siemens.Engineering.SW.FunctionCharts` | 2 | 0 | 1 | 1 | 8 | 0 |
-| DCC | `Siemens.Engineering.MC.Drives.Dcc` | 25 | 1 | 1 | 23 | 97 | 3 |
-| DCC | `Siemens.Engineering.MC.Drives.Dcc.DccExceptions` | 39 | 0 | 0 | 39 | 39 | 0 |
-| Safety | `Siemens.Engineering.Safety` | 12 | 9 | 1 | 2 | 54 | 36 |
-| Safety | `Siemens.Engineering.Safety.Download.Configurations` | 1 | 0 | 1 | 0 | 1 | 0 |
-| SafetyValidation | `Siemens.Engineering.SafetyValidation` | 14 | 0 | 0 | 14 | 60 | 0 |
-| Sivarc | `Siemens.Engineering.SiVArc` | 72 | 6 | 1 | 65 | 314 | 6 |
-| Startdrive | `Siemens.Engineering.MC.Drives` | 26 | 1 | 3 | 22 | 95 | 2 |
-| Startdrive | `Siemens.Engineering.MC.Drives.DFI` | 16 | 0 | 0 | 16 | 51 | 0 |
-| Startdrive | `Siemens.Engineering.MC.Drives.SecurityObjects` | 2 | 0 | 0 | 2 | 4 | 0 |
-| Startdrive | `Siemens.Engineering.SW.TechnologicalObjects.Motion` | 23 | 3 | 9 | 11 | 95 | 13 |
-| Step7 | `Siemens.Engineering.Cax` | 4 | 2 | 0 | 2 | 18 | 12 |
-| Step7 | `Siemens.Engineering.SW` | 18 | 4 | 0 | 14 | 40 | 15 |
-| Step7 | `Siemens.Engineering.SW.Alarm` | 8 | 2 | 1 | 5 | 18 | 4 |
-| Step7 | `Siemens.Engineering.SW.Alarm.Exceptions` | 1 | 0 | 0 | 1 | 1 | 0 |
-| Step7 | `Siemens.Engineering.SW.Alarm.TextLists` | 5 | 3 | 0 | 2 | 13 | 6 |
-| Step7 | `Siemens.Engineering.SW.Blocks` | 19 | 8 | 3 | 8 | 72 | 29 |
-| Step7 | `Siemens.Engineering.SW.Blocks.Exceptions` | 1 | 0 | 0 | 1 | 1 | 0 |
-| Step7 | `Siemens.Engineering.SW.Blocks.Interface` | 4 | 2 | 1 | 1 | 8 | 2 |
-| Step7 | `Siemens.Engineering.SW.ExternalSources` | 6 | 1 | 0 | 5 | 21 | 3 |
-| Step7 | `Siemens.Engineering.SW.Loader` | 1 | 1 | 0 | 0 | 2 | 2 |
-| Step7 | `Siemens.Engineering.SW.OpcUa` | 9 | 5 | 1 | 3 | 42 | 16 |
-| Step7 | `Siemens.Engineering.SW.OpcUa.AccessControl` | 7 | 3 | 1 | 3 | 31 | 6 |
-| Step7 | `Siemens.Engineering.SW.Supervision` | 6 | 1 | 1 | 4 | 13 | 2 |
-| Step7 | `Siemens.Engineering.SW.Tags` | 11 | 5 | 0 | 6 | 62 | 28 |
-| Step7 | `Siemens.Engineering.SW.TechnologicalObjects` | 8 | 1 | 0 | 7 | 27 | 4 |
-| Step7 | `Siemens.Engineering.SW.TechnologicalObjects.Ident` | 1 | 1 | 0 | 0 | 2 | 1 |
-| Step7 | `Siemens.Engineering.SW.Types` | 11 | 2 | 1 | 8 | 41 | 15 |
-| Step7 | `Siemens.Engineering.SW.Units` | 8 | 2 | 0 | 6 | 27 | 2 |
-| Step7 | `Siemens.Engineering.SW.WatchAndForceTables` | 11 | 4 | 0 | 7 | 44 | 16 |
-| TeamcenterGateway | `Siemens.Engineering.TeamcenterGateway` | 12 | 0 | 0 | 12 | 51 | 0 |
-| TestSuite | `Siemens.Engineering.TestSuite` | 4 | 0 | 1 | 3 | 15 | 0 |
-| TestSuite | `Siemens.Engineering.TestSuite.ApplicationTest` | 7 | 1 | 0 | 6 | 24 | 5 |
-| TestSuite | `Siemens.Engineering.TestSuite.StyleGuide` | 4 | 1 | 0 | 3 | 15 | 3 |
-| TestSuite | `Siemens.Engineering.TestSuite.SystemTest` | 5 | 1 | 0 | 4 | 17 | 3 |
-| WinCC | `Siemens.Engineering.Hmi.Communication` | 2 | 2 | 0 | 0 | 5 | 4 |
-| WinCC | `Siemens.Engineering.Hmi.Cycle` | 2 | 2 | 0 | 0 | 6 | 4 |
-| WinCC | `Siemens.Engineering.Hmi.Faceplate` | 1 | 1 | 0 | 0 | 1 | 1 |
-| WinCC | `Siemens.Engineering.Hmi.Globalization` | 3 | 0 | 1 | 2 | 6 | 0 |
-| WinCC | `Siemens.Engineering.Hmi.RuntimeScripting` | 8 | 4 | 0 | 4 | 21 | 5 |
-| WinCC | `Siemens.Engineering.Hmi.Screen` | 26 | 3 | 0 | 23 | 63 | 9 |
-| WinCC | `Siemens.Engineering.Hmi.Tag` | 9 | 5 | 0 | 4 | 28 | 14 |
-| WinCC | `Siemens.Engineering.Hmi.TextGraphicList` | 4 | 2 | 0 | 2 | 10 | 6 |
-| WinCC.Extension | `Siemens.Engineering.Hmi` | 3 | 1 | 0 | 2 | 28 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified` | 1 | 1 | 0 | 0 | 21 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.Common` | 5 | 0 | 0 | 5 | 13 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.Cpm` | 14 | 3 | 0 | 11 | 70 | 4 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm` | 6 | 0 | 0 | 6 | 32 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon` | 2 | 1 | 1 | 0 | 22 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAudit` | 3 | 1 | 0 | 2 | 9 | 1 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiConnections` | 5 | 1 | 0 | 4 | 21 | 6 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging` | 6 | 0 | 0 | 6 | 10 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon` | 6 | 0 | 2 | 4 | 28 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiOpcUaAlarm` | 2 | 0 | 0 | 2 | 10 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiTags` | 12 | 4 | 0 | 8 | 74 | 19 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.LoggingTags` | 2 | 0 | 0 | 2 | 22 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.RuntimeSettings` | 12 | 1 | 0 | 11 | 82 | 1 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.Scripts` | 2 | 1 | 0 | 1 | 7 | 3 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.TextGraphicList` | 6 | 0 | 0 | 6 | 14 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI` | 1 | 0 | 0 | 1 | 4 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Base` | 11 | 1 | 0 | 10 | 53 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Controls` | 15 | 1 | 1 | 13 | 120 | 1 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization` | 6 | 2 | 2 | 2 | 16 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing` | 1 | 1 | 0 | 0 | 4 | 1 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Script` | 3 | 1 | 1 | 1 | 12 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Tag` | 7 | 3 | 2 | 2 | 20 | 4 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Events` | 96 | 0 | 0 | 96 | 243 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Features` | 13 | 0 | 0 | 13 | 75 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Parts` | 85 | 0 | 0 | 85 | 370 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.ScreenGroup` | 2 | 1 | 0 | 1 | 6 | 4 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Screens` | 3 | 2 | 0 | 1 | 33 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Shapes` | 20 | 1 | 1 | 18 | 129 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Widgets` | 19 | 3 | 0 | 16 | 133 | 7 |
+| 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Base | `Siemens.Engineering` | 59 | 13 | 6 | 0 | 40 | 185 | 47 |
+| Base | `Siemens.Engineering.AdvancedProtection` | 1 | 1 | 0 | 0 | 0 | 3 | 3 |
+| Base | `Siemens.Engineering.Compare` | 3 | 0 | 0 | 0 | 3 | 7 | 0 |
+| Base | `Siemens.Engineering.Compiler` | 5 | 2 | 0 | 0 | 3 | 14 | 5 |
+| Base | `Siemens.Engineering.Connection` | 14 | 5 | 0 | 0 | 9 | 34 | 15 |
+| Base | `Siemens.Engineering.CrossReference` | 8 | 2 | 0 | 0 | 6 | 28 | 6 |
+| Base | `Siemens.Engineering.CustomIdentity` | 2 | 1 | 1 | 0 | 0 | 4 | 3 |
+| Base | `Siemens.Engineering.Download` | 5 | 2 | 0 | 0 | 3 | 21 | 8 |
+| Base | `Siemens.Engineering.Download.Configurations` | 31 | 3 | 24 | 0 | 4 | 32 | 3 |
+| Base | `Siemens.Engineering.FingerprintData` | 4 | 2 | 0 | 0 | 2 | 6 | 4 |
+| Base | `Siemens.Engineering.HW` | 63 | 13 | 1 | 0 | 49 | 204 | 45 |
+| Base | `Siemens.Engineering.HW.CommunicationConnections` | 10 | 2 | 8 | 0 | 0 | 90 | 3 |
+| Base | `Siemens.Engineering.HW.CustomDataTypes` | 3 | 0 | 0 | 0 | 3 | 4 | 0 |
+| Base | `Siemens.Engineering.HW.Extensions` | 1 | 1 | 0 | 0 | 0 | 2 | 2 |
+| Base | `Siemens.Engineering.HW.Features` | 43 | 14 | 29 | 0 | 0 | 111 | 18 |
+| Base | `Siemens.Engineering.HW.HardwareCatalog` | 1 | 0 | 0 | 0 | 1 | 7 | 0 |
+| Base | `Siemens.Engineering.HW.Systemdiagnostics.Settings` | 2 | 1 | 0 | 0 | 1 | 3 | 2 |
+| Base | `Siemens.Engineering.HW.Utilities` | 5 | 0 | 0 | 0 | 5 | 9 | 0 |
+| Base | `Siemens.Engineering.Library` | 11 | 4 | 0 | 0 | 7 | 83 | 7 |
+| Base | `Siemens.Engineering.Library.Compare` | 6 | 0 | 0 | 0 | 6 | 15 | 0 |
+| Base | `Siemens.Engineering.Library.MasterCopies` | 8 | 2 | 0 | 0 | 6 | 20 | 5 |
+| Base | `Siemens.Engineering.Library.Types` | 13 | 3 | 0 | 0 | 10 | 65 | 24 |
+| Base | `Siemens.Engineering.Multiuser` | 14 | 5 | 0 | 0 | 9 | 47 | 18 |
+| Base | `Siemens.Engineering.Online` | 2 | 1 | 0 | 0 | 1 | 15 | 5 |
+| Base | `Siemens.Engineering.Online.Configurations` | 5 | 2 | 0 | 0 | 3 | 13 | 2 |
+| Base | `Siemens.Engineering.Online.Security` | 2 | 0 | 1 | 0 | 1 | 2 | 0 |
+| Base | `Siemens.Engineering.Private` | 1 | 0 | 0 | 0 | 1 | 9 | 0 |
+| Base | `Siemens.Engineering.Security` | 12 | 3 | 0 | 0 | 9 | 41 | 6 |
+| Base | `Siemens.Engineering.Settings` | 4 | 0 | 0 | 0 | 4 | 7 | 0 |
+| Base | `Siemens.Engineering.Umac` | 31 | 12 | 2 | 0 | 17 | 107 | 43 |
+| Base | `Siemens.Engineering.Upload` | 5 | 2 | 0 | 0 | 3 | 16 | 3 |
+| Base | `Siemens.Engineering.Upload.Configurations` | 5 | 0 | 1 | 0 | 4 | 6 | 0 |
+| Base | `Siemens.Engineering.VersionControl` | 11 | 5 | 1 | 0 | 5 | 36 | 21 |
+| CFC | `Siemens.Engineering.SW.FunctionCharts` | 2 | 0 | 1 | 0 | 1 | 8 | 0 |
+| DCC | `Siemens.Engineering.MC.Drives.Dcc` | 25 | 1 | 1 | 0 | 23 | 97 | 3 |
+| DCC | `Siemens.Engineering.MC.Drives.Dcc.DccExceptions` | 39 | 0 | 0 | 0 | 39 | 39 | 0 |
+| Safety | `Siemens.Engineering.Safety` | 12 | 11 | 1 | 0 | 0 | 54 | 40 |
+| Safety | `Siemens.Engineering.Safety.Download.Configurations` | 1 | 0 | 1 | 0 | 0 | 1 | 0 |
+| SafetyValidation | `Siemens.Engineering.SafetyValidation` | 14 | 0 | 0 | 0 | 14 | 60 | 0 |
+| Sivarc | `Siemens.Engineering.SiVArc` | 72 | 6 | 1 | 0 | 65 | 314 | 6 |
+| Startdrive | `Siemens.Engineering.MC.Drives` | 26 | 1 | 3 | 0 | 22 | 95 | 2 |
+| Startdrive | `Siemens.Engineering.MC.Drives.DFI` | 16 | 0 | 0 | 0 | 16 | 51 | 0 |
+| Startdrive | `Siemens.Engineering.MC.Drives.SecurityObjects` | 2 | 0 | 0 | 0 | 2 | 4 | 0 |
+| Startdrive | `Siemens.Engineering.SW.TechnologicalObjects.Motion` | 23 | 3 | 9 | 0 | 11 | 95 | 13 |
+| Step7 | `Siemens.Engineering.Cax` | 4 | 2 | 0 | 0 | 2 | 18 | 12 |
+| Step7 | `Siemens.Engineering.SW` | 18 | 4 | 0 | 0 | 14 | 40 | 15 |
+| Step7 | `Siemens.Engineering.SW.Alarm` | 8 | 2 | 1 | 0 | 5 | 18 | 4 |
+| Step7 | `Siemens.Engineering.SW.Alarm.Exceptions` | 1 | 0 | 0 | 0 | 1 | 1 | 0 |
+| Step7 | `Siemens.Engineering.SW.Alarm.TextLists` | 5 | 3 | 0 | 0 | 2 | 13 | 6 |
+| Step7 | `Siemens.Engineering.SW.Blocks` | 19 | 8 | 3 | 0 | 8 | 72 | 29 |
+| Step7 | `Siemens.Engineering.SW.Blocks.Exceptions` | 1 | 0 | 0 | 0 | 1 | 1 | 0 |
+| Step7 | `Siemens.Engineering.SW.Blocks.Interface` | 4 | 2 | 1 | 0 | 1 | 8 | 2 |
+| Step7 | `Siemens.Engineering.SW.ExternalSources` | 6 | 1 | 0 | 0 | 5 | 21 | 3 |
+| Step7 | `Siemens.Engineering.SW.Loader` | 1 | 1 | 0 | 0 | 0 | 2 | 2 |
+| Step7 | `Siemens.Engineering.SW.OpcUa` | 9 | 5 | 1 | 0 | 3 | 42 | 16 |
+| Step7 | `Siemens.Engineering.SW.OpcUa.AccessControl` | 7 | 3 | 1 | 0 | 3 | 31 | 6 |
+| Step7 | `Siemens.Engineering.SW.Supervision` | 6 | 1 | 1 | 0 | 4 | 13 | 2 |
+| Step7 | `Siemens.Engineering.SW.Tags` | 11 | 5 | 0 | 0 | 6 | 62 | 28 |
+| Step7 | `Siemens.Engineering.SW.TechnologicalObjects` | 8 | 1 | 0 | 0 | 7 | 27 | 4 |
+| Step7 | `Siemens.Engineering.SW.TechnologicalObjects.Ident` | 1 | 1 | 0 | 0 | 0 | 2 | 1 |
+| Step7 | `Siemens.Engineering.SW.Types` | 11 | 2 | 1 | 0 | 8 | 41 | 15 |
+| Step7 | `Siemens.Engineering.SW.Units` | 8 | 2 | 0 | 0 | 6 | 27 | 2 |
+| Step7 | `Siemens.Engineering.SW.WatchAndForceTables` | 11 | 4 | 0 | 0 | 7 | 44 | 16 |
+| TeamcenterGateway | `Siemens.Engineering.TeamcenterGateway` | 12 | 0 | 0 | 0 | 12 | 51 | 0 |
+| TestSuite | `Siemens.Engineering.TestSuite` | 4 | 0 | 1 | 0 | 3 | 15 | 0 |
+| TestSuite | `Siemens.Engineering.TestSuite.ApplicationTest` | 7 | 1 | 0 | 0 | 6 | 24 | 5 |
+| TestSuite | `Siemens.Engineering.TestSuite.StyleGuide` | 4 | 1 | 0 | 0 | 3 | 15 | 3 |
+| TestSuite | `Siemens.Engineering.TestSuite.SystemTest` | 5 | 1 | 0 | 0 | 4 | 17 | 3 |
+| WinCC | `Siemens.Engineering.Hmi.Communication` | 2 | 2 | 0 | 0 | 0 | 5 | 4 |
+| WinCC | `Siemens.Engineering.Hmi.Cycle` | 2 | 2 | 0 | 0 | 0 | 6 | 4 |
+| WinCC | `Siemens.Engineering.Hmi.Faceplate` | 1 | 1 | 0 | 0 | 0 | 1 | 1 |
+| WinCC | `Siemens.Engineering.Hmi.Globalization` | 3 | 0 | 1 | 0 | 2 | 6 | 0 |
+| WinCC | `Siemens.Engineering.Hmi.RuntimeScripting` | 8 | 4 | 0 | 0 | 4 | 21 | 5 |
+| WinCC | `Siemens.Engineering.Hmi.Screen` | 26 | 3 | 0 | 0 | 23 | 63 | 9 |
+| WinCC | `Siemens.Engineering.Hmi.Tag` | 9 | 5 | 0 | 0 | 4 | 28 | 14 |
+| WinCC | `Siemens.Engineering.Hmi.TextGraphicList` | 4 | 2 | 0 | 0 | 2 | 10 | 6 |
+| WinCC.Extension | `Siemens.Engineering.Hmi` | 3 | 1 | 0 | 0 | 2 | 28 | 5 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified` | 1 | 1 | 0 | 0 | 0 | 21 | 5 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.Common` | 5 | 0 | 0 | 0 | 5 | 13 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.Cpm` | 14 | 3 | 0 | 0 | 11 | 70 | 4 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm` | 6 | 0 | 0 | 0 | 6 | 32 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon` | 2 | 1 | 1 | 0 | 0 | 22 | 2 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAudit` | 3 | 1 | 0 | 0 | 2 | 9 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiConnections` | 5 | 1 | 0 | 0 | 4 | 21 | 6 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging` | 6 | 0 | 0 | 0 | 6 | 10 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon` | 6 | 0 | 2 | 0 | 4 | 28 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiOpcUaAlarm` | 2 | 0 | 0 | 0 | 2 | 10 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiTags` | 12 | 4 | 0 | 0 | 8 | 74 | 19 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.LoggingTags` | 2 | 0 | 0 | 0 | 2 | 22 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.RuntimeSettings` | 12 | 1 | 0 | 0 | 11 | 82 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.Scripts` | 2 | 1 | 0 | 0 | 1 | 7 | 3 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.TextGraphicList` | 6 | 0 | 0 | 0 | 6 | 14 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI` | 1 | 0 | 0 | 0 | 1 | 4 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Base` | 11 | 2 | 0 | 9 | 0 | 53 | 5 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Controls` | 15 | 1 | 0 | 14 | 0 | 120 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization` | 6 | 2 | 0 | 4 | 0 | 16 | 5 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing` | 1 | 1 | 0 | 0 | 0 | 4 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Script` | 3 | 1 | 0 | 2 | 0 | 12 | 2 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Tag` | 7 | 3 | 0 | 4 | 0 | 20 | 4 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Events` | 96 | 0 | 0 | 96 | 0 | 243 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Features` | 13 | 0 | 0 | 13 | 0 | 75 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Parts` | 85 | 0 | 0 | 85 | 0 | 370 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.ScreenGroup` | 2 | 1 | 0 | 0 | 1 | 6 | 4 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Screens` | 3 | 2 | 0 | 1 | 0 | 33 | 5 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Shapes` | 20 | 1 | 0 | 19 | 0 | 129 | 2 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Widgets` | 19 | 4 | 0 | 15 | 0 | 133 | 9 |
+
+## 动态覆盖的类型（登记表 scripts/diagnostics/openness-dynamic-coverage.json）
+
+- **DescribeUnifiedScreenItemType**：13 个类型（IHmiArcFeature、IHmiAreaFeature、IHmiAxisFeature、IHmiBasicScreenFeature、IHmiBasicScreenItemFeature、IHmiBoxFeature、IHmiLineFeature、IHmiOperabilityFeature、IHmiRotationFeature、IHmiScaleFeature、IHmiScreenWindowFeature、IHmiTimeRangeFeature、IHmiWindowFeature）
+- **ManageUnifiedDynamization**：10 个类型（DynamizationBase、DynamizationBaseComposition、ExpressionDynamization、IHmiScript、ScriptDynamization、MappingTableEntryBase、MappingTableEntryBaseComposition、MappingTableEntryBitmask、MappingTableEntrySimple、TagParameterDynamization）
+- **ManageUnifiedEvent / ReadUnifiedObjectEvents**：96 个类型（HmiAlarmControlEventHandler、HmiAlarmControlEventHandlerComposition、HmiAlarmIndicatorEventHandler、HmiAlarmIndicatorEventHandlerComposition、HmiAlarmLineControlEventHandler、HmiAlarmLineControlEventHandlerComposition、HmiBarEventHandler、HmiBarEventHandlerComposition、HmiButtonEventHandler、HmiButtonEventHandlerComposition、HmiCheckBoxGroupEventHandler、HmiCheckBoxGroupEventHandlerComposition、HmiCircleEventHandler、HmiCircleEventHandlerComposition、HmiCircleSegmentEventHandler、HmiCircleSegmentEventHandlerComposition、HmiCircularArcEventHandler、HmiCircularArcEventHandlerComposition、HmiClockEventHandler、HmiClockEventHandlerComposition、HmiComboBoxEventHandler、HmiComboBoxEventHandlerComposition、HmiCustomWebControlContainerEventHandler、HmiCustomWebControlContainerEventHandlerComposition、HmiCustomWidgetContainerEventHandler、HmiCustomWidgetContainerEventHandlerComposition、HmiDetailedParameterControlEventHandler、HmiDetailedParameterControlEventHandlerComposition、HmiDotNetControlContainerEventHandler、HmiDotNetControlContainerEventHandlerComposition、HmiEllipseEventHandler、HmiEllipseEventHandlerComposition、HmiEllipseSegmentEventHandler、HmiEllipseSegmentEventHandlerComposition、HmiEllipticalArcEventHandler、HmiEllipticalArcEventHandlerComposition、HmiFaceplateContainerEventHandler、HmiFaceplateContainerEventHandlerComposition、HmiFunctionTrendControlEventHandler、HmiFunctionTrendControlEventHandlerComposition、HmiGaugeEventHandler、HmiGaugeEventHandlerComposition、HmiGraphicViewEventHandler、HmiGraphicViewEventHandlerComposition、HmiIOFieldEventHandler、HmiIOFieldEventHandlerComposition、HmiLineEventHandler、HmiLineEventHandlerComposition、HmiListBoxEventHandler、HmiListBoxEventHandlerComposition、HmiMediaControlEventHandler、HmiMediaControlEventHandlerComposition、HmiPolygonEventHandler、HmiPolygonEventHandlerComposition、HmiPolylineEventHandler、HmiPolylineEventHandlerComposition、HmiProcessControlEventHandler、HmiProcessControlEventHandlerComposition、HmiProcessDiagnosisGraphOverviewControlEventHandler、HmiProcessDiagnosisGraphOverviewControlEventHandlerComposition、HmiProcessDiagnosisOverviewControlEventHandler、HmiProcessDiagnosisOverviewControlEventHandlerComposition、HmiProcessDiagnosisPlcCodeViewerControlEventHandler、HmiProcessDiagnosisPlcCodeViewerControlEventHandlerComposition、HmiProDiagCriteriaAnalysisControlEventHandler、HmiProDiagCriteriaAnalysisControlEventHandlerComposition、HmiRadioButtonGroupEventHandler、HmiRadioButtonGroupEventHandlerComposition、HmiRectangleEventHandler、HmiRectangleEventHandlerComposition、HmiScreenEventHandler、HmiScreenEventHandlerComposition、HmiScreenWindowEventHandler、HmiScreenWindowEventHandlerComposition、HmiSliderEventHandler、HmiSliderEventHandlerComposition、HmiSymbolicIOFieldEventHandler、HmiSymbolicIOFieldEventHandlerComposition、HmiSystemDiagnosisControlEventHandler、HmiSystemDiagnosisControlEventHandlerComposition、HmiTextBoxEventHandler、HmiTextBoxEventHandlerComposition、HmiTextEventHandler、HmiTextEventHandlerComposition、HmiToggleSwitchEventHandler、HmiToggleSwitchEventHandlerComposition、HmiTouchAreaEventHandler、HmiTouchAreaEventHandlerComposition、HmiTrendCompanionEventHandler、HmiTrendCompanionEventHandlerComposition、HmiTrendControlEventHandler、HmiTrendControlEventHandlerComposition、HmiWebControlEventHandler、HmiWebControlEventHandlerComposition、PropertyEventHandler、PropertyEventHandlerComposition）
+- **ManageUnifiedObjectParts / ManageUnifiedScreenItem**：85 个类型（HmiAlarmColumnPart、HmiAlarmLineColumnPart、HmiAlarmLineColumnPartComposition、HmiAlarmLineViewPart、HmiAlarmStatePart、HmiAlarmStatisticColumnPart、HmiContentPart、HmiControlBarButtonPart、HmiControlBarDisplayPart、HmiControlBarElementPartBase、HmiControlBarElementPartBaseComposition、HmiControlBarLabelPart、HmiControlBarPartBase、HmiControlBarTextBoxPart、HmiControlBarToggleSwitchPart、HmiCornersPart、HmiCurvedScalePart、HmiCustomControlInterface、HmiCustomControlInterfaceComposition、HmiDataGridColumnHeaderPart、HmiDataGridColumnPart、HmiDataGridColumnPartBase、HmiDataGridColumnPartBaseComposition、HmiDataGridHeaderSettingsPart、HmiDataGridViewPart、HmiDataSourcePart、HmiDetailedParameterControlColumnPart、HmiFaceplateInterface、HmiFaceplateInterfaceComposition、HmiFontPart、HmiFunctionTrendAreaPart、HmiFunctionTrendAreaPartComposition、HmiFunctionTrendPart、HmiFunctionTrendPartComposition、HmiGraphOverviewControlColumnPart、HmiHelpLinePart、HmiHelpLinePartComposition、HmiInputBehaviorPart、HmiLegendPart、HmiLinearMovementPart、HmiMatrixViewPart、HmiOverviewParameterControlColumnPart、HmiPaddingPart、HmiPlcDataSourcePart、HmiPressedStateTagPart、HmiPressedStateTagPartComposition、HmiProcessColumnPart、HmiProcessDiagnosisCriteriaAnalysisControlColumnPart、HmiProcessDiagnosisOperationModePart、HmiProcessDiagnosisOverviewElementPart、HmiProcessDiagnosisOverviewElementPartComposition、HmiProcessDiagnosisOverviewPart、HmiQualityPart、HmiRulerPart、HmiScalePartBase、HmiScalingEntryPart、HmiScalingEntryPartComposition、HmiSelectionItemPart、HmiSelectionItemPartComposition、HmiStraightScalePart、HmiSystemDiagnosisControlColumnPart、HmiSystemDiagnosisControlScriptColumnPart、HmiSystemDiagnosisDetailViewPart、HmiSystemDiagnosisHardwareDetailPart、HmiSystemDiagnosisHardwareDetailPartComposition、HmiSystemDiagnosisMatrixColumnPart、HmiTextPart、HmiThresholdPart、HmiThresholdPartComposition、HmiTimeAxisPart、HmiTimeAxisPartComposition、HmiTimeRangeColumnPart、HmiToolBarPart、HmiTrendAreaPart、HmiTrendAreaPartBase、HmiTrendAreaPartComposition、HmiTrendColumnPart、HmiTrendPart、HmiTrendPartBase、HmiTrendPartComposition、HmiValueAxisPartBase、HmiXValueAxisPart、HmiXValueAxisPartComposition、HmiYValueAxisPart、HmiYValueAxisPartComposition）
+- **ManageUnifiedScreenItem**：10 个类型（HmiCompanionBase、HmiContainerBase、HmiControlWindowBase、HmiCustomWebControlContainer、HmiCustomWidgetContainer、HmiScreenItemBaseComposition、HmiSimpleScreenItemBase、HmiTrendControlBase、HmiWindowBase、HmiScreenWindow）
+- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType**：34 个类型（HmiCentricShapeBase、HmiCircle、HmiCircleSegment、HmiCircularArc、HmiCircularShapeBase、HmiEllipse、HmiEllipseSegment、HmiEllipticalArc、HmiEllipticalShapeBase、HmiGraphicView、HmiLine、HmiPoint、HmiPointBasedShapeBase、HmiPointComposition、HmiPolygon、HmiPolyline、HmiRectangle、HmiShapeBase、HmiSurfaceShapeBase、HmiAlarmIndicator、HmiBar、HmiCheckBoxGroup、HmiClock、HmiGauge、HmiListBox、HmiRadioButtonGroup、HmiScaleWidgetBase、HmiSelectionGroupBase、HmiSlider、HmiSymbolicIOField、HmiTextBox、HmiTextWidgetBase、HmiToggleSwitch、HmiTouchArea）
+- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts**：14 个类型（HmiAlarmControl、HmiAlarmLineControl、HmiDetailedParameterControl、HmiFunctionTrendControl、HmiMediaControl、HmiProcessControl、HmiProcessDiagnosisCriteriaAnalysisControl、HmiProcessDiagnosisGraphOverviewControl、HmiProcessDiagnosisOverviewControl、HmiProcessDiagnosisPlcCodeViewerControl、HmiSystemDiagnosisControl、HmiTrendCompanion、HmiTrendControl、HmiWebControl）
 
 
 完整的未触及类型及其成员清单体积过大，不入库；在放置了 PublicAPI 的机器上运行下列命令即可重新生成到被忽略的 `bin-build/audits/` 目录（`-SummaryMarkdown` 输出含逐类型列表）：

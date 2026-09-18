@@ -94,6 +94,7 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\RuntimeChannelsLogic.cs" Link="RuntimeChannelsLogic.cs" />

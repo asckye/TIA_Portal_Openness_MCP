@@ -100,6 +100,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Safety 工具族纯逻辑：动作门控、propertiesJson 四路拆分、GlobalSettings、打印件参数、签名行 ==");
             SafetyLogicTests.Run(Check);
 
+            Console.WriteLine("== Unified 画面对象：类型目录/解析、属性 schema、多语言拆分、嵌套写入 ==");
+            UnifiedScreenItemTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

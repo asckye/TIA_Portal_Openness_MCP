@@ -1,0 +1,59 @@
+{
+  "$comment": "Types the engine reaches through reflective/generic adapters (type names never appear literally in the source, so the lexical audit cannot see them). Each entry names the tool, how it reaches the type and the real-project evidence. Audit-OpennessCoverage.ps1 reports matching UNTOUCHED / TYPE_NAMED_NO_MEMBER types as DYNAMIC. Patterns match the full type name; * is a wildcard.",
+  "entries": [
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Shapes.*",
+      "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType",
+      "mechanism": "Create<T>(name) by resolved CLR type; properties read/written by reflection (scalar, Color, parts, MultilingualText)",
+      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1 (see docs/releases/v2.7.26.md)"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Widgets.*",
+      "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType",
+      "mechanism": "Create<T>(name) by resolved CLR type; properties read/written by reflection (scalar, Color, parts, MultilingualText)",
+      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Controls.*",
+      "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts",
+      "mechanism": "Create<T>(name[, containedType]); properties by reflection; view/column/trend parts via ManageUnifiedObjectParts",
+      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenWindow",
+      "tool": "ManageUnifiedScreenItem",
+      "mechanism": "Create<T>(name); Screen/Adaption/zoom/scroll properties by reflection",
+      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Base.*",
+      "tool": "ManageUnifiedScreenItem",
+      "mechanism": "base-class properties of every screen item (Left/Top/Width/Height, Visible, Enabled, TabIndex, Authorization, Opacity, ToolTipText, rotation, LinearMovement part)",
+      "verified": "2.7.26 V21 AutomaticDipCoatingMachine HMI_RT_1"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Features.*",
+      "tool": "DescribeUnifiedScreenItemType",
+      "mechanism": "feature interfaces reported per item type; their members are the item properties above",
+      "verified": "2.7.26 shape checks V20/V21"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Events.*",
+      "tool": "ManageUnifiedEvent / ReadUnifiedObjectEvents",
+      "mechanism": "native EventHandlers.Create(enum) per composition; script fields by reflection",
+      "verified": "2.7.18 shape checks; real project 2.7.26 (event counts)"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Parts.*",
+      "tool": "ManageUnifiedObjectParts / ManageUnifiedScreenItem",
+      "mechanism": "composition Create()/Create(string), nested part properties by reflection",
+      "verified": "2.7.18 shape checks; real project 2.7.26 (Font/Padding parts)"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.UI.Dynamization.*",
+      "tool": "ManageUnifiedDynamization",
+      "mechanism": "native Dynamizations.Create<T>(propertyName); ValueConverter/MappingTable/Trigger by reflection",
+      "verified": "2.7.18 shape checks"
+    }
+  ]
+}

@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.26] - 2026-09-18
+
+引擎 2.7.26.0（V20/V21 均重建），工具 362 → 364，默认 lite 56 项不变。详见 [v2.7.26](docs/releases/v2.7.26.md)。官方 API 全量对齐第二阶段（WinCC Unified）子批次 ①：画面对象族。
+
+- **新工具 2 个**：`DescribeUnifiedScreenItemType`（从加载的官方 API 反射出全部 43 个具体画面对象类型的目录与属性 schema：scalar/color/multilingual/part/collection 分类、枚举值、可写性、部件子属性、事件类型；不需要工程）、`ManageUnifiedScreenItem`（任意类型 `Create<T>(name[, containedType])` 创建、list/read/update/delete，嵌套部件与逐语言文本写入并读回）。覆盖 `UI.Shapes` 17 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Base` 9 / `UI.Features` 13 / `HmiScreenWindow`。
+- **修复**：`HmiSlider` / `HmiToggleSwitch` / `HmiCircleSegment` / `HmiEllipseSegment` 隐藏基类 `EventHandlers` 导致 `Type.GetProperty` 歧义，`ReadUnifiedObjectEvents` / `ManageUnifiedObjectParts` / `ManageUnifiedDynamization` 在这四种对象上此前会失败；改为取最派生声明。
+- **覆盖口径**：新增动态覆盖登记表 `scripts/diagnostics/openness-dynamic-coverage.json`，审计脚本单列"动态覆盖"栏；完全未触及类型 885 → 626，Unified 未封装功能类型 113 → 41。
+- **验证**：离线 1402 项（新增 49 项）；引擎 API 形状检查 V20 936 / V21 1032（新增 50 / 50 项）；两版 EXE 回归见 `manifest/release-build.json`。
+
 ## [2.7.25] - 2026-09-18
 
 引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](docs/development/roadmap.md#20-官方-api-全量对齐计划)）。

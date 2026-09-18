@@ -23,13 +23,17 @@
   输出目录（默认 bin-build\audits\openness-coverage-<日期>，被 .gitignore 忽略）。
 .PARAMETER SummaryMarkdown
   可选：把汇总写成 Markdown（例如 docs\reference\openness-coverage.md）。
+.PARAMETER DynamicCoverage
+  动态覆盖登记表（默认为脚本旁的 openness-dynamic-coverage.json）：经反射/泛型适配器到达、类型名不会出现在源码里的类型，
+  按全名通配匹配后记为 DYNAMIC 并写明工具与验证证据；传空串关闭。
 #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][string]$PublicApiDirectory,
     [string]$Version = 'V21',
     [string]$OutputDirectory = '',
-    [string]$SummaryMarkdown = ''
+    [string]$SummaryMarkdown = '',
+    [string]$DynamicCoverage = (Join-Path $PSScriptRoot 'openness-dynamic-coverage.json')
 )
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
@@ -112,6 +116,17 @@ foreach ($r in $rows) {
     $r | Add-Member -NotePropertyName verdict -NotePropertyValue $v
 }
 
+# ---- 3b. 动态覆盖登记表 ----------------------------------------------------------------
+$dynamicEntries = @()
+if ($DynamicCoverage -ne '' -and (Test-Path -LiteralPath $DynamicCoverage)) {
+    $dynamicEntries = @((Get-Content -LiteralPath $DynamicCoverage -Raw -Encoding UTF8 | ConvertFrom-Json).entries)
+    Write-Host ("  {0} dynamic-coverage patterns from {1}" -f $dynamicEntries.Count, $DynamicCoverage)
+}
+function Get-DynamicEntry([string]$typeName) {
+    foreach ($e in $dynamicEntries) { if ($typeName -like $e.pattern) { return $e } }
+    return $null
+}
+
 # ---- 4. 类型级与命名空间级汇总 ------------------------------------------------------
 $byOwner = $rows | Where-Object { $_.kind -ne 'T' -and -not $_.boilerplate } | Group-Object owner
 $typeSummary = foreach ($g in $byOwner) {
@@ -120,8 +135,11 @@ $typeSummary = foreach ($g in $byOwner) {
     $unr = @($g.Group | Where-Object verdict -eq 'UNREFERENCED').Count
     $first = $g.Group[0]
     $status = if ($ref -gt 0) { 'PARTIAL_OR_COVERED' } elseif ($own -gt 0) { 'TYPE_NAMED_NO_MEMBER' } else { 'UNTOUCHED' }
+    $dyn = $null
+    if ($status -ne 'PARTIAL_OR_COVERED') { $dyn = Get-DynamicEntry $g.Name; if ($dyn) { $status = 'DYNAMIC' } }
     [pscustomobject]@{ assembly=$first.assembly; namespace=$first.namespace; type=$g.Name; typeSimple=$first.ownerSimple
         members=$g.Count; referenced=$ref; ownerOnly=$own; unreferenced=$unr; status=$status
+        dynamicTool = $(if ($dyn) { $dyn.tool } else { '' }); dynamicVerified = $(if ($dyn) { $dyn.verified } else { '' })
         unreferencedMembers = (($g.Group | Where-Object { $_.verdict -ne 'REFERENCED' } | Select-Object -ExpandProperty member | Sort-Object -Unique) -join ' ') }
 }
 $nsSummary = $typeSummary | Group-Object namespace | ForEach-Object {
@@ -129,6 +147,7 @@ $nsSummary = $typeSummary | Group-Object namespace | ForEach-Object {
     [pscustomobject]@{ namespace=$_.Name; assembly=($t[0].assembly)
         types=$t.Count; typesCovered=@($t | Where-Object status -eq 'PARTIAL_OR_COVERED').Count
         typesNamedOnly=@($t | Where-Object status -eq 'TYPE_NAMED_NO_MEMBER').Count
+        typesDynamic=@($t | Where-Object status -eq 'DYNAMIC').Count
         typesUntouched=@($t | Where-Object status -eq 'UNTOUCHED').Count
         members=($t | Measure-Object members -Sum).Sum
         membersReferenced=($t | Measure-Object referenced -Sum).Sum }
@@ -150,23 +169,33 @@ $stats = [ordered]@{
     types=$typeSummary.Count
     typesCovered=@($typeSummary | Where-Object status -eq 'PARTIAL_OR_COVERED').Count
     typesNamedOnly=@($typeSummary | Where-Object status -eq 'TYPE_NAMED_NO_MEMBER').Count
+    typesDynamic=@($typeSummary | Where-Object status -eq 'DYNAMIC').Count
     typesUntouched=@($typeSummary | Where-Object status -eq 'UNTOUCHED').Count
+    dynamicCoverageFile=$(if ($dynamicEntries.Count -gt 0) { $DynamicCoverage } else { '' })
     caveat='Lexical only. REFERENCED = owner type name AND .member( both appear in engine source. Generic reflection tools can reach unreferenced members dynamically. AddIn.* assemblies excluded.'
 }
 ($stats | ConvertTo-Json -Depth 3) | Set-Content -Encoding UTF8 (Join-Path $OutputDirectory "$Version-summary.json")
 Write-Host ""
 Write-Host ("Domain members {0}: referenced {1} / owner-only {2} / unreferenced {3}" -f $stats.domainMembers,$stats.referenced,$stats.ownerOnly,$stats.unreferenced)
-Write-Host ("Types {0}: covered {1} / named-only {2} / untouched {3}" -f $stats.types,$stats.typesCovered,$stats.typesNamedOnly,$stats.typesUntouched)
+Write-Host ("Types {0}: covered {1} / named-only {2} / dynamic {3} / untouched {4}" -f $stats.types,$stats.typesCovered,$stats.typesNamedOnly,$stats.typesDynamic,$stats.typesUntouched)
 Write-Host "Output: $OutputDirectory"
 
 if ($SummaryMarkdown -ne '') {
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine("<!-- 由 scripts/diagnostics/Audit-OpennessCoverage.ps1 生成，勿手工编辑数字 -->")
     [void]$sb.AppendLine("")
-    [void]$sb.AppendLine("| 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 完全未触及 | 成员数 | 已引用成员 |")
-    [void]$sb.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|")
+    [void]$sb.AppendLine("| 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |")
+    [void]$sb.AppendLine("|---|---|---:|---:|---:|---:|---:|---:|---:|")
     foreach ($n in $nsSummary) {
-        [void]$sb.AppendLine(("| {0} | ``{1}`` | {2} | {3} | {4} | {5} | {6} | {7} |" -f ($n.assembly -replace '^Siemens\.Engineering\.?',''), $n.namespace, $n.types, $n.typesCovered, $n.typesNamedOnly, $n.typesUntouched, $n.members, $n.membersReferenced))
+        [void]$sb.AppendLine(("| {0} | ``{1}`` | {2} | {3} | {4} | {5} | {6} | {7} | {8} |" -f ($n.assembly -replace '^Siemens\.Engineering\.?',''), $n.namespace, $n.types, $n.typesCovered, $n.typesNamedOnly, $n.typesDynamic, $n.typesUntouched, $n.members, $n.membersReferenced))
+    }
+    if ($dynamicEntries.Count -gt 0) {
+        [void]$sb.AppendLine("")
+        [void]$sb.AppendLine("## 动态覆盖的类型（登记表 scripts/diagnostics/openness-dynamic-coverage.json）")
+        [void]$sb.AppendLine("")
+        foreach ($grp in ($typeSummary | Where-Object status -eq 'DYNAMIC' | Group-Object dynamicTool | Sort-Object Name)) {
+            [void]$sb.AppendLine(("- **{0}**：{1} 个类型（{2}）" -f $grp.Name, $grp.Count, (($grp.Group | Sort-Object type | Select-Object -ExpandProperty typeSimple) -join '、')))
+        }
     }
     [void]$sb.AppendLine("")
     [void]$sb.AppendLine("## 完全未触及的类型（按命名空间）")
