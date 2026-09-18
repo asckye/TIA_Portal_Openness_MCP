@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 07:10:58
-- 引擎文件版本：2.7.30.0
-- 工具数量：380
+- 生成时间：2026-09-18 08:09:24
+- 引擎文件版本：2.7.31.0
+- 工具数量：386
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 110 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 139 |
+| `READ` | 读取已打开工程，不改动 | 114 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 141 |
 | `FILE` | 导出/导入文件或生成离线产物 | 44 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -30,7 +30,7 @@
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 34 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (6)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 44 | `Project` (20)、`Library` (7)、`VersionControl` (5)、`Security` (4)、`Validation` (8) |
+| `project` | 工程与协作 / Project & collaboration | 50 | `Project` (20)、`Library` (13)、`VersionControl` (5)、`Security` (4)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
 | `hardware` | 硬件与网络 / Hardware & network | 53 | `Hardware` (53) |
@@ -115,7 +115,7 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（44）
+## project — 工程与协作 / Project & collaboration（50）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
@@ -144,17 +144,23 @@
 | `RunTestSuiteCase` | L2 | EXECUTE | Execute one exact Siemens Test Suite rule set/case. Default preview; application/system require confirmExternalExecution=true because configured simulation or servers may be affected. Returns actual testPassed and native diagnostics. |
 | `SaveAsProject` | L2 | FILE* | Save current TIA-Portal project/session with a new name |
 
-### [Library]（7）
+### [Library]（13）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
+| `CheckLibraryUpdates` | L2 | READ | Native ILibrary.UpdateCheck(project, updateCheckMode ReportOutOfDateOnly/ReportOutOfDateAndUpToDate) of the project library or an exact open global library against the bound project: the UpdateCheckResult message tree (Description, MessageParts, nested Messages) flattened with bounds. Read-only; nothing is updated. |
 | `CompareLibraries` | L2 | READ | Native CompareToLibrary between two libraries: empty name = project library, otherwise exact open global library name. Result tree flattened (path/depth/state), summary counts all states, records exclude identical elements unless includeIdentical=true; paginated. Read-only, no library opened or modified. |
+| `CompareLibraryObjects` | L2 | READ | Native detailed comparison of two library objects of the same kind (type: LibraryType.CompareTo; version: LibraryTypeVersion.CompareTo with leftVersion/rightVersion Major.Minor.Build; masterCopy: MasterCopy.CompareTo) across the project library and open global libraries: DetailedCompareResult.Properties rows (Description, DetailCompareStatus, LeftValue, RightValue) with a status summary; identical rows hidden unless includeIdentical. Read-only. |
 | `CreateLibraryMasterCopy` | L2 | WRITE | Create a native master copy from an exact block/type/device/screen in an existing library folder. sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise already-open global library. dryRun=true default. Native IMasterCopySource required; no automatic save or close. |
-| `ImportLibraryTypeDocuments` | L2 | WRITE | Native type CreateFromDocuments in exact library folder. Explicit import options; default preview. Dependency changes governed by native import; no automatic save. |
-| `ManageGlobalLibrary` | L2 | WRITE | List/create/open/retrieve/save/saveAs/close a global library. Exact expected name, new destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite. |
+| `ImportLibraryTypeDocuments` | L2 | WRITE | Native library document import (SimaticML / WinCC ML / S7DCL / SCL / STL / UDT / NVT): without typePath, LibraryTypeComposition.CreateFromDocuments creates a new type with an InWork default version in the exact library folder; with typePath, LibraryTypeVersionComposition.CreateFromDocuments adds a version to that type (createOptions None fails natively if an in-work version exists, Override replaces it). STEP 7 documents need targetSoftwarePath + targetGroupKind (blocks/types) + targetGroupPath as target environment. importOptions None/SkipInactiveCultures/ActivateInactiveCultures. Returns TransferResultState, messages and the created type/version. Project library only (global libraries throw natively); default preview; no automatic save. |
+| `ManageGlobalLibrary` | L2 | WRITE | Global library lifecycle: list (open libraries), infos (GlobalLibraryComposition.GetGlobalLibraryInfos: every library this Portal knows with path, type and IsOpen), create/open/openInfo (Open(GlobalLibraryInfo) by exact name)/retrieve/save/saveAs/close, and archive (UserGlobalLibrary.Archive(destinationDirectory, archiveName, archiveMode None/Compressed/DiscardRestorableData/DiscardRestorableDataAndCompressed); the library must be saved first). Exact expected name, new destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite. |
 | `ManageLibraryFolder` | L2 | WRITE | Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive deletion or save. Default preview. |
 | `ManageLibraryMasterCopy` | L2 | WRITE | Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact master-copy path. No overwrites or automatic save. Default preview for mutations. |
+| `ManageLibraryType` | L2 | WRITE | One exact library type: update (propertiesJson Name/DoNotUse/SetForUpdate; SetForUpdate is refused natively on project-library and write-protected types), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePathsJson entry: PLC / HMI / Unified HMI software paths). Default dryRun=true; no save/compile/download. |
 | `ManageLibraryTypeVersion` | L2 | WRITE | Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. |
+| `ReadLibraryOverview` | L2 | READ | Official library overview: empty libraryName = project library, otherwise an exact already-open global library. Header (GlobalLibrary Author/Comment per culture/Copyright/Family/Version/Path/CreationTime/LastModified(By)/IsModified/IsWriteProtected/Size, HistoryEntries, UsedProducts), the Types folder tree (LibraryTypeFolder Status, each LibraryType with Guid/Namespace/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion/Status/version summary) and the master copy tree (MasterCopy Author/CreationDate/ContentDescriptions). Bounded by maxDepth/maxItems; no modification. |
+| `ReadLibraryType` | L2 | READ | One library type by exact typePath (relative to the Types folder) or by guid (type GUID via ILibrary.FindType, or version GUID via FindVersion): type scalars incl. Status/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion, GetSupportedExportFormats, and every version with State/IsDefault/Author/ModifiedDate/OriginalLibrary/Dependencies/Dependents/MasterCopiesContainingInstances (per-field failures captured; TIA may throw on InWork versions). Paginated versions; no modification. |
+| `SynchronizeLibrary` | L2 | WRITE | ILibrary-level operations on a selection (selectionJson: [{"type":"Folder/Type"},{"folder":"Folder"}], {"folder":""} = whole Types folder): updateLibrary (UpdateLibrary into targetLibraryName with forceUpdateMode/deleteUnusedVersionsMode/structureConflictResolutionMode; types matched by GUID), updateProject (UpdateProject into scopeSoftwarePathsJson scopes; a global library source synchronizes the project library first), harmonizeProject (HarmonizeProject with harmonizeOptionsJson HarmonizeNames/HarmonizePaths; renames and moves instances) and cleanUp (ProjectLibrary.CleanUpLibrary with cleanUpMode PreserveDefaultVersionOfUnusedTypes/DeleteUnusedTypes, UserGlobalLibrary.CleanUpLibrary without mode). Real execution needs confirmChange=true; default dryRun=true; no save/compile/download. |
 
 ### [VersionControl]（5）
 
