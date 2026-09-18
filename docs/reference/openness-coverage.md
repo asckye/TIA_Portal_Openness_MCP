@@ -1,8 +1,8 @@
-# 官方 Openness API 覆盖清单（V21，2.7.26）
+# 官方 Openness API 覆盖清单（V21，2.7.27）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
-本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.26 引擎源码（2026-09-18）；上一次为 2.7.25 / 2.7.24（同日）与 2.7.18。
+本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.27 引擎源码（2026-09-18）；上一次为 2.7.26 / 2.7.25 / 2.7.24（同日）与 2.7.18。
 
 ## 口径（先读这个，再看数字）
 
@@ -10,15 +10,15 @@
 - 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明"有专用代码路径"，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可以动态到达任何公开成员，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
 - **动态覆盖（2.7.26 起）**：类型名从不出现在源码、但由反射/泛型适配器到达的类型，登记在 [scripts/diagnostics/openness-dynamic-coverage.json](../../scripts/diagnostics/openness-dynamic-coverage.json)（模式、工具、机制、真机证据），审计脚本按全名通配匹配后记为 DYNAMIC 并单列一栏。登记的前提是有形状检查或真机验证；没有证据的不登记，仍算"未触及"。
-- 结果（V21，2.7.26）：领域成员已引用 **663**（2.7.25 为 654，2.7.18 为 609）、仅类型名 836、未引用 2,991；有领域成员的类型 1,217 个中有专用引用 **224**、仅类型名 105、**动态覆盖 262**、完全未触及 **626**（2.7.25 为 885）。2.7.26 的变化全部来自 WinCC Unified 画面对象族：`ManageUnifiedScreenItem` / `DescribeUnifiedScreenItemType` 让 `UI.Shapes` / `UI.Widgets` / `UI.Controls` / `UI.Base` / `UI.Features` / `HmiScreenWindow` 进入动态覆盖，2.7.18 已有的 `UI.Events` / `UI.Parts` / `UI.Dynamization` 适配器同时登记。
+- 结果（V21，2.7.27）：领域成员已引用 **675**（2.7.26 为 663，2.7.18 为 609）、仅类型名 824、未引用 2,991；有领域成员的类型 1,217 个中有专用引用 **231**、仅类型名 102、**动态覆盖 285**、完全未触及 **599**（2.7.26 为 626，2.7.25 为 885）。2.7.27 的变化：真机验证后把 `HmiAlarm` / `HmiLogging` / `RuntimeSettings` 登记为动态覆盖，`UI.Controls` 补上真机创建证据。
 
-## 缺口结构（2.7.26）
+## 缺口结构（2.7.27）
 
-626 个"完全未触及"的类型里（2.7.25 为 885，2.7.24 为 895；差额是登记为动态覆盖的 262 个 Unified UI 类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 308 个 / 1,286 个成员**（2.7.25 口径为 371 / 1,712；2.7.26 起所有行统一用审计脚本的壳子规则重算，Base/Step7/选件包的数字因此略有上调），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）198 个 / 750 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
+599 个"完全未触及"的类型里（2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 285 个 Unified 类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 288 个 / 1,185 个成员**（2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）178 个 / 649 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
-| WinCCUnified | 41 | 219 | **2.7.26 画面对象族已封装**（`UI.Shapes` 17 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Base` 9 / `UI.Features` 13 / `HmiScreenWindow`：`ManageUnifiedScreenItem` 任意类型创建/读/改/删 + `DescribeUnifiedScreenItemType` 属性 schema）。仍未封装：运行时设置嵌套对象（`HmiOpcUaServerRuntimeSettings` 23、`HmiLanguageAndFont` 9、诊断/报告/登录/遥测/UPSS/独占操作，10 类型 / 58 成员）、报警类与离散/模拟报警（`HmiAlarm` 3 / 26）、报警/数据记录与备份/分段设置（`HmiLogging` 7 / 17）、审计类（1 / 6）、文本/图形/系统文本列表（3 / 5）、阈值/替代值/系统变量（3 / 9）、记录变量（1 / 20）、`Cpm` 6 / 54、`OpcUaAlarm` / `DriverProperty`（3 / 14）、`Common`（`IChromDataExchangeExport` 等 3 / 6）、`UIBase` 1 / 4——多数已可经 `ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` / `ManageUnifiedEngineeringObject` 等通用路径到达，待真机逐族验证后登记（路线图 §2.0 阶段 2 子批次 ②–⑤） |
+| WinCCUnified | 21 | 118 | **2.7.26–2.7.27 已封装/登记**：画面对象族（`UI.Shapes` / `Widgets` / `Controls` / `Base` / `Features` / `HmiScreenWindow`，`ManageUnifiedScreenItem` + `DescribeUnifiedScreenItemType`）、报警类与离散/模拟报警（`HmiAlarm`，含状态视觉颜色写入）、报警/数据记录与备份/分段设置（`HmiLogging`）、运行时设置嵌套对象（`RuntimeSettings`）——后三族经 `ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties`（2.7.27 起支持颜色与嵌套部件）真机验证。仍未封装：审计类（1 / 6）、文本/图形/系统文本列表（3 / 5）、阈值/替代值/系统变量（3 / 9）、记录变量（1 / 20）、`Cpm` 6 / 54、`OpcUaAlarm` / `DriverProperty`（3 / 14）、`Common`（`IChromDataExchangeExport` 等 3 / 6）、`UIBase` 1 / 4——路线图 §2.0 阶段 2 子批次 ⑤ |
 | Base | 89 | 332 | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
 | Step7 | 44 | 140 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
 | WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
@@ -27,11 +27,12 @@
 
 已核实为**官方没有 API** 而保持明确拒绝的项不计入缺口，见下文"已核实为官方无 API 的项"。"未封装"不等于"用不了"：`DescribeObject` / `GetObjectProperty` / `InvokeObject` / `InvokeService` 可到达任何公开成员，只是没有带校验、预览与文档的专用工具。
 
-## 能力域状态（2.7.18 建表，2.7.25 增补 Safety，2.7.26 增补 Unified 画面对象）
+## 能力域状态（2.7.18 建表，2.7.25 增补 Safety，2.7.26–2.7.27 增补 Unified 画面对象与嵌套属性）
 
 | 能力域 | 官方入口（V21 XML） | 2.7.17 | 2.7.18 |
 |---|---|---|---|
 | Unified 画面对象 | `HmiUnified.UI.Shapes/Widgets/Controls/Screens`（43 个具体类型，V20 37）+ `UI.Base` / `UI.Features` | 只有 Button/Rectangle/Text/IOField 别名 + 版式 JSON | **2.7.26**：`DescribeUnifiedScreenItemType`（目录 + 属性 schema）、`ManageUnifiedScreenItem`（任意类型 `Create<T>`，标量/颜色/部件/多语言嵌套写入并读回） |
+| Unified 报警类 / 记录 / 运行时设置嵌套对象 | `HmiAlarm.*`、`HmiLogging.*`、`RuntimeSettings.*` | 标量经通用路径 | **2.7.27**：`UpdateUnifiedObjectProperties` 接受 `#AARRGGBB` 颜色与嵌套部件（报警类四种状态视觉、记录 `Settings/Backup/Segment`、运行时设置子对象），真机写入并复原 |
 | Safety（F 程序） | `Safety.*`（12 类型 / 54 成员） | 反射读标量 | **2.7.25**：`ManagePlcSafety` 强类型 12 动作、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`；F 编译不在 PublicAPI 内 |
 | 下载提示应答 | `Download.Configurations.*` 43 种 | 只应答 16 种，3 种误作复选框 | 全部按真实形态应答，未应答项回传 |
 | 设备上载 / 可达设备扫描 | `Upload.StationUploadProvider`、`Connection.ConfigurationPcInterface.GetAccessibleDevices` | 无 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`（V21） |
@@ -59,7 +60,7 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.26 源码；"动态覆盖"栏来自登记表）
+## 统计表（脚本生成，2.7.27 源码；"动态覆盖"栏来自登记表）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -143,21 +144,21 @@
 | WinCCUnified | `Siemens.Engineering.HmiUnified` | 1 | 1 | 0 | 0 | 0 | 21 | 5 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.Common` | 5 | 0 | 0 | 0 | 5 | 13 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.Cpm` | 14 | 3 | 0 | 0 | 11 | 70 | 4 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm` | 6 | 0 | 0 | 0 | 6 | 32 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon` | 2 | 1 | 1 | 0 | 0 | 22 | 2 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm` | 6 | 0 | 0 | 6 | 0 | 32 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAlarm.HmiAlarmCommon` | 2 | 1 | 0 | 1 | 0 | 22 | 2 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.HmiAudit` | 3 | 1 | 0 | 0 | 2 | 9 | 1 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.HmiConnections` | 5 | 1 | 0 | 0 | 4 | 21 | 6 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging` | 6 | 0 | 0 | 0 | 6 | 10 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon` | 6 | 0 | 2 | 0 | 4 | 28 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging` | 6 | 0 | 0 | 6 | 0 | 10 | 0 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon` | 6 | 0 | 0 | 6 | 0 | 28 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.HmiOpcUaAlarm` | 2 | 0 | 0 | 0 | 2 | 10 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.HmiTags` | 12 | 4 | 0 | 0 | 8 | 74 | 19 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.LoggingTags` | 2 | 0 | 0 | 0 | 2 | 22 | 0 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.RuntimeSettings` | 12 | 1 | 0 | 0 | 11 | 82 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.RuntimeSettings` | 12 | 1 | 0 | 11 | 0 | 82 | 1 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.Scripts` | 2 | 1 | 0 | 0 | 1 | 7 | 3 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.TextGraphicList` | 6 | 0 | 0 | 0 | 6 | 14 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI` | 1 | 0 | 0 | 0 | 1 | 4 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Base` | 11 | 2 | 0 | 9 | 0 | 53 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Controls` | 15 | 1 | 0 | 14 | 0 | 120 | 1 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Controls` | 15 | 2 | 0 | 13 | 0 | 120 | 3 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization` | 6 | 2 | 0 | 4 | 0 | 16 | 5 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Flashing` | 1 | 1 | 0 | 0 | 0 | 4 | 1 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Dynamization.Script` | 3 | 1 | 0 | 2 | 0 | 12 | 2 |
@@ -166,9 +167,9 @@
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Features` | 13 | 0 | 0 | 13 | 0 | 75 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Parts` | 85 | 0 | 0 | 85 | 0 | 370 | 0 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.UI.ScreenGroup` | 2 | 1 | 0 | 0 | 1 | 6 | 4 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Screens` | 3 | 2 | 0 | 1 | 0 | 33 | 5 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Shapes` | 20 | 1 | 0 | 19 | 0 | 129 | 2 |
-| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Widgets` | 19 | 4 | 0 | 15 | 0 | 133 | 9 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Screens` | 3 | 2 | 0 | 1 | 0 | 33 | 6 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Shapes` | 20 | 5 | 0 | 15 | 0 | 129 | 7 |
+| WinCCUnified | `Siemens.Engineering.HmiUnified.UI.Widgets` | 19 | 6 | 0 | 13 | 0 | 133 | 13 |
 
 ## 动态覆盖的类型（登记表 scripts/diagnostics/openness-dynamic-coverage.json）
 
@@ -177,9 +178,11 @@
 - **ManageUnifiedEvent / ReadUnifiedObjectEvents**：96 个类型（HmiAlarmControlEventHandler、HmiAlarmControlEventHandlerComposition、HmiAlarmIndicatorEventHandler、HmiAlarmIndicatorEventHandlerComposition、HmiAlarmLineControlEventHandler、HmiAlarmLineControlEventHandlerComposition、HmiBarEventHandler、HmiBarEventHandlerComposition、HmiButtonEventHandler、HmiButtonEventHandlerComposition、HmiCheckBoxGroupEventHandler、HmiCheckBoxGroupEventHandlerComposition、HmiCircleEventHandler、HmiCircleEventHandlerComposition、HmiCircleSegmentEventHandler、HmiCircleSegmentEventHandlerComposition、HmiCircularArcEventHandler、HmiCircularArcEventHandlerComposition、HmiClockEventHandler、HmiClockEventHandlerComposition、HmiComboBoxEventHandler、HmiComboBoxEventHandlerComposition、HmiCustomWebControlContainerEventHandler、HmiCustomWebControlContainerEventHandlerComposition、HmiCustomWidgetContainerEventHandler、HmiCustomWidgetContainerEventHandlerComposition、HmiDetailedParameterControlEventHandler、HmiDetailedParameterControlEventHandlerComposition、HmiDotNetControlContainerEventHandler、HmiDotNetControlContainerEventHandlerComposition、HmiEllipseEventHandler、HmiEllipseEventHandlerComposition、HmiEllipseSegmentEventHandler、HmiEllipseSegmentEventHandlerComposition、HmiEllipticalArcEventHandler、HmiEllipticalArcEventHandlerComposition、HmiFaceplateContainerEventHandler、HmiFaceplateContainerEventHandlerComposition、HmiFunctionTrendControlEventHandler、HmiFunctionTrendControlEventHandlerComposition、HmiGaugeEventHandler、HmiGaugeEventHandlerComposition、HmiGraphicViewEventHandler、HmiGraphicViewEventHandlerComposition、HmiIOFieldEventHandler、HmiIOFieldEventHandlerComposition、HmiLineEventHandler、HmiLineEventHandlerComposition、HmiListBoxEventHandler、HmiListBoxEventHandlerComposition、HmiMediaControlEventHandler、HmiMediaControlEventHandlerComposition、HmiPolygonEventHandler、HmiPolygonEventHandlerComposition、HmiPolylineEventHandler、HmiPolylineEventHandlerComposition、HmiProcessControlEventHandler、HmiProcessControlEventHandlerComposition、HmiProcessDiagnosisGraphOverviewControlEventHandler、HmiProcessDiagnosisGraphOverviewControlEventHandlerComposition、HmiProcessDiagnosisOverviewControlEventHandler、HmiProcessDiagnosisOverviewControlEventHandlerComposition、HmiProcessDiagnosisPlcCodeViewerControlEventHandler、HmiProcessDiagnosisPlcCodeViewerControlEventHandlerComposition、HmiProDiagCriteriaAnalysisControlEventHandler、HmiProDiagCriteriaAnalysisControlEventHandlerComposition、HmiRadioButtonGroupEventHandler、HmiRadioButtonGroupEventHandlerComposition、HmiRectangleEventHandler、HmiRectangleEventHandlerComposition、HmiScreenEventHandler、HmiScreenEventHandlerComposition、HmiScreenWindowEventHandler、HmiScreenWindowEventHandlerComposition、HmiSliderEventHandler、HmiSliderEventHandlerComposition、HmiSymbolicIOFieldEventHandler、HmiSymbolicIOFieldEventHandlerComposition、HmiSystemDiagnosisControlEventHandler、HmiSystemDiagnosisControlEventHandlerComposition、HmiTextBoxEventHandler、HmiTextBoxEventHandlerComposition、HmiTextEventHandler、HmiTextEventHandlerComposition、HmiToggleSwitchEventHandler、HmiToggleSwitchEventHandlerComposition、HmiTouchAreaEventHandler、HmiTouchAreaEventHandlerComposition、HmiTrendCompanionEventHandler、HmiTrendCompanionEventHandlerComposition、HmiTrendControlEventHandler、HmiTrendControlEventHandlerComposition、HmiWebControlEventHandler、HmiWebControlEventHandlerComposition、PropertyEventHandler、PropertyEventHandlerComposition）
 - **ManageUnifiedObjectParts / ManageUnifiedScreenItem**：85 个类型（HmiAlarmColumnPart、HmiAlarmLineColumnPart、HmiAlarmLineColumnPartComposition、HmiAlarmLineViewPart、HmiAlarmStatePart、HmiAlarmStatisticColumnPart、HmiContentPart、HmiControlBarButtonPart、HmiControlBarDisplayPart、HmiControlBarElementPartBase、HmiControlBarElementPartBaseComposition、HmiControlBarLabelPart、HmiControlBarPartBase、HmiControlBarTextBoxPart、HmiControlBarToggleSwitchPart、HmiCornersPart、HmiCurvedScalePart、HmiCustomControlInterface、HmiCustomControlInterfaceComposition、HmiDataGridColumnHeaderPart、HmiDataGridColumnPart、HmiDataGridColumnPartBase、HmiDataGridColumnPartBaseComposition、HmiDataGridHeaderSettingsPart、HmiDataGridViewPart、HmiDataSourcePart、HmiDetailedParameterControlColumnPart、HmiFaceplateInterface、HmiFaceplateInterfaceComposition、HmiFontPart、HmiFunctionTrendAreaPart、HmiFunctionTrendAreaPartComposition、HmiFunctionTrendPart、HmiFunctionTrendPartComposition、HmiGraphOverviewControlColumnPart、HmiHelpLinePart、HmiHelpLinePartComposition、HmiInputBehaviorPart、HmiLegendPart、HmiLinearMovementPart、HmiMatrixViewPart、HmiOverviewParameterControlColumnPart、HmiPaddingPart、HmiPlcDataSourcePart、HmiPressedStateTagPart、HmiPressedStateTagPartComposition、HmiProcessColumnPart、HmiProcessDiagnosisCriteriaAnalysisControlColumnPart、HmiProcessDiagnosisOperationModePart、HmiProcessDiagnosisOverviewElementPart、HmiProcessDiagnosisOverviewElementPartComposition、HmiProcessDiagnosisOverviewPart、HmiQualityPart、HmiRulerPart、HmiScalePartBase、HmiScalingEntryPart、HmiScalingEntryPartComposition、HmiSelectionItemPart、HmiSelectionItemPartComposition、HmiStraightScalePart、HmiSystemDiagnosisControlColumnPart、HmiSystemDiagnosisControlScriptColumnPart、HmiSystemDiagnosisDetailViewPart、HmiSystemDiagnosisHardwareDetailPart、HmiSystemDiagnosisHardwareDetailPartComposition、HmiSystemDiagnosisMatrixColumnPart、HmiTextPart、HmiThresholdPart、HmiThresholdPartComposition、HmiTimeAxisPart、HmiTimeAxisPartComposition、HmiTimeRangeColumnPart、HmiToolBarPart、HmiTrendAreaPart、HmiTrendAreaPartBase、HmiTrendAreaPartComposition、HmiTrendColumnPart、HmiTrendPart、HmiTrendPartBase、HmiTrendPartComposition、HmiValueAxisPartBase、HmiXValueAxisPart、HmiXValueAxisPartComposition、HmiYValueAxisPart、HmiYValueAxisPartComposition）
 - **ManageUnifiedScreenItem**：10 个类型（HmiCompanionBase、HmiContainerBase、HmiControlWindowBase、HmiCustomWebControlContainer、HmiCustomWidgetContainer、HmiScreenItemBaseComposition、HmiSimpleScreenItemBase、HmiTrendControlBase、HmiWindowBase、HmiScreenWindow）
-- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType**：34 个类型（HmiCentricShapeBase、HmiCircle、HmiCircleSegment、HmiCircularArc、HmiCircularShapeBase、HmiEllipse、HmiEllipseSegment、HmiEllipticalArc、HmiEllipticalShapeBase、HmiGraphicView、HmiLine、HmiPoint、HmiPointBasedShapeBase、HmiPointComposition、HmiPolygon、HmiPolyline、HmiRectangle、HmiShapeBase、HmiSurfaceShapeBase、HmiAlarmIndicator、HmiBar、HmiCheckBoxGroup、HmiClock、HmiGauge、HmiListBox、HmiRadioButtonGroup、HmiScaleWidgetBase、HmiSelectionGroupBase、HmiSlider、HmiSymbolicIOField、HmiTextBox、HmiTextWidgetBase、HmiToggleSwitch、HmiTouchArea）
-- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts**：14 个类型（HmiAlarmControl、HmiAlarmLineControl、HmiDetailedParameterControl、HmiFunctionTrendControl、HmiMediaControl、HmiProcessControl、HmiProcessDiagnosisCriteriaAnalysisControl、HmiProcessDiagnosisGraphOverviewControl、HmiProcessDiagnosisOverviewControl、HmiProcessDiagnosisPlcCodeViewerControl、HmiSystemDiagnosisControl、HmiTrendCompanion、HmiTrendControl、HmiWebControl）
-
+- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType**：28 个类型（HmiCentricShapeBase、HmiCircularArc、HmiCircularShapeBase、HmiEllipse、HmiEllipticalArc、HmiEllipticalShapeBase、HmiGraphicView、HmiLine、HmiPoint、HmiPointBasedShapeBase、HmiPointComposition、HmiPolygon、HmiPolyline、HmiShapeBase、HmiSurfaceShapeBase、HmiAlarmIndicator、HmiBar、HmiCheckBoxGroup、HmiClock、HmiGauge、HmiListBox、HmiRadioButtonGroup、HmiScaleWidgetBase、HmiSelectionGroupBase、HmiSymbolicIOField、HmiTextBox、HmiTextWidgetBase、HmiTouchArea）
+- **ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts**：13 个类型（HmiAlarmControl、HmiAlarmLineControl、HmiDetailedParameterControl、HmiFunctionTrendControl、HmiMediaControl、HmiProcessControl、HmiProcessDiagnosisCriteriaAnalysisControl、HmiProcessDiagnosisGraphOverviewControl、HmiProcessDiagnosisOverviewControl、HmiProcessDiagnosisPlcCodeViewerControl、HmiTrendCompanion、HmiTrendControl、HmiWebControl）
+- **ReadUnifiedAlarmCommon / ManageUnifiedEngineeringObject / UpdateUnifiedObjectProperties / UpdateUnifiedMultilingualProperty**：7 个类型（HmiAlarmClass、HmiAlarmClassComposition、AlarmStatusVisuals、HmiAnalogAlarm、HmiAnalogAlarmComposition、HmiDiscreteAlarm、HmiDiscreteAlarmComposition）
+- **ReadUnifiedEngineeringObjects / ManageUnifiedEngineeringObject / UpdateUnifiedObjectProperties / SetUnifiedLogDuration / ReadUnifiedAuditSettings**：12 个类型（HmiAlarmLog、HmiAlarmLogComposition、HmiAuditTrail、HmiAuditTrailComposition、HmiDataLog、HmiDataLogComposition、LogBackup、LogDuration、LoggingBase、LogSegment、LogSettings、SegmentDuration）
+- **ReadUnifiedObjectProperties / UpdateUnifiedObjectProperties / ReadUnifiedRuntimeSettings**：11 个类型（HmiExclusiveOperationSettings、HmiLanguageAndFont、HmiLanguageAndFontAssociation、HmiMaxLoginRuntimeSettings、HmiOpcUaServerRuntimeSettings、HmiProcessDiagnosticsRuntimeSettings、HmiReportingSettings、HmiRuntimeResourceSettings、HmiTelemetryRuntimeSettings、HmiUnifiedTagSettings、HmiUpssRuntimeSettings）
 
 完整的未触及类型及其成员清单体积过大，不入库；在放置了 PublicAPI 的机器上运行下列命令即可重新生成到被忽略的 `bin-build/audits/` 目录（`-SummaryMarkdown` 输出含逐类型列表）：
 

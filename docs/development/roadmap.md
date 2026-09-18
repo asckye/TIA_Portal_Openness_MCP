@@ -33,7 +33,7 @@
 | 阶段 | 程序集 / 领域 | 起点缺口（2.7.24） | 状态 |
 |---|---|---|---|
 | 1 | **Safety**（`Siemens.Engineering.Safety`） | 10 类型 / 41 成员 | **2.7.25 完成**：12 类型 / 54 成员全部有专用工具（`ManagePlcSafety` 12 个动作、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`）。剩余仅 `SafetyValidation` 选件（阶段 6） |
-| 2 | **WinCC Unified**（`Siemens.Engineering.HmiUnified`） | 113 类型 / 685 成员 | **进行中**。① 画面对象族 `UI.Shapes` / `Widgets` / `Controls` / `Base` / `Features` / `HmiScreenWindow`（69 类型）——**2.7.26 完成**：`DescribeUnifiedScreenItemType` + `ManageUnifiedScreenItem`（反射自官方 API 的类型目录与属性 schema，任意类型 `Create<T>`；硬编码属性表在 43 个类型 × 数十属性下不可维护，且与 V20/V21 差异冲突，故走"反射 + 形状检查 + 登记表"）；② 报警类 / 离散 / 模拟报警 `HmiAlarm`（3 类型 / 26 成员，含报警类四种状态视觉的颜色写入）；③ 报警/数据记录与备份/分段设置、审计类 `HmiLogging` / `HmiAudit`（8 / 23）；④ 运行时设置嵌套对象 `RuntimeSettings`（10 / 58）——**2.7.27 真机验证**：`ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` 路径 `[{property:RuntimeSettings},{property:OpcUaServerRuntimeSettings}]` 全部标量可读可写，已登记动态覆盖；⑤ 阈值（`HmiThresholdComposition.Create`）/ 替代值 / 系统变量、记录变量、文本/图形列表、`Cpm`、`OpcUaAlarm.Import`、变量与脚本模块的 xlsx/js 导入导出（`HmiTagComposition` / `HmiScriptModuleComposition` `Export/Import`）。②–⑤ 多数已可经通用属性路径工具到达，先在真机逐族验证、补缺口、再登记为动态覆盖 |
+| 2 | **WinCC Unified**（`Siemens.Engineering.HmiUnified`） | 113 类型 / 685 成员 | **进行中**。① 画面对象族 `UI.Shapes` / `Widgets` / `Controls` / `Base` / `Features` / `HmiScreenWindow`（69 类型）——**2.7.26 完成**：`DescribeUnifiedScreenItemType` + `ManageUnifiedScreenItem`（反射自官方 API 的类型目录与属性 schema，任意类型 `Create<T>`；硬编码属性表在 43 个类型 × 数十属性下不可维护，且与 V20/V21 差异冲突，故走"反射 + 形状检查 + 登记表"）；② 报警类 / 离散 / 模拟报警 `HmiAlarm`——**2.7.27 真机验证**（状态视觉颜色经 `UpdateUnifiedObjectProperties` 写入并复原），已登记；③ 报警/数据记录与备份/分段设置 `HmiLogging`——**2.7.27 真机验证**（`Settings.LogMaxSize` 写入并复原），已登记；审计类 `HmiAudit`（1 / 6）待验证；④ 运行时设置嵌套对象 `RuntimeSettings`（10 / 58）——**2.7.27 真机验证**：`ReadUnifiedObjectProperties` / `UpdateUnifiedObjectProperties` 路径 `[{property:RuntimeSettings},{property:OpcUaServerRuntimeSettings}]` 全部标量可读可写，已登记动态覆盖；⑤ 阈值（`HmiThresholdComposition.Create`）/ 替代值 / 系统变量、记录变量、文本/图形列表、`Cpm`、`OpcUaAlarm.Import`、变量与脚本模块的 xlsx/js 导入导出（`HmiTagComposition` / `HmiScriptModuleComposition` `Export/Import`）。②–⑤ 多数已可经通用属性路径工具到达，先在真机逐族验证、补缺口、再登记为动态覆盖 |
 | 3 | **Base 硬件深层与库**（`Siemens.Engineering.HW` / `Library` / `Umac` / `Security` / `Compare` / `CrossReference`） | 85 类型 / 310 成员 | `TransferArea` / `MrpInstance` / `SyncDomain` / `IoSystem` / `Channel` / `WebserverUser` / `DeviceGroup`；`GlobalLibrary` 与类型版本文件夹 / `UpdateCheck`；`UmcUser*`；`SyslogServer` / `CertificateTemplate` / `PlcPasswordPolicyService`；比较结果元素；跨引用 `SourceObject` / `ReferenceObject` |
 | 4 | **Step7**（`Siemens.Engineering.SW`） | 41 类型 / 136 成员 | 软件单元 `SW.Units` 27、`PlcDocument*`、`PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、报警类导入导出结果、`OpcUaCommunicationGroup`；`PlcForceTableEntry` 保持刻意不注册 |
 | 5 | **经典 WinCC**（`Siemens.Engineering.Hmi`） | 24 类型 / 59 成员 | 弹出/滑入画面与模板的文件夹层次 23、变量文件夹 |
@@ -111,7 +111,7 @@
 
 ## 5. 2.7.27 已完成
 
-- 引擎：2.7.26 画面对象族真机重跑；修复创建后代理身份核对（`ManageUnifiedScreenItem` / `ManageUnifiedScreenLayout`）、部件内多语言文本、`UpdateUnifiedObjectProperties` 的颜色与嵌套部件写入。运行时设置子对象（子批次 ④）真机验证可读可写，登记为动态覆盖。
+- 引擎：2.7.26 画面对象族真机重跑；修复创建后代理身份核对（`ManageUnifiedScreenItem` / `ManageUnifiedScreenLayout`）、部件内多语言文本、`UpdateUnifiedObjectProperties` 的颜色与嵌套部件写入；2.7.27 真机重跑全部通过。子批次 ②③④（`HmiAlarm` / `HmiLogging` / `RuntimeSettings`）与 `UI.Controls` 真机验证后登记为动态覆盖：完全未触及 626 → 599，Unified 未封装功能类型 41 → 21。
 
 ## 5.1 2.7.26 已完成
 

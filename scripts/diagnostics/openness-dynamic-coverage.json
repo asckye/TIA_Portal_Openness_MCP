@@ -17,13 +17,25 @@
       "pattern": "Siemens.Engineering.HmiUnified.RuntimeSettings.*",
       "tool": "ReadUnifiedObjectProperties / UpdateUnifiedObjectProperties / ReadUnifiedRuntimeSettings",
       "mechanism": "property path [{property:RuntimeSettings},{property:<SubObject>}]; scalars by reflection, nested parts since 2.7.27",
-      "verified": "2.7.27 real project HMI_RT_1: OpcUaServerRuntimeSettings 23 scalars read (write path shares the nested adapter)"
+      "verified": "2.7.26/2.7.27 real project HMI_RT_1: OpcUaServerRuntimeSettings 23 scalars read; nested write adapter verified on AlarmLogs.Settings"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiAlarm.*",
+      "tool": "ReadUnifiedAlarmCommon / ManageUnifiedEngineeringObject / UpdateUnifiedObjectProperties / UpdateUnifiedMultilingualProperty",
+      "mechanism": "AlarmClasses / DiscreteAlarms / AnalogAlarms compositions by name; scalars, the four AlarmStatusVisuals state parts with colors, and EventText/InfoText languages by reflection",
+      "verified": "2.7.27 real project HMI_RT_1: AlarmClasses.Acknowledgement RaisedState.BackColor/Flashing written and restored"
+    },
+    {
+      "pattern": "Siemens.Engineering.HmiUnified.HmiLogging.*",
+      "tool": "ReadUnifiedEngineeringObjects / ManageUnifiedEngineeringObject / UpdateUnifiedObjectProperties / SetUnifiedLogDuration / ReadUnifiedAuditSettings",
+      "mechanism": "AlarmLogs / DataLogs / AuditTrails by name; Settings / Backup / Segment parts by nested reflection, LogDuration / SegmentDuration via SetUnifiedLogDuration",
+      "verified": "2.7.27 real project HMI_RT_1: AlarmLogs.AlarmHistory Settings.LogMaxSize written and restored, Backup/Segment read"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Controls.*",
       "tool": "ManageUnifiedScreenItem / DescribeUnifiedScreenItemType / ManageUnifiedObjectParts",
       "mechanism": "Create<T>(name[, containedType]); properties by reflection; view/column/trend parts via ManageUnifiedObjectParts",
-      "verified": "2.7.26 shape checks V20/V21 (catalog 15 control types, schema); real-project create/update pending the 2.7.27 rerun"
+      "verified": "2.7.27 real project HMI_RT_1: HmiAlarmControl created with geometry, AlwaysShowRecent and Caption.Text zh-CN"
     },
     {
       "pattern": "Siemens.Engineering.HmiUnified.UI.Screens.HmiScreenWindow",

@@ -6,7 +6,7 @@
 
 - **2.7.26 真机重跑**（V21 `HMI_RT_1`）：目录 43 类型、schema、update（标量/颜色/部件/顶层多语言）、read、list、delete、隐藏 `EventHandlers` 修复均通过；发现三处缺陷。
 - **修复**：① `ManageUnifiedScreenItem create` 与 `ManageUnifiedScreenLayout create`（2.7.18 起）在真实 API 上恒报"not found exactly once"——`Create<T>` 与 `Find()` 返回不同代理，`ReferenceEquals` 恒假；改按名称查回 + 计数核对。② 部件内多语言文本（`Title.Text` 等）此前不被识别，现任意深度拆分并逐条读回。③ `UpdateUnifiedObjectProperties` 不支持颜色与嵌套部件（报警类状态颜色写入失败），现与 `ReadUnifiedObjectProperties` 一起改用 UI 模型嵌套读写。
-- **验证**：离线 1408 项（新增 6 项）；形状检查 V20 936 / V21 1032；两版 EXE 回归见 `manifest/release-build.json`。
+- **验证**：离线 1408 项（新增 6 项）；形状检查 V20 936 / V21 1032；两版 EXE 回归见 `manifest/release-build.json`。真机（V21 `HMI_RT_1`，2026-09-18）全部通过：画面创建、`HmiGauge` 带 `Title.Text` 双语初始属性创建、`HmiAlarmControl` 创建、报警类状态颜色写入并复原、记录 `Settings.LogMaxSize` 写入并复原；`HmiAlarm` / `HmiLogging` / `RuntimeSettings` / `UI.Controls` 登记为动态覆盖，详见发布说明。
 
 ## [2.7.26] - 2026-09-18
 
