@@ -19,8 +19,8 @@ using System.Windows.Threading;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
-[assembly: AssemblyVersion("2.7.22.0")]
-[assembly: AssemblyFileVersion("2.7.22.0")]
+[assembly: AssemblyVersion("2.7.23.0")]
+[assembly: AssemblyFileVersion("2.7.23.0")]
 
 namespace TiaMcpConfigurator
 {
@@ -312,8 +312,12 @@ namespace TiaMcpConfigurator
             Find<RadioButton>(mode == 0 ? "RemoteNav" : "LocalNav").IsChecked = true;
             Window.Show(); Window.UpdateLayout(); Window.Dispatcher.Invoke(new Action(delegate { }), DispatcherPriority.Render);
             if (scrollToBottom) { Find<ScrollViewer>("ContentScroll").ScrollToBottom(); Window.UpdateLayout(); Window.Dispatcher.Invoke(new Action(delegate { }), DispatcherPriority.Render); }
+            // Render() draws the panel at its layout offset, so the bitmap must also cover the margin on
+            // both sides — sizing it from ActualWidth alone cut the right edge (and the status pill with it).
             var content = (FrameworkElement)Window.Content;
-            var bitmap = new RenderTargetBitmap((int)content.ActualWidth, (int)content.ActualHeight, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
+            int width = (int)Math.Ceiling(content.ActualWidth + content.Margin.Left + content.Margin.Right);
+            int height = (int)Math.Ceiling(content.ActualHeight + content.Margin.Top + content.Margin.Bottom);
+            var bitmap = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using (var stream = File.Create(path)) encoder.Save(stream);
         }

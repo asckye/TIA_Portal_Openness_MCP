@@ -216,6 +216,14 @@ namespace TiaMcpConfigurator
                     var clientPane = (System.Windows.Controls.Border)window.FindName("ClientPane");
                     Assert(list.ActualHeight <= list.MaxHeight + 1 && list.MaxHeight < 400, "client list is capped so it scrolls inside its card");
                     Assert(Math.Abs(serverPane.ActualHeight - clientPane.ActualHeight) < 1 && clientPane.ActualHeight < 460, "both panes render at the same, bounded height");
+                    // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
+                    var shell = (System.Windows.FrameworkElement)window.Content;
+                    var pill = (System.Windows.Controls.TextBlock)window.FindName("Status");
+                    double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
+                    Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
+                    using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
+                        Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
+                            >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
                     form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                     window.Width = 1000; window.Height = 720;
                     form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);

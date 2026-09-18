@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "2.7.22",
-    "packageName":  "TIA_MCP_Delivery_v2.7.22_20260918",
+    "bundleVersion":  "2.7.23",
+    "packageName":  "TIA_MCP_Delivery_v2.7.23_20260918",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-09-18T05:58:18.9112505+00:00",
+    "refreshedAt":  "2026-09-18T06:02:52.6305319+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -116,7 +116,7 @@
                                          }
                      },
     "fileVersion":  "2.7.20.0",
-    "validationStatus":  "Delivery 2.7.22; engine 2.7.20 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "validationStatus":  "Delivery 2.7.23; engine 2.7.20 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",
