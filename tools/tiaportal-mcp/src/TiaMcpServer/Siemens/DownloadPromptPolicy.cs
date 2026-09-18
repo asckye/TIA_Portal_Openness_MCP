@@ -120,6 +120,8 @@ namespace TiaMcpServer.Siemens
                 "AllBlocksDownload" => ConsistentBlocksOnly ? "" : Sel("DownloadAllBlocks"),
                 "UserManagementDownload" => Sel(UserManagementSelection(UserManagementMode)),
                 "AlarmTextLibrariesDownload" => Sel("ConsistentDownload"),
+                // Siemens.Engineering.Safety.Download.Configurations.SafetyProgram: the only documented selection.
+                "SafetyProgram" => Sel("ConsistentDownload"),
                 "DifferentTargetConfiguration" or "ActiveTestCanBeAborted" or "ActiveTestCanPreventDownload" => Sel("AcceptAll"),
                 "ExpandDownload" => Sel("Download"),
                 "LoadIdentificationData" => Sel("LoadData"),

@@ -13,7 +13,7 @@
 - [版本控制与 Git](guides/version-control.md)
 - [在线实时读值](guides/online-monitoring.md)
 - 硬件与网络：[硬件网络工具](guides/hardware-network.md)
-- PLC：[模板及网络模式](guides/plc/templates.md)、[LAD](guides/plc/lad.md)、[SCL](guides/plc/scl.md)、[类型组](guides/plc/type-groups.md)、[构建器工具](guides/plc/builders.md)
+- PLC：[模板及网络模式](guides/plc/templates.md)、[LAD](guides/plc/lad.md)、[SCL](guides/plc/scl.md)、[类型组](guides/plc/type-groups.md)、[构建器工具](guides/plc/builders.md)、[Safety（F 程序）](guides/plc/safety.md)
 - HMI：[画面设计](guides/hmi/design.md)、[连接驱动](guides/hmi/connections.md)、[变量绑定](guides/hmi/tag-binding.md)、[只读迁移](guides/hmi/read-only-migration.md)、[全局脚本](guides/hmi/global-scripts.md)、[图形选择](guides/hmi/graphic-selection.md)、[运行设置](guides/hmi/runtime-settings.md)、[Unified 动作工具](guides/hmi/unified-actions.md)、[Unified 主题与布局](guides/hmi/unified-theme-layout.md)
 
 ## 参考与排错
@@ -25,9 +25,9 @@
 ## 开发与历史
 
 - [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)
-- [路线图与待办](development/roadmap.md)：引擎待重建项、官方 API 缺口优先级（2.7.24 新增 Safety 只读 P1）、第三方集成候选、合规事项（2026-09-17 审计，2026-09-18 更新）
+- [路线图与待办](development/roadmap.md)：官方 API 全量对齐分阶段计划（2.7.25 完成 Safety，下一步 WinCC Unified）、引擎待重建项、第三方集成候选、合规事项（2026-09-17 审计，2026-09-18 更新）
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
-- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.24.md)、[v2.7.23](releases/v2.7.23.md)、[v2.7.22](releases/v2.7.22.md)、[v2.7.21](releases/v2.7.21.md)、[v2.7.20](releases/v2.7.20.md)
+- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.25.md)、[v2.7.24](releases/v2.7.24.md)、[v2.7.23](releases/v2.7.23.md)、[v2.7.22](releases/v2.7.22.md)、[v2.7.21](releases/v2.7.21.md)、[v2.7.20](releases/v2.7.20.md)
 - 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)、[多语言修复](archive/multilingual-fix.md)、[v2.7.14 API 覆盖审计](archive/openness-audit-v2.7.14.md)、[v2.7.16 配置器界面检查记录](archive/design-qa.md)
 
 日常使用以入门和操作指南为准，归档保留当时结论。代码块内以 `docs/`、`runtime/`、`templates/`、`scripts/` 或 `tools/` 开头的路径相对仓库/交付包根目录。

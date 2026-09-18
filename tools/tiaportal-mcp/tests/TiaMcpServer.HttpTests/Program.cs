@@ -338,6 +338,7 @@ internal static class Program
                     MotionProDiagClassicHmiShapeChecks.Run(Server, shapeCheck);
                     RuntimeChannelsShapeChecks.Run(Server, shapeCheck);
                     SimulationDocumentationShapeChecks.Run(Server, shapeCheck);
+                    SafetyShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

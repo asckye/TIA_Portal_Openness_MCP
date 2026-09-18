@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 00:59:39
-- 引擎文件版本：2.7.24.0
-- 工具数量：359
+- 生成时间：2026-09-18 01:59:22
+- 引擎文件版本：2.7.25.0
+- 工具数量：362
 
 ## 读法
 
@@ -15,9 +15,9 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 103 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 128 |
-| `FILE` | 导出/导入文件或生成离线产物 | 41 |
+| `READ` | 读取已打开工程，不改动 | 104 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 129 |
+| `FILE` | 导出/导入文件或生成离线产物 | 42 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 10 |
@@ -31,7 +31,7 @@
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 34 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (6)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 44 | `Project` (20)、`Library` (7)、`VersionControl` (5)、`Security` (4)、`Validation` (8) |
-| `plc` | PLC 软件 / PLC software | 91 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (1) |
+| `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
 | `hardware` | 硬件与网络 / Hardware & network | 40 | `Hardware` (40) |
 | `hmi` | HMI 人机界面 / HMI | 110 | `HMI` (25)、`HMI-Unified` (65)、`HMI-Classic` (14)、`HMI-Library` (6) |
@@ -188,7 +188,7 @@
 | `RunOfflineReleaseValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. |
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markersJson default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 
-## plc — PLC 软件 / PLC software（91）
+## plc — PLC 软件 / PLC software（94）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
@@ -307,11 +307,14 @@
 | `ReadOpcUaAccessControl` | L2 | READ | Read the PLC OPC UA server access control (ServerInterfaceGroup.AccessControl): section roles (RoleMappings with per-namespace permissions) or restrictions (NamespaceAccessRestrictions). Exact softwarePath; offset/limit pagination. NotSupported on TIA V20. No secrets, nothing modified. |
 | `SetOpcUaInterfaceEnabled` | L2 | WRITE* | [PreCondition:Connect+OpenProject] Enable or disable an OPC UA server interface, SIMATIC interface, or reference namespace. Setting Enabled=true activates the interface — download to PLC is required for the change to take effect on the CPU. interfaceType options: 'ServerInterface' (default), 'SimaticInterface', 'ReferenceNamespace'. Workflow: GetOpcUaConfig → SetOpcUaInterfaceEnabled → DownloadToPlc. |
 
-### [Safety]（1）
+### [Safety]（4）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
-| `ManagePlcSafety` | L2 | WRITE | Offline Safety read/createRuntimeGroup/deleteRuntimeGroup/updateRuntimeGroup/updateSettings via official optional Safety API. Exact PLC and runtimeGroup. Scalar propertiesJson for updates. dryRun=true default. Existing TIA Safety login required when protected; no credentials, safety-mode disabling, compile/save/download or automatic login. Read includes settings, runtime groups and available signature metadata; API availability is not functional safety acceptance. |
+| `ExportSafetyPrintout` | L2 | FILE | Official STEP 7 Safety printout of one exact F-PLC via native SafetyPrintout.Print on the CPU device item: printer MicrosoftPrintToPdf (.pdf) or MicrosoftXpsDocumentWriter (.xps/.oxps), option All or Compact, documentLayout default DocuInfo_ISO_A4_Portrait. filePath is absolute on the MCP server, must not exist (native Print would overwrite) and its parent must exist; the Windows printer driver must be enabled on the TIA machine. dryRun=true default; execution returns the native bool, byte size and SHA-256. No project change. |
+| `ManagePlcSafety` | L2 | WRITE | Official Siemens.Engineering.Safety administration of one exact F-PLC. read: password/login state, SafetySettings incl. AssignmentOfBlockNumbers (ManagementMode, From/To FB/FC/DB), SafetySystemVersion + applicable versions, EnableConsistentUploadFromFCpu/EnableFCommunicationIdTag attributes, runtime groups incl. FOBNumber/FOBCycleTime/FOBPhaseShift/FOBPriority, collective/software/hardware/communication-address F-signatures (V21), portal GlobalSettings and CPU Failsafe_FCapabilityActivated. Writes: createRuntimeGroup (optional mainSafetyBlockPath FC, or FB + mainSafetyInstanceDbPath), deleteRuntimeGroup, updateRuntimeGroup/updateSettings (propertiesJson: scalar properties, AssignmentOfBlockNumbers.*, SafetySystemVersion exact string, documented attributes), generateGlobalFIOStatusBlock, cleanSystemGeneratedObjects, generateBaseId (V21, F-BaseID CPUs), login/logoff/setPassword/revokePassword (password passed straight to TIA, never stored or logged). dryRun=true default; program edits require Offline and F-login when protected; delete/generate/clean/password actions and SafetyModeCanBeDisabled require confirmSafetyChange=true. No F-compile, save or download; API access is not functional safety acceptance. |
+| `ManageSafetyGlobalSettings` | L2 | WRITE | Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). propertiesJson holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login. |
+| `ReadSafetyBlockSignatures` | L2 | READ | Per-block F-signatures via native PlcBlock.GetService<SafetySignatureProvider>() for one exact blockPath or every block of the PLC (recursive), plus the PLC collective/software/hardware/communication-address signatures (V21 ProgramSignatures) when includeProgramSignatures=true. Blocks without the service (non-F blocks, non-F-CPU) are counted, not listed. Value 0 = no valid signature (changed since the last F-compile). Offline project values, never read from the CPU. Paginated offset/limit<=500. No change. |
 
 ## plc-online — PLC 在线与传输 / PLC online & transfer（15）
 

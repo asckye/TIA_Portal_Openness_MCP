@@ -42,7 +42,10 @@
 | SetPlcUnitObjectAccess | 对单元内块/UDT 设置 Published/Unpublished | unitName、objectKind、objectPath、access；原生 API 不支持 OB 发布 |
 | CreateLibraryMasterCopy | 从准确块/UDT/设备/画面创建主副本 | sourceKind/sourcePath、已存在 folderPath；device 路径使用 JSON 数组 |
 | ManageLibraryTypeVersion | read/edit/release/setDefault/deleteVersion/updateInstances | typePath、version；release 需 newVersion/dependenciesMode；更新实例限定 targetSoftwarePath |
-| ManagePlcSafety | read/createRuntimeGroup/deleteRuntimeGroup/updateRuntimeGroup/updateSettings | 可用的签名、运行组、标量设置；保护工程需用户已在 TIA 登录 |
+| ManagePlcSafety | read/createRuntimeGroup/deleteRuntimeGroup/updateRuntimeGroup/updateSettings/generateGlobalFIOStatusBlock/cleanSystemGeneratedObjects/generateBaseId/login/logoff/setPassword/revokePassword（2.7.25 强类型重写） | read 含块号段、安全系统版本、文档化属性、运行组 FOB 属性、集体签名（V21）、GlobalSettings、CPU F 能力；写入需 Offline，密码保护需已登录（可 `action=login`，密码直传不记录）；删除/生成/清理/密码类动作需 confirmSafetyChange |
+| ManageSafetyGlobalSettings | read/update（2.7.25） | TIA Portal 级 SafetyModificationsPossible、GenerationOfDefaultFailsafeProgram、ManagementOfFailsafeInSoftwareUnitsEnvironment、UsernameForFChangeHistory |
+| ReadSafetyBlockSignatures | 单块或整 PLC 逐块 F 签名（2.7.25） | blockPath 可空；值 0 = 无有效签名；离线工程值，不读 CPU |
+| ExportSafetyPrintout | 官方安全打印件写文件（2.7.25） | printer PDF/XPS、option All/Compact、documentLayout；拒绝覆盖；返回 SHA-256；TIA 机器需启用对应 Windows 打印驱动 |
 | ManagePlcCertificate | list/read/create/import/export/delete/assign/unassign | 精确 DeviceItem 与 certificateId；usage/template properties；可用 assignmentItemPathJson 指定 OPC UA 分配属性所属子模块 |
 | ManageUnifiedHmiGroup | screens/tags 的 create/rename/deleteEmpty | 精确相对 groupPath，不支持原生不存在的 ScriptGroups |
 | ReadUnifiedEngineeringObjects | 七类集合分页标量读取 | category、精确可选 name、offset/limit |

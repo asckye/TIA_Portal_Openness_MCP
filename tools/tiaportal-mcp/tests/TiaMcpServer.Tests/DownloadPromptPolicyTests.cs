@@ -38,6 +38,7 @@ namespace TiaMcpServer.Tests
             }
             check(new DownloadPromptPolicy().Decide("ProtectionLevelChanged", new[] { "ContinueDownloading", "NoChange" }, false, false).Value == "NoChange", "ProtectionLevelChanged keeps the protection level by default");
             check(new DownloadPromptPolicy().Decide("TargetForSoftware", new[] { "CPU", "PlcSimulationAdvanced" }, false, false).Value == "CPU", "TargetForSoftware defaults to the real CPU");
+            check(new DownloadPromptPolicy().Decide("SafetyProgram", new[] { "ConsistentDownload" }, false, false).Value == "ConsistentDownload", "Safety.Download.Configurations.SafetyProgram is answered with its only selection, ConsistentDownload");
 
             var explicitPolicy = new DownloadPromptPolicy();
             foreach (var kv in DownloadPromptPolicy.ParseExplicitAnswers("{\"ResetModule\":\"deleteall\",\"OverwriteHmiData\":true}")) explicitPolicy.Explicit[kv.Key] = kv.Value;

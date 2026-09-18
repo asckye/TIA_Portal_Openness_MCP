@@ -1,19 +1,19 @@
-# 官方 Openness API 覆盖清单（V21，2.7.24）
+# 官方 Openness API 覆盖清单（V21，2.7.25）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
-本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.24 引擎源码（2026-09-18）；上一次为 2.7.18。
+本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.25 引擎源码（2026-09-18）；上一次为 2.7.24（同日）与 2.7.18。
 
 ## 口径（先读这个，再看数字）
 
 - 分母是 **4,490 个领域成员**（1,239 个方法 + 3,251 个属性），已剔除每个类型都有的 `ToString`/`Equals`/`GetHashCode`/`Parent`/`GetAttribute(s)`/`SetAttribute(s)`/集合枚举等 10,294 个样板成员、构造函数和显式接口实现。
 - 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明"有专用代码路径"，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可以动态到达任何公开成员，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
-- 结果（V21，2.7.24）：领域成员已引用 **621**（2.7.18 为 609，2.7.17 为 426）、仅类型名 776、未引用 3,093；有领域成员的类型 1,217 个中有专用引用 **212**（2.7.18 为 208）、仅类型名 110、完全未触及 895。2.7.19–2.7.24 的改动集中在渲染器、配置器与 PLCSIM Advanced 通道，API 封装面几乎未变。属性侧数字被"通用属性读写"显著低估，方法侧更接近真实封装度。
+- 结果（V21，2.7.25）：领域成员已引用 **654**（2.7.24 为 621，2.7.18 为 609）、仅类型名 784、未引用 3,052；有领域成员的类型 1,217 个中有专用引用 **220**（2.7.24 为 212）、仅类型名 112、完全未触及 885。2.7.25 的 +33 成员 / +8 类型全部来自 Safety 程序集的全量封装（[路线图 §2.0](../development/roadmap.md#20-官方-api-全量对齐计划) 阶段 1）；属性侧数字仍被"通用属性读写"低估。
 
-## 缺口结构（2.7.24）
+## 缺口结构（2.7.25）
 
-895 个"完全未触及"的类型里，`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见。去掉这三类后，**没有专用封装的功能类型为 381 个 / 1,753 个成员**，其中核心程序集（Base / Step7 / WinCC / WinCCUnified / Safety）273 个 / 1,231 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
+885 个"完全未触及"的类型里（2.7.24 为 895），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见。去掉这三类后，**没有专用封装的功能类型为 371 个 / 1,712 个成员**（2.7.24 为 381 / 1,753），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）263 个 / 1,190 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 522 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
@@ -21,15 +21,16 @@
 | Base | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
 | Step7 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
 | WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
-| Safety | 10 | 41 | 已有的 `ManagePlcSafety(action=read)` 经反射读取 `SafetyAdministration` / `SafetySettings` / `RuntimeGroup` 的标量与 `ProgramSignatures`（词法扫描看不到）。仍缺：`SafetySettings.AssignmentOfBlockNumbers`（F 块号范围）与 `SafetySystemVersion` 等嵌套对象、工程级 `GlobalSettings`、逐块的 `SafetySignatureProvider.Signatures`、官方安全打印输出 `SafetyPrintout.Print`；`GenerateAcceptanceReport` 也未纳入 Safety。见路线图 P1 |
+| Safety | 0 | 0 | **2.7.25 全量封装**：`ManagePlcSafety`（12 个动作，强类型）、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`。统计表里 Safety 仍有 2 个"完全未触及"类型（`RuntimeGroupComposition` / `SafetySignatureComposition` 只有 `IsReadOnly` 一类样板外成员）与若干 OWNER_ONLY 属性（经 `EngineeringScalarProperties` 通用读写，词法看不见）。`SafetyValidation` 选件（14 类型）未做，见选件包行 |
 | 选件包 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
 
 已核实为**官方没有 API** 而保持明确拒绝的项不计入缺口，见下文"已核实为官方无 API 的项"。"未封装"不等于"用不了"：`DescribeObject` / `GetObjectProperty` / `InvokeObject` / `InvokeService` 可到达任何公开成员，只是没有带校验、预览与文档的专用工具。
 
-## 能力域状态（2.7.18，此后无 API 侧变化）
+## 能力域状态（2.7.18 建表，2.7.25 增补 Safety）
 
 | 能力域 | 官方入口（V21 XML） | 2.7.17 | 2.7.18 |
 |---|---|---|---|
+| Safety（F 程序） | `Safety.*`（12 类型 / 54 成员） | 反射读标量 | **2.7.25**：`ManagePlcSafety` 强类型 12 动作、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`；F 编译不在 PublicAPI 内 |
 | 下载提示应答 | `Download.Configurations.*` 43 种 | 只应答 16 种，3 种误作复选框 | 全部按真实形态应答，未应答项回传 |
 | 设备上载 / 可达设备扫描 | `Upload.StationUploadProvider`、`Connection.ConfigurationPcInterface.GetAccessibleDevices` | 无 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`（V21） |
 | 下载到 Windows 文件夹 | `DownloadProvider.Download(DirectoryInfo,…)` | 无 | `DownloadPlcToFolder` |
@@ -56,7 +57,7 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.24 源码）
+## 统计表（脚本生成，2.7.25 源码）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -96,8 +97,8 @@
 | CFC | `Siemens.Engineering.SW.FunctionCharts` | 2 | 0 | 1 | 1 | 8 | 0 |
 | DCC | `Siemens.Engineering.MC.Drives.Dcc` | 25 | 1 | 1 | 23 | 97 | 3 |
 | DCC | `Siemens.Engineering.MC.Drives.Dcc.DccExceptions` | 39 | 0 | 0 | 39 | 39 | 0 |
-| Safety | `Siemens.Engineering.Safety` | 12 | 1 | 0 | 11 | 54 | 3 |
-| Safety | `Siemens.Engineering.Safety.Download.Configurations` | 1 | 0 | 0 | 1 | 1 | 0 |
+| Safety | `Siemens.Engineering.Safety` | 12 | 9 | 1 | 2 | 54 | 36 |
+| Safety | `Siemens.Engineering.Safety.Download.Configurations` | 1 | 0 | 1 | 0 | 1 | 0 |
 | SafetyValidation | `Siemens.Engineering.SafetyValidation` | 14 | 0 | 0 | 14 | 60 | 0 |
 | Sivarc | `Siemens.Engineering.SiVArc` | 72 | 6 | 1 | 65 | 314 | 6 |
 | Startdrive | `Siemens.Engineering.MC.Drives` | 26 | 1 | 3 | 22 | 95 | 2 |

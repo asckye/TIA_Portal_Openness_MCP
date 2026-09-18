@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.7.25] - 2026-09-18
+
+引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](docs/development/roadmap.md#20-官方-api-全量对齐计划)）。
+
+- **`Siemens.Engineering.Safety` 全量封装**（12 类型 / 54 成员，按官方 "F-related Openness" 章节逐页对照）：`ManagePlcSafety` 由反射改为强类型，`read` 补齐 `AssignmentOfBlockNumbers`、`SafetySystemVersion` + 可用版本、`EnableConsistentUploadFromFCpu` / `EnableFCommunicationIdTag`、运行组 `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority`、**集体 / 软件 / 硬件 / 通信地址 F 签名**（旧实现从未真正读出）、工程级 `GlobalSettings` 与 CPU `Failsafe_FCapabilityActivated`；新增动作 `generateGlobalFIOStatusBlock` / `cleanSystemGeneratedObjects` / `generateBaseId` / `login` / `logoff` / `setPassword` / `revokePassword`，`createRuntimeGroup` 三种官方重载，`updateSettings` 支持嵌套块号段与精确版本。
+- **新工具 3 个**：`ManageSafetyGlobalSettings`（TIA Portal 级四项全局安全设置）、`ReadSafetyBlockSignatures`（逐块 F 签名，单块或整 PLC）、`ExportSafetyPrintout`（官方安全打印件 PDF/XPS）。下载提示 `SafetyProgram` 应答 `ConsistentDownload`。
+- **验证**：离线 1353 项（新增 59 项）；引擎 API 形状检查 V20 886 / V21 982（新增 73 / 80 项 Safety 成员核对）；两版 EXE 回归见 `manifest/release-build.json`。
+
 ## [2.7.24] - 2026-09-18
 
 引擎 2.7.24.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.24](docs/releases/v2.7.24.md)。
