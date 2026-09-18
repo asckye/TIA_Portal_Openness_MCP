@@ -6,7 +6,7 @@
 
 - **`Siemens.Engineering.Safety` 全量封装**（12 类型 / 54 成员，按官方 "F-related Openness" 章节逐页对照）：`ManagePlcSafety` 由反射改为强类型，`read` 补齐 `AssignmentOfBlockNumbers`、`SafetySystemVersion` + 可用版本、`EnableConsistentUploadFromFCpu` / `EnableFCommunicationIdTag`、运行组 `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority`、**集体 / 软件 / 硬件 / 通信地址 F 签名**（旧实现从未真正读出）、工程级 `GlobalSettings` 与 CPU `Failsafe_FCapabilityActivated`；新增动作 `generateGlobalFIOStatusBlock` / `cleanSystemGeneratedObjects` / `generateBaseId` / `login` / `logoff` / `setPassword` / `revokePassword`，`createRuntimeGroup` 三种官方重载，`updateSettings` 支持嵌套块号段与精确版本。
 - **新工具 3 个**：`ManageSafetyGlobalSettings`（TIA Portal 级四项全局安全设置）、`ReadSafetyBlockSignatures`（逐块 F 签名，单块或整 PLC）、`ExportSafetyPrintout`（官方安全打印件 PDF/XPS）。下载提示 `SafetyProgram` 应答 `ConsistentDownload`。
-- **验证**：离线 1353 项（新增 59 项）；引擎 API 形状检查 V20 886 / V21 982（新增 73 / 80 项 Safety 成员核对）；两版 EXE 回归见 `manifest/release-build.json`。
+- **验证**：离线 1353 项（新增 59 项）；引擎 API 形状检查 V20 886 / V21 982（新增 73 / 80 项 Safety 成员核对）；两版 EXE 回归见 `manifest/release-build.json`。真机（V21 `+S1-K1`，1510SP F V4.1，2026-09-18）全部通过：集体/软件/硬件签名读出（2.7.24 为空）、11 个 F 块逐块签名、官方安全打印件 PDF 205 KB、GlobalSettings 写入并复位，详见发布说明。
 
 ## [2.7.24] - 2026-09-18
 
