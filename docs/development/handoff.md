@@ -9,26 +9,22 @@
 - 最新 tag `v2.7.30`（2026-09-18，desktop-ivrlcht 构建；ZIP 由 "Publish complete release" 工作流上传）。此前 `b4730ec` 记录了 2.7.29 的真机重跑。
 - 工具 380 个、默认 lite 56；离线套件 1506 项；引擎 API 形状检查 V20 1158 / V21 1255（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,217 = 专用引用 269 / 仅类型名 91 / 动态覆盖 322 / 完全未触及 535；未封装功能类型 253 / 1,006（Base 75 / 271、Step7 44 / 140、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 108 / 525，Unified 0）。
-- 阶段 3 ③-① 硬件网络深层（2.7.30）：13 个强类型工具（`ReadIoSystems` / `ManageIoSystem`、`ReadNetworkDomains` / `ManageNetworkDomain`、`ReadTransferAreas` / `ManageTransferArea`、`ReadDeviceItemChannels` / `UpdateDeviceItemChannel`、`ReadDeviceAddressing` / `UpdateDeviceAddress`、`ManageDeviceUserGroup`、`ManageDeviceUsers`、`ManagePortInterconnection`），**全部未真机验证**（本机无 TIA）。
+- 阶段 3 ③-① 硬件网络深层（2.7.30）：13 个强类型工具（`ReadIoSystems` / `ManageIoSystem`、`ReadNetworkDomains` / `ManageNetworkDomain`、`ReadTransferAreas` / `ManageTransferArea`、`ReadDeviceItemChannels` / `UpdateDeviceItemChannel`、`ReadDeviceAddressing` / `UpdateDeviceAddress`、`ManageDeviceUserGroup`、`ManageDeviceUsers`、`ManagePortInterconnection`）。**2.7.30 真机重跑已于 2026-09-18 完成**：全部到达真实对象，读取与可复原写入通过；暴露两处引擎缺陷（域组合代理在 Create/Delete 后陈旧；`EngineeringObjectDisposedException` 误触发连接失败保护）与一处改进（通道属性名缺 AccessMode），记录见 `docs/releases/v2.7.30.md#真机结果`。
 - 阶段 1 Safety（2.7.25）、阶段 2 WinCC Unified（2.7.26–2.7.29）已收口。**2.7.29 真机重跑已于 2026-09-18 完成**（变量导出核对通过；文本/系统文本列表读取与原生导出、`Validate`、画面组建删通过），登记表 `scripts/diagnostics/openness-dynamic-coverage.json` 已回写；仍未真机验证的只剩 `Cpm.*` 与 `HmiConnections.*`（工程无对象）以及 `HmiOpcUaAlarm` / `LoggingTags` 的 `Create`（组合到达但为空）。记录见 `docs/releases/v2.7.29.md#验证`。
 
 ## 2. 下一步（按顺序）
 
-1. **部署 2.7.30 到虚拟机并真机验证 ③-①**（`runtime/v21/TiaMcpServer.exe` 2.7.30.0 替换后重启服务，`AttachToOpenProject`；工程只有一个 PLC + 一个 Unified HMI，能验的是）：
-   - `ReadIoSystems`（`subnetName` 取 `GetProjectTree` 里的 PROFINET 子网名，再按 PLC 的 PROFINET 接口设备项 `devicePathJson=["+S1-K1"]`、`itemPathJson` 指向接口项）——期望 IoController 行、IO 系统 Name/Number、动态属性至少 `MultipleUseIoSystem` 可读。
-   - `ReadNetworkDomains`（同一子网）——期望 `syncDomainOwnerAvailable=true`、默认同步域 `IsDefault=true`、`mrpInstances` 列出接口。
-   - `ReadDeviceAddressing`（PLC 设备、CPU 设备项）——期望 `hwIdentifiers` 非空、CPU 项 `isAddressController=true` 且 `registeredAddresses` 非空。
-   - `ReadDeviceItemChannels`（任一 ET200SP IO 模块的设备项）——期望 `ChannelAddress` / `ChannelWidth` 可读；`UpdateDeviceItemChannel` 只做 `dryRun`。
-   - `ManageDeviceUsers family=webserver action=read`（CPU 设备项）——Web 服务器未启用时服务可能为 null，如实记录；`family=opcUa read` 对 OPC UA 子模块项。
-   - `ManageDeviceUserGroup`：`read` → `create` 临时组 `mcp_tmp_devgroup_2730` → `deleteEmpty`。
-   - `ManagePortInterconnection read`（PLC 接口的端口设备项）。
-   - 传输区 / MRP 域 / CCDX / SIWAREX 需要相应硬件，工程里没有就写"无对象"。通过后：`docs/releases/v2.7.30.md` 验证表、`CHANGELOG.md` 2.7.30 条目末尾加真机记录，提交信息形如 `Record the 2.7.30 real-project rerun; ...`。
+1. **2.7.31 先修真机暴露的三处问题，再做 ③-② 库**（都在 `Portal.HardwareNetwork.cs` / `HmiReadSafety`）：
+   - `ManageNetworkDomain`（以及同一模式的 `ManageTransferArea` / `ManageDeviceUsers`）：`Create` 后不要对变更前取到的组合按名查找——用 `Create` 返回的代理读 `Name`（TIA 可能规范化）并从 owner 重新导航（`subnet.GetService<MrpDomainOwner>().MrpDomains`）再计数；`Delete` 后同样重新导航再核对缺席，枚举旧代理会撞 `EngineeringObjectDisposedException`。
+   - `HmiReadSafety.ConnectionUnavailable`：`EngineeringObjectDisposedException` 不是连接失败，不应把 `snapshotReadsBlocked` 置为 true 阻断所有步骤工具（真机上要 `AttachToOpenProject` 才解封）。
+   - `ReadDeviceItemChannels` 的 `attributeNames` 改为 `[{name, accessMode}]`（`GetAttributeInfos().AccessMode`），`UpdateDeviceItemChannel` 写前按它拒绝只读属性。
+   - 修完在真机上重跑 `ManageNetworkDomain` mrp create → delete（DNS 安全名，如 `mcptmpmrp2731`）确认按名查回与计数。
 2. **阶段 3 剩余子批次**（Base 未封装 75 类型 / 271 成员，全部在 `Siemens.Engineering.Base.dll`，V20/V21 都有）：
    - ~~③-① 硬件网络深层~~ **2.7.30 完成**（HW 里只剩 `CertificateSupportedService`、`Telecontrol*DataPoint`、`WebApplicationConfiguration`、`CatalogEntry`、`HardwareUtility` / `ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`、`Watch/ForceTableAccessRule`、`StructuredData` / `TableData`，可并入 ③-④ 收尾）。
    - ③-② 库：`GlobalLibrary` 打开/关闭/更新检查（`UpdateCheck`）、类型版本文件夹、`LibraryTypeVersion` 状态、实例/母版复制（官方 "Functions for libraries"）。
    - ③-③ 用户管理与安全：`UmcUser` / `UmcUserGroup` / `UmcCredentials`、`SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`（官方 "Functions for security"）。
    - ③-④ `Compare` 结果元素、`CrossReference` 的 `SourceObject` / `ReferenceObject` 深层字段。
-   - 每个子批次一个发布（③-② 为 2.7.31）；先在浏览器里把官方章节逐页读完（`https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows`，`get_page_text` 可直接取正文），再对照 `TIA_V21_PublicAPI\V21\net48\Siemens.Engineering.Base.xml` 核成员签名（V21 的 `net48` 目录没有单体 `Siemens.Engineering.dll/.xml`，Base 类型在 `Siemens.Engineering.Base.*`；V20 仍是 `Siemens.Engineering.xml`）。
+   - 每个子批次一个发布（③-② 与上面三处修复合为 2.7.31）；先在浏览器里把官方章节逐页读完（`https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows`，`get_page_text` 可直接取正文），再对照 `TIA_V21_PublicAPI\V21\net48\Siemens.Engineering.Base.xml` 核成员签名（V21 的 `net48` 目录没有单体 `Siemens.Engineering.dll/.xml`，Base 类型在 `Siemens.Engineering.Base.*`；V20 仍是 `Siemens.Engineering.xml`）。
 3. 之后按路线图：阶段 4 Step7（软件单元、`PlcDocument*`、校验和/仿真设置提供者）→ 5 经典 WinCC 文件夹层次 → 6 选件包（只做形状检查）。
 
 ## 3. 每个阶段的固定动作
@@ -66,17 +62,19 @@
 - 宿主机若设了 `HTTP_PROXY`（desktop-ivrlcht 是 `127.0.0.1:7897`），MCP 客户端会把局域网请求送进代理，表现为 "Version negotiation probe timed out after 5000ms"（curl 经代理同样 5 秒 502，`--noproxy '*'` 直连立即 401/200）。把虚拟机地址加进 `NO_PROXY`，或临时用直连脚本经 `CallTool` 调用。
 - 默认 lite 只暴露 56 个工具，Unified 等全量工具经 `CallTool(name, argumentsJson)` 调用；大响应（>20,000 字符）会被服务器切成 `GetExport(exportId, offset)` 分页。
 - 工程 `AutomaticDipCoatingMachine`（V21），PLC `+S1-K1`（1510SP F V4.1），HMI `HMI_RT_1`（Unified）。**永不保存工程**；临时对象（画面、变量、组）用完即删；改过的设置（报警类颜色、记录大小、GlobalSettings）复原；先 `dryRun` 再实做。
+- 工程事实（硬件）：设备 `ET 200SP station_1` 在组 `+S1` 下（`devicePathJson=["ET 200SP station_1"]` 单名即可），CPU 项路径 `["+S1-K1"]`（**不经**机架 `机架_0`），PROFINET 接口 `["+S1-K1","PROFINET 接口_1"]`，其端口 `["+S1-K1","PROFINET 接口_1","端口_3"]` 与 `["BA 2xRJ45","Port_1"]`；IO 模块 `["+S1-K3","+S1-K3"]`（K3 DI16、K4 DQ16、K5 AI2、K6 AI4 RTD）、`F-DI 8x24VDC HF_1`；OPC UA 子模块 `["+S1-K1","OPC UA_1"]`；4 台 SINAMICS G120C（`SINAMICS G_5` → `["+S1-7Q1","PROFINET 接口"]` 等）是 IO 设备；子网 `PN/IE_1`，IO 系统 "PROFINET IO-System" #100；无拓扑互连、无传输区、无 MRP 环。
 - 工程事实：`HmiSoftware.Connections` 为空（集成连接 `HMI_Connection_1` 只在硬件网络里）；无工厂视图；报警审计类为空；语言 en-US / zh-CN / de-DE；变量表 `Default tag table` 可放临时变量（`EnsureUnifiedHmiTag`，参数名是 `hmiSoftwarePath`）。
 
 ## 6. 只在真机上学到的 Openness 事实
 
-（2.7.30 只对照了 PublicAPI 与官方文档，没有真机事实；从 API 上核实的：`WebserverUserPermissions` 值为独立单比特但没有 `[Flags]`，组合值 `ToString()` 是数字，引擎按位解码；`SimpleWebserverUserComposition` 无 `Create`、`SimpleWebserverUser` 无 `Delete`；`Subnet.Nodes` / `Subnet.IoSystems` 是关联；`ISyncDomainParticipant` 由 `NetworkInterface` 与 `IoSystem` 实现；`TransferAreaType.F_CD` 仅 V21；`Address.AssignProcessImageToOrganizationBlock` 仅 V20。官方文档站的正文可经 `https://docs.tia.siemens.cloud/api/khub/maps/<mapId>/topics/<contentId>/content` 直接取 HTML，`clustered-search` API 按标题搜页面——比逐页导航快得多。）
+（从 API 上核实的：`WebserverUserPermissions` 值为独立单比特但没有 `[Flags]`，组合值 `ToString()` 是数字，引擎按位解码；`SimpleWebserverUserComposition` 无 `Create`、`SimpleWebserverUser` 无 `Delete`；`Subnet.Nodes` / `Subnet.IoSystems` 是关联；`ISyncDomainParticipant` 由 `NetworkInterface` 与 `IoSystem` 实现；`TransferAreaType.F_CD` 仅 V21；`Address.AssignProcessImageToOrganizationBlock` 仅 V20。官方文档站的正文可经 `https://docs.tia.siemens.cloud/api/khub/maps/<mapId>/topics/<contentId>/content` 直接取 HTML，`clustered-search` API 按标题搜页面——比逐页导航快得多。）
 
 - `Create<T>` / `Create` 返回的代理与 `Find()` 不同，`ReferenceEquals` 恒假——创建后按名称查回 + 计数核对。
 - `HmiSlider` / `HmiToggleSwitch` / `HmiCircleSegment` / `HmiEllipseSegment` 隐藏基类 `EventHandlers`，`Type.GetProperty` 抛歧义——取最派生声明（`UnifiedUiModelLogic.FindProperty`）；`HmiLabel` 没有 `EventHandlers`；`HmiButton` 事件是 `Tapped` 不是 `Click`。
 - `Object` 类型属性写 JSON 数字 `0` 后读回是字符串 `"0"`——跨类型比较（`EngineeringScalarProperties.SameValue`）。
 - `HmiThresholdComposition.Create()` 在 PublicAPI 里，但 TIA V21 对普通变量拒绝 "New thresholds are not supported"；替代值只对外部变量可设，内部变量报"已禁用的字段不支持设置"；`Font.Weight` 只接受 `Bold` / `Normal`。
 - `HmiTagComposition.Export(dir, name)` 回报的 `FileInfo` 没有 `.hmi.yml` 扩展名（文件本身写出）；脚本模块导出正确回报 `Name.hmi.yml` + `Name.hmi.js`。`ShiftModel` 这张 15 变量的表导出只有 `ShiftModel.hmi.yml`（4,400 B）一个文件，没有 `NameData.yml` 等副文件。
+- 硬件（2.7.30 真机）：变更前取到的 HW 组合代理是陈旧的——`MrpDomainComposition.Create` 后在旧代理上按名查不到，`Delete` 后旧代理枚举抛 `EngineeringObjectDisposedException`；从 owner 重新导航即正常。空的临时同步域会被 TIA 释放。SINAMICS 接口暴露两个 IoConnector（文档说一个），未连接的那个所有 PN 属性不支持。1510SP F V4.1 上 `WebserverUserManagement` / `SimpleWebserverUserManagement` 为 null（Web 用户由 UMAC 接管），`OpcUaUserManagement` 在 `OPC UA_1` 子模块。`MrpInstancesOwner` 只在组态了 MRP 环的接口项上出现。ET 200SP DI 模块通道的 `ChannelActivated` / `InputDelay` 只读；AI 通道 `Smoothing` 写 1 被拒、写 0 同值可通。S7-1500 地址不支持 `Context` / `IsochronousMode` / `InterruptObNumber`。
 - `HmiTextList.Export` / `HmiSystemTextList.Export` 各写两个文件：`<名>.hmi.yml` + `<名>.TextLibrary.hmi.yml`，后者带整个文本库（`PowerState` 的两个文件 554 KB + 599 KB）。
 - `HmiTag.Validate()` 在 `ShiftModel` 的变量上返回 3 条 `HmiValidationResult`（`Connection` / `DataType` / `PlcTag`），错误文本按 TIA 界面语言本地化（zh-CN），`Warnings` 为空；"HMI_Connection_1 不存在"与 `HmiSoftware.Connections` 为空一致。
 - `HmiScreenGroupComposition.Create(name)` 后 `deleteEmpty` 对空组生效，按名查回 "Exact named object not found"。

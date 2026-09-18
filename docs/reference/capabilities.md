@@ -15,7 +15,7 @@
 | 设备用户 | `ManageDeviceUsers` | Web 服务器 / OPC UA 未启用（或未启用用户名密码认证）时 TIA 拒绝 create/delete/setPassword，读取仍可用；SIWAREX 用户是固定槽位（无 Create/Delete）；密码转 `SecureString`、不回显、不可读回 |
 | 端口互连 | `ManagePortInterconnection` | 同一接口的两个端口、已互连的伙伴、不支持备选伙伴的第二连接均被 TIA 拒绝 |
 
-**全部未在真实工程上验证**（本机无 TIA）；形状检查 V20 1158 / V21 1255 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1158 / V21 1255 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-18，`AutomaticDipCoatingMachine`）13 个工具全部到达真实对象**，读取与可复原写入通过，见 [v2.7.30](../releases/v2.7.30.md#真机结果v21-automaticdipcoatingmachine)。真机暴露的两处引擎缺陷（域组合代理在 Create/Delete 后陈旧；`EngineeringObjectDisposedException` 误触发连接失败保护）在 2.7.31 修。
 
 ## 2.7.19 新增工具族
 
