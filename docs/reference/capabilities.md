@@ -2,6 +2,21 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.30 新增工具族（阶段 3 ③-① 硬件网络深层）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| IO 系统 | `ReadIoSystems`、`ManageIoSystem` | 按子网或接口设备项；`create` 要求接口已连子网且无 IO 系统（空名 = TIA 默认名）；`connect` 要求 IoConnector 未连接且与目标控制器同子网；`Number` 超出界面范围只在编译时失败；动态属性逐名读、失败逐条列出 |
+| 同步域 / MRP | `ReadNetworkDomains`、`ManageNetworkDomain` | 只在暴露 `SyncDomainOwner` / `MrpDomainOwner` 的（PROFINET）子网上可用；参与者只能 `Add`（官方关联没有移除）；只支持 `NetworkInterface` 作为参与者（`IoSystem` 亦实现 `ISyncDomainParticipant`，本版未暴露） |
+| 传输区 | `ReadTransferAreas`、`ManageTransferArea` | 类型创建后不可改；位置号缺失时 PN/PN 耦合器拒绝创建子模块；CCDX 删发送方连带删全部接收方；映射规则 `Target` 须是 IO 设备上的模块；"编译要求所有设备离线"是 TIA 侧约束 |
+| 通道 | `ReadDeviceItemChannels`、`UpdateDeviceItemChannel` | 无通道的模块返回空集；可写的动态属性由 TIA 决定，写入后按当前值类型读回 |
+| 地址 / 硬件标识符 | `ReadDeviceAddressing`、`UpdateDeviceAddress` | 改 `StartAddress` 可能连带移动同模块另一 IoType、不重连变量、不支持打包地址；`InterruptObNumber` 仅 S7-300/400；`AssignProcessImageToOrganizationBlock` 仅 V20 |
+| 设备用户组 | `ManageDeviceUserGroup` | `CreateFrom(MasterCopy)` 未暴露；只删空组 |
+| 设备用户 | `ManageDeviceUsers` | Web 服务器 / OPC UA 未启用（或未启用用户名密码认证）时 TIA 拒绝 create/delete/setPassword，读取仍可用；SIWAREX 用户是固定槽位（无 Create/Delete）；密码转 `SecureString`、不回显、不可读回 |
+| 端口互连 | `ManagePortInterconnection` | 同一接口的两个端口、已互连的伙伴、不支持备选伙伴的第二连接均被 TIA 拒绝 |
+
+**全部未在真实工程上验证**（本机无 TIA）；形状检查 V20 1158 / V21 1255 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.19 新增工具族
 
 | 族 | 工具 | 边界 |

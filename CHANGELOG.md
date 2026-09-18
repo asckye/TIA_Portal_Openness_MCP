@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.7.30] - 2026-09-18
+
+引擎 2.7.30.0（V20/V21 均重建），工具 367 → 380，默认 lite 56 项不变。详见 [v2.7.30](docs/releases/v2.7.30.md)。"官方 Openness API 全量对齐"阶段 3 子批次 ③-①：Base 硬件网络深层。
+
+- **新增（域 `Hardware`，13 个强类型工具）**：`ReadIoSystems` / `ManageIoSystem`（`IoController.CreateIoSystem`、`IoSystem.Delete`、`IoConnector.ConnectToIoSystem` / `DisconnectFromIoSystem`、官方动态属性）；`ReadNetworkDomains` / `ManageNetworkDomain`（`SyncDomainOwner` / `MrpDomainOwner` 的域创建、删除、属性、`DomainParticipants.Add`，`MrpInstances` 读出）；`ReadTransferAreas` / `ManageTransferArea`（`TransferAreaComposition.Create/Find`、映射规则、`MulticastableTransferAreaComposition.Create` 四个重载、CCDX 删除语义）；`ReadDeviceItemChannels` / `UpdateDeviceItemChannel`（`ChannelComposition.Find`、`ChannelAddress` / `ChannelWidth`）；`ReadDeviceAddressing` / `UpdateDeviceAddress`（`Address`、`HwIdentifier`、`AddressController` / `HwIdentifierController`，V20 独有的 `AssignProcessImageToOrganizationBlock`）；`ManageDeviceUserGroup`（`DeviceUserGroupComposition.Create`、`UngroupedDevicesGroup`）；`ManageDeviceUsers`（`WebserverUserManagement` / `SimpleWebserverUserManagement` / `OpcUaUserManagement`，密码转 `SecureString` 不回显，`WebserverUserPermissions` 无 `[Flags]` 故按位解码）；`ManagePortInterconnection`（`NetworkPort.ConnectToPort` / `DisconnectFromPort`）。写入默认预览、删除需确认、执行后按原生对象读回。
+- **审计**：有专用引用 238 → 269，完全未触及 556 → 535，未封装功能类型 267 / 1,067 → 253 / 1,006（Base 89 / 332 → 75 / 271）。
+- **验证**：离线 1506 项（新增 60 项）；形状检查 V20 1158 / V21 1255（新增 168 / 168 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收未执行**（本机无 TIA；下次真机重跑至少验 IO 系统、域、地址、通道、Web 用户读取与设备组建删）。
+
 ## [2.7.29] - 2026-09-18
 
 引擎 2.7.29.0（V20/V21 均重建），工具 367、默认 lite 56 项不变。详见 [v2.7.29](docs/releases/v2.7.29.md)。WinCC Unified 阶段（路线图 §2.0 阶段 2）收口。

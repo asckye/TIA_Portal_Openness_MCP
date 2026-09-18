@@ -63,6 +63,16 @@ ALLOWED = {
     'ReadAlarm': 'WinCC Unified Open Pipe 消息名',
     'ReadConfig': 'WinCC Unified Open Pipe 消息名（仅经 UnifiedOpenPipeRequest 原始请求可达）',
     'WriteConfig': 'WinCC Unified Open Pipe 消息名（仅经 UnifiedOpenPipeRequest 原始请求可达）',
+    # 2.7.30 硬件网络深层工具族描述里点名的原生成员 / 类型 / 枚举，都在说明底层调用，不是 MCP 工具名
+    'CreateIoSystem': 'Openness IoController.CreateIoSystem(name)，由 ManageIoSystem 的 create 动作封装',
+    'ConnectToIoSystem': 'Openness IoConnector.ConnectToIoSystem(ioSystem)，由 ManageIoSystem 的 connect 动作封装',
+    'ConnectToPort': 'Openness NetworkPort.ConnectToPort(partner)，由 ManagePortInterconnection 的 connect 动作封装',
+    'CreateFrom': 'Openness DeviceUserGroupComposition.CreateFrom(MasterCopy)，描述原文即 "not exposed"',
+    'SetAttribute': 'Openness IEngineeringObject.SetAttribute()',
+    'SyncDomainOwner': 'Openness HW.Features.SyncDomainOwner 服务类型名',
+    'SyncDomains': 'Openness SyncDomainOwner.SyncDomains 导航器名',
+    'SyncDomainComposition': 'Openness HW.SyncDomainComposition 类型名',
+    'SyncRole': 'Openness IoController/IoConnector 的动态属性名（SyncRole 枚举）',
 }
 
 VERB = re.compile(

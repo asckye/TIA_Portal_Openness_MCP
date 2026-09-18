@@ -1,4 +1,4 @@
-# 官方 Openness API 覆盖清单（V21，2.7.29）
+# 官方 Openness API 覆盖清单（V21，2.7.30）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -11,15 +11,16 @@
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
 - **动态覆盖（2.7.26 起）**：类型名从不出现在源码、但由反射/泛型适配器到达的类型，登记在 [scripts/diagnostics/openness-dynamic-coverage.json](../../scripts/diagnostics/openness-dynamic-coverage.json)（模式、工具、机制、真机证据），审计脚本按全名通配匹配后记为 DYNAMIC 并单列一栏。登记的前提是有形状检查或真机验证；没有证据的不登记，仍算"未触及"。
 - 结果（V21，2.7.27）：领域成员已引用 **675**（2.7.26 为 663，2.7.18 为 609）、仅类型名 824、未引用 2,991；有领域成员的类型 1,217 个中有专用引用 **231**、仅类型名 102、**动态覆盖 285**、完全未触及 **599**（2.7.26 为 626，2.7.25 为 885）。2.7.27 的变化：真机验证后把 `HmiAlarm` / `HmiLogging` / `RuntimeSettings` 登记为动态覆盖，`UI.Controls` 补上真机创建证据。
+- 结果（V21，2.7.30）：领域成员已引用 **795**（2.7.29 为 697）、仅类型名 798、未引用 2,897；类型 1,217 个中有专用引用 **269**（2.7.29 为 238）、仅类型名 91、动态覆盖 322、完全未触及 **535**（2.7.29 为 556）。2.7.30 的变化：`Siemens.Engineering.HW` 命名空间有专用引用的类型 13 → 32、已引用成员 45 → 120，`HW.Features` 15 → 26 / 19 → 39——全部是强类型封装，词法可见，不进登记表。
 
-## 缺口结构（2.7.29）
+## 缺口结构（2.7.30）
 
-556 个"完全未触及"的类型里（2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 267 个 / 1,067 个成员**（2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）157 个 / 531 个，`WinCC.Extension` 2 个 / 11 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
+535 个"完全未触及"的类型里（2.7.29 为 556，2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型与 2.7.30 强类型封装的硬件网络类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 253 个 / 1,006 个成员**（2.7.29 为 267 / 1,067，2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）143 个 / 470 个，`WinCC.Extension` 2 个 / 11 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
 | WinCCUnified | 0 | 0 | **2.7.26–2.7.29 已封装/登记**：画面对象族（`ManageUnifiedScreenItem` + `DescribeUnifiedScreenItemType`）、报警类与离散/模拟报警（`HmiAlarm`）、记录（`HmiLogging`）、运行时设置（`RuntimeSettings`）——真机验证；2.7.28 新增 `ExchangeUnifiedTags` / `ExchangeUnifiedScriptModules` / `ImportUnifiedOpcUaAlarms`（变量导出核对 2.7.29 真机修复）；系统变量、阈值（`Create()` 被 TIA 拒绝）、替代值（仅外部变量）、审计类真机到达并登记；连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`IValidator`、画面组以**仅形状检查**登记（登记表 `verified` 字段如实标注，待下次真机重跑补跑） |
-| Base | 89 | 332 | 85 | 310 | HW 深层：`TransferArea` / `MulticastableTransferArea`、`MrpInstance`、`SyncDomain`、`IoSystem` / `IoConnector`、`Channel`、`WebserverUser`、`DeviceGroup`（约 100 个成员）；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
+| Base | 75 | 271 | **2.7.30 ③-① 已封装**硬件网络深层（`IoSystem` / `IoController` / `IoConnector`、`SyncDomain` / `MrpDomain` / `MrpInstance`、`TransferArea` / `MulticastableTransferArea` / `TransferAreaMappingRule`、`Channel`、`Address` / `HwIdentifier` 及控制器、`DeviceUserGroup`、`WebserverUser` / `SimpleWebserverUser` / `OpcUaUser`、`NetworkPort` 互连；**真机未验证**）。剩余：HW 里的 `CertificateSupportedService`、`Telecontrol*DataPoint`、`WebApplicationConfiguration`、`CatalogEntry`、`HardwareUtility` / `ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`、`Watch/ForceTableAccessRule`；`GlobalLibrary`(30) / `ILibrary` / 类型版本文件夹与 `UpdateCheck`；Umac 的 `UmcUser` / `UmcUserGroup` / `UmcCredentials`；Security 的 `SyslogServer`、`CertificateTemplate`、`PlcPasswordPolicyService`；`TiaPortalSession` / `Transaction` / 事件参数；`Compare` 结果元素；跨引用 `SourceObject` / `ReferenceObject` |
 | Step7 | 44 | 140 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
 | WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
 | Safety | 0 | 0 | **2.7.25 全量封装**：`ManagePlcSafety`（12 个动作，强类型）、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`。统计表里 Safety 仍有 2 个"完全未触及"类型（`RuntimeGroupComposition` / `SafetySignatureComposition` 只有 `IsReadOnly` 一类样板外成员）与若干 OWNER_ONLY 属性（经 `EngineeringScalarProperties` 通用读写，词法看不见）。`SafetyValidation` 选件（14 类型）未做，见选件包行 |
@@ -60,7 +61,7 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.29 源码；"动态覆盖"栏来自登记表）
+## 统计表（脚本生成，2.7.30 源码；"动态覆盖"栏来自登记表）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -74,18 +75,18 @@
 | Base | `Siemens.Engineering.Download` | 5 | 2 | 0 | 0 | 3 | 21 | 8 |
 | Base | `Siemens.Engineering.Download.Configurations` | 31 | 3 | 24 | 0 | 4 | 32 | 3 |
 | Base | `Siemens.Engineering.FingerprintData` | 4 | 2 | 0 | 0 | 2 | 6 | 4 |
-| Base | `Siemens.Engineering.HW` | 63 | 13 | 1 | 0 | 49 | 204 | 45 |
-| Base | `Siemens.Engineering.HW.CommunicationConnections` | 10 | 2 | 8 | 0 | 0 | 90 | 3 |
+| Base | `Siemens.Engineering.HW` | 63 | 32 | 3 | 0 | 28 | 204 | 120 |
+| Base | `Siemens.Engineering.HW.CommunicationConnections` | 10 | 3 | 7 | 0 | 0 | 90 | 4 |
 | Base | `Siemens.Engineering.HW.CustomDataTypes` | 3 | 0 | 0 | 0 | 3 | 4 | 0 |
 | Base | `Siemens.Engineering.HW.Extensions` | 1 | 1 | 0 | 0 | 0 | 2 | 2 |
-| Base | `Siemens.Engineering.HW.Features` | 43 | 15 | 28 | 0 | 0 | 111 | 19 |
+| Base | `Siemens.Engineering.HW.Features` | 43 | 26 | 17 | 0 | 0 | 111 | 39 |
 | Base | `Siemens.Engineering.HW.HardwareCatalog` | 1 | 0 | 0 | 0 | 1 | 7 | 0 |
 | Base | `Siemens.Engineering.HW.Systemdiagnostics.Settings` | 2 | 1 | 0 | 0 | 1 | 3 | 2 |
 | Base | `Siemens.Engineering.HW.Utilities` | 5 | 0 | 0 | 0 | 5 | 9 | 0 |
 | Base | `Siemens.Engineering.Library` | 11 | 4 | 0 | 0 | 7 | 83 | 7 |
 | Base | `Siemens.Engineering.Library.Compare` | 6 | 0 | 0 | 0 | 6 | 15 | 0 |
 | Base | `Siemens.Engineering.Library.MasterCopies` | 8 | 2 | 0 | 0 | 6 | 20 | 5 |
-| Base | `Siemens.Engineering.Library.Types` | 13 | 3 | 0 | 0 | 10 | 65 | 24 |
+| Base | `Siemens.Engineering.Library.Types` | 13 | 3 | 0 | 0 | 10 | 65 | 25 |
 | Base | `Siemens.Engineering.Multiuser` | 14 | 5 | 0 | 0 | 9 | 47 | 18 |
 | Base | `Siemens.Engineering.Online` | 2 | 1 | 0 | 0 | 1 | 15 | 5 |
 | Base | `Siemens.Engineering.Online.Configurations` | 5 | 2 | 0 | 0 | 3 | 13 | 2 |
@@ -121,7 +122,7 @@
 | Step7 | `Siemens.Engineering.SW.OpcUa` | 9 | 5 | 1 | 0 | 3 | 42 | 16 |
 | Step7 | `Siemens.Engineering.SW.OpcUa.AccessControl` | 7 | 3 | 1 | 0 | 3 | 31 | 6 |
 | Step7 | `Siemens.Engineering.SW.Supervision` | 6 | 1 | 1 | 0 | 4 | 13 | 2 |
-| Step7 | `Siemens.Engineering.SW.Tags` | 11 | 5 | 0 | 0 | 6 | 62 | 28 |
+| Step7 | `Siemens.Engineering.SW.Tags` | 11 | 5 | 0 | 0 | 6 | 62 | 29 |
 | Step7 | `Siemens.Engineering.SW.TechnologicalObjects` | 8 | 1 | 0 | 0 | 7 | 27 | 4 |
 | Step7 | `Siemens.Engineering.SW.TechnologicalObjects.Ident` | 1 | 1 | 0 | 0 | 0 | 2 | 1 |
 | Step7 | `Siemens.Engineering.SW.Types` | 11 | 2 | 1 | 0 | 8 | 41 | 15 |
@@ -201,7 +202,7 @@
 完整的未触及类型及其成员清单体积过大，不入库；在放置了 PublicAPI 的机器上运行下列命令即可重新生成到被忽略的 `bin-build/audits/` 目录（`-SummaryMarkdown` 输出含逐类型列表）：
 
 ```powershell
-.\scripts\diagnostics\Audit-OpennessCoverage.ps1 -PublicApiDirectory D:\TIA_PublicAPI\TIA_V21_PublicAPI\V21\net48 -Version V21 -SummaryMarkdown .\bin-build\audits\V21-summary.md
+.\scripts\diagnostics\Audit-OpennessCoverage.ps1 -PublicApiDirectory .\TIA_V21_PublicAPI\V21\net48 -Version V21 -SummaryMarkdown .\bin-build\audits\V21-summary.md
 ```
 
 V21 Update 或新版本安装后重跑并 diff 本页统计表，即为路线图要求的"再核对"步骤。

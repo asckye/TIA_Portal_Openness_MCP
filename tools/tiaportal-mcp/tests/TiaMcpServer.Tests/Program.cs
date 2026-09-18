@@ -106,6 +106,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Unified 原生交换：变量 WinCC ML / 脚本模块 / OPC UA 报警 xml 的目录、文件与结果核对 ==");
             UnifiedExchangeTests.Run(Check);
 
+            Console.WriteLine("== 硬件网络深层纯逻辑：IO 系统/同步域/MRP/传输区/通道/地址/设备用户/端口互连的参数门控、枚举目录、权限标志 ==");
+            HardwareNetworkTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

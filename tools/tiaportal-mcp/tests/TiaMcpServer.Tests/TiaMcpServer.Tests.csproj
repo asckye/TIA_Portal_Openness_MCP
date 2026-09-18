@@ -92,6 +92,7 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SafetyLogic.cs" Link="SafetyLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareNetworkLogic.cs" Link="HardwareNetworkLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />

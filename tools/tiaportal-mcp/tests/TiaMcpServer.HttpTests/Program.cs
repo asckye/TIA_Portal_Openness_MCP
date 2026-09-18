@@ -341,6 +341,7 @@ internal static class Program
                     SafetyShapeChecks.Run(Server, shapeCheck);
                     UnifiedScreenItemShapeChecks.Run(Server, shapeCheck);
                     UnifiedExchangeShapeChecks.Run(Server, shapeCheck);
+                    HardwareNetworkShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }
