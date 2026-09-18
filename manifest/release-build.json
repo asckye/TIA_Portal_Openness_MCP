@@ -1,11 +1,11 @@
 {
-    "release":  "2.7.28",
+    "release":  "2.7.29",
     "releaseDate":  "20260918",
-    "fileVersion":  "2.7.28.0",
-    "package":  "TIA_MCP_Delivery_v2.7.28_20260918",
-    "generatedAt":  "2026-09-18T11:00:42.7514127+00:00",
+    "fileVersion":  "2.7.29.0",
+    "package":  "TIA_MCP_Delivery_v2.7.29_20260918",
+    "generatedAt":  "2026-09-18T11:19:27.1419314+00:00",
     "validation":  {
-                       "offlinePassed":  1441,
+                       "offlinePassed":  1446,
                        "runtimes":  {
                                         "V20":  {
                                                     "httpPassed":  28,
@@ -356,8 +356,8 @@
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
-                             "length":  2949120,
-                             "sha256":  "ef8cc5cd56117ffde472aefa90b81b01e10dbce358718c6786cff55ade6f9be9"
+                             "length":  2950144,
+                             "sha256":  "243839534f6ab7002a8c48774693afc9e19247461aab9d5c72fc1fde8674291c"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -686,8 +686,8 @@
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
-                             "length":  2949120,
-                             "sha256":  "1e0874608844a5aaf150aff377fccb4cfdf9970cc634e923a8150db9d265b3ec"
+                             "length":  2950656,
+                             "sha256":  "3ed9d1aa83d16ebcbacd40fe7f348254e57c68e45f6aaf97434e016a4e806ad2"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -1248,7 +1248,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedExchangeLogic.cs",
-                            "sha256":  "9b1400696766f7aa335a3f877219995949a4b1dccbedd561951b3b6c86aaaffd"
+                            "sha256":  "9c79910f574ba5e7a0490cdb103f301a567421fa626cad7a1d68ee8873924317"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedGlobalScriptEdit.cs",
@@ -1544,7 +1544,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.UnifiedExchange.cs",
-                            "sha256":  "a738dab024d600dcaa742f6436f66976da6d529857e29cf24da5f978f6299a1a"
+                            "sha256":  "8480138c40e37b5a1e1c772e5a11261399ccb0b590e2e1bc91432435dcfa2f8a"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.UnifiedLogging.cs",
@@ -1608,11 +1608,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "122131c60e0325412f40a69b912e039c17b5f068e77364f3f8deead81cc9d42a"
+                            "sha256":  "d91bdb565a342534ee345dd02d5c351694af5befb953455db066a880b4bbda7e"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "39e8af964a30e438061b87abba9d039078e09c743b4867c1c07c6319dc39f5da"
+                            "sha256":  "3d68aad7586070bc59732958304ab8200325a6029ff3ec94e2a6fbb9b0021e58"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/DeviceTransferShapeChecks.cs",
@@ -1828,7 +1828,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedExchangeTests.cs",
-                            "sha256":  "1326f6694fdf9719eabc85749dc7aec6f4fddaf0a1902dd89fafb550b04770aa"
+                            "sha256":  "6c751838dc819c5fcf1b9bcf20e577bec5fbf4930daa7787732a96381a22cd67"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs",
