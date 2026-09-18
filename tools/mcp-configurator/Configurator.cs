@@ -196,15 +196,17 @@ namespace TiaMcpConfigurator
             string engine = null, ip = null, secret = null; int port = 0;
             if (remote) { ip = Text("ClientAddress"); port = Int32.Parse(Text("ClientPort")); secret = Secret("Client"); ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); }
             else { engine = ConfigCore.Engine(root, Version); ConfigCore.ValidateTia(Text("TiaPath"), Version); }
-            string message = "请先退出所选客户端，避免配置同时写入。\n将保留其它设置并备份原文件：\n\n" + String.Join("\n", selected.Select(x => x.Name + "\n" + x.Path));
-            if (remote && selected.Any(x => x.Id == "claude")) message += "\n\nClaude Desktop Chat 需 Node.js LTS / npx，首次运行将联网下载 mcp-remote 桥接包。";
+            // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
+            var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)) }).ToList();
+            string message = "请先退出所选客户端，避免配置同时写入。\n将保留其它设置并备份原文件：\n\n" + String.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
             message += "\n\n客户端配置按其格式保存密钥，请勿分享文件或备份。继续？";
             if (MessageBox.Show(Window, message, "配置所选客户端", MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
             int saved = 0; var errors = new List<string>();
-            foreach (var profile in selected)
+            foreach (var target in targets)
             {
-                try { ClientProfiles.Save(profile, remote, ip, port, secret, engine, Version, Text("TiaPath")); saved++; Append(profile.Name + " 已保存：" + profile.Path); }
-                catch (Exception ex) { errors.Add(profile.Name + "：" + ex.Message); }
+                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, Version, Text("TiaPath")); saved++; Append(target.Names + " 已保存：" + target.Profile.Path); }
+                catch (Exception ex) { errors.Add(target.Names + "：" + ex.Message); }
             }
             if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
             Status("已配置 " + saved + " 个客户端");

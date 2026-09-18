@@ -13,52 +13,93 @@ namespace TiaMcpConfigurator
         public string Name { get; set; }
         public string Path { get; set; }
         public string Hint { get; set; }
-        public string DisplayName { get { return Id == "claude" ? "Claude Desktop" : Id == "vscode" ? "VS Code · Copilot" : Id == "cline" ? "Cline" : Name; } }
-        public string Category { get { return Id == "claude" ? "CHAT" : Id == "cline" ? "VS CODE" : new[] { "claude-code", "codex", "gemini" }.Contains(Id) ? "CLI" : "IDE"; } }
+        // Schema family that decides file layout and entry shape. Brand cards (通义千问 → Qwen Code, DeepSeek / 智谱 / Grok → OpenCode …)
+        // write another product's file, so several profiles may map onto one Client.
+        public string Client { get; set; }
+        public string Kind { get; set; }      // CLI / IDE
+        public string DisplayName { get { return Id == "vscode" ? "VS Code · Copilot" : Name; } }
+        // Tile subtitle: the transport family plus, when the card is a model brand, the client that actually gets written.
+        public string Category { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
         public override string ToString() { return Name; }
-        public ClientProfile(string id, string name, string path, string hint) { Id = id; Name = name; Path = path; Hint = hint; }
+        public ClientProfile(string id, string name, string path, string hint, string client = null, string kind = "CLI")
+        {
+            Id = id; Name = name; Path = path; Hint = hint; Client = client ?? id; Kind = kind;
+        }
     }
 
     public static class ClientProfiles
     {
+        public static string ClientLabel(string client)
+        {
+            switch (client)
+            {
+                case "opencode": return "OpenCode";
+                case "qwen": return "Qwen Code";
+                case "kimi": return "Kimi Code";
+                case "codebuddy": return "CodeBuddy";
+                default: return null;   // native client: the card already carries its name
+            }
+        }
+
+        // Order is the on-screen order: CLIs first, Claude Code and Codex on top, IDEs last.
         public static List<ClientProfile> All()
         {
             string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string app = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             string codex = Environment.GetEnvironmentVariable("CODEX_HOME");
             if (String.IsNullOrWhiteSpace(codex)) codex = System.IO.Path.Combine(home, ".codex");
+            string kimi = Environment.GetEnvironmentVariable("KIMI_CODE_HOME");
+            if (String.IsNullOrWhiteSpace(kimi)) kimi = System.IO.Path.Combine(home, ".kimi-code");
+            string opencode = System.IO.Path.Combine(home, ".config", "opencode", "opencode.json");
+            const string opencodeHint = "写入 OpenCode 的 opencode.json；模型在 OpenCode 的 provider 里选 {0}，MCP 配置与模型无关。重启 OpenCode 后新建会话。";
             return new List<ClientProfile> {
                 new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), "官方桌面客户端：重启后选择 Code → Local，新建会话。CLI 也使用此配置。"),
                 new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), "保存后重启 Codex 桌面应用 / CLI，重新打开任务以加载 MCP。"),
-                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。"),
-                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(app, "Code", "User", "mcp.json"), "适用于 VS Code 默认用户配置。重载窗口，在 MCP 服务器列表中启动并信任该服务。"),
-                new ClientProfile("claude", "Claude Desktop · Chat", System.IO.Path.Combine(app, "Claude", "claude_desktop_config.json"), "远程连接使用 mcp-remote 桥接：需安装 Node.js LTS（含 npx）。首次启动会联网下载 npm 包。Code 页请选 Claude Code。"),
                 new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), "重启 Gemini CLI，使用 /mcp 检查服务器状态。"),
-                new ClientProfile("windsurf", "Windsurf", System.IO.Path.Combine(home, ".codeium", "windsurf", "mcp_config.json"), "重启 Windsurf，在 Cascade 的 MCP 设置中刷新服务器。"),
-                new ClientProfile("cline", "Cline · VS Code", System.IO.Path.Combine(app, "Code", "User", "globalStorage", "saoudrizwan.claude-dev", "settings", "cline_mcp_settings.json"), "适用于 VS Code 默认配置中的 Cline 扩展。重载窗口并在 MCP 设置中启用服务。")
+                // 国产模型与 Grok 没有自带 MCP 客户端，卡片按模型命名，实际写入各家官方 CLI 或 OpenCode。
+                new ClientProfile("qwen", "通义千问", System.IO.Path.Combine(home, ".qwen", "settings.json"), "写入阿里 Qwen Code 的 settings.json（格式同 Gemini CLI）。重启 Qwen Code，用 /mcp 检查服务器。"),
+                new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), "写入月之暗面 Kimi Code CLI 的 mcp.json，尊重 KIMI_CODE_HOME。重启后状态栏显示 MCP 就绪即可新建会话。"),
+                new ClientProfile("codebuddy", "腾讯元宝", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
+                new ClientProfile("deepseek", "DeepSeek", opencode, String.Format(opencodeHint, "DeepSeek"), "opencode"),
+                new ClientProfile("zhipu", "智谱清言", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
+                new ClientProfile("grok", "Grok", opencode, String.Format(opencodeHint, "xAI Grok"), "opencode"),
+                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。", null, "IDE"),
+                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(app, "Code", "User", "mcp.json"), "适用于 VS Code 默认用户配置。重载窗口，在 MCP 服务器列表中启动并信任该服务。", null, "IDE")
             };
+        }
+
+        // OpenCode keeps servers under "mcp", VS Code under "servers"; everyone else uses "mcpServers".
+        public static string RootKey(ClientProfile profile)
+        {
+            return profile.Client == "vscode" ? "servers" : profile.Client == "opencode" ? "mcp" : "mcpServers";
+        }
+
+        // Key that carries the endpoint in a remote entry, per client schema.
+        public static string UrlKey(ClientProfile profile)
+        {
+            return profile.Client == "gemini" || profile.Client == "qwen" ? "httpUrl" : "url";
         }
 
         public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia)
         {
+            string client = profile.Client;
             if (!remote)
             {
-                var local = new Dictionary<string, object> { { "command", engine }, { "args", new[] { "--tia-major-version", version.ToString(), "--tia-portal-location", tia } } };
-                if (profile.Id == "claude-code" || profile.Id == "vscode" || profile.Id == "cline" || profile.Id == "cursor") local["type"] = "stdio";
+                var localArgs = new[] { "--tia-major-version", version.ToString(), "--tia-portal-location", tia };
+                // OpenCode: command is one array that starts with the executable.
+                if (client == "opencode")
+                    return new Dictionary<string, object> { { "type", "local" }, { "command", new[] { engine }.Concat(localArgs).ToArray() }, { "enabled", true } };
+                var local = new Dictionary<string, object> { { "command", engine }, { "args", localArgs } };
+                if (client == "claude-code" || client == "vscode" || client == "cursor" || client == "codebuddy") local["type"] = "stdio";
                 return local;
             }
             ConfigCore.ValidateKey(key);
             string url = ConfigCore.Prefix(address, port) + "mcp";
-            if (profile.Id == "claude")
-                return new Dictionary<string, object> {
-                    { "command", "cmd.exe" },
-                    { "args", new[] { "/d", "/c", "npx", "-y", "mcp-remote", url, "--allow-http", "--transport", "http-only", "--header", "Authorization:${TIA_MCP_AUTH_HEADER}" } },
-                    { "env", new Dictionary<string, object> { { "TIA_MCP_AUTH_HEADER", "Bearer " + key } } } };
             var entry = new Dictionary<string, object> {
-                { profile.Id == "gemini" ? "httpUrl" : profile.Id == "windsurf" ? "serverUrl" : "url", url },
+                { UrlKey(profile), url },
                 { "headers", new Dictionary<string, object> { { "Authorization", "Bearer " + key } } } };
-            if (profile.Id == "claude-code" || profile.Id == "vscode") entry["type"] = "http";
-            if (profile.Id == "cline") { entry["type"] = "streamableHttp"; entry["disabled"] = false; entry["autoApprove"] = new string[0]; }
+            if (client == "claude-code" || client == "vscode" || client == "codebuddy") entry["type"] = "http";
+            if (client == "opencode") { entry["type"] = "remote"; entry["enabled"] = true; }
             return entry;
         }
 
@@ -66,13 +107,13 @@ namespace TiaMcpConfigurator
         {
             var entry = Entry(profile, remote, address, port, key, engine, version, tia);
             string name = ServerName(profile, remote);
-            if (profile.Id == "codex")
+            if (profile.Client == "codex")
             {
                 string original = File.Exists(profile.Path) ? File.ReadAllText(profile.Path) : "";
                 ConfigCore.AtomicText(profile.Path, MergeToml(original, name, remote, address, port, key, engine, version, tia));
                 return;
             }
-            string rootKey = profile.Id == "vscode" ? "servers" : "mcpServers";
+            string rootKey = RootKey(profile);
             var root = File.Exists(profile.Path) ? ConfigCore.Json().DeserializeObject(StripJsonComments(File.ReadAllText(profile.Path))) as Dictionary<string, object> : new Dictionary<string, object>();
             if (root == null) throw new InvalidDataException("现有客户端配置不是 JSON 对象，未修改。");
             object raw;
@@ -82,11 +123,10 @@ namespace TiaMcpConfigurator
             ConfigCore.AtomicJson(profile.Path, root);
         }
 
+        // Remote definitions are named tia-portal-vm everywhere; local stdio ones tia-portal, matching the plugin.
         public static string ServerName(ClientProfile profile, bool remote)
         {
-            // Claude Code also reads Desktop Chat configuration. Keep the bridge from
-            // overriding the direct HTTP definition when both clients are selected.
-            return remote ? (profile.Id == "claude" ? "tia-portal-vm-chat" : "tia-portal-vm") : "tia-portal";
+            return remote ? "tia-portal-vm" : "tia-portal";
         }
 
         // JSONC comments/trailing commas are common in editor configs. Strings and URLs stay intact.

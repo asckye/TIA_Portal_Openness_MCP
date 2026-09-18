@@ -20,7 +20,7 @@
 | AI 在宿主机 | 把配置器 EXE 复制到宿主机，选“AI 客户端”，选择客户端，填写虚拟机地址和同一密钥，测试并保存。宿主机无需安装 TIA。 |
 | TIA 与 AI 同机 | 设置 TIA 版本和目录后进入“本机连接”。客户端经 stdio 自动启动引擎，无需 HTTP 端口和密钥。 |
 
-可多选 **Claude Code、Codex、Cursor、VS Code / Copilot、Claude Desktop Chat、Gemini CLI、Windsurf、Cline**。官方 Claude 客户端的 **Code** 页面选“Claude Code”，**Chat** 页面选“Claude Desktop · Chat”；Chat 局域网 HTTP 连接需 Node.js 和 `mcp-remote` 桥接。
+卡片按 CLI 在前排列：**Claude Code、Codex、Gemini CLI、通义千问（写 Qwen Code）、Kimi（写 Kimi Code CLI）、腾讯元宝（写 CodeBuddy Code）、DeepSeek / 智谱清言 / Grok（写 OpenCode，在其 provider 里选模型）**，其后是 **Cursor、VS Code / Copilot**。国产模型和 Grok 没有自带的 MCP 客户端，卡片按模型命名、实际写入各家官方 CLI 或 OpenCode。官方 Claude 客户端的 **Code** 页面选“Claude Code”。
 
 服务运行时保持配置器窗口打开。保存配置后重启客户端并新建会话。配置位置、权限、备份和客户端差异统一见 [图形配置指南](docs/getting-started/configuration.md)。
 

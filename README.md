@@ -22,7 +22,7 @@ Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github
 
 The configurator UI is Chinese-only; the labels above are its exact button names.
 
-Profiles: Claude Code, Codex, Cursor, VS Code / Copilot, Claude Desktop Chat, Gemini CLI, Windsurf and Cline. For official Claude's **Code** page select **Claude Code**; its **Chat** page uses Claude Desktop and an `mcp-remote` bridge for LAN HTTP. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
+Cards, CLIs first: Claude Code, Codex, Gemini CLI, 通义千问 (Qwen Code), Kimi (Kimi Code CLI), 腾讯元宝 (CodeBuddy Code), DeepSeek / 智谱清言 / Grok (OpenCode, pick the provider there), then Cursor and VS Code / Copilot. The Chinese model brands and Grok have no MCP client of their own, so their cards write the vendor CLI or OpenCode. For official Claude's **Code** page select **Claude Code**. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
 
 Keep the configurator open while it runs the VM service. Restart configured clients and open a new session.
 

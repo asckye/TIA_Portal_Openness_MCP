@@ -5,7 +5,8 @@
 引擎 2.7.20.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.20](docs/releases/v2.7.20.md)。
 
 - **`DescribeBlockLogic` 渲染丢失修复**（真实工程连机测试发现）：SCL 网络里的调用（`TIME_TCK()`、`TIME_TO_DINT(#a - #b)`、`LIMIT(MN := …)`、多重实例 `#inst⟨FB⟩(…)`）、`LocalConstant`/`GlobalConstant` 命名常量、`%I1.3` 绝对地址、数组下标此前整段丢失或被压成 `#a.b`，工具却照样报 `success`；LAD 网络里 `<Call>` 块调用不被识别，整段退化成孤立触点清单。现 SCL 递归渲染 `CallInfo`/`Parameter`/`Instance`/`Constant Name`/`Address`，LAD 收集 `<Call>` 为调用框并按 `Parameter Section` 判断引脚方向，输出 `CALL "FB"[inst](pin=操作数, pin=⟨触点链⟩)`；块 Bool 输出驱动线圈时内联为 `CALL "FB"[inst].pin`；新增 `Not` 元件；MOVE/定时器框的上游按 `in → IN → en` 回溯（原只查 `in`，EN 触点链丢失）。
-- **验证**：离线 1287 项（新增 13 项，含反向哨兵）。
+- **配置器：客户端卡片重排，加入国产模型与 Grok**：AI 客户端页按 CLI 在前、Claude Code 与 Codex 居首、IDE 在后排列；去掉 Windsurf、Cline、Claude Desktop · Chat（含 `mcp-remote` 桥接与 `tia-portal-vm-chat`）。新增 **通义千问**（写阿里 Qwen Code `%USERPROFILE%\.qwen\settings.json`，`httpUrl`）、**Kimi**（写 Kimi Code CLI `%KIMI_CODE_HOME%\mcp.json`，默认 `~\.kimi-code\mcp.json`）、**腾讯元宝**（写 CodeBuddy Code CLI `~\.codebuddy\.mcp.json`，`type: http`）、**DeepSeek / 智谱清言 / Grok**（写 OpenCode `~\.config\opencode\opencode.json` 的 `mcp` 节，`type: remote`；本机 `type: local` + 单数组 `command`；三张卡片共用一个文件只写一次）。这些模型的聊天 App 不支持 MCP，卡片按模型命名、在所写客户端里选模型即可。豆包（Trae）因全局配置位置未公开且远程仅 SSE 未加入。卡片 8 → 11。未在真实客户端上联调。
+- **验证**：离线 1287 项（新增 13 项，含反向哨兵）；配置器 80 项（新增 22 项）。
 
 ## [2.7.19] - 2026-09-17
 

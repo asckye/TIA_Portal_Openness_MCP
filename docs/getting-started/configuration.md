@@ -24,32 +24,35 @@
 4. 退出选中的 AI 客户端，再点击 **配置所选客户端**。确认窗口会展示具体写入位置。
 5. 重启对应客户端，新建会话，使用 `tia-portal-vm` 读取工程树。不要让多个 AI 同时修改同一工程。
 
-客户端卡片支持多选，右上角实时显示选择结果；点击该文字可查看所选客户端的使用说明。窗口缩小时卡片自动换成四列，右侧内容可滚动到操作按钮和日志。
+客户端卡片支持多选，右上角实时显示选择结果；点击该文字可查看所选客户端的使用说明。窗口缩小时卡片自动换成四列，右侧内容可滚动到操作按钮和日志。卡片顺序：CLI 在前（Claude Code、Codex 居首），IDE 在后。
 
-**官方 Claude 桌面客户端的 Code 页**：选择“Claude Code”，保存后重启，进入 **Code → Local → 新建会话**。
+**官方 Claude 桌面客户端的 Code 页**：选择“Claude Code”，保存后重启，进入 **Code → Local → 新建会话**。Claude Desktop 的 Chat 页不再提供卡片。
 
 **Codex 桌面客户端 / CLI**：选择“Codex”，保存后重启并重新打开任务；写入用户级 `config.toml`，尊重 `CODEX_HOME`。
 
-**Claude Desktop 的 Chat 页**：选择“Claude Desktop · Chat”。其局域网远程配置通过 `mcp-remote` stdio 桥接，需要先安装 Node.js LTS（含 npx）；第一次使用将通过 npm 下载桥接包。Code 页不需要这个桥接。此功能不使用云端自定义连接器。
+**通义千问、Kimi、腾讯元宝、DeepSeek、智谱清言、Grok**：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
 
-| 客户端 | 默认配置位置 | 远程方式 |
-|---|---|---|
-| Claude Code | `%USERPROFILE%\.claude.json` | HTTP |
-| Codex | `%CODEX_HOME%\config.toml`，未设置时用 `%USERPROFILE%\.codex\config.toml` | TOML URL / HTTP headers |
-| Cursor | `%USERPROFILE%\.cursor\mcp.json` | HTTP URL |
-| VS Code / Copilot | `%APPDATA%\Code\User\mcp.json` | `servers` / HTTP |
-| Claude Desktop · Chat | `%APPDATA%\Claude\claude_desktop_config.json` | npx / mcp-remote 桥接 |
-| Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `httpUrl` |
-| Windsurf | `%USERPROFILE%\.codeium\windsurf\mcp_config.json` | `serverUrl` |
-| Cline · VS Code | `%APPDATA%\Code\User\globalStorage\saoudrizwan.claude-dev\settings\cline_mcp_settings.json` | `streamableHttp` |
+| 卡片 | 实际写入 | 默认配置位置 | 远程条目 |
+|---|---|---|---|
+| Claude Code | Claude Code | `%USERPROFILE%\.claude.json` | `type: http` |
+| Codex | Codex | `%CODEX_HOME%\config.toml`，未设置时用 `%USERPROFILE%\.codex\config.toml` | TOML `url` / `http_headers` |
+| Gemini CLI | Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `httpUrl` |
+| 通义千问 | 阿里 Qwen Code | `%USERPROFILE%\.qwen\settings.json` | `httpUrl`（同 Gemini CLI） |
+| Kimi | 月之暗面 Kimi Code CLI | `%KIMI_CODE_HOME%\mcp.json`，未设置时用 `%USERPROFILE%\.kimi-code\mcp.json` | `url` |
+| 腾讯元宝 | 腾讯 CodeBuddy Code CLI | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
+| DeepSeek / 智谱清言 / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
+| Cursor | Cursor | `%USERPROFILE%\.cursor\mcp.json` | `url` |
+| VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json` | `servers` / `type: http` |
 
-VS Code / Cline 默认路径针对标准 VS Code 默认用户配置，不涵盖 Insiders、portable 或自定义 profile。
+三张 OpenCode 卡片写同一个文件，多选时只写一次。本机 stdio 模式下 OpenCode 条目为 `type: local` 且 `command` 是含可执行文件的单个数组，其它客户端为 `command` + `args`。VS Code 默认路径针对标准 VS Code 默认用户配置，不涵盖 Insiders、portable 或自定义 profile。Qwen Code / Kimi Code CLI / CodeBuddy / OpenCode 的路径与字段按各自当前官方文档写入，尚未在真实客户端上联调。
+
+豆包没有对应卡片：其 IDE（Trae）的全局 MCP 文件位置未公开、远程只支持 SSE，而本引擎只提供 Streamable HTTP；如需在 Trae 里用，可在其 MCP 面板“手动添加”里粘贴本机 stdio 条目。
 
 配置会保留其它设置和服务，为旧文件创建唯一 `.bak_...` 备份；多选时逐个保存，若有失败会明确列出，不撤销其它成功项。无效 JSON 拒绝覆盖。JSONC 注释和尾随逗号支持读取，重写为标准 JSON，原注释保存在备份中。Codex 保留无关 TOML 文本和多行字符串；罕见的根级内联/点号 MCP 定义无法安全合并时会停止并保留原文件。
 
 AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置和备份。连接中心另在 `%LOCALAPPDATA%\TiaPortalMcp\client.json` 加密保存上次填写的连接信息，方便下次使用。
 
-远程通常使用 `tia-portal-vm`；Claude Desktop Chat 使用 `tia-portal-vm-chat`，防止桥接配置覆盖 Code 页的原生 HTTP 连接。两者均避免与插件/本机的 `tia-portal` 冲突。项目或客户端若已有同名定义，请消除重复配置。
+远程统一使用 `tia-portal-vm`，本机 stdio 使用 `tia-portal`，与插件一致。项目或客户端若已有同名定义，请消除重复配置。
 
 ## 本机连接
 
@@ -65,7 +68,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 图形入口启动前独立检查 HTTP 监听，直接展示权限/端口错误，避免旧引擎可能把原始错误掩盖为取消异常。原 TIA 引擎二进制没有修改。HTTP 测试成功不等于 TIA 工程已连接。
 
-已用隔离配置和模拟 HTTP 验证 8 个客户端的配置生成、合并、备份、密钥保护和 WPF 渲染。真实虚拟机网络/UAC、8 个实际 AI 客户端以及真实 TIA 工程需分别联调；不将配置生成视为实际连接验收。
+已用隔离配置和模拟 HTTP 验证 11 张卡片（9 种客户端文件格式）的配置生成、合并、备份、密钥保护和 WPF 渲染。真实虚拟机网络/UAC、各实际 AI 客户端以及真实 TIA 工程需分别联调；不将配置生成视为实际连接验收。
 
 ## 工具显示与手动 HTTP 启动
 
@@ -97,7 +100,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 ## 开发
 
-源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 8 个客户端适配。
+源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 11 张卡片（9 种客户端格式）适配。
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
@@ -107,4 +110,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 
 手动配置示例：[cursor.example.json](cursor.example.json) 是本机 V21 stdio 示例，把 `command` 替换为交付包中 `runtime/v21/TiaMcpServer.exe` 的绝对路径；V20 同时修改路径与版本参数。宿主机连接虚拟机及其他客户端优先使用 `TiaMcpConfigurator.exe`。示例不含现场 IP、密钥或用户配置，不能直接当作已配置文件使用。
 
-配置格式依据：[Claude Code](https://code.claude.com/docs/en/mcp)、[Codex](https://developers.openai.com/codex/mcp)、[Cursor](https://cursor.com/docs/mcp)、[VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)、[Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)、[Windsurf](https://docs.windsurf.com/windsurf/cascade/mcp)、[Cline](https://docs.cline.bot/mcp/mcp-overview)、[mcp-remote](https://github.com/punkpeye/mcp-remote)。
+配置格式依据：[Claude Code](https://code.claude.com/docs/en/mcp)、[Codex](https://developers.openai.com/codex/mcp)、[Cursor](https://cursor.com/docs/mcp)、[VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)、[Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)、[Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/features/mcp/)、[Kimi Code CLI](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html)、[CodeBuddy Code](https://www.codebuddy.cn/docs/cli/mcp)、[OpenCode](https://opencode.ai/docs/mcp-servers/)。

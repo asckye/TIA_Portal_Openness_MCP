@@ -31,7 +31,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Release.
 
 3. 审查并提交两版运行文件、源码、测试、说明和清单，推送 `master`。工作区必须干净。
 
-统一构建入口也会运行 `scripts/build/Build-Configurator.ps1 -Test`，生成独立 WPF 配置 EXE 并验证 8 个客户端的配置格式、备份、加密、HTTP 就绪检查和窗口渲染。单独修改 UI 时可直接运行此脚本，提交更新的 `TiaMcpConfigurator.exe`；图形工具不依赖本机 TIA 来配置远程客户端。真实客户端/虚拟机联调与自动化测试结果分开记录。
+统一构建入口也会运行 `scripts/build/Build-Configurator.ps1 -Test`，生成独立 WPF 配置 EXE 并验证 11 张客户端卡片的配置格式、备份、加密、HTTP 就绪检查和窗口渲染。单独修改 UI 时可直接运行此脚本，提交更新的 `TiaMcpConfigurator.exe`；图形工具不依赖本机 TIA 来配置远程客户端。真实客户端/虚拟机联调与自动化测试结果分开记录。
 4. 生成完整包：
 
 ```text

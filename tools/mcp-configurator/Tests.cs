@@ -127,37 +127,53 @@ namespace TiaMcpConfigurator
                 }
                 Probe(false); Probe(true);
                 var profiles = ClientProfiles.All();
-                Assert(profiles.Count == 8, "all eight original clients selectable");
+                Assert(profiles.Count == 11, "eleven cards: Claude Code, Codex, Gemini CLI, 通义千问, Kimi, 腾讯元宝, DeepSeek, 智谱清言, Grok, Cursor, VS Code");
+                Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
+                Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles.Skip(9).All(x => x.Kind == "IDE"), "CLI cards precede IDE cards");
+                Assert(!profiles.Any(x => x.Id == "windsurf" || x.Id == "cline" || x.Id == "claude"), "Windsurf, Cline and Claude Desktop cards are gone");
+                Assert(profiles.Select(x => x.Id).Distinct().Count() == profiles.Count, "card ids are unique");
                 foreach (var profile in profiles)
                 {
-                    var testProfile = new ClientProfile(profile.Id, profile.Name, Path.Combine(temp, profile.Id + (profile.Id == "codex" ? ".toml" : ".json")), profile.Hint);
-                    if (profile.Id == "codex") File.WriteAllText(testProfile.Path, "# preserved\r\nmodel = \"keep\"\r\n[mcp_servers.other]\r\ncommand = \"other.exe\"\r\n");
-                    else File.WriteAllText(testProfile.Path, "{ // existing settings\n\"keep\": true, \"" + (profile.Id == "vscode" ? "servers" : "mcpServers") + "\": {\"other\":{\"command\":\"keep.exe\"},},}");
+                    var testProfile = new ClientProfile(profile.Id, profile.Name, Path.Combine(temp, profile.Id + (profile.Client == "codex" ? ".toml" : ".json")), profile.Hint, profile.Client, profile.Kind);
+                    if (profile.Client == "codex") File.WriteAllText(testProfile.Path, "# preserved\r\nmodel = \"keep\"\r\n[mcp_servers.other]\r\ncommand = \"other.exe\"\r\n");
+                    else File.WriteAllText(testProfile.Path, "{ // existing settings\n\"keep\": true, \"" + ClientProfiles.RootKey(profile) + "\": {\"other\":{\"command\":\"keep.exe\"},},}");
                     ClientProfiles.Save(testProfile, true, "192.0.2.10", 8765, secret, null, 21, null);
                     string saved = File.ReadAllText(testProfile.Path);
                     Assert(saved.Contains("other") && saved.Contains("keep") && saved.Contains("tia-portal-vm"), profile.Name + " remote merge preserves other config");
-                    if (profile.Id != "codex")
+                    if (profile.Client != "codex")
                     {
                         var doc = ConfigCore.Json().Deserialize<Dictionary<string, object>>(saved);
-                        var map = (Dictionary<string, object>)doc[profile.Id == "vscode" ? "servers" : "mcpServers"];
+                        var map = (Dictionary<string, object>)doc[ClientProfiles.RootKey(profile)];
                         var entry = (Dictionary<string, object>)map[ClientProfiles.ServerName(profile, true)];
-                        string field = profile.Id == "gemini" ? "httpUrl" : profile.Id == "windsurf" ? "serverUrl" : "url";
-                        if (profile.Id == "claude")
-                        {
-                            Assert(saved.Contains("--allow-http") && saved.Contains("http-only") && saved.Contains("TIA_MCP_AUTH_HEADER"), "Desktop Chat HTTP bridge includes private HTTP and env-based header");
-                        }
-                        else Assert((string)entry[field] == "http://192.0.2.10:8765/mcp", profile.Name + " native HTTP schema");
+                        Assert((string)entry[ClientProfiles.UrlKey(profile)] == "http://192.0.2.10:8765/mcp", profile.Name + " native HTTP schema");
                     }
                     ClientProfiles.Save(testProfile, false, null, 0, null, @"C:\bundle space\runtime\v21\TiaMcpServer.exe", 21, @"C:\Siemens\Portal V21");
                     Assert(File.ReadAllText(testProfile.Path).Contains("--tia-portal-location"), profile.Name + " local stdio saves explicit TIA path");
                 }
+                // 国产模型入口的客户端各自有独立 schema，泛型循环只核对了 URL 字段；这里盯住会被静默接受但客户端读不懂的形状。
+                var qwen = ClientProfiles.Entry(profiles.First(x => x.Id == "qwen"), true, "192.0.2.10", 8765, secret, null, 21, null);
+                Assert(qwen.ContainsKey("httpUrl") && !qwen.ContainsKey("url") && !qwen.ContainsKey("type"), "通义千问 → Qwen Code uses Gemini-style httpUrl without a type field");
+                var kimi = ClientProfiles.Entry(profiles.First(x => x.Id == "kimi"), true, "192.0.2.10", 8765, secret, null, 21, null);
+                Assert(kimi.ContainsKey("url") && !kimi.ContainsKey("type") && ((Dictionary<string, object>)kimi["headers"]).ContainsKey("Authorization"), "Kimi → Kimi Code CLI uses plain url + headers");
+                Assert(profiles.First(x => x.Id == "kimi").Path.EndsWith("mcp.json"), "Kimi Code CLI writes mcp.json, not config.toml");
+                var buddy = ClientProfiles.Entry(profiles.First(x => x.Id == "codebuddy"), true, "192.0.2.10", 8765, secret, null, 21, null);
+                Assert((string)buddy["type"] == "http" && buddy.ContainsKey("url") && profiles.First(x => x.Id == "codebuddy").Path.EndsWith(".mcp.json"), "腾讯元宝 → CodeBuddy uses type=http in .codebuddy\\.mcp.json");
+                var brands = profiles.Where(x => x.Client == "opencode").ToList();
+                Assert(brands.Select(x => x.Id).SequenceEqual(new[] { "deepseek", "zhipu", "grok" }) && brands.Select(x => x.Path).Distinct().Count() == 1, "DeepSeek / 智谱 / Grok are brand cards over one OpenCode file");
+                Assert(brands.All(x => x.Category == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").Category == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").Category == "CLI", "brand cards show the client they write to; native cards show only the kind");
+                var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, null, 21, null);
+                Assert((string)openRemote["type"] == "remote" && (bool)openRemote["enabled"] && (string)openRemote["url"] == "http://192.0.2.10:8765/mcp", "OpenCode remote entry carries type=remote and enabled");
+                var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, @"C:\r\TiaMcpServer.exe", 21, @"C:\Siemens\Portal V21");
+                var openCommand = (string[])openLocal["command"];
+                Assert((string)openLocal["type"] == "local" && openCommand[0] == @"C:\r\TiaMcpServer.exe" && openCommand.Contains("--tia-portal-location") && !openLocal.ContainsKey("args"), "OpenCode local entry is one command array starting with the executable");
+                Assert(ClientProfiles.RootKey(brands[0]) == "mcp" && ClientProfiles.RootKey(profiles.First(x => x.Id == "qwen")) == "mcpServers", "OpenCode servers live under 'mcp', the CLIs under 'mcpServers'");
                 string originalToml = "model = \"keep\"\r\n[mcp_servers.\"tia-portal-vm\"] # old\r\nurl = \"old\"\r\n[mcp_servers.\"tia-portal-vm\".http_headers]\r\nAuthorization = \"oldsecret\"\r\n[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n";
                 string changedToml = ClientProfiles.MergeToml(originalToml, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null);
                 Assert(changedToml.Contains("[projects.\"D:/work\"]\r\ntrust_level = \"trusted\"\r\n") && !changedToml.Contains("oldsecret"), "Codex removes only target tables and preserves unrelated bytes");
                 Reject(() => ClientProfiles.MergeToml("mcp_servers = {}", "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null), "Codex inline MCP table rejected without destructive merge");
                 string multi = "instructions = \"\"\"\n[mcp_servers.tia-portal-vm]\nthis is text, not a table\n\"\"\"\n";
                 Assert(ClientProfiles.MergeToml(multi, "tia-portal-vm", true, "192.0.2.10", 8765, secret, null, 21, null).StartsWith(multi), "Codex multiline instructions remain byte-identical");
-                Assert(ClientProfiles.ServerName(profiles.First(x => x.Id == "claude"), true) != ClientProfiles.ServerName(profiles.First(x => x.Id == "claude-code"), true), "Desktop bridge cannot override Claude Code direct HTTP server");
+                Assert(profiles.All(x => ClientProfiles.ServerName(x, true) == "tia-portal-vm" && ClientProfiles.ServerName(x, false) == "tia-portal"), "every card uses tia-portal-vm remotely and tia-portal locally, matching the plugin");
                 string jsonc = "{\"url\":\"http://example/a/*b*/\",/*comment*/\"list\":[1,],}";
                 var parsedJsonc = ConfigCore.Json().Deserialize<Dictionary<string, object>>(ClientProfiles.StripJsonComments(jsonc));
                 Assert((string)parsedJsonc["url"] == "http://example/a/*b*/", "JSONC URLs preserved while removing comments and trailing commas");
@@ -176,13 +192,13 @@ namespace TiaMcpConfigurator
                     var choices = (System.Windows.Controls.ListBox)window.FindName("ClientChoices");
                     choices.SelectedItems.Add(choices.Items[1]);
                     Assert(((System.Windows.Controls.TextBlock)window.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
-                    choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[4]);
+                    choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
                     var localChoices = (System.Windows.Controls.ListBox)window.FindName("LocalChoices");
-                    localChoices.SelectedItems.Clear(); localChoices.SelectedItems.Add(localChoices.Items[4]);
+                    localChoices.SelectedItems.Clear(); localChoices.SelectedItems.Add(localChoices.Items[6]);
                     form.CapturePage(Path.Combine(output, "server.png"), 0);
                     form.CapturePage(Path.Combine(output, "client.png"), 1);
                     form.CapturePage(Path.Combine(output, "local.png"), 2);
-                    Assert(((System.Windows.Controls.TextBlock)window.FindName("ConnectionProtocol")).Text == "STDIO" && ((System.Windows.Controls.TextBlock)window.FindName("LocalSelection")).Text == "Claude Desktop", "local page uses actual transport and selected client");
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("ConnectionProtocol")).Text == "STDIO" && ((System.Windows.Controls.TextBlock)window.FindName("LocalSelection")).Text == "DeepSeek", "local page uses actual transport and selected client");
                     window.Width = 1000; window.Height = 720;
                     form.CapturePage(Path.Combine(output, "client-compact.png"), 1);
                     form.CapturePage(Path.Combine(output, "client-compact-bottom.png"), 1, true);
