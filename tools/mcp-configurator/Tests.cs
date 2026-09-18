@@ -209,6 +209,13 @@ namespace TiaMcpConfigurator
                         && ((System.Windows.Controls.Grid)window.FindName("AddressRow")).Visibility == System.Windows.Visibility.Collapsed
                         && ((System.Windows.Controls.Grid)window.FindName("ServerActions")).Visibility == System.Windows.Visibility.Collapsed
                         && ((System.Windows.Controls.Border)window.FindName("LocalNote")).Visibility == System.Windows.Visibility.Visible, "local mode hides address, secret and service controls");
+                    // 右栏的卡片列表必须在卡内滚动：否则 11 张卡片会把右栏拉长，左栏被迫留一大片空白。
+                    form.CapturePage(Path.Combine(output, "remote.png"), 0);
+                    var list = (System.Windows.Controls.ListBox)window.FindName("ClientChoices");
+                    var serverPane = (System.Windows.Controls.Border)window.FindName("ServerPane");
+                    var clientPane = (System.Windows.Controls.Border)window.FindName("ClientPane");
+                    Assert(list.ActualHeight <= list.MaxHeight + 1 && list.MaxHeight < 400, "client list is capped so it scrolls inside its card");
+                    Assert(Math.Abs(serverPane.ActualHeight - clientPane.ActualHeight) < 1 && clientPane.ActualHeight < 460, "both panes render at the same, bounded height");
                     form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                     window.Width = 1000; window.Height = 720;
                     form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);

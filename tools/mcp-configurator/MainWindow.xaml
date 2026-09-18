@@ -50,6 +50,14 @@
     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="#2F5B4C"/><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/><Setter TargetName="Thumb" Property="Margin" Value="0,0,3,0"/></Trigger>
    </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
   </Style>
+  <Style TargetType="ScrollBar"><Setter Property="Width" Value="9"/><Setter Property="Background" Value="Transparent"/><Setter Property="Focusable" Value="False"/>
+   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ScrollBar"><Grid Background="Transparent"><Track x:Name="PART_Track" IsDirectionReversed="True">
+    <Track.Thumb><Thumb Focusable="False"><Thumb.Template><ControlTemplate TargetType="Thumb"><Border CornerRadius="3" Background="#CFCDC5" Margin="2,0"/></ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+    <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Focusable="False" Opacity="0"/></Track.DecreaseRepeatButton>
+    <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Focusable="False" Opacity="0"/></Track.IncreaseRepeatButton>
+   </Track></Grid></ControlTemplate></Setter.Value></Setter>
+   <Style.Triggers><Trigger Property="Orientation" Value="Horizontal"><Setter Property="Width" Value="Auto"/><Setter Property="Height" Value="9"/></Trigger></Style.Triggers>
+  </Style>
   <Style x:Key="ClientChoice" TargetType="ListBoxItem"><Setter Property="Margin" Value="0,0,10,8"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Cursor" Value="Hand"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Choice" Background="White" CornerRadius="12" Padding="13,10" MinHeight="56" BorderThickness="1" BorderBrush="#E2E0D8"><ContentPresenter/></Border><ControlTemplate.Triggers>
     <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Choice" Property="Background" Value="#F6F4EF"/></Trigger>
@@ -112,7 +120,16 @@
 
      <Grid x:Name="Panes">
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-      <Border Style="{StaticResource Card}"><StackPanel>
+      <Border x:Name="ServerPane" Style="{StaticResource Card}"><DockPanel>
+       <StackPanel DockPanel.Dock="Bottom">
+        <Border Height="1" Background="#EEECE5" Margin="0,18,0,16"/>
+        <Grid x:Name="ServerActions">
+         <Button x:Name="Network" Content="网络权限" HorizontalAlignment="Left"/>
+         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button x:Name="StopServer" Content="停止" IsEnabled="False" Margin="0,0,10,0"/><Button x:Name="StartServer" Content="启动服务" MinWidth="104" Style="{StaticResource Primary}"/></StackPanel>
+        </Grid>
+        <TextBlock x:Name="LocalActionsNote" Visibility="Collapsed" Style="{StaticResource Muted}" FontSize="12" LineHeight="21" Text="选好版本与安装目录后，在右侧写入客户端配置即可；本机模式不需要启动服务。"/>
+       </StackPanel>
+       <StackPanel>
        <Grid Margin="0,0,0,22">
         <StackPanel Orientation="Horizontal">
          <Border Width="24" Height="24" CornerRadius="8" Background="#E7F0EB" BorderBrush="#D3E1D9" BorderThickness="1"><TextBlock Text="A" Foreground="#2F5B4C" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -133,15 +150,18 @@
         <TextBlock Text="stdio · 客户端按需自动启动引擎" FontSize="13.5" Margin="0,8,0,0"/>
         <TextBlock Text="同机连接不经 HTTP，无需 IP、端口、密钥和防火墙规则。" Style="{StaticResource Muted}" FontSize="12" LineHeight="21" Margin="0,7,0,0"/>
        </StackPanel></Border>
-       <Border Height="1" Background="#EEECE5" Margin="0,18,0,16"/>
-       <Grid x:Name="ServerActions">
-        <Button x:Name="Network" Content="网络权限" HorizontalAlignment="Left"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button x:Name="StopServer" Content="停止" IsEnabled="False" Margin="0,0,10,0"/><Button x:Name="StartServer" Content="启动服务" MinWidth="104" Style="{StaticResource Primary}"/></StackPanel>
-       </Grid>
-       <TextBlock x:Name="LocalActionsNote" Visibility="Collapsed" Style="{StaticResource Muted}" FontSize="12" LineHeight="21" Text="选好版本与安装目录后，在右侧写入客户端配置即可；本机模式不需要启动服务。"/>
-      </StackPanel></Border>
+       </StackPanel>
+      </DockPanel></Border>
 
-      <Border Grid.Column="2" Style="{StaticResource Card}"><StackPanel>
+      <Border x:Name="ClientPane" Grid.Column="2" Style="{StaticResource Card}"><DockPanel>
+       <StackPanel DockPanel.Dock="Bottom">
+        <Border Height="1" Background="#EEECE5" Margin="0,14,0,16"/>
+        <Grid>
+         <Button x:Name="TestClient" Content="测试连接" HorizontalAlignment="Left"/>
+         <Button x:Name="SaveClient" Content="写入客户端配置" MinWidth="148" Style="{StaticResource Primary}" HorizontalAlignment="Right"/>
+        </Grid>
+       </StackPanel>
+       <StackPanel>
        <Grid Margin="0,0,0,20">
         <StackPanel Orientation="Horizontal">
          <Border Width="24" Height="24" CornerRadius="8" Background="#E7F0EB" BorderBrush="#D3E1D9" BorderThickness="1"><TextBlock Text="B" Foreground="#2F5B4C" FontWeight="Bold" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
@@ -149,13 +169,10 @@
         </StackPanel>
         <TextBlock x:Name="ClientSelection" Text="已选 Claude Code" Style="{StaticResource Mono}" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand"/>
        </Grid>
-       <ListBox x:Name="ClientChoices" SelectionMode="Multiple" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource ClientChoice}" ItemTemplate="{StaticResource ClientTile}" Margin="0,0,-10,0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"><ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{DynamicResource ClientColumns}"/></ItemsPanelTemplate></ListBox.ItemsPanel></ListBox>
-       <Border Height="1" Background="#EEECE5" Margin="0,10,0,16"/>
-       <Grid>
-        <Button x:Name="TestClient" Content="测试连接" HorizontalAlignment="Left"/>
-        <Button x:Name="SaveClient" Content="写入客户端配置" MinWidth="148" Style="{StaticResource Primary}" HorizontalAlignment="Right"/>
-       </Grid>
-      </StackPanel></Border>
+       <!-- 卡片多于一屏时在卡内滚动，右栏因此与左栏等高，而不是把左栏撑出一大片空白。 -->
+       <ListBox x:Name="ClientChoices" MaxHeight="192" SelectionMode="Multiple" BorderThickness="0" Background="Transparent" ItemContainerStyle="{StaticResource ClientChoice}" ItemTemplate="{StaticResource ClientTile}" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.CanContentScroll="False"><ListBox.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="{DynamicResource ClientColumns}"/></ItemsPanelTemplate></ListBox.ItemsPanel></ListBox>
+       </StackPanel>
+      </DockPanel></Border>
      </Grid>
      <TextBlock x:Name="ClientInstructions" Visibility="Collapsed"/>
 
