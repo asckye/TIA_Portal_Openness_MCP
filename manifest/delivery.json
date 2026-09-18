@@ -1,10 +1,10 @@
 {
-    "release":  "2.7.20",
-    "releaseDate":  "20260917",
-    "package":  "TIA_MCP_Delivery_v2.7.20_20260917",
+    "release":  "2.7.21",
+    "releaseDate":  "20260918",
+    "package":  "TIA_MCP_Delivery_v2.7.21_20260918",
     "engineRelease":  "2.7.20",
     "fileVersion":  "2.7.20.0",
     "engineBuildSha256":  "130102433d66ad39c3b7920e9aba9e148563e46d8bca4c016ee976e66554829b",
-    "configuratorBuildSha256":  "d03035457573b67e1a72882ae9c0b4c2677d5e732a7e5911f3aeabd1517b4589",
-    "generatedAt":  "2026-09-18T01:43:44.4516208+00:00"
+    "configuratorBuildSha256":  "c5349e42a8aab7b0522837dad864b937d69a6494ac0a8dc980f6727d75e3e362",
+    "generatedAt":  "2026-09-18T05:51:58.2617206+00:00"
 }

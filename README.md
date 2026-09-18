@@ -16,9 +16,9 @@ Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github
 
 | Scenario | Configuration |
 |---|---|
-| TIA in a virtual machine | On the VM select **虚拟机服务端** (VM server); choose TIA version, installation root, IPv4, port and key; save, configure network permissions and start. |
-| AI on the host | Copy the configurator EXE to the host, select **AI 客户端** (AI client), choose clients, enter the VM address and matching key, test and save. TIA is not required on the host. |
-| TIA and AI on one computer | Select TIA version/path, then **本机连接** (local connection). Clients launch the matching engine over stdio without HTTP. |
+| TIA in a virtual machine | Keep the **虚拟机 ↔ 宿主机** (VM ↔ host) mode. On the VM fill pane **A**: TIA version, installation root, IPv4, port and the shared key, then **网络权限** (network permissions) and **启动服务** (start). |
+| AI on the host | Copy the configurator EXE to the host, enter the same address, port and key, pick clients in pane **B**, then **测试连接** (test) and **写入客户端配置** (write client config). TIA is not required on the host. |
+| TIA and AI on one computer | Switch to **同一台电脑** (same computer). Pane A only needs version and path; clients launch the matching engine over stdio, so no address, port or key is used. |
 
 The configurator UI is Chinese-only; the labels above are its exact button names.
 

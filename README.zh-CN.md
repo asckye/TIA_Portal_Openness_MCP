@@ -16,9 +16,9 @@
 
 | 使用方式 | 配置步骤 |
 |---|---|
-| TIA 在虚拟机 | 在虚拟机选“虚拟机服务端”，填写 TIA 版本、安装根目录、IPv4、端口及密钥，保存配置、配置网络权限、启动服务。 |
-| AI 在宿主机 | 把配置器 EXE 复制到宿主机，选“AI 客户端”，选择客户端，填写虚拟机地址和同一密钥，测试并保存。宿主机无需安装 TIA。 |
-| TIA 与 AI 同机 | 设置 TIA 版本和目录后进入“本机连接”。客户端经 stdio 自动启动引擎，无需 HTTP 端口和密钥。 |
+| TIA 在虚拟机 | 保持“虚拟机 ↔ 宿主机”模式，在虚拟机填 A 栏：TIA 版本、安装根目录、IPv4、端口和共用密钥，然后“网络权限 → 启动服务”。 |
+| AI 在宿主机 | 把配置器 EXE 复制到宿主机，填同一地址、端口和密钥，在 B 栏选客户端，“测试连接 → 写入客户端配置”。宿主机无需安装 TIA。 |
+| TIA 与 AI 同机 | 右上角切到“同一台电脑”。A 栏只需版本和目录，客户端经 stdio 自动启动引擎，不用地址、端口和密钥。 |
 
 卡片按 CLI 在前排列：**Claude Code、Codex、Gemini CLI、通义千问（写 Qwen Code）、Kimi（写 Kimi Code CLI）、腾讯元宝（写 CodeBuddy Code）、DeepSeek / 智谱清言 / Grok（写 OpenCode，在其 provider 里选模型）**，其后是 **Cursor、VS Code / Copilot**。国产模型和 Grok 没有自带的 MCP 客户端，卡片按模型命名、实际写入各家官方 CLI 或 OpenCode。官方 Claude 客户端的 **Code** 页面选“Claude Code”。
 

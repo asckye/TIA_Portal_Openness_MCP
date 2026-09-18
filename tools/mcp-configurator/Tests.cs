@@ -182,29 +182,39 @@ namespace TiaMcpConfigurator
                     var window = form.Window;
                     var generate = (System.Windows.Controls.Button)window.FindName("GenerateKey");
                     generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
-                    var password = (System.Windows.Controls.PasswordBox)window.FindName("ServerKey");
-                    Assert(password.Password.Length >= 24 && ((System.Windows.Controls.TextBlock)window.FindName("ServerKeyPlaceholder")).Visibility == System.Windows.Visibility.Collapsed, "generated key updates masked input and placeholder");
-                    var reveal = (System.Windows.Controls.CheckBox)window.FindName("ShowServerKey");
+                    var password = (System.Windows.Controls.PasswordBox)window.FindName("Key");
+                    Assert(password.Password.Length >= 24 && ((System.Windows.Controls.TextBlock)window.FindName("KeyPlaceholder")).Visibility == System.Windows.Visibility.Collapsed, "generated key updates masked input and placeholder");
+                    var reveal = (System.Windows.Controls.CheckBox)window.FindName("ShowKey");
                     reveal.IsChecked = true; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                    Assert(((System.Windows.Controls.TextBox)window.FindName("ServerKeyVisible")).Text == password.Password, "show-key control preserves generated value");
+                    Assert(((System.Windows.Controls.TextBox)window.FindName("KeyVisible")).Text == password.Password, "show-key control preserves generated value");
                     reveal.IsChecked = false; reveal.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
-                    password.Password = ""; ((System.Windows.Controls.TextBox)window.FindName("ServerKeyVisible")).Text = "";
+                    password.Password = ""; ((System.Windows.Controls.TextBox)window.FindName("KeyVisible")).Text = "";
                     var choices = (System.Windows.Controls.ListBox)window.FindName("ClientChoices");
                     choices.SelectedItems.Add(choices.Items[1]);
                     Assert(((System.Windows.Controls.TextBlock)window.FindName("ClientSelection")).Text.Contains("2"), "client multi-select updates live count");
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("LinkClient")).Text.Contains("2"), "link bar follows the client selection");
                     choices.SelectedItems.Clear(); choices.SelectedItems.Add(choices.Items[6]);
-                    var localChoices = (System.Windows.Controls.ListBox)window.FindName("LocalChoices");
-                    localChoices.SelectedItems.Clear(); localChoices.SelectedItems.Add(localChoices.Items[6]);
-                    form.CapturePage(Path.Combine(output, "server.png"), 0);
-                    form.CapturePage(Path.Combine(output, "client.png"), 1);
-                    form.CapturePage(Path.Combine(output, "local.png"), 2);
-                    Assert(((System.Windows.Controls.TextBlock)window.FindName("ConnectionProtocol")).Text == "STDIO" && ((System.Windows.Controls.TextBlock)window.FindName("LocalSelection")).Text == "DeepSeek", "local page uses actual transport and selected client");
+                    ((System.Windows.Controls.TextBox)window.FindName("ServerAddress")).Text = "192.0.2.10";
+                    form.CapturePage(Path.Combine(output, "remote.png"), 0);
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("LinkEndpoint")).Text == "192.0.2.10:8765"
+                        && ((System.Windows.Controls.TextBlock)window.FindName("LinkState")).Text == "idle"
+                        && ((System.Windows.Controls.TextBlock)window.FindName("LinkClient")).Text == "DeepSeek", "remote mode shows the live endpoint, state and selected client");
+                    Assert(((System.Windows.Controls.Border)window.FindName("SecretBand")).Visibility == System.Windows.Visibility.Visible
+                        && ((System.Windows.Controls.Grid)window.FindName("AddressRow")).Visibility == System.Windows.Visibility.Visible, "remote mode shows the shared secret band and the address row");
+                    form.CapturePage(Path.Combine(output, "local.png"), 1);
+                    // stdio 本机模式既不用地址也不用密钥：这两块必须真的消失，否则界面在教用户填无用的值。
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("LinkEndpoint")).Text.StartsWith("stdio")
+                        && ((System.Windows.Controls.TextBlock)window.FindName("LinkState")).Text == "local", "local mode reports the stdio transport");
+                    Assert(((System.Windows.Controls.Border)window.FindName("SecretBand")).Visibility == System.Windows.Visibility.Collapsed
+                        && ((System.Windows.Controls.Grid)window.FindName("AddressRow")).Visibility == System.Windows.Visibility.Collapsed
+                        && ((System.Windows.Controls.Grid)window.FindName("ServerActions")).Visibility == System.Windows.Visibility.Collapsed
+                        && ((System.Windows.Controls.Border)window.FindName("LocalNote")).Visibility == System.Windows.Visibility.Visible, "local mode hides address, secret and service controls");
+                    form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
                     window.Width = 1000; window.Height = 720;
-                    form.CapturePage(Path.Combine(output, "client-compact.png"), 1);
-                    form.CapturePage(Path.Combine(output, "client-compact-bottom.png"), 1, true);
-                    Assert((int)window.Resources["ClientColumns"] == 4, "compact window uses four client columns");
+                    form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
+                    Assert((int)window.Resources["ClientColumns"] == 2, "compact window uses two client columns");
                 }
-                Assert(File.Exists(Path.Combine(output, "server.png")), "all GUI pages render");
+                Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
                 Console.WriteLine("Passed: " + passed); return 0;
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }
