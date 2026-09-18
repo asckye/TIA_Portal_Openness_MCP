@@ -24,7 +24,7 @@
 
 ## 开发与历史
 
-- [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)
+- [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)、[接续工作交接](development/handoff.md)（换机器继续 API 对齐计划时先读：现状、下一步、每阶段固定动作、闸门、真机约定）
 - [路线图与待办](development/roadmap.md)：官方 API 全量对齐分阶段计划（2.7.25 完成 Safety，2.7.26 起 WinCC Unified 进行中）、引擎待重建项、第三方集成候选、合规事项（2026-09-17 审计，2026-09-18 更新）
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
 - [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v2.7.29.md)、[v2.7.28](releases/v2.7.28.md)、[v2.7.27](releases/v2.7.27.md)、[v2.7.26](releases/v2.7.26.md)、[v2.7.25](releases/v2.7.25.md)、[v2.7.24](releases/v2.7.24.md)、[v2.7.23](releases/v2.7.23.md)、[v2.7.22](releases/v2.7.22.md)、[v2.7.21](releases/v2.7.21.md)、[v2.7.20](releases/v2.7.20.md)
