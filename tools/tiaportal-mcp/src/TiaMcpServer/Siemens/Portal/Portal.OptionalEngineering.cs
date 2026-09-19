@@ -7,33 +7,7 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        private object ExactOfflineDrive(string devicePathJson,string itemPathJson,ushort driveObjectNumber)
-        {
-            var item=ExactEngineeringHardware(devicePathJson,itemPathJson);
-            var container=OfficialServiceAccess.Require(item,"Siemens.Engineering.MC.Drives.DriveObjectContainer","Siemens.Engineering.Startdrive");
-            var matches=EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(container,"DriveObjects")).Where(x=>Convert.ToUInt16(EngineeringGroupOperations.Get(x,"DriveObjectNumber"))==driveObjectNumber).Take(2).ToArray();
-            if(matches.Length!=1)throw new InvalidOperationException("Expected exactly one offline drive object number.");
-            return matches[0];
-        }
-        public ResponseMessage ManageStartdriveParameter(string devicePathJson,string itemPathJson,ushort driveObjectNumber,string parameter,string action="read",string valueJson="null",bool dryRun=true)
-            =>RunHmiStepTool("ManageStartdriveParameter",meta=>{
-                if(action!="read"&&action!="write")throw new ArgumentException("action must be read/write.");
-                if(string.IsNullOrWhiteSpace(parameter))throw new ArgumentException("Exact parameter name such as p1000[0] required.");
-                bool write=action=="write"&&!dryRun;using var access=write ? AcquireHmiEditAccess() : null;
-                var drive=ExactOfflineDrive(devicePathJson,itemPathJson,driveObjectNumber);
-                var parameters=EngineeringGroupOperations.Get(drive,action=="write" ? "Parameters" : "ReadParameters");
-                // Native Find supports indexed parameter syntax; no fallback or fuzzy matching.
-                var target=EngineeringGroupOperations.Call(parameters,"Find",new[]{typeof(string)},parameter) ?? throw new InvalidOperationException("Exact drive parameter not found.");
-                meta["before"]=EngineeringObjectAddress.Read(target);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;meta["online"]=false;
-                if(action=="read")return "Offline drive parameter read. No OnlineDriveObject or live device access used.";
-                var current=EngineeringGroupOperations.Get(target,"Value");
-                var value=EngineeringScalarProperties.ConvertValue(JsonNode.Parse(valueJson),current.GetType());
-                var changes=EngineeringScalarProperties.Prepare(target.GetType(),new JsonObject{["Value"]=EngineeringScalarProperties.Json(value)});
-                changes[0]=(changes[0].Property,value);
-                if(!write)return "Offline drive parameter preview; native limits/semantics checked on execution.";
-                EngineeringScalarProperties.Apply(target,changes,meta);meta["after"]=EngineeringObjectAddress.Read(target);
-                return "Offline drive parameter changed and read back; no download, online parameter write or drive command.";
-            });
+        // 2.7.39: ManageStartdriveParameter moved to Portal.Startdrive.cs (typed DriveObjectContainer / DriveParameter); the DCC tools to Portal.Dcc.cs.
         // 2.7.38: the anchor is the typed Sivarc project service (Portal.Sivarc.cs); the generic path-based readers below stay for arbitrary sub-paths.
         private object ExactSiVArcRoot(string category) => Family(category).Anchor(RequireSivarc());
         public ResponseMessage ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
@@ -67,7 +41,11 @@ namespace TiaMcpServer.Siemens
                 if(action=="create")target=EngineeringGroupOperations.Call(collection,"Create",new[]{typeof(string)},name);
                 if(action=="delete") {
                     EngineeringGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
-                    if(EngineeringGroupOperations.Find(collection,name)!=null)throw new InvalidOperationException("Rule remains after deletion.");meta["verifiedAbsent"]=true;
+                    // 2.7.38 real project: the composition proxy used for Find/Delete is stale afterwards - enumerating it throws
+                    // EngineeringObjectDisposedException although the rule / group is gone (same as the 2.7.30 hardware
+                    // compositions). Re-resolve the collection from the typed anchor before verifying.
+                    var fresh=EngineeringObjectAddress.Resolve(ExactSiVArcRoot(category),collectionPathJson);
+                    if(EngineeringGroupOperations.Find(fresh,name)!=null)throw new InvalidOperationException("Rule remains after deletion.");meta["verifiedAbsent"]=true;meta["verifiedOnFreshNavigation"]=true;
                 }else {EngineeringScalarProperties.Apply(target!,prepared,meta);meta["after"]=EngineeringObjectAddress.Read(target!);}
                 return "SiVArc native rule operation completed; no generation, save, compile or download.";
             });

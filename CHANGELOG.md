@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.7.39] - 2026-09-19
+
+引擎 2.7.39.0（V20/V21 均重建），工具 421 → 437，默认 lite 56 项不变。详见 [v2.7.39](docs/releases/v2.7.39.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-②：Startdrive + DCC 选件包——**Startdrive 34 / 117 与 DCC 13 / 68 功能类型缺口归零**（形状检查；虚拟机装有 Startdrive Advanced + DCC，部署后真机验证）。
+
+- **修复（2.7.38 真机）**：类型化规则工具 `ManageSivarcRule` 改名 `ManageSivarcTableRule`（`CallTool` 的工具映射不分大小写，被旧工具 `ManageSiVArcRule` 遮蔽，lite 模式下不可达），`Check-DeadToolReferences.py` 新增"工具名不分大小写唯一"闸门；`GenerateSiVArc` 改传 PLC 设备名（`Sivarc.Generate` 的 `plcs` 是设备名，真机报 "PLC device '+S1-K1' not found"）；通用 `ManageSiVArcRule delete` 后从锚点重导航再核对（旧组合代理抛 `EngineeringObjectDisposedException`）；`Probe-McpServer.py` 打印 JSON-RPC 错误。
+- **新增（Startdrive）**：`ReadDriveObjects`（`DriveObjectContainer` 驱动对象 + 报文 + 功能接口视图 + 工艺扩展 + DCC 摘要 + `ModuleAccessPoint` / V21 `DriveItemHardwareModule`）、`ReadDriveParameters`（`ReadParameters` / `Parameters` 按名 / 按号 / 分页，BICO 源、位、枚举）、`ManageDriveTelegrams`（Can* / Insert* / Erase / ChangeSize / TelegramNumber、V21 SDR 接口与 V20 基接口的 `Connect(Telegram)`）、`ManageDriveFunctions`（驱动对象类型、激活、Function in Use、调试、安全校验和、电机 / 编码器硬件投影与配置条目）、`ManageDriveSecurity`（UMAC / DDE）、`ManageTechnologyExtensions`（驱动对象的扩展与门户的安装包）、`ManageDriveHardwareModule`（V21）、`ManageDriveSafetyAcceptanceTest`（V21）、`ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE：恢复出厂 / RAM→ROM / 激活）；`ManageStartdriveParameter` 类型化改造（新增 `driveObjectIndex`——G120C 上 `DriveObjectNumber` 不可读——与 BICO 写入）；Startdrive 下载 / 上载提示类型化。
+- **新增（DCC）**：`ReadDccCharts`（图表树、分区、接口、块、引脚、DCB 库、执行顺序）、`ManageDccBlock`、`ManageDccPin`（连接 / 发布 / 参数）、`ManageDccChartInterface`、`ManageDccChartPartition`、`ManageDcbLibraries`（V21 `DcbLibraryImporter`）；`ManageDccChart` 类型化改造（子图路径、自动命名、`exportAll` / `readSequence` / `showEditor`、`MoveInRuntimeSequence`、`confirmDelete`）、`ReadDccObject` 类型化驱动解析；39 个 `DccException` 子类分类回报。
+- **审计**：有专用引用 573 → 629，完全未触及 255 → 158，未封装功能类型 72 / 307 → 25 / 122（Startdrive 34 / 117 → 0 / 0，DCC 13 / 68 → 0 / 0；剩 SafetyValidation 8 / 34、TestSuite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7）。
+- **验证**：离线 2056 项（新增 103 项）；形状检查 V20 2589 / V21 2809（新增 288 / 312 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程待验（部署后按交接页 §2 重跑 Startdrive / DCC 与 SiVArc 修复）。
+
 ## [2.7.38] - 2026-09-19
 
 引擎 2.7.38.0（V20/V21 均重建），工具 413 → 421，默认 lite 56 项不变。详见 [v2.7.38](docs/releases/v2.7.38.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-①：SiVArc 选件包——**SiVArc 功能类型缺口 33 / 198 归零**（发布时按形状检查；部署后发现虚拟机装有 SiVArc 并完成真机验证）。

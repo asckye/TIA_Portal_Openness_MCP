@@ -1,12 +1,25 @@
 # 工程能力与验收边界
 
-本文说明 2.7.38 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 421 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.38：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc 的功能类型缺口为 0，其余选件包剩 72 类型 / 307 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.39 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.39 新增工具族（阶段 6 ⑥-② Startdrive + DCC 选件包）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 驱动对象与参数 | `ReadDriveObjects`、`ReadDriveParameters`、`ManageStartdriveParameter`（类型化改造，新增 `driveObjectIndex` 与 BICO 写入 `{"bicoSource":"r19"}`） | `DriveObjectContainer` 只在驱动单元 / 控制单元设备项上；驱动对象按 `driveObjectNumber` 或 `driveObjectIndex` 选（G120C 上 `DriveObjectNumber` 不可读，用序号）；参数名要精确（`p1000[0]`、`r47`、`p2080[0].6`），枚举整个参数集只能分页；只读参数在 `ReadParameters` 视图 |
+| 报文 | `ManageDriveTelegrams` | 先 `check`（Can*）再实做；`AdditionalTelegram` 用 `inputSize` / `outputSize`；改大小后 TIA 使旧 `Telegram` 代理失效，读回一律重导航；`connectTechnologyObject` V21 走 `AxisHardwareConnectionSDRProvider` / `EncoderHardwareConnectionSDRProvider`，V20 走基接口 |
+| 驱动功能 | `ManageDriveFunctions` | 离线 `DriveFunctionInterface`：动作字段放 `valueJson`，多余键拒绝；`HardwareProjection` 在 G120 上要插 Power Module，S120 只离线；`SetMotorType` 仅 G120；原生 bool 为 false 时 `operationSuccess=false` |
+| 安全 / 工艺扩展 / 硬件模块 / 验收测试 | `ManageDriveSecurity`、`ManageTechnologyExtensions`、`ManageDriveHardwareModule`、`ManageDriveSafetyAcceptanceTest` | UMAC / DDE 只离线且 API 不回状态；工艺扩展的安装 / 卸载改的是 TIA Portal 安装（`TiaPortal.GetService`），不是工程；`DriveItemHardwareModule` / `SafetyAcceptanceTest*` 仅 V21 |
+| 在线 | `ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE，`confirmOnline`） | 需要驱动已在线；恢复出厂 / RAM→ROM 作用于真实驱动，写保护钩子按 ONLINE-WRITE 拦截 |
+| DCC | `ReadDccCharts`、`ManageDccChart`（类型化改造：子图路径、自动命名、`exportAll` / `readSequence` / `showEditor`、`sequenceIndex`、`confirmDelete`）、`ManageDccBlock`、`ManageDccPin`、`ManageDccChartInterface`、`ManageDccChartPartition`、`ManageDcbLibraries`、`ReadDccObject` | `DriveControlChartContainer` 是驱动对象的服务，不支持 DCC 的驱动回 NotSupported；DCC 异常按类型回报（`dccException.type / family / licenceMissing`）；`DcbLibraryImporter` 仅 V21；导出文件必须不存在 |
+
+**真机待验（虚拟机装有 SINAMICS Startdrive Advanced + DCC，工程有 4 台 G120C）**：2.7.38 真机只到 `DriveObjectContainer.DriveObjects` 枚举与 `DriveObjectNumber` 抛异常这一步，2.7.39 部署后按交接页 §2 重跑。形状检查 V20 2589 / V21 2809 对本机 PublicAPI 逐成员核对通过。
 
 ## 2.7.38 新增工具族（阶段 6 ⑥-① SiVArc 选件包）
 
 | 族 | 工具 | 边界 |
 |---|---|---|
-| 规则层次 | `ReadSivarcRuleTree`、`ManageSivarcRuleContainer`、`ManageSivarcRule` | 要求工程上有 `Sivarc` 服务（无 SiVArc 选件时 NotSupported）；实做写入要 SiVArc 许可（TIA 报 "License not found"）；只删空文件夹 / 空组、默认规则表拒绝删除；条件 / 注释 500 字、名称 128 字的官方上限在参数门就拒；`ConditionOperator` 对不适用的规则回 `None`、写入会被 TIA 拒绝；设备列只对画面 / 报警 / 复制 / 高级变量规则；实例化规则表在发布模式下的编辑被 TIA 拒绝 |
+| 规则层次 | `ReadSivarcRuleTree`、`ManageSivarcRuleContainer`、`ManageSivarcTableRule`（2.7.38 名为 `ManageSivarcRule`，2.7.39 改名：`CallTool` 的映射不分大小写，与旧 `ManageSiVArcRule` 撞键） | 要求工程上有 `Sivarc` 服务（无 SiVArc 选件时 NotSupported）；实做写入要 SiVArc 许可（TIA 报 "License not found"）；只删空文件夹 / 空组、默认规则表拒绝删除；条件 / 注释 500 字、名称 128 字的官方上限在参数门就拒；`ConditionOperator` 对不适用的规则回 `None`、写入会被 TIA 拒绝；设备列只对画面 / 报警 / 复制 / 高级变量规则；实例化规则表在发布模式下的编辑被 TIA 拒绝 |
 | 块定义 | `ReadSivarcBlockDefinitions`、`ManageSivarcBlockDefinition` | 只对代码块（OB / FB / FC）；`TagMemberSettings` / `CommonParameters` / `BlockParameters` 仅 V21，块参数只 update（镜像块接口） |
 | 表达式解析 | `ResolveSivarcExpression` | 只读；PLC 必须已编译且有调用结构；库对象是母本或库类型 |
 | 布局数据 | `ManageSivarcScreenLayout` | 仅 V21；经典 `Screen` 与 Unified `HmiScreen` 都可；导出必须是新文件；导入默认预览 |
@@ -270,7 +283,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 2.7.18 之后仍未实现或官方无 API 的项（全量对照见 [官方 API 覆盖清单](openness-coverage.md)）：
 
 - **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
-- **选件与协作**：Startdrive / DCC 的类型化封装（阶段 6 ⑥-②，2.7.39）、SafetyValidation / Teamcenter（无任何入口）与 TestSuite / CFC 的剩余动作（⑥-③，2.7.40）；UMC 服务器在线同步与启用/停用工程保护（工程无 UMC 服务器；工程级保护官方无 API）；V20 `Connect(Telegram, …)` 重载。SiVArc（2.7.38）、UMC 离线用户/组（2.7.32）、`CompareLibraryObjects` 的详细比较（2.7.31）、`Connect(Channel)`（2.7.36）已做。
+- **选件与协作**：SafetyValidation / Teamcenter（无任何入口）与 TestSuite / CFC 的剩余动作（⑥-③，2.7.40）；Startdrive / DCC 已在 2.7.39 类型化；UMC 服务器在线同步与启用/停用工程保护（工程无 UMC 服务器；工程级保护官方无 API）；V20 `Connect(Telegram, …)` 重载。SiVArc（2.7.38）、UMC 离线用户/组（2.7.32）、`CompareLibraryObjects` 的详细比较（2.7.31）、`Connect(Channel)`（2.7.36）已做。
 - **硬件杂项**：App ID、批量硬件参数、Software Controller PSC/资源配置、自定义 Logo、CiR、I-Device PN-GSD 导出、共享设备、GSDX 签名状态、向 PLC 下载附加用户文件；`SelectiveDeleteDownload`、`Upgrade/DowngradeTargetDevice`、`TurnOffSequence`、`OverwriteHmiData`、Startdrive 下载提示无内置默认，需经 `promptAnswersJson` 显式指定。
 - **库**：实例清理/更新全部流程、HMI-Library 之外的模板分析。
 - **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`。

@@ -133,6 +133,12 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== SiVArc 纯逻辑：规则族、文件夹 / 表请求、规则 / 组请求（属性、引用、设备列）、块定义请求、表达式 / 布局请求、生成选项 ==");
             SivarcTests.Run(Check);
 
+            Console.WriteLine("== Startdrive 纯逻辑：驱动对象选择器、参数选择器与 BICO 值、报文请求、驱动功能请求、安全 / 工艺扩展 / 硬件模块 / 验收测试 / 在线门 ==");
+            StartdriveTests.Run(Check);
+
+            Console.WriteLine("== DCC 纯逻辑：图表 / 块 / 引脚 / 图表接口 / 分区 / DCB 库请求、可写属性目录、导入选项与文件门 ==");
+            DccTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

@@ -350,6 +350,8 @@ internal static class Program
                     TechnologyMappingShapeChecks.Run(Server, shapeCheck);
                     ClassicHmiFoldersShapeChecks.Run(Server, shapeCheck);
                     SivarcShapeChecks.Run(Server, shapeCheck);
+                    StartdriveShapeChecks.Run(Server, shapeCheck);
+                    DccShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

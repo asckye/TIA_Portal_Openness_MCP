@@ -262,7 +262,7 @@ namespace TiaMcpServer.Siemens
                 var rules = EngineeringGroupOperations.Items(family.Rules(table)).Select(r => (JsonNode)SivarcRuleRow(r, false)).ToArray();
                 Page(rules, offset, limit, meta);
                 meta["groups"] = new JsonArray(EngineeringGroupOperations.Items(family.Groups(table)).Select(g => (JsonNode)SivarcGroupRow(family, g, 1, maxDepth, includeRules)).ToArray());
-                return "SiVArc rule table read: paged top-level rules (records) and nested groups (up to maxDepth, 200 rules per group). Device columns need ManageSivarcRule read with deviceNamesJson. No generation.";
+                return "SiVArc rule table read: paged top-level rules (records) and nested groups (up to maxDepth, 200 rules per group). Device columns need ManageSivarcTableRule read with deviceNamesJson. No generation.";
             });
 
         // ---- tools: folders / tables ----------------------------------------------------------------------------------------------
@@ -391,9 +391,9 @@ namespace TiaMcpServer.Siemens
             return row;
         }
 
-        public ResponseMessage ManageSivarcRule(string category, string tablePath, string rulePath = "", string kind = "rule", string action = "read", string propertiesJson = "{}", string referencesJson = "{}",
+        public ResponseMessage ManageSivarcTableRule(string category, string tablePath, string rulePath = "", string kind = "rule", string action = "read", string propertiesJson = "{}", string referencesJson = "{}",
             string deviceSelectionJson = "{}", string deviceNamesJson = "[]", string libraryName = "", string masterCopyPath = "", string createOption = "Replace", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSivarcRule", meta =>
+            => RunHmiStepTool("ManageSivarcTableRule", meta =>
             {
                 bool write = Logic.ValidateRuleRequest(category, tablePath, rulePath, kind, action, propertiesJson, referencesJson, deviceSelectionJson, masterCopyPath, createOption, confirmDelete, dryRun);
                 var deviceNames = Logic.ParseNames(deviceNamesJson, "deviceNamesJson");
@@ -642,6 +642,16 @@ namespace TiaMcpServer.Siemens
             });
 
         // ---- typed generation (retrofit of GenerateSiVArc) ----------------------------------------------------------------------------------
+        /// <summary>Name of the Device that owns the PLC software at softwarePath (SoftwareContainer.Parent -> DeviceItem chain -> Device).</summary>
+        private string OwningDeviceName(string softwarePath)
+        {
+            var sc = ResolveSoftwareContainerUncached(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath);
+            IEngineeringObject? current = sc.Parent;
+            while (current is DeviceItem item) current = item.Parent;
+            if (current is Device owner && !string.IsNullOrEmpty(owner.Name)) return owner.Name;
+            throw new PortalException(PortalErrorCode.NotFound, "Owning device of PLC software " + softwarePath + " not found (Sivarc.Generate needs the PLC device name).");
+        }
+
         public ResponseMessage GenerateSiVArc(string hmiDeviceName, string plcSoftwarePathsJson, string generationOptions, bool dryRun = true, string additionalHmiDeviceNamesJson = "[]")
             => RunHmiStepTool("GenerateSiVArc", meta =>
             {
@@ -650,12 +660,17 @@ namespace TiaMcpServer.Siemens
                 var extra = Logic.ParseNames(additionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson").Select(n => ExactEngineeringDevice(new JsonArray(JsonValue.Create(n)).ToJsonString()).Name).ToArray();
                 var devices = new[] { device.Name }.Concat(extra).ToArray();
                 if (devices.Distinct(StringComparer.Ordinal).Count() != devices.Length) throw new ArgumentException("HMI device names repeat.");
-                var plcs = ExactNameList(plcSoftwarePathsJson).Select(p => ExactPlcForEngineering(p, !dryRun).Name).ToArray();
-                if (plcs.Distinct(StringComparer.Ordinal).Count() != plcs.Length) throw new InvalidOperationException("Native PLC name aliases are ambiguous.");
+                // 2.7.38 real project: Sivarc.Generate(deviceName, plcs, options) takes PLC *device* names - TIA answered
+                // "PLC device '+S1-K1' not found" for the PlcSoftware name, the CPU lives in device "ET 200SP station_1".
+                var plcPaths = ExactNameList(plcSoftwarePathsJson);
+                var plcSoftwareNames = plcPaths.Select(p => ExactPlcForEngineering(p, !dryRun).Name).ToArray();
+                var plcs = plcPaths.Select(p => OwningDeviceName(p)).ToArray();
+                if (plcs.Distinct(StringComparer.Ordinal).Count() != plcs.Length) throw new InvalidOperationException("Native PLC device names repeat (two PLC paths inside the same device).");
                 var sivarc = RequireSivarc();
                 var names = Logic.ParseGenerationOptions(generationOptions);
                 GenerationOptions options = names.Aggregate(GenerationOptions.None, (acc, n) => acc | (GenerationOptions)Enum.Parse(typeof(GenerationOptions), n));
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["hmiDeviceName"] = device.Name; meta["hmiDeviceNames"] = new JsonArray(devices.Select(d => (JsonNode)d).ToArray()); meta["plcNames"] = new JsonArray(plcs.Select(p => (JsonNode)p).ToArray());
+                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["hmiDeviceName"] = device.Name; meta["hmiDeviceNames"] = new JsonArray(devices.Select(d => (JsonNode)d).ToArray());
+                meta["plcSoftwareNames"] = new JsonArray(plcSoftwareNames.Select(p => (JsonNode)p).ToArray()); meta["plcDeviceNames"] = new JsonArray(plcs.Select(p => (JsonNode)p).ToArray()); meta["plcNames"] = new JsonArray(plcs.Select(p => (JsonNode)p).ToArray());
                 meta["generationOptions"] = options.ToString(); meta["nativeSignature"] = devices.Length > 1 ? "Sivarc.Generate(IEnumerable<string>, IEnumerable<string>, GenerationOptions)" : "Sivarc.Generate(string, IEnumerable<string>, GenerationOptions)";
                 if (dryRun) return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
                 meta["mayHaveChanged"] = true;

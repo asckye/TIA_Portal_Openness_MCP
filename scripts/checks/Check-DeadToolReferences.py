@@ -74,10 +74,10 @@ ALLOWED = {
     'ExportProDIAGInfo': 'Openness CodeBlock.ExportProDIAGInfo()，由 ExportPlcProDiagInfo 封装',
     'ImportScreenOverview': 'Openness HmiTarget.ImportScreenOverview()，由 ManageClassicHmiScreenObject objectKind=overview 封装',
     'ImportScreenGlobalElements': 'Openness HmiTarget.ImportScreenGlobalElements()，由 ManageClassicHmiScreenObject objectKind=globalElements 封装',
-    'CreateOptions': 'Openness SiVArc CreateOptions 枚举（Replace / Rename），由 ManageSivarcRule createOption 封装',
+    'CreateOptions': 'Openness SiVArc CreateOptions 枚举（Replace / Rename），由 ManageSivarcTableRule createOption 封装',
     'GetExpressionResolver': 'Openness Sivarc.GetExpressionResolver()，由 ResolveSivarcExpression 封装',
-    'GetLayoutFields': 'Openness ScreenRule / ScreenRuleGroup.GetLayoutFields()，由 ManageSivarcRule read 回报',
-    'SetAttributes': 'Openness IEngineeringObject.SetAttributes()，由 ManageSivarcRule deviceSelectionJson 封装',
+    'GetLayoutFields': 'Openness ScreenRule / ScreenRuleGroup.GetLayoutFields()，由 ManageSivarcTableRule read 回报',
+    'SetAttributes': 'Openness IEngineeringObject.SetAttributes()，由 ManageSivarcTableRule deviceSelectionJson 封装',
     'ImportInstanceTextsFromXlsx': 'Openness PlcAlarmTextProvider.ImportInstanceTextsFromXlsx()，由 ImportPlcAlarmInstanceTexts 封装',
     'GetCreationInfos': 'Openness IEngineeringComposition.GetCreationInfos()，动态组合接口',
     'CloseAndCommit': 'Openness LocalSession.CloseAndCommit()，由 ManageMultiuserSession 的 commit 动作封装',
@@ -106,6 +106,14 @@ ALLOWED = {
     'GetGlobalLibraryInfos': 'Openness GlobalLibraryComposition.GetGlobalLibraryInfos()，由 ManageGlobalLibrary 的 infos 动作封装',
     'GetSupportedExportFormats': 'Openness LibraryType.GetSupportedExportFormats()，由 ReadLibraryType 读出',
     'SetForUpdate': 'Openness LibraryType.SetForUpdate 属性名',
+    # 2.7.39 Startdrive / DCC 工具族描述里点名的原生成员 / 枚举值，都在说明底层调用，不是 MCP 工具名
+    'CreateProtocol': 'Openness SafetyAcceptanceTestReport.CreateProtocol()，由 ManageDriveSafetyAcceptanceTest createProtocol 封装',
+    'ReadParameters': 'Openness DriveObject / OnlineDriveObject.ReadParameters 导航器名，由 ReadDriveParameters / ReadOnlineDriveParameters 读出',
+    'GetChartSequence': 'Openness DriveControlChartComposition.GetChartSequence()，由 ReadDccCharts / ManageDccChart readSequence 封装',
+    'GetRunSequence': 'Openness DriveControlChart.GetRunSequence()，由 ReadDccCharts / ManageDccChart readSequence 封装',
+    'MoveInRuntimeSequence': 'Openness Statement.MoveInRuntimeSequence(uint)，由 ManageDccChart / ManageDccBlock 的 sequenceIndex 封装',
+    'ImportDcbLibrary': 'Openness DcbLibraryImporter.ImportDcbLibrary()，由 ManageDcbLibraries import 封装',
+    'RenameOnConflict': 'Openness DccImportOptions 枚举值（importOptions 参数取值）',
 }
 
 VERB = re.compile(
@@ -148,11 +156,42 @@ def scan(src, extra_text=None):
     return names, bad
 
 
+def duplicate_names(src, extra_text=None):
+    """返回 {小写工具名: [(拼写, 出处)]}，只含不分大小写后撞在一起的注册。
+
+    2.7.38 真机：新工具 `ManageSivarcRule` 与旧工具 `ManageSiVArcRule` 只差大小写，而 CallTool 的
+    工具映射（McpServer.ToolBridge.cs 的 AllToolMethods）建在 OrdinalIgnoreCase 上，两个键合并成一个，
+    lite 模式下 CallTool("ManageSivarcRule") 派发到旧工具——新工具在真机上根本不可达。名字必须不分
+    大小写唯一，这里对拍。"""
+    items = list(src.items())
+    if extra_text:
+        items.append(('<sentinel>', extra_text))
+    seen = collections.defaultdict(list)
+    for p, s in items:
+        for m in re.finditer(r'McpServerTool\(Name\s*=\s*"([A-Za-z0-9_]+)"', s):
+            line = s[:m.start()].count('\n') + 1
+            seen[m.group(1).lower()].append((m.group(1), os.path.basename(p) + ':' + str(line)))
+    return {k: v for k, v in seen.items() if len(v) > 1}
+
+
 def main():
     src = load(ROOT)
     if not src:
         print('找不到源码目录 %s —— 请在仓库根目录运行。' % ROOT)
         return 2
+
+    # 哨兵 2：注入一个只差大小写的重名注册，闸门必须抓到。
+    dup_sentinel = '[McpServerTool(Name = "GETSTATE"), Description("sentinel")]'
+    if 'getstate' not in duplicate_names(src, extra_text=dup_sentinel):
+        print('[FAIL] 重名哨兵没被抓到 —— 工具名唯一性检查自己坏了，它的 PASS 不可信。')
+        return 2
+    dups = duplicate_names(src)
+    if dups:
+        print('[FAIL] 下列工具名不分大小写后重复（CallTool 的映射不分大小写，后注册的会遮蔽先注册的）：')
+        for k, v in sorted(dups.items()):
+            print('  %-38s %s' % (k, ', '.join('%s (%s)' % x for x in v)))
+        print('修法：给其中一个换名字；两个名字只差大小写的工具对 Agent 来说是同一个。')
+        return 1
 
     # 哨兵：注入一个必然不存在的工具名，闸门必须抓到它。
     # 这条不是形式主义 —— 本仓吃过「检查自己坏了却全绿」的亏（字段读错致全假 PASS）。

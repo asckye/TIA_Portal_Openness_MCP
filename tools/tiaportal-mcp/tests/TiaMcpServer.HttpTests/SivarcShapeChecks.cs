@@ -133,7 +133,7 @@ internal static class SivarcShapeChecks
 
         // ---- server side ----
         var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
-        foreach(var tool in new[]{"ReadSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcRule","ReadSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSiVArc"})
+        foreach(var tool in new[]{"ReadSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcTableRule","ReadSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSiVArc"})
             check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
         check(portal.GetMethod("GenerateSiVArc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNamesJson"),"GenerateSiVArc takes additionalHmiDeviceNamesJson (multi-device overload)");
     }

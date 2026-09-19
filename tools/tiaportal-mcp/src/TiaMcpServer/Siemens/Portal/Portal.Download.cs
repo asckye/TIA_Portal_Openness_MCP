@@ -238,7 +238,17 @@ namespace TiaMcpServer.Siemens
                         else selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
                         break;
                     case DownloadPromptPolicy.AnswerKind.Checked:
-                        if (config is DownloadCheckConfiguration check) check.Checked = answer.Value == "true";
+                        // 2.7.39: the Startdrive prompts are typed (V21 Siemens.Engineering.Startdrive.dll): the two upload checks derive from
+                        // UploadConfiguration (not UploadCheckConfiguration; V21 only), the three download checks from DownloadCheckConfiguration.
+#if !TIA_V20
+                        if (config is OverrideTelegramMismatch telegramMismatch) telegramMismatch.Checked = answer.Value == "true";
+                        else if (config is OverwriteOfflineConfiguration overwriteOffline) overwriteOffline.Checked = answer.Value == "true";
+                        else
+#endif
+                        if (config is StartDriveDownloadCheckConfiguration startdriveCheck) startdriveCheck.Checked = answer.Value == "true";
+                        else if (config is AcceptDownloadOfUnencryptedSensitiveData unencrypted) unencrypted.Checked = answer.Value == "true";
+                        else if (config is ReplaceDownloadedData replaceDownloaded) replaceDownloaded.Checked = answer.Value == "true";
+                        else if (config is DownloadCheckConfiguration check) check.Checked = answer.Value == "true";
                         else checkedProp!.SetValue(config, answer.Value == "true");
                         break;
                     case DownloadPromptPolicy.AnswerKind.Password:
