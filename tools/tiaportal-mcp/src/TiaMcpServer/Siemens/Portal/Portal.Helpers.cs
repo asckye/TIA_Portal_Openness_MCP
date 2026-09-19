@@ -65,7 +65,13 @@ namespace TiaMcpServer.Siemens
                 //     fall through to the actionable "no project" message so the AI calls Connect.
                 try
                 {
-                    if (_portal != null)
+                    if (_expectedProjectName != null)
+                    {
+                        // 2.7.33: an explicit bind exists - only that project may come back (2.7.32 real project: with two TIA
+                        // instances the unconstrained ConnectPortal below bound the other instance's project between two calls).
+                        if (!AttachToOpenProject(_expectedProjectName, 3)) _logger?.LogWarning("IsProjectNull self-heal: expected project '{Name}' is not open in any TIA Portal instance; not binding anything else.", _expectedProjectName);
+                    }
+                    else if (_portal != null)
                     {
                         GetState();
                     }
@@ -594,7 +600,11 @@ namespace TiaMcpServer.Siemens
         /// Returns null when no password is provided or the configuration object is not a
         /// ConnectionConfiguration (no event to hook).
         /// </summary>
-        private static IDisposable? AttachPasswordHandler(object? configuration, string? password)
+        private static IDisposable? AttachPasswordHandler(object? configuration, string? password) => AttachPasswordHandler(configuration, password, null, null, null);
+
+        // 2.7.33: besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
+        // password + UserType, IsSecureCommunication, GetSupportedAuthenticationTypes); the answered prompts are reported to meta.
+        private static IDisposable? AttachPasswordHandler(object? configuration, string? password, string? userName, string? userType, JsonObject? meta)
         {
             if (string.IsNullOrEmpty(password) || configuration is not ConnectionConfiguration conn)
                 return null;
@@ -607,9 +617,25 @@ namespace TiaMcpServer.Siemens
 
             OnlineConfigurationDelegate handler = (cfg) =>
             {
-                if (cfg is OnlinePasswordConfiguration pwdCfg)
+                if (cfg is OnlineAuthenticationConfiguration auth)
+                {
+                    OnlineCredentials credentials = auth.OnlineCredentials;
+                    var supported = new JsonArray();
+                    try { foreach (AuthenticationType type in auth.GetSupportedAuthenticationTypes()) supported.Add(type.CurrentUserType.ToString()); } catch { }
+                    if (!string.IsNullOrEmpty(userName)) credentials.Name = userName;
+                    if (!string.IsNullOrEmpty(userType)) credentials.Type = (UserType)Enum.Parse(typeof(UserType), userType);
+                    else if (!string.IsNullOrEmpty(userName)) credentials.Type = UserType.ProjectUser;
+                    credentials.SetPassword(secure);
+                    if (meta != null) meta["onlineAuthentication"] = new JsonObject { ["isSecureCommunication"] = auth.IsSecureCommunication, ["supportedUserTypes"] = supported, ["userName"] = userName ?? "", ["userType"] = credentials.Type.ToString() };
+                }
+                else if (cfg is OnlinePasswordConfiguration pwdCfg)
                 {
                     pwdCfg.SetPassword(secure);
+#if TIA_V20
+                    if (meta != null) meta["onlinePassword"] = new JsonObject { ["answered"] = true };
+#else
+                    if (meta != null) meta["onlinePassword"] = new JsonObject { ["isSecureCommunication"] = pwdCfg.IsSecureCommunication };
+#endif
                 }
             };
             conn.OnlineLegitimation += handler;

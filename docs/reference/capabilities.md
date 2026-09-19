@@ -2,6 +2,21 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.33 新增工具族（阶段 3 ③-④ Base 收尾）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 门户诊断 | `ReadPortalInfo` | `TiaPortalProcess` 是快照（`AcquisitionTime`），不阻塞；`TextCategories` 只在 V21；无工程也可调 |
+| 传输路由 / R/H | `ReadTransferRoutes`；`DownloadToPlc` / `GoOnline` 的 `rhTarget` | 只读路由树、不套用；`rhTarget` 需要 R/H 系统的 `RHDownloadProvider` / `RHOnlineProvider`（参考工程没有，仅形状检查）；V20 的 R/H 在线没有地址重载 |
+| 硬件工具 | `ManageHardwareUtilities` | `Project.HwUtilities.Find`；OPC UA 导出只对 PLC 项、PSC 导出只对设备且拒绝覆盖，F 激活设备在 V18 及以下拒绝，加密需 CPU V40.0+；密码不回显 |
+| 设备服务对象 | `ManageDeviceServiceObjects` | Web 应用与遥控数据点对象是 V21 专有（V20 只剩遥控数据点的导入导出）；`RemainingCertificateLifetime` 10..90，`Runtime` 用途在 Web 服务器 / OPC UA 服务器停用时被 TIA 拒绝，`ServiceGroupName` ≤ 64；V20 的服务 Id 是只读 `UInt16` |
+| 对象标识 / 编辑器 | `ReadObjectIdentifier`、`ShowObjectInEditor` | 官方只保证设备、设备项、块、变量、软件单元、工艺实例 DB、`PlcStruct`；`ShowInEditor` 只动 UI、需要带界面的 Portal；V20 的设备不实现 `IShowable` |
+| 事务 | `RunToolsInTransaction` | 一个 `ExclusiveAccess` + `Transaction`，内层工具复用独占访问；全部成功才提交，内层 `dryRun` 强制 false；`CallTool` / 嵌套事务拒绝；`TargetInvocationException` 之后再 `CommitOnDispose` 会被 TIA 拒绝 |
+| 受保护工程 / UMAC 在线 | `OpenProject`（`umacUserName` / `umacPassword` / `umacUserType`）、`GoOnline`（`userName` / `userType`） | 凭据只进 SecureString；`GetSupportedAuthenticationTypes` 与 `IsSecureCommunication` 回报到 meta，密码永不回显 |
+| 改绑守卫 | 所有写工具 | 显式绑定的工程名被记住：自愈只回绑它，写前核对 `_project.Name`，不一致直接拒绝并要求 `AttachToOpenProject` |
+
+**真机待验**；形状检查 V20 1585 / V21 1708 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.32 新增工具族（阶段 3 ③-③ 用户管理与安全）
 
 | 族 | 工具 | 边界 |
@@ -61,7 +76,7 @@
 | 下载提示（缺陷修复） | `DownloadToPlc` 新参数 `userManagementMode`、`promptAnswersJson`、`moduleAccessPassword`、`blockBindingPassword`、`masterSecretPassword` | 43 种提示按真实形态应答；破坏性提示默认 NoAction/NoChange，需 `promptAnswersJson` 显式指定；未应答提示回传 `Meta.promptsUnanswered` |
 | 设备传输 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`、`DownloadPlcToFolder` | 扫描为在线网络探测；上载要求 `confirmUpload`，目标地址须与扫描结果精确一致；参数上载 V20 无 API；文件夹下载要求新目录或空目录 |
 | PLC 块服务 | `ManagePlcBlockProtection`、`ManagePlcDataBlockSnapshot`、`UpdatePlcProgram`、`ReadPlcBlockFingerprints`、`ImportPlcAlarmInstanceTexts`、`ManagePlcAlarmTextList` | 保护/取消保护需 `confirmProtectionChange`；快照装载改变 CPU 实际值需 `confirmValueChange`，V20 无 `ValueService`；指纹读取是在线调用；报警文本列表 API 无条目与 `Create(string)`，只有主副本创建/删除 |
-| 工程安全与协作 | `ReadProjectUserManagement`、`ManageProjectUserManagement`、`ReadProjectProtection`、`ManageMultiuserSession`、`CompareLibraries`、`CompareProjects`、`ReadProjectSettings`、`ManageUmcUsers`、`ManagePasswordPolicy`、`ManageSyslogServers` | UMAC 17 种动作（含匿名用户激活）需 `confirmChange`；不启用/停用工程保护；UMC 导入 / 同步 / 一致性检查由 `ManageUmcUsers` 经 `Authentication` 事件送凭据（2.7.32）；官方无工程级"已保护"标量；比较接口 V20/V21 命名空间不同，按反射绑定 |
+| 工程安全与协作 | `ReadProjectUserManagement`、`ManageProjectUserManagement`、`ReadProjectProtection`、`ManageMultiuserSession`、`CompareLibraries`、`CompareProjects`、`ReadProjectSettings`、`ManageUmcUsers`、`ManagePasswordPolicy`、`ManageSyslogServers`、`ReadPortalInfo`、`ReadObjectIdentifier`、`RunToolsInTransaction` | UMAC 17 种动作（含匿名用户激活）需 `confirmChange`；不启用/停用工程保护；UMC 导入 / 同步 / 一致性检查由 `ManageUmcUsers` 经 `Authentication` 事件送凭据（2.7.32）；官方无工程级"已保护"标量；比较接口 V20/V21 命名空间不同，按反射绑定 |
 | 硬件服务 | `ReadCommunicationConnections`、`ManageCommunicationConnection`、`ManageWatchForceTableWebAccess`、`ExchangeSystemDiagnosticsSettings`、`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl`、`ImportDeviceAml`、`ReadHardwareFeatures` | 通信连接与 OPC UA 访问控制 V20 无 API；连接创建要求调用方精确指定拥有 `ConnectionComposition` 的对象；AML 导入需 `confirmImport` 并回传原生日志哈希 |
 | Unified 原生交换（2.7.28，2.7.29 真机修复） | `ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms` | 导出要求新目录、每个原生文件哈希（变量导出回报的无扩展名路径解析到实际 `.hmi.yml`，附 `reportedPath` 与 `directoryListing`）；导入要求现有目录并核对期望名/模块名；`OpcUaAlarm` 只在 OPC UA 连接上存在；默认预览，无保存/编译/下载 |
 | Unified 画面对象（2.7.26，2.7.27 真机修复） | `DescribeUnifiedScreenItemType`、`ManageUnifiedScreenItem` | 目录与 schema 反射自加载的官方 API（V21 43 个具体类型 / V20 37 个）；`create` 经原生 `Create<T>(name[, containedType])`，按名称查回核对；部件嵌套对象、多语言按 culture（任意深度，如 `Title.Text`）、颜色 `#AARRGGBB`，每个叶子读回；`delete` 需 `confirmDelete`；事件/动态化仍用各自工具 |

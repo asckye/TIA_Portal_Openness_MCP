@@ -244,7 +244,20 @@ namespace TiaMcpServer.Siemens
                     {
                         if (++count > maxItems) { truncated = true; break; }
                         var row = new JsonObject { ["description"] = message.Description ?? "" };
-                        try { row["messageParts"] = new JsonArray(EngineeringGroupOperations.Items(message.MessageParts).Select(p => EngineeringScalarProperties.Scalar(p.GetType()) ? EngineeringScalarProperties.Json(p) : (JsonNode)EngineeringScalarProperties.Read(p)).ToArray()); }
+                        try
+                        {
+                            // Real project: every part is a KeyValuePair<string,string> (DeviceName, LibraryTypeName, LibraryVersionNumber,
+                            // UpToDate, PathToInstance, InstanceName, CurrentVersionNumber); rendered flat instead of the 60x scalar dump.
+                            var parts = new JsonObject(); var other = new JsonArray();
+                            foreach (var part in EngineeringGroupOperations.Items(message.MessageParts))
+                            {
+                                var type = part.GetType();
+                                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                                    parts[type.GetProperty("Key")?.GetValue(part)?.ToString() ?? ""] = EngineeringScalarProperties.Json(type.GetProperty("Value")?.GetValue(part));
+                                else other.Add(EngineeringScalarProperties.Scalar(type) ? EngineeringScalarProperties.Json(part) : (JsonNode)EngineeringScalarProperties.Read(part));
+                            }
+                            row["parts"] = parts; if (other.Count > 0) row["messageParts"] = other;
+                        }
                         catch (Exception ex) { row["messagePartsError"] = ex.GetBaseException().Message; }
                         row["messages"] = Flatten(message.Messages, depth + 1);
                         rows.Add(row);
@@ -253,7 +266,7 @@ namespace TiaMcpServer.Siemens
                 }
                 meta["messages"] = Flatten(result.Messages, 0); meta["messageCount"] = count; meta["truncated"] = truncated;
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = !truncated;
-                meta["scope"] = "Native ILibrary.UpdateCheck(project, mode) message tree (Description, MessageParts, nested Messages). Read-only; no update performed.";
+                meta["scope"] = "Native ILibrary.UpdateCheck(project, mode) message tree: Description, parts {Key: Value} (DeviceName / LibraryTypeName / LibraryVersionNumber / UpToDate / PathToInstance / InstanceName / CurrentVersionNumber), nested Messages. Read-only; no update performed.";
                 return count == 0 ? "Update check completed: no messages (nothing out of date for this mode)." : "Update check completed; inspect the message tree.";
             });
 

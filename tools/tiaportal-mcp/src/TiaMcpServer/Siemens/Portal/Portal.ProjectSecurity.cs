@@ -10,6 +10,7 @@ using Siemens.Engineering.CustomIdentity;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Multiuser;
+using Siemens.Engineering.Settings;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.Umac;
 using TiaMcpServer.ModelContextProtocol;
@@ -40,7 +41,7 @@ namespace TiaMcpServer.Siemens
             => hardware is Device device ? device.GetService<T>() : hardware is DeviceItem item ? item.GetService<T>() : null;
         private UmacDevice RequireUmacDevice(string devicePathJson, string itemPathJson)
             => HardwareService<UmacDevice>(ExactEngineeringHardware(devicePathJson, itemPathJson))
-               ?? throw new NotSupportedException("UmacDevice service unavailable on the selected hardware object; address the CPU/HMI DeviceItem that owns the UMAC configuration.");
+               ?? throw new NotSupportedException("UmacDevice service unavailable on the selected hardware object. On the reference project it lives on the Device (devicePathJson only, itemPathJson=[]), not on the CPU DeviceItem; address the Device or the DeviceItem that owns the UMAC configuration.");
         private static JsonArray Names(object collection)
             => new JsonArray(EngineeringGroupOperations.Items(collection).Select(x => (JsonNode)JsonValue.Create(EngineeringGroupOperations.Get(x, "Name").ToString())!).ToArray());
         private static JsonObject UmacRow(object item)
@@ -237,7 +238,7 @@ namespace TiaMcpServer.Siemens
                         {
                             var bound = new JsonObject { ["projectName"] = _session.Project?.Name };
                             try { bound["isUpToDate"] = _session.IsUptoDate(); } catch (Exception ex) { bound["isUpToDate"] = null; bound["isUpToDateError"] = ex.GetBaseException().Message; }
-                            var markings = _session.MarkingService.GetMarkings();
+                            Markings markings = _session.MarkingService.GetMarkings();
                             var all = EngineeringGroupOperations.Items(markings.AllMarkings).ToArray();
                             bound["conflictedMarkingCount"] = EngineeringGroupOperations.Items(markings.ConflictedMarkings).Count();
                             var rows = ProjectSecurityLogic.Page(all.Select(m => (JsonNode)new JsonObject {
@@ -255,14 +256,14 @@ namespace TiaMcpServer.Siemens
                         var server = ExactProjectServer(serverName); meta["server"] = EngineeringScalarProperties.Read(server);
                         var projects = server.GetServerProjects();
                         var rows = ProjectSecurityLogic.Page(projects.Select(p => (JsonNode)EngineeringScalarProperties.Read(p)).ToList(), offset, limit, meta);
-                        meta["records"] = rows; meta["serverGroups"] = new JsonArray(server.GetProjectServerGroups().Select(g => (JsonNode)JsonValue.Create(g.Name)!).ToArray());
+                        meta["records"] = rows; meta["serverGroups"] = new JsonArray(server.GetProjectServerGroups().Select(g => { ProjectServerGroup group = g; return (JsonNode)JsonValue.Create(group.Name)!; }).ToArray());
                         meta["apiCallSuccess"] = true; meta["dataComplete"] = offset == 0 && rows.Count == projects.Count;
                         return "Server projects listed for the exact server alias; nothing opened.";
                     }
                     case "readLockState":
                     {
                         var server = ExactProjectServer(serverName); var info = ExactServerProject(server, projectName);
-                        var lockState = server.GetLockStateProvider(info);
+                        LockStateProvider lockState = server.GetLockStateProvider(info);
                         meta["serverProject"] = EngineeringScalarProperties.Read(info);
                         meta["isProjectLocked"] = lockState.IsProjectLocked(); meta["lockOwner"] = lockState.GetLockOwner();
                         meta["apiCallSuccess"] = true; meta["dataComplete"] = true;
@@ -334,7 +335,10 @@ namespace TiaMcpServer.Siemens
         }
         private static string PublishCompareResult(object result, bool includeIdentical, int maxDepth, int offset, int limit, JsonObject meta)
         {
-            var root = EngineeringGroupOperations.Get(result, "RootElement");
+            // 2.7.33: the software compare tree is typed (CompareResult.RootElement -> CompareResultElement.Elements); the library
+            // tree keeps the reflective walk (LibraryCompareResultElement lives in the Library.Compare namespace).
+            var root = result is global::Siemens.Engineering.Compare.CompareResult typedResult ? (object)typedResult.RootElement : EngineeringGroupOperations.Get(result, "RootElement");
+            if (root is global::Siemens.Engineering.Compare.CompareResultElement rootElement) meta["rootElement"] = new JsonObject { ["leftName"] = rootElement.LeftName, ["rightName"] = rootElement.RightName, ["comparisonResult"] = rootElement.ComparisonResult.ToString(), ["detailedInformation"] = rootElement.DetailedInformation, ["elements"] = EngineeringGroupOperations.Items(rootElement.Elements).Count() };
             var rows = ProjectSecurityLogic.FlattenCompareTree(root, e => EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(e, "Elements")), CompareRow, maxDepth, 10000, out bool treeTruncated);
             meta["resultType"] = result.GetType().FullName; meta["summary"] = ProjectSecurityLogic.Summarize(rows); meta["totalElements"] = rows.Count; meta["treeTruncated"] = treeTruncated;
             var selected = includeIdentical ? rows : rows.Where(r => !ProjectSecurityLogic.IsIdentical(r["comparisonResult"]?.GetValue<string>())).ToList();
@@ -421,7 +425,8 @@ namespace TiaMcpServer.Siemens
                 ProjectSecurityLogic.ValidatePage(offset, limit);
                 if (_portal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 var parts = EngineeringGroupOperations.Parts(folderPath, true);
-                object collection = _portal.SettingsFolders; object? folder = null;
+                // 2.7.33: typed root (TiaPortal.SettingsFolders -> TiaPortalSettingsFolder.Folders / Settings -> TiaPortalSetting.Name / Value).
+                TiaPortalSettingsFolderComposition rootFolders = _portal.SettingsFolders; object collection = rootFolders; object? folder = null;
                 foreach (var part in parts)
                 {
                     folder = EngineeringGroupOperations.Find(collection, part) ?? throw new PortalException(PortalErrorCode.NotFound, "Settings folder not found: " + part);

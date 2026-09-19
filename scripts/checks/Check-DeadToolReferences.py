@@ -49,6 +49,15 @@ ALLOWED = {
     'DeleteFunctionBlock': '同上',
     'ImportInstanceTexts': '描述原文即 "not yet exposed"',
     # 2.7.18 新工具族描述里点名的原生成员，都在说明底层调用，不是 MCP 工具名
+    # 2.7.33 Base 收尾工具族描述里点名的原生成员，都在说明底层调用
+    'AttachTime': 'Openness TiaPortalSession.AttachTime 属性名，由 ReadPortalInfo 读出',
+    'CompileProvider': 'Openness 类型名（PublicAPI 里是 internal），描述在说明它不可用',
+    'DownloadToBackup': 'Openness RHDownloadProvider.DownloadToBackup()，由 DownloadToPlc rhTarget=backup 封装',
+    'DownloadToPrimary': 'Openness RHDownloadProvider.DownloadToPrimary()，由 DownloadToPlc rhTarget=primary 封装',
+    'ExportDataPoints': 'Openness TelecontrolManagement.ExportDataPoints()，由 ManageDeviceServiceObjects export 封装',
+    'ImportDataPoints': 'Openness TelecontrolManagement.ImportDataPoints()，由 ManageDeviceServiceObjects import 封装',
+    'GetIdentifier': 'Openness ObjectIdentifierProvider.GetIdentifier()，由 ReadObjectIdentifier 封装',
+    'OpenWithUpgrade': 'Openness ProjectComposition.OpenWithUpgrade()，由 OpenProject 封装',
     # 2.7.32 安全/UMC 工具族描述里点名的原生成员（ManageUmcUsers），都在说明底层调用
     'CreateOfflineUmcUser': 'Openness UmcUserComposition.CreateOfflineUmcUser(name)，由 ManageUmcUsers createOffline 封装',
     'CreateOfflineUmcUserGroup': 'Openness UmcUserGroupComposition.CreateOfflineUmcUserGroup()，由 ManageUmcUsers createOffline 封装',

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Siemens.Engineering.Connection;
 using Siemens.Engineering.Online;
 using System;
 using System.Collections;
@@ -71,8 +72,14 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress = null, string? password = null)
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress = null, string? password = null) => GoOnline(softwarePath, ipAddress, password, null, null, "");
+
+        // 2.7.33: userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
+        // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget)
         {
+            BaseLeftoversLogic.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
+            rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget);
             // 这两条原来都返回 State="Offline"。那是**给一个没测过的问题一个确定的答案**：
             // 调用方读 isOnline=false 会当成「已确认这台 PLC 不在线」，而真相是
             // 「没连项目」或「路径写错，压根没这台 PLC」。比不回答更糟。
@@ -93,6 +100,26 @@ namespace TiaMcpServer.Siemens
 
             try
             {
+                if (rhTarget.Length > 0)
+                {
+                    RHOnlineProvider rh = ResolvePlcService<RHOnlineProvider>(softwarePath, plcSoftware)
+                        ?? throw new PortalException(PortalErrorCode.NotFound, "RHOnlineProvider service not available on this PLC (rhTarget applies to R/H systems only).");
+                    using var rhScope = AttachPasswordHandler(rh.Configuration, password, userName, userType, null);
+                    // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
+                    ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
+                    if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _logger?.LogWarning("GoOnline R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
+#if TIA_V20
+                    if (rhAddress != null) _logger?.LogWarning("GoOnline R/H: the V20 RHOnlineProvider has no address overload; using the configured address");
+                    OnlineState rhState = rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup();
+#else
+                    OnlineState rhState = rhAddress == null
+                        ? (rhTarget == "primary" ? rh.GoOnlineToPrimary() : rh.GoOnlineToBackup())
+                        : (rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress));
+#endif
+                    var rhName = rhState.ToString();
+                    return new ResponseOnlineState { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
+                        Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})" };
+                }
                 var provider = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
                 if (provider == null)
                 {
@@ -108,7 +135,7 @@ namespace TiaMcpServer.Siemens
                     };
                 }
 
-                using var passwordScope = AttachPasswordHandler(provider.Configuration, password);
+                using var passwordScope = AttachPasswordHandler(provider.Configuration, password, userName, userType, null);
 
                 OnlineState resultState;
                 if (!string.IsNullOrWhiteSpace(ipAddress))
@@ -157,6 +184,17 @@ namespace TiaMcpServer.Siemens
                 _logger?.LogError(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
                 return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = $"GoOnline failed: {ex.Message}" };
             }
+        }
+
+        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (2.7.33; R/H online targets).
+        private static ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
+        {
+            foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
+                foreach (ConfigurationPcInterface pcInterface in EngineeringGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
+                    foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
+                        foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
+                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+            return null;
         }
 
         public ResponseMessage GoOffline(string softwarePath)

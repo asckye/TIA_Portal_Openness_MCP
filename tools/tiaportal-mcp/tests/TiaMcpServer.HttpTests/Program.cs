@@ -344,6 +344,7 @@ internal static class Program
                     HardwareNetworkShapeChecks.Run(Server, shapeCheck);
                     LibraryDeepShapeChecks.Run(Server, shapeCheck);
                     SecurityDeepShapeChecks.Run(Server, shapeCheck);
+                    BaseLeftoversShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

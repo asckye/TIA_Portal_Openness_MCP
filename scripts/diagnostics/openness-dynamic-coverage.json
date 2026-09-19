@@ -168,6 +168,12 @@
       "tool": "CompareLibraries / CompareProjects (library targets)",
       "mechanism": "ILibrary.CompareToLibrary result walked by reflection (RootElement / Elements / ComparisonResult / DetailedInformation / Left / Right / LeftName / RightName) so the same walker serves software and library compare trees",
       "verified": "2.7.18 shape checks V20/V21; 2.7.32 real project 2026-09-18 (AutomaticDipCoatingMachine): CompareLibraries project library vs system library Buttons-and-Switches reached LibraryCompareResult with 396 elements (LeftMissing 229 / ObjectsDifferent 1 / RightMissing 166), rows carry localized paths; the 2.7.31 attempt had failed on the ProjectLibrary.Name defect"
+    },
+    {
+      "pattern": "Siemens.Engineering.HW.CustomDataTypes.*",
+      "tool": "ReadDeviceItemChannels / UpdateDeviceItemChannel / ManageNetworkDomain / ManageSyslogServers and every other dynamic-attribute reader (GetAttribute / GetAttributes)",
+      "mechanism": "TableData / StructuredData are the value types of custom (GSD) device attributes; the PublicAPI exposes no owner property, they only arrive as GetAttribute results and are rendered by EngineeringScalarProperties.Json / Read",
+      "verified": "2.7.33 shape checks only (no GSD device with table attributes on the reference project)"
     }
   ]
 }

@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
                     return "Public certificate metadata listed; no private key exported.";
                 }
                 Certificate? certificate = null;
-                if (action != "create" && action != "import" && action != "unassign")
+                if (action != "create" && action != "import" && action != "unassign" && action != "template")
                 {
                     var matches = store.Certificates.Where(c => c.Id.ToString() == certificateId).Take(2).ToArray();
                     if (matches.Length != 1) throw new InvalidOperationException("Exact certificate ID did not uniquely match.");

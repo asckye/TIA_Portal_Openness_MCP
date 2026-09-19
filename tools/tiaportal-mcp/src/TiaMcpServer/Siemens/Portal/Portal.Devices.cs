@@ -626,18 +626,25 @@ namespace TiaMcpServer.Siemens
 
         private static HardwareCatalogCandidate? CatalogEntryToHardwareCandidate(object entry, string keyword)
         {
-            var c = new HardwareCatalogCandidate
-            {
-                Source = "HardwareCatalog",
-                Keyword = keyword,
-                ArticleNumber = TryGetPropertyValue(entry, "ArticleNumber")?.ToString(),
-                CatalogPath = TryGetPropertyValue(entry, "CatalogPath")?.ToString(),
-                Description = TryGetPropertyValue(entry, "Description")?.ToString(),
-                TypeIdentifier = TryGetPropertyValue(entry, "TypeIdentifier")?.ToString(),
-                TypeIdentifierNormalized = TryGetPropertyValue(entry, "TypeIdentifierNormalized")?.ToString(),
-                TypeName = TryGetPropertyValue(entry, "TypeName")?.ToString(),
-                Version = TryGetPropertyValue(entry, "Version")?.ToString()
-            };
+            // 2.7.33: the official HardwareCatalog.Find rows are typed CatalogEntry objects; the reflective read stays as fallback.
+            var c = entry is global::Siemens.Engineering.HW.HardwareCatalog.CatalogEntry typed
+                ? new HardwareCatalogCandidate
+                {
+                    Source = "HardwareCatalog", Keyword = keyword, ArticleNumber = typed.ArticleNumber, CatalogPath = typed.CatalogPath, Description = typed.Description,
+                    TypeIdentifier = typed.TypeIdentifier, TypeIdentifierNormalized = typed.TypeIdentifierNormalized, TypeName = typed.TypeName, Version = typed.Version
+                }
+                : new HardwareCatalogCandidate
+                {
+                    Source = "HardwareCatalog",
+                    Keyword = keyword,
+                    ArticleNumber = TryGetPropertyValue(entry, "ArticleNumber")?.ToString(),
+                    CatalogPath = TryGetPropertyValue(entry, "CatalogPath")?.ToString(),
+                    Description = TryGetPropertyValue(entry, "Description")?.ToString(),
+                    TypeIdentifier = TryGetPropertyValue(entry, "TypeIdentifier")?.ToString(),
+                    TypeIdentifierNormalized = TryGetPropertyValue(entry, "TypeIdentifierNormalized")?.ToString(),
+                    TypeName = TryGetPropertyValue(entry, "TypeName")?.ToString(),
+                    Version = TryGetPropertyValue(entry, "Version")?.ToString()
+                };
             c.Insertable = !string.IsNullOrWhiteSpace(c.TypeIdentifier);
 
             var haystack = string.Join(" ", new[]

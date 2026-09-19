@@ -26,6 +26,15 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? ReferenceLocation { get; set; }
         public string? ReferenceType { get; set; }
         public string? Access { get; set; }
+        // 2.7.33: typed CrossReference.SourceObject / ReferenceObject fields (null on the reflective fallback path).
+        public string? SourceTypeName { get; set; }
+        public string? SourceAddress { get; set; }
+        public string? SourceDevice { get; set; }
+        public string? SourceObjectClass { get; set; }
+        public string? ReferenceTypeName { get; set; }
+        public string? ReferenceAddress { get; set; }
+        public string? ReferenceDevice { get; set; }
+        public string? ReferenceObjectClass { get; set; }
     }
 
     public class NetworkAttribute

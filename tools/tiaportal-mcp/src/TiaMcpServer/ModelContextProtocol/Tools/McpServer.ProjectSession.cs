@@ -69,7 +69,10 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "OpenProject"), Description("[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: Connect. Closes any currently open project first. After success, call GetProjectTree to explore its structure.")]
         public static ResponseOpenProject OpenProject(
             [Description("path: defines the path where to the project/session")] string path,
-            [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false)
+            [Description("closeForeignProject: DEFAULT false. If TIA already has a project open that this session did not open, the call is REFUSED rather than closing the user's work. Only pass true after the user has agreed to close it.")] bool closeForeignProject = false,
+            [Description("umacUserName: optional user for a UMAC-protected project (Projects.OpenWithUpgrade(file, UmacDelegate)); give it together with umacPassword.")] string umacUserName = "",
+            [Description("umacPassword: password of umacUserName; converted to SecureString, never logged or echoed.")] string umacPassword = "",
+            [Description("umacUserType: Project (default) or Global (UMC user).")] string umacUserType = "")
         {
             try
             {
@@ -102,7 +105,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (extension.StartsWith(".ap"))
                 {
-                    success = Portal.OpenProject(path, closeForeignProject);
+                    success = Portal.OpenProject(path, closeForeignProject, umacUserName, umacPassword, umacUserType);
                 }
                 if (extension.StartsWith(".als"))
                 {

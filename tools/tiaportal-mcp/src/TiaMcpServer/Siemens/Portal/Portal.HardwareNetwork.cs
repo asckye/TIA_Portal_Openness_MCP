@@ -49,9 +49,33 @@ namespace TiaMcpServer.Siemens
             return new JsonObject { ["values"] = values, ["failures"] = failures };
         }
         // Dynamic attribute writes: the CLR type is taken from the current value (enum names, numbers, booleans), then read back.
+        // 2.7.33: two or more attributes go through SetAttributes(pairs, AttributeDelegate) - the official error handler reports
+        // AttributeNameUnsupported / AttributeReadOnly / AttributeTypeUnsupported / AttributeValueUnsupported per attribute
+        // (Name, Message) and answers Ignore so the remaining attributes are still written; each value is then read back.
         private static void SetDynamicAttributes(IEngineeringObject target, JsonObject attributes, JsonObject meta)
         {
             var applied = new JsonArray(); meta["appliedAttributes"] = applied;
+            if (attributes.Count > 1)
+            {
+                var pairs = new List<KeyValuePair<string, object>>(); var refused = new JsonArray(); meta["refusedAttributes"] = refused;
+                foreach (var pair in attributes)
+                {
+                    object? current = null; try { current = target.GetAttribute(pair.Key); } catch { }
+                    pairs.Add(new KeyValuePair<string, object>(pair.Key, EngineeringScalarProperties.ConvertValue(pair.Value, current?.GetType() ?? typeof(object))!));
+                }
+                AttributeDelegate handler = configuration => { AttributeConfiguration problem = configuration; refused.Add(new JsonObject { ["attribute"] = problem.Name, ["kind"] = problem.GetType().Name, ["message"] = problem.Message }); problem.CurrentSelection = AttributeChoiceSelection.Ignore; };
+                meta["mayHaveChanged"] = true;
+                target.SetAttributes(pairs, handler);
+                var refusedNames = new HashSet<string>(refused.Select(r => r!["attribute"]!.GetValue<string>()), StringComparer.Ordinal);
+                foreach (var pair in pairs)
+                {
+                    if (refusedNames.Contains(pair.Key)) continue;
+                    applied.Add(pair.Key);
+                    if (!EngineeringScalarProperties.SameValue(target.GetAttribute(pair.Key), pair.Value)) throw new InvalidOperationException("Attribute readback differs: " + pair.Key + ". Changes are not rolled back.");
+                }
+                if (refused.Count > 0) throw new InvalidOperationException("TIA refused " + refused.Count + " attribute(s) (see refusedAttributes); the others were written and read back.");
+                return;
+            }
             foreach (var pair in attributes)
             {
                 object? current = null; try { current = target.GetAttribute(pair.Key); } catch { }

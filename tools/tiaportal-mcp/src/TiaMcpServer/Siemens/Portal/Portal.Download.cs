@@ -8,6 +8,8 @@ using Siemens.Engineering.Download.Configurations;
 using Siemens.Engineering.Hmi;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.Online.Configurations;
+using Siemens.Engineering.Upload;
+using Siemens.Engineering.Upload.Configurations;
 using Siemens.Engineering.SW.Alarm;
 using Siemens.Engineering.SW.OpcUa;
 using Siemens.Engineering.HmiUnified;
@@ -54,11 +56,14 @@ namespace TiaMcpServer.Siemens
             string promptAnswersJson = "{}",
             string? moduleAccessPassword = null,
             string? blockBindingPassword = null,
-            string? masterSecretPassword = null)
+            string? masterSecretPassword = null,
+            string rhTarget = "")
         {
             _logger?.LogInformation(
                 "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
+            try { rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget); }
+            catch (ArgumentException ex) { return new ResponseDownload { Ok = false, Message = ex.Message, Errors = new[] { ex.Message } }; }
 
             if (IsProjectNull())
                 return new ResponseDownload { Ok = false, Message = "No project open." };
@@ -119,6 +124,20 @@ namespace TiaMcpServer.Siemens
 
                 object? downloadConfig = routeDiagnostics.Configuration ?? configuration;
                 _logger?.LogInformation("DownloadToPlc: PG/PC route = {Route}", routeDiagnostics.Description);
+
+                if (rhTarget.Length > 0)
+                {
+                    // 2.7.33: R/H systems download to one CPU at a time through RHDownloadProvider (typed overloads; no reflection).
+                    RHDownloadProvider rh = ResolvePlcService<RHDownloadProvider>(softwarePath, plcSoftware)
+                        ?? throw new PortalException(PortalErrorCode.NotFound, "RHDownloadProvider service not available on this PLC (rhTarget applies to R/H systems only).");
+                    var rhConfiguration = downloadConfig as IConfiguration ?? throw new PortalException(PortalErrorCode.InvalidState, "No applicable route (IConfiguration) for the R/H download; give pgPcInterface/targetIpAddress.");
+                    DownloadResult rhResult = rhTarget == "primary"
+                        ? rh.DownloadToPrimary(rhConfiguration, preDelegate, postDelegate, DownloadOptions.Software)
+                        : rh.DownloadToBackup(rhConfiguration, preDelegate, postDelegate, DownloadOptions.Software);
+                    var rhResponse = BuildDownloadResponse(rhResult, softwarePath, routeDiagnostics, promptPolicy);
+                    rhResponse.Message = "[R/H " + rhTarget + "] " + rhResponse.Message;
+                    return rhResponse;
+                }
 
                 // Resolve the 4-arg overload Download(IConfiguration, pre, post, DownloadOptions)
                 // and invoke via reflection (the parameter is typed IConfiguration).
@@ -199,7 +218,8 @@ namespace TiaMcpServer.Siemens
             var type = config.GetType();
             var typeName = type.Name;
             string? message = null;
-            try { message = type.GetProperty("Message")?.GetValue(config) as string; } catch { }
+            // 2.7.33: the official base classes carry the prompt text; the 43 concrete V21 prompt classes derive from them.
+            try { message = config switch { DownloadConfiguration download => download.Message, UploadConfiguration upload => upload.Message, _ => type.GetProperty("Message")?.GetValue(config) as string }; } catch { }
             _logger?.LogDebug("ApplyDownloadPrompt: {TypeName}", typeName);
             try
             {
@@ -207,17 +227,19 @@ namespace TiaMcpServer.Siemens
                 var selectionValues = selection != null && selection.PropertyType.IsEnum && selection.CanWrite
                     ? Enum.GetNames(selection.PropertyType) : Array.Empty<string>();
                 var checkedProp = type.GetProperty("Checked");
-                bool hasChecked = checkedProp != null && checkedProp.CanWrite && checkedProp.PropertyType == typeof(bool);
-                bool hasPassword = type.GetMethod("SetPassword", new[] { typeof(SecureString) }) != null;
+                bool hasChecked = config is DownloadCheckConfiguration || checkedProp != null && checkedProp.CanWrite && checkedProp.PropertyType == typeof(bool);
+                bool hasPassword = config is DownloadPasswordConfiguration || config is UploadPasswordConfiguration || type.GetMethod("SetPassword", new[] { typeof(SecureString) }) != null;
 
                 var answer = policy.Decide(typeName, selectionValues, hasChecked, hasPassword);
                 switch (answer.Kind)
                 {
                     case DownloadPromptPolicy.AnswerKind.Selection:
-                        selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
+                        if (config is SelectiveDeleteDownload selectiveDelete) selectiveDelete.CurrentSelection = (SelectiveDeleteDataSelections)Enum.Parse(typeof(SelectiveDeleteDataSelections), answer.Value!, ignoreCase: true);
+                        else selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
                         break;
                     case DownloadPromptPolicy.AnswerKind.Checked:
-                        checkedProp!.SetValue(config, answer.Value == "true");
+                        if (config is DownloadCheckConfiguration check) check.Checked = answer.Value == "true";
+                        else checkedProp!.SetValue(config, answer.Value == "true");
                         break;
                     case DownloadPromptPolicy.AnswerKind.Password:
                         var secret = typeName switch
@@ -229,7 +251,9 @@ namespace TiaMcpServer.Siemens
                         var secure = new SecureString();
                         foreach (var c in secret!) secure.AppendChar(c);
                         secure.MakeReadOnly();
-                        type.GetMethod("SetPassword", new[] { typeof(SecureString) })!.Invoke(config, new object[] { secure });
+                        if (config is DownloadPasswordConfiguration downloadPassword) { answer.Note = "secureCommunication=" + downloadPassword.IsSecureCommunication; downloadPassword.SetPassword(secure); }
+                        else if (config is UploadPasswordConfiguration uploadPassword) { answer.Note = "secureCommunication=" + uploadPassword.IsSecureCommunication; uploadPassword.SetPassword(secure); }
+                        else type.GetMethod("SetPassword", new[] { typeof(SecureString) })!.Invoke(config, new object[] { secure });
                         break;
                 }
                 policy.Record(typeName, message, answer);
@@ -602,6 +626,23 @@ namespace TiaMcpServer.Siemens
                 if (obj == null) continue;
                 try
                 {
+                    // 2.7.33: typed result messages (DownloadResultMessage / UploadResultMessage carry State, Message, counts, nested Messages).
+                    if (obj is DownloadResultMessage downloadMessage)
+                    {
+                        var text = downloadMessage.Message ?? string.Empty; var state = downloadMessage.State;
+                        if (state == DownloadResultState.Error && text.Length > 0) errors.Add(text + (downloadMessage.ErrorCount > 1 ? " [" + downloadMessage.ErrorCount + " errors]" : ""));
+                        else if (state == DownloadResultState.Warning && text.Length > 0) warnings.Add(text + (downloadMessage.WarningCount > 1 ? " [" + downloadMessage.WarningCount + " warnings]" : ""));
+                        CollectDownloadMessages(downloadMessage.Messages, errors, warnings);
+                        continue;
+                    }
+                    if (obj is UploadResultMessage uploadMessage)
+                    {
+                        var text = uploadMessage.Message ?? string.Empty; var state = uploadMessage.State;
+                        if (state == UploadResultState.Error && text.Length > 0) errors.Add(text + (uploadMessage.ErrorCount > 1 ? " [" + uploadMessage.ErrorCount + " errors]" : ""));
+                        else if (state == UploadResultState.Warning && text.Length > 0) warnings.Add(text + (uploadMessage.WarningCount > 1 ? " [" + uploadMessage.WarningCount + " warnings]" : ""));
+                        CollectDownloadMessages(uploadMessage.Messages, errors, warnings);
+                        continue;
+                    }
                     var msgText = obj.GetType().GetProperty("Message")?.GetValue(obj) as string ?? string.Empty;
                     var stateObj = obj.GetType().GetProperty("State")?.GetValue(obj);
                     var stateName = stateObj?.ToString() ?? string.Empty;

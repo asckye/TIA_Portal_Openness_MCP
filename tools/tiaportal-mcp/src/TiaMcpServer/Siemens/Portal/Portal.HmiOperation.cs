@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
@@ -48,7 +49,7 @@ namespace TiaMcpServer.Siemens
                 }
                 if (requiresProject && IsProjectNull())
                 {
-                    meta["error"] = "Project is null";
+                    meta["error"] = ProjectNullMessage(meta);
                     meta["status"] = "InvalidState";
                     meta["operationSuccess"] = false;
                     return new ResponseMessage { Message = "Project is null", Meta = meta };
@@ -62,6 +63,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 meta["error"] = ex.ToString();
+                AddExceptionMessageData(ex, meta);
                 meta["operationSuccess"] = false;
                 meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
                 meta["status"] = MigrationRead.Cause(ex) is PortalException pex ? pex.Code.ToString() : "ReadOrWriteFailed";

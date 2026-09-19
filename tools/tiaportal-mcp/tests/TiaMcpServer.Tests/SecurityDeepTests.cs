@@ -43,6 +43,7 @@ namespace TiaMcpServer.Tests
             check(Fails<ArgumentException>(() => SecurityDeepLogic.ValidateSyslogRequest("plc", "createServer", "", O("{}"), "[\"D\"]", "", 514, false, true)), "secdeep: createServer without address refused");
             check(Fails<ArgumentException>(() => SecurityDeepLogic.ValidateSyslogRequest("plc", "read", "S", O("{}"), "[\"D\"]", "", 0, false, true)), "secdeep: name on PLC scope refused");
             check(SecurityDeepLogic.SyslogTransportProtocols.SequenceEqual(new[] { "None", "TLSServerAndClientAuthentication", "TLSOnlyServerAuthentication", "UDP" }) && SecurityDeepLogic.SyslogPlcAttributes.Length == 3, "secdeep: syslog catalogs (official enum names and the three CPU attributes)");
+            check(SecurityDeepLogic.ProjectSyslogCreateRefusal.Contains("preview-only") && SecurityDeepLogic.ProjectSyslogCreateRefusal.Contains("SyslogServerComposition.Create") && SecurityDeepLogic.ProjectSyslogCreateRefusal.Contains("crashed TIA Portal"), "secdeep: project syslog create refusal names the crashing API and the TIA UI alternative (2.7.33)");
 
             // ---- password policies ----
             SecurityDeepLogic.ValidatePolicyRequest("read", "", O("{}"), false, true);

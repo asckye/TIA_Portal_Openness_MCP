@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.33] - 2026-09-19
+
+引擎 2.7.33.0（V20/V21 均重建），工具 389 → 396，默认 lite 56 项不变。详见 [v2.7.33](docs/releases/v2.7.33.md)。2.7.32 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-④：Base 收尾——**`Siemens.Engineering.Base.dll` 的功能类型缺口归零，阶段 3 收口**。
+
+- **修复（2.7.32 真机）**：工程级 `SyslogServerComposition.Create` 让 TIA Portal V21 崩溃——`ManageSyslogServers scope=project create` 只留预览并说明替代路径；`ManagePlcCertificate template` 不再要求 `certificateId`；`RequireUmacDevice` 文案指向设备；`CheckLibraryUpdates` 的 `KeyValuePair` 部件扁平渲染为 `parts`；多 TIA 实例下的改绑守卫（记住显式绑定的工程名，自愈只回绑它，写前核对）。
+- **新增**：`ReadPortalInfo`（`TiaPortalProcess` / `TiaPortalSession` / `TiaPortalProduct`、`TextCategories`、`HwUtilities`）、`ReadTransferRoutes`（`Connection.*` 路由树、R/H 提供者）、`ManageHardwareUtilities`（`ModuleInformationProvider`、OPC UA XML 导出、PSC 卡片导出）、`ManageDeviceServiceObjects`（Web 应用、遥控数据点、动态证书管理与 `CertificateSupportedService`）、`ReadObjectIdentifier`（`ObjectIdentifierProvider.GetIdentifier / Find`）、`ShowObjectInEditor`（`IShowable`）、`RunToolsInTransaction`（`ExclusiveAccess.Transaction`，全部成功才 `CommitOnDispose`）。扩展：`OpenProject` 的 UMAC 凭据（`UmacDelegate` / `UmacCredentials`）、`GoOnline` 的 `userName` / `userType`（`OnlineAuthenticationConfiguration`）与 `rhTarget`、`DownloadToPlc` 的 `rhTarget`（`RHDownloadProvider`）、下载 / 上载提示与结果的官方基类、`SetAttributes(pairs, AttributeDelegate)` 批量属性写、`GetCrossReferences` 的类型化 `SourceObject` / `ReferenceObject` 字段、`CompareProjects` 的 `CompareResultElement`、`SearchHardwareCatalog` 的 `CatalogEntry`、多用户 / 版本控制 / 设置的类型化行、错误 meta 附 `ExceptionMessageData`。
+- **审计**：分母去掉 internal 的 `CompileProvider` / `Private.ProcessHelper`（1,215 类型）；有专用引用 314 → 396，完全未触及 490 → 428，未封装功能类型 230 / 896 → 178 / 735（Base 52 / 161 → 0 / 0）；`HW.CustomDataTypes.*` 登记为动态覆盖。
+- **验证**：离线 1667 项（新增 47 项）；形状检查 V20 1585 / V21 1708（新增 182 / 208 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（五处修复、门户诊断、传输路由、硬件工具、设备服务对象读取、对象标识、事务回滚）。
+
 ## [2.7.32] - 2026-09-18
 
 引擎 2.7.32.0（V20/V21 均重建），工具 386 → 389，默认 lite 56 项不变。详见 [v2.7.32](docs/releases/v2.7.32.md)。2.7.31 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-③：用户管理与安全。

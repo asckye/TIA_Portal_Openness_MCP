@@ -80,6 +80,9 @@ foreach ($xf in $xmlFiles) {
         $kind = $sig.Substring(0,1)
         if ($kind -notin @('T','M','P')) { continue }
         $full = $sig.Substring(2)
+        # 2.7.33: documented but non-public types (Siemens.Engineering.Private.*, Compiler.CompileProvider) cannot be referenced
+        # by an external client; they are excluded from the coverage denominator instead of being counted as untouched.
+        if ($full -like 'Siemens.Engineering.Private.*' -or $full -like 'Siemens.Engineering.Compiler.CompileProvider*') { continue }
         $stem = ($full -split '\(',2)[0]
         if ($kind -eq 'T') { $owner = $stem; $member = '' }
         else {
@@ -172,7 +175,7 @@ $stats = [ordered]@{
     typesDynamic=@($typeSummary | Where-Object status -eq 'DYNAMIC').Count
     typesUntouched=@($typeSummary | Where-Object status -eq 'UNTOUCHED').Count
     dynamicCoverageFile=$(if ($dynamicEntries.Count -gt 0) { $DynamicCoverage } else { '' })
-    caveat='Lexical only. REFERENCED = owner type name AND .member( both appear in engine source. Generic reflection tools can reach unreferenced members dynamically. AddIn.* assemblies excluded.'
+    caveat='Lexical only. REFERENCED = owner type name AND .member( both appear in engine source. Generic reflection tools can reach unreferenced members dynamically. AddIn.* assemblies and documented non-public types (Siemens.Engineering.Private.*, Compiler.CompileProvider) excluded.'
 }
 ($stats | ConvertTo-Json -Depth 3) | Set-Content -Encoding UTF8 (Join-Path $OutputDirectory "$Version-summary.json")
 Write-Host ""

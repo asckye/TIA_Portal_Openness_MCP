@@ -44,6 +44,24 @@ namespace TiaMcpServer.Siemens
         private TiaPortal? _portal;
         private ProjectBase? _project;
 
+        // 2.7.32 real project: with two TIA Portal processes open, the IsProjectNull self-heal re-ran ConnectPortal and silently
+        // bound the OTHER instance's project between two tool calls. The name the caller bound explicitly (AttachToOpenProject /
+        // OpenProject / CreateProject) is remembered; self-heal only rebinds to that name and every write re-checks it.
+        private string? _expectedProjectName;
+        /// <summary>Project name the caller bound explicitly, or null before any explicit bind (Connect resets it).</summary>
+        public string? ExpectedProjectName => _expectedProjectName;
+        private void RememberExpectedProject() { try { _expectedProjectName = _project?.Name; } catch { _expectedProjectName = null; } }
+        /// <summary>Throws when the bound project no longer carries the explicitly bound name (stale handle or silent rebind).</summary>
+        internal void EnsureBoundProjectUnchanged(string operation)
+        {
+            if (_expectedProjectName == null || _project == null) return;
+            string actual;
+            try { actual = _project.Name; }
+            catch (Exception ex) { throw new PortalException(PortalErrorCode.InvalidState, operation + " refused: the bound project handle for '" + _expectedProjectName + "' is stale (" + ex.GetBaseException().Message + "). Re-attach with AttachToOpenProject before writing."); }
+            if (!string.Equals(actual, _expectedProjectName, StringComparison.OrdinalIgnoreCase))
+                throw new PortalException(PortalErrorCode.InvalidState, operation + " refused: the bound project changed from '" + _expectedProjectName + "' to '" + actual + "' since the last explicit AttachToOpenProject / OpenProject (another TIA Portal instance?). Re-attach explicitly before writing.");
+        }
+
         /// <summary>
         /// The currently open project/session, or null. Exposed because some Openness features are
         /// only reachable as a service off the project root (e.g. VersionControlInterface) and the
@@ -217,6 +235,7 @@ namespace TiaMcpServer.Siemens
                 _projectOpenedByUs = false;
                 _session = null;
                 _portal = null;
+                _expectedProjectName = null;
 
                 // connect to running TIA Portal
                 var processes = TiaPortal.GetProcesses();
@@ -462,6 +481,7 @@ namespace TiaMcpServer.Siemens
                 _project = null;
                 _projectOpenedByUs = false;
                 _session = null;
+                _expectedProjectName = null;
                 _portal?.Dispose();
                 _portal = null;
             });
@@ -516,6 +536,11 @@ namespace TiaMcpServer.Siemens
                 }
             }
 
+            if (_expectedProjectName != null && _project != null)
+            {
+                try { if (!string.Equals(_project.Name, _expectedProjectName, StringComparison.OrdinalIgnoreCase)) _logger?.LogWarning("GetState: bound project '{Actual}' differs from the explicitly bound '{Expected}'.", _project.Name, _expectedProjectName); }
+                catch { }
+            }
             return new State
             {
                 IsConnected = IsConnected(),
@@ -524,7 +549,9 @@ namespace TiaMcpServer.Siemens
             };
         }
 
-        public bool AttachToOpenProject(string projectName)
+        public bool AttachToOpenProject(string projectName) => AttachToOpenProject(projectName, 15);
+
+        private bool AttachToOpenProject(string projectName, int timeoutSeconds)
         {
             _logger?.LogInformation($"Attaching to open project: {projectName}");
 
@@ -533,13 +560,14 @@ namespace TiaMcpServer.Siemens
 
             // Connect 之后 TIA 的 LocalSessions / Projects 是异步填充的，
             // 这里轮询最多 15s，避免 Connect+Attach 并行或刚启动时刷出 false。
-            var deadline = DateTime.UtcNow.AddSeconds(15);
+            var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
             while (true)
             {
                 try
                 {
                     if (_portal != null && TryAttachProjectInPortal(_portal, projectName))
                     {
+                        RememberExpectedProject();
                         return true;
                     }
 
@@ -557,6 +585,7 @@ namespace TiaMcpServer.Siemens
                                 }
 
                                 _portal = candidate;
+                                RememberExpectedProject();
                                 return true;
                             }
 
@@ -665,9 +694,27 @@ namespace TiaMcpServer.Siemens
             catch { return "(unnamed)"; }
         }
 
-        public bool OpenProject(string projectPath, bool closeForeignProject = false)
+        public bool OpenProject(string projectPath, bool closeForeignProject = false) => OpenProject(projectPath, closeForeignProject, "", "", "");
+
+        // 2.7.33: protected projects open through the UmacDelegate overloads (Projects.OpenWithUpgrade(file, umacDelegate)); the
+        // credentials go in as UmacCredentials.Name / Type / SetPassword(SecureString) and are never logged.
+        public bool OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType)
         {
-            _logger?.LogInformation($"Opening project: {projectPath}");
+            _logger?.LogInformation($"Opening project: {projectPath} (credentials={(string.IsNullOrEmpty(umacUserName) ? "none" : "umac")})");
+            BaseLeftoversLogic.ValidateUmacCredentials(umacUserName, umacPassword, umacUserType);
+            UmacDelegate? umacDelegate = null; SecureString? umacSecret = null;
+            if (!string.IsNullOrEmpty(umacUserName))
+            {
+                umacSecret = PlcBlockServicesLogic.ToSecureString(umacPassword);
+                var type = (UmacUserType)Enum.Parse(typeof(UmacUserType), string.IsNullOrEmpty(umacUserType) ? "Project" : umacUserType);
+                umacDelegate = credentials => { UmacCredentials umac = credentials; umac.Name = umacUserName; umac.Type = type; umac.SetPassword(umacSecret); };
+            }
+            try { return OpenProjectCore(projectPath, closeForeignProject, umacDelegate); }
+            finally { umacSecret?.Dispose(); }
+        }
+
+        private bool OpenProjectCore(string projectPath, bool closeForeignProject, UmacDelegate? umacDelegate)
+        {
 
             var foreign = ForeignOpenProjectName();
             if (foreign != null && !closeForeignProject)
@@ -731,8 +778,9 @@ namespace TiaMcpServer.Siemens
 
                     try
                     {
-                        _project = _portal?.Projects.OpenWithUpgrade(fi);
+                        _project = umacDelegate == null ? _portal?.Projects.OpenWithUpgrade(fi) : _portal?.Projects.OpenWithUpgrade(fi, umacDelegate);
                         _projectOpenedByUs = true;
+                        RememberExpectedProject();
                     }
                     catch (Exception ex)
                     {
@@ -741,7 +789,7 @@ namespace TiaMcpServer.Siemens
                         _projectOpenedByUs = false;
                     }
 
-                    if (_project != null) return true;
+                    if (_project != null) { RememberExpectedProject(); return true; }
 
                     // Fallback: some environments expose Projects.Open(FileInfo) instead.
                     try
@@ -757,6 +805,7 @@ namespace TiaMcpServer.Siemens
                                 {
                                     _project = pb;
                                     LastConnectError = null;
+                                    RememberExpectedProject();
                                     return true;
                                 }
                             }
@@ -822,6 +871,7 @@ namespace TiaMcpServer.Siemens
                 var created = _portal!.Projects.Create(di, projectName);
                 _project = created;
                 _projectOpenedByUs = true;
+                RememberExpectedProject();
                 return _project != null;
             }
             catch (Exception ex)
@@ -902,6 +952,7 @@ namespace TiaMcpServer.Siemens
             (_project as Project)?.Close();
             _project = null;
             _projectOpenedByUs = false;
+            _expectedProjectName = null;
 
             return true;
         }

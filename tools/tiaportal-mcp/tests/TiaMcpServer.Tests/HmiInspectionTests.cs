@@ -18,6 +18,8 @@ namespace TiaMcpServer.Siemens
         private void InvalidateHmiSoftwareCache() { FixtureCacheClears++; }
         internal object? CurrentProject=>FixtureRoot;
         private bool IsProjectNull()=>FixtureRoot==null;
+        private string ProjectNullMessage(JsonObject meta)=>"Project is null";
+        private static void AddExceptionMessageData(Exception ex, JsonObject meta) { }
         private IDisposable AcquireHmiEditAccess()=>new FixtureLease();
         private sealed class FixtureLease:IDisposable { public void Dispose(){} }
         private object ResolveHmiSoftwareOrThrow(string path)

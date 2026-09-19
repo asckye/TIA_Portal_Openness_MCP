@@ -3597,14 +3597,20 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseOnlineState GoOnline(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.")] string ipAddress = "",
-            [Description("password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.")] string password = "")
+            [Description("password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.")] string password = "",
+            [Description("userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.")] string userName = "",
+            [Description("userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.")] string userType = "",
+            [Description("rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.")] string rhTarget = "")
         {
             try
             {
                 return Portal.GoOnline(
                     softwarePath,
                     string.IsNullOrWhiteSpace(ipAddress) ? null : ipAddress,
-                    string.IsNullOrWhiteSpace(password) ? null : password);
+                    string.IsNullOrWhiteSpace(password) ? null : password,
+                    string.IsNullOrWhiteSpace(userName) ? null : userName,
+                    string.IsNullOrWhiteSpace(userType) ? null : userType,
+                    rhTarget ?? "");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -3902,7 +3908,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("promptAnswersJson: optional JSON object of explicit answers for download prompts by type name, e.g. {\"ResetModule\":\"DeleteAll\",\"OverwriteHmiData\":true}. Selection prompts take an enum name, checkbox prompts take true/false. Without an entry, destructive prompts (InitializeMemory, OverwriteOnMemoryCard, OverwriteSystemData, ResetModule, SwitchBackupToPrimary, ProtectionLevelChanged) default to NoAction/NoChange and prompts without a known default stay unanswered; Meta.promptsAnswered / Meta.promptsUnanswered list what happened.")] string promptAnswersJson = "{}",
             [Description("moduleAccessPassword: optional password for ModuleReadAccessPassword / ModuleWriteAccessPassword prompts; defaults to 'password' when empty. Never logged.")] string moduleAccessPassword = "",
             [Description("blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.")] string blockBindingPassword = "",
-            [Description("masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.")] string masterSecretPassword = "")
+            [Description("masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.")] string masterSecretPassword = "",
+            [Description("rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup.")] string rhTarget = "")
         {
             try
             {
@@ -3919,7 +3926,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     string.IsNullOrWhiteSpace(promptAnswersJson) ? "{}" : promptAnswersJson,
                     string.IsNullOrWhiteSpace(moduleAccessPassword) ? null : moduleAccessPassword,
                     string.IsNullOrWhiteSpace(blockBindingPassword) ? null : blockBindingPassword,
-                    string.IsNullOrWhiteSpace(masterSecretPassword) ? null : masterSecretPassword);
+                    string.IsNullOrWhiteSpace(masterSecretPassword) ? null : masterSecretPassword,
+                    rhTarget ?? "");
 
                 if (result.Ok == false && result.Errors != null && result.Errors.Length > 0)
                     throw new McpException(

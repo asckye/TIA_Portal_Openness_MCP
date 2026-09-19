@@ -86,12 +86,14 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var found = new List<Workspace>();
             var pending = new Stack<WorkspaceGroup>();
-            pending.Push(Keep(vci.WorkspaceGroup));
+            // 2.7.33: the root is the typed WorkspaceSystemGroup, its descendants are WorkspaceUserGroups (Name / Groups / Workspaces).
+            WorkspaceSystemGroup root = Keep(vci.WorkspaceGroup);
+            pending.Push(root);
             while (pending.Count > 0)
             {
                 var g = pending.Pop();
                 foreach (var w in Keep(g.Workspaces)) found.Add(Keep(w));
-                foreach (var sub in Keep(g.Groups)) pending.Push(Keep(sub));
+                foreach (WorkspaceUserGroup sub in Keep(g.Groups)) pending.Push(Keep(sub));
             }
             return found;
         }

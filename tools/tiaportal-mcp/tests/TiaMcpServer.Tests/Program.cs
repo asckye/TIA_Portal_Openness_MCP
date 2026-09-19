@@ -115,6 +115,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== 安全/UMC 深层纯逻辑：syslog（工程/PLC）请求门控、密码策略目标与范围、UMC 用户/组/服务器请求与凭据规则、证书模板与 SAN、匿名用户动作 ==");
             SecurityDeepTests.Run(Check);
 
+            Console.WriteLine("== Base 收尾纯逻辑：硬件工具、设备服务对象（Web 应用 / 遥控数据点 / 动态证书）、对象选择、事务调用清单、UMAC / 在线凭据、R/H 目标 ==");
+            BaseLeftoversTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

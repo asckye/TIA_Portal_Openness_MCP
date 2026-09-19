@@ -6434,6 +6434,13 @@ namespace TiaMcpServer.Siemens
         private static List<ModelContextProtocol.CrossReferenceEntry> TryFlattenCrossReferenceResult(object crossReferenceResult, string sourcePathFallback)
         {
             var items = new List<ModelContextProtocol.CrossReferenceEntry>();
+            if (crossReferenceResult is global::Siemens.Engineering.CrossReference.CrossReferenceResult typedResult)
+            {
+                // 2.7.33: typed walk - SourceObject (Name/Path/TypeName/Address/Device/Children/References/UnderlyingObject) and
+                // ReferenceObject (same scalars + Locations/UnderlyingObject) straight from the official CrossReference namespace.
+                try { FlattenTypedSources(typedResult.Sources, sourcePathFallback, items, 0); } catch { }
+                return items;
+            }
 
             try
             {
@@ -6492,6 +6499,33 @@ namespace TiaMcpServer.Siemens
             }
 
             return items;
+        }
+
+        private static void FlattenTypedSources(global::Siemens.Engineering.CrossReference.SourceObjectComposition sources, string sourcePathFallback, List<ModelContextProtocol.CrossReferenceEntry> items, int depth)
+        {
+            if (depth > 16) return;
+            foreach (global::Siemens.Engineering.CrossReference.SourceObject source in EngineeringGroupOperations.Items(sources).Cast<global::Siemens.Engineering.CrossReference.SourceObject>())
+            {
+                string? sourceName = source.Name, sourcePath = source.Path ?? sourcePathFallback, sourceType = source.TypeName, sourceAddress = source.Address, sourceDevice = source.Device;
+                string? sourceClass = null; try { sourceClass = source.UnderlyingObject?.GetType().Name; } catch { }
+                foreach (global::Siemens.Engineering.CrossReference.ReferenceObject reference in EngineeringGroupOperations.Items(source.References).Cast<global::Siemens.Engineering.CrossReference.ReferenceObject>())
+                {
+                    string? referenceClass = null; try { referenceClass = reference.UnderlyingObject?.GetType().Name; } catch { }
+                    var locations = EngineeringGroupOperations.Items(reference.Locations).ToArray();
+                    if (locations.Length == 0)
+                    {
+                        items.Add(new ModelContextProtocol.CrossReferenceEntry { SourceName = sourceName, SourcePath = sourcePath, SourceTypeName = sourceType, SourceAddress = sourceAddress, SourceDevice = sourceDevice, SourceObjectClass = sourceClass,
+                            ReferenceName = reference.Name, ReferencePath = reference.Path, ReferenceTypeName = reference.TypeName, ReferenceAddress = reference.Address, ReferenceDevice = reference.Device, ReferenceObjectClass = referenceClass });
+                        continue;
+                    }
+                    foreach (var location in locations)
+                        items.Add(new ModelContextProtocol.CrossReferenceEntry { SourceName = sourceName, SourcePath = sourcePath, SourceTypeName = sourceType, SourceAddress = sourceAddress, SourceDevice = sourceDevice, SourceObjectClass = sourceClass,
+                            ReferenceName = reference.Name, ReferencePath = reference.Path, ReferenceTypeName = reference.TypeName, ReferenceAddress = reference.Address, ReferenceDevice = reference.Device, ReferenceObjectClass = referenceClass,
+                            LocationName = location.GetType().GetProperty("Name")?.GetValue(location)?.ToString(), ReferenceLocation = location.GetType().GetProperty("ReferenceLocation")?.GetValue(location)?.ToString(),
+                            ReferenceType = location.GetType().GetProperty("ReferenceType")?.GetValue(location)?.ToString(), Access = location.GetType().GetProperty("Access")?.GetValue(location)?.ToString() });
+                }
+                try { FlattenTypedSources(source.Children, sourcePathFallback, items, depth + 1); } catch { }
+            }
         }
 
         public List<string>? GetPlcExternalSources(string softwarePath)
@@ -6940,6 +6974,7 @@ namespace TiaMcpServer.Siemens
             // Compile of its own — for Unified the compilable object is the owning device item,
             // which is what the TIA UI compiles as well.
             ICompilable compileService = ResolveCompileService(softwareContainer, softwarePath, out var targetKind);
+            // Siemens.Engineering.Compiler.CompileProvider is documented but internal in the PublicAPI; ICompilable is the public entry.
 
             try
             {
@@ -6947,6 +6982,12 @@ namespace TiaMcpServer.Siemens
 
                 if (result == null)
                     throw new PortalException(PortalErrorCode.OpennessError, "ICompilable.Compile() returned null");
+                try
+                {
+                    foreach (CompilerResultMessage top in EngineeringGroupOperations.Items(result.Messages).Cast<CompilerResultMessage>().Take(20))
+                        _logger?.LogInformation("Compile {Path}: {State} {Description} ({Errors} errors / {Warnings} warnings, {Time}, {Nested} nested)", top.Path, top.State, top.Description, top.ErrorCount, top.WarningCount, top.DateTime, EngineeringGroupOperations.Items(top.Messages).Count());
+                }
+                catch { }
 
                 return result;
             }

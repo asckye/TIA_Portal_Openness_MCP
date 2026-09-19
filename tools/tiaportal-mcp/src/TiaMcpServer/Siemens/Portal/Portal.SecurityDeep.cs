@@ -40,6 +40,7 @@ namespace TiaMcpServer.Siemens
                 var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson"); var attributes = HardwareNetworkLogic.ParseObject(attributesJson, "attributesJson");
                 SecurityDeepLogic.ValidateSyslogRequest(scope, action, name, properties, devicePathJson, serverAddress, serverPort, confirmDelete, dryRun);
                 if (attributes.Count > 0 && (scope != "plc" || action != "update")) throw new ArgumentException("attributesJson (SysLogAutoAcceptClient / SysLogClientCertificateId / SysLogTrustedCertificateIds) applies to scope=plc action=update only.");
+                if (scope == "project" && action == "create" && !dryRun) throw new NotSupportedException(SecurityDeepLogic.ProjectSyslogCreateRefusal);
                 bool write = action != "read" && !dryRun;
                 using var access = write ? AcquireHmiEditAccess() : null;
                 meta["scope"] = scope; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -102,7 +103,7 @@ namespace TiaMcpServer.Siemens
                     if (action == "unassignModule" && !assigned) throw new InvalidOperationException("Module is not assigned to this syslog server.");
                 }
                 var prepared = EngineeringScalarProperties.Prepare(typeof(SyslogServer), properties);
-                if (!write) return "Project syslog server " + action + " preview; nothing changed.";
+                if (!write) return action == "create" ? "Project syslog server create preview (real creation is disabled: " + SecurityDeepLogic.ProjectSyslogCreateRefusal + ")" : "Project syslog server " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {
