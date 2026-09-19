@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-19 00:50:59
-- 引擎文件版本：2.7.35.0
-- 工具数量：408
+- 生成时间：2026-09-19 01:57:30
+- 引擎文件版本：2.7.36.0
+- 工具数量：409
 
 ## 读法
 
@@ -15,7 +15,7 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 123 |
+| `READ` | 读取已打开工程，不改动 | 124 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 153 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
@@ -31,7 +31,7 @@
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 35 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (7)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 57 | `Project` (24)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
-| `plc` | PLC 软件 / PLC software | 105 | `PLC-Software` (71)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
+| `plc` | PLC 软件 / PLC software | 106 | `PLC-Software` (71)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 55 | `Hardware` (55) |
 | `hmi` | HMI 人机界面 / HMI | 115 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (14)、`HMI-Library` (6) |
@@ -202,7 +202,7 @@
 | `RunOfflineReleaseValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. |
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markersJson default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 
-## plc — PLC 软件 / PLC software（105）
+## plc — PLC 软件 / PLC software（106）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
@@ -309,7 +309,7 @@
 | `ImportPlcAlarmInstanceTexts` | L2 | WRITE | Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download. |
 | `ManagePlcAlarmTextList` | L2 | WRITE | read/createFromMasterCopy/delete PLC alarm text lists (PlcAlarmTextlistGroup system+user lists; entries are not exposed by Openness). read paginates Name/ID/ListRange, optionally one exact name. createFromMasterCopy needs an open library name and exact master copy path; copyMode ThrowIfExists/Rename/Replace optional. delete refuses system lists and requires confirmDelete=true besides dryRun=false; absence verified. Default preview, Offline PLC for execution; no save/compile/download. |
 
-### [PLC-TechnologyObjects]（7）
+### [PLC-TechnologyObjects]（8）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -318,8 +318,9 @@
 | `ExportTechnologyObject` | L2 | FILE* | [PreCondition:Connect+OpenProject] Export a single Technology Object (axis, cam, measuring input, etc.) to an XML file. The XML can be inspected, modified offline, and re-imported with ImportTechnologyObject. Use GetTechnologyObjects first to confirm the exact TO name. |
 | `ExportTechnologyObjectsToDirectory` | L2 | FILE* | [PreCondition:Connect+OpenProject] Batch-export all (or regex-filtered) Technology Objects to XML files in a directory. Each TO is saved as '<TOName>.xml'. Returns lists of exported names and any failures. Use regexName to filter by TO name, e.g. 'Axis_.*' for all axes. |
 | `GetTechnologyObjects` | L2 | READ* | [PreCondition:Connect+OpenProject] List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. Returns each TO's Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion). Use this to discover TO names before ExportTechnologyObject. No tool returns axis/TO parameter values directly — export the TO with ExportTechnologyObject and read the XML file. TOs are stored as TechnologicalInstanceDB instances in the TechnologicalObjectGroup. |
-| `ManageMotionAxis` | L2 | WRITE | Native Motion TO operations beyond cam/bit-address tools: add/removeMasterValue (aspect synchronous*/conveyor*/superimposingSetPoint, name=exact master TO path), create/update/deleteMapping (aspect toMapping/dbMemberMapping, name=alias, propertiesJson), connect/disconnect (aspect actor/sensor/torque/encoder/measuringInput/outputCam; targetJson selects exactly one native overload: devicePath+itemPath[+secondItemPath\|channelIndex], dbMemberPath, plcTagPath, address, or encoder bit addresses), connectIdent (deviceItem target). Exact names; Offline PLC for real writes; deletes need confirmDelete=true. Default preview; native readback; no save/compile/download, never commands a drive. |
-| `ReadMotionAxisConfiguration` | L2 | READ | Exact Motion technology object (axis/cam/kinematics/output cam/measuring input/ident) read: scalar object values plus every native Motion/Ident service it provides (hardware interfaces, master-value couplings, interpreter mappings, cam/interpreter capabilities). Absent services are reported by state. Optional paginated parameters. No drive or motion command. |
+| `ManageMotionAxis` | L2 | WRITE | Native Motion TO operations beyond cam/bit-address tools: add/removeMasterValue (aspect synchronous*/conveyor*/superimposingSetPoint, name=exact master TO path), create/update/deleteMapping (aspect toMapping/dbMemberMapping, name=alias, propertiesJson), connect/disconnect (aspect actor/sensor/torque/encoder/measuringInput/outputCam; targetJson selects exactly one native overload: devicePath+itemPath[+secondItemPath\|channelIndex\|channelType+channelIoType+channelNumber for Connect(Channel)], dbMemberPath, plcTagPath, address, or encoder bit addresses; typed AxisEncoderHardwareConnectionInterface / TorqueHardwareConnectionInterface / MeasuringInput / OutputCam calls with typed readback rows), connectIdent (deviceItem target). Exact names; Offline PLC for real writes; deletes need confirmDelete=true. Default preview; native readback; no save/compile/download, never commands a drive. |
+| `ReadMotionAxisConfiguration` | L2 | READ | Exact Motion technology object (axis/cam/kinematics/output cam/measuring input/ident) read: scalar object values plus every native Motion/Ident service it provides (hardware interfaces, master-value couplings, interpreter mappings, cam/interpreter capabilities) and, under typed, the same data as typed rows (AxisHardwareConnectionProvider actor / sensors / torque, encoder, measuring input, output cam, master values, V21 TOMapping / DBMemberMapping / Ident). Absent services are reported by state. Optional paginated parameters. No drive or motion command. |
+| `ReadTechnologyObjectTree` | L2 | READ | Typed read of the technology objects of one exact PLC: PlcSoftware.TechnologicalObjectGroup (or the user group at groupPath) as a TechnologicalInstanceDBGroup tree - Name, TechnologicalObjects (TechnologicalInstanceDB Name / Number / OfSystemLibElement / OfSystemLibVersion / IsConsistent / parameter count) and Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value rows (first 500 per object); includeMotionView adds the typed Motion / Ident view of the root group's objects (actor / sensor / torque / encoder interfaces with modules, addresses, DB member paths, tags and channels; measuring input and output cam connections; master-value couplings; V21 interpreter TO / DB member mappings, superimposing axes and Ident device). No modification, no drive or motion command. |
 
 ### [PLC-OpcUA]（6）
 
