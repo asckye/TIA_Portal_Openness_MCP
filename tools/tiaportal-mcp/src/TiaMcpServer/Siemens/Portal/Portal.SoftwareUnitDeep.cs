@@ -43,6 +43,13 @@ namespace TiaMcpServer.Siemens
             PlcUnitComposition units = group.Units;
             return units.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact software unit not found: " + name + " (available: " + string.Join(", ", EngineeringGroupOperations.Items(units).Cast<PlcUnit>().Select(u => u.Name)) + ").");
         }
+        // 2.7.34 real project: after PlcUnitRelationComposition.Create the same composition proxy answers Find(relatedObject) with null,
+        // and after PlcUnitRelation.Delete it throws EngineeringObjectDisposedException - readback must re-navigate from the unit group.
+        private static bool RelationExists(PlcUnitSystemGroup group, string unitKind, string unitName, string relatedUnit)
+        {
+            PlcUnitRelationComposition fresh = ExactUnit(group, unitKind, unitName).Relations;
+            return EngineeringGroupOperations.Items(fresh).Cast<PlcUnitRelation>().Any(r => string.Equals(r.RelatedObject, relatedUnit, StringComparison.OrdinalIgnoreCase));
+        }
         // Object roots for paths: the PLC itself, or a unit's own block / type system group.
         private PlcUnitBase? OptionalUnit(PlcSoftware plc, string unitName, string unitKind)
             => string.IsNullOrEmpty(unitName) ? null : ExactUnit(RequireUnitProvider(plc).UnitGroup, unitKind, unitName);
@@ -192,15 +199,15 @@ namespace TiaMcpServer.Siemens
                     if (!writing) return "Relation creation preview; no changes.";
                     meta["mayHaveChanged"] = true;
                     PlcUnitRelation created = relations.Create(relatedUnit, kind); meta["apiCallSuccess"] = true;
-                    if (relations.Find(relatedUnit) == null) throw new InvalidOperationException("Relation absent after Create.");
                     meta["relationAfter"] = RelationRow(created);
+                    if (!RelationExists(group, unitKind, name, relatedUnit)) throw new InvalidOperationException("Relation absent after Create (fresh readback from the unit group).");
                     return "Unit relation created and verified by readback; project not saved.";
                 }
                 if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "Relation not found to " + relatedUnit + ".");
                 if (!writing) return "Relation deletion preview; no changes.";
                 meta["mayHaveChanged"] = true;
                 existing.Delete(); meta["apiCallSuccess"] = true;
-                if (relations.Find(relatedUnit) != null) throw new InvalidOperationException("Relation remains after Delete.");
+                if (RelationExists(group, unitKind, name, relatedUnit)) throw new InvalidOperationException("Relation remains after Delete (fresh readback from the unit group).");
                 meta["verifiedAbsent"] = true;
                 return "Unit relation deleted and absence verified; project not saved.";
             });
