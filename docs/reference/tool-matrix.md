@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 23:14:27
-- 引擎文件版本：2.7.33.0
-- 工具数量：396
+- 生成时间：2026-09-19 00:07:00
+- 引擎文件版本：2.7.34.0
+- 工具数量：402
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 117 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 147 |
+| `READ` | 读取已打开工程，不改动 | 120 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 150 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -30,8 +30,8 @@
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 35 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (7)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 56 | `Project` (23)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
-| `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
+| `project` | 工程与协作 / Project & collaboration | 57 | `Project` (24)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
+| `plc` | PLC 软件 / PLC software | 99 | `PLC-Software` (66)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 55 | `Hardware` (55) |
 | `hmi` | HMI 人机界面 / HMI | 115 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (14)、`HMI-Library` (6) |
@@ -116,11 +116,11 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（56）
+## project — 工程与协作 / Project & collaboration（57）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
-### [Project]（23）
+### [Project]（24）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -138,6 +138,7 @@
 | `ExportProjectTexts` | L2 | FILE | Native project text export for explicit source/target cultures to a new absolute file. Returns API completion and file hash; default preview. |
 | `ImportProjectTexts` | L2 | WRITE | Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. |
 | `ManageMultiuserSession` | L2 | WRITE | Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly. |
+| `ManageProjectCompilationSettings` | L2 | WRITE | Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update propertiesJson {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save. |
 | `ManageProjectLanguage` | L2 | WRITE | Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. |
 | `ReadObjectIdentifier` | L2 | READ | ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePathJson/itemPathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only. |
 | `ReadProjectSettings` | L2 | READ | Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified. |
@@ -201,11 +202,11 @@
 | `RunOfflineReleaseValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. |
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markersJson default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 
-## plc — PLC 软件 / PLC software（94）
+## plc — PLC 软件 / PLC software（99）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
-### [PLC-Software]（61）
+### [PLC-Software]（66）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -260,12 +261,17 @@
 | `ImportTechnologyObject` | L2 | WRITE* | Import one PLC Technology Object XML file into PLC software (best-effort) |
 | `ImportTechnologyObjectsFromDirectory` | L2 | WRITE* | Batch import PLC technology object .xml files from a directory (best-effort) |
 | `ManagePlcBlockProtection` | L2 | WRITE | Read/protect/unprotect know-how protection of one exact block path via native PlcBlockProtectionProvider. Password is passed straight to TIA and never stored or logged; native invalid-password characters are reported. Refuses protecting an already protected block or unprotecting an unprotected one. Default preview; real change requires dryRun=false AND confirmProtectionChange=true, an Offline PLC, and is verified by IsKnowHowProtected readback. No save/compile/download. |
-| `ManagePlcSoftwareUnit` | L2 | WRITE | Native Software Unit list/read/create/delete/update/createRelation/deleteRelation. Exact name; relatedUnit and official relationType for relations. update accepts writable scalar propertiesJson, excludes Name. dryRun=true default; actual writes require Offline. Delete includes contained objects. No save/compile/download or implicit publication of objects. |
+| `ManagePlcBlockWriteProtection` | L2 | WRITE | Block write protection (V21 PlcBlockWriteProtectionProvider, distinct from know-how protection): read IsDefined / IsProtected; define sets the password, protect / unprotect toggle protection with it, change rotates it to newPassword, remove calls Change(password, null) dropping password and protection. The official state machine is enforced before any call (define refused when defined, protect needs a defined password, ...), passwords go in as SecureString and are never echoed, native invalid-password characters are checked, every change is verified by readback. blockPath under BlockGroup or a unit's BlockGroup (unitName + unitKind). Real change requires dryRun=false AND confirmProtectionChange=true and an Offline PLC; V20 answers NotSupported. No save/compile/download. |
+| `ManagePlcDocuments` | L2 | WRITE | Named value type documents (objectKind=document: PlcTypeGroup.Documents / PlcDocument) and UDT documents (objectKind=type: PlcTypeComposition / PlcType) of the exact PLC type group (root, groupPath under it, or a unit's TypeGroup via unitName + unitKind). list / read; export = ExportAsDocuments(directoryPath, name) with the DocumentExportResult (State, ExportedDocuments hashed, native messages) and the new files, refusing to overwrite name.*; import = ImportFromDocuments(directoryPath, name, importOption None/Override/SkipInactiveCultures/ActivateInactiveCultures) returning DocumentImportResultForSplDocument.ImportedDocuments or DocumentImportResultForTypes.ImportedPlcTypes plus DocumentResultMessage lines, verified by Find; createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace) and createFromLibraryType (typePath + version of a PlcDocumentLibraryTypeVersion / PlcTypeLibraryTypeVersion, updatePathsMode) instantiate into the group (document CreateFrom is V21+). Default dryRun=true; real writes need an Offline PLC; no save/compile/download. |
+| `ManagePlcSoftwareUnit` | L2 | WRITE | Native software units (PlcUnitProvider.UnitGroup): list (standard and safety units), read (typed PlcUnitBase row with contents), create, createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, update (propertiesJson Author / NamespacePreset; commentsJson {culture: text} writes Comment per active project language; Name refused), createRelation (relatedUnit + relationType SoftwareUnit/NonUnitDB/TODB) and deleteRelation. unitKind=safety addresses the system-generated PlcSafetyUnit (read / update / relations only; it can neither be created nor deleted). Every write is verified by readback. dryRun=true default; real writes require an Offline PLC. Delete includes contained objects. No save/compile/download or implicit publication of objects (SetPlcUnitObjectAccess). |
 | `ManagePlcSupervision` | L2 | WRITE | ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. Openness exposes no typed supervision list; XLSX bulk exchange is ExchangePlcSupervisions. Offline PLC for real writes; deletes need confirmDelete=true. Default preview; no save/compile/download. |
 | `ManagePlcTagDefinition` | L2 | WRITE | Native tag/constant read/create/update/delete in exact table path. Creation requires dataType and logical address or constant value. Public scalar edits; default preview, execution requires Offline. No runtime value write, save/compile/download. |
 | `ManagePlcUserGroup` | L2 | WRITE | Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology. groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. |
 | `ManageTechnologyObject` | L2 | WRITE | Native technology object read/create/delete/setParameter. Exact objectPath relative to TechnologicalObjectGroup, including user folders. create requires official typeIdentifier and version. setParameter takes exact parameter name and scalar valueJson. dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. |
 | `MoveBlockToGroup` | L2 | WRITE* | Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block, deletes it, and re-imports it into the target group (SIMATIC SD .s7dcl preferred, SimaticML XML fallback for STL/mixed-language). The block number and references are preserved. autoCreateGroup creates the target group path if missing. Requires: Connect + OpenProject + block consistent (compile first). After moving, call CompileAndDiagnosePlc to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip. |
+| `ReadPlcChecksums` | L2 | READ | Native PlcChecksumProvider of the exact PLC software: Software (program checksum) and TextLists checksum strings, both read-only and null until the program is compiled; PLCs without checksum support (GetService returns null) answer supported=false. No modification. |
+| `ReadPlcObjectFingerprints` | L2 | READ | Offline fingerprints of one exact block (objectKind=block, path under BlockGroup) or UDT (objectKind=type, path under TypeGroup), optionally inside a unit (unitName + unitKind), via native FingerprintProvider.GetFingerprints: every Fingerprint Id (Code/Interface/Properties/Comments/LibraryType/Texts/Alarms/Supervisions/TechnologyObject/Events/TextualInterface/ProgramCode) with its value; fingerprints consider user input only. An inconsistent object is refused natively (compile first). Online CPU fingerprints are ReadPlcBlockFingerprints. No modification. |
+| `ReadPlcSoftwareUnits` | L2 | READ | Typed read of the native software units of one exact PLC (PlcUnitProvider.UnitGroup): the PlcUnitSystemGroup (Name on V21, unit / safety-unit counts) and every PlcUnit / PlcSafetyUnit with Name, Author, NamespacePreset, Comment per culture, relations (RelatedObject / RelationType) and, with includeContents, the names in its BlockGroup (blocks, groups, system block groups), TypeGroup (types, groups, named value type documents), TagTableGroup, ExternalSourceGroup and PlcAlarmTextlistGroup (first 200 each). unitKind all/unit/safety, optional exact unitName. Paginated; PLCs without unit support answer NotSupported. No modification. |
 | `RepairAndReimportBlock` | L2 | WRITE* | Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). |
 | `SeedProjectFromReference` | L2 | WRITE* | Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) |
 | `SetPlcUnitObjectAccess` | L2 | WRITE | Publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. |
@@ -405,7 +411,7 @@
 | `ReadCommunicationConnections` | L2 | READ | List Siemens.Engineering.HW.CommunicationConnections (S7/ISO/ISO-on-TCP/TCP/UDP/FDL/PtP/HMI) owned by one exact hardware object (devicePathJson/itemPathJson JSON name arrays, e.g. the CPU). Scalar properties (LocalConnectionName, TSAPs, addresses, ports) plus local/partner target and interface names; offset/limit pagination. NotSupported on TIA V20. Nothing modified. |
 | `ReadDccObject` | L2 | READ | Exact offline DCC chart/block/pin/library property path with bounded scalar pagination. Complex properties excluded explicitly; no complete internal binding guarantee. |
 | `ReadDeviceAddressing` | L2 | READ | Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification. |
-| `ReadDeviceItemChannels` | L2 | READ | DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNamesJson (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. |
+| `ReadDeviceItemChannels` | L2 | READ | DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNamesJson (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note). |
 | `ReadHardwareFeatures` | L2 | READ | Probe every Siemens.Engineering.HW.Features.* service from the V21 API catalog on one exact hardware object (devicePathJson/itemPathJson): reports advertised services, present/absent per feature and public scalar values (credential-related features report presence only). offset/limit pagination. Read-only. |
 | `ReadIoSystems` | L2 | READ | Official IoSystem rows (Name, Number, Subnet, ConnectedIoDevices owner paths, HwIdentifiers, dynamic MultipleUseIoSystem/UseIoSystemNameAsDeviceNameExtension/MaxNumberIWlanLinksPerSegment/IsochronousTiTo*) scoped by exact subnetName (Subnet.IoSystems) or by the interface device item (devicePathJson + itemPathJson: NetworkInterface.IoControllers[].IoSystem and IoConnectors[].ConnectedToIoSystem, with IoController SyncRole/PnDeviceNumber/Addresses and IoConnector PnUpdateTime*/PnWatchdog*/RtClass/SyncRole rows). Attribute failures are listed per name. Paginated, no modification. |
 | `ReadNetworkDomains` | L2 | READ | Domain management of one exact subnet: SyncDomainOwner.SyncDomains (Name, ConvertedName, IsDefault, participants, dynamic HighPerformanceActive/FastForwardingActive), MrpDomainOwner.MrpDomains (Name, participants, dynamic IsDefault/ManagerOutsideOfProjectActive) and the MrpInstances (ConnectedMrpDomain, RingPort1/2) of the subnet's interface items. Owner availability is reported; no modification. |
@@ -415,7 +421,7 @@
 | `SetDeviceItemAttribute` | L2 | WRITE* | Set one exact DeviceItem attribute by name with type coercion and detailed error return. Use GetDeviceItemInfo/GetDeviceItemNetworkInfo first. |
 | `SetDeviceItemIoAddress` | L2 | WRITE | Preview or change the I/O START ADDRESS of one device item (e.g. move a DI module to start at %I2.0 by passing startAddress=2). Defaults to dryRun=true. startAddress is the ENGINE RAW byte offset, not '2.0'. It writes hardware configuration, so a wrong value does NOT fail compilation — the program silently reads a different module. Read back with GetDeviceItemIoAddresses, then CompileSoftware and SaveProject. Overlapping address ranges are rejected by TIA and reported back with the reason. |
 | `SetPutGetAccess` | L2 | WRITE | [PreCondition:Connect+OpenProject] Enable or disable remote PUT/GET access on a CPU (the precondition for S7 DB reads). This is a hardware-configuration change — you must run DownloadToPlc afterwards for it to take effect on the live CPU. Returns before/after readback evidence. |
-| `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) calls Address.AssignProcessImageToOrganizationBlock on V20 only (removed from the V21 PublicAPI). Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
+| `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
 | `UpdateDeviceItemChannel` | L2 | WRITE | SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. |
 
 ## hmi — HMI 人机界面 / HMI（115）
