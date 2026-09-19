@@ -4,9 +4,9 @@
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.38 已构建待发布；阶段 6 ⑥-① SiVArc 收口，核心程序集缺口全部归零）
+## 1. 现状（2.7.38 已发布，待部署；阶段 6 ⑥-① SiVArc 收口，核心程序集缺口全部归零）
 
-- 2.7.38 本机已构建（`Build-Release.ps1` 通过），三段提交后 tag `v2.7.38` 触发发布；上一个 tag `v2.7.37`（2026-09-19，已发布并真机验证）。
+- 最新 tag `v2.7.38`（2026-09-19，本机构建并发布，`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP 已上传；上一个 `v2.7.37` 同日，已真机验证）。
 - 工具 421 个、默认 lite 56；离线套件 1953 项；引擎 API 形状检查 V20 2301 / V21 2497（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,215（分母去掉 internal 的 `Compiler.CompileProvider` 与 `Private.ProcessHelper`，审计脚本 2.7.33 起排除）= 专用引用 573 / 仅类型名 62 / 动态覆盖 325 / 完全未触及 255；未封装功能类型 72 / 307（**Base 0 / 0、Step7 0 / 0、经典 WinCC 0 / 0、`WinCC.Extension` 0 / 0、SiVArc 0 / 0**，其余选件包 72 / 307）。
 - 阶段 6 ⑥-① SiVArc（2.7.38，形状检查；虚拟机无许可，真机不可验证）：`ReadSivarcRuleTree`、`ManageSivarcRuleContainer`、`ManageSivarcRule`、`ReadSivarcBlockDefinitions`、`ManageSivarcBlockDefinition`、`ResolveSivarcExpression`、`ManageSivarcScreenLayout`（V21）、`UpgradeSivarcDefinitions` + `GenerateSiVArc` / `ReadSiVArcRules` / `ManageSiVArcRule` / `ReadLibraryType typeKind`（加 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule` / `sivarc*` / `dccBlockType`）类型化。文件：`Siemens/SivarcLogic.cs`、`Siemens/Portal/Portal.Sivarc.cs`（族表 `SivarcFamilies`：六族的类型化开关；`OptionPackageLibraryTypeKind`）、`ModelContextProtocol/Tools/McpServer.Sivarc.cs`、`tests/.../SivarcTests.cs`、`tests/.../SivarcShapeChecks.cs`。
@@ -22,7 +22,7 @@
 
 ## 2. 下一步（按顺序）
 
-1. **发布 2.7.38**：三段提交（`Release 2.7.38 (1/3|2/3|3/3)`）、push、等 `validate-bundle` / `offline-checks` 绿、打 annotated tag `v2.7.38`、等 `Publish complete release`。
+1. ~~发布 2.7.38~~ **2026-09-19 完成**（三段提交 3a4008a / ddd8674 / 2277e27，tag `v2.7.38`，三个工作流全绿）。
 2. **部署 2.7.38 到虚拟机**：SiVArc 工具只能验 NotSupported（`ReadSivarcRuleTree {"category":"screens"}` 应回 "SiVArc service unavailable on this project"——除非虚拟机装了 SiVArc）；`ReadLibraryType` 看 `LSicar/Types_HMI/Scripts/LSicar_GeneralScripts` 的 `typeKind` 是否为 `unifiedScriptModule`；`ManageUnifiedScreenLayout` 与 `ManageSivarcScreenLayout export` 对 `HMI_RT_1` 画面（`LayoutData` 需要 SiVArc，预期 NotSupported）。把结果记进 `docs/releases/v2.7.38.md`、`CHANGELOG.md`、`capabilities.md`、本页 §1 / §6。
 3. **阶段 6 ⑥-② Startdrive + DCC（2.7.39）**：Startdrive 34 / 117（`MC.Drives` `DriveObject` / `DriveParameter` / `ReadDriveParameter` / `DriveItemHardwareModule` / `TechnologyExtension*` / `SafetyAcceptanceTest*` / `SecurityObjects.*` / `TestFunction` / `ModuleAccessPoint`、`MC.Drives.DFI.*` 14 个、`SW.TechnologicalObjects.Motion.*SDR*` 4 个、`Upload.Configurations.OverrideTelegramMismatch` / `OverwriteOfflineConfiguration`）、DCC 13 / 68（`DriveControlChart` / `DccBlock` / `DccPin` / `DccParameter` / `DccConnection` / `DccChartInterface` / `DccChartPartition` / `DcbLibrary` / `DcbLibraryImporter` / `DcbBlockType` / `IOVariable` / `IDccObject` / `DccImportResultData`）；现有 `ManageStartdriveParameter` / `Portal.DccEngineering.cs` 是反射入口，照 SiVArc 的做法类型化。参考页在 Startdrive Openness 手册（不在 Openness 地图；用 `clustered-search` 找 mapId）。
 4. **阶段 6 ⑥-③ SafetyValidation + TestSuite + Teamcenter + CFC（2.7.40，阶段 6 收口）**：SafetyValidation 9 / 43（`SafetyValidationAssistant` / `SafetyFunction` / `ActivationTest*` / `Condition` / `DeviceQuery` / `TraceConfiguration` / `TestValidity`，V21 only）、TestSuite 9 / 44（现有 `Portal.TestSuite.cs`）、Teamcenter 7 / 37、CFC 1 / 7（`ChartProvider`，现有 `Portal.SpecializedExchange.cs` 反射入口）。
