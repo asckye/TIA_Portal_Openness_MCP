@@ -72,6 +72,8 @@ ALLOWED = {
     'CreateFromFile': 'Openness PlcExternalSourceComposition.CreateFromFile()，由 ManagePlcExternalSources createFromFile 封装',
     'GenerateBlocksFromSource': 'Openness PlcExternalSource.GenerateBlocksFromSource()，由 ManagePlcExternalSources generateBlocks 封装',
     'ExportProDIAGInfo': 'Openness CodeBlock.ExportProDIAGInfo()，由 ExportPlcProDiagInfo 封装',
+    'ImportScreenOverview': 'Openness HmiTarget.ImportScreenOverview()，由 ManageClassicHmiScreenObject objectKind=overview 封装',
+    'ImportScreenGlobalElements': 'Openness HmiTarget.ImportScreenGlobalElements()，由 ManageClassicHmiScreenObject objectKind=globalElements 封装',
     'ImportInstanceTextsFromXlsx': 'Openness PlcAlarmTextProvider.ImportInstanceTextsFromXlsx()，由 ImportPlcAlarmInstanceTexts 封装',
     'GetCreationInfos': 'Openness IEngineeringComposition.GetCreationInfos()，动态组合接口',
     'CloseAndCommit': 'Openness LocalSession.CloseAndCommit()，由 ManageMultiuserSession 的 commit 动作封装',

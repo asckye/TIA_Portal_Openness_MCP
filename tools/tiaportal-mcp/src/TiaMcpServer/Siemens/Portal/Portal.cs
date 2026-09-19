@@ -92,6 +92,7 @@ namespace TiaMcpServer.Siemens
         public Portal(ILogger<Portal>? logger = null)
         {
             _logger = logger;
+            EngineeringScalarProperties.ValueRenderer ??= HmiValueJson;   // 2.7.37: WinCC.Extension value types (V21)
         }
 
         #endregion

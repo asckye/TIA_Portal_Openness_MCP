@@ -2,6 +2,17 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.37 新增工具族（阶段 5 经典 WinCC 文件夹层次，核心程序集收口）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 画面树 / 画面对象 | `ReadClassicHmiScreenTree`、`ManageClassicHmiScreenObject` | 只对经典 `HmiTarget`（Unified 目标明确拒绝）；滑入画面按 `SlideinType` 寻址、无 Name / Delete；总览 / 全局元素每台设备一个，只有 Export / Import；导出必须是新文件；删除与 Override 导入要 `confirmDelete`；普通画面仍走原有画面工具 |
+| 文件夹 | `ManageClassicHmiFolder` | 用户文件夹 `Name` 只读（无原生改名）；只删空文件夹；系统文件夹拒绝删除 |
+| 多语言图形 | `ManageClassicHmiGraphic` | `GraphicsProvider` 仅 V21；导出写 XML + 图片文件（默认语言后缀 `default`，同名自动编号）；不读图片字节 |
+| 类型化改造 | `ReadClassicHmiScripts` / `ManageClassicHmiScript`、`ReadLibraryType`（`typeKind`）、`EngineeringScalarProperties.Json`（`ConstValue` / `NullableDateTime` 渲染钩子） | 签名不变 |
+
+**真机待验**（参考工程 HMI 是 Unified，只能验拒绝文案与值渲染）；形状检查 V20 1957 / V21 2140 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.36 新增工具族（阶段 4 ④-③ 工艺对象映射，阶段 4 收口）
 
 | 族 | 工具 | 边界 |

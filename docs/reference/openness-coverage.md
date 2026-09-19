@@ -1,4 +1,4 @@
-# 官方 Openness API 覆盖清单（V21，2.7.36）
+# 官方 Openness API 覆盖清单（V21，2.7.37）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -14,21 +14,22 @@
 - 结果（V21，2.7.30）：领域成员已引用 **795**（2.7.29 为 697）、仅类型名 798、未引用 2,897；类型 1,217 个中有专用引用 **269**（2.7.29 为 238）、仅类型名 91、动态覆盖 322、完全未触及 **535**（2.7.29 为 556）。2.7.30 的变化：`Siemens.Engineering.HW` 命名空间有专用引用的类型 13 → 32、已引用成员 45 → 120，`HW.Features` 15 → 26 / 19 → 39——全部是强类型封装，词法可见，不进登记表。
 - 结果（V21，2.7.31）：领域成员已引用 **928**（2.7.30 为 795）、仅类型名 756、未引用 2,806；类型 1,217 个中有专用引用 **288**、仅类型名 91、动态覆盖 325（新登记 `Library.Compare.LibraryCompareResult*`，反射遍历）、完全未触及 **513**。`Siemens.Engineering.Library` / `.Types` / `.Compare` / `.MasterCopies` 的功能类型缺口归零。
 - 结果（V21，2.7.32）：领域成员已引用 **1,008**（2.7.31 为 928）、仅类型名 740、未引用 2,742；类型 1,217 个中有专用引用 **314**、仅类型名 88、动态覆盖 325、完全未触及 **490**。`Siemens.Engineering.Security` 与 `Siemens.Engineering.Umac` 的功能类型缺口归零（`Security` 12 个类型全部有专用引用，`Umac` 31 个里只剩 4 个 `IsReadOnly` 壳子）；工程用户管理里的组合与关联改为类型化访问后词法可见。
+- 结果（V21，2.7.37）：领域成员已引用 **1,549**（2.7.36 为 1,460）、仅类型名 693、未引用 2,238；类型 **1,215** = 有专用引用 **505**、仅类型名 61、动态覆盖 327、完全未触及 **322**。阶段 5 把经典 WinCC 的 24 个文件夹 / 画面对象 / 脚本 / 图形 / 库类型类型与 `WinCC.Extension` 的 `ConstValue` / `NullableDateTime` 改为专用引用。**经典 WinCC 与 WinCC.Extension 的功能类型缺口归零，核心程序集全部收口**；剩下的 107 / 515 全在选件包里。
 - 结果（V21，2.7.36）：领域成员已引用 **1,460**（2.7.35 为 1,377）、仅类型名 690、未引用 2,330；类型 **1,215** = 有专用引用 **469**、仅类型名 62、动态覆盖 327、完全未触及 **357**。阶段 4 ④-③ 把 `TOMapping`、`AxisEncoderHardwareConnectionInterface`、`TorqueHardwareConnectionInterface`、`TechnologicalInstanceDBGroup`、`TechnologicalParameter` 及其组合 / 关联、`AxisHardwareConnectionProvider` / `EncoderHardwareConnectionProvider` / `InterpreterMappings` / `DBMemberMapping` / `SuperimposingAxes` / `SynchronousAxisMasterValues` / `ConveyorTrackingLeadingValues` / `OutputCamMeasuringInputContainer` / `IdentTechnologicalObjectProvider` 改为专用引用。**`Siemens.Engineering.Step7.dll` 的功能类型缺口归零**，阶段 4 收口。
 - 结果（V21，2.7.35）：领域成员已引用 **1,377**（2.7.34 为 1,280）、仅类型名 703、未引用 2,400；类型 **1,215** = 有专用引用 **451**、仅类型名 67、动态覆盖 327、完全未触及 **370**。阶段 4 ④-② 把 `SW.ExternalSources` 四个类型、`PlcSystemBlockGroup` / `PlcSystemTypeGroup`、`PlcConstant`、`PlcAlarmTextListProvider`、`AlarmClassExportImportResultMessage` / `SupervisionSettingsExportImportResultMessage`、`OpcUaCommunicationGroup` / `NamespaceAccessRestriction`、`PlcTableCommentEntry` / `PlcForceTableEntry`、`WatchTableAccessRule` / `ForceTableAccessRule`、`CodeBlock.ExportProDIAGInfo`、三个 STEP 7 库类型子类和四种用户组改为专用引用（Step7 未封装 28 / 100 → 5 / 42）。
 - 结果（V21，2.7.34）：领域成员已引用 **1,280**（2.7.33 为 1,224）、仅类型名 702、未引用 2,498；类型 **1,215** = 有专用引用 **417**、仅类型名 65、动态覆盖 327、完全未触及 **406**。阶段 4 ④-① 把 `SW.Units`（`PlcUnitBase` / `PlcUnitSystemGroup` / `PlcUnitRelation` / `PlcSafetyUnit` 与三个组合）、`SW` 的 `PlcDocument` / `DocumentImportResult*` / `DocumentResultMessage` / `PlcChecksumProvider` / `FingerprintProvider` / `PlcSimulationSettingsProvider` / `VirtualPlcSettingsProvider` / `PlcTagProvider` / `ProcessImageProvider` 与 `SW.Blocks.PlcBlockWriteProtectionProvider` 改为专用引用（Step7 未封装 44 / 140 → 28 / 100）。
 - 结果（V21，2.7.33）：领域成员已引用 **1,224**（2.7.32 为 1,008）、仅类型名 696、未引用 2,560；类型 **1,215**（分母去掉 PublicAPI 里 internal 的 `Siemens.Engineering.Private.ProcessHelper` 与 `Compiler.CompileProvider`）= 有专用引用 **396**、仅类型名 64、动态覆盖 327（新登记 `HW.CustomDataTypes.*`：GSD 自定义属性的 `GetAttribute` 值）、完全未触及 **428**。**`Siemens.Engineering.Base.dll` 的功能类型缺口归零**，阶段 3 收口；Base 里剩下的"仅类型名"是经 `ReadHardwareFeatures` 反射读取的特性类（`FdlConnection` 等六种通信连接的标量、`GsdDevice(Item)`、`FrontPanelDisplay`、`PlcAccessControlConfigurationProvider`、`PlcAccountLockingAtRuntimeFeature`、`SystemWebPagesFeature`、`ModuleDescriptionUpdater`、`PcInterfaceAssignment`）。
 
-## 缺口结构（2.7.36）
+## 缺口结构（2.7.37）
 
-357 个"完全未触及"的类型里（2.7.35 为 370，2.7.34 为 406，2.7.33 为 428，2.7.32 为 490，2.7.31 为 513，2.7.30 为 535，2.7.29 为 556，2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型与 2.7.30 强类型封装的硬件网络类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 133 个 / 585 个成员**（2.7.35 为 139 / 637，2.7.34 为 162 / 695，2.7.33 为 178 / 735，2.7.32 为 230 / 896，2.7.31 为 239 / 929，2.7.30 为 253 / 1,006，2.7.29 为 267 / 1,067，2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）24 个 / 59 个，`WinCC.Extension` 2 个 / 11 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
+322 个"完全未触及"的类型里（2.7.36 为 357，2.7.35 为 370，2.7.34 为 406，2.7.33 为 428，2.7.32 为 490，2.7.31 为 513，2.7.30 为 535，2.7.29 为 556，2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型与 2.7.30 强类型封装的硬件网络类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 107 个 / 515 个成员**（2.7.36 为 133 / 585，2.7.35 为 139 / 637，2.7.34 为 162 / 695，2.7.33 为 178 / 735，2.7.32 为 230 / 896，2.7.31 为 239 / 929，2.7.30 为 253 / 1,006，2.7.29 为 267 / 1,067，2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）0 个 / 0 个，`WinCC.Extension` 0 个 / 0 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
 | WinCCUnified | 0 | 0 | **2.7.26–2.7.29 已封装/登记**：画面对象族（`ManageUnifiedScreenItem` + `DescribeUnifiedScreenItemType`）、报警类与离散/模拟报警（`HmiAlarm`）、记录（`HmiLogging`）、运行时设置（`RuntimeSettings`）——真机验证；2.7.28 新增 `ExchangeUnifiedTags` / `ExchangeUnifiedScriptModules` / `ImportUnifiedOpcUaAlarms`（变量导出核对 2.7.29 真机修复）；系统变量、阈值（`Create()` 被 TIA 拒绝）、替代值（仅外部变量）、审计类真机到达并登记；连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`IValidator`、画面组以**仅形状检查**登记（登记表 `verified` 字段如实标注，待下次真机重跑补跑） |
 | Base | 0 | 0 | **2.7.33 ③-④ 已封装**Base 收尾（`ReadPortalInfo`：`TiaPortalProcess` / `TiaPortalSession` / `TiaPortalProduct` / `TextCategory` / `HwUtilities`；`ReadTransferRoutes`：`Connection.*` 路由树 + `RHDownloadProvider` / `RHOnlineProvider`；`ManageHardwareUtilities`：`ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`；`ManageDeviceServiceObjects`：`WebApplicationConfiguration` / `Telecontrol*DataPoint` / `CertificateManagementConfiguration` + `CertificateSupportedService`；`ReadObjectIdentifier` / `ShowObjectInEditor` / `RunToolsInTransaction`：`ObjectIdentifierProvider` / `IShowable` / `ISystemObject` / `Transaction`；`OpenProject` 的 `UmacCredentials`、`GoOnline` 的 `OnlineAuthenticationConfiguration` / `OnlineCredentials` / `AuthenticationType`、下载 / 上载提示与结果基类、`AttributeConfiguration` 批量写、`CrossReference` / `Compare` / `CatalogEntry` / Multiuser / VersionControl / Settings 类型化；`ExceptionMessageData`；真机待验）。**2.7.32 ③-③**用户管理与安全、**2.7.31 ③-②** 库深层、**2.7.30 ③-①** 硬件网络深层均已真机验证。`Compiler.CompileProvider` 与 `Private.ProcessHelper` 是 internal，`HW.CustomDataTypes.*` 登记为动态覆盖 |
 | Step7 | 0 | 0 | **2.7.36 ④-③ 已封装**工艺对象映射（`ReadTechnologyObjectTree`：`TechnologicalInstanceDBGroup` / `TechnologicalInstanceDB` / `TechnologicalParameter`；`ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ConfigureMotionHardwareConnection` 类型化：`AxisHardwareConnectionProvider` + `AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface`、`EncoderHardwareConnectionProvider`、测量输入 / 输出凸轮提供者、`TechnologicalInstanceDBAssociation` 主值、V21 `InterpreterMappings` 的 `TOMapping` / `DBMemberMapping`、`SuperimposingAxes`、`IdentTechnologicalObjectProvider`；`ManageTechnologyObject` 的 `TechnologicalInstanceDBComposition.Create` / `TechnologicalParameterComposition.Find`；2026-09-19 在临时 `TO_SpeedAxis` 上真机验证通过）。**2.7.35 ④-②** Step7 收尾与 **2.7.34 ④-①** 软件单元均已真机验证。`PlcForceTableEntry` 只读、Startdrive 的 `*SDR*` 接口归选件包 |
-| WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
+| WinCC（经典） | 0 | 0 | **2.7.37 阶段 5 已封装**：`ReadClassicHmiScreenTree` / `ManageClassicHmiScreenObject` / `ManageClassicHmiFolder`（`ScreenSystemFolder` / `ScreenUserFolder`、`ScreenPopup(Folder/SystemFolder/UserFolder)`、`ScreenTemplate(Folder/SystemFolder/UserFolder)`、`ScreenSlidein(SystemFolder)`、`ScreenOverview` / `ScreenGlobalElements`、`TagSystemFolder` / `TagUserFolder`、`VBScript(SystemFolder/UserFolder)`）、`ManageClassicHmiGraphic`（`GraphicsProvider` / `MultiLingualGraphic`，V21）、`ReadLibraryType typeKind`（`ScreenLibraryType` / `StyleLibraryType` / `StyleSheetLibraryType` / `HmiUdtLibraryType`）；参考工程的 HMI 是 Unified，只做形状检查与拒绝路径真机验证。`WinCC.Extension` 的 `ConstValue` / `NullableDateTime` 经 `EngineeringScalarProperties.Json` 的引擎侧渲染钩子到达 |
 | Safety | 0 | 0 | **2.7.25 全量封装**：`ManagePlcSafety`（12 个动作，强类型）、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`。统计表里 Safety 仍有 2 个"完全未触及"类型（`RuntimeGroupComposition` / `SafetySignatureComposition` 只有 `IsReadOnly` 一类样板外成员）与若干 OWNER_ONLY 属性（经 `EngineeringScalarProperties` 通用读写，词法看不见）。`SafetyValidation` 选件（14 类型）未做，见选件包行 |
 | 选件包 | 110 | 536 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
 
@@ -67,7 +68,7 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.36 源码；"动态覆盖"栏来自登记表）
+## 统计表（脚本生成，2.7.37 源码；"动态覆盖"栏来自登记表）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -141,12 +142,12 @@
 | WinCC | `Siemens.Engineering.Hmi.Communication` | 2 | 2 | 0 | 0 | 0 | 5 | 4 |
 | WinCC | `Siemens.Engineering.Hmi.Cycle` | 2 | 2 | 0 | 0 | 0 | 6 | 5 |
 | WinCC | `Siemens.Engineering.Hmi.Faceplate` | 1 | 1 | 0 | 0 | 0 | 1 | 1 |
-| WinCC | `Siemens.Engineering.Hmi.Globalization` | 3 | 0 | 1 | 0 | 2 | 6 | 0 |
-| WinCC | `Siemens.Engineering.Hmi.RuntimeScripting` | 8 | 4 | 0 | 0 | 4 | 21 | 5 |
-| WinCC | `Siemens.Engineering.Hmi.Screen` | 26 | 3 | 0 | 0 | 23 | 63 | 9 |
-| WinCC | `Siemens.Engineering.Hmi.Tag` | 9 | 5 | 0 | 0 | 4 | 28 | 15 |
+| WinCC | `Siemens.Engineering.Hmi.Globalization` | 3 | 3 | 0 | 0 | 0 | 6 | 5 |
+| WinCC | `Siemens.Engineering.Hmi.RuntimeScripting` | 8 | 8 | 0 | 0 | 0 | 21 | 18 |
+| WinCC | `Siemens.Engineering.Hmi.Screen` | 26 | 26 | 0 | 0 | 0 | 63 | 55 |
+| WinCC | `Siemens.Engineering.Hmi.Tag` | 9 | 9 | 0 | 0 | 0 | 28 | 24 |
 | WinCC | `Siemens.Engineering.Hmi.TextGraphicList` | 4 | 2 | 0 | 0 | 2 | 10 | 6 |
-| WinCC.Extension | `Siemens.Engineering.Hmi` | 3 | 1 | 0 | 0 | 2 | 28 | 7 |
+| WinCC.Extension | `Siemens.Engineering.Hmi` | 3 | 3 | 0 | 0 | 0 | 28 | 23 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified` | 1 | 1 | 0 | 0 | 0 | 21 | 7 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.Common` | 5 | 1 | 0 | 4 | 0 | 13 | 2 |
 | WinCCUnified | `Siemens.Engineering.HmiUnified.Cpm` | 14 | 3 | 0 | 11 | 0 | 70 | 4 |

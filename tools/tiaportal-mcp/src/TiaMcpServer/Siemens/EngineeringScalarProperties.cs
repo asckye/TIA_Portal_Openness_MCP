@@ -11,7 +11,9 @@ namespace TiaMcpServer.Siemens
     internal static class EngineeringScalarProperties
     {
         internal static bool Scalar(Type type) => type.IsEnum || type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type == typeof(DateTime) || type == typeof(TimeSpan) || type == typeof(Guid) || type == typeof(Version);
-        internal static JsonNode? Json(object? value) => value is TimeSpan span ? JsonValue.Create(span.ToString("c", CultureInfo.InvariantCulture)) : value == null ? null : value.GetType().IsEnum || value is Version || value is Guid || value is DateTime
+        // Engine-side renderer for API value types the tests never see (2.7.37: Siemens.Engineering.Hmi.ConstValue / NullableDateTime); null in the offline suite.
+        internal static Func<object, JsonNode?>? ValueRenderer;
+        internal static JsonNode? Json(object? value) => value is TimeSpan span ? JsonValue.Create(span.ToString("c", CultureInfo.InvariantCulture)) : value == null ? null : ValueRenderer?.Invoke(value) is JsonNode rendered ? rendered : value.GetType().IsEnum || value is Version || value is Guid || value is DateTime
             ? JsonValue.Create(Convert.ToString(value, CultureInfo.InvariantCulture)) : JsonSerializer.SerializeToNode(value);
         internal static object? ConvertValue(JsonNode? node, Type type)
         {

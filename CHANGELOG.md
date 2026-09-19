@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.7.37] - 2026-09-19
+
+引擎 2.7.37.0（V20/V21 均重建），工具 409 → 413，默认 lite 56 项不变。详见 [v2.7.37](docs/releases/v2.7.37.md)。"官方 Openness API 全量对齐"阶段 5：经典 WinCC 文件夹层次——**经典 WinCC 与 WinCC.Extension 的功能类型缺口归零，核心程序集全部收口**。
+
+- **新增**：`ReadClassicHmiScreenTree`（`ScreenSystemFolder` / `ScreenPopupSystemFolder` / `ScreenTemplateSystemFolder` / `ScreenSlideinSystemFolder` 及用户文件夹树、`ScreenOverview` / `ScreenGlobalElements`）、`ManageClassicHmiScreenObject`（`ScreenPopup` / `ScreenTemplate` / `ScreenSlidein` / `ScreenOverview` / `ScreenGlobalElements` 的读 / 导出 / 导入 / 删除）、`ManageClassicHmiFolder`（画面 / 弹出 / 模板 / 变量 / 脚本用户文件夹的读建删）、`ManageClassicHmiGraphic`（V21 `GraphicsProvider` 的 `MultiLingualGraphic`）。类型化改造：`ReadClassicHmiScripts` / `ManageClassicHmiScript`（`VBScriptSystemFolder` / `VBScriptUserFolder` / `VBScript`）、`ReadLibraryType typeKind`（四个经典 HMI 库类型子类）、`EngineeringScalarProperties.Json` 的引擎侧值渲染钩子（`ConstValue` / `NullableDateTime`）。
+- **审计**：有专用引用 469 → 505，完全未触及 357 → 322，未封装功能类型 133 / 585 → 107 / 515（经典 WinCC 24 / 59 → 0 / 0，WinCC.Extension 2 / 11 → 0 / 0；只剩选件包）。
+- **验证**：离线 1881 项（新增 45 项）；形状检查 V20 1957 / V21 2140（新增 78 / 95 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（参考工程的 HMI 是 Unified，只能验拒绝文案与值渲染）。
+
 ## [2.7.36] - 2026-09-19
 
 引擎 2.7.36.0（V20/V21 均重建），工具 408 → 409，默认 lite 56 项不变。详见 [v2.7.36](docs/releases/v2.7.36.md)。2.7.35 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-③：工艺对象映射——**`Siemens.Engineering.Step7.dll` 的功能类型缺口归零，阶段 4 收口**。

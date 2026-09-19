@@ -40,7 +40,7 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 ## Capabilities and limits
 
-The static inventory contains **409 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **56**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+The static inventory contains **413 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **56**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
 Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 

@@ -348,6 +348,7 @@ internal static class Program
                     SoftwareUnitDeepShapeChecks.Run(Server, shapeCheck);
                     Step7LeftoversShapeChecks.Run(Server, shapeCheck);
                     TechnologyMappingShapeChecks.Run(Server, shapeCheck);
+                    ClassicHmiFoldersShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

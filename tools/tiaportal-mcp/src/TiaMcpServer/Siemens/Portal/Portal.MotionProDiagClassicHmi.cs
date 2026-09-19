@@ -438,13 +438,8 @@ namespace TiaMcpServer.Siemens
             var software = ResolveSoftwareContainerUncached(softwarePath)?.Software ?? throw new PortalException(PortalErrorCode.NotFound, "Exact HMI software not found: " + softwarePath);
             return software as HmiTarget ?? throw new NotSupportedException("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName + "); Unified targets use the Unified tools.");
         }
-        private static object ClassicScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath)
-        {
-            object current = hmi.VBScriptFolder ?? throw new NotSupportedException("VBScriptFolder unavailable.");
-            foreach (var part in folderPath)
-                current = EngineeringGroupOperations.Find(EngineeringGroupOperations.Get(current, "Folders"), part) ?? throw new PortalException(PortalErrorCode.NotFound, "Script folder not found: " + part);
-            return current;
-        }
+        // 2.7.37: typed VBScriptSystemFolder / VBScriptUserFolder navigation (Portal.ClassicHmiFolders.cs).
+        private static object ClassicScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath) => ExactVbScriptFolder(hmi, folderPath);
         private static JsonObject ClassicRow(object target, string? path = null)
         {
             var row = EngineeringDynamicAccess.Read(target); row["clrProperties"] = EngineeringScalarProperties.Read(target); row["name"] = EngineeringDynamicAccess.Name(target);
@@ -563,7 +558,7 @@ namespace TiaMcpServer.Siemens
                         if (folders.GetType().GetMethod("Create", new[] { typeof(string) }) == null) throw new NotSupportedException("Native VBScriptUserFolderComposition.Create(string) unavailable.");
                         if (!writing) return "Script folder creation preview; no changes.";
                         meta["mayHaveChanged"] = true;
-                        var created = EngineeringGroupOperations.Call(folders, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
+                        object created = folders is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScriptUserFolderComposition typedFolders ? typedFolders.Create(name) : EngineeringGroupOperations.Call(folders, "Create", new[] { typeof(string) }, name); meta["apiCallSuccess"] = true;
                         if (!string.Equals(EngineeringDynamicAccess.Name(created), name, StringComparison.Ordinal)) throw new InvalidOperationException("Created folder name readback differs.");
                         meta["after"] = ClassicRow(created);
                         return "Script folder created and verified; no save/compile/download.";
@@ -579,8 +574,29 @@ namespace TiaMcpServer.Siemens
                 switch (action)
                 {
                     case "read": Logic.ParseAttributes(attributesJson, false); meta["script"] = ClassicRow(script, scriptPath); meta["apiCallSuccess"] = true; meta["dataComplete"] = meta["script"]!["dataComplete"]!.DeepClone(); return "VB script read.";
-                    case "export": Logic.ParseAttributes(attributesJson, false); return ClassicExport(script, filePath, meta, dryRun);
-                    case "delete": Logic.ParseAttributes(attributesJson, false); meta["before"] = ClassicRow(script, scriptPath); return ClassicDelete(script, scripts, name, confirmDelete, meta, writing);
+                    case "export":
+                        Logic.ParseAttributes(attributesJson, false);
+                        if (script is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScript typedScript)
+                        {
+                            // 2.7.37: typed VBScript.Export(FileInfo, ExportOptions).
+                            var file = NativeFileOutput.Plan(filePath);
+                            if (dryRun) return "Native export preview; no file written.";
+                            meta["mayHaveWrittenFiles"] = true; typedScript.Export(file, ExportOptions.None); meta["apiCallSuccess"] = true; meta["file"] = NativeFileOutput.Verify(file);
+                            return "VB script exported to a new XML file and hashed; no project change.";
+                        }
+                        return ClassicExport(script, filePath, meta, dryRun);
+                    case "delete":
+                        Logic.ParseAttributes(attributesJson, false); meta["before"] = ClassicRow(script, scriptPath);
+                        if (script is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScript deletable && scripts is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScriptComposition typedScripts)
+                        {
+                            if (!confirmDelete) throw new ArgumentException("confirmDelete=true is required to delete a VB script.");
+                            if (!writing) return "VB script deletion preview; no changes.";
+                            meta["mayHaveChanged"] = true; deletable.Delete(); meta["apiCallSuccess"] = true;
+                            if (typedScripts.Find(name) != null) throw new InvalidOperationException("VB script remains after Delete.");
+                            meta["verifiedAbsent"] = true;
+                            return "VB script deleted and absence verified; no save/compile/download.";
+                        }
+                        return ClassicDelete(script, scripts, name, confirmDelete, meta, writing);
                     default: return ClassicSetAttributes(script, attributesJson, meta, writing);
                 }
             });

@@ -67,6 +67,10 @@ namespace TiaMcpServer.Siemens
             global::Siemens.Engineering.SW.Blocks.CodeBlockLibraryType => "codeBlock",
             global::Siemens.Engineering.SW.Types.PlcTypeLibraryType => "plcType",
             global::Siemens.Engineering.SW.Types.PlcDocumentLibraryType => "plcDocument",
+            global::Siemens.Engineering.Hmi.Screen.ScreenLibraryType => "hmiScreen",
+            global::Siemens.Engineering.Hmi.Screen.StyleLibraryType => "hmiStyle",
+            global::Siemens.Engineering.Hmi.Screen.StyleSheetLibraryType => "hmiStyleSheet",
+            global::Siemens.Engineering.Hmi.Tag.HmiUdtLibraryType => "hmiUdt",
             _ => "other"
         };
         private static JsonObject TypeRow(LibraryType type, bool versions)

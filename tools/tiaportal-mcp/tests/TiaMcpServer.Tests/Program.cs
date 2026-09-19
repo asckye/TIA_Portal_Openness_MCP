@@ -127,6 +127,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== 工艺对象映射纯逻辑：Connect(Channel) 目标与各接口的重载目录 ==");
             TechnologyMappingTests.Run(Check);
 
+            Console.WriteLine("== 经典 WinCC 文件夹纯逻辑：画面树、弹出 / 模板 / 滑入 / 总览 / 全局元素对象请求、五类文件夹请求、多语言图形请求 ==");
+            ClassicHmiFoldersTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");
