@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.32] - 2026-09-18
+
+引擎 2.7.32.0（V20/V21 均重建），工具 386 → 389，默认 lite 56 项不变。详见 [v2.7.32](docs/releases/v2.7.32.md)。2.7.31 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-③：用户管理与安全。
+
+- **修复（2.7.31 真机）**：库名统一走 `LibraryRef`（`ProjectLibrary` 没有 `Name`，工程库固定标签 + 所属工程），`ReadLibraryOverview` / `CheckLibraryUpdates` / `SynchronizeLibrary` / `ManageLibraryType` / `CompareLibraries` 在工程库上不再抛 "Name is unavailable"；系统库为 null 的 `TypeFolder` / `MasterCopyFolder` 输出 null + 说明，选择集解析对 null 根给明确 `NotFound`；`CheckLibraryUpdates` 在调用 TIA 前拒绝没有类型文件夹的库（TIA 对系统库抛 `NonRecoverableException` 并会触发连接保护）；`ManageGlobalLibrary` 的 `close` / `save` / `saveAs` / `archive` 对系统库说明 "只在 UserGlobalLibrary 上存在"，`openInfo` 回报 `closableThroughApi`。
+- **新增（域 `Security`，3 个强类型工具）**：`ManageSyslogServers`（工程级 `SyslogServerProvider.Servers` 的 read / create / update / delete / assignModule / unassignModule，CPU `SysLogConfigurationManager` 的 read / update / createServer / deleteServer）、`ManagePasswordPolicy`（`PasswordPolicyConfigurator` 8 项、`PlcPasswordPolicyService`、`LegacyPlcPasswordPolicyService` 5 项，legacy 官方范围预核）、`ManageUmcUsers`（UMC 用户 / 组的 read / createOffline / importFromServer / rename / activate / deactivate / delete / assignRole / unassignRole；服务器 read / checkConsistency / synchronize；凭据经 `Authentication` 事件、SecureString 不回显）。扩展 `ManagePlcCertificate`（`template`、类型化模板字段 + `subjectAlternativeNamesJson`、`password` 导入、`EnableGlobalCertificatesStore`）与 `ManageProjectUserManagement`（`activateAnonymousUser` / `deactivateAnonymousUser`；设备功能权行带 identifier / group / comment）。
+- **审计**：有专用引用 288 → 314，完全未触及 513 → 490，未封装功能类型 239 / 929 → 230 / 896（Base 61 / 194 → 52 / 161，`Siemens.Engineering.Security` / `Umac` 归零）。
+- **验证**：离线 1620 项（新增 66 项）；形状检查 V20 1403 / V21 1500（新增 112 / 112 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（库缺陷修复、密码策略、工程级 syslog、offline UMC 用户 / 组、证书模板）。
+
 ## [2.7.31] - 2026-09-18
 
 引擎 2.7.31.0（V20/V21 均重建），工具 380 → 386，默认 lite 56 项不变。详见 [v2.7.31](docs/releases/v2.7.31.md)。2.7.30 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-②：库深层。

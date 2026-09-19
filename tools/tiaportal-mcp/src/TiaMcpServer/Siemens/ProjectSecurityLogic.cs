@@ -15,8 +15,8 @@ namespace TiaMcpServer.Siemens
         internal sealed class UserManagementRequest
         {
             public string Action = "";
-            public string Target = "";          // user | role | deviceRight
-            public bool NeedsPassword, NeedsRole, NeedsRight, NeedsDevice, NeedsGroup, Creates, Deletes;
+            public string Target = "";          // user | role | deviceRight | anonymousUser
+            public bool NeedsPassword, NeedsRole, NeedsRight, NeedsDevice, NeedsGroup, Creates, Deletes, NoName;
         }
         private static readonly Dictionary<string, UserManagementRequest> UserActions = new[] {
             new UserManagementRequest { Action = "createUser", Target = "user", NeedsPassword = true, Creates = true },
@@ -34,13 +34,17 @@ namespace TiaMcpServer.Siemens
             new UserManagementRequest { Action = "unassignDeviceRight", Target = "role", NeedsRight = true, NeedsDevice = true },
             new UserManagementRequest { Action = "createDeviceRight", Target = "deviceRight", NeedsGroup = true, Creates = true },
             new UserManagementRequest { Action = "deleteDeviceRight", Target = "deviceRight", Deletes = true },
+            // 2.7.32: UmacConfigurator.ActivateAnonymousUser / DeactivateAnonymousUser (single anonymous user per protected project; no name).
+            new UserManagementRequest { Action = "activateAnonymousUser", Target = "anonymousUser", NoName = true },
+            new UserManagementRequest { Action = "deactivateAnonymousUser", Target = "anonymousUser", NoName = true },
         }.ToDictionary(x => x.Action, StringComparer.Ordinal);
         internal static IEnumerable<string> UserActionNames => UserActions.Keys;
 
         internal static UserManagementRequest ValidateUserManagement(string action, string name, string password, string roleName, string rightName, string group, string devicePathJson)
         {
             if (action == null || !UserActions.TryGetValue(action, out var request)) throw new ArgumentException("action must be one of: " + string.Join(", ", UserActions.Keys));
-            if (string.IsNullOrWhiteSpace(name) || name.Length > 256) throw new ArgumentException("Exact nonempty " + request.Target + " name required (max 256 chars).");
+            if (request.NoName) { if (!string.IsNullOrEmpty(name)) throw new ArgumentException(action + " takes no name (there is a single anonymous user per protected project)."); }
+            else if (string.IsNullOrWhiteSpace(name) || name.Length > 256) throw new ArgumentException("Exact nonempty " + request.Target + " name required (max 256 chars).");
             if (request.NeedsPassword && string.IsNullOrEmpty(password)) throw new ArgumentException("password required for " + action + "; it is passed to the API as SecureString and never logged.");
             if (!request.NeedsPassword && !string.IsNullOrEmpty(password)) throw new ArgumentException("password is not accepted for " + action + ".");
             if (request.NeedsRole && string.IsNullOrWhiteSpace(roleName)) throw new ArgumentException("Exact roleName required for " + action + ".");

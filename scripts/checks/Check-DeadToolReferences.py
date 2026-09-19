@@ -49,6 +49,13 @@ ALLOWED = {
     'DeleteFunctionBlock': '同上',
     'ImportInstanceTexts': '描述原文即 "not yet exposed"',
     # 2.7.18 新工具族描述里点名的原生成员，都在说明底层调用，不是 MCP 工具名
+    # 2.7.32 安全/UMC 工具族描述里点名的原生成员（ManageUmcUsers），都在说明底层调用
+    'CreateOfflineUmcUser': 'Openness UmcUserComposition.CreateOfflineUmcUser(name)，由 ManageUmcUsers createOffline 封装',
+    'CreateOfflineUmcUserGroup': 'Openness UmcUserGroupComposition.CreateOfflineUmcUserGroup()，由 ManageUmcUsers createOffline 封装',
+    'GetUserByName': 'Openness UmcServer.GetUserByName()，由 ManageUmcUsers importFromServer 封装',
+    'GetUserGroupByName': 'Openness UmcServer.GetUserGroupByName()，由 ManageUmcUsers importFromServer 封装',
+    'SetName': 'Openness UmcUser/UmcUserGroup.SetName()，由 ManageUmcUsers rename 封装',
+    'CheckConsistency': 'Openness UmcServerConfigurator.CheckConsistency()，由 ManageUmcUsers kind=server 封装',
     'GetAccessibleDevices': 'Openness ConfigurationPcInterface.GetAccessibleDevices()，由 ScanAccessibleDevices 封装',
     'GetFingerprintData': 'Openness FingerprintDataProvider.GetFingerprintData()，由 ReadPlcBlockFingerprints 封装',
     'ImportInstanceTextsFromXlsx': 'Openness PlcAlarmTextProvider.ImportInstanceTextsFromXlsx()，由 ImportPlcAlarmInstanceTexts 封装',

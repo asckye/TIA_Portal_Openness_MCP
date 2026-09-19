@@ -50,6 +50,10 @@ namespace TiaMcpServer.Siemens
             if (item is UmcUserGroup group) row["roles"] = Names(group.Roles);
             if (item is CustomRole custom) row["assignedEngineeringRights"] = Names(custom.AssignedEngineeringRights);
             if (item is SystemRole system) row["assignedEngineeringRights"] = Names(system.AssignedEngineeringRights);
+            // 2.7.32: DeviceFunctionRight rows typed (Identifier / Group; Comment on both the system and the custom subclass).
+            if (item is DeviceFunctionRight right) { row["identifier"] = right.Identifier; row["group"] = right.Group; row["rightClass"] = right.GetType().Name; }
+            if (item is SystemDeviceFunctionRight systemRight) row["comment"] = systemRight.Comment;
+            if (item is CustomDeviceFunctionRight customRight) row["comment"] = customRight.Comment;
             return row;
         }
 
@@ -97,6 +101,19 @@ namespace TiaMcpServer.Siemens
                 var umac = RequireUmac();
                 meta["action"] = action; meta["name"] = name; meta["dryRun"] = dryRun; meta["confirmChange"] = confirmChange; meta["mayHaveChanged"] = false;
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                if (request.Target == "anonymousUser")
+                {
+                    // Official: AnonymousUser is null while deactivated; one anonymous user per protected project.
+                    var anonymousBefore = umac.AnonymousUser; meta["before"] = anonymousBefore == null ? null : UmacRow(anonymousBefore); meta["activeBefore"] = anonymousBefore?.IsActive ?? false;
+                    if (dryRun) return "Anonymous user " + action + " preview; nothing written (deactivating it can lock out clients that rely on password-less access).";
+                    meta["mayHaveChanged"] = true;
+                    if (action == "activateAnonymousUser") umac.ActivateAnonymousUser(); else umac.DeactivateAnonymousUser();
+                    meta["apiCallSuccess"] = true;
+                    var anonymousAfter = RequireUmac().AnonymousUser; meta["after"] = anonymousAfter == null ? null : UmacRow(anonymousAfter); meta["activeAfter"] = anonymousAfter?.IsActive ?? false;
+                    bool active = anonymousAfter?.IsActive ?? false;
+                    if (active != (action == "activateAnonymousUser")) throw new InvalidOperationException("Native call returned but the anonymous user state did not change to the requested one.");
+                    return "Anonymous user " + action + " executed and read back; no save.";
+                }
                 object collection = request.Target == "user" ? umac.ProjectUsers : request.Target == "role" ? umac.CustomRoles : umac.CustomDeviceFunctionRights;
                 var existing = FindOrdinal(collection, name, request.Target);
                 if (request.Creates && existing != null) throw new InvalidOperationException("Exact " + request.Target + " already exists: " + name);
@@ -112,22 +129,24 @@ namespace TiaMcpServer.Siemens
                 try
                 {
                     var user = existing as ProjectUser; var customRole = existing as CustomRole;
+                    ProjectUserComposition projectUsers = umac.ProjectUsers; CustomRoleComposition customRoles = umac.CustomRoles; CustomDeviceFunctionRightComposition deviceRights = umac.CustomDeviceFunctionRights;
+                    RoleAssociation? userRoles = user?.Roles; EngineeringFunctionRightAssociation? engineeringRights = customRole?.AssignedEngineeringRights;
                     switch (action)
                     {
-                        case "createUser": umac.ProjectUsers.Create(name, secure!); break;
+                        case "createUser": projectUsers.Create(name, secure!); break;
                         case "deleteUser": user!.Delete(); break;
                         case "setUserPassword": user!.SetPassword(secure!); break;
                         case "activateUser": user!.Activate(); break;
                         case "deactivateUser": user!.Deactivate(); break;
-                        case "assignRole": user!.Roles.Add(role!); break;
-                        case "unassignRole": user!.Roles.Remove(role!); break;
-                        case "createRole": umac.CustomRoles.Create(name, comment); break;
+                        case "assignRole": userRoles!.Add(role!); break;
+                        case "unassignRole": if (!userRoles!.Remove(role!)) throw new InvalidOperationException("RoleAssociation.Remove returned false; the role was not assigned."); break;
+                        case "createRole": customRoles.Create(name, comment); break;
                         case "deleteRole": customRole!.Delete(); break;
-                        case "assignEngineeringRight": customRole!.AssignedEngineeringRights.Add(engineeringRight!); break;
-                        case "unassignEngineeringRight": customRole!.AssignedEngineeringRights.Remove(engineeringRight!); break;
+                        case "assignEngineeringRight": engineeringRights!.Add(engineeringRight!); break;
+                        case "unassignEngineeringRight": if (!engineeringRights!.Remove(engineeringRight!)) throw new InvalidOperationException("EngineeringFunctionRightAssociation.Remove returned false; the right was not assigned."); break;
                         case "assignDeviceRight": customRole!.AssignDeviceFunctionRight(device!, deviceRight!); break;
                         case "unassignDeviceRight": customRole!.UnAssignDeviceFunctionRight(device!, deviceRight!); break;
-                        case "createDeviceRight": umac.CustomDeviceFunctionRights.Create(name, group, comment); break;
+                        case "createDeviceRight": deviceRights.Create(name, group, comment); break;
                         case "deleteDeviceRight": ((CustomDeviceFunctionRight)existing!).Delete(); break;
                     }
                 }

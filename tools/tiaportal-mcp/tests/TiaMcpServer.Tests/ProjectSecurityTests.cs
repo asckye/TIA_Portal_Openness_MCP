@@ -34,7 +34,7 @@ namespace TiaMcpServer.Tests
             check(deviceRequest.NeedsDevice && deviceRequest.NeedsRight && deviceRequest.Target == "role", "assignDeviceRight sentinel passes with device path");
             check(FailsWith<ArgumentException>(() => ProjectSecurityLogic.ValidateUserManagement("createDeviceRight", "Right1", "", "", "", "", "[]")), "createDeviceRight without group refused");
             check(ProjectSecurityLogic.ValidateUserManagement("deleteDeviceRight", "Right1", "", "", "", "", "[]").Deletes, "deleteDeviceRight flagged as delete");
-            check(ProjectSecurityLogic.UserActionNames.Count() == 15, "fifteen UMAC actions exposed");
+            check(ProjectSecurityLogic.UserActionNames.Count() == 17, "seventeen UMAC actions exposed (15 + activateAnonymousUser/deactivateAnonymousUser since 2.7.32)");
             check(FailsWith<ArgumentException>(() => ProjectSecurityLogic.ValidateCategory("secrets")), "unknown read category refused");
             check(!Fails(() => ProjectSecurityLogic.ValidateCategory("users")), "users category sentinel passes");
             check(FailsWith<ArgumentException>(() => ProjectSecurityLogic.ValidateDevicePath("[\"\"]")), "device path with empty name refused");

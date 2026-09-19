@@ -2,6 +2,18 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.32 新增工具族（阶段 3 ③-③ 用户管理与安全）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| syslog | `ManageSyslogServers` | `scope=project` 是 `SyslogServerProvider` 的工程级服务器（V19+），模块分配用 `AssignedModules` 关联的 `Add` / `Remove`；`scope=plc` 是 CPU 的 `SysLogConfigurationManager`（S7-1500 FW 3.1+），TLS 协议要配合三个证书动态属性；删除需 `confirmDelete` |
+| 密码策略 | `ManagePasswordPolicy` | `umac` 8 项、`plc` 只有 `PasswordPolicyEnabled`（S7-1200/1500 沿用 UMAC 复杂度）、`legacyPlc` 5 项且官方范围 5..8 / 0..8 / 0..8 在调用前核；超范围 TIA 抛 `PasswordPolicySettingsException`；已有密码不会被重新校验；实做需 `confirmChange` |
+| UMC 用户 / 组 / 服务器 | `ManageUmcUsers` | 需要受保护工程（`UmacConfigurator`）；`importFromServer` / `checkConsistency` / `synchronize` 经 `Authentication` 事件送 UMC 凭据（SecureString、不回显），需要 UMC View 权限的账号；offline 用户 / 组不需要服务器；同名 offline 创建 TIA 抛 `EngineeringTargetInvocationException`；`UmcServer` 没有公开标量；实做需 `confirmChange` |
+| 证书模板 | `ManagePlcCertificate`（`template` / `create` + SAN / `import` + `password`） | `CertificateUsage.None` 与 `SignatureAlgorithm.None` 官方不支持；SAN 类型 Dns / Email / IP / Uri；私钥永不导出 |
+| 匿名用户 | `ManageProjectUserManagement`（`activateAnonymousUser` / `deactivateAnonymousUser`） | 每个受保护工程一个匿名用户；停用后 `AnonymousUser` 为 null，依赖无密码访问的客户端会被锁在外面，默认预览 |
+
+**真机待验**；形状检查 V20 1403 / V21 1500 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.31 新增工具族（阶段 3 ③-② 库深层）
 
 | 族 | 工具 | 边界 |
@@ -13,7 +25,7 @@
 | 全局库 | `ManageGlobalLibrary`（`infos` / `openInfo` / `archive`） | 系统/企业库只读；归档前必须已保存，`None` / `DiscardRestorableData` 产物不能经 API 检索 |
 | 文档导入 | `ImportLibraryTypeDocuments`（`typePath` 版本导入） | 仅工程库；同名多扩展文件时原生拒绝；`CreateOptions.None` 遇 in-work 版本原生失败 |
 
-**真机待验**；形状检查 V20 1291 / V21 1388 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1291 / V21 1388 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-18）**：全局库头 / 母版树、`ReadLibraryType` 三种入口、`ManageLibraryType` 预览、`CompareLibraryObjects` 三种对象、`ManageGlobalLibrary infos/openInfo` 通过；工程库路径因 `ProjectLibrary` 没有 `Name` 全部失败，系统库 `TypeFolder` 为 null 未守卫，`UpdateCheck` 对系统库触发 `NonRecoverableException`，`close` 对系统库报 "not found"——四处在 2.7.32 修，见 [v2.7.31](../releases/v2.7.31.md#真机结果v21-automaticdipcoatingmachine2026-09-18)。
 
 ## 2.7.30 新增工具族（阶段 3 ③-① 硬件网络深层）
 
@@ -49,7 +61,7 @@
 | 下载提示（缺陷修复） | `DownloadToPlc` 新参数 `userManagementMode`、`promptAnswersJson`、`moduleAccessPassword`、`blockBindingPassword`、`masterSecretPassword` | 43 种提示按真实形态应答；破坏性提示默认 NoAction/NoChange，需 `promptAnswersJson` 显式指定；未应答提示回传 `Meta.promptsUnanswered` |
 | 设备传输 | `ScanAccessibleDevices`、`UploadStationFromPlc`、`UploadDeviceParameters`、`DownloadPlcToFolder` | 扫描为在线网络探测；上载要求 `confirmUpload`，目标地址须与扫描结果精确一致；参数上载 V20 无 API；文件夹下载要求新目录或空目录 |
 | PLC 块服务 | `ManagePlcBlockProtection`、`ManagePlcDataBlockSnapshot`、`UpdatePlcProgram`、`ReadPlcBlockFingerprints`、`ImportPlcAlarmInstanceTexts`、`ManagePlcAlarmTextList` | 保护/取消保护需 `confirmProtectionChange`；快照装载改变 CPU 实际值需 `confirmValueChange`，V20 无 `ValueService`；指纹读取是在线调用；报警文本列表 API 无条目与 `Create(string)`，只有主副本创建/删除 |
-| 工程安全与协作 | `ReadProjectUserManagement`、`ManageProjectUserManagement`、`ReadProjectProtection`、`ManageMultiuserSession`、`CompareLibraries`、`CompareProjects`、`ReadProjectSettings` | UMAC 15 种动作需 `confirmChange`；不启用/停用工程保护、不做 UMC 同步；官方无工程级"已保护"标量；比较接口 V20/V21 命名空间不同，按反射绑定 |
+| 工程安全与协作 | `ReadProjectUserManagement`、`ManageProjectUserManagement`、`ReadProjectProtection`、`ManageMultiuserSession`、`CompareLibraries`、`CompareProjects`、`ReadProjectSettings`、`ManageUmcUsers`、`ManagePasswordPolicy`、`ManageSyslogServers` | UMAC 17 种动作（含匿名用户激活）需 `confirmChange`；不启用/停用工程保护；UMC 导入 / 同步 / 一致性检查由 `ManageUmcUsers` 经 `Authentication` 事件送凭据（2.7.32）；官方无工程级"已保护"标量；比较接口 V20/V21 命名空间不同，按反射绑定 |
 | 硬件服务 | `ReadCommunicationConnections`、`ManageCommunicationConnection`、`ManageWatchForceTableWebAccess`、`ExchangeSystemDiagnosticsSettings`、`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl`、`ImportDeviceAml`、`ReadHardwareFeatures` | 通信连接与 OPC UA 访问控制 V20 无 API；连接创建要求调用方精确指定拥有 `ConnectionComposition` 的对象；AML 导入需 `confirmImport` 并回传原生日志哈希 |
 | Unified 原生交换（2.7.28，2.7.29 真机修复） | `ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms` | 导出要求新目录、每个原生文件哈希（变量导出回报的无扩展名路径解析到实际 `.hmi.yml`，附 `reportedPath` 与 `directoryListing`）；导入要求现有目录并核对期望名/模块名；`OpcUaAlarm` 只在 OPC UA 连接上存在；默认预览，无保存/编译/下载 |
 | Unified 画面对象（2.7.26，2.7.27 真机修复） | `DescribeUnifiedScreenItemType`、`ManageUnifiedScreenItem` | 目录与 schema 反射自加载的官方 API（V21 43 个具体类型 / V20 37 个）；`create` 经原生 `Create<T>(name[, containedType])`，按名称查回核对；部件嵌套对象、多语言按 culture（任意深度，如 `Title.Text`）、颜色 `#AARRGGBB`，每个叶子读回；`delete` 需 `confirmDelete`；事件/动态化仍用各自工具 |
@@ -76,7 +88,7 @@
 | ManageSafetyGlobalSettings | read/update（2.7.25） | TIA Portal 级 SafetyModificationsPossible、GenerationOfDefaultFailsafeProgram、ManagementOfFailsafeInSoftwareUnitsEnvironment、UsernameForFChangeHistory |
 | ReadSafetyBlockSignatures | 单块或整 PLC 逐块 F 签名（2.7.25） | blockPath 可空；值 0 = 无有效签名；离线工程值，不读 CPU |
 | ExportSafetyPrintout | 官方安全打印件写文件（2.7.25） | printer PDF/XPS、option All/Compact、documentLayout；拒绝覆盖；返回 SHA-256；TIA 机器需启用对应 Windows 打印驱动 |
-| ManagePlcCertificate | list/read/create/import/export/delete/assign/unassign | 精确 DeviceItem 与 certificateId；usage/template properties；可用 assignmentItemPathJson 指定 OPC UA 分配属性所属子模块 |
+| ManagePlcCertificate | list/read/template/create/import/export/delete/assign/unassign | 精确 DeviceItem 与 certificateId；`template` 读某用途的默认模板；create 的模板字段类型化校验 + `subjectAlternativeNamesJson`；import 可带 `password`（2.7.32）；可用 assignmentItemPathJson 指定 OPC UA 分配属性所属子模块 |
 | ManageUnifiedHmiGroup | screens/tags 的 create/rename/deleteEmpty | 精确相对 groupPath，不支持原生不存在的 ScriptGroups |
 | ReadUnifiedEngineeringObjects | 七类集合分页标量读取 | category、精确可选 name、offset/limit |
 | ManageUnifiedEngineeringObject | 原生 create/update/delete | category、name、公开可写标量 propertiesJson；不以反射绕过复杂引用类型 |
