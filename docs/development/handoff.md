@@ -4,9 +4,9 @@
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.36 已构建，待发布与真机验证；阶段 4 收口）
+## 1. 现状（2.7.36 已发布，待真机验证；阶段 4 收口）
 
-- 最新 tag `v2.7.35`（2026-09-19，已真机验证）；**2.7.36 已在本机跑完 `Build-Release.ps1` 并按 3 提交模式提交**（推送 / 打 tag / 真机验证见 §2）。
+- 最新 tag `v2.7.36`（2026-09-19，本机构建并发布，`Publish complete release` 已上传 ZIP；上一个 `v2.7.35` 同日，已真机验证）。
 - 工具 409 个、默认 lite 56；离线套件 1836 项；引擎 API 形状检查 V20 1879 / V21 2045（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,215（分母去掉 internal 的 `Compiler.CompileProvider` 与 `Private.ProcessHelper`，审计脚本 2.7.33 起排除）= 专用引用 469 / 仅类型名 62 / 动态覆盖 327 / 完全未触及 357；未封装功能类型 133 / 585（**Base 0 / 0、Step7 0 / 0**、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 107 / 515）。**阶段 4 收口。**
 - 阶段 4 ④-③ 工艺对象映射（2.7.36，真机待验）：`ReadTechnologyObjectTree` + `ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ManageTechnologyObject` / `ConfigureMotionHardwareConnection` 类型化改造（`Portal.TechnologyMapping.cs` 的类型化行、`TypedMotionView`、`ConnectTyped` / `DisconnectTyped`；`targetJson` 新增 `channelType` / `channelIoType` / `channelNumber`）；另修 2.7.35 真机的注释行计数缺陷。文件：`Siemens/Portal/Portal.TechnologyMapping.cs`、`ModelContextProtocol/Tools/McpServer.TechnologyMapping.cs`、`tests/.../TechnologyMappingTests.cs`、`tests/.../TechnologyMappingShapeChecks.cs`。
@@ -20,7 +20,7 @@
 
 ## 2. 下一步（按顺序）
 
-1. **发布 2.7.36**：本机工作树里 3 个提交（`Release 2.7.36 (1/3|2/3|3/3)`）已就绪但**未推送**——`git push`，在 GitHub Actions 看 `validate-bundle` / `offline-checks` 通过后打注解 tag `v2.7.36` 触发 "Publish complete release"（闸门见 §4；GitHub API 从本机限流时用 `https://github.com/<repo>/actions/workflows/<wf>.yml` 页面的 `aria-label` 抓状态）。
+1. ~~发布 2.7.36~~ **2026-09-19 完成**（`validate-bundle` / `offline-checks` / `Publish complete release` 全绿；GitHub API 从本机限流时用 `https://github.com/<repo>/actions/workflows/<wf>.yml` 页面的 `aria-label` 抓状态）。
 2. **部署 2.7.36 到虚拟机并真机验证**（约定见 §5）：参考工程没有工艺对象——`ReadTechnologyObjectTree`（空树 + 根组名 + `includeMotionView`）、`ReadMotionAxisConfiguration` / `ManageMotionAxis read` 对不存在对象的 NotFound 文案、`ManageTechnologyObject create` 预览（不实做）、`ManagePlcTableEntries createComment` 计数修复（临时监控表 `MCP_TMP_2735_WT` 若还在就直接用，否则 `SetWatchTableModifyValue` 再建一张）。把结果记进 `docs/releases/v2.7.36.md#真机结果`、`CHANGELOG.md`、`capabilities.md`、本页 §1 / §6。未验证项仍留：R/H、`GoOnline userName`、`OpenProject` UMAC 凭据、`CompareProjects rootElement`、`exportCardReaderPsc` 实做、双实例改绑拒绝、安全单元本体、单元 / 文档 / 外部源母本、`.nvt` 文档、真实 XLSX 导出导入、ProDiag 实做、任何工艺对象的硬件连接 / 映射实做；虚拟机桌面的 `mcp2733-opcua.xml`（20 MB）、`LDiag_typeFault.s7dcl`、`MCP_TMP_FC_2735.scl`、`mcp2735-alarmclasses.dat` 可删。
 3. **阶段 5 经典 WinCC（`Siemens.Engineering.WinCC.dll`，24 类型 / 59 成员，2.7.37 起）**：`Hmi.Screen` 17 / 38（`ScreenPopup(Folder/SystemFolder/UserFolder)`、`ScreenSlidein(SystemFolder)`、`ScreenTemplate(Folder/SystemFolder/UserFolder)`、`ScreenSystemFolder` / `ScreenUserFolder`、`ScreenGlobalElements` / `ScreenOverview`、`ScreenLibraryType` / `StyleLibraryType` / `StyleSheetLibraryType`）、`Hmi.RuntimeScripting` 3 / 10（`VBScript`、`VBScriptSystemFolder` / `VBScriptUserFolder`）、`Hmi.Tag` 3 / 8（`TagSystemFolder` / `TagUserFolder`、`HmiUdtLibraryType`）、`Hmi.Globalization` 1 / 3（`MultiLingualGraphic`）。参考工程的 HMI 是 Unified（`HMI_RT_1`），经典 WinCC 只能形状检查 + 现有 `Portal.ClassicHmi*` 的类型化改造；先看 `docs/reference/openness-coverage.md` 的经典 WinCC 行与 `Portal.MotionProDiagClassicHmi.cs` 里已有的经典 HMI 工具（`ManageClassicHmiScripts` / `ManageClassicHmiCycles` / `ManageClassicHmiTextLists`…）。
 4. ~~阶段 4 Step7（`Siemens.Engineering.Step7.dll`）~~ **2.7.34–2.7.36 完成，功能类型缺口 0 / 0**：
