@@ -4,9 +4,9 @@
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.35 已构建，待发布与真机验证；阶段 4 ④-② 完成）
+## 1. 现状（2.7.35 已发布，待真机验证；阶段 4 ④-② 完成）
 
-- 最新 tag `v2.7.34`（2026-09-19，已真机验证）；**2.7.35 已在本机跑完 `Build-Release.ps1` 并按 3 提交模式提交**（推送 / 打 tag / 真机验证见 §2）。
+- 最新 tag `v2.7.35`（2026-09-19，本机构建并发布，`Publish complete release` 已上传 ZIP；上一个 `v2.7.34` 同日，已真机验证）。
 - 工具 408 个、默认 lite 56；离线套件 1825 项；引擎 API 形状检查 V20 1784 / V21 1929（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,215（分母去掉 internal 的 `Compiler.CompileProvider` 与 `Private.ProcessHelper`，审计脚本 2.7.33 起排除）= 专用引用 451 / 仅类型名 67 / 动态覆盖 327 / 完全未触及 370；未封装功能类型 139 / 637（**Base 0 / 0**、Step7 5 / 42、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 108 / 525）。
 - 阶段 4 ④-② Step7 收尾（2.7.35，真机待验）：`ManagePlcExternalSources`、`ReadPlcSystemGroups`、`ReadPlcTagTableConstants`、`ExchangePlcAlarmTextListsXlsx`、`ManagePlcTableEntries`、`ExportPlcProDiagInfo` + 类型化改造（`ManageWatchForceTableWebAccess` 访问规则、OPC UA `OpcUaCommunicationGroup` / `NamespaceAccessRestriction`、`ExportAlarmClasses` / `ImportAlarmClasses` 消息、`ManagePlcSupervision` 设置消息、`ReadLibraryType typeKind`、`ManagePlcUserGroup` 新增 `watchTables` / `externalSources`）；另修 2.7.34 真机的关系回读缺陷。文件：`Siemens/Step7LeftoversLogic.cs`、`Siemens/Portal/Portal.Step7Leftovers.cs`、`ModelContextProtocol/Tools/McpServer.Step7Leftovers.cs`、`tests/.../Step7LeftoversTests.cs`、`tests/.../Step7LeftoversShapeChecks.cs`。
@@ -19,7 +19,7 @@
 
 ## 2. 下一步（按顺序）
 
-1. **发布 2.7.35**：本机工作树里 3 个提交（`Release 2.7.35 (1/3|2/3|3/3)`）已就绪但**未推送**——`git push`，在 GitHub Actions 看 `validate-bundle` / `offline-checks` 通过后打注解 tag `v2.7.35` 触发 "Publish complete release"（闸门见 §4）。
+1. ~~发布 2.7.35~~ **2026-09-19 完成**（`validate-bundle` / `offline-checks` / `Publish complete release` 全绿；GitHub API 从本机限流时用 `https://github.com/<repo>/actions/workflows/<wf>.yml` 页面的 `aria-label` 抓状态）。
 2. **部署 2.7.35 到虚拟机并真机验证**（约定见 §5）：`ManagePlcSoftwareUnit createRelation / deleteRelation`（建两个临时单元，看回读修复）、`ManagePlcExternalSources list`（PLC 根，`+S1-K1` 的外部源组）+ `createFromFile`（先用 `GeneratePlcSourceFromBlocks` 把一个 SCL FB 生成到桌面 .scl，再建源）/ `generateBlocks`（到一个临时块用户组）/ `delete` / `createGroup` / `deleteGroup`、`ReadPlcSystemGroups`、`ReadPlcTagTableConstants`（`F_Input` / `Input` 表的系统常量）、`ExchangePlcAlarmTextListsXlsx export`（工程没有用户文本列表时看原生 `TextListNotFoundException`）、`ManagePlcTableEntries read`（如有监控表；`createComment` / `deleteEntry` 在临时表上）、`ExportPlcProDiagInfo`（工程无 ProDiag FB 时看语言门控）、`ManageWatchForceTableWebAccess read`（类型化行）、`ReadOpcUaAccessControl restrictions`（类型化行）、`ExportAlarmClasses`（消息行）、`ManagePlcUserGroup family=externalSources create/deleteEmpty`。把结果记进 `docs/releases/v2.7.35.md#真机结果`、`CHANGELOG.md`、`capabilities.md`、本页 §1 / §6。未验证项仍留：R/H、`GoOnline userName`、`OpenProject` UMAC 凭据、`CompareProjects rootElement`、`exportCardReaderPsc` 实做、双实例改绑拒绝、安全单元本体、单元 / 文档母本与库类型实例化、`.nvt` 文档；虚拟机桌面的 `mcp2733-opcua.xml`（20 MB）与 `LDiag_typeFault.s7dcl`（168 B）可删。
 3. **阶段 4 Step7（`Siemens.Engineering.Step7.dll`，剩 5 类型 / 42 成员）**：
    - ~~④-① 软件单元 + `PlcDocument*` + `PlcChecksumProvider` / `PlcSimulationSettingsProvider` / `PlcBlockWriteProtectionProvider`~~ **2.7.34 完成**（官方页面 id：软件单元 `0h0oxLVauEUie7gZF4QPWw` / `cRardLf5JWn6RV4GwzVX2Q` / `1XBGooV5zT1c4pMm~pUcDQ` / `R3UTOiWAisuD36RmvULj9Q` / `JT6mLOEcCLGxh5bzCM6sxw`、安全单元 `nRkWKOSJ40n_TTB9pS3iEw` / `UXq9Lu_poeISbbKKJiZn7Q`、NVT 文档 `pi7xDzfb1aKRSwG4KIQP3g`、UDT 文档 `H_AHIQyhM0nIyyGLbQm7fQ` / `f7I~jdKwF~pGMltuKUvtAQ`、校验和 `4oWqygP07f_Pxz7N2LEwBw`、指纹 `CU2HzxWdQiVq8MOz7QkvNw`、写保护 `4qvX8TvoaH0t9f7LiQc_3g`、工程属性 `~zGrGn3wwJUHBCn6pO5Cjg`）。
