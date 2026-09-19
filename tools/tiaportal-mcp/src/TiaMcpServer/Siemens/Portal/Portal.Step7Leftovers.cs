@@ -266,8 +266,9 @@ namespace TiaMcpServer.Siemens
                     if (!writing) return "Comment entry creation preview; no changes.";
                     meta["mayHaveChanged"] = true;
                     PlcTableCommentEntry created = entries.Create(); meta["apiCallSuccess"] = true;
-                    int after = entries.Count; meta["entryCountAfter"] = after;
-                    if (after != all.Length + 1) throw new InvalidOperationException("Entry count did not increase by one after Create.");
+                    // 2.7.35 real project: the composition proxy used for Create still answers the old Count; count on a fresh navigation.
+                    int after = EngineeringGroupOperations.Items(((PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = after;
+                    if (after != all.Length + 1) throw new InvalidOperationException("Entry count did not increase by one after Create (fresh readback).");
                     meta["after"] = TableEntryRow(created, after - 1);
                     return "Comment entry appended to the watch table and counted back; project not saved.";
                 }
