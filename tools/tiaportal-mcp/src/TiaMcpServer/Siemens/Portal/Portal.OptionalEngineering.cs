@@ -34,12 +34,8 @@ namespace TiaMcpServer.Siemens
                 EngineeringScalarProperties.Apply(target,changes,meta);meta["after"]=EngineeringObjectAddress.Read(target);
                 return "Offline drive parameter changed and read back; no download, online parameter write or drive command.";
             });
-        private object ExactSiVArcRoot(string category)
-        {
-            var property=category switch {"screens"=>"ScreenRules","tags"=>"TagRules","advancedTags"=>"AdvancedTagRules","alarms"=>"AlarmRules","copies"=>"CopyRules","textLists"=>"TextlistRules",_=>throw new ArgumentException("Unknown SiVArc rule category.")};
-            var service=OfficialServiceAccess.Require(_project!,"Siemens.Engineering.SiVArc.Sivarc","Siemens.Engineering.Sivarc");
-            return EngineeringGroupOperations.Get(service,property);
-        }
+        // 2.7.38: the anchor is the typed Sivarc project service (Portal.Sivarc.cs); the generic path-based readers below stay for arbitrary sub-paths.
+        private object ExactSiVArcRoot(string category) => Family(category).Anchor(RequireSivarc());
         public ResponseMessage ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
             =>RunHmiStepTool("ReadSiVArcRules",meta=>{
                 if(offset<0||limit<1||limit>500)throw new ArgumentException("Invalid pagination.");
@@ -74,24 +70,6 @@ namespace TiaMcpServer.Siemens
                     if(EngineeringGroupOperations.Find(collection,name)!=null)throw new InvalidOperationException("Rule remains after deletion.");meta["verifiedAbsent"]=true;
                 }else {EngineeringScalarProperties.Apply(target!,prepared,meta);meta["after"]=EngineeringObjectAddress.Read(target!);}
                 return "SiVArc native rule operation completed; no generation, save, compile or download.";
-            });
-        public ResponseMessage GenerateSiVArc(string hmiDeviceName,string plcSoftwarePathsJson,string generationOptions,bool dryRun=true)
-            =>RunHmiStepTool("GenerateSiVArc",meta=>{
-                using var access=dryRun ? null : AcquireHmiEditAccess();
-                var device=ExactEngineeringDevice(new JsonArray(JsonValue.Create(hmiDeviceName)).ToJsonString());
-                var plcs=ExactNameList(plcSoftwarePathsJson).Select(p=>ExactPlcForEngineering(p,!dryRun).Name).ToArray();
-                if(plcs.Distinct(StringComparer.Ordinal).Count()!=plcs.Length)throw new InvalidOperationException("Native PLC name aliases are ambiguous.");
-                var service=OfficialServiceAccess.Require(_project!,"Siemens.Engineering.SiVArc.Sivarc","Siemens.Engineering.Sivarc");
-                var method=service.GetType().GetMethods().Single(m=>m.Name=="Generate"&&m.GetParameters().Length==3&&m.GetParameters()[0].ParameterType==typeof(string));
-                var options=EngineeringScalarProperties.ConvertValue(JsonValue.Create(generationOptions),method.GetParameters()[2].ParameterType);
-                meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;meta["hmiDeviceName"]=device.Name;
-                if(dryRun)return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
-                meta["mayHaveChanged"]=true;
-                var result=EngineeringGroupOperations.Call(service,"Generate",method.GetParameters().Select(p=>p.ParameterType).ToArray(),device.Name,plcs,options!);
-                OfficialServiceAccess.AttachResult(meta,result);
-                var state=result?.GetType().GetProperty("State")?.GetValue(result)?.ToString();meta["nativeState"]=state;meta["generationPassed"]=state=="Success";
-                if(state!="Success")meta["operationSuccess"]=false;
-                return "SiVArc generation returned; inspect native result. No automatic save/compile/download.";
             });
     }
 }

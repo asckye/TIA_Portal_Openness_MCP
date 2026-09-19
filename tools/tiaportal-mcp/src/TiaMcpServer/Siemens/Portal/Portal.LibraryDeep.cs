@@ -61,7 +61,9 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex) { row["masterCopiesContainingInstancesError"] = ex.GetBaseException().Message; }
             return row;
         }
-        // 2.7.35: the STEP 7 library type subclasses (CodeBlockLibraryType / PlcTypeLibraryType / PlcDocumentLibraryType) name what a version instantiates.
+        // 2.7.35: the STEP 7 library type subclasses (CodeBlockLibraryType / PlcTypeLibraryType / PlcDocumentLibraryType) name what a version instantiates;
+        // 2.7.37 / 2.7.38 add the classic HMI and Unified subclasses (2.7.37 real project: Unified faceplates / graphics are plain LibraryType -> "other").
+        // The SiVArc rule-table types and the DCC block type are named by the phase 6 option-package tools (SivarcLibraryTypeKind / DccLibraryTypeKind).
         private static string LibraryTypeKind(LibraryType type) => type switch
         {
             global::Siemens.Engineering.SW.Blocks.CodeBlockLibraryType => "codeBlock",
@@ -71,7 +73,11 @@ namespace TiaMcpServer.Siemens
             global::Siemens.Engineering.Hmi.Screen.StyleLibraryType => "hmiStyle",
             global::Siemens.Engineering.Hmi.Screen.StyleSheetLibraryType => "hmiStyleSheet",
             global::Siemens.Engineering.Hmi.Tag.HmiUdtLibraryType => "hmiUdt",
-            _ => "other"
+            global::Siemens.Engineering.Hmi.Faceplate.FaceplateLibraryType => "hmiFaceplate",
+            global::Siemens.Engineering.Hmi.RuntimeScripting.VBScriptLibraryType => "hmiVbScript",
+            global::Siemens.Engineering.Hmi.RuntimeScripting.CScriptLibraryType => "hmiCScript",
+            global::Siemens.Engineering.HmiUnified.Library.ScriptModuleType => "unifiedScriptModule",
+            _ => OptionPackageLibraryTypeKind(type)
         };
         private static JsonObject TypeRow(LibraryType type, bool versions)
         {

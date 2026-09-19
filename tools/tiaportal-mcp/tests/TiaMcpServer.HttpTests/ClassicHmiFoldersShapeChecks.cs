@@ -78,7 +78,11 @@ internal static class ClassicHmiFoldersShapeChecks
             Method(wincc,glob+"MultiLingualGraphicComposition","Find",new[]{text},"MultiLingualGraphic"); Method(wincc,glob+"MultiLingualGraphicComposition","Import",new[]{file,importOptions});
         }
         // ---- classic library type subclasses ----
-        foreach(var t in new[]{screen+"ScreenLibraryType",screen+"StyleLibraryType",screen+"StyleSheetLibraryType",tag+"HmiUdtLibraryType"}) { check(T(wincc,t).IsSubclassOf(T(core,"Siemens.Engineering.Library.Types.LibraryType")),t+" derives from LibraryType"); Property(wincc,t,"Name","String"); }
+        foreach(var t in new[]{screen+"ScreenLibraryType",screen+"StyleLibraryType",screen+"StyleSheetLibraryType",tag+"HmiUdtLibraryType",hmi+"Faceplate.FaceplateLibraryType",script+"VBScriptLibraryType",script+"CScriptLibraryType"}) { check(T(wincc,t).IsSubclassOf(T(core,"Siemens.Engineering.Library.Types.LibraryType")),t+" derives from LibraryType"); Property(wincc,t,"Name","String"); }
+        // 2.7.38: the Unified script-module library type (2.7.37 real project: 8 of them in the SICAR / LAF libraries) and the base class itself for Unified faceplates / graphics
+        var unified=Api("Siemens.Engineering.WinCCUnified","Siemens.Engineering");
+        check(T(unified,"Siemens.Engineering.HmiUnified.Library.ScriptModuleType").IsSubclassOf(T(core,"Siemens.Engineering.Library.Types.LibraryType")),"HmiUnified.Library.ScriptModuleType derives from LibraryType");
+        check(!T(core,"Siemens.Engineering.Library.Types.LibraryType").IsAbstract,"LibraryType is instantiable (Unified faceplates / graphics report the base class)");
         // ---- WinCC.Extension value types (V21) ----
         if(v20) Console.WriteLine("CAPABILITY Siemens.Engineering.Hmi.ConstValue / NullableDateTime absent on V20 (value renderer returns null)");
         else

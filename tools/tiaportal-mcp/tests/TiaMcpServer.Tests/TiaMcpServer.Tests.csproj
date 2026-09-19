@@ -99,6 +99,7 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareUnitDeepLogic.cs" Link="SoftwareUnitDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Step7LeftoversLogic.cs" Link="Step7LeftoversLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ClassicHmiFoldersLogic.cs" Link="ClassicHmiFoldersLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\SivarcLogic.cs" Link="SivarcLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />

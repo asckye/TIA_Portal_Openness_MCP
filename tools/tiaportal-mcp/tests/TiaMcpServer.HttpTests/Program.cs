@@ -349,6 +349,7 @@ internal static class Program
                     Step7LeftoversShapeChecks.Run(Server, shapeCheck);
                     TechnologyMappingShapeChecks.Run(Server, shapeCheck);
                     ClassicHmiFoldersShapeChecks.Run(Server, shapeCheck);
+                    SivarcShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

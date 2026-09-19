@@ -37,7 +37,7 @@
 | 3 | **Base 硬件深层与库**（`Siemens.Engineering.HW` / `Library` / `Umac` / `Security` / `Compare` / `CrossReference`） | 85 类型 / 310 成员 | **完成（2.7.33 收口，Base 功能类型缺口 0 / 0）**。③-④ Base 收尾——**2.7.33 完成**：`ReadPortalInfo`（`TiaPortalProcess` / `TiaPortalSession` / `TiaPortalProduct` / `TextCategory` / `HwUtilities`）、`ReadTransferRoutes`（`Connection.*` 路由树、`RHDownloadProvider` / `RHOnlineProvider`）、`ManageHardwareUtilities`（`ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`）、`ManageDeviceServiceObjects`（`WebApplicationConfiguration` / `Telecontrol*DataPoint` / `CertificateManagementConfiguration` + `CertificateSupportedService`）、`ReadObjectIdentifier` / `ShowObjectInEditor` / `RunToolsInTransaction`（`ObjectIdentifierProvider` / `IShowable` / `Transaction`）、`OpenProject` UMAC 凭据、`GoOnline` 用户认证与 R/H、`DownloadToPlc` R/H、类型化的传输提示 / 结果 / `AttributeConfiguration` 批量写 / 交叉引用 / 比较 / 目录 / 多用户 / 版本控制 / 设置行、`ExceptionMessageData`（Base 未封装 52 / 161 → 0 / 0；`CompileProvider` / `Private.ProcessHelper` 为 internal 从分母排除；真机已验 2026-09-19）。③-③ 用户管理与安全——**2.7.32 完成**：`ManageSyslogServers`（工程级 `SyslogServerProvider` / `SyslogServer` / `AssignedModules` + CPU `SysLogConfigurationManager`）、`ManagePasswordPolicy`（`PasswordPolicyConfigurator` / `PlcPasswordPolicyService` / `LegacyPlcPasswordPolicyService`）、`ManageUmcUsers`（offline 与服务器导入的 `UmcUser` / `UmcUserGroup`、`UmcServerConfigurator` 一致性检查与同步、`Authentication` 凭据）、`ManagePlcCertificate` 的 `CertificateTemplate` / `SubjectAlternativeName` / 密码导入、匿名用户激活（Base 未封装 61 / 194 → 52 / 161，`Security` / `Umac` 归零；真机已验 2026-09-18）。③-② 库深层——**2.7.31 完成**：6 个强类型工具封装 `ILibrary` 的 `UpdateCheck` / `UpdateLibrary` / `UpdateProject` / `HarmonizeProject` / `CleanUpLibrary`、`FindType` / `FindVersion`、类型与版本深层字段（Status / SetForUpdate / DoNotUse / Dependencies / Dependents / MasterCopiesContainingInstances / OriginalLibrary）、`DetailedCompareResult`、`GlobalLibraryInfo` / `Archive`、`TypeCreateTransferResults` / `VersionCreateTransferResults`（Base 未封装 75 / 271 → 61 / 194，Library 归零；真机已验 2026-09-18）。③-① 硬件网络深层——**2.7.30 完成**：13 个强类型工具封装 `IoSystem` / `IoController` / `IoConnector`、`SyncDomain` / `MrpDomain` / `MrpInstance`、`TransferArea` / `MulticastableTransferArea` / `TransferAreaMappingRule`、`Channel`、`Address` / `HwIdentifier` 及其控制器、`DeviceUserGroup` / `DeviceGroup`、`WebserverUser` / `SimpleWebserverUser` / `OpcUaUser`、`NetworkPort` 互连（Base 未封装 89 / 332 → 75 / 271；真机 2026-09-18 全部到达，域组合陈旧代理与释放异常误判两处缺陷待 2.7.31）；Base 里剩下的只是经 `ReadHardwareFeatures` 反射读取的"仅类型名"特性类（六种通信连接标量、`GsdDevice(Item)`、`FrontPanelDisplay`、`PlcAccessControlConfigurationProvider`、`PlcAccountLockingAtRuntimeFeature`、`SystemWebPagesFeature`、`ModuleDescriptionUpdater`、`PcInterfaceAssignment`），不计入缺口 |
 | 4 | **Step7**（`Siemens.Engineering.SW`） | 44 类型 / 140 成员 | **完成（2.7.36 收口，Step7 功能类型缺口 0 / 0）**。④-③ 工艺对象映射——**2.7.36 完成**：`ReadTechnologyObjectTree`（`TechnologicalInstanceDBGroup` / `TechnologicalInstanceDB` / `TechnologicalParameter`）+ `ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ManageTechnologyObject` / `ConfigureMotionHardwareConnection` 类型化（`AxisHardwareConnectionProvider` + `AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface`、测量输入 / 输出凸轮、主值关联、V21 `TOMapping` / `DBMemberMapping` / `SuperimposingAxes` / Ident；新增 `Connect(Channel)` 目标；2026-09-19 在临时 `TO_SpeedAxis` 上真机验证通过）。④-② Step7 收尾——**2.7.35 完成并真机验证**：`ManagePlcExternalSources`、`ReadPlcSystemGroups`、`ReadPlcTagTableConstants`、`ExchangePlcAlarmTextListsXlsx`、`ManagePlcTableEntries`、`ExportPlcProDiagInfo` + 访问规则 / OPC UA / 报警类 / 监控设置 / 库类型 / 用户组类型化。④-① 软件单元与 `PlcSoftware` 小服务——**2.7.34 完成并真机验证**。`PlcForceTableEntry` 只读 |
 | 5 | **经典 WinCC**（`Siemens.Engineering.Hmi`） | 24 类型 / 59 成员 | **完成（2.7.37，经典 WinCC 与 WinCC.Extension 功能类型缺口 0 / 0）**：`ReadClassicHmiScreenTree`、`ManageClassicHmiScreenObject`（弹出 / 模板 / 滑入 / 总览 / 全局元素）、`ManageClassicHmiFolder`（五类用户文件夹）、`ManageClassicHmiGraphic`（V21 `GraphicsProvider`）+ VB 脚本 / 库类型 / `ConstValue` / `NullableDateTime` 类型化。参考工程 HMI 是 Unified：形状检查 + 拒绝路径真机验证 |
-| 6 | **选件包** | 108 类型 / 522 成员 | Startdrive `MC.Drives` 22 + `DFI` 16、DCC 图表 62（39 个异常类）、SiVArc 65、Test Suite 16、SafetyValidation 14、Teamcenter 12——本机无这些选件时只能做形状检查，不能真机验证 |
+| 6 | **选件包** | 107 类型 / 515 成员（2.7.37 审计） | **进行中**。⑥-① SiVArc——**2.7.38 完成（33 / 198 → 0 / 0）**：`ReadSivarcRuleTree` / `ManageSivarcRuleContainer` / `ManageSivarcRule`（六个规则族）、`ReadSivarcBlockDefinitions` / `ManageSivarcBlockDefinition`、`ResolveSivarcExpression`、`ManageSivarcScreenLayout`（V21）、`UpgradeSivarcDefinitions` + 类型化 `GenerateSiVArc`。⑥-② Startdrive + DCC（34 / 117 + 13 / 68）、⑥-③ SafetyValidation + Test Suite + Teamcenter + CFC（8 / 34 + 9 / 44 + 7 / 37 + 1 / 7）待做——虚拟机没有这些选件的许可，只做形状检查，不宣称真机验证 |
 
 每阶段的固定动作：对照官方在线文档章节逐页实现 → 纯逻辑离线测试 → 引擎 API 形状检查（`HttpTests engineering-api-only`，逐成员核对 V20/V21 PublicAPI）→ 重跑 `Audit-OpennessCoverage.ps1` 回写覆盖清单 → 有真机条件的在 V21 工程上跑一遍。
 
@@ -109,72 +109,76 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.37 已完成
+## 5. 2.7.38 已完成
+
+- 引擎：阶段 6 ⑥-① SiVArc 选件包：`ReadSivarcRuleTree`、`ManageSivarcRuleContainer`、`ManageSivarcRule`、`ReadSivarcBlockDefinitions`、`ManageSivarcBlockDefinition`、`ResolveSivarcExpression`、`ManageSivarcScreenLayout`、`UpgradeSivarcDefinitions` + `GenerateSiVArc` / `ReadSiVArcRules` / `ManageSiVArcRule` / `ReadLibraryType typeKind` 的类型化改造，全部对照 SiVArc 手册 "SiVArc Openness" 章（规则表 / 文件夹、规则与规则组、母本复制、库对象引用、PLC / HMI 设备列、变量 / 文本定义、变量成员设置、表达式解析器、布局字段导入导出、定义升级、生成）与 `Siemens.Engineering.Sivarc.xml`。有专用引用 505 → 573，完全未触及 322 → 255，未封装功能类型 107 / 515 → 72 / 307（**SiVArc 33 / 198 → 0 / 0**）。离线 1953、形状检查 2301 / 2497。真机不可验证（无 SiVArc 许可）。
+
+## 5.0 2.7.37 已完成
 
 - 引擎：阶段 5 经典 WinCC 文件夹层次：`ReadClassicHmiScreenTree`、`ManageClassicHmiScreenObject`、`ManageClassicHmiFolder`、`ManageClassicHmiGraphic` + `ReadClassicHmiScripts` / `ManageClassicHmiScript` / `ReadLibraryType` / `EngineeringScalarProperties.Json` 的类型化改造，全部对照官方 "Exporting / Importing a pop-up screen" / "Exporting / Importing a slide-in screen" / "Exporting screen templates from a folder" / "Deleting a user-defined folder of an HMI device" / "Creating user-defined folders for HMI tags" / "Exporting/importing graphics" 章节与 `Siemens.Engineering.WinCC(.Extension).xml`。有专用引用 469 → 505，完全未触及 357 → 322，未封装功能类型 133 / 585 → 107 / 515（**经典 WinCC 24 / 59 → 0 / 0，WinCC.Extension 2 / 11 → 0 / 0；核心程序集全部收口**）。离线 1881、形状检查 1957 / 2140。真机（2026-09-19）：四个工具对 Unified / PLC 目标按预期拒绝，`typeKind` 在 1,038 个工程库类型上核对（Unified `ScriptModuleType` 与基类 `LibraryType` 面板暂回 `other`，2.7.38 补），`ConstValue` / `NullableDateTime` 在 Unified 里不出现；经典实做路径无经典 HMI 工程可验。
 
-## 5.0 2.7.36 已完成
+## 5.1 2.7.36 已完成
 
 - 引擎：2.7.35 真机缺陷修复（监控表注释行计数从表重新导航）；阶段 4 子批次 ④-③ 工艺对象映射：`ReadTechnologyObjectTree` + `ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ManageTechnologyObject` / `ConfigureMotionHardwareConnection` 的类型化改造（`TechnologicalInstanceDBGroup` / `TechnologicalParameter` / `TechnologicalInstanceDBAssociation`、`AxisHardwareConnectionProvider` 与两种硬件连接接口的全部重载、测量输入 / 输出凸轮、V21 `TOMapping` / `DBMemberMapping` / `SuperimposingAxes` / Ident，`Connect(Channel)` 目标），全部对照 `Siemens.Engineering.Step7.xml` 的 `SW.TechnologicalObjects` 摘要。有专用引用 451 → 469，完全未触及 370 → 357，未封装功能类型 139 / 637 → 133 / 585（**Step7 5 / 42 → 0 / 0，阶段 4 收口**）。离线 1836、形状检查 1879 / 2045。真机验证通过（2026-09-19，临时 `TO_SpeedAxis` V9.0）。
 
-## 5.1 2.7.35 已完成
+## 5.2 2.7.35 已完成
 
 - 引擎：2.7.34 真机缺陷修复（单元关系回读从单元组重新导航）；阶段 4 子批次 ④-② Step7 收尾：`ManagePlcExternalSources`、`ReadPlcSystemGroups`、`ReadPlcTagTableConstants`、`ExchangePlcAlarmTextListsXlsx`、`ManagePlcTableEntries`、`ExportPlcProDiagInfo` + 访问规则 / OPC UA / 报警类 / 监控设置 / 库类型 / 用户组的类型化改造，全部对照官方 "Generating blocks from source" / "Generating block/UDT from external source file in specific user group" / "Querying the system group for system blocks" / "Export/Import of Plc Alarm TextLists" / "Export/Import of Alarm classes" / "Exporting ProDiag alarm message" 章节与 `Siemens.Engineering.Step7.xml`。有专用引用 417 → 451，完全未触及 406 → 370，未封装功能类型 162 / 695 → 139 / 637（Step7 28 / 100 → 5 / 42）。离线 1825、形状检查 1784 / 1929。真机验证通过（2026-09-19）。
 
-## 5.2 2.7.34 已完成
+## 5.3 2.7.34 已完成
 
 - 引擎：2.7.33 真机事务缺陷修复（`ForceRealExecution` 无键也写 `dryRun=false`）；阶段 4 子批次 ④-① Step7 软件单元与 `PlcSoftware` 小服务：`ReadPlcSoftwareUnits`、`ManagePlcDocuments`、`ReadPlcChecksums`、`ReadPlcObjectFingerprints`、`ManagePlcBlockWriteProtection`、`ManageProjectCompilationSettings` + `ManagePlcSoftwareUnit` / `ReadDeviceItemChannels` / `UpdateDeviceAddress` / `ImportFromDocuments` 扩展，全部对照官方 "Accessing software unit" / "Accessing the SafetyUnit" / "Accessing name value type document" / "Exporting UDT as document" / "Accessing Software Checksum" / "Changing blocks using fingerprints" / "Setting up write protection of blocks" / "Updating project properties" 章节与 `Siemens.Engineering.Step7.xml`。有专用引用 396 → 417，完全未触及 428 → 406，未封装功能类型 178 / 735 → 162 / 695（Step7 44 / 140 → 28 / 100）。离线 1754、形状检查 1670 / 1810。真机验证通过（2026-09-19）。
 
-## 5.3 2.7.33 已完成
+## 5.4 2.7.33 已完成
 
 - 引擎：2.7.32 真机问题修复（工程级 syslog `create` 改为只预览、证书 `template` 免 `certificateId`、`UmacDevice` 文案、`CheckLibraryUpdates parts` 扁平渲染、多 TIA 实例下的改绑守卫）；阶段 3 子批次 ③-④ Base 收尾：`ReadPortalInfo`、`ReadTransferRoutes`、`ManageHardwareUtilities`、`ManageDeviceServiceObjects`、`ReadObjectIdentifier`、`ShowObjectInEditor`、`RunToolsInTransaction` + `OpenProject` / `GoOnline` / `DownloadToPlc` 扩展与十余处类型化改造，全部对照官方 "Diagnostic interfaces" / "Transaction handling" / "Identifying cross session object" / HwUtilities / "Managing dynamic certificate settings" 章节与 `Siemens.Engineering.Base.xml`。有专用引用 314 → 396，完全未触及 490 → 428，未封装功能类型 230 / 896 → 178 / 735（**Base 52 / 161 → 0 / 0，阶段 3 收口**）。离线 1667、形状检查 1585 / 1708。真机已验（2026-09-18，见 `docs/releases/v2.7.32.md#真机结果`）。
 
-## 5.4 2.7.32 已完成
+## 5.5 2.7.32 已完成
 
 - 引擎：2.7.31 真机缺陷修复（`ProjectLibrary` 无 `Name` 的库标签、系统库 null `TypeFolder` 守卫、`UpdateCheck` 预拒绝、用户库限定动作的文案）；阶段 3 子批次 ③-③ 用户管理与安全：`ManageSyslogServers`、`ManagePasswordPolicy`、`ManageUmcUsers` + `ManagePlcCertificate`（`template` / SAN / 密码导入）与 `ManageProjectUserManagement`（匿名用户）扩展，全部对照官方 UMAC / UMC / 密码策略 / 证书 / Syslog 章节与 `Siemens.Engineering.Base.xml`。有专用引用 288 → 314，完全未触及 513 → 490，未封装功能类型 239 / 929 → 230 / 896（Base 61 / 194 → 52 / 161）。离线 1620、形状检查 1403 / 1500。真机已验（2026-09-18，见 `docs/releases/v2.7.31.md#真机结果`）。
 
-## 5.5 2.7.31 已完成
+## 5.6 2.7.31 已完成
 
 - 引擎：2.7.30 真机问题修复（HW 组合代理刷新、就地捕获已释放代理、通道属性访问模式）；阶段 3 子批次 ③-② 库深层：`ReadLibraryOverview`、`ReadLibraryType`、`ManageLibraryType`、`CheckLibraryUpdates`、`SynchronizeLibrary`、`CompareLibraryObjects` + `ManageGlobalLibrary` / `ImportLibraryTypeDocuments` 扩展，全部对照官方 "Functions on libraries" 章节与 `Siemens.Engineering.Base.xml`。有专用引用 269 → 288，完全未触及 535 → 513，未封装功能类型 253 / 1,006 → 239 / 929。离线 1550、形状检查 1291 / 1388。真机已验（2026-09-18，见 `docs/releases/v2.7.30.md#真机结果`）。
 
-## 5.6 2.7.30 已完成
+## 5.7 2.7.30 已完成
 
 - 引擎：阶段 3 子批次 ③-① Base 硬件网络深层：13 个强类型工具（IO 系统、同步域 / MRP 域 / MRP 实例、传输区与映射规则、CCDX 多播传输区、通道、地址 / 硬件标识符及控制器、设备用户组、Web 服务器 / SIWAREX / OPC UA 用户、端口互连），全部对照官方 "Functions on networks" / "Functions on device items" / PLC 服务章节与 `Siemens.Engineering.Base.xml`。有专用引用 238 → 269，完全未触及 556 → 535，未封装功能类型 267 / 1,067 → 253 / 1,006。离线 1506、形状检查 1158 / 1255。真机重跑（2026-09-18）：13 个工具全部到达真实对象，读取与可复原写入通过；发现域组合代理在 Create/Delete 后陈旧、`EngineeringObjectDisposedException` 误触发连接失败保护两处缺陷，2.7.31 修。
 
-## 5.7 2.7.29 已完成
+## 5.8 2.7.29 已完成
 
 - 引擎：`ExchangeUnifiedTags export` 回报路径解析修复 + `directoryListing`；剩余 Unified 类型登记（真机 / 仅形状检查如实标注）；完全未触及 599 → 556，未封装功能类型 288 / 1,185 → 267 / 1,067。离线 1446、形状检查 990 / 1087。WinCC Unified 阶段收口，下一阶段为 Base 硬件深层 / 库 / UMC / 安全（§2.0 阶段 3）。
 
-## 5.8 2.7.28 已完成
+## 5.9 2.7.28 已完成
 
 - 引擎：WinCC Unified 子批次 ⑤：`ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms`；其余剩余类型经既有通用工具真机验证并登记。离线 1437、形状检查 990 / 1087。
 
-## 5.9 2.7.27 已完成
+## 5.10 2.7.27 已完成
 
 - 引擎：2.7.26 画面对象族真机重跑；修复创建后代理身份核对（`ManageUnifiedScreenItem` / `ManageUnifiedScreenLayout`）、部件内多语言文本、`UpdateUnifiedObjectProperties` 的颜色与嵌套部件写入；2.7.27 真机重跑全部通过。子批次 ②③④（`HmiAlarm` / `HmiLogging` / `RuntimeSettings`）与 `UI.Controls` 真机验证后登记为动态覆盖：完全未触及 626 → 599，Unified 未封装功能类型 41 → 21。
 
-## 5.10 2.7.26 已完成
+## 5.11 2.7.26 已完成
 
 - 引擎：WinCC Unified 画面对象族（§2.0 阶段 2 子批次 ①）：`DescribeUnifiedScreenItemType`、`ManageUnifiedScreenItem`；隐藏 `EventHandlers` 的四种对象类型的歧义修复。审计脚本新增动态覆盖登记表与"动态覆盖"栏（完全未触及 885 → 626）。离线 1402、形状检查 936 / 1032。
 
-## 5.11 2.7.25 已完成
+## 5.12 2.7.25 已完成
 
 - 引擎：`Siemens.Engineering.Safety` 全量封装（§2.0 阶段 1）。`ManagePlcSafety` 强类型重写并补齐嵌套对象、文档化属性、集体签名（此前从未真正读出）、F-I/O 状态块生成、系统对象清理、F-BaseID、登录/登出/密码设置与撤销；新增 `ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`；下载提示 `SafetyProgram`。离线 1353、形状检查 886 / 982。
 
-## 5.12 2.7.20–2.7.24 已完成
+## 5.13 2.7.20–2.7.24 已完成
 
 - 引擎：`DescribeBlockLogic` 在真实 V21 工程上暴露的渲染丢失全部修复并真机回归（SCL 调用 / 命名常量 / 绝对地址 / 数组下标 / 位切片 / `ENO`，LAD `<Call>` 调用框 / 用户命名引脚 / `Not` / EN 链）；`RenderPlcBlockDocument` / `ComparePlcBlockDocuments` / `GeneratePlcDocumentation` 同族修复。SCL 渲染改为按 `SW.PlcBlocks.Access_v5.xsd` 的全部分支实现。
 - 配置器：重做为单页双栏连接控制台（虚拟机 ↔ 宿主机 / 同一台电脑），客户端卡片按 CLI 在前排列并加入通义千问 / Kimi / 腾讯元宝 / DeepSeek / 智谱清言 / Grok（写各家官方 CLI 或 OpenCode）。
 - 覆盖盘点重跑（2.7.24）：API 封装面较 2.7.18 仅 +12 成员 / +4 类型；去掉壳子类型与动态覆盖后，真实缺口 381 个功能类型 / 1,753 个成员，见[覆盖清单](../reference/openness-coverage.md#缺口结构2724)。据此把 **Safety** 提为第一阶段（§2.0），2.7.25 完成。
 
-## 5.13 2.7.19 已完成
+## 5.14 2.7.19 已完成
 
 - 引擎：E8、E11 完成，全部 11 项引擎待办处理完毕（E10 保留为设计决定）。新增 9 个工具（共 359）：PLCSIM Advanced 通道 5 个（#1 与 S2 的场景式单元测试，反射后期绑定，**未在真实 PLCSIM Advanced 上验证**）、离线文档 2 个（S3 的块可视化，自研 Markdown/Mermaid 渲染，不移植 TS 渲染器）、SCL 预检 1 个（#8，自研启发式规则，不引入 tree-sitter/Node）、AML 生成 1 个（#6 的生成半边，不引入 Aml.Engine，配合已有 `ImportDeviceAml`）。
 - 程序文档（#9）由 `GeneratePlcDocumentation` 覆盖（索引、调用交叉引用、逐块渲染）。写保护钩子与审计日志（S7 及竞品的审计模式）随插件交付。
 - §3 候选中仍未落地：AutoPLC / Agents4PLC 数据（#4/#5，skill 调优素材，只在 [生态与参考资源](../reference/ecosystem.md) 登记）；`Siemens.Collaboration.Net.*` 再分发决策（§4）仍待维护者。
 - 分类修正：6 个运行时/上载写入工具改为 ONLINE-WRITE。
 
-## 5.14 2.7.18 已完成
+## 5.15 2.7.18 已完成
 
 - 引擎：E1–E5、E7、E9 处理完毕；新增 52 个官方 Openness 工具、8 个运行时通道工具、3 个离线分析工具与 `ListToolCategories`，共 350 个工具；V20/V21 重建，离线 1158、形状检查 847/758、实际 EXE 回归两版全过；**真实工程验收未执行**。
 - §2.1 中的 P1（下载提示、设备上载/扫描、DB 快照、文件夹下载）与大部分 P2（块保护、`UpdateProgram`、OPC UA 访问控制、UMAC 读写、库/工程比较、报警文本导入、Unified 事件/部件/动态化、通信连接、监视/强制表 Web 访问）已实现；P3 的 ProDiag 对象、多用户会话、Motion 对象模型、经典 HMI 脚本亦已实现。仍未做：SafetyValidation、Teamcenter、Startdrive/SiVArc/DCC 剩余动作、UMC 同步与工程保护启停、硬件杂项（App ID、批量参数、PSC、Logo、CiR、共享设备、I-Device GSD 导出）、库实例清理/更新流程。

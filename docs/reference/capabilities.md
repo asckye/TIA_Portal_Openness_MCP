@@ -2,6 +2,19 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.38 新增工具族（阶段 6 ⑥-① SiVArc 选件包）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 规则层次 | `ReadSivarcRuleTree`、`ManageSivarcRuleContainer`、`ManageSivarcRule` | 要求工程上有 `Sivarc` 服务（无 SiVArc 选件时 NotSupported）；实做写入要 SiVArc 许可（TIA 报 "License not found"）；只删空文件夹 / 空组、默认规则表拒绝删除；条件 / 注释 500 字、名称 128 字的官方上限在参数门就拒；`ConditionOperator` 对不适用的规则回 `None`、写入会被 TIA 拒绝；设备列只对画面 / 报警 / 复制 / 高级变量规则；实例化规则表在发布模式下的编辑被 TIA 拒绝 |
+| 块定义 | `ReadSivarcBlockDefinitions`、`ManageSivarcBlockDefinition` | 只对代码块（OB / FB / FC）；`TagMemberSettings` / `CommonParameters` / `BlockParameters` 仅 V21，块参数只 update（镜像块接口） |
+| 表达式解析 | `ResolveSivarcExpression` | 只读；PLC 必须已编译且有调用结构；库对象是母本或库类型 |
+| 布局数据 | `ManageSivarcScreenLayout` | 仅 V21；经典 `Screen` 与 Unified `HmiScreen` 都可；导出必须是新文件；导入默认预览 |
+| 定义升级 / 生成 | `UpgradeSivarcDefinitions`、`GenerateSiVArc`（类型化改造，新增多设备重载） | 默认预览；生成结果按 `IsGenerationSuccessful` 判定 `operationSuccess`；HMI 未连到所选 PLC 时 TIA 抛异常 |
+| 类型化改造 | `ReadSiVArcRules` / `ManageSiVArcRule` 锚点、`ReadLibraryType`（`typeKind` 新增 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule` / `sivarc*` / `dccBlockType`） | 签名不变 |
+
+**真机不可验证**（虚拟机没有 SiVArc 许可；部署后只验 NotSupported 与 `typeKind`）；形状检查 V20 2301 / V21 2497 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.37 新增工具族（阶段 5 经典 WinCC 文件夹层次，核心程序集收口）
 
 | 族 | 工具 | 边界 |
@@ -126,7 +139,7 @@
 | 硬件服务 | `ReadCommunicationConnections`、`ManageCommunicationConnection`、`ManageWatchForceTableWebAccess`、`ExchangeSystemDiagnosticsSettings`、`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl`、`ImportDeviceAml`、`ReadHardwareFeatures` | 通信连接与 OPC UA 访问控制 V20 无 API；连接创建要求调用方精确指定拥有 `ConnectionComposition` 的对象；AML 导入需 `confirmImport` 并回传原生日志哈希 |
 | Unified 原生交换（2.7.28，2.7.29 真机修复） | `ExchangeUnifiedTags`、`ExchangeUnifiedScriptModules`、`ImportUnifiedOpcUaAlarms` | 导出要求新目录、每个原生文件哈希（变量导出回报的无扩展名路径解析到实际 `.hmi.yml`，附 `reportedPath` 与 `directoryListing`）；导入要求现有目录并核对期望名/模块名；`OpcUaAlarm` 只在 OPC UA 连接上存在；默认预览，无保存/编译/下载 |
 | Unified 画面对象（2.7.26，2.7.27 真机修复） | `DescribeUnifiedScreenItemType`、`ManageUnifiedScreenItem` | 目录与 schema 反射自加载的官方 API（V21 43 个具体类型 / V20 37 个）；`create` 经原生 `Create<T>(name[, containedType])`，按名称查回核对；部件嵌套对象、多语言按 culture（任意深度，如 `Title.Text`）、颜色 `#AARRGGBB`，每个叶子读回；`delete` 需 `confirmDelete`；事件/动态化仍用各自工具 |
-| Unified UI 对象模型 | `ReadUnifiedObjectEvents`、`ManageUnifiedObjectParts`、`ManageUnifiedDynamization`、`ManageUnifiedScreenLayout`、`ManageUnifiedListEntries`、`ReadUnifiedAlarmCommon`、`ReadUnifiedAuditSettings` | 阈值/数据网格/报警行列无原生 `Create`；画面复制与布局字段导入导出官方无 API；Unified 列表条目官方无类型，`ManageUnifiedListEntries` 的变更动作明确 NotSupported |
+| Unified UI 对象模型 | `ReadUnifiedObjectEvents`、`ManageUnifiedObjectParts`、`ManageUnifiedDynamization`、`ManageUnifiedScreenLayout`、`ManageUnifiedListEntries`、`ReadUnifiedAlarmCommon`、`ReadUnifiedAuditSettings` | 阈值/数据网格/报警行列无原生 `Create`；画面复制官方无 API，布局字段导入导出是 SiVArc 选件的 `LayoutData`（`ManageSivarcScreenLayout`，V21）；Unified 列表条目官方无类型，`ManageUnifiedListEntries` 的变更动作明确 NotSupported |
 | Motion / ProDiag / 经典 HMI | `ReadMotionAxisConfiguration`、`ManageMotionAxis`、`ManagePlcSupervision`、`ReadClassicHmiScripts`、`ManageClassicHmiScript`、`ManageClassicHmiCycle`、`ManageClassicHmiTextGraphicList`、`ReadClassicHmiGlobalization`、`ReadClassicHmiFaceplates` | ProDiag 无类型化监督组合，只能经官方动态组合接口；经典 HMI 脚本/周期/列表无 `Create(string)`，新对象只能经原生 XML 导入 |
 | 运行时通道（不经 Openness） | `ReadPlcWebVars`、`WritePlcWebVars`、`ReadPlcWebDiagnostics`、`SetPlcWebOperatingMode`；`ReadUnifiedRuntimeTags`、`WriteUnifiedRuntimeTags`、`ReadUnifiedRuntimeAlarms`、`UnifiedOpenPipeRequest` | 写入与模式切换需 `confirmWrite` / `confirmModeChange`；证书默认校验；Open Pipe 只在本机、需 "SIMATIC HMI" 组；订阅类消息拒绝 |
 | 离线分析 | `ComparePlcBlockDocuments`、`ScanPlcSourceAnnotations`、`ExtractPlcBlockMetrics` | 指标来自导出文档，不是西门子质量判定 |
@@ -256,7 +269,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 
 2.7.18 之后仍未实现或官方无 API 的项（全量对照见 [官方 API 覆盖清单](openness-coverage.md)）：
 
-- **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
+- **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
 - **选件与协作**：SafetyValidation、Teamcenter、UMC 服务器同步与用户/组创建、启用/停用工程保护、Startdrive/SiVArc/DCC/CFC/TestSuite 未在表中列出的剩余动作、主副本/类型版本的 `DetailedCompareResult` 比较、`Connect(Channel)` 与 V20 `Connect(Telegram, …)` 重载。
 - **硬件杂项**：App ID、批量硬件参数、Software Controller PSC/资源配置、自定义 Logo、CiR、I-Device PN-GSD 导出、共享设备、GSDX 签名状态、向 PLC 下载附加用户文件；`SelectiveDeleteDownload`、`Upgrade/DowngradeTargetDevice`、`TurnOffSequence`、`OverwriteHmiData`、Startdrive 下载提示无内置默认，需经 `promptAnswersJson` 显式指定。
 - **库**：实例清理/更新全部流程、HMI-Library 之外的模板分析。
