@@ -67,6 +67,8 @@ ALLOWED = {
     'CheckConsistency': 'Openness UmcServerConfigurator.CheckConsistency()，由 ManageUmcUsers kind=server 封装',
     'GetAccessibleDevices': 'Openness ConfigurationPcInterface.GetAccessibleDevices()，由 ScanAccessibleDevices 封装',
     'GetFingerprintData': 'Openness FingerprintDataProvider.GetFingerprintData()，由 ReadPlcBlockFingerprints 封装',
+    'GetFingerprints': 'Openness FingerprintProvider.GetFingerprints()，由 ReadPlcObjectFingerprints 封装',
+    'GetLinkedTags': 'Openness PlcTagProvider.GetLinkedTags()，由 ReadDeviceItemChannels includeLinkedTags 封装',
     'ImportInstanceTextsFromXlsx': 'Openness PlcAlarmTextProvider.ImportInstanceTextsFromXlsx()，由 ImportPlcAlarmInstanceTexts 封装',
     'GetCreationInfos': 'Openness IEngineeringComposition.GetCreationInfos()，动态组合接口',
     'CloseAndCommit': 'Openness LocalSession.CloseAndCommit()，由 ManageMultiuserSession 的 commit 动作封装',

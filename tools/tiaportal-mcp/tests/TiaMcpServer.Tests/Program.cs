@@ -118,6 +118,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Base 收尾纯逻辑：硬件工具、设备服务对象（Web 应用 / 遥控数据点 / 动态证书）、对象选择、事务调用清单、UMAC / 在线凭据、R/H 目标 ==");
             BaseLeftoversTests.Run(Check);
 
+            Console.WriteLine("== Step7 软件单元深层纯逻辑：单元 / 安全单元请求、命名值类型与 UDT 文档请求、指纹、块写保护状态机、工程编译设置、目录快照 ==");
+            SoftwareUnitDeepTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

@@ -1195,7 +1195,7 @@ namespace TiaMcpServer.Siemens
             bool prevAutoNumber = false;
             try { if (existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { }
 
-            DocumentImportResult? result;
+            DocumentImportResultForBlocks? result;
             try
             {
                 result = targetGroup.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option);
@@ -1216,8 +1216,9 @@ namespace TiaMcpServer.Siemens
             if (result == null || result.State != DocumentResultState.Success)
             {
                 throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"ImportFromDocuments returned state '{result?.State.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The document set was not imported.");
+                    $"ImportFromDocuments returned state '{result?.State.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The document set was not imported." + DocumentMessageSuffix(result));
             }
+            LastImportedDocumentBlocks = result.ImportedPlcBlocks == null ? Array.Empty<string>() : EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
 
             // Restore the original block number if Override renumbered it (symbolic/optimized blocks
             // are addressed by name, so this is cosmetic-but-important for a stable, diffable project).
@@ -1245,6 +1246,19 @@ namespace TiaMcpServer.Siemens
                 }
             }
             return true;
+        }
+
+        /// <summary>Names of the blocks the last single-document import created (DocumentImportResultForBlocks.ImportedPlcBlocks).</summary>
+        public string[] LastImportedDocumentBlocks { get; private set; } = Array.Empty<string>();
+        // Native log lines of a document export / import (DocumentResultMessageComposition of DocumentResultMessage).
+        private static string DocumentMessageSuffix(DocumentImportResult? result)
+        {
+            try
+            {
+                var lines = DocumentMessages(result?.Messages).Select(m => m?.ToString()).Where(m => !string.IsNullOrWhiteSpace(m)).ToArray();
+                return lines.Length == 0 ? "" : " Native messages: " + string.Join(" | ", lines);
+            }
+            catch { return ""; }
         }
 
         /// <summary>Depth-first search for a block by exact name across all nested block groups.</summary>
@@ -1337,7 +1351,7 @@ namespace TiaMcpServer.Siemens
 
                         try
                         {
-                            var result = (group != null)
+                            DocumentImportResultForBlocks result = (group != null)
                                 ? group.Blocks.ImportFromDocuments(dir, name, option)
                                 : plcSoftware.BlockGroup.Blocks.ImportFromDocuments(dir, name, option);
 
@@ -1355,7 +1369,7 @@ namespace TiaMcpServer.Siemens
                             {
                                 // State 不是 Success 也是失败，只是不抛异常 —— 以前这条路径连日志都没有。
                                 failures.Add($"{name}: ImportFromDocuments 返回 state="
-                                             + (result?.State.ToString() ?? "null") + "，整份文档未导入");
+                                             + (result?.State.ToString() ?? "null") + "，整份文档未导入" + DocumentMessageSuffix(result));
                             }
                         }
                         catch (EngineeringNotSupportedException ex)

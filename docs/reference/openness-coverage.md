@@ -1,4 +1,4 @@
-# 官方 Openness API 覆盖清单（V21，2.7.33）
+# 官方 Openness API 覆盖清单（V21，2.7.34）
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -14,17 +14,18 @@
 - 结果（V21，2.7.30）：领域成员已引用 **795**（2.7.29 为 697）、仅类型名 798、未引用 2,897；类型 1,217 个中有专用引用 **269**（2.7.29 为 238）、仅类型名 91、动态覆盖 322、完全未触及 **535**（2.7.29 为 556）。2.7.30 的变化：`Siemens.Engineering.HW` 命名空间有专用引用的类型 13 → 32、已引用成员 45 → 120，`HW.Features` 15 → 26 / 19 → 39——全部是强类型封装，词法可见，不进登记表。
 - 结果（V21，2.7.31）：领域成员已引用 **928**（2.7.30 为 795）、仅类型名 756、未引用 2,806；类型 1,217 个中有专用引用 **288**、仅类型名 91、动态覆盖 325（新登记 `Library.Compare.LibraryCompareResult*`，反射遍历）、完全未触及 **513**。`Siemens.Engineering.Library` / `.Types` / `.Compare` / `.MasterCopies` 的功能类型缺口归零。
 - 结果（V21，2.7.32）：领域成员已引用 **1,008**（2.7.31 为 928）、仅类型名 740、未引用 2,742；类型 1,217 个中有专用引用 **314**、仅类型名 88、动态覆盖 325、完全未触及 **490**。`Siemens.Engineering.Security` 与 `Siemens.Engineering.Umac` 的功能类型缺口归零（`Security` 12 个类型全部有专用引用，`Umac` 31 个里只剩 4 个 `IsReadOnly` 壳子）；工程用户管理里的组合与关联改为类型化访问后词法可见。
+- 结果（V21，2.7.34）：领域成员已引用 **1,280**（2.7.33 为 1,224）、仅类型名 702、未引用 2,498；类型 **1,215** = 有专用引用 **417**、仅类型名 65、动态覆盖 327、完全未触及 **406**。阶段 4 ④-① 把 `SW.Units`（`PlcUnitBase` / `PlcUnitSystemGroup` / `PlcUnitRelation` / `PlcSafetyUnit` 与三个组合）、`SW` 的 `PlcDocument` / `DocumentImportResult*` / `DocumentResultMessage` / `PlcChecksumProvider` / `FingerprintProvider` / `PlcSimulationSettingsProvider` / `VirtualPlcSettingsProvider` / `PlcTagProvider` / `ProcessImageProvider` 与 `SW.Blocks.PlcBlockWriteProtectionProvider` 改为专用引用（Step7 未封装 44 / 140 → 28 / 100）。
 - 结果（V21，2.7.33）：领域成员已引用 **1,224**（2.7.32 为 1,008）、仅类型名 696、未引用 2,560；类型 **1,215**（分母去掉 PublicAPI 里 internal 的 `Siemens.Engineering.Private.ProcessHelper` 与 `Compiler.CompileProvider`）= 有专用引用 **396**、仅类型名 64、动态覆盖 327（新登记 `HW.CustomDataTypes.*`：GSD 自定义属性的 `GetAttribute` 值）、完全未触及 **428**。**`Siemens.Engineering.Base.dll` 的功能类型缺口归零**，阶段 3 收口；Base 里剩下的"仅类型名"是经 `ReadHardwareFeatures` 反射读取的特性类（`FdlConnection` 等六种通信连接的标量、`GsdDevice(Item)`、`FrontPanelDisplay`、`PlcAccessControlConfigurationProvider`、`PlcAccountLockingAtRuntimeFeature`、`SystemWebPagesFeature`、`ModuleDescriptionUpdater`、`PcInterfaceAssignment`）。
 
-## 缺口结构（2.7.33）
+## 缺口结构（2.7.34）
 
-428 个"完全未触及"的类型里（2.7.32 为 490，2.7.31 为 513，2.7.30 为 535，2.7.29 为 556，2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型与 2.7.30 强类型封装的硬件网络类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 178 个 / 735 个成员**（2.7.32 为 230 / 896，2.7.31 为 239 / 929，2.7.30 为 253 / 1,006，2.7.29 为 267 / 1,067，2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）68 个 / 199 个，`WinCC.Extension` 2 个 / 11 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
+406 个"完全未触及"的类型里（2.7.33 为 428，2.7.32 为 490，2.7.31 为 513，2.7.30 为 535，2.7.29 为 556，2.7.27 为 599，2.7.26 为 626，2.7.25 为 885；差额是登记为动态覆盖的 322 个 Unified 类型与 2.7.30 强类型封装的硬件网络类型），`*Composition` / `*Association` / `*EventArgs` / `*Exception` / `*Result` / `*Info` 这类集合与结果壳子 333 个，Unified `UI.Events`（96）与 `UI.Parts`（85）经 `GetCompositionInfos` / 泛型 `Create<T>` 动态覆盖而词法不可见（2.7.26 起已从"未触及"移入动态覆盖栏）。去掉这三类后，**没有专用封装的功能类型为 162 个 / 695 个成员**（2.7.33 为 178 / 735，2.7.32 为 230 / 896，2.7.31 为 239 / 929，2.7.30 为 253 / 1,006，2.7.29 为 267 / 1,067，2.7.27 为 288 / 1,185，2.7.26 为 308 / 1,286；2.7.26 起所有行统一用审计脚本的壳子规则重算），其中核心程序集（Base / Step7 / WinCC / WinCCUnified）52 个 / 159 个，`WinCC.Extension` 2 个 / 11 个，选件包（SiVArc / Startdrive / DCC / Test Suite / SafetyValidation / Teamcenter / CFC）108 个 / 525 个。
 
 | 程序集 | 未封装功能类型 | 成员 | 具体是什么 |
 |---|---:|---:|---|
 | WinCCUnified | 0 | 0 | **2.7.26–2.7.29 已封装/登记**：画面对象族（`ManageUnifiedScreenItem` + `DescribeUnifiedScreenItemType`）、报警类与离散/模拟报警（`HmiAlarm`）、记录（`HmiLogging`）、运行时设置（`RuntimeSettings`）——真机验证；2.7.28 新增 `ExchangeUnifiedTags` / `ExchangeUnifiedScriptModules` / `ImportUnifiedOpcUaAlarms`（变量导出核对 2.7.29 真机修复）；系统变量、阈值（`Create()` 被 TIA 拒绝）、替代值（仅外部变量）、审计类真机到达并登记；连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`IValidator`、画面组以**仅形状检查**登记（登记表 `verified` 字段如实标注，待下次真机重跑补跑） |
 | Base | 0 | 0 | **2.7.33 ③-④ 已封装**Base 收尾（`ReadPortalInfo`：`TiaPortalProcess` / `TiaPortalSession` / `TiaPortalProduct` / `TextCategory` / `HwUtilities`；`ReadTransferRoutes`：`Connection.*` 路由树 + `RHDownloadProvider` / `RHOnlineProvider`；`ManageHardwareUtilities`：`ModuleInformationProvider` / `OpcUaExportProvider` / `CardReaderPscProvider`；`ManageDeviceServiceObjects`：`WebApplicationConfiguration` / `Telecontrol*DataPoint` / `CertificateManagementConfiguration` + `CertificateSupportedService`；`ReadObjectIdentifier` / `ShowObjectInEditor` / `RunToolsInTransaction`：`ObjectIdentifierProvider` / `IShowable` / `ISystemObject` / `Transaction`；`OpenProject` 的 `UmacCredentials`、`GoOnline` 的 `OnlineAuthenticationConfiguration` / `OnlineCredentials` / `AuthenticationType`、下载 / 上载提示与结果基类、`AttributeConfiguration` 批量写、`CrossReference` / `Compare` / `CatalogEntry` / Multiuser / VersionControl / Settings 类型化；`ExceptionMessageData`；真机待验）。**2.7.32 ③-③**用户管理与安全、**2.7.31 ③-②** 库深层、**2.7.30 ③-①** 硬件网络深层均已真机验证。`Compiler.CompileProvider` 与 `Private.ProcessHelper` 是 internal，`HW.CustomDataTypes.*` 登记为动态覆盖 |
-| Step7 | 44 | 140 | 41 | 136 | 软件单元 `SW.Units`（27）、`PlcDocument*` 与 `PlcChecksumProvider` / `PlcSimulationSettingsProvider`、`PlcBlockWriteProtectionProvider`、系统块/类型组、`PlcForceTableEntry`（刻意不注册）、报警类导入导出结果、`OpcUaCommunicationGroup` |
+| Step7 | 28 | 100 | **2.7.34 ④-① 已封装**软件单元与 `PlcSoftware` 小服务（`ReadPlcSoftwareUnits` / `ManagePlcSoftwareUnit`：`PlcUnitSystemGroup` / `PlcUnitBase` / `PlcUnit` / `PlcSafetyUnit` / `PlcUnitRelation` 与组合；`ManagePlcDocuments`：`PlcDocument` / `PlcDocumentComposition` / `DocumentImportResultForSplDocument` / `DocumentImportResultForTypes` / `DocumentResultMessage`；`ReadPlcChecksums`、`ReadPlcObjectFingerprints`（`Fingerprint` / `FingerprintId`）、`ManagePlcBlockWriteProtection`、`ManageProjectCompilationSettings`、`ReadDeviceItemChannels includeLinkedTags`（`PlcTagProvider`）、`UpdateDeviceAddress`（V21 `ProcessImageProvider`）；真机待验）。剩余：`SW.ExternalSources`（`PlcExternalSource(Group/UserGroup)` / `PlcExternalSourceSystemGroup.GenerateSource`）、`SW.Blocks` 零头（`PlcSystemBlockGroup`、`CodeBlock.ExportProDIAGInfo`、`CodeBlockLibraryType`）、`SW.Types` / `SW.Tags` 的系统 / 用户组与 `PlcConstant`、`PlcAlarmTextListProvider` 与报警 / 监控导入导出结果消息、`OpcUaCommunicationGroup` / `NamespaceAccessRestriction`、工艺对象映射（`TOMapping`、`AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface`、`TechnologicalInstanceDBGroup`、`TechnologicalParameter`）、`WatchTableAccessRule` / `ForceTableAccessRule`、`PlcForceTableEntry`（刻意不注册） |
 | WinCC（经典） | 24 | 59 | 弹出画面 / 滑入画面 / 模板的文件夹层次（23）、变量文件夹 |
 | Safety | 0 | 0 | **2.7.25 全量封装**：`ManagePlcSafety`（12 个动作，强类型）、`ManageSafetyGlobalSettings`、`ReadSafetyBlockSignatures`、`ExportSafetyPrintout`、下载提示 `SafetyProgram`。统计表里 Safety 仍有 2 个"完全未触及"类型（`RuntimeGroupComposition` / `SafetySignatureComposition` 只有 `IsReadOnly` 一类样板外成员）与若干 OWNER_ONLY 属性（经 `EngineeringScalarProperties` 通用读写，词法看不见）。`SafetyValidation` 选件（14 类型）未做，见选件包行 |
 | 选件包 | 110 | 536 | 108 | 522 | Startdrive `MC.Drives`(22 类型) + `DFI`(16)、DCC 图表（62，其中 39 个是异常类）、SiVArc（65）、Test Suite（16）、SafetyValidation（14）、Teamcenter（12） |
@@ -64,7 +65,7 @@
 
 独立 RUN/STOP（运行时通道 `SetPlcWebOperatingMode` 可做，但不经 Openness）、清除强制、读诊断缓冲区、按块选择性下载、LED/模块在线健康、Unified 画面复制、Unified 布局字段导入导出、Unified 列表条目、经典 HMI 脚本/周期/列表 `Create(string)`、ProDiag 类型化监督组合、Unified 阈值/数据网格/报警行列 `Create`、工程级"已保护"标量。V21 XML 与在线文档均无对应成员。
 
-## 统计表（脚本生成，2.7.33 源码；"动态覆盖"栏来自登记表）
+## 统计表（脚本生成，2.7.34 源码；"动态覆盖"栏来自登记表）
 
 | 程序集 | 命名空间 | 类型数 | 有专用引用 | 仅类型名 | 动态覆盖 | 完全未触及 | 成员数 | 已引用成员 |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -86,7 +87,7 @@
 | Base | `Siemens.Engineering.HW.HardwareCatalog` | 1 | 1 | 0 | 0 | 0 | 7 | 7 |
 | Base | `Siemens.Engineering.HW.Systemdiagnostics.Settings` | 2 | 1 | 0 | 0 | 1 | 3 | 2 |
 | Base | `Siemens.Engineering.HW.Utilities` | 5 | 4 | 1 | 0 | 0 | 9 | 7 |
-| Base | `Siemens.Engineering.Library` | 11 | 10 | 0 | 0 | 1 | 83 | 73 |
+| Base | `Siemens.Engineering.Library` | 11 | 10 | 0 | 0 | 1 | 83 | 74 |
 | Base | `Siemens.Engineering.Library.Compare` | 6 | 3 | 0 | 2 | 1 | 15 | 10 |
 | Base | `Siemens.Engineering.Library.MasterCopies` | 8 | 4 | 0 | 0 | 4 | 20 | 12 |
 | Base | `Siemens.Engineering.Library.Types` | 13 | 10 | 0 | 0 | 3 | 65 | 54 |
@@ -112,14 +113,14 @@
 | Startdrive | `Siemens.Engineering.MC.Drives.SecurityObjects` | 2 | 0 | 0 | 0 | 2 | 4 | 0 |
 | Startdrive | `Siemens.Engineering.SW.TechnologicalObjects.Motion` | 23 | 3 | 9 | 0 | 11 | 95 | 13 |
 | Step7 | `Siemens.Engineering.Cax` | 4 | 2 | 0 | 0 | 2 | 18 | 13 |
-| Step7 | `Siemens.Engineering.SW` | 18 | 4 | 0 | 0 | 14 | 40 | 15 |
+| Step7 | `Siemens.Engineering.SW` | 18 | 16 | 1 | 0 | 1 | 40 | 34 |
 | Step7 | `Siemens.Engineering.SW.Alarm` | 8 | 2 | 1 | 0 | 5 | 18 | 4 |
 | Step7 | `Siemens.Engineering.SW.Alarm.Exceptions` | 1 | 0 | 0 | 0 | 1 | 1 | 0 |
 | Step7 | `Siemens.Engineering.SW.Alarm.TextLists` | 5 | 3 | 0 | 0 | 2 | 13 | 6 |
-| Step7 | `Siemens.Engineering.SW.Blocks` | 19 | 8 | 3 | 0 | 8 | 72 | 31 |
+| Step7 | `Siemens.Engineering.SW.Blocks` | 19 | 10 | 2 | 0 | 7 | 72 | 38 |
 | Step7 | `Siemens.Engineering.SW.Blocks.Exceptions` | 1 | 0 | 0 | 0 | 1 | 1 | 0 |
 | Step7 | `Siemens.Engineering.SW.Blocks.Interface` | 4 | 2 | 1 | 0 | 1 | 8 | 2 |
-| Step7 | `Siemens.Engineering.SW.ExternalSources` | 6 | 1 | 0 | 0 | 5 | 21 | 3 |
+| Step7 | `Siemens.Engineering.SW.ExternalSources` | 6 | 2 | 0 | 0 | 4 | 21 | 5 |
 | Step7 | `Siemens.Engineering.SW.Loader` | 1 | 1 | 0 | 0 | 0 | 2 | 2 |
 | Step7 | `Siemens.Engineering.SW.OpcUa` | 9 | 5 | 1 | 0 | 3 | 42 | 25 |
 | Step7 | `Siemens.Engineering.SW.OpcUa.AccessControl` | 7 | 3 | 1 | 0 | 3 | 31 | 6 |
@@ -127,8 +128,8 @@
 | Step7 | `Siemens.Engineering.SW.Tags` | 11 | 5 | 0 | 0 | 6 | 62 | 30 |
 | Step7 | `Siemens.Engineering.SW.TechnologicalObjects` | 8 | 1 | 0 | 0 | 7 | 27 | 4 |
 | Step7 | `Siemens.Engineering.SW.TechnologicalObjects.Ident` | 1 | 1 | 0 | 0 | 0 | 2 | 1 |
-| Step7 | `Siemens.Engineering.SW.Types` | 11 | 2 | 1 | 0 | 8 | 41 | 17 |
-| Step7 | `Siemens.Engineering.SW.Units` | 8 | 2 | 0 | 0 | 6 | 27 | 2 |
+| Step7 | `Siemens.Engineering.SW.Types` | 11 | 3 | 1 | 0 | 7 | 41 | 24 |
+| Step7 | `Siemens.Engineering.SW.Units` | 8 | 7 | 1 | 0 | 0 | 27 | 22 |
 | Step7 | `Siemens.Engineering.SW.WatchAndForceTables` | 11 | 4 | 0 | 0 | 7 | 44 | 18 |
 | TeamcenterGateway | `Siemens.Engineering.TeamcenterGateway` | 12 | 0 | 0 | 0 | 12 | 51 | 0 |
 | TestSuite | `Siemens.Engineering.TestSuite` | 4 | 0 | 1 | 0 | 3 | 15 | 0 |

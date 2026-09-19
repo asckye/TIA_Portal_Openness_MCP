@@ -572,7 +572,7 @@ namespace TiaMcpServer.Siemens
         private static Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber)
             => item.Channels.Find((ChannelType)Enum.Parse(typeof(ChannelType), channelType), (ChannelIoType)Enum.Parse(typeof(ChannelIoType), channelIoType), channelNumber)
                ?? throw new PortalException(PortalErrorCode.NotFound, "Channel not found: " + channelType + "/" + channelIoType + "/" + channelNumber);
-        public ResponseMessage ReadDeviceItemChannels(string devicePathJson, string itemPathJson, string channelType = "", string channelIoType = "", int channelNumber = -1, string attributeNamesJson = "[]", int offset = 0, int limit = 100)
+        public ResponseMessage ReadDeviceItemChannels(string devicePathJson, string itemPathJson, string channelType = "", string channelIoType = "", int channelNumber = -1, string attributeNamesJson = "[]", int offset = 0, int limit = 100, bool includeLinkedTags = false)
             => RunHmiStepTool("ReadDeviceItemChannels", meta => {
                 HardwareServicesLogic.ValidatePagination(offset, limit);
                 bool exact = HardwareNetworkLogic.ChannelIdentityGiven(channelType, channelIoType, channelNumber);
@@ -580,9 +580,9 @@ namespace TiaMcpServer.Siemens
                 var item = RequireDeviceItem(ExactEngineeringHardware(devicePathJson, itemPathJson), "itemPathJson");
                 meta["ownerPath"] = HardwareOwnerPath(item);
                 var channels = exact ? new[] { ExactChannel(item, channelType, channelIoType, channelNumber) } : EngineeringGroupOperations.Items(item.Channels).Cast<Channel>().ToArray();
-                Page(channels.Select(c => (JsonNode)ChannelRow(c, extra)).ToArray(), offset, limit, meta);
+                Page(channels.Select(c => { var row = ChannelRow(c, extra); if (includeLinkedTags) row["linkedTags"] = LinkedTagRows(c, row); return (JsonNode)row; }).ToArray(), offset, limit, meta);
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
-                meta["scope"] = "Channel Number/Type/IoType, attribute names from GetAttributeInfos, values of ChannelAddress/ChannelWidth plus requested names (failures listed).";
+                meta["scope"] = "Channel Number/Type/IoType, attribute names from GetAttributeInfos, values of ChannelAddress/ChannelWidth plus requested names (failures listed)" + (includeLinkedTags ? "; linkedTags = PLC tags linked to the channel via PlcTagProvider.GetLinkedTags (V21)." : ".");
                 return "Channels of the device item read; no modification.";
             });
         public ResponseMessage UpdateDeviceItemChannel(string devicePathJson, string itemPathJson, string channelType, string channelIoType, int channelNumber, string attributesJson, bool dryRun = true)
@@ -654,11 +654,20 @@ namespace TiaMcpServer.Siemens
                     meta["processImageOb"] = ob.Name;
                 }
 #else
-                if (!string.IsNullOrEmpty(processImageObName)) throw new NotSupportedException("Address.AssignProcessImageToOrganizationBlock exists only in the V20 PublicAPI; assign the process image partition in the OB's properties on V21.");
+                // V21 moved the assignment from Address to the ProcessImageProvider service of the address.
+                OB? ob = null; global::Siemens.Engineering.SW.ProcessImageProvider? processImage = null;
+                if (!string.IsNullOrEmpty(processImageObName))
+                {
+                    ob = GetBlock(HardwareNetworkLogic.RequireExactName(softwarePath, "softwarePath"), processImageObName) as OB ?? throw new PortalException(PortalErrorCode.NotFound, "OB not found in the PLC software: " + processImageObName);
+                    processImage = address.GetService<global::Siemens.Engineering.SW.ProcessImageProvider>() ?? throw new NotSupportedException("ProcessImageProvider unavailable on this address (V21 service replacing Address.AssignProcessImageToOrganizationBlock).");
+                    meta["processImageOb"] = ob.Name; meta["processImageAccess"] = "ProcessImageProvider.AssignProcessImageToOrganizationBlock";
+                }
 #endif
                 ApplyScalarsAndAttributes(address, propertiesJson, attributesJson, meta, !dryRun);
 #if TIA_V20
                 if (ob != null && !dryRun) { meta["mayHaveChanged"] = true; address.AssignProcessImageToOrganizationBlock(ob); meta["processImageAssigned"] = true; }
+#else
+                if (ob != null && !dryRun) { meta["mayHaveChanged"] = true; processImage!.AssignProcessImageToOrganizationBlock(ob); meta["processImageAssigned"] = true; }
 #endif
                 if (dryRun) return "Address update preview; nothing changed.";
                 meta["after"] = AddressRow(address);

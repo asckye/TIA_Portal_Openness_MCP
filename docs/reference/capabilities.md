@@ -2,6 +2,19 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.34 新增工具族（阶段 4 ④-① Step7 软件单元与 PlcSoftware 小服务）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 软件单元 | `ReadPlcSoftwareUnits`；`ManagePlcSoftwareUnit`（新增 `unitKind=safety`、`createFromMasterCopy`、`commentsJson`） | 只有部分 PLC 支持单元（`PlcUnitProvider` 为 null 时 NotSupported）；安全单元系统生成、不可创建 / 删除；`Name` 改名拒绝（要引用影响评审）；`Comment` 是 `MultilingualText`，按激活的工程语言逐条写 `Items[i].Text`；`PlcUnitSystemGroup.Name` 仅 V21 |
+| 文档 | `ManagePlcDocuments` | `PlcDocument` 在 PublicAPI 只有 `Name`；导出目录必须已存在且不含 `name.*`；导入结果 `PartialSuccess` 不算失败但会带原生消息；文档的 `CreateFrom(MasterCopy / PlcDocumentLibraryTypeVersion)` 仅 V21，UDT 的两种 `CreateFrom` 两版都有 |
+| 校验和 / 指纹 | `ReadPlcChecksums`、`ReadPlcObjectFingerprints` | 校验和未编译为 null；指纹只看用户输入、对象不一致时原生拒绝；`FingerprintProvider` 对变量表不存在；在线 CPU 指纹仍是 `ReadPlcBlockFingerprints` |
+| 块写保护 | `ManagePlcBlockWriteProtection` | 仅 V21；官方状态机（define → protect / unprotect → change / remove）在调用前门控；实做要 `dryRun=false` + `confirmProtectionChange=true` + Offline；密码不回显 |
+| 工程编译设置 | `ManageProjectCompilationSettings` | V20 是 `Project` 属性；V21 删掉了属性、只剩 `PlcSimulationSettingsProvider` / `VirtualPlcSettingsProvider` 服务（官方页面仍按属性举例） |
+| 通道关联变量 / 过程映像 | `ReadDeviceItemChannels includeLinkedTags`；`UpdateDeviceAddress processImageObName` | `PlcTagProvider` / `ProcessImageProvider` 仅 V21（`Channel` / `Address` 在 V20 不是服务提供者）；V20 仍走 `Address.AssignProcessImageToOrganizationBlock` |
+
+**真机待验**；形状检查 V20 1670 / V21 1810 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.33 新增工具族（阶段 3 ③-④ Base 收尾）
 
 | 族 | 工具 | 边界 |
@@ -95,7 +108,8 @@
 | ManageTechnologyObject | read、create、delete、setParameter | objectPath；创建需官方 typeIdentifier/version；参数需 parameter/valueJson |
 | ImportPlcWatchTableOffline | 原生监视表 XML 导入 | filePath、现有 groupPath；仅离线、无覆盖、拒绝强制表/混合对象/DTD |
 | ManageHardwareObject | deleteDevice/deleteItem/moveItem/copyItem | devicePathJson/itemPathJson 精确名称数组；移动/复制需目的路径及 position，通过 CanPlug 检查 |
-| ManagePlcSoftwareUnit | list/read/create/delete/update/createRelation/deleteRelation | name、relatedUnit、官方 relationType；update 仅公开可写标量属性 |
+| ManagePlcSoftwareUnit | list/read/create/createFromMasterCopy/delete/update/createRelation/deleteRelation（`unitKind` unit / safety） | name、relatedUnit、官方 relationType；update 只收 Author / NamespacePreset 与 commentsJson；安全单元不可创建 / 删除 |
+| ReadPlcSoftwareUnits | 类型化读单元树（含安全单元、关系与各组内容名） | unitName、unitKind、includeContents、分页 |
 | SetPlcUnitObjectAccess | 对单元内块/UDT 设置 Published/Unpublished | unitName、objectKind、objectPath、access；原生 API 不支持 OB 发布 |
 | CreateLibraryMasterCopy | 从准确块/UDT/设备/画面创建主副本 | sourceKind/sourcePath、已存在 folderPath；device 路径使用 JSON 数组 |
 | ManageLibraryTypeVersion | read/edit/release/setDefault/deleteVersion/updateInstances | typePath、version；release 需 newVersion/dependenciesMode；更新实例限定 targetSoftwarePath |

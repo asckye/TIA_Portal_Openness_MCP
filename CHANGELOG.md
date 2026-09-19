@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.34] - 2026-09-19
+
+引擎 2.7.34.0（V20/V21 均重建），工具 396 → 402，默认 lite 56 项不变。详见 [v2.7.34](docs/releases/v2.7.34.md)。2.7.33 真机事务缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-①：Step7 软件单元与 `PlcSoftware` 小服务。
+
+- **修复（2.7.33 真机）**：`RunToolsInTransaction` 内层调用不带 `dryRun` 时跑成预览却回报已提交——`ForceRealExecution` 无论键是否存在都写入 `dryRun=false`。
+- **新增**：`ReadPlcSoftwareUnits`（`PlcUnitSystemGroup` / `PlcUnitBase` / `PlcSafetyUnit` / `PlcUnitRelation` 类型化树）、`ManagePlcDocuments`（命名值类型文档与 UDT 的 list / read / export / import / createFromMasterCopy / createFromLibraryType：`PlcDocument` / `PlcDocumentComposition` / `DocumentImportResultForSplDocument` / `DocumentImportResultForTypes` / `DocumentResultMessage`）、`ReadPlcChecksums`（`PlcChecksumProvider`）、`ReadPlcObjectFingerprints`（`FingerprintProvider` / `Fingerprint` / `FingerprintId`）、`ManagePlcBlockWriteProtection`（V21 `PlcBlockWriteProtectionProvider` 状态机）、`ManageProjectCompilationSettings`（V20 `Project` 属性 / V21 `PlcSimulationSettingsProvider` + `VirtualPlcSettingsProvider`）。扩展：`ManagePlcSoftwareUnit` 的 `unitKind=safety` / `createFromMasterCopy` / `commentsJson`，`ReadDeviceItemChannels includeLinkedTags`（V21 `PlcTagProvider.GetLinkedTags`），`UpdateDeviceAddress` 在 V21 经 `ProcessImageProvider` 指派过程映像，`ImportFromDocuments` 的类型化 `DocumentImportResultForBlocks` 与原生消息。
+- **审计**：有专用引用 396 → 417，完全未触及 428 → 406，未封装功能类型 178 / 735 → 162 / 695（Step7 44 / 140 → 28 / 100）。
+- **验证**：离线 1754 项（新增 87 项）；形状检查 V20 1670 / V21 1810（新增 85 / 102 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**。
+
 ## [2.7.33] - 2026-09-19
 
 引擎 2.7.33.0（V20/V21 均重建），工具 389 → 396，默认 lite 56 项不变。详见 [v2.7.33](docs/releases/v2.7.33.md)。2.7.32 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-④：Base 收尾——**`Siemens.Engineering.Base.dll` 的功能类型缺口归零，阶段 3 收口**。
