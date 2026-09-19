@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.39_20260919",
-    "generatedAt":  "2026-09-19T14:07:03.7315767+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.40_20260920",
+    "generatedAt":  "2026-09-19T16:55:24.9571730+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.39.0",
-    "exeSha256":  "bb4b59e4f8c9e8b6c3a25e309ef91f41c12c8d82a13c8c36123d27420ed65500",
+    "fileVersion":  "2.7.40.0",
+    "exeSha256":  "a550748e4061a3b2de0519ab036bc686b9b1af1a990d81b8cacca01ebba9a43d",
     "toolCount":  437,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -4537,7 +4537,7 @@
                                          "confirmDelete",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSiVArcRule differs only in case and stays for arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None|And|Equal|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} | {kind:masterCopy|libraryType|masterCopyFolder|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null clears}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves."
+                      "description":  "[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSiVArcRule differs only in case and stays for arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None|And|Equal|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} | {kind:masterCopy|libraryType|masterCopyFolder|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock (\u0027may not be null\u0027, 2.7.39 real project) - assign another block instead}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves."
                   },
                   {
                       "name":  "ReadSivarcBlockDefinitions",
@@ -4662,9 +4662,10 @@
                                          "includeBits",
                                          "includeEnumValues",
                                          "offset",
-                                         "limit"
+                                         "limit",
+                                         "includeValue"
                                      ],
-                      "description":  "[L2][Hardware][ONLINE] Parameters of the connected drive (OnlineDriveObjectContainer.OnlineDriveObjects[n].ReadParameters): namesJson / numbersJson selectors or paged enumeration, same typed rows as ReadDriveParameters (BICO sources, bits, enum values). Requires the drive to be online in TIA Portal; nothing is written."
+                      "description":  "[L2][Hardware][ONLINE] Parameters of the connected drive (OnlineDriveObjectContainer.OnlineDriveObjects[n].ReadParameters): namesJson / numbersJson selectors or paged enumeration, same typed rows as ReadDriveParameters (BICO sources, bits, enum values, includeValue). Requires the drive to be online in TIA Portal; nothing is written."
                   },
                   {
                       "name":  "ManageOnlineDriveFunctions",
@@ -4850,7 +4851,7 @@
                                          "dryRun",
                                          "additionalHmiDeviceNamesJson"
                                      ],
-                      "description":  "[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNamesJson (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with | (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download."
+                      "description":  "[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNamesJson (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with | (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. plcSoftwarePathsJson names the PLC software; the native call is tried with the software names and then with the owning device names (SiVArc only knows PLCs connected to the HMI device - the 2.7.39 real project without an HMI connection answered \u0027PLC device not found\u0027 for both). Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download."
                   },
                   {
                       "name":  "ManageLibraryMasterCopy",
@@ -5053,9 +5054,10 @@
                                          "includeBits",
                                          "includeEnumValues",
                                          "offset",
-                                         "limit"
+                                         "limit",
+                                         "includeValue"
                                      ],
-                      "description":  "[L2][Hardware][READ] Typed offline drive parameters of one drive object: source read (ReadDriveParameter view) or write (DriveParameter view); namesJson [\"p1000[0]\",\"r47\"] uses Find(name), numbersJson [{number, arrayIndex}] uses Find(number, arrayIndex) (arrayIndex -1 for array-less parameters); without both the composition is enumerated in native order with offset / limit. Rows: name, number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value list and bit parameters (Bits). Read-only, offline; ReadOnlineDriveParameters reads the connected drive."
+                      "description":  "[L2][Hardware][READ] Typed offline drive parameters of one drive object: source read (ReadDriveParameter view) or write (DriveParameter view); namesJson [\"p1000[0]\",\"r47\"] uses Find(name), numbersJson [{number, arrayIndex}] uses Find(number, arrayIndex) (arrayIndex -1 for array-less parameters); without both the composition is enumerated in native order with offset / limit. Rows: name, number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value list and bit parameters (Bits); bit names such as r722.0 resolve through the parent\u0027s Bits. includeValue=false reads the metadata without touching Value - do that first for BICO sinks and status words on a freshly added drive: on a G120C, TIA Portal V21 itself went down while reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline; ReadOnlineDriveParameters reads the connected drive."
                   },
                   {
                       "name":  "ManageStartdriveParameter",
@@ -5076,7 +5078,7 @@
                                          "dryRun",
                                          "driveObjectIndex"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read returns the ReadDriveParameter row with bits, enum values and BICO source; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {\"bicoSource\":\"r19\"} (Value = Parameters.Find(source)). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive."
+                      "description":  "[L2][Hardware][WRITE] Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read returns the ReadDriveParameter row with bits, enum values and BICO source; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {\"bicoSource\":\"r2050[1]\"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent\u0027s Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -\u003e 11 -\u003e 10 and p1070[0] \u003c- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive."
                   },
                   {
                       "name":  "ManageDriveTelegrams",
@@ -5107,7 +5109,7 @@
                                          "connectOption",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] Telegrams of one drive object (TelegramComposition): read; check (CanInsertTelegram / CanInsertMainTelegram / CanInsertSupplementaryTelegram / CanInsertSafetyTelegram / CanInsertTorqueTelegram / CanInsertAdditionalTelegram(inputSize, outputSize) and CanChangeTelegram); insert (typed Insert* per telegramType MainTelegram / SupplementaryTelegram / AdditionalTelegram / SafetyTelegram / TorqueTelegram / EdgeTelegram, telegramNumber 999 = free telegram); erase (EraseTelegram, main telegrams only on G220); changeNumber (Telegram.TelegramNumber after CanChangeTelegram); changeSize (Telegram.ChangeSize(direction Input|Output, size words, keepOriginalAddress) after CanChangeSize); connectTechnologyObject (V21 AxisHardwareConnectionSDRProvider / EncoderHardwareConnectionSDRProvider SDR interfaces, V20 base interfaces: interfaceKind actor / sensor (sensorIndex) / torque / encoder of the technology object at softwarePath + objectPath, optional connectOption Default | AllowAllModules). Default preview; telegrams are read back on a fresh navigation because TIA invalidates Telegram objects after size changes. No download."
+                      "description":  "[L2][Hardware][WRITE] Telegrams of one drive object (TelegramComposition): read; check (CanInsertTelegram / CanInsertMainTelegram / CanInsertSupplementaryTelegram / CanInsertSafetyTelegram / CanInsertTorqueTelegram / CanInsertAdditionalTelegram(inputSize, outputSize) and CanChangeTelegram); insert (typed Insert* per telegramType MainTelegram / SupplementaryTelegram / AdditionalTelegram / SafetyTelegram / TorqueTelegram / EdgeTelegram, telegramNumber 999 = free telegram); erase (EraseTelegram, main telegrams only on G220); while a MainTelegram exists, check / insert for MainTelegram skip the native Can* / Insert* (TIA Portal V21 crashed on a G120C there) - use changeNumber / changeSize; changeNumber (Telegram.TelegramNumber after CanChangeTelegram); changeSize (Telegram.ChangeSize(direction Input|Output, size words, keepOriginalAddress) after CanChangeSize); connectTechnologyObject (V21 AxisHardwareConnectionSDRProvider / EncoderHardwareConnectionSDRProvider SDR interfaces, V20 base interfaces: interfaceKind actor / sensor (sensorIndex) / torque / encoder of the technology object at softwarePath + objectPath, optional connectOption Default | AllowAllModules). Default preview; telegrams are read back on a fresh navigation because TIA invalidates Telegram objects after size changes. No download."
                   },
                   {
                       "name":  "ReadUnifiedRuntimeAlarms",
