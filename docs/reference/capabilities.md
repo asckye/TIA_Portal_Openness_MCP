@@ -6,13 +6,13 @@
 
 | 族 | 工具 | 边界 |
 |---|---|---|
-| syslog | `ManageSyslogServers` | `scope=project` 是 `SyslogServerProvider` 的工程级服务器（V19+），模块分配用 `AssignedModules` 关联的 `Add` / `Remove`；`scope=plc` 是 CPU 的 `SysLogConfigurationManager`（S7-1500 FW 3.1+），TLS 协议要配合三个证书动态属性；删除需 `confirmDelete` |
+| syslog | `ManageSyslogServers` | `scope=project` 是 `SyslogServerProvider` 的工程级服务器（V19+），模块分配用 `AssignedModules` 关联的 `Add` / `Remove`——**真机上 `Create` 让 TIA Portal V21 崩溃（两次复现），实做前先看 [v2.7.32](../releases/v2.7.32.md#真机结果v21-automaticdipcoatingmachine2026-09-18)**；`scope=plc` 是 CPU 的 `SysLogConfigurationManager`（S7-1500 FW 3.1+），TLS 协议要配合三个证书动态属性；删除需 `confirmDelete` |
 | 密码策略 | `ManagePasswordPolicy` | `umac` 8 项、`plc` 只有 `PasswordPolicyEnabled`（S7-1200/1500 沿用 UMAC 复杂度）、`legacyPlc` 5 项且官方范围 5..8 / 0..8 / 0..8 在调用前核；超范围 TIA 抛 `PasswordPolicySettingsException`；已有密码不会被重新校验；实做需 `confirmChange` |
 | UMC 用户 / 组 / 服务器 | `ManageUmcUsers` | 需要受保护工程（`UmacConfigurator`）；`importFromServer` / `checkConsistency` / `synchronize` 经 `Authentication` 事件送 UMC 凭据（SecureString、不回显），需要 UMC View 权限的账号；offline 用户 / 组不需要服务器；同名 offline 创建 TIA 抛 `EngineeringTargetInvocationException`；`UmcServer` 没有公开标量；实做需 `confirmChange` |
-| 证书模板 | `ManagePlcCertificate`（`template` / `create` + SAN / `import` + `password`） | `CertificateUsage.None` 与 `SignatureAlgorithm.None` 官方不支持；SAN 类型 Dns / Email / IP / Uri；私钥永不导出 |
+| 证书模板 | `ManagePlcCertificate`（`template` / `create` + SAN / `import` + `password`） | `CertificateUsage.None` 与 `SignatureAlgorithm.None` 官方不支持；SAN 类型 Dns / Email / IP / Uri；私钥永不导出；2.7.32 的 `template` 误要求 `certificateId`（给任一现有 Id 可绕过，2.7.33 修） |
 | 匿名用户 | `ManageProjectUserManagement`（`activateAnonymousUser` / `deactivateAnonymousUser`） | 每个受保护工程一个匿名用户；停用后 `AnonymousUser` 为 null，依赖无密码访问的客户端会被锁在外面，默认预览 |
 
-**真机待验**；形状检查 V20 1403 / V21 1500 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1403 / V21 1500 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-18，`AutomaticDipCoatingMachine`）**：密码策略三套读写、CPU 级 syslog 读取、offline UMC 用户 / 组全流程、证书模板 + SAN 创建 / 删除、匿名用户预览、设备功能权典型行通过；工程级 syslog `create` 让 TIA 崩溃，见 [v2.7.32](../releases/v2.7.32.md#真机结果v21-automaticdipcoatingmachine2026-09-18)。
 
 ## 2.7.31 新增工具族（阶段 3 ③-② 库深层）
 
