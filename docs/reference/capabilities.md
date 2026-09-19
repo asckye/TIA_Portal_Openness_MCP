@@ -11,11 +11,11 @@
 | 硬件工具 | `ManageHardwareUtilities` | `Project.HwUtilities.Find`；OPC UA 导出只对 PLC 项、PSC 导出只对设备且拒绝覆盖，F 激活设备在 V18 及以下拒绝，加密需 CPU V40.0+；密码不回显 |
 | 设备服务对象 | `ManageDeviceServiceObjects` | Web 应用与遥控数据点对象是 V21 专有（V20 只剩遥控数据点的导入导出）；`RemainingCertificateLifetime` 10..90，`Runtime` 用途在 Web 服务器 / OPC UA 服务器停用时被 TIA 拒绝，`ServiceGroupName` ≤ 64；V20 的服务 Id 是只读 `UInt16` |
 | 对象标识 / 编辑器 | `ReadObjectIdentifier`、`ShowObjectInEditor` | 官方只保证设备、设备项、块、变量、软件单元、工艺实例 DB、`PlcStruct`；`ShowInEditor` 只动 UI、需要带界面的 Portal；V20 的设备不实现 `IShowable` |
-| 事务 | `RunToolsInTransaction` | 一个 `ExclusiveAccess` + `Transaction`，内层工具复用独占访问；全部成功才提交，内层 `dryRun` 强制 false；`CallTool` / 嵌套事务拒绝；`TargetInvocationException` 之后再 `CommitOnDispose` 会被 TIA 拒绝 |
+| 事务 | `RunToolsInTransaction` | 一个 `ExclusiveAccess` + `Transaction`，内层工具复用独占访问；全部成功才提交；`CallTool` / 嵌套事务拒绝；`TargetInvocationException` 之后再 `CommitOnDispose` 会被 TIA 拒绝。**2.7.33 缺陷**：内层调用要显式写 `"dryRun": false`，否则按预览跑却回报已提交（2.7.34 修） |
 | 受保护工程 / UMAC 在线 | `OpenProject`（`umacUserName` / `umacPassword` / `umacUserType`）、`GoOnline`（`userName` / `userType`） | 凭据只进 SecureString；`GetSupportedAuthenticationTypes` 与 `IsSecureCommunication` 回报到 meta，密码永不回显 |
 | 改绑守卫 | 所有写工具 | 显式绑定的工程名被记住：自愈只回绑它，写前核对 `_project.Name`，不一致直接拒绝并要求 `AttachToOpenProject` |
 
-**真机待验**；形状检查 V20 1585 / V21 1708 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1585 / V21 1708 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-19，`AutomaticDipCoatingMachine`）**：门户诊断、传输路由、硬件工具（OPC UA 导出实做）、设备服务对象读取、对象标识往返、事务提交 / 回滚、类型化交叉引用与目录行通过，见 [v2.7.33](../releases/v2.7.33.md#真机结果v21-automaticdipcoatingmachine2026-09-19)；R/H、UMAC 凭据打开 / 在线、PSC 导出未验证。
 
 ## 2.7.32 新增工具族（阶段 3 ③-③ 用户管理与安全）
 
