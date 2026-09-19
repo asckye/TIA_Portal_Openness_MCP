@@ -167,7 +167,7 @@
       "pattern": "Siemens.Engineering.Library.Compare.LibraryCompareResult*",
       "tool": "CompareLibraries / CompareProjects (library targets)",
       "mechanism": "ILibrary.CompareToLibrary result walked by reflection (RootElement / Elements / ComparisonResult / DetailedInformation / Left / Right / LeftName / RightName) so the same walker serves software and library compare trees",
-      "verified": "2.7.18 shape checks V20/V21; not yet run on a real project (needs a second open library)"
+      "verified": "2.7.18 shape checks V20/V21; 2.7.31 real-project attempt (2026-09-18, project library vs system library Buttons-and-Switches) failed before CompareToLibrary because ProjectLibrary has no Name (engine defect, fix in 2.7.32); DetailedCompareResult (CompareLibraryObjects) did reach real objects"
     }
   ]
 }
