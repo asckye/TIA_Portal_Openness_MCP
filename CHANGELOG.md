@@ -7,7 +7,7 @@
 - **修复（2.7.35 真机）**：`ManagePlcTableEntries createComment` 后从监控表重新导航计数（旧组合代理 `Count` 陈旧）。
 - **新增**：`ReadTechnologyObjectTree`（`TechnologicalInstanceDBGroup` 树 + `TechnologicalParameter` 行 + 类型化 Motion / Ident 视图）。类型化改造：`ReadMotionAxisConfiguration`（`typed` 视图）、`ManageMotionAxis`（`TechnologicalInstanceDBAssociation`、`TOMapping` / `DBMemberMapping`、`IdentTechnologicalObjectProvider`、`AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface` / 测量输入 / 输出凸轮的 `Connect` / `Disconnect`，新增 `Connect(Channel)` 目标）、`ManageTechnologyObject`（`TechnologicalInstanceDBComposition.Create`、`TechnologicalParameterComposition.Find`）、`ConfigureMotionHardwareConnection`（类型化提供者）。
 - **审计**：有专用引用 451 → 469，完全未触及 370 → 357，未封装功能类型 139 / 637 → 133 / 585（**Step7 5 / 42 → 0 / 0**）。
-- **验证**：离线 1836 项（新增 11 项）；形状检查 V20 1879 / V21 2045（新增 95 / 116 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（参考工程没有工艺对象，只能验空树与拒绝文案）。
+- **验证**：离线 1836 项（新增 11 项）；形状检查 V20 1879 / V21 2045（新增 95 / 116 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.36 真机结果](docs/releases/v2.7.36.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：临时建 `TO_SpeedAxis` V9.0 后，类型化树、42 个参数、执行器 / 扭矩接口行、`Connect(DeviceItem)` 到达原生门控（驱动无地址）、通道目标门控、`Disconnect`、删除，以及注释行计数修复全部通过。
 
 ## [2.7.35] - 2026-09-19
 

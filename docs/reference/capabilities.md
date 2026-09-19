@@ -9,7 +9,7 @@
 | 工艺对象树 | `ReadTechnologyObjectTree` | 只读；每组最多 200 个对象、每个对象最多 500 个参数；`includeMotionView` 只看根组前 50 个对象；参数值按标量 JSON 渲染，复杂值给类型名 |
 | 类型化 Motion | `ReadMotionAxisConfiguration`（`typed`）、`ManageMotionAxis`、`ConfigureMotionHardwareConnection`、`ManageTechnologyObject` | 签名不变；`targetJson` 新增 `channelType` + `channelIoType` + `channelNumber`（`Connect(Channel)`，扭矩接口没有）；`TOMapping` / `DBMemberMapping` / 叠加轴 / Ident 仅 V21，V20 回 NotSupported 或反射回退；V20 的 `Connect(Telegram)` 只经反射；`ConnectOption` 只对两模块 / 位地址目标；从不下发运动命令 |
 
-**真机待验**（参考工程没有工艺对象，只能验空树与拒绝文案）；形状检查 V20 1879 / V21 2045 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1879 / V21 2045 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-19，`AutomaticDipCoatingMachine`）**：临时 `TO_SpeedAxis` V9.0 上类型化树 / 42 个参数 / 执行器与扭矩接口行 / `Connect(DeviceItem)` 到原生门控（"Target not available for input=-1 and output=-1"，驱动无地址）/ 通道目标门控 / `Disconnect` / 删除通过。已知：工艺对象的 `typeIdentifier` 形式是 `TO_SpeedAxis`（不是 `System:TO.…`），1510SP F V4.1 + TIA V21 用 TO 版本 9.0；速度轴没有传感器接口、不提供 `InterpreterMappings`。
 
 ## 2.7.35 新增工具族（阶段 4 ④-② Step7 收尾）
 
