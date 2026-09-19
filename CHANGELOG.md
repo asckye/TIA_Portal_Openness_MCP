@@ -7,7 +7,7 @@
 - **修复（2.7.33 真机）**：`RunToolsInTransaction` 内层调用不带 `dryRun` 时跑成预览却回报已提交——`ForceRealExecution` 无论键是否存在都写入 `dryRun=false`。
 - **新增**：`ReadPlcSoftwareUnits`（`PlcUnitSystemGroup` / `PlcUnitBase` / `PlcSafetyUnit` / `PlcUnitRelation` 类型化树）、`ManagePlcDocuments`（命名值类型文档与 UDT 的 list / read / export / import / createFromMasterCopy / createFromLibraryType：`PlcDocument` / `PlcDocumentComposition` / `DocumentImportResultForSplDocument` / `DocumentImportResultForTypes` / `DocumentResultMessage`）、`ReadPlcChecksums`（`PlcChecksumProvider`）、`ReadPlcObjectFingerprints`（`FingerprintProvider` / `Fingerprint` / `FingerprintId`）、`ManagePlcBlockWriteProtection`（V21 `PlcBlockWriteProtectionProvider` 状态机）、`ManageProjectCompilationSettings`（V20 `Project` 属性 / V21 `PlcSimulationSettingsProvider` + `VirtualPlcSettingsProvider`）。扩展：`ManagePlcSoftwareUnit` 的 `unitKind=safety` / `createFromMasterCopy` / `commentsJson`，`ReadDeviceItemChannels includeLinkedTags`（V21 `PlcTagProvider.GetLinkedTags`），`UpdateDeviceAddress` 在 V21 经 `ProcessImageProvider` 指派过程映像，`ImportFromDocuments` 的类型化 `DocumentImportResultForBlocks` 与原生消息。
 - **审计**：有专用引用 396 → 417，完全未触及 428 → 406，未封装功能类型 178 / 735 → 162 / 695（Step7 44 / 140 → 28 / 100）。
-- **验证**：离线 1754 项（新增 87 项）；形状检查 V20 1670 / V21 1810（新增 85 / 102 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**。
+- **验证**：离线 1754 项（新增 87 项）；形状检查 V20 1670 / V21 1810（新增 85 / 102 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.34 真机结果](docs/releases/v2.7.34.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：临时软件单元建 / 改 / 关系 / 删、UDT 文档导出与 Override 导入、校验和、指纹、块写保护整条状态机、编译设置读写、四种模块的通道关联变量、不带 `dryRun` 的事务提交与回滚全部通过；一处缺陷记入 2.7.35（单元关系 Create / Delete 后在同一组合代理上回读失效）。
 
 ## [2.7.33] - 2026-09-19
 

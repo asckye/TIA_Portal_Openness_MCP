@@ -6,14 +6,14 @@
 
 | 族 | 工具 | 边界 |
 |---|---|---|
-| 软件单元 | `ReadPlcSoftwareUnits`；`ManagePlcSoftwareUnit`（新增 `unitKind=safety`、`createFromMasterCopy`、`commentsJson`） | 只有部分 PLC 支持单元（`PlcUnitProvider` 为 null 时 NotSupported）；安全单元系统生成、不可创建 / 删除；`Name` 改名拒绝（要引用影响评审）；`Comment` 是 `MultilingualText`，按激活的工程语言逐条写 `Items[i].Text`；`PlcUnitSystemGroup.Name` 仅 V21 |
+| 软件单元 | `ReadPlcSoftwareUnits`；`ManagePlcSoftwareUnit`（新增 `unitKind=safety`、`createFromMasterCopy`、`commentsJson`） | 只有部分 PLC 支持单元（`PlcUnitProvider` 为 null 时 NotSupported）；安全单元系统生成、不可创建 / 删除；`Name` 改名拒绝（要引用影响评审）；`Comment` 是 `MultilingualText`，按激活的工程语言逐条写 `Items[i].Text`；`PlcUnitSystemGroup.Name` 仅 V21 且按界面语言本地化（"软件单元"）；关系 Create / Delete 后旧组合代理失效（2.7.34 真机，2.7.35 修） |
 | 文档 | `ManagePlcDocuments` | `PlcDocument` 在 PublicAPI 只有 `Name`；导出目录必须已存在且不含 `name.*`；导入结果 `PartialSuccess` 不算失败但会带原生消息；文档的 `CreateFrom(MasterCopy / PlcDocumentLibraryTypeVersion)` 仅 V21，UDT 的两种 `CreateFrom` 两版都有 |
 | 校验和 / 指纹 | `ReadPlcChecksums`、`ReadPlcObjectFingerprints` | 校验和未编译为 null；指纹只看用户输入、对象不一致时原生拒绝；`FingerprintProvider` 对变量表不存在；在线 CPU 指纹仍是 `ReadPlcBlockFingerprints` |
 | 块写保护 | `ManagePlcBlockWriteProtection` | 仅 V21；官方状态机（define → protect / unprotect → change / remove）在调用前门控；实做要 `dryRun=false` + `confirmProtectionChange=true` + Offline；密码不回显 |
 | 工程编译设置 | `ManageProjectCompilationSettings` | V20 是 `Project` 属性；V21 删掉了属性、只剩 `PlcSimulationSettingsProvider` / `VirtualPlcSettingsProvider` 服务（官方页面仍按属性举例） |
 | 通道关联变量 / 过程映像 | `ReadDeviceItemChannels includeLinkedTags`；`UpdateDeviceAddress processImageObName` | `PlcTagProvider` / `ProcessImageProvider` 仅 V21（`Channel` / `Address` 在 V20 不是服务提供者）；V20 仍走 `Address.AssignProcessImageToOrganizationBlock` |
 
-**真机待验**；形状检查 V20 1670 / V21 1810 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1670 / V21 1810 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-19，`AutomaticDipCoatingMachine`）**：临时单元建 / 改（标量 + 多语言注释）/ 关系 / 删、UDT `.s7dcl` 导出与 Override 导入（原生消息回传，UDT 名在整个 PLC 内唯一）、校验和、指纹（含不一致对象的原生拒绝）、块写保护 define → protect → unprotect → change → remove 全链、编译设置经 V21 服务提供者读写、DI / F-DI / DQ / AI 的通道关联变量、事务内层不带 `dryRun` 的提交与回滚通过。已知缺陷（2.7.35 修）：单元关系 Create 后同一组合代理 `Find` 回 null、Delete 后抛 `EngineeringObjectDisposedException`——要从单元组重新导航回读。未验证：安全单元本体（工程没有 `SafetyUnit`）、单元 / 文档的母本与库类型实例化、`.nvt` 文档导出导入。
 
 ## 2.7.33 新增工具族（阶段 3 ③-④ Base 收尾）
 
