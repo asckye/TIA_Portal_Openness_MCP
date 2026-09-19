@@ -30,4 +30,6 @@
 
 `tools/tiaportal-mcp/src/TiaMcpServer/` 按职责分子目录，命名空间不变：`ModelContextProtocol/Tools/`（全部 `McpServer.*.cs` 工具声明）、`ModelContextProtocol/Builders/`（离线 XML/JSON 构造器、分析器、校验套件、`*Logic.cs`）、`ModelContextProtocol/`（响应类型、`ToolTaxonomy`、指南/提示、导出寄存等基础设施）、`Siemens/Portal/`（全部 `Portal.*.cs` 实现）、`Siemens/Hmi/`（`Unified*`、`Hmi*` 访问层）、`Siemens/`（Openness 解析、反射与纯逻辑助手）、`Runtime/`（S7/OPC UA/Web API/Open Pipe 运行时通道）、`Cli/` 与根目录 `Program*.cs`。所有 `.cs` 为无 BOM 的 UTF-8、仓库内 LF（`.gitattributes`）。离线测试项目按相对路径链接其中的纯逻辑文件，新增或移动文件时同步更新 `TiaMcpServer.Tests.csproj`。
 
+2.7.25 起每个"官方 API 对齐"工具族固定四件套：`Siemens/<Family>Logic.cs`（无 Siemens 依赖的参数门控 / JSON 拆分，链接进离线测试）、`Siemens/Portal/Portal.<Family>.cs`（`partial class Portal` 的类型化实现，V20 / V21 差异用 `#if TIA_V20`）、`ModelContextProtocol/Tools/McpServer.<Family>.cs`（工具声明）、`tests/TiaMcpServer.Tests/<Family>Tests.cs` + `tests/TiaMcpServer.HttpTests/<Family>ShapeChecks.cs`（离线测试与对 PublicAPI 的逐成员形状检查，各在其 `Program.cs` 注册）。族名与版本的对应见 [接续工作交接 §1](handoff.md)；选件包（`Portal.Sivarc.cs`、`Portal.DccEngineering.cs`、`Portal.TestSuite.cs`、`Portal.OptionalEngineering.cs`、`Portal.SpecializedExchange.cs`）在服务缺席时回 NotSupported，不依赖选件许可编译。
+
 `bin-build/` 是被忽略的本机验证/打包目录，不进入公开交付。用户工程、外部素材及客户端配置不属于仓库清理范围。

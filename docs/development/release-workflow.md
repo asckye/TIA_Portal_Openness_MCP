@@ -42,7 +42,7 @@ Git 不在 PATH 时加 `--git "Git可执行文件完整路径"`。打包器核�
 
 ## 上传与发布检查
 
-推荐在 GitHub 的 **Actions → Publish complete release → Run workflow** 手动发布已审查的 master。工作流根据已提交的双版本运行文件和验证清单重新生成完整包，校验 GitHub 资产大小与 SHA256 后才发布，并自动使用标准版本标签和标题；不需要个人访问令牌或 MCP 密钥。编译和真实工程验收仍在前面单独完成。
+2.7.30 起的实际做法：源码 / 版本 / 文档一次提交（`Release X.Y.Z (1/3)`），`runtime/v20/TiaMcpServer.exe` 一次（`2/3`），`runtime/v21/TiaMcpServer.exe` + `TiaMcpConfigurator.exe` + `manifest/*` + `docs/reference/tool-matrix.md` 一次（`3/3`）；本地 `Package-Release.py` 干跑通过后推送，等 `validate-bundle` / `offline-checks` 绿，再推送 annotated tag `vX.Y.Z`——`Publish complete release` 工作流由该 tag 触发（`push: tags`），也可在 GitHub 的 **Actions → Publish complete release → Run workflow** 手动发布已审查的 master。任何引擎或测试源码改动都要重跑 `Build-Release.ps1`，否则 `manifest/release-build.json` 的源码哈希对不上，`validate-bundle` 与打包器都会以 "Source changed after validation" 拒绝；细节与闸门清单见[接续工作交接 §4](handoff.md)。工作流根据已提交的双版本运行文件和验证清单重新生成完整包，校验 GitHub 资产大小与 SHA256 后才发布，并自动使用标准版本标签和标题；不需要个人访问令牌或 MCP 密钥。编译和真实工程验收仍在前面单独完成。
 
 首次整理独立项目的发布列表时，可勾选 `archive_legacy`：带 `asckye/defects/readonly` 后缀的历史 Release 转为草稿，原标签和附件保留；已有标准版本只规范标题。后续正常发布无需勾选。
 

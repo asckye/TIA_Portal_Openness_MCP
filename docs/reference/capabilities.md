@@ -1,6 +1,6 @@
 # 工程能力与验收边界
 
-本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
+本文说明 2.7.38 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 421 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.38：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc 的功能类型缺口为 0，其余选件包剩 72 类型 / 307 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
 
 ## 2.7.38 新增工具族（阶段 6 ⑥-① SiVArc 选件包）
 
@@ -245,7 +245,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 | ExchangeMotionCamData、ConfigureMotionHardwareConnection | Cam 文本/二进制/点列表交换；离线轴驱动/传感器/转矩映射，地址单位为 bit；不向驱动发送运动命令 |
 | ManageUnifiedEvent | 普通事件/属性事件精确读取、创建、脚本字段更新和删除；执行修改需预览 token；不执行脚本或 SyntaxCheck，不涵盖所有自定义 Web 事件 |
 | ManageStartdriveParameter | 离线 DriveObject 精确编号和参数名读取/修改；不获取 OnlineDriveObject，不写在线参数 |
-| ReadSiVArcRules、ManageSiVArcRule、GenerateSiVArc | 规则公开标量、支持 Create(string) 的集合操作、指定 HMI/PLC 原生生成；不代表复杂规则引用全覆盖 |
+| ReadSiVArcRules、ManageSiVArcRule、GenerateSiVArc | 规则公开标量、支持 Create(string) 的集合操作（按路径的通用反射入口，保留）；2.7.38 起类型化的规则层次 / 引用 / 设备列 / 块定义 / 表达式 / 布局 / 升级见上文"2.7.38 新增工具族"，`GenerateSiVArc` 已类型化并支持多设备 |
 | ManageLibraryMasterCopy、ImportLibraryTypeDocuments | 主副本精确复制/比较/删除；原生类型文档导入。已有 ManageLibraryTypeVersion 增加 discard/findInstances |
 | ManageDccChart、ReadDccObject | 离线 DCC 图表读/建/改/删/文件交换/优化顺序；块、引脚等定点标量读取。不含全部块/引脚连接编辑 |
 
@@ -270,7 +270,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 2.7.18 之后仍未实现或官方无 API 的项（全量对照见 [官方 API 覆盖清单](openness-coverage.md)）：
 
 - **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
-- **选件与协作**：SafetyValidation、Teamcenter、UMC 服务器同步与用户/组创建、启用/停用工程保护、Startdrive/SiVArc/DCC/CFC/TestSuite 未在表中列出的剩余动作、主副本/类型版本的 `DetailedCompareResult` 比较、`Connect(Channel)` 与 V20 `Connect(Telegram, …)` 重载。
+- **选件与协作**：Startdrive / DCC 的类型化封装（阶段 6 ⑥-②，2.7.39）、SafetyValidation / Teamcenter（无任何入口）与 TestSuite / CFC 的剩余动作（⑥-③，2.7.40）；UMC 服务器在线同步与启用/停用工程保护（工程无 UMC 服务器；工程级保护官方无 API）；V20 `Connect(Telegram, …)` 重载。SiVArc（2.7.38）、UMC 离线用户/组（2.7.32）、`CompareLibraryObjects` 的详细比较（2.7.31）、`Connect(Channel)`（2.7.36）已做。
 - **硬件杂项**：App ID、批量硬件参数、Software Controller PSC/资源配置、自定义 Logo、CiR、I-Device PN-GSD 导出、共享设备、GSDX 签名状态、向 PLC 下载附加用户文件；`SelectiveDeleteDownload`、`Upgrade/DowngradeTargetDevice`、`TurnOffSequence`、`OverwriteHmiData`、Startdrive 下载提示无内置默认，需经 `promptAnswersJson` 显式指定。
 - **库**：实例清理/更新全部流程、HMI-Library 之外的模板分析。
 - **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`。
@@ -282,4 +282,4 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 
 离线测试、官方程序集 API 形状检查和实际 EXE HTTP 回归的项数与日期以 [manifest/release-build.json](../../manifest/release-build.json) 为准，本页不重复维护快照（口径见[验证说明](../development/validation.md)）。三类检查都是元数据或本地回环级别，不连接博图，不代表 TIA 工程实际操作成功。
 
-新增功能尚未进行真实 TIA 工程验收。真实安装环境和测试工程需另行验收；此状态不计作验收通过。
+各版本工具族的真机验收结果在本页对应段落与 `docs/releases/vX.Y.Z.md` 的"真机结果"表里（V21 参考工程 `AutomaticDipCoatingMachine`：PLC `+S1-K1`、Unified HMI `HMI_RT_1`）；没有对象或许可的项（经典 HMI 实做、选件包）只有形状检查，不计作验收通过。真实安装环境和测试工程需另行验收。

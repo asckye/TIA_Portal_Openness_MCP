@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.29 更新）
+# 路线图与待办（2026-09-17 审计，2.7.38 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -57,6 +57,8 @@
 | P3 | 监视/强制表定义 CRUD + `WatchAndForceTableAccessManager` | PLC 服务章节 | 补全现有导入 |
 | P3 | 通信连接（S7/ISO/TCP/UDP…）、CiR、共享设备、I-Device GSD 导出、批量硬件参数、App ID | V21 What's-new；**章节页未定位到，先以本地 XML 核实** | 多 PLC 产线 |
 | P3 | UMAC/UMC 与工程保护；多用户/Project Server 会话、提交、锁状态 | 各自章节 | 合规与团队协作 |
+
+状态（2.7.38）：本表各项已在 2.7.18–2.7.36 间落地（对应版本见 §5 各段与 CHANGELOG），本表保留为当时的优先级依据；未做的只剩 §2.2 的无 API 项与 §2.0 阶段 6 的选件包。
 
 ### 2.2 高价值但 Openness 无 API——保持明确拒绝并给出替代通道
 

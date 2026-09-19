@@ -1131,11 +1131,11 @@ Honest scope so you don't over-promise. Quote this when a user asks "can it do X
 | Unified HMI design JSON + bindings | ✅ (§12) | ✅ | ✅ (JSON screens) |
 | OPC UA read (live values, monitoring) | ✅ read-only (`ReadPlcLiveValuesOpcUa`) | ✅ | ✅ browser+subscribe+trend |
 | Download to CPU | ✅ fixed, verified on real CPU (§13) | ✅ | ✅ |
-| **Safety F-block author / compile / signature** | ✕ **不做(主动放弃)** | ✅ full | ✅ full |
+| **Safety F-block author / compile / signature** | partial: F-administration, runtime groups, signatures, printout (`ManagePlcSafety` / `ReadSafetyBlockSignatures` / `ExportSafetyPrintout`, 2.7.25); F-compile is not in the PublicAPI | ✅ full | ✅ full |
 | **PLCSIM simulation / unit testing** | ✕ **不做(主动放弃)** | ✅ simulate | ✅ PLCSIM Advanced tests |
 | Native Git / VCI | ✕ 不做(用文本导出替代 §16) | ✅ Git+CI | ✅ full Git UI |
-| Block protection / encrypted vault | ❌ | partial | ✅ AES vault |
-| UMAC user/rights, SiVArc auto-screens | ❌ | ✅ | partial |
+| Block protection / encrypted vault | partial: know-how / write protection (`ManagePlcBlockProtection`, `ManagePlcBlockWriteProtection`), no vault | partial | ✅ AES vault |
+| UMAC user/rights, SiVArc auto-screens | ✅ UMAC users / roles / UMC offline users (`ManageProjectUserManagement`, `ManageUmcUsers`, 2.7.32–2.7.33); ✅ SiVArc rules / definitions / generation typed (2.7.38, needs the SiVArc licence at run time) | ✅ | partial |
 
 **Where we win:** one-call `ScaffoldProject`, verified S7DCL LAD + mixed LAD/SCL,
 honest verified-vs-not discipline, and being a real MCP (not a paid license).

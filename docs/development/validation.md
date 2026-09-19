@@ -25,6 +25,8 @@ GitHub `offline-checks` 和 `validate-bundle` 运行对应检查。完整引擎�
 
 [Build-Release.ps1](../../scripts/build/Build-Release.ps1) 使用本地匹配 PublicAPI 构建 V20/V21，执行实际 EXE 的 HTTP、资源发现、HMI 遍历、文件代理和 API 签名检查。测试数量和日期写入 release-build，不在本页重复维护版本快照。
 
+其中"API 签名检查"是 `tests/TiaMcpServer.HttpTests` 的 `engineering-api-only` 分支：每个工具族一份 `*ShapeChecks.cs`，对本机 V20 / V21 PublicAPI 逐成员核对（类型存在、属性类型与可写性、方法签名与返回类型、枚举值、服务接口），期望条数硬编码在 `Build-Release.ps1`（2.7.38：V20 2301 / V21 2497），少一条即构建失败；这是没有对应对象或许可（经典 HMI、选件包）时唯一的验证。覆盖记分板由 `scripts/diagnostics/Audit-OpennessCoverage.ps1` 对 V21 PublicAPI XML 做词法盘点生成，回写到[官方 API 覆盖清单](../reference/openness-coverage.md)；它是词法的（类型名记号 + `.成员` 同时出现即算引用），会有同名记号的误判，以形状检查为准。
+
 专项脚本在 [scripts/checks](../../scripts/checks)。`Check-LiteProfile.py` 等协议探测可能启动服务，只在匹配环境执行。诊断脚本在 `scripts/diagnostics`，不是无 TIA 的 CI 项目。
 
 ## 真实工程验收
