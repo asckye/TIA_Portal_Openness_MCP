@@ -2,6 +2,15 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.36 新增工具族（阶段 4 ④-③ 工艺对象映射，阶段 4 收口）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 工艺对象树 | `ReadTechnologyObjectTree` | 只读；每组最多 200 个对象、每个对象最多 500 个参数；`includeMotionView` 只看根组前 50 个对象；参数值按标量 JSON 渲染，复杂值给类型名 |
+| 类型化 Motion | `ReadMotionAxisConfiguration`（`typed`）、`ManageMotionAxis`、`ConfigureMotionHardwareConnection`、`ManageTechnologyObject` | 签名不变；`targetJson` 新增 `channelType` + `channelIoType` + `channelNumber`（`Connect(Channel)`，扭矩接口没有）；`TOMapping` / `DBMemberMapping` / 叠加轴 / Ident 仅 V21，V20 回 NotSupported 或反射回退；V20 的 `Connect(Telegram)` 只经反射；`ConnectOption` 只对两模块 / 位地址目标；从不下发运动命令 |
+
+**真机待验**（参考工程没有工艺对象，只能验空树与拒绝文案）；形状检查 V20 1879 / V21 2045 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.35 新增工具族（阶段 4 ④-② Step7 收尾）
 
 | 族 | 工具 | 边界 |

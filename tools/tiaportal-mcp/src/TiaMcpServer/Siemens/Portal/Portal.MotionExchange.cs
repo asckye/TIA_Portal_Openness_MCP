@@ -39,15 +39,17 @@ namespace TiaMcpServer.Siemens
                 if(!new[]{"read","connect","disconnect"}.Contains(action))throw new ArgumentException("Invalid action.");
                 bool write=action!="read"&&!dryRun;using var access=write ? AcquireHmiEditAccess() : null;
                 var target=ExactTechnology(softwarePath,objectPath,write);
-                var service=OfficialServiceAccess.Require(target,"Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider","Siemens.Engineering.Step7");
+                // 2.7.36: typed AxisHardwareConnectionProvider (ActorInterface / SensorInterface[i] : AxisEncoderHardwareConnectionInterface, TorqueInterface : TorqueHardwareConnectionInterface).
+                global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider service=(target as global::Siemens.Engineering.IEngineeringServiceProvider)?.GetService<global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider>()
+                    ?? throw new NotSupportedException("AxisHardwareConnectionProvider is not provided by "+target.GetType().Name+" (axis technology objects only).");
                 object selected;
-                if(interfaceKind=="actor")selected=EngineeringGroupOperations.Get(service,"ActorInterface");
-                else if(interfaceKind=="torque")selected=EngineeringGroupOperations.Get(service,"TorqueInterface");
+                if(interfaceKind=="actor")selected=service.ActorInterface;
+                else if(interfaceKind=="torque")selected=service.TorqueInterface;
                 else if(interfaceKind=="sensor") {
-                    var sensors=EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(service,"SensorInterface")).ToArray();
-                    if(sensorIndex<0||sensorIndex>=sensors.Length)throw new ArgumentException("Sensor index out of range.");selected=sensors[sensorIndex];
+                    global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisEncoderHardwareConnectionInterfaceComposition sensors=service.SensorInterface;
+                    if(sensorIndex<0||sensorIndex>=sensors.Count)throw new ArgumentException("Sensor index out of range.");selected=sensors[sensorIndex];
                 } else throw new ArgumentException("interfaceKind must be actor/sensor/torque.");
-                meta["before"]=EngineeringObjectAddress.Read(selected);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
+                meta["before"]=InterfaceRow(selected);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 var method=action=="connect" ? selected.GetType().GetMethods().SingleOrDefault(m=>m.Name=="Connect"&&m.GetParameters().Length==3&&m.GetParameters()[0].ParameterType==typeof(int)&&m.GetParameters()[1].ParameterType==typeof(int)) : selected.GetType().GetMethod("Disconnect",Type.EmptyTypes);
                 if(action!="read"&&method==null)throw new NotSupportedException("Native hardware connection signature unavailable.");
                 object? mode=null;if(action=="connect") {
@@ -56,8 +58,12 @@ namespace TiaMcpServer.Siemens
                 }
                 if(!write)return "Motion hardware mapping read/preview. Addresses are bits; no drive operation performed.";
                 meta["mayHaveChanged"]=true;
-                EngineeringGroupOperations.Call(selected,method!.Name,method.GetParameters().Select(p=>p.ParameterType).ToArray(),action=="connect" ? new object[]{inputBitAddress,outputBitAddress,mode!} : Array.Empty<object>());
-                meta["after"]=EngineeringObjectAddress.Read(selected);meta["mappingVerified"]=false;
+                if(action=="connect") {
+                    var option=(global::Siemens.Engineering.SW.TechnologicalObjects.Motion.ConnectOption)mode!;
+                    if(selected is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisEncoderHardwareConnectionInterface axisInterface)axisInterface.Connect(inputBitAddress,outputBitAddress,option);
+                    else ((global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TorqueHardwareConnectionInterface)selected).Connect(inputBitAddress,outputBitAddress,option);
+                } else if(!DisconnectTyped(selected))EngineeringGroupOperations.Call(selected,"Disconnect",Type.EmptyTypes);
+                meta["after"]=InterfaceRow(selected);meta["mappingVerified"]=IsConnectedTyped(selected)==(action=="connect");
                 return "Offline motion hardware mapping changed; inspect native readback. No save/compile/download or motion command.";
             });
     }

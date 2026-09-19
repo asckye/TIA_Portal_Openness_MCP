@@ -11,6 +11,7 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.TechnologicalObjects;
+using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using TiaMcpServer.ModelContextProtocol;
 using Logic = TiaMcpServer.Siemens.MotionProDiagClassicHmiLogic;
 
@@ -88,13 +89,14 @@ namespace TiaMcpServer.Siemens
                     if (row["dataComplete"]?.GetValue<bool>() == false) complete = false;
                 }
                 meta["services"] = services; meta["serviceStates"] = states;
+                if (target is TechnologicalInstanceDB typedObject) { meta["object"] = TechnologyObjectRow(typedObject); try { meta["typed"] = TypedMotionView(typedObject); } catch (Exception ex) { meta["typedError"] = ex.GetBaseException().Message; } }
                 if (includeParameters)
                 {
                     var parameters = EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(target, "Parameters")).ToArray();
-                    var page = parameters.Skip(offset).Take(limit).Select(EngineeringScalarProperties.Read).ToArray();
+                    var page = parameters.Skip(offset).Take(limit).Select(p => p is TechnologicalParameter tp ? (JsonObject)ParameterRow(tp) : EngineeringScalarProperties.Read(p)).ToArray();
                     meta["parameters"] = new JsonArray(page.Cast<JsonNode>().ToArray()); meta["parameterCount"] = parameters.Length;
                     meta["nextOffset"] = offset + page.Length < parameters.Length ? offset + page.Length : (int?)null;
-                    complete &= offset == 0 && page.Length == parameters.Length && page.All(p => p["dataComplete"]!.GetValue<bool>());
+                    complete &= offset == 0 && page.Length == parameters.Length && page.All(p => p["dataComplete"]?.GetValue<bool>() ?? !p.ContainsKey("valueError"));
                 }
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = complete;
                 meta["scope"] = "Scalar values of the technology object and every Motion/Ident service it provides (one bounded reference level). Absent services are listed by state, not omitted.";
@@ -126,14 +128,17 @@ namespace TiaMcpServer.Siemens
                     var signature = new[] { typeof(TechnologicalInstanceDB) };
                     var method = action == "addMasterValue" ? "Add" : "Remove";
                     if (association.GetType().GetMethod(method, signature) == null || association.GetType().GetMethod("Contains", signature) == null) throw new NotSupportedException("Native association " + method + "/Contains signature unavailable.");
-                    bool present = (bool)EngineeringGroupOperations.Call(association, "Contains", signature, master);
+                    TechnologicalInstanceDBAssociation? typedAssociation = association as TechnologicalInstanceDBAssociation;
+                    bool present = typedAssociation != null ? typedAssociation.Contains(master) : (bool)EngineeringGroupOperations.Call(association, "Contains", signature, master);
                     meta["masterObjectPath"] = name; meta["before"] = new JsonObject { ["coupled"] = present, ["members"] = new JsonArray(EngineeringGroupOperations.Items(association).Select(x => (JsonNode)(EngineeringDynamicAccess.Name(x) ?? "")).ToArray()) };
                     if (action == "addMasterValue" && present) throw new InvalidOperationException("Master value is already coupled.");
                     if (action == "removeMasterValue" && !present) throw new InvalidOperationException("Master value is not coupled.");
                     if (!writing) return "Master value coupling preview; no changes.";
                     meta["mayHaveChanged"] = true;
-                    EngineeringGroupOperations.Call(association, method, signature, master); meta["apiCallSuccess"] = true;
-                    bool after = (bool)EngineeringGroupOperations.Call(association, "Contains", signature, master);
+                    if (typedAssociation != null) { if (action == "addMasterValue") typedAssociation.Add(master); else typedAssociation.Remove(master); }
+                    else EngineeringGroupOperations.Call(association, method, signature, master);
+                    meta["apiCallSuccess"] = true;
+                    bool after = typedAssociation != null ? typedAssociation.Contains(master) : (bool)EngineeringGroupOperations.Call(association, "Contains", signature, master);
                     if (after != (action == "addMasterValue")) throw new InvalidOperationException("Association call returned but readback differs.");
                     meta["after"] = new JsonObject { ["coupled"] = after };
                     return "Master value coupling changed and verified; no save/compile/download or motion command.";
@@ -146,6 +151,11 @@ namespace TiaMcpServer.Siemens
                     var matches = EngineeringGroupOperations.Items(composition).Where(x => string.Equals(EngineeringGroupOperations.Get(x, "Alias").ToString(), name, StringComparison.Ordinal)).Take(2).ToList();
                     if (matches.Count > 1) throw new InvalidOperationException("Ambiguous alias: " + name);
                     var existing = matches.SingleOrDefault();
+#if !TIA_V20
+                    // 2.7.36: typed composition lookups (TOMappingComposition / DBMemberMappingComposition Find by alias).
+                    if (existing == null && composition is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TOMappingComposition toMappings) existing = toMappings.Find(name);
+                    if (existing == null && composition is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.DBMemberMappingComposition dbMappings) existing = dbMappings.Find(name);
+#endif
                     var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                     if (changes.ContainsKey("Alias")) throw new ArgumentException("Alias is fixed by name; renaming is not supported.");
                     string? masterPath = null;
@@ -165,12 +175,21 @@ namespace TiaMcpServer.Siemens
                         if (composition.GetType().GetMethod("Create", new[] { typeof(string) }) == null) throw new NotSupportedException("Native mapping Create(string) unavailable.");
                         if (!writing) return "Mapping creation preview; no changes.";
                         meta["mayHaveChanged"] = true;
+#if !TIA_V20
+                        existing = composition switch
+                        {
+                            global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TOMappingComposition toCreate => toCreate.Create(name),
+                            global::Siemens.Engineering.SW.TechnologicalObjects.Motion.DBMemberMappingComposition dbCreate => dbCreate.Create(name),
+                            _ => EngineeringGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name)
+                        };
+#else
                         existing = EngineeringGroupOperations.Call(composition, "Create", new[] { typeof(string) }, name);
+#endif
                     }
                     else
                     {
                         if (existing == null) throw new InvalidOperationException("Exact mapping alias not found.");
-                        meta["before"] = DescribeNode(existing, 1);
+                        meta["before"] = MappingRow(existing);
                         if (action == "deleteMapping")
                         {
                             if (prepared.Count != 0 || masterObject != null) throw new ArgumentException("No properties allowed for deleteMapping.");
@@ -178,7 +197,14 @@ namespace TiaMcpServer.Siemens
                             if (existing.GetType().GetMethod("Delete", Type.EmptyTypes) == null) throw new NotSupportedException("Native mapping Delete unavailable.");
                             if (!writing) return "Mapping deletion preview; no changes.";
                             meta["mayHaveChanged"] = true;
-                            EngineeringGroupOperations.Call(existing, "Delete", Type.EmptyTypes); meta["apiCallSuccess"] = true;
+#if !TIA_V20
+                            if (existing is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TOMapping toDelete) toDelete.Delete();
+                            else if (existing is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.DBMemberMapping dbDelete) dbDelete.Delete();
+                            else EngineeringGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
+#else
+                            EngineeringGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
+#endif
+                            meta["apiCallSuccess"] = true;
                             if (EngineeringGroupOperations.Items(composition).Any(x => string.Equals(EngineeringGroupOperations.Get(x, "Alias").ToString(), name, StringComparison.Ordinal))) throw new InvalidOperationException("Mapping remains after Delete.");
                             meta["verifiedAbsent"] = true;
                             return "Mapping deleted and verified absent; no save/compile/download.";
@@ -189,13 +215,24 @@ namespace TiaMcpServer.Siemens
                     EngineeringScalarProperties.Apply(existing, prepared, meta);
                     if (masterObject != null)
                     {
-                        var reference = existing.GetType().GetProperty("TechnologicalObject") ?? throw new NotSupportedException("TechnologicalObject property unavailable.");
-                        if (reference.SetMethod?.IsPublic != true) throw new NotSupportedException("TechnologicalObject is not writable.");
-                        meta["mayHaveChanged"] = true;
-                        reference.SetValue(existing, masterObject);
-                        if (!Equals(reference.GetValue(existing), masterObject)) throw new InvalidOperationException("TechnologicalObject readback differs.");
+#if !TIA_V20
+                        if (existing is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TOMapping toMapping && masterObject is TechnologicalInstanceDB masterDb)
+                        {
+                            meta["mayHaveChanged"] = true;
+                            toMapping.TechnologicalObject = masterDb;
+                            if (!Equals(toMapping.TechnologicalObject, masterDb)) throw new InvalidOperationException("TechnologicalObject readback differs.");
+                        }
+                        else
+#endif
+                        {
+                            var reference = existing.GetType().GetProperty("TechnologicalObject") ?? throw new NotSupportedException("TechnologicalObject property unavailable.");
+                            if (reference.SetMethod?.IsPublic != true) throw new NotSupportedException("TechnologicalObject is not writable.");
+                            meta["mayHaveChanged"] = true;
+                            reference.SetValue(existing, masterObject);
+                            if (!Equals(reference.GetValue(existing), masterObject)) throw new InvalidOperationException("TechnologicalObject readback differs.");
+                        }
                     }
-                    meta["after"] = DescribeNode(existing, 1); meta["apiCallSuccess"] = true;
+                    meta["after"] = MappingRow(existing); meta["apiCallSuccess"] = true;
                     return "Mapping " + (action == "createMapping" ? "created" : "updated") + " and verified; no save/compile/download.";
                 }
                 if (category == "ident")
@@ -209,7 +246,13 @@ namespace TiaMcpServer.Siemens
                     meta["deviceItem"] = item.Name;
                     if (!writing) return "Ident device connection preview; no changes.";
                     meta["mayHaveChanged"] = true;
-                    EngineeringGroupOperations.Call(provider, "Connect", new[] { typeof(DeviceItem) }, item); meta["apiCallSuccess"] = true;
+#if !TIA_V20
+                    if (provider is global::Siemens.Engineering.SW.TechnologicalObjects.Ident.IdentTechnologicalObjectProvider identProvider) identProvider.Connect(item);
+                    else EngineeringGroupOperations.Call(provider, "Connect", new[] { typeof(DeviceItem) }, item);
+#else
+                    EngineeringGroupOperations.Call(provider, "Connect", new[] { typeof(DeviceItem) }, item);
+#endif
+                    meta["apiCallSuccess"] = true;
                     var connected = provider.GetType().GetProperty("ConnectedIdentDevice")?.GetValue(provider) as DeviceItem;
                     if (!Equals(connected, item)) throw new InvalidOperationException("Connect returned but ConnectedIdentDevice differs.");
                     meta["after"] = new JsonObject { ["connectedIdentDevice"] = connected!.Name };
@@ -221,6 +264,18 @@ namespace TiaMcpServer.Siemens
                     var service = RequireOfficialService(to, serviceName);
                     object iface;
                     if (property == "") iface = service;
+                    else if (service is AxisHardwareConnectionProvider axisProvider)
+                    {
+                        // 2.7.36: typed AxisHardwareConnectionProvider navigation (ActorInterface / SensorInterface[i] / TorqueInterface).
+                        if (aspect == "sensor")
+                        {
+                            AxisEncoderHardwareConnectionInterfaceComposition sensors = axisProvider.SensorInterface;
+                            if (sensorIndex < 0 || sensorIndex >= sensors.Count) throw new ArgumentException("sensorIndex out of range (0.." + (sensors.Count - 1) + ").");
+                            iface = sensors[sensorIndex];
+                        }
+                        else iface = aspect == "torque" ? (object)axisProvider.TorqueInterface : axisProvider.ActorInterface;
+                    }
+                    else if (service is EncoderHardwareConnectionProvider encoderProvider) iface = encoderProvider.SensorInterface;
                     else if (aspect == "sensor")
                     {
                         var sensors = EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(service, property)).ToArray();
@@ -228,16 +283,17 @@ namespace TiaMcpServer.Siemens
                         iface = sensors[sensorIndex];
                     }
                     else iface = EngineeringGroupOperations.Get(service, property);
-                    meta["before"] = DescribeNode(iface, 1);
+                    meta["before"] = InterfaceRow(iface);
                     var isConnected = iface.GetType().GetProperty("IsConnected");
                     if (action == "disconnect")
                     {
                         if (iface.GetType().GetMethod("Disconnect", Type.EmptyTypes) == null) throw new NotSupportedException("Native Disconnect unavailable.");
                         if (!writing) return "Hardware disconnect preview; no changes.";
                         meta["mayHaveChanged"] = true;
-                        EngineeringGroupOperations.Call(iface, "Disconnect", Type.EmptyTypes); meta["apiCallSuccess"] = true;
-                        meta["after"] = DescribeNode(iface, 1);
-                        if (isConnected != null && (bool)isConnected.GetValue(iface)!) throw new InvalidOperationException("Disconnect returned but IsConnected is still true.");
+                        if (!DisconnectTyped(iface)) EngineeringGroupOperations.Call(iface, "Disconnect", Type.EmptyTypes);
+                        meta["apiCallSuccess"] = true;
+                        meta["after"] = InterfaceRow(iface);
+                        if (IsConnectedTyped(iface) ?? (isConnected != null && (bool)isConnected.GetValue(iface)!)) throw new InvalidOperationException("Disconnect returned but IsConnected is still true.");
                         return "Hardware interface disconnected and verified; no save/compile/download or motion command.";
                     }
                     var target = Logic.ParseConnectionTarget(targetJson);
@@ -254,6 +310,7 @@ namespace TiaMcpServer.Siemens
                             signature = target.HasConnectOption ? new[] { typeof(DeviceItem), typeof(DeviceItem), optionType } : new[] { typeof(DeviceItem), typeof(DeviceItem) };
                             args = target.HasConnectOption ? new object[] { first, second, Option() } : new object[] { first, second }; break;
                         case "deviceItemChannel": signature = new[] { typeof(DeviceItem), typeof(int) }; args = new object[] { ExactDeviceItem(target.DevicePath!, target.ItemPath!), target.ChannelIndex }; break;
+                        case "channel": signature = new[] { typeof(Channel) }; args = new object[] { ExactChannel(ExactDeviceItem(target.DevicePath!, target.ItemPath!), target.ChannelType, target.ChannelIoType, target.ChannelNumber) }; break;
                         case "dbMember": signature = new[] { typeof(string) }; args = new object[] { target.DbMemberPath }; break;
                         case "plcTag": signature = new[] { typeof(PlcTag) }; args = new object[] { ExactPlcTag(softwarePath, target.PlcTagPath) }; break;
                         case "addresses": signature = new[] { typeof(int), typeof(int), optionType }; args = new object[] { target.InputBitAddress, target.OutputBitAddress, Option() }; break;
@@ -263,9 +320,10 @@ namespace TiaMcpServer.Siemens
                     meta["nativeSignature"] = "Connect(" + string.Join(",", signature.Select(t => t.Name)) + ")";
                     if (!writing) return "Hardware connection preview; native overload validated, no changes.";
                     meta["mayHaveChanged"] = true;
-                    EngineeringGroupOperations.Call(iface, "Connect", signature, args); meta["apiCallSuccess"] = true;
-                    meta["after"] = DescribeNode(iface, 1);
-                    if (isConnected != null && !(bool)isConnected.GetValue(iface)!) throw new InvalidOperationException("Connect returned but IsConnected is false.");
+                    if (!ConnectTyped(iface, target, softwarePath, (ConnectOption)Option())) EngineeringGroupOperations.Call(iface, "Connect", signature, args);
+                    meta["apiCallSuccess"] = true;
+                    meta["after"] = InterfaceRow(iface);
+                    if (!(IsConnectedTyped(iface) ?? (isConnected == null || (bool)isConnected.GetValue(iface)!))) throw new InvalidOperationException("Connect returned but IsConnected is false.");
                     meta["mappingVerified"] = isConnected != null;
                     return "Offline hardware connection changed; inspect native readback. No save/compile/download or motion command.";
                 }

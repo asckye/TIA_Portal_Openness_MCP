@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.Online;
 using TiaMcpServer.ModelContextProtocol;
 
@@ -38,8 +39,18 @@ namespace TiaMcpServer.Siemens
                     if (writing)
                     {
                         meta["mayHaveChanged"] = true;
-                        target = EngineeringGroupOperations.Call(collection, "Create", new[] { typeof(string), typeof(string), typeof(Version) }, parts.Last(), typeIdentifier, apiVersion);
-                        meta["after"] = EngineeringScalarProperties.Read(target);
+                        // 2.7.36: typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
+                        if (collection is TechnologicalInstanceDBComposition typedCollection)
+                        {
+                            TechnologicalInstanceDB created = typedCollection.Create(parts.Last(), typeIdentifier, apiVersion);
+                            if (typedCollection.Find(parts.Last()) == null) throw new InvalidOperationException("Technology object not found by readback after Create.");
+                            target = created; meta["after"] = TechnologyObjectRow(created);
+                        }
+                        else
+                        {
+                            target = EngineeringGroupOperations.Call(collection, "Create", new[] { typeof(string), typeof(string), typeof(Version) }, parts.Last(), typeIdentifier, apiVersion);
+                            meta["after"] = EngineeringScalarProperties.Read(target);
+                        }
                     }
                 }
                 else
@@ -59,17 +70,20 @@ namespace TiaMcpServer.Siemens
                     else
                     {
                         var parameters = EngineeringGroupOperations.Get(target, "Parameters");
+                        TechnologicalParameterComposition? typedParameters = parameters as TechnologicalParameterComposition;
+                        if (target is TechnologicalInstanceDB typedObject) meta["object"] = TechnologyObjectRow(typedObject);
                         if (string.IsNullOrEmpty(parameter))
                         {
                             if (action == "setParameter") throw new ArgumentException("Exact parameter name required.");
-                            var all = EngineeringGroupOperations.Items(parameters).Select(EngineeringScalarProperties.Read).ToArray();
+                            var all = EngineeringGroupOperations.Items(parameters).Select(x => x is TechnologicalParameter tp ? ParameterRow(tp) : EngineeringScalarProperties.Read(x)).ToArray();
                             meta["parameters"] = new JsonArray(all.Cast<JsonNode>().ToArray());
-                            meta["actualCount"] = all.Length; meta["dataComplete"] = all.All(x => x["dataComplete"]!.GetValue<bool>());
+                            meta["actualCount"] = all.Length; meta["dataComplete"] = all.All(x => x["dataComplete"]?.GetValue<bool>() ?? !x.ContainsKey("valueError"));
                         }
                         else
                         {
-                            var p = EngineeringGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
-                            meta["before"] = EngineeringScalarProperties.Read(p);
+                            // 2.7.36: typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
+                            var p = (typedParameters != null ? typedParameters.Find(parameter) : null) ?? EngineeringGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
+                            meta["before"] = p is TechnologicalParameter typedBefore ? ParameterRow(typedBefore) : EngineeringScalarProperties.Read(p);
                             if (action == "setParameter")
                             {
                                 var edits = EngineeringScalarProperties.Prepare(p.GetType(), new JsonObject { ["Value"] = JsonNode.Parse(valueJson) });
@@ -77,7 +91,7 @@ namespace TiaMcpServer.Siemens
                                 if (existingValue != null && edits[0].Property.PropertyType == typeof(object))
                                     edits[0] = (edits[0].Property, EngineeringScalarProperties.ConvertValue(JsonNode.Parse(valueJson), existingValue.GetType()));
                                 meta["requestedValue"] = JsonNode.Parse(valueJson);
-                                if (writing) { EngineeringScalarProperties.Apply(p, edits, meta); meta["after"] = EngineeringScalarProperties.Read(p); }
+                                if (writing) { EngineeringScalarProperties.Apply(p, edits, meta); meta["after"] = p is TechnologicalParameter typedAfter ? ParameterRow(typedAfter) : EngineeringScalarProperties.Read(p); }
                             }
                         }
                     }

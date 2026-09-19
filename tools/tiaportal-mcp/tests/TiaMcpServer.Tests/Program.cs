@@ -124,6 +124,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Step7 收尾纯逻辑：外部源（文件 / 母本 / 用户组 / 生成块）、系统组与常量请求、报警文本列表 XLSX、监控 / 强制表条目、ProDiag 门控 ==");
             Step7LeftoversTests.Run(Check);
 
+            Console.WriteLine("== 工艺对象映射纯逻辑：Connect(Channel) 目标与各接口的重载目录 ==");
+            TechnologyMappingTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

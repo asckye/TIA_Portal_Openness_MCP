@@ -44,12 +44,12 @@ namespace TiaMcpServer.Siemens
         // Overloads present in the V21 XML per interface type; bit addresses for actor/sensor/torque stay with ConfigureMotionHardwareConnection.
         internal static readonly IReadOnlyDictionary<string, string[]> ConnectionModes = new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            ["actor"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag" },
-            ["sensor"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag" },
+            ["actor"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag", "channel" },
+            ["sensor"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag", "channel" },
             ["torque"] = new[] { "deviceItem", "deviceItems", "dbMember" },
-            ["encoder"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag", "addresses" },
-            ["measuringInput"] = new[] { "address", "deviceItemChannel" },
-            ["outputCam"] = new[] { "address", "plcTag" },
+            ["encoder"] = new[] { "deviceItem", "deviceItems", "dbMember", "plcTag", "addresses", "channel" },
+            ["measuringInput"] = new[] { "address", "deviceItemChannel", "channel" },
+            ["outputCam"] = new[] { "address", "plcTag", "channel" },
         };
         internal static readonly string[] ReadableMotionServices =
         {
@@ -105,12 +105,14 @@ namespace TiaMcpServer.Siemens
             public string DbMemberPath = "", PlcTagPath = "", ConnectOption = "Default";
             public bool HasConnectOption;
             public int InputBitAddress = -1, OutputBitAddress = -1, Address = -1, ChannelIndex = -1;
+            // 2.7.36: Connect(Channel) target - the exact channel (ChannelComposition.Find(type, ioType, number)) of the device item.
+            public string ChannelType = "", ChannelIoType = ""; public int ChannelNumber = -1;
         }
         internal static ConnectionTarget ParseConnectionTarget(string json)
         {
             if (json == null || json.Length > 16384) throw new ArgumentException("targetJson exceeds 16 KiB.");
             var obj = JsonNode.Parse(json) as JsonObject ?? throw new ArgumentException("targetJson must be a JSON object.");
-            var allowed = new[] { "devicePath", "itemPath", "secondItemPath", "dbMemberPath", "plcTagPath", "connectOption", "inputBitAddress", "outputBitAddress", "address", "channelIndex" };
+            var allowed = new[] { "devicePath", "itemPath", "secondItemPath", "dbMemberPath", "plcTagPath", "connectOption", "inputBitAddress", "outputBitAddress", "address", "channelIndex", "channelType", "channelIoType", "channelNumber" };
             foreach (var pair in obj) if (!allowed.Contains(pair.Key)) throw new ArgumentException("Unknown targetJson key: " + pair.Key);
             string[]? Names(string key)
             {
@@ -137,16 +139,19 @@ namespace TiaMcpServer.Siemens
                 DevicePath = Names("devicePath"), ItemPath = Names("itemPath"), SecondItemPath = Names("secondItemPath"),
                 DbMemberPath = Str("dbMemberPath"), PlcTagPath = Str("plcTagPath"), HasConnectOption = obj.ContainsKey("connectOption"),
                 InputBitAddress = Int("inputBitAddress"), OutputBitAddress = Int("outputBitAddress"), Address = Int("address"), ChannelIndex = Int("channelIndex"),
+                ChannelType = Str("channelType"), ChannelIoType = Str("channelIoType"), ChannelNumber = Int("channelNumber"),
             };
             if (target.HasConnectOption) target.ConnectOption = Str("connectOption");
             var modes = new List<string>();
+            bool channel = target.ChannelType != "" || target.ChannelIoType != "" || target.ChannelNumber >= 0;
+            if (channel && (target.ChannelType == "" || target.ChannelIoType == "" || target.ChannelNumber < 0)) throw new ArgumentException("A channel target needs channelType, channelIoType and channelNumber together (plus devicePath and itemPath).");
             if (target.DevicePath != null || target.ItemPath != null)
             {
                 if (target.DevicePath == null || target.ItemPath == null) throw new ArgumentException("devicePath and itemPath are both required for a device item target.");
-                if (target.SecondItemPath != null && target.ChannelIndex >= 0) throw new ArgumentException("secondItemPath and channelIndex are mutually exclusive.");
-                modes.Add(target.SecondItemPath != null ? "deviceItems" : target.ChannelIndex >= 0 ? "deviceItemChannel" : "deviceItem");
+                if ((target.SecondItemPath != null ? 1 : 0) + (target.ChannelIndex >= 0 ? 1 : 0) + (channel ? 1 : 0) > 1) throw new ArgumentException("secondItemPath, channelIndex and channelType/channelIoType/channelNumber are mutually exclusive.");
+                modes.Add(target.SecondItemPath != null ? "deviceItems" : target.ChannelIndex >= 0 ? "deviceItemChannel" : channel ? "channel" : "deviceItem");
             }
-            else if (target.SecondItemPath != null || target.ChannelIndex >= 0) throw new ArgumentException("secondItemPath/channelIndex require devicePath and itemPath.");
+            else if (target.SecondItemPath != null || target.ChannelIndex >= 0 || channel) throw new ArgumentException("secondItemPath/channelIndex/channel targets require devicePath and itemPath.");
             if (target.DbMemberPath != "") modes.Add("dbMember");
             if (target.PlcTagPath != "") modes.Add("plcTag");
             if (target.InputBitAddress >= 0 || target.OutputBitAddress >= 0)
@@ -155,7 +160,7 @@ namespace TiaMcpServer.Siemens
                 modes.Add("addresses");
             }
             if (target.Address >= 0) modes.Add("address");
-            if (modes.Count != 1) throw new ArgumentException("targetJson must describe exactly one target: deviceItem, deviceItems, deviceItemChannel, dbMember, plcTag, addresses or address.");
+            if (modes.Count != 1) throw new ArgumentException("targetJson must describe exactly one target: deviceItem, deviceItems, deviceItemChannel, channel, dbMember, plcTag, addresses or address.");
             if (target.HasConnectOption && modes[0] != "deviceItems" && modes[0] != "addresses") throw new ArgumentException("connectOption applies only to deviceItems or addresses targets.");
             target.Mode = modes[0];
             return target;

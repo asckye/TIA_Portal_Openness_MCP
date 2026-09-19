@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.36] - 2026-09-19
+
+引擎 2.7.36.0（V20/V21 均重建），工具 408 → 409，默认 lite 56 项不变。详见 [v2.7.36](docs/releases/v2.7.36.md)。2.7.35 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-③：工艺对象映射——**`Siemens.Engineering.Step7.dll` 的功能类型缺口归零，阶段 4 收口**。
+
+- **修复（2.7.35 真机）**：`ManagePlcTableEntries createComment` 后从监控表重新导航计数（旧组合代理 `Count` 陈旧）。
+- **新增**：`ReadTechnologyObjectTree`（`TechnologicalInstanceDBGroup` 树 + `TechnologicalParameter` 行 + 类型化 Motion / Ident 视图）。类型化改造：`ReadMotionAxisConfiguration`（`typed` 视图）、`ManageMotionAxis`（`TechnologicalInstanceDBAssociation`、`TOMapping` / `DBMemberMapping`、`IdentTechnologicalObjectProvider`、`AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface` / 测量输入 / 输出凸轮的 `Connect` / `Disconnect`，新增 `Connect(Channel)` 目标）、`ManageTechnologyObject`（`TechnologicalInstanceDBComposition.Create`、`TechnologicalParameterComposition.Find`）、`ConfigureMotionHardwareConnection`（类型化提供者）。
+- **审计**：有专用引用 451 → 469，完全未触及 370 → 357，未封装功能类型 139 / 637 → 133 / 585（**Step7 5 / 42 → 0 / 0**）。
+- **验证**：离线 1836 项（新增 11 项）；形状检查 V20 1879 / V21 2045（新增 95 / 116 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（参考工程没有工艺对象，只能验空树与拒绝文案）。
+
 ## [2.7.35] - 2026-09-19
 
 引擎 2.7.35.0（V20/V21 均重建），工具 402 → 408，默认 lite 56 项不变。详见 [v2.7.35](docs/releases/v2.7.35.md)。2.7.34 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-②：Step7 收尾。
