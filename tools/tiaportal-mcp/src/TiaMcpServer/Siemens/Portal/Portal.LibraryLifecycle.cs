@@ -39,11 +39,14 @@ namespace TiaMcpServer.Siemens
                     meta["mayHaveChanged"] = true;
                     var opened = libraries.Open(info);
                     meta["after"] = EngineeringScalarProperties.Read(opened); meta["libraryClass"] = opened.GetType().Name; meta["apiCallSuccess"] = true;
-                    return "Global library opened from its info entry (GlobalLibraryComposition.Open(GlobalLibraryInfo)). Close is explicit.";
+                    meta["closableThroughApi"] = opened is UserGlobalLibrary; meta["hasTypeFolder"] = ((ILibrary)opened).TypeFolder != null;
+                    return opened is UserGlobalLibrary
+                        ? "Global library opened from its info entry (GlobalLibraryComposition.Open(GlobalLibraryInfo)). Close is explicit."
+                        : "Global library opened from its info entry as " + opened.GetType().Name + "; the Openness API has Close only on UserGlobalLibrary, so it stays open until TIA closes it.";
                 }
                 if (action == "archive") {
                     LibraryDeepLogic.RequireOneOf(archiveMode, LibraryDeepLogic.ArchivationModes, "archiveMode"); LibraryDeepLogic.ValidateArchiveName(archiveName);
-                    var target = EngineeringGroupOperations.Find(libraries, libraryName) as UserGlobalLibrary ?? throw new InvalidOperationException("Exact open user global library not found (only user libraries can be archived).");
+                    var target = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                     if (!Path.IsPathRooted(destinationDirectory)) throw new ArgumentException("Absolute destinationDirectory required.");
                     var archiveDirectory = new DirectoryInfo(destinationDirectory);
                     meta["library"] = EngineeringScalarProperties.Read(target); meta["archiveMode"] = archiveMode; meta["archiveName"] = archiveName; meta["destinationDirectory"] = archiveDirectory.FullName;
@@ -62,7 +65,7 @@ namespace TiaMcpServer.Siemens
                 if (action == "create" || action == "open" || action == "retrieve") {
                     if (string.IsNullOrWhiteSpace(libraryName)) throw new ArgumentException("Expected library name required.");
                     if (EngineeringGroupOperations.Find(libraries, libraryName) != null) throw new InvalidOperationException("Library with this name already open.");
-                } else library = EngineeringGroupOperations.Find(libraries, libraryName) as UserGlobalLibrary ?? throw new InvalidOperationException("Exact open user global library not found.");
+                } else library = ExactOpenUserGlobalLibrary(libraries, libraryName, action);
                 if (action == "open" || action == "retrieve") {
                     file = new FileInfo(filePath); if (!file.Exists) throw new FileNotFoundException("Library file not found.");
                 }
@@ -88,6 +91,13 @@ namespace TiaMcpServer.Siemens
                 return "Native global library operation completed. Project not saved, compiled or downloaded.";
             }, requiresProject:false);
 
+        // Close / Save / SaveAs / Archive exist on UserGlobalLibrary only; a system library opened through Open(GlobalLibraryInfo) is
+        // found but cannot be closed through the API (2.7.31 real project) - say so instead of "not found".
+        private static UserGlobalLibrary ExactOpenUserGlobalLibrary(GlobalLibraryComposition libraries, string libraryName, string action)
+        {
+            var found = EngineeringGroupOperations.Find(libraries, libraryName) ?? throw new InvalidOperationException("Exact open global library not found (action=list shows the open ones).");
+            return found as UserGlobalLibrary ?? throw new NotSupportedException(LibraryDeepLogic.UserGlobalLibraryOnlyMessage(action, libraryName, found.GetType().Name));
+        }
         public ResponseMessage ManageLibraryFolder(string folderKind, string folderPath, string action, string libraryName="", string newName="", bool dryRun=true)
             => RunHmiStepTool("ManageLibraryFolder", meta => {
                 if (folderKind != "types" && folderKind != "masterCopies") throw new ArgumentException("folderKind must be types/masterCopies.");

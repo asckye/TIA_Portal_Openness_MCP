@@ -117,5 +117,16 @@ namespace TiaMcpServer.Siemens
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth must be 1..16.");
             if (maxItems < 1 || maxItems > 5000) throw new ArgumentException("maxItems must be 1..5000.");
         }
+
+        // 2.7.31 real project: ProjectLibrary has no Name in the PublicAPI (only MasterCopyFolder / Parent / TypeFolder), so the
+        // label is synthesized; SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only) and TIA answers
+        // UpdateCheck on such a library with a NonRecoverableException; Close / Save / SaveAs / Archive / CleanUpLibrary exist on
+        // UserGlobalLibrary only, so a system library opened through Open(GlobalLibraryInfo) cannot be closed through the API.
+        internal const string ProjectLibraryLabel = "ProjectLibrary";
+        internal static readonly string[] UserGlobalLibraryOnlyActions = { "save", "saveAs", "close", "archive" };
+        internal static string NoTypeFolderMessage(string libraryClass, string operation)
+            => libraryClass + " has no TypeFolder (system global libraries expose master copies only); " + operation + " needs a library with types. Nothing was called on TIA.";
+        internal static string UserGlobalLibraryOnlyMessage(string action, string libraryName, string libraryClass)
+            => "'" + libraryName + "' is a " + libraryClass + "; action=" + action + " exists only on UserGlobalLibrary in the Openness API (Close / Save / SaveAs / Archive / CleanUpLibrary). System and corporate libraries stay open until TIA closes them.";
     }
 }

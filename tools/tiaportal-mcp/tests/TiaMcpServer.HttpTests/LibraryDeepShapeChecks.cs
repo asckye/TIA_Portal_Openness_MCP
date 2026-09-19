@@ -49,6 +49,12 @@ internal static class LibraryDeepShapeChecks
         Method(lib+"UserGlobalLibrary","CleanUpLibrary",new[]{selectionSeq},"Void");
         Method(lib+"UserGlobalLibrary","Archive",new[]{dir,typeof(string),T(lib+"LibraryArchivationMode")},"Void");
         check(ilibrary.IsAssignableFrom(T(lib+"ProjectLibrary")) && ilibrary.IsAssignableFrom(T(lib+"GlobalLibrary")),"ProjectLibrary and GlobalLibrary implement ILibrary");
+        // 2.7.32 (2.7.31 real project): the label is synthesized because ProjectLibrary has no Name; only UserGlobalLibrary can be closed / saved.
+        check(T(lib+"ProjectLibrary").GetProperty("Name")==null,"ProjectLibrary has no Name (label synthesized by LibraryRef)");
+        Property(lib+"GlobalLibrary","Name","String");
+        Method(lib+"UserGlobalLibrary","Close",Type.EmptyTypes,"Void"); Method(lib+"UserGlobalLibrary","Save",Type.EmptyTypes,"Void");
+        check(T(lib+"SystemGlobalLibrary").GetMethod("Close",Type.EmptyTypes)==null && T(lib+"GlobalLibrary").GetMethod("Close",Type.EmptyTypes)==null,"SystemGlobalLibrary / GlobalLibrary have no Close (system libraries cannot be closed through the API)");
+        check(T(lib+"SystemGlobalLibrary").IsSubclassOf(T(lib+"GlobalLibrary")) && T(lib+"UserGlobalLibrary").IsSubclassOf(T(lib+"GlobalLibrary")),"System/UserGlobalLibrary derive from GlobalLibrary");
         // GlobalLibrary header
         foreach(var name in new[]{"Author","Copyright","Family","Version","LastModifiedBy"}) Property(lib+"GlobalLibrary",name,"String",false);
         Property(lib+"GlobalLibrary","Comment","MultilingualText",false); Property(lib+"GlobalLibrary","Path","FileInfo",false); Property(lib+"GlobalLibrary","Size","Int64",false);

@@ -76,6 +76,13 @@ namespace TiaMcpServer.Tests
             check(true, "libdeep: archive names accepted");
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateArchiveName("a/b")) && Fails<ArgumentException>(() => LibraryDeepLogic.ValidateArchiveName("")), "libdeep: archive name with separator / empty refused");
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateBounds(0, 10)) && Fails<ArgumentException>(() => LibraryDeepLogic.ValidateBounds(3, 9999)), "libdeep: bounds refused outside 1..16 / 1..5000");
+            // 2.7.32: labels and refusals learned on the real project (ProjectLibrary has no Name; system libraries have no TypeFolder / Close).
+            check(LibraryDeepLogic.ProjectLibraryLabel == "ProjectLibrary", "libdeep: project library label is synthesized (no Name in the PublicAPI)");
+            check(LibraryDeepLogic.UserGlobalLibraryOnlyActions.SequenceEqual(new[] { "save", "saveAs", "close", "archive" }), "libdeep: user-global-library-only actions catalog");
+            var noTypes = LibraryDeepLogic.NoTypeFolderMessage("SystemGlobalLibrary", "UpdateCheck");
+            check(noTypes.Contains("SystemGlobalLibrary") && noTypes.Contains("UpdateCheck") && noTypes.Contains("Nothing was called on TIA"), "libdeep: no-TypeFolder refusal names the class, the operation and that TIA was not called");
+            var userOnly = LibraryDeepLogic.UserGlobalLibraryOnlyMessage("close", "Buttons-and-Switches", "SystemGlobalLibrary");
+            check(userOnly.Contains("'Buttons-and-Switches'") && userOnly.Contains("action=close") && userOnly.Contains("UserGlobalLibrary") && userOnly.Contains("SystemGlobalLibrary"), "libdeep: user-library-only refusal names library, class, action and the API constraint");
             // HmiReadSafety: a disposed Openness proxy alone is not a session loss; anything remoting-shaped in the chain still is.
             check(HmiReadSafety.DisposedObjectOnly(new EngineeringObjectDisposedException("Access to a disposed object of type 'Siemens.Engineering.HW.MrpDomain' is not possible.")), "safety: disposed-object exception alone is classified as disposed-only");
             check(HmiReadSafety.DisposedObjectOnly(new InvalidOperationException("wrap", new EngineeringObjectDisposedException("inner"))), "safety: disposed-object inner exception is classified as disposed-only");

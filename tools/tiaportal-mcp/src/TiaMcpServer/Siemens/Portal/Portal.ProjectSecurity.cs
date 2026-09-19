@@ -331,8 +331,8 @@ namespace TiaMcpServer.Siemens
                 if ((string.IsNullOrEmpty(leftLibraryName) || string.IsNullOrEmpty(rightLibraryName)) && IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "Project library requested but no project is bound.");
                 var left = ExactOpenEngineeringLibrary(leftLibraryName); var right = ExactOpenEngineeringLibrary(rightLibraryName);
                 if (ReferenceEquals(left, right)) throw new ArgumentException("Left and right resolve to the same library.");
-                meta["left"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(left, "Name").ToString(), ["type"] = left.GetType().FullName };
-                meta["right"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(right, "Name").ToString(), ["type"] = right.GetType().FullName };
+                meta["left"] = LibraryRef(left); meta["left"]!["type"] = left.GetType().FullName;
+                meta["right"] = LibraryRef(right); meta["right"]!["type"] = right.GetType().FullName;
                 return PublishCompareResult(InvokeNativeCompare(left, "CompareToLibrary", right), includeIdentical, maxDepth, offset, limit, meta);
             }, requiresProject: false);
 

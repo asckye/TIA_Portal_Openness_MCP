@@ -110,9 +110,9 @@ namespace TiaMcpServer.Siemens
             }
             return row;
         }
-        private static JsonObject LibraryHeader(object library)
+        private JsonObject LibraryHeader(object library)
         {
-            var row = new JsonObject { ["libraryClass"] = library.GetType().Name, ["name"] = EngineeringGroupOperations.Get(library, "Name").ToString() };
+            var row = LibraryRef(library);
             if (library is GlobalLibrary global)
             {
                 row["author"] = global.Author; row["comment"] = MultilingualJson(global.Comment); row["copyright"] = global.Copyright; row["family"] = global.Family; row["version"] = global.Version;
@@ -177,9 +177,20 @@ namespace TiaMcpServer.Siemens
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
                 meta["library"] = LibraryHeader(library);
                 int items = 0;
-                if (includeTypes) meta["typeFolder"] = TypeFolderTree(lib.TypeFolder, "", 0, maxDepth, ref items, maxItems);
+                if (includeTypes)
+                {
+                    // SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only; 2.7.31 real project).
+                    var typeFolder = lib.TypeFolder;
+                    meta["typeFolder"] = typeFolder == null ? null : TypeFolderTree(typeFolder, "", 0, maxDepth, ref items, maxItems);
+                    if (typeFolder == null) meta["typeFolderNote"] = library.GetType().Name + " exposes no TypeFolder (master copies only).";
+                }
                 int copies = 0;
-                if (includeMasterCopies) meta["masterCopyFolder"] = MasterCopyFolderTree(lib.MasterCopyFolder, "", 0, maxDepth, ref copies, maxItems);
+                if (includeMasterCopies)
+                {
+                    var masterCopyFolder = lib.MasterCopyFolder;
+                    meta["masterCopyFolder"] = masterCopyFolder == null ? null : MasterCopyFolderTree(masterCopyFolder, "", 0, maxDepth, ref copies, maxItems);
+                    if (masterCopyFolder == null) meta["masterCopyFolderNote"] = library.GetType().Name + " exposes no MasterCopyFolder.";
+                }
                 meta["typeItems"] = items; meta["masterCopyItems"] = copies; meta["apiCallSuccess"] = true; meta["dataComplete"] = items <= maxItems && copies <= maxItems;
                 meta["scope"] = "Library header (GlobalLibrary scalars, comment per culture, history entries, used products), type folder tree with consistency Status / Guid / DoNotUse / SetForUpdate / version summary, master copy tree with ContentDescriptions. Bounded by maxDepth/maxItems.";
                 return "Library overview read; no modification.";
@@ -217,8 +228,12 @@ namespace TiaMcpServer.Siemens
             => RunHmiStepTool("CheckLibraryUpdates", meta => {
                 LibraryDeepLogic.RequireOneOf(updateCheckMode, LibraryDeepLogic.UpdateCheckModes, "updateCheckMode"); LibraryDeepLogic.ValidateBounds(1, maxItems);
                 if (_portal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
+                if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "UpdateCheck runs against the bound project; attach a project first.");
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
-                meta["library"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(library, "Name").ToString(), ["libraryClass"] = library.GetType().Name }; meta["updateCheckMode"] = updateCheckMode;
+                meta["library"] = LibraryRef(library); meta["updateCheckMode"] = updateCheckMode;
+                // TIA answers UpdateCheck on a library without types (SystemGlobalLibrary) with a NonRecoverableException that the
+                // connection guard treats as a lost session (2.7.31 real project): refuse before calling.
+                if (lib.TypeFolder == null) throw new ArgumentException(LibraryDeepLogic.NoTypeFolderMessage(library.GetType().Name, "UpdateCheck"));
                 var result = lib.UpdateCheck(_project!, ParseEnum<UpdateCheckMode>(updateCheckMode));
                 int count = 0; bool truncated = false;
                 JsonArray Flatten(object messages, int depth)
@@ -275,7 +290,7 @@ namespace TiaMcpServer.Siemens
                     case "updateLibrary":
                     {
                         var target = AsLibrary(ExactOpenEngineeringLibrary(targetLibraryName));
-                        meta["targetLibrary"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(target, "Name").ToString(), ["libraryClass"] = target.GetType().Name };
+                        meta["targetLibrary"] = LibraryRef(target);
                         if (dryRun) return "Type UpdateLibrary preview (single-type overload with DeleteUnusedVersionsMode / StructureConflictResolutionMode / ForceUpdateMode); nothing changed.";
                         meta["mayHaveChanged"] = true;
                         type.UpdateLibrary(target, ParseEnum<DeleteUnusedVersionsMode>(deleteUnusedVersionsMode), ParseEnum<StructureConflictResolutionMode>(structureConflictResolutionMode), ParseEnum<ForceUpdateMode>(forceUpdateMode));
@@ -305,14 +320,14 @@ namespace TiaMcpServer.Siemens
                 using var access = dryRun ? null : AcquireHmiEditAccess();
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
-                meta["library"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(library, "Name").ToString(), ["libraryClass"] = library.GetType().Name };
+                meta["library"] = LibraryRef(library);
                 var selected = ResolveSelection(library, selection, meta);
                 switch (action)
                 {
                     case "updateLibrary":
                     {
                         var target = AsLibrary(ExactOpenEngineeringLibrary(targetLibraryName));
-                        meta["targetLibrary"] = new JsonObject { ["name"] = EngineeringGroupOperations.Get(target, "Name").ToString(), ["libraryClass"] = target.GetType().Name };
+                        meta["targetLibrary"] = LibraryRef(target);
                         meta["modes"] = new JsonObject { ["forceUpdateMode"] = forceUpdateMode, ["deleteUnusedVersionsMode"] = deleteUnusedVersionsMode, ["structureConflictResolutionMode"] = structureConflictResolutionMode };
                         if (dryRun) return "UpdateLibrary preview; nothing changed (types are matched by GUID; a version GUID mismatch aborts natively).";
                         meta["mayHaveChanged"] = true;
