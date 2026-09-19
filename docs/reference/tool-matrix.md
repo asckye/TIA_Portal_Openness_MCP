@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 20:41:27
-- 引擎文件版本：2.7.32.0
-- 工具数量：389
+- 生成时间：2026-09-18 23:14:27
+- 引擎文件版本：2.7.33.0
+- 工具数量：396
 
 ## 读法
 
@@ -15,9 +15,9 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 114 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 144 |
-| `FILE` | 导出/导入文件或生成离线产物 | 44 |
+| `READ` | 读取已打开工程，不改动 | 117 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 147 |
+| `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 10 |
@@ -29,15 +29,15 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 34 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (6)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 53 | `Project` (20)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
+| `session` | 会话与基础设施 / Session & infrastructure | 35 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (7)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `project` | 工程与协作 / Project & collaboration | 56 | `Project` (23)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
-| `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
-| `hardware` | 硬件与网络 / Hardware & network | 53 | `Hardware` (53) |
+| `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
+| `hardware` | 硬件与网络 / Hardware & network | 55 | `Hardware` (55) |
 | `hmi` | HMI 人机界面 / HMI | 115 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (14)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
-## session — 会话与基础设施 / Session & infrastructure（34）
+## session — 会话与基础设施 / Session & infrastructure（35）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -61,7 +61,7 @@
 | `FindTools` | L0 | READ | Search the FULL tool roster, including tools not listed in this session. The server ships a small 'lite' roster by default so every host can load it; everything else is reached through this tool plus CallTool. USE THIS whenever the visible tools do not cover what you need, before concluding the server cannot do something. Search by capability words, not exact names: 'watch table', 'HMI screen', 'download', 'cross reference', 'GSD'. Optionally restrict to one category (session/project/plc/plc-online/hardware/hmi/runtime) or one domain tag (e.g. HMI-Unified, PLC-Online) — see ListToolCategories. Returns each match's exact name, parameter signature with defaults, and full description; then invoke it with CallTool. |
 | `ListToolCategories` | L0 | READ | The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per category/domain/operation. Call this first to orient, then FindTools(category=… or domain=…) to browse one area. |
 
-### [Portal]（6）
+### [Portal]（7）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -71,6 +71,7 @@
 | `Disconnect` | L1 | SESSION* | Disconnect from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed. |
 | `EnsureOpennessUserGroup` | L1 | SESSION* | Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK. |
 | `ListPortalProcessProjects` | L1 | SESSION* | List running TIA Portal processes and the projects/sessions visible in each process. |
+| `ReadPortalInfo` | L2 | READ | Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project. |
 
 ### [Diagnostics]（5）
 
@@ -115,11 +116,11 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（53）
+## project — 工程与协作 / Project & collaboration（56）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
-### [Project]（20）
+### [Project]（23）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -138,11 +139,14 @@
 | `ImportProjectTexts` | L2 | WRITE | Native project text import. updateSourceLanguage explicitly controls updating SOURCE language, not a generic overwrite switch. Default preview; returns native diagnostics; no save/compile/download. |
 | `ManageMultiuserSession` | L2 | WRITE | Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly. |
 | `ManageProjectLanguage` | L2 | WRITE | Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download. |
+| `ReadObjectIdentifier` | L2 | READ | ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePathJson/itemPathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only. |
 | `ReadProjectSettings` | L2 | READ | Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified. |
 | `ReadTestSuiteCases` | L2 | READ | Siemens Test Suite styleGuide/application/system case or rule-set scalar read. Exact name or live offset pagination. Does not execute tests. |
 | `RetrieveProjectArchive` | L2 | WRITE | Retrieve an archive into a new absolute directory and bind returned project. Requires connected Portal with no open project/session; never closes existing projects. upgrade=false, dryRun=true. |
 | `RunTestSuiteCase` | L2 | EXECUTE | Execute one exact Siemens Test Suite rule set/case. Default preview; application/system require confirmExternalExecution=true because configured simulation or servers may be affected. Returns actual testPassed and native diagnostics. |
+| `RunToolsInTransaction` | L2 | WRITE | Run 1..20 tool calls (callsJson [{"name":"<tool>","arguments":{...}}]) inside one ExclusiveAccess + Transaction(project, text): TIA groups them into a single undo unit and the transaction is committed (Transaction.CommitOnDispose) only when every call reports success; any failure rolls all of them back on dispose. Inner dryRun arguments are forced to false; CallTool / nested transactions are refused. Reports CanCommit / CommitRequested and each call's result. dryRun=true only validates the call list; real execution needs confirmChange. No save. |
 | `SaveAsProject` | L2 | FILE* | Save current TIA-Portal project/session with a new name |
+| `ShowObjectInEditor` | L2 | WRITE | IShowable.ShowInEditor on the exact object (kind=device via devicePathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true. |
 
 ### [Library]（13）
 
@@ -179,7 +183,7 @@
 | `ManagePasswordPolicy` | L2 | WRITE | Project password policies. read (all targets or one): umac = Umac.PasswordPolicyConfigurator (IncludesLowerCaseAndUpperCaseCharacters, MinimumLength, MinimumNumericCharacterLength, MinimumSpecialCharacterLength, EnablePasswordAging, MinimumUserPasswordsBlockedForReuse, PasswordValidity, PasswordValidityPrewarningTime), plc = Security.PlcPasswordPolicyService (PasswordPolicyEnabled: S7-1200/1500 passwords follow the UMAC complexity), legacyPlc = Security.LegacyPlcPasswordPolicyService (PasswordPolicyEnabled, MinimumLength 5..8, MinimumNumericCharacterLength 0..8, MinimumSpecialCharacterLength 0..8, IncludesLowerCaseAndUpperCaseCharacters). update (target + propertiesJson, every write read back; TIA raises PasswordPolicySettingsException outside its ranges) needs confirmChange with dryRun=false. Passwords are never readable; no save. |
 | `ManagePlcCertificate` | L2 | WRITE | Offline engineering certificates of the exact PLC DeviceItem (LocalCertificateManager.LocalCertificateStore): list, read, template (default CertificateTemplate for usage Tls/WebServer/OpcUaServer/OpcUaClient/OpcUaClientServer: Signature, SubjectCommonName, Usage, ValidFrom, ValidUntil, SubjectAlternativeNames), create (usage + template propertiesJson Signature Sha1RSA/Sha256RSA, SubjectCommonName, ValidFrom/ValidUntil ISO dates + subjectAlternativeNamesJson [{type Dns/Email/IP/Uri, value}] via SubjectAlternativeNameComposition.Create), import (filePath; optional password for protected files via Import(file, SecureString), never echoed), export (new file), delete (by exact certificateId), assign/unassign (WebserverCertificate/OpcUaServerCertificate dynamic attribute on the selected owner). dryRun=true default; no download/save; export refuses overwrite; private keys are never exported. |
 | `ManageProjectUserManagement` | L2 | WRITE | UMAC mutation by exact names: createUser/deleteUser/setUserPassword/activateUser/deactivateUser/assignRole/unassignRole (name=user, roleName), createRole/deleteRole/assignEngineeringRight/unassignEngineeringRight/assignDeviceRight/unassignDeviceRight (name=custom role, rightName, devicePathJson), createDeviceRight/deleteDeviceRight (name, group, comment), activateAnonymousUser/deactivateAnonymousUser (no name; UmacConfigurator.ActivateAnonymousUser/DeactivateAnonymousUser, single anonymous user per protected project - roles are assigned with assignRole name=Anonymous). Default preview; real execution needs dryRun=false AND confirmChange=true. Password goes to the API as SecureString and is never logged. Readback verified; no save/compile/download; system roles and project protection itself are never changed. |
-| `ManageSyslogServers` | L2 | WRITE | Syslog configuration. scope=project (Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (name + propertiesJson Address/Port/Tls/Comment, read back on the refreshed composition), update (propertiesJson), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePathJson/itemPathJson module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, dynamic SysLogAutoAcceptClient/SysLogClientCertificateId/SysLogTrustedCertificateIds), update (propertiesJson EnableSystemLogging/TransportProtocol None\|TLSServerAndClientAuthentication\|TLSOnlyServerAuthentication\|UDP + attributesJson for the three dynamic attributes), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download. |
+| `ManageSyslogServers` | L2 | WRITE | Syslog configuration. scope=project (Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (PREVIEW ONLY: SyslogServerComposition.Create crashed TIA Portal V21 twice on the reference project, so dryRun=false is refused; create the server in the TIA UI), update (propertiesJson), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePathJson/itemPathJson module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, dynamic SysLogAutoAcceptClient/SysLogClientCertificateId/SysLogTrustedCertificateIds), update (propertiesJson EnableSystemLogging/TransportProtocol None\|TLSServerAndClientAuthentication\|TLSOnlyServerAuthentication\|UDP + attributesJson for the three dynamic attributes), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download. |
 | `ManageUmcUsers` | L2 | WRITE | UMC (central) users and groups of a protected project (UmacConfigurator.UmcUsers/UmcUserGroups) and the UMC server (UmcServerConfigurator). kind=user\|group: read (all or exact name, paginated: Name, IsActive, DomainId, Description, roles), createOffline (UmcUserComposition.CreateOfflineUmcUser(name) / CreateOfflineUmcUserGroup()+SetName), importFromServer (UmcServer.GetUserByName/GetUserGroupByName then Create(info); needs serverUserName + serverPassword for the Authentication event, a UMC account with the UMC View right), rename (newName via SetName), activate/deactivate, delete (verified absent), assignRole/unassignRole (roleName = system or custom role, RoleAssociation.Add/Remove). kind=server: read (UmcServer scalars/attribute names), checkConsistency (UmcServerConfigurator.CheckConsistency), synchronize (Synchronize with the server; optional credentials). Real changes need confirmChange with dryRun=false; passwords go to the API as SecureString and are never echoed; no save. ManageProjectUserManagement handles project (local) users. |
 | `ReadProjectProtection` | L2 | READ | Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection. |
 | `ReadProjectUserManagement` | L2 | READ | Paginated UMAC listing of the bound project: category users/anonymousUser/systemRoles/customRoles/engineeringRights/customDeviceRights/umcUsers/umcUserGroups/passwordPolicy/deviceRights/roleDeviceRights. Optional exact name filter; deviceRights/roleDeviceRights need devicePathJson (+itemPathJson) JSON arrays of exact names. Requires the native UmacConfigurator service (protected project); passwords never readable. Nothing modified. |
@@ -325,11 +329,11 @@
 | `ManageSafetyGlobalSettings` | L2 | WRITE | Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). propertiesJson holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login. |
 | `ReadSafetyBlockSignatures` | L2 | READ | Per-block F-signatures via native PlcBlock.GetService<SafetySignatureProvider>() for one exact blockPath or every block of the PLC (recursive), plus the PLC collective/software/hardware/communication-address signatures (V21 ProgramSignatures) when includeProgramSignatures=true. Blocks without the service (non-F blocks, non-F-CPU) are counted, not listed. Value 0 = no valid signature (changed since the last F-compile). Offline project values, never read from the CPU. Paginated offset/limit<=500. No change. |
 
-## plc-online — PLC 在线与传输 / PLC online & transfer（15）
+## plc-online — PLC 在线与传输 / PLC online & transfer（16）
 
 经 Openness 的在线/离线切换、下载、存储卡镜像、站上载、可达设备扫描、在线比较与监视表读取。
 
-### [PLC-Online]（15）
+### [PLC-Online]（16）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -344,16 +348,17 @@
 | `GetPlcForceTables` | L2 | READ* | [PreCondition:Connect+OpenProject] List all force table names in the PLC software. Force tables configure which variables are continuously forced to specific values while the CPU is online. Read-only: this server exposes NO tool for creating or editing force entries — forcing overrides live PLC logic (a forced output stays forced regardless of what the program writes) and is deliberately kept out of the AI tool surface. Create or edit force entries in the TIA Portal UI. For a one-shot value written from a watch table instead, use SetWatchTableModifyValue (the variable reverts to PLC logic afterwards). |
 | `ManagePlcDataBlockSnapshot` | L2 | ONLINE | read/createSnapshot/loadSnapshotAsActualValues/loadStartValuesAsActualValues/exportSnapshot on one exact data block via native ValueService/InterfaceSnapshot. Siemens semantics: createSnapshot reads actual values from the CPU and load actions write values INTO the running CPU, so the PLC must already be online in TIA; this tool never goes online/offline. Load actions require confirmValueChange=true besides dryRun=false; no value readback exists, only native return. exportSnapshot writes a NEW absolute file and returns its SHA-256. ValueService is V21+ (V20 returns NotSupported). Default preview; no save/compile/download. |
 | `ReadPlcBlockFingerprints` | L2 | ONLINE | Read fingerprint data (identifier/value pairs) from the CPU via native FingerprintDataProvider.GetFingerprintData using the configured route whose CPU address exactly equals targetIpAddress; several PG/PC adapters to that address require the exact pgPcInterface name. Optional CPU password is passed only to the native legitimation callback. Paginated offset/limit<=500. Default preview resolves the route without contacting the PLC; dryRun=false contacts the PLC read-only. No project or PLC change. |
+| `ReadTransferRoutes` | L2 | READ | The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) -> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadToPlc / GoOnline. |
 | `ScanAccessibleDevices` | L2 | ONLINE | Live network scan of reachable devices (name, IP, MAC, device series) on one exact PG/PC interface via ConfigurationPcInterface.GetAccessibleDevices. pgPcInterface is the exact name or number (required when several exist); softwarePath optionally scans through an existing PLC's connection configuration. Read-only for the project; probes the network. Feeds UploadStationFromPlc. |
 | `SetWatchTableModifyValue` | L2 | ONLINE-WRITE | [PreCondition:Connect+OpenProject+GoOnline] Configure a watch table entry to write a value to a PLC variable once (or on a trigger). This is an OFFLINE CONFIGURATION step — the value is written to the PLC only when TIA Portal is online and the trigger fires. Trigger options: Permanent (every cycle), PermanentAtStart (every cycle, at scan start), OnceOnlyAtStart (single write at scan start), PermanentAtEnd, OnceOnlyAtEnd, OnceOnlyAtStop. Use GoOnline before calling this for the write to reach the PLC. SAFETY: the target is a variable in the physical CPU, not a simulation. The moment the trigger fires the value lands on the real address — if that address is a coil, a valve, a contactor or a drive enable, the machine moves at that instant, with no acknowledgement step. Before calling, know exactly what the address drives and confirm nobody is at or inside the machine. The resulting physical motion is NOT undone by calling this tool again with another value; the equipment stays wherever it moved to. Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again (a force would keep overriding the program continuously). This server exposes no tool for force entries — GetPlcForceTables only lists them; use TIA Portal directly to force a value. Example: SetWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart') |
 | `UploadDeviceParameters` | L2 | ONLINE-WRITE | Upload hardware parameters from a live device into the exact offline device/item (ParameterUploadProvider.ParameterUpload). Route is selected by exact pgPcInterface/targetIpAddress. Default preview; execution needs confirmUpload=true and exclusive access; returns before/after scalar properties. No save/compile/download. |
 | `UploadStationFromPlc` | L2 | ONLINE-WRITE | Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an address seen by ScanAccessibleDevices on the same PG/PC interface. Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download. |
 
-## hardware — 硬件与网络 / Hardware & network（53）
+## hardware — 硬件与网络 / Hardware & network（55）
 
 设备/模块增删移动、硬件目录、子网与 IO 系统、通信连接、系统诊断设置、AML 交换、驱动与 DCC 图表。
 
-### [Hardware]（53）
+### [Hardware]（55）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -382,9 +387,11 @@
 | `ImportDeviceAml` | L2 | FILE | Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice\|OverwriteTiaDevice\|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download. |
 | `ManageCommunicationConnection` | L2 | WRITE | Create or delete one communication connection on an exact owner DeviceItem. create: connectionType is one exact kind (S7Connection/IsoConnection/IsoOnTcpConnection/TcpConnection/UdpConnection/FdlConnection/PtpConnection/HmiConnection), localInterfaceItemPathJson + localNodeName (required when the interface has several nodes), partnerDevicePathJson/partnerItemPathJson (partner DeviceItem) and partnerInterfaceItemPathJson/partnerNodeName; optional connectionName is written to LocalConnectionName and verified. delete: exact LocalConnectionName (ambiguous names refused) and confirmDelete=true. Default preview; real run needs exclusive access. NotSupported on TIA V20. No save/compile/download. |
 | `ManageDccChart` | L2 | WRITE | Exact offline DCC chart read/create/update/delete/import/export/optimizeSequence. Default preview. Delete includes chart contents; import uses explicit native options. No online drive commands. Native results and file hashes, not semantic completeness. |
+| `ManageDeviceServiceObjects` | L2 | WRITE | Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + propertiesJson, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update propertiesJson; setServiceGroupName name=<Id or Guid> propertiesJson {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download. |
 | `ManageDeviceUserGroup` | L2 | WRITE | Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download. |
 | `ManageDeviceUsers` | L2 | WRITE | Users of the exact hardware object's official services: family=webserver (CPU WebserverUserManagement.WebserverUsers: read, create with permissionsJson flag names such as ["ReadTag","DoDiagnosis"] and password, delete, setPermissions, setPassword), family=simpleWebserver (SIWAREX SimpleWebserverUserManagement: fixed user slots; setActive, rename via newName, setPermissions None/ReadOnly/ReadWrite, setPassword) and family=opcUa (OpcUaUserManagement.OpcUaUsers: read, create with password, delete, setPassword). Passwords are converted to SecureString and never echoed; TIA refuses writes while the web server / OPC UA authentication is disabled. Deletes need confirmDelete. Default dryRun=true; no save/compile/download. |
 | `ManageHardwareObject` | L2 | WRITE | Native deleteDevice/deleteItem/moveItem/copyItem. devicePathJson=[group,...,station] or [unique exact station name]; itemPathJson lists exact child names, preserving slashes in names. Move/copy require destinationDevicePathJson,destinationItemPathJson,position and pass native CanPlug check. dryRun=true default. Deletes may remove contained software. No save/download/online control. |
+| `ManageHardwareUtilities` | L2 | FILE | Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed. |
 | `ManageIoSystem` | L2 | WRITE | Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default), delete (IoSystem.Delete, needs confirmDelete), update (propertiesJson Name/Number + attributesJson dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. |
 | `ManageNetworkDomain` | L2 | WRITE | kind=sync/mrp on one exact subnet: create (SyncDomainComposition/MrpDomainComposition.Create(name)), delete (needs confirmDelete), update (propertiesJson Name/IsDefault + attributesJson dynamic attributes, read back) and addParticipant (DomainParticipants.Add of the NetworkInterface at participantDevicePathJson/participantItemPathJson; the API exposes no removal). Default dryRun=true; no save/compile/download. |
 | `ManagePortInterconnection` | L2 | WRITE | Topology of one exact port device item (NetworkPort service): read lists ConnectedPorts with owner paths; connect/disconnect call NetworkPort.ConnectToPort/DisconnectFromPort with the partner port at partnerDevicePathJson/partnerItemPathJson and verify the ConnectedPorts count. TIA refuses ports of the same interface and second partners on ports without alternative partners. Default dryRun=true; no save/compile/download. |

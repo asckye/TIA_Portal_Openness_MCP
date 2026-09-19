@@ -1,10 +1,10 @@
 {
-    "generatedAt":  "2026-09-19T03:41:33.3371855+00:00",
+    "generatedAt":  "2026-09-19T06:14:32.4413873+00:00",
     "testsPassed":  88,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "8652cad9dad22bc0ef4149314e6e5a1768383bdb2da48282cb0512526bfcf15c"
+                       "sha256":  "dc4495a5757b7bccdc3993f9c0e70205b1b72008b791f2b5294d663b9246b5b6"
                    },
     "sourceFiles":  [
                         {
@@ -21,7 +21,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "54efe7ea31800ff24131b56123031248c9f13c977a64eb91cfe05f56c368af2a"
+                            "sha256":  "76a19524fa34294a9a040d09ff4ad7959bfd5dfbbee7f70272f56ae868fa81c5"
                         },
                         {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
