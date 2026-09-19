@@ -4,9 +4,9 @@
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.37 已构建，待发布与真机验证；阶段 5 收口，核心程序集缺口全部归零）
+## 1. 现状（2.7.37 已发布，待真机验证；阶段 5 收口，核心程序集缺口全部归零）
 
-- 最新 tag `v2.7.36`（2026-09-19，已真机验证）；**2.7.37 已在本机跑完 `Build-Release.ps1` 并按 3 提交模式提交**（推送 / 打 tag / 真机验证见 §2）。
+- 最新 tag `v2.7.37`（2026-09-19，本机构建并发布，`Publish complete release` 已上传 ZIP；上一个 `v2.7.36` 同日，已真机验证）。
 - 工具 413 个、默认 lite 56；离线套件 1881 项；引擎 API 形状检查 V20 1957 / V21 2140（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,215（分母去掉 internal 的 `Compiler.CompileProvider` 与 `Private.ProcessHelper`，审计脚本 2.7.33 起排除）= 专用引用 505 / 仅类型名 61 / 动态覆盖 327 / 完全未触及 322；未封装功能类型 107 / 515（**Base 0 / 0、Step7 0 / 0、经典 WinCC 0 / 0、`WinCC.Extension` 0 / 0**，选件包 107 / 515）。**阶段 5 收口，核心程序集全部归零。**
 - 阶段 5 经典 WinCC（2.7.37，真机待验）：`ReadClassicHmiScreenTree`、`ManageClassicHmiScreenObject`、`ManageClassicHmiFolder`、`ManageClassicHmiGraphic` + `ReadClassicHmiScripts` / `ManageClassicHmiScript` / `ReadLibraryType typeKind` / `EngineeringScalarProperties.ValueRenderer`（`ConstValue` / `NullableDateTime`）类型化。文件：`Siemens/ClassicHmiFoldersLogic.cs`、`Siemens/Portal/Portal.ClassicHmiFolders.cs`、`ModelContextProtocol/Tools/McpServer.ClassicHmiFolders.cs`、`tests/.../ClassicHmiFoldersTests.cs`、`tests/.../ClassicHmiFoldersShapeChecks.cs`。
@@ -21,7 +21,7 @@
 
 ## 2. 下一步（按顺序）
 
-1. **发布 2.7.37**：本机工作树里 3 个提交（`Release 2.7.37 (1/3|2/3|3/3)`）已就绪但**未推送**——`git push`，在 GitHub Actions 看 `validate-bundle` / `offline-checks` 通过后打注解 tag `v2.7.37` 触发 "Publish complete release"（闸门见 §4；GitHub API 从本机限流时用 `https://github.com/<repo>/actions/workflows/<wf>.yml` 页面的 `aria-label` 抓状态）。
+1. ~~发布 2.7.37~~ **2026-09-19 完成**（`validate-bundle` / `offline-checks` / `Publish complete release` 全绿；GitHub API 从本机限流时用 `https://github.com/<repo>/actions/workflows/<wf>.yml` 页面的 `aria-label` 抓状态）。
 2. **部署 2.7.37 到虚拟机并真机验证**（约定见 §5）：参考工程的 HMI 是 Unified（`HMI_RT_1`）——四个新工具对它应回 "Selected software is not a classic WinCC HmiTarget … Unified targets use the Unified tools"；`ReadLibraryType` 看 `typeKind`；`ReadUnifiedTag` 类的读取里看 `ConstValue` / `NullableDateTime` 是否以 `valueClass` 渲染（阈值 / 日期时间初始值）。把结果记进 `docs/releases/v2.7.37.md#真机结果`、`CHANGELOG.md`、`capabilities.md`、本页 §1 / §6。未验证项仍留：所有经典 WinCC 实做路径（没有经典 HMI 工程）、R/H、`GoOnline userName`、`OpenProject` UMAC 凭据、`CompareProjects rootElement`、`exportCardReaderPsc` 实做、双实例改绑拒绝、安全单元本体、单元 / 文档 / 外部源母本、`.nvt` 文档、真实 XLSX 导出导入、ProDiag 实做、带地址驱动的硬件连接 / 主值耦合 / 解释器映射 / Ident；虚拟机桌面的 `mcp2733-opcua.xml`（20 MB）、`LDiag_typeFault.s7dcl`、`MCP_TMP_FC_2735.scl`、`mcp2735-alarmclasses.dat` 可删。
 3. **阶段 6 选件包（只做形状检查，2.7.38 起）**：107 类型 / 515 成员——SiVArc 33 / 198、Startdrive 34 / 117（含 `*SDR*` 硬件连接接口）、DCC 14 / 69（另有 39 个异常类是壳子）、SafetyValidation 9 / 43、TestSuite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7。虚拟机没有这些选件的许可，路线图约定：每个选件包一份 `*ShapeChecks.cs` 逐成员核对 + 一个只读 / 预览工具族（服务不可用时明确 NotSupported），不宣称真机验证。先跑审计拿清单：`bin-build/audits/<名>/V21-types.csv` 里 `assembly` 属于选件包且 `status=UNTOUCHED`，按壳子规则过滤。
 4. ~~阶段 5 经典 WinCC（`Siemens.Engineering.WinCC.dll`）~~ **2.7.37 完成，功能类型缺口 0 / 0**（官方页面 id：弹出画面 `Bs8q~5oMGOhyPiULc5EjXg` / `WfkApIgS2OeHao78qoNfYQ`、滑入 `t9yZaXoGpzKIvND1XMsAKQ` / `g0G3yI1viTlSPt3pddPr_A`、模板 `~xq~afYOxwUtTqH3V1I_Tw` / `lOIf7qsktx_jISESVA846Q`、变量文件夹 `NjqFj5DVnfDkwuPfn6k8Xg` / `nda76ZAvfbuD9koVDoGIJQ`、图形 `txSvxCRTH2TMhIO~7G8jLw`、VB 脚本 `jA1DvFRkXxu0ll1Btu5hRw` / `iQJjjjTJbZJl4VkE_aN_Bw`）。原清单：`Hmi.Screen` 17 / 38（`ScreenPopup(Folder/SystemFolder/UserFolder)`、`ScreenSlidein(SystemFolder)`、`ScreenTemplate(Folder/SystemFolder/UserFolder)`、`ScreenSystemFolder` / `ScreenUserFolder`、`ScreenGlobalElements` / `ScreenOverview`、`ScreenLibraryType` / `StyleLibraryType` / `StyleSheetLibraryType`）、`Hmi.RuntimeScripting` 3 / 10（`VBScript`、`VBScriptSystemFolder` / `VBScriptUserFolder`）、`Hmi.Tag` 3 / 8（`TagSystemFolder` / `TagUserFolder`、`HmiUdtLibraryType`）、`Hmi.Globalization` 1 / 3（`MultiLingualGraphic`）。参考工程的 HMI 是 Unified（`HMI_RT_1`），经典 WinCC 只能形状检查 + 现有 `Portal.ClassicHmi*` 的类型化改造；先看 `docs/reference/openness-coverage.md` 的经典 WinCC 行与 `Portal.MotionProDiagClassicHmi.cs` 里已有的经典 HMI 工具（`ManageClassicHmiScripts` / `ManageClassicHmiCycles` / `ManageClassicHmiTextLists`…）。
