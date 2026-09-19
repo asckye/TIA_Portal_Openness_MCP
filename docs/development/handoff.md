@@ -4,9 +4,9 @@
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 
-## 1. 现状（2.7.34 已构建，待发布与真机验证；阶段 4 ④-① 完成）
+## 1. 现状（2.7.34 已发布，待真机验证；阶段 4 ④-① 完成）
 
-- 最新 tag `v2.7.33`（2026-09-19，已真机验证）；**2.7.34 已在本机跑完 `Build-Release.ps1` 并按 3 提交模式提交**（推送 / 打 tag / 真机验证见 §2）。
+- 最新 tag `v2.7.34`（2026-09-19，本机构建并发布，`Publish complete release` 已上传 ZIP；上一个 `v2.7.33` 同日，已真机验证）。
 - 工具 402 个、默认 lite 56；离线套件 1754 项；引擎 API 形状检查 V20 1670 / V21 1810（`Build-Release.ps1` 第 73 行硬编码这两个数）。
 - 审计（V21）：类型 1,215（分母去掉 internal 的 `Compiler.CompileProvider` 与 `Private.ProcessHelper`，审计脚本 2.7.33 起排除）= 专用引用 417 / 仅类型名 65 / 动态覆盖 327 / 完全未触及 406；未封装功能类型 162 / 695（**Base 0 / 0**、Step7 28 / 100、经典 WinCC 24 / 59、`WinCC.Extension` 2 / 11、选件包 108 / 525）。
 - 阶段 4 ④-① Step7 软件单元与 `PlcSoftware` 小服务（2.7.34，真机待验）：`ReadPlcSoftwareUnits`、`ManagePlcDocuments`（命名值类型文档 + UDT 文档导入导出 / 母本 / 库类型实例化）、`ReadPlcChecksums`、`ReadPlcObjectFingerprints`、`ManagePlcBlockWriteProtection`（V21）、`ManageProjectCompilationSettings` + `ManagePlcSoftwareUnit`（`unitKind=safety` / `createFromMasterCopy` / `commentsJson`）、`ReadDeviceItemChannels includeLinkedTags`（V21 `PlcTagProvider`）、`UpdateDeviceAddress`（V21 `ProcessImageProvider`）、类型化 `DocumentImportResultForBlocks` 扩展；另修 2.7.33 真机的事务缺陷（`ForceRealExecution` 无键也写 `dryRun=false`）。文件：`Siemens/SoftwareUnitDeepLogic.cs`、`Siemens/Portal/Portal.SoftwareUnitDeep.cs`、`ModelContextProtocol/Tools/McpServer.SoftwareUnitDeep.cs`、`tests/.../SoftwareUnitDeepTests.cs`、`tests/.../SoftwareUnitDeepShapeChecks.cs`。
@@ -18,7 +18,7 @@
 
 ## 2. 下一步（按顺序）
 
-1. **发布 2.7.34**：本机工作树里 3 个提交（`Release 2.7.34 (1/3|2/3|3/3)`）已就绪但**未推送**——`git push`，在 GitHub Actions 看 `validate-bundle` / `offline-checks` 通过后打注解 tag `v2.7.34` 触发 "Publish complete release"（闸门见 §4）。
+1. ~~发布 2.7.34~~ **2026-09-19 完成**（`validate-bundle` / `offline-checks` / `Publish complete release` 全绿）。
 2. **部署 2.7.34 到虚拟机并真机验证**（约定见 §5）：`ReadPlcSoftwareUnits`（参考工程 1510SP F 的 `SafetyUnit`：`unitKind=safety`，看 BlockGroup / TypeGroup / Documents 名单与关系）、`ManagePlcSoftwareUnit read`（safety）与 `update` / `createRelation` 预览、`ManagePlcDocuments list`（PLC 根与 `SafetyUnit` 的 `TypeGroup.Documents`）+ `export`（`objectKind=type` 导出一个 UDT 到桌面目录，看 `ExportedDocuments` 扩展名）、`ReadPlcChecksums`、`ReadPlcObjectFingerprints`（`00_Safety/OpMode01/OPMODE01_IN_FFB` 与一个 UDT）、`ManagePlcBlockWriteProtection read`、`ManageProjectCompilationSettings read`（V21 两个服务提供者是否非 null）、`ReadDeviceItemChannels includeLinkedTags`（`+S1` 的 DI/DQ 模块）、`RunToolsInTransaction` 内层调用**不带** `dryRun` 时是否真执行。把结果记进 `docs/releases/v2.7.34.md#真机结果`、`CHANGELOG.md`、`capabilities.md`、本页 §1 / §6 与 `openness-dynamic-coverage.json`。未验证项仍留：R/H、`GoOnline userName`、`OpenProject` UMAC 凭据、`CompareProjects rootElement`、`exportCardReaderPsc` 实做、双实例改绑拒绝；虚拟机桌面的 `mcp2733-opcua.xml`（20 MB）可删。
 3. **阶段 4 Step7（`Siemens.Engineering.Step7.dll`，2.7.34 起，剩 28 类型 / 100 成员）**：
    - ~~④-① 软件单元 + `PlcDocument*` + `PlcChecksumProvider` / `PlcSimulationSettingsProvider` / `PlcBlockWriteProtectionProvider`~~ **2.7.34 完成**（官方页面 id：软件单元 `0h0oxLVauEUie7gZF4QPWw` / `cRardLf5JWn6RV4GwzVX2Q` / `1XBGooV5zT1c4pMm~pUcDQ` / `R3UTOiWAisuD36RmvULj9Q` / `JT6mLOEcCLGxh5bzCM6sxw`、安全单元 `nRkWKOSJ40n_TTB9pS3iEw` / `UXq9Lu_poeISbbKKJiZn7Q`、NVT 文档 `pi7xDzfb1aKRSwG4KIQP3g`、UDT 文档 `H_AHIQyhM0nIyyGLbQm7fQ` / `f7I~jdKwF~pGMltuKUvtAQ`、校验和 `4oWqygP07f_Pxz7N2LEwBw`、指纹 `CU2HzxWdQiVq8MOz7QkvNw`、写保护 `4qvX8TvoaH0t9f7LiQc_3g`、工程属性 `~zGrGn3wwJUHBCn6pO5Cjg`）。
