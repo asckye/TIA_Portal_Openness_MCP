@@ -42,6 +42,14 @@ namespace TiaMcpServer.Siemens
         private readonly char[] _regexChars = ['.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|'];
 
         private TiaPortal? _portal;
+        // 2.7.40: the OS process behind _portal. Startdrive calls on a G120C can take TIA Portal V21 down with it (real project:
+        // r2139, unwired BICO sinks, CanInsertMainTelegram); the next call then only sees EngineeringObjectDisposedException, so the
+        // fault record and GetState say whether the process is still alive instead of leaving the operator to guess.
+        private void RememberBoundProcess(int? processId = null)
+        {
+            if (processId != null) { _boundProcessId = processId; return; }
+            try { _boundProcessId = _portal?.GetCurrentProcess().Id; } catch { _boundProcessId = null; }
+        }
         private ProjectBase? _project;
 
         // 2.7.32 real project: with two TIA Portal processes open, the IsProjectNull self-heal re-ran ConnectPortal and silently
@@ -282,7 +290,7 @@ namespace TiaMcpServer.Siemens
 
                             if (hasSession || hasProject)
                             {
-                                _portal = candidate;
+                                _portal = candidate; RememberBoundProcess(proc.Id);
                                 _logger?.LogInformation($"Selected attached TIA Portal PID={proc.Id}");
 
                                 if (hasSession)
@@ -343,7 +351,7 @@ namespace TiaMcpServer.Siemens
                     // fallback to first attachable instance
                     if (firstAttachable != null)
                     {
-                        _portal = firstAttachable;
+                        _portal = firstAttachable; RememberBoundProcess();
                         _logger?.LogInformation($"Falling back to first attachable TIA Portal ({firstAttachableInfo})");
                         LastConnectError = $"Attached to first available portal ({firstAttachableInfo}), but it has no visible projects/sessions.";
                         return true;
@@ -359,7 +367,7 @@ namespace TiaMcpServer.Siemens
                     ? TiaPortalMode.WithUserInterface
                     : TiaPortalMode.WithoutUserInterface;
                 _logger?.LogInformation($"Starting a new TIA Portal instance ({launchMode}).");
-                _portal = new TiaPortal(launchMode);
+                _portal = new TiaPortal(launchMode); RememberBoundProcess();
 
                 return true;
             }
@@ -464,7 +472,7 @@ namespace TiaMcpServer.Siemens
                     "ConnectIsolated: this MCP session already owns a TIA connection. "
                     + "Start a fresh MCP process before calling ConnectIsolated.");
             LastConnectError = null;
-            _portal = new TiaPortal(TiaPortalMode.WithoutUserInterface);
+            _portal = new TiaPortal(TiaPortalMode.WithoutUserInterface); RememberBoundProcess();
             _logger?.LogInformation("Started isolated headless TIA Portal instance.");
             return true;
         }
@@ -585,7 +593,7 @@ namespace TiaMcpServer.Siemens
                                     try { _portal.Dispose(); } catch { }
                                 }
 
-                                _portal = candidate;
+                                _portal = candidate; RememberBoundProcess(proc.Id);
                                 RememberExpectedProject();
                                 return true;
                             }

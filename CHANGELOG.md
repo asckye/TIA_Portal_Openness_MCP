@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.40] - 2026-09-20
+
+引擎 2.7.40.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.40](docs/releases/v2.7.40.md)。2.7.39 真机重跑暴露了三处让 TIA Portal V21 整个退出的 Startdrive 调用（G120C），本版加守卫与诊断。
+
+- **守卫（Startdrive）**：`ManageDriveTelegrams` 在驱动对象已有主报文时不再调用 `CanInsertMainTelegram` / `InsertMainTelegram`（真机上 TIA 在此崩溃；主报文只在 G220 上可增删），`check` 回 `mainTelegramPresent`，`insert` 明确拒绝；`ReadDriveParameters` / `ReadOnlineDriveParameters` 新增 `includeValue`（默认 true），`Value` 改为最后读且可关闭——先读元数据再决定是否读值（真机上读 `r2139` 与新建驱动上未接线的 `p840[0]` 的值让 TIA 退出）；位参数名（`r722.0`）经父参数 `Bits` 解析（`Find` 对点名回 null），`ManageStartdriveParameter` 的读写与 BICO 源同样支持。
+- **诊断**：引擎记住所绑定的 TIA Portal 进程 id；`GetState` 的 `hmiReadHealth.portalProcess`、连接失败保护的记录与 `GetState` 失败文案都报告该进程是否还在（`processAlive=false` 时直接说"TIA Portal 进程已不在，重启并重新打开工程后 AttachToOpenProject"），不再让人猜"disposed"到底是句柄陈旧还是进程没了。
+- **SiVArc**：`GenerateSiVArc` 先按 `PlcSoftware.Name` 再按所属设备名调 `Sivarc.Generate`，两次都报 "PLC device not found" 时以 InvalidState 说明 SiVArc 只认 HMI 已连接的 PLC（`meta.attempts` 记录两次）；`ManageSivarcTableRule` 描述改正：`ProgramBlock` 赋 null 会被 TIA 拒绝。
+- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811（新增 2 项）；真实工程按交接页 §2 待重跑（2.7.39 的真机结果见其发布说明）。
+
 ## [2.7.39] - 2026-09-19
 
 引擎 2.7.39.0（V20/V21 均重建），工具 421 → 437，默认 lite 56 项不变。详见 [v2.7.39](docs/releases/v2.7.39.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-②：Startdrive + DCC 选件包——**Startdrive 34 / 117 与 DCC 13 / 68 功能类型缺口归零**（形状检查；虚拟机装有 Startdrive Advanced + DCC，部署后真机验证）。
@@ -8,7 +17,7 @@
 - **新增（Startdrive）**：`ReadDriveObjects`（`DriveObjectContainer` 驱动对象 + 报文 + 功能接口视图 + 工艺扩展 + DCC 摘要 + `ModuleAccessPoint` / V21 `DriveItemHardwareModule`）、`ReadDriveParameters`（`ReadParameters` / `Parameters` 按名 / 按号 / 分页，BICO 源、位、枚举）、`ManageDriveTelegrams`（Can* / Insert* / Erase / ChangeSize / TelegramNumber、V21 SDR 接口与 V20 基接口的 `Connect(Telegram)`）、`ManageDriveFunctions`（驱动对象类型、激活、Function in Use、调试、安全校验和、电机 / 编码器硬件投影与配置条目）、`ManageDriveSecurity`（UMAC / DDE）、`ManageTechnologyExtensions`（驱动对象的扩展与门户的安装包）、`ManageDriveHardwareModule`（V21）、`ManageDriveSafetyAcceptanceTest`（V21）、`ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE：恢复出厂 / RAM→ROM / 激活）；`ManageStartdriveParameter` 类型化改造（新增 `driveObjectIndex`——G120C 上 `DriveObjectNumber` 不可读——与 BICO 写入）；Startdrive 下载 / 上载提示类型化。
 - **新增（DCC）**：`ReadDccCharts`（图表树、分区、接口、块、引脚、DCB 库、执行顺序）、`ManageDccBlock`、`ManageDccPin`（连接 / 发布 / 参数）、`ManageDccChartInterface`、`ManageDccChartPartition`、`ManageDcbLibraries`（V21 `DcbLibraryImporter`）；`ManageDccChart` 类型化改造（子图路径、自动命名、`exportAll` / `readSequence` / `showEditor`、`MoveInRuntimeSequence`、`confirmDelete`）、`ReadDccObject` 类型化驱动解析；39 个 `DccException` 子类分类回报。
 - **审计**：有专用引用 573 → 629，完全未触及 255 → 158，未封装功能类型 72 / 307 → 25 / 122（Startdrive 34 / 117 → 0 / 0，DCC 13 / 68 → 0 / 0；剩 SafetyValidation 8 / 34、TestSuite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7）。
-- **验证**：离线 2056 项（新增 103 项）；形状检查 V20 2589 / V21 2809（新增 288 / 312 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程待验（部署后按交接页 §2 重跑 Startdrive / DCC 与 SiVArc 修复）。
+- **验证**：离线 2056 项（新增 103 项）；形状检查 V20 2589 / V21 2809（新增 288 / 312 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-20，临时设备 `MCP_TMP_G120C`）：SiVArc 三处修复中两处通过（`ManageSivarcTableRule` 全链路、通用 delete 重导航），`GenerateSiVArc` 仍报 "PLC device not found"（HMI 无到该 PLC 的连接）；Startdrive 驱动对象 / 报文行 / 参数按名按号分页 / `p1120[0]` 写回 / BICO `p1070[0] ← r2050[1]` 通过；三处调用让 TIA Portal V21 退出（`r2139` 读值、已有主报文时 `CanInsertMainTelegram`、新建驱动上未接线 `p840[0]` 读值），2.7.40 加守卫。
 
 ## [2.7.38] - 2026-09-19
 

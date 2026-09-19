@@ -1,6 +1,16 @@
 # 工程能力与验收边界
 
-本文说明 2.7.39 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.40 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.40 守卫与诊断（2.7.39 真机重跑之后）
+
+| 项 | 内容 | 边界 |
+|---|---|---|
+| TIA 进程存活 | `GetState.hmiReadHealth.portalProcess`、连接失败保护记录的 `portalProcess` / `recovery`、`GetState` 失败文案 | 引擎记住绑定的 TIA 进程 id；`processAlive=false` 表示 TIA Portal 已退出（G120C 上的三处 Startdrive 调用会这样），要重启 TIA、重开工程再 `AttachToOpenProject`；未保存工程里的临时对象随进程消失 |
+| Startdrive 守卫 | `ManageDriveTelegrams`（已有主报文时不调 `CanInsertMainTelegram` / `InsertMainTelegram`）、`ReadDriveParameters` / `ReadOnlineDriveParameters` 的 `includeValue`（`Value` 最后读、可关闭）、位参数名经 `Bits` 解析 | 真机：读 `r2139` 与新建驱动上未接线 `p840[0]` 的值、已有主报文时 `CanInsertMainTelegram` 都让 TIA V21 退出——先 `includeValue=false`，再逐个读值 |
+| SiVArc | `GenerateSiVArc` 软件名 → 设备名两次尝试（`meta.attempts`）；`ManageSivarcTableRule` `ProgramBlock` 不能赋 null | SiVArc 只认 HMI 已连接的 PLC；参考工程 HMI 无连接，两次都 "PLC device not found" |
+
+**真机（2026-09-20，2.7.39 引擎，临时设备 `MCP_TMP_G120C`）**：见 [v2.7.39 验证](../releases/v2.7.39.md#验证)。
 
 ## 2.7.39 新增工具族（阶段 6 ⑥-② Startdrive + DCC 选件包）
 
@@ -13,7 +23,7 @@
 | 在线 | `ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE，`confirmOnline`） | 需要驱动已在线；恢复出厂 / RAM→ROM 作用于真实驱动，写保护钩子按 ONLINE-WRITE 拦截 |
 | DCC | `ReadDccCharts`、`ManageDccChart`（类型化改造：子图路径、自动命名、`exportAll` / `readSequence` / `showEditor`、`sequenceIndex`、`confirmDelete`）、`ManageDccBlock`、`ManageDccPin`、`ManageDccChartInterface`、`ManageDccChartPartition`、`ManageDcbLibraries`、`ReadDccObject` | `DriveControlChartContainer` 是驱动对象的服务，不支持 DCC 的驱动回 NotSupported；DCC 异常按类型回报（`dccException.type / family / licenceMissing`）；`DcbLibraryImporter` 仅 V21；导出文件必须不存在 |
 
-**真机待验（虚拟机装有 SINAMICS Startdrive Advanced + DCC，工程有 4 台 G120C）**：2.7.38 真机只到 `DriveObjectContainer.DriveObjects` 枚举与 `DriveObjectNumber` 抛异常这一步，2.7.39 部署后按交接页 §2 重跑。形状检查 V20 2589 / V21 2809 对本机 PublicAPI 逐成员核对通过。
+**真机（2026-09-20，临时设备 `MCP_TMP_G120C` + 现有 G120C 只读）**：`ReadDriveObjects`、`ReadDriveParameters`（按名 / 按号 / 分页 / 枚举表 / `Bits`）、`ManageStartdriveParameter`（`p1120[0]` 写回、BICO `p1070[0] ← r2050[1]`）通过；`ManageDriveTelegrams check` 在已有主报文时让 TIA 退出（2.7.40 守卫）；驱动功能 / 安全 / 工艺扩展 / 硬件模块 / 验收测试 / DCC / 在线工具待 2.7.40 部署后验。形状检查 V20 2589 / V21 2809 对本机 PublicAPI 逐成员核对通过。
 
 ## 2.7.38 新增工具族（阶段 6 ⑥-① SiVArc 选件包）
 

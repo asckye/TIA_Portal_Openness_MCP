@@ -35,6 +35,22 @@ namespace TiaMcpServer.Siemens
         private DriveObjectContainer ExactDriveContainer(DeviceItem item)
             => item.GetService<DriveObjectContainer>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveObjectContainer unavailable on device item '" + item.Name + "' (not a Startdrive drive object host, or Startdrive not installed).");
         private static ushort? SafeDriveObjectNumber(DriveObject drive) { try { return drive.DriveObjectNumber; } catch { return null; } }
+        // 2.7.39 real project (G120C): Find("r722.0") answers null - bit parameters are only reachable through the parent's Bits, whose
+        // members carry the dotted name. Find(name) first, then base name + Bits when the name has a bit suffix.
+        private static DriveParameter? FindParameter(DriveParameterComposition parameters, string name)
+        {
+            var direct = parameters.Find(name); if (direct != null) return direct;
+            int dot = name.LastIndexOf('.'); if (dot <= 0) return null;
+            var parent = parameters.Find(name.Substring(0, dot)); if (parent == null) return null;
+            return EngineeringGroupOperations.Items(parent.Bits).Cast<DriveParameter>().FirstOrDefault(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
+        private static ReadDriveParameter? FindParameter(ReadDriveParameterComposition parameters, string name)
+        {
+            var direct = parameters.Find(name); if (direct != null) return direct;
+            int dot = name.LastIndexOf('.'); if (dot <= 0) return null;
+            var parent = parameters.Find(name.Substring(0, dot)); if (parent == null) return null;
+            return EngineeringGroupOperations.Items(parent.Bits).Cast<ReadDriveParameter>().FirstOrDefault(b => string.Equals(b.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
         private static DriveObject ExactDriveObject(DriveObjectContainer container, Logic.DriveSelector selector)
         {
             DriveObjectComposition objects = container.DriveObjects;
@@ -75,24 +91,28 @@ namespace TiaMcpServer.Siemens
             var o = new JsonObject(); if (list == null) return o;
             foreach (var pair in list.Take(500)) o[pair.Key.ToString()] = pair.Value; return o;
         }
-        private static JsonObject DriveParameterRow(DriveParameter p, bool bits, bool enums)
+        // Value is read last and only on request (includeValue): on the 2.7.39 real project TIA Portal V21 went down while reading the Value of
+        // r2139 (existing G120C) and of the unwired BICO sink p840[0] (freshly added G120C) - the metadata reads before it are safe.
+        private static JsonObject DriveParameterRow(DriveParameter p, bool bits, bool enums, bool value = true)
         {
             var row = new JsonObject { ["name"] = p.Name, ["parameterClass"] = "DriveParameter" };
             Safe(row, "number", () => p.Number); Safe(row, "arrayIndex", () => p.ArrayIndex); Safe(row, "arrayLength", () => p.ArrayLength);
-            Safe(row, "value", () => BicoOrScalar(p.Value)); Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
+            Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
             Safe(row, "unit", () => p.Unit); Safe(row, "parameterText", () => p.ParameterText);
             if (enums) Safe(row, "enumValueList", () => EnumValues(p.EnumValueList));
-            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums)).ToArray()));
+            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums, value)).ToArray()));
+            if (value) Safe(row, "value", () => BicoOrScalar(p.Value)); else row["value"] = null;
             return row;
         }
-        private static JsonObject DriveParameterRow(ReadDriveParameter p, bool bits, bool enums)
+        private static JsonObject DriveParameterRow(ReadDriveParameter p, bool bits, bool enums, bool value = true)
         {
             var row = new JsonObject { ["name"] = p.Name, ["parameterClass"] = "ReadDriveParameter" };
             Safe(row, "number", () => p.Number); Safe(row, "arrayIndex", () => p.ArrayIndex); Safe(row, "arrayLength", () => p.ArrayLength);
-            Safe(row, "value", () => BicoOrScalar(p.Value)); Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
+            Safe(row, "minValue", () => EngineeringScalarProperties.Json(p.MinValue)); Safe(row, "maxValue", () => EngineeringScalarProperties.Json(p.MaxValue));
             Safe(row, "unit", () => p.Unit); Safe(row, "parameterText", () => p.ParameterText);
             if (enums) Safe(row, "enumValueList", () => EnumValues(p.EnumValueList));
-            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums)).ToArray()));
+            if (bits) Safe(row, "bits", () => new JsonArray(p.Bits.Take(64).Select(b => (JsonNode)DriveParameterRow(b, false, enums, value)).ToArray()));
+            if (value) Safe(row, "value", () => BicoOrScalar(p.Value)); else row["value"] = null;
             return row;
         }
         private static JsonObject TelegramRow(Telegram t, bool nested = false)
@@ -177,7 +197,7 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ReadDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string source = "read", string namesJson = "[]", string numbersJson = "[]",
-            bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100)
+            bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
             => RunHmiStepTool("ReadDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest(source, namesJson, numbersJson, offset, limit);
@@ -188,18 +208,19 @@ namespace TiaMcpServer.Siemens
                 if (source == "read")
                 {
                     ReadDriveParameterComposition parameters = drive.ReadParameters;
-                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
-                    else rows = selector.Names.Select(n => (Name: n, Parameter: parameters.Find(n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues)).ToArray();
+                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                    else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
+                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
                 }
                 else
                 {
                     DriveParameterComposition parameters = drive.Parameters;
-                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<DriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
-                    else rows = selector.Names.Select(n => (Name: n, Parameter: parameters.Find(n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues)).ToArray();
+                    if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<DriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                    else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
+                        .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
                 }
-                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing;
+                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
+                if (!includeValue) meta["scope"] = "Metadata only (Value not read): use this first for BICO sinks / status words on a freshly added drive - 2.7.39 real project: reading Value of r2139 and of the unwired p840[0] took TIA Portal V21 down.";
                 if (selector.Enumerate) meta["scope"] = "Enumeration of the composition in native order; the drive has thousands of parameters, so page with offset / limit or ask by namesJson / numbersJson.";
                 return "Offline drive parameters read (" + (source == "read" ? "ReadDriveParameter rows incl. BICO sources" : "DriveParameter rows incl. BICO sources") + "); no OnlineDriveObject or drive access.";
             });
@@ -214,20 +235,20 @@ namespace TiaMcpServer.Siemens
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["online"] = false;
                 if (action == "read")
                 {
-                    ReadDriveParameter target = drive.ReadParameters.Find(parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact drive parameter not found: " + parameter);
+                    ReadDriveParameter target = FindParameter(drive.ReadParameters, parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact drive parameter not found: " + parameter);
                     meta["before"] = DriveParameterRow(target, true, true);
                     return "Offline drive parameter read (ReadParameters view with bits, enum values and BICO source). No OnlineDriveObject or live device access used.";
                 }
-                DriveParameter writable = drive.Parameters.Find(parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact writable drive parameter not found: " + parameter + " (read-only parameters live in ReadParameters).");
+                DriveParameter writable = FindParameter(drive.Parameters, parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact writable drive parameter not found: " + parameter + " (read-only parameters live in ReadParameters).");
                 meta["before"] = DriveParameterRow(writable, false, true);
                 var value = Logic.ParseParameterValue(valueJson);
                 object? converted = null; DriveParameter? source = null;
-                if (value.IsBico) { source = drive.Parameters.Find(value.BicoSource) ?? throw new PortalException(PortalErrorCode.NotFound, "BICO source parameter not found: " + value.BicoSource); meta["bicoSource"] = DriveParameterRow(source, false, false); }
+                if (value.IsBico) { source = FindParameter(drive.Parameters, value.BicoSource) ?? throw new PortalException(PortalErrorCode.NotFound, "BICO source parameter not found in the writable Parameters view: " + value.BicoSource + " (bit sources as r722.0 resolve through the parent's Bits; r19 does not exist on G120C)."); meta["bicoSource"] = DriveParameterRow(source, false, false); }
                 else { var current = writable.Value; converted = current == null || current is DriveParameter ? EngineeringScalarProperties.ConvertValue(value.Scalar, typeof(object)) : EngineeringScalarProperties.ConvertValue(value.Scalar, current.GetType()); meta["requestedValue"] = EngineeringScalarProperties.Json(converted); }
                 if (!write) return "Offline drive parameter write preview; native limits / BICO semantics are checked on execution.";
                 meta["mayHaveChanged"] = true;
                 writable.Value = value.IsBico ? source : converted;      // official: "P2080Bit6.Value = cu.Parameters.Find("r19")" wires a BICO sink
-                var after = drive.Parameters.Find(parameter) ?? writable;
+                var after = FindParameter(drive.Parameters, parameter) ?? writable;
                 meta["after"] = DriveParameterRow(after, false, true);
                 return "Offline drive parameter changed and read back; no download, online parameter write or drive command.";
             });
@@ -247,6 +268,17 @@ namespace TiaMcpServer.Siemens
                 var type = (TelegramType)Enum.Parse(typeof(TelegramType), r.TelegramType);
                 Telegram? existing = telegrams.Find(type);
                 var checks = new JsonObject();
+                // 2.7.39 real project (G120C, main telegram present): CanInsertTelegram(1, MainTelegram) answered false and the following
+                // CanInsertMainTelegram(1) took TIA Portal V21 down. Official: main telegrams are only inserted / erased on G220 drives, so
+                // neither Can* nor Insert* is called while a main telegram exists - changeNumber / changeSize edit the existing one.
+                if (type == TelegramType.MainTelegram && existing != null && (action == "check" || action == "insert"))
+                {
+                    checks["mainTelegramPresent"] = true; checks["canInsertMainTelegram"] = null;
+                    checks["note"] = "A MainTelegram already exists on this drive object: CanInsertMainTelegram / InsertMainTelegram are not called (TIA Portal V21 crashed on a G120C in that state; main telegrams can only be added on G220 drives). Use changeNumber / changeSize.";
+                    meta["checks"] = checks;
+                    if (action == "insert") throw new PortalException(PortalErrorCode.InvalidState, "MainTelegram already exists on this drive object (number " + existing.TelegramNumber + "); insert is refused - use changeNumber or changeSize instead.");
+                    return "Telegram feasibility: a MainTelegram is already present, the native Can* checks for inserting another one are skipped; nothing changed.";
+                }
                 if (action == "check" || action == "insert")
                 {
                     if (type == TelegramType.AdditionalTelegram) checks["canInsertAdditionalTelegram"] = telegrams.CanInsertAdditionalTelegram(r.InputSize, r.OutputSize);
@@ -565,7 +597,7 @@ namespace TiaMcpServer.Siemens
             });
 
         // ---- online (connected drive) --------------------------------------------------------------------------------------------
-        public ResponseMessage ReadOnlineDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string namesJson = "[]", string numbersJson = "[]", bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100)
+        public ResponseMessage ReadOnlineDriveParameters(string devicePathJson, string itemPathJson, ushort driveObjectNumber = 0, int driveObjectIndex = -1, string namesJson = "[]", string numbersJson = "[]", bool includeBits = false, bool includeEnumValues = false, int offset = 0, int limit = 100, bool includeValue = true)
             => RunHmiStepTool("ReadOnlineDriveParameters", meta =>
             {
                 var selector = Logic.ValidateParametersRequest("read", namesJson, numbersJson, offset, limit);
@@ -574,10 +606,10 @@ namespace TiaMcpServer.Siemens
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["online"] = true;
                 Safe(meta, "driveObjectNumber", () => drive.DriveObjectNumber);
                 ReadDriveParameterComposition parameters = drive.ReadParameters; var missing = new JsonArray(); JsonNode[] rows;
-                if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
-                else rows = selector.Names.Select(n => (Name: n, Parameter: parameters.Find(n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
-                    .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues)).ToArray();
-                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing;
+                if (selector.Enumerate) { var all = EngineeringGroupOperations.Items(parameters).Cast<ReadDriveParameter>().Skip(offset).Take(limit + 1).ToArray(); rows = all.Take(limit).Select(p => (JsonNode)DriveParameterRow(p, includeBits, includeEnumValues, includeValue)).ToArray(); meta["truncated"] = all.Length > limit; meta["nextOffset"] = all.Length > limit ? offset + limit : (int?)null; }
+                else rows = selector.Names.Select(n => (Name: n, Parameter: FindParameter(parameters, n))).Concat(selector.Numbers.Select(x => (Name: x.Number + (x.ArrayIndex >= 0 ? "[" + x.ArrayIndex + "]" : ""), Parameter: parameters.Find(x.Number, x.ArrayIndex))))
+                    .Where(x => { if (x.Parameter == null) missing.Add(x.Name); return x.Parameter != null; }).Select(x => (JsonNode)DriveParameterRow(x.Parameter!, includeBits, includeEnumValues, includeValue)).ToArray();
+                meta["records"] = new JsonArray(rows); meta["actualCount"] = rows.Length; meta["offset"] = offset; meta["limit"] = limit; meta["notFound"] = missing; meta["includeValue"] = includeValue;
                 return "Online drive parameters read from the connected drive (OnlineDriveObject.ReadParameters); nothing written.";
             });
 

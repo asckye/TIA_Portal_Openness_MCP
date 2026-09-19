@@ -9,10 +9,22 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         private JsonObject? _hmiReadFault;
+        // 2.7.40: OS process behind the bound TiaPortal (set by RememberBoundProcess in Portal.cs); pure .NET so the offline suite compiles it.
+        private int? _boundProcessId;
+        public JsonObject GetPortalProcessHealth()
+        {
+            var row = new JsonObject { ["boundProcessId"] = _boundProcessId };
+            if (_boundProcessId == null) { row["processAlive"] = null; row["note"] = "no TIA Portal process bound"; return row; }
+            try { using var process = System.Diagnostics.Process.GetProcessById(_boundProcessId.Value); row["processAlive"] = !process.HasExited; row["processName"] = process.ProcessName; }
+            catch (ArgumentException) { row["processAlive"] = false; row["note"] = "TIA Portal process " + _boundProcessId + " is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject."; }
+            catch (Exception ex) { row["processAlive"] = null; row["note"] = ex.GetBaseException().Message; }
+            return row;
+        }
         public JsonObject GetHmiReadHealth() => new JsonObject
         {
             ["snapshotReadsBlocked"] = _hmiReadFault != null,
             ["lastFailure"] = _hmiReadFault?.DeepClone(),
+            ["portalProcess"] = GetPortalProcessHealth(),
             ["meaning"] = "Portal attachment and HMI software-handle health are separate. A successful GetState does not validate every software handle."
         };
         private void ResetHmiReadHealth() { _hmiReadFault = null; }
@@ -25,7 +37,10 @@ namespace TiaMcpServer.Siemens
             meta["status"] = "HmiConnectionUnavailable";
             meta["connectionUnavailable"] = true; meta["remoteInspectionStopped"] = true;
             meta["requiresExplicitRebind"] = true;
-            meta["recovery"] = "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. "
+            var process = GetPortalProcessHealth(); meta["portalProcess"] = process;
+            meta["recovery"] = process["processAlive"] is JsonValue alive && alive.TryGetValue<bool>(out var running) && !running
+                ? "The bound TIA Portal process is no longer running - it crashed or was closed during this call. Restart TIA Portal, reopen the project, then AttachToOpenProject; the objects created in the unsaved project are gone."
+                : "Stop collection and inspect MCP/TIA logs. No automatic retry, attach, close or dispose was performed. "
                 + "Only an explicit successful AttachToOpenProject clears the snapshot-read block; it does not establish root cause or fix TIA.";
         }
         private ResponseMessage RunHmiStepTool(string toolName, Func<JsonObject, string> action, bool requiresProject = true)

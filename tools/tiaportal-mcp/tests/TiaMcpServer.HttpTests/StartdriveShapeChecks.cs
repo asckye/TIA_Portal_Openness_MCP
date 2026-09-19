@@ -171,5 +171,7 @@ internal static class StartdriveShapeChecks
         foreach(var tool in new[]{"ReadDriveObjects","ReadDriveParameters","ManageStartdriveParameter","ManageDriveTelegrams","ManageDriveFunctions","ManageDriveSecurity","ManageTechnologyExtensions","ManageDriveHardwareModule","ManageDriveSafetyAcceptanceTest","ReadOnlineDriveParameters","ManageOnlineDriveFunctions"})
             check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
         check(portal.GetMethod("ManageStartdriveParameter")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageStartdriveParameter takes driveObjectIndex (G120: DriveObjectNumber not retrievable)");
+        check(portal.GetMethod("ReadDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue") && portal.GetMethod("ReadOnlineDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue"),"ReadDriveParameters / ReadOnlineDriveParameters take includeValue (2.7.40: Value read last and on request)");
+        check(portal.GetMethod("GetPortalProcessHealth")!=null,"Portal.GetPortalProcessHealth exists (2.7.40: bound TIA process liveness after a crash)");
     }
 }

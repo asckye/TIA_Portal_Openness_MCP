@@ -233,7 +233,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                var process = Portal.GetPortalProcessHealth();
+                var dead = process["processAlive"] is JsonValue alive && alive.TryGetValue<bool>(out var running) && !running;
+                throw new McpException($"Unexpected error retrieving TIA-Portal MCP server state: {ex.Message}{McpHints.Recovery(ex)}" + (dead ? $"  ▶ TIA Portal process {process["boundProcessId"]} is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject." : ""), ex, McpErrorCode.InternalError);
             }
         }
 
