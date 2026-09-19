@@ -70,7 +70,7 @@ namespace TiaMcpServer.Tests
             // ---- transactions ----
             var calls = BaseLeftoversLogic.ParseToolCalls("[{\"name\":\"ManageSyslogServers\",\"arguments\":{\"scope\":\"plc\",\"dryRun\":true}},{\"name\":\"ManagePasswordPolicy\"}]");
             check(calls.Length == 2 && calls[1].ArgumentsJson == "{}" && calls[0].ArgumentsJson.Contains("\"scope\""), "baseleft: tool calls parsed (missing arguments = {})");
-            check(BaseLeftoversLogic.ForceRealExecution(calls[0].ArgumentsJson).Contains("\"dryRun\":false") && BaseLeftoversLogic.ForceRealExecution("{}") == "{}", "baseleft: inner dryRun forced to false inside a transaction");
+            check(BaseLeftoversLogic.ForceRealExecution(calls[0].ArgumentsJson).Contains("\"dryRun\":false") && BaseLeftoversLogic.ForceRealExecution("{}") == "{\"dryRun\":false}" && BaseLeftoversLogic.ForceRealExecution("{\"DryRun\":true}") == "{\"DryRun\":false}", "baseleft: inner dryRun forced to false inside a transaction, added when absent (2.7.33 real-project defect)");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ParseToolCalls("[]")), "baseleft: empty call list refused");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ParseToolCalls("[{\"name\":\"CallTool\"}]")), "baseleft: CallTool inside a transaction refused");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ParseToolCalls("[{\"name\":\"RunToolsInTransaction\"}]")), "baseleft: nested transaction refused");

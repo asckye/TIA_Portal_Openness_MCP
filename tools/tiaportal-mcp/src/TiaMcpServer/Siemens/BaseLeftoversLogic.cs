@@ -131,12 +131,14 @@ namespace TiaMcpServer.Siemens
             if (calls.Length == 0) throw new ArgumentException("At least one tool call is required.");
             HardwareServicesLogic.RequireConfirmation(confirmChange, "confirmChange", dryRun);
         }
-        // Inner tools decide their own dryRun; inside a real transaction every call must run for real or the transaction is pointless.
+        // Inside a real transaction every call must run for real or the transaction is pointless. 2.7.33 real project: only an
+        // existing dryRun key was flipped, so calls without one ran as previews (tool default true) while the transaction still
+        // reported committed=true; the key is now written unconditionally (CallTool ignores it on tools without a dryRun parameter).
         internal static string ForceRealExecution(string argumentsJson)
         {
             var o = JsonNode.Parse(argumentsJson) as JsonObject ?? new JsonObject();
-            var key = o.Select(p => p.Key).FirstOrDefault(k => string.Equals(k, "dryRun", StringComparison.OrdinalIgnoreCase));
-            if (key != null) o[key] = false;
+            var key = o.Select(p => p.Key).FirstOrDefault(k => string.Equals(k, "dryRun", StringComparison.OrdinalIgnoreCase)) ?? "dryRun";
+            o[key] = false;
             return o.ToJsonString();
         }
 
