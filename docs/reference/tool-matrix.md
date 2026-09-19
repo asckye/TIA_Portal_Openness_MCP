@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-18 08:09:24
-- 引擎文件版本：2.7.31.0
-- 工具数量：386
+- 生成时间：2026-09-18 20:41:27
+- 引擎文件版本：2.7.32.0
+- 工具数量：389
 
 ## 读法
 
@@ -16,7 +16,7 @@
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
 | `READ` | 读取已打开工程，不改动 | 114 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 141 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 144 |
 | `FILE` | 导出/导入文件或生成离线产物 | 44 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -30,7 +30,7 @@
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 34 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (6)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 50 | `Project` (20)、`Library` (13)、`VersionControl` (5)、`Security` (4)、`Validation` (8) |
+| `project` | 工程与协作 / Project & collaboration | 53 | `Project` (20)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 94 | `PLC-Software` (61)、`PLC-Builders` (9)、`PLC-Alarms` (7)、`PLC-TechnologyObjects` (7)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 15 | `PLC-Online` (15) |
 | `hardware` | 硬件与网络 / Hardware & network | 53 | `Hardware` (53) |
@@ -115,7 +115,7 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（50）
+## project — 工程与协作 / Project & collaboration（53）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
@@ -172,12 +172,15 @@
 | `ConnectProjectToWorkspace` | L2 | WRITE* | Put a WHOLE project under version control automatically - no TIA UI clicks. Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC software object is mappable as one unit it is mapped whole and its children are not visited, so you get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware configuration) are reported, never silently dropped. DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. After a real run call SyncVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit. |
 | `CreateVersionControlWorkspace` | L2 | WRITE* | Create a VCI workspace pointing at a folder on disk — normally the working tree of a Git repository, so every synchronized export lands where Git can commit it. Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace afterwards to map the whole project (or one device) automatically. Requires TIA V21+ and an open project. |
 
-### [Security]（4）
+### [Security]（7）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
-| `ManagePlcCertificate` | L2 | WRITE | Offline engineering certificate list/read/create/import/export/delete/assign/unassign. Exact devicePathJson and itemPathJson segments; selected item must expose LocalCertificateManager. Exact certificateId. Create requires usage enum and scalar template propertiesJson; filePath for import/export. Assignment=WebserverCertificate/OpcUaServerCertificate on selected owner. dryRun=true default. No password/private-key export/download/save; export refuses overwrite. |
-| `ManageProjectUserManagement` | L2 | WRITE | UMAC mutation by exact names: createUser/deleteUser/setUserPassword/activateUser/deactivateUser/assignRole/unassignRole (name=user, roleName), createRole/deleteRole/assignEngineeringRight/unassignEngineeringRight/assignDeviceRight/unassignDeviceRight (name=custom role, rightName, devicePathJson), createDeviceRight/deleteDeviceRight (name, group, comment). Default preview; real execution needs dryRun=false AND confirmChange=true. Password goes to the API as SecureString and is never logged. Readback verified; no save/compile/download; system roles and project protection itself are never changed. |
+| `ManagePasswordPolicy` | L2 | WRITE | Project password policies. read (all targets or one): umac = Umac.PasswordPolicyConfigurator (IncludesLowerCaseAndUpperCaseCharacters, MinimumLength, MinimumNumericCharacterLength, MinimumSpecialCharacterLength, EnablePasswordAging, MinimumUserPasswordsBlockedForReuse, PasswordValidity, PasswordValidityPrewarningTime), plc = Security.PlcPasswordPolicyService (PasswordPolicyEnabled: S7-1200/1500 passwords follow the UMAC complexity), legacyPlc = Security.LegacyPlcPasswordPolicyService (PasswordPolicyEnabled, MinimumLength 5..8, MinimumNumericCharacterLength 0..8, MinimumSpecialCharacterLength 0..8, IncludesLowerCaseAndUpperCaseCharacters). update (target + propertiesJson, every write read back; TIA raises PasswordPolicySettingsException outside its ranges) needs confirmChange with dryRun=false. Passwords are never readable; no save. |
+| `ManagePlcCertificate` | L2 | WRITE | Offline engineering certificates of the exact PLC DeviceItem (LocalCertificateManager.LocalCertificateStore): list, read, template (default CertificateTemplate for usage Tls/WebServer/OpcUaServer/OpcUaClient/OpcUaClientServer: Signature, SubjectCommonName, Usage, ValidFrom, ValidUntil, SubjectAlternativeNames), create (usage + template propertiesJson Signature Sha1RSA/Sha256RSA, SubjectCommonName, ValidFrom/ValidUntil ISO dates + subjectAlternativeNamesJson [{type Dns/Email/IP/Uri, value}] via SubjectAlternativeNameComposition.Create), import (filePath; optional password for protected files via Import(file, SecureString), never echoed), export (new file), delete (by exact certificateId), assign/unassign (WebserverCertificate/OpcUaServerCertificate dynamic attribute on the selected owner). dryRun=true default; no download/save; export refuses overwrite; private keys are never exported. |
+| `ManageProjectUserManagement` | L2 | WRITE | UMAC mutation by exact names: createUser/deleteUser/setUserPassword/activateUser/deactivateUser/assignRole/unassignRole (name=user, roleName), createRole/deleteRole/assignEngineeringRight/unassignEngineeringRight/assignDeviceRight/unassignDeviceRight (name=custom role, rightName, devicePathJson), createDeviceRight/deleteDeviceRight (name, group, comment), activateAnonymousUser/deactivateAnonymousUser (no name; UmacConfigurator.ActivateAnonymousUser/DeactivateAnonymousUser, single anonymous user per protected project - roles are assigned with assignRole name=Anonymous). Default preview; real execution needs dryRun=false AND confirmChange=true. Password goes to the API as SecureString and is never logged. Readback verified; no save/compile/download; system roles and project protection itself are never changed. |
+| `ManageSyslogServers` | L2 | WRITE | Syslog configuration. scope=project (Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (name + propertiesJson Address/Port/Tls/Comment, read back on the refreshed composition), update (propertiesJson), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePathJson/itemPathJson module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, dynamic SysLogAutoAcceptClient/SysLogClientCertificateId/SysLogTrustedCertificateIds), update (propertiesJson EnableSystemLogging/TransportProtocol None\|TLSServerAndClientAuthentication\|TLSOnlyServerAuthentication\|UDP + attributesJson for the three dynamic attributes), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download. |
+| `ManageUmcUsers` | L2 | WRITE | UMC (central) users and groups of a protected project (UmacConfigurator.UmcUsers/UmcUserGroups) and the UMC server (UmcServerConfigurator). kind=user\|group: read (all or exact name, paginated: Name, IsActive, DomainId, Description, roles), createOffline (UmcUserComposition.CreateOfflineUmcUser(name) / CreateOfflineUmcUserGroup()+SetName), importFromServer (UmcServer.GetUserByName/GetUserGroupByName then Create(info); needs serverUserName + serverPassword for the Authentication event, a UMC account with the UMC View right), rename (newName via SetName), activate/deactivate, delete (verified absent), assignRole/unassignRole (roleName = system or custom role, RoleAssociation.Add/Remove). kind=server: read (UmcServer scalars/attribute names), checkConsistency (UmcServerConfigurator.CheckConsistency), synchronize (Synchronize with the server; optional credentials). Real changes need confirmChange with dryRun=false; passwords go to the API as SecureString and are never echoed; no save. ManageProjectUserManagement handles project (local) users. |
 | `ReadProjectProtection` | L2 | READ | Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection. |
 | `ReadProjectUserManagement` | L2 | READ | Paginated UMAC listing of the bound project: category users/anonymousUser/systemRoles/customRoles/engineeringRights/customDeviceRights/umcUsers/umcUserGroups/passwordPolicy/deviceRights/roleDeviceRights. Optional exact name filter; deviceRights/roleDeviceRights need devicePathJson (+itemPathJson) JSON arrays of exact names. Requires the native UmacConfigurator service (protected project); passwords never readable. Nothing modified. |
 

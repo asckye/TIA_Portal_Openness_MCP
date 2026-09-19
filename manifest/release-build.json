@@ -1,11 +1,11 @@
 {
-    "release":  "2.7.31",
+    "release":  "2.7.32",
     "releaseDate":  "20260918",
-    "fileVersion":  "2.7.31.0",
-    "package":  "TIA_MCP_Delivery_v2.7.31_20260918",
-    "generatedAt":  "2026-09-18T15:09:26.4684673+00:00",
+    "fileVersion":  "2.7.32.0",
+    "package":  "TIA_MCP_Delivery_v2.7.32_20260918",
+    "generatedAt":  "2026-09-19T03:41:30.3500633+00:00",
     "validation":  {
-                       "offlinePassed":  1550,
+                       "offlinePassed":  1620,
                        "runtimes":  {
                                         "V20":  {
                                                     "httpPassed":  28,
@@ -16,7 +16,7 @@
                                                     "realProjectAcceptance":  "NOT PERFORMED for this release",
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
-                                                    "engineeringApiShapePassed":  1291,
+                                                    "engineeringApiShapePassed":  1403,
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "not exposed by supplied V20 API",
                                                     "globalScriptBridgePassed":  7,
@@ -33,7 +33,7 @@
                                                     "realProjectAcceptance":  "NOT PERFORMED for this release",
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
-                                                    "engineeringApiShapePassed":  1388,
+                                                    "engineeringApiShapePassed":  1500,
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "API present; native import not live-tested",
                                                     "globalScriptBridgePassed":  8,
@@ -356,8 +356,8 @@
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
-                             "length":  3085824,
-                             "sha256":  "4b44ed75bcd448d2047a274c7f2576d256a55f15b462432a410beafc692fb3da"
+                             "length":  3131904,
+                             "sha256":  "a41a562996704b181188af5a08a633caeabce000905752d0edf58baf84086ec8"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -686,8 +686,8 @@
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
-                             "length":  3085824,
-                             "sha256":  "1fbe5a043086d975d64a6fe075faeac480eb89223d41b47544964db015f3f566"
+                             "length":  3131904,
+                             "sha256":  "9678bf3c9f70f4ef5e5c19ccf3614ddb42309419f79de201eb606b408e3ef8bf"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -972,7 +972,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.EngineeringManagement.cs",
-                            "sha256":  "df38023fb7ad6e32ea1aed45e7569b9f5a50fbe07be834676acdf78b33188c75"
+                            "sha256":  "16c6e5eb9af453c816196c0b0773f419a931c482dd0186de0d649a0a9fe34559"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Exports.cs",
@@ -1060,7 +1060,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSecurity.cs",
-                            "sha256":  "fe1395f430b08c59e6520de877421b068f977fecb4c2d2a82efb9e2a00e57a03"
+                            "sha256":  "30e373b7f807436ddf1f96581a5c6508c31df8036775377d615664241b13511a"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSession.cs",
@@ -1077,6 +1077,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.RuntimeSettings.cs",
                             "sha256":  "0539471d7e0bbfc4923d684ee48de1711d150e3c6203435ce242f52ef61e97b4"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.SecurityDeep.cs",
+                            "sha256":  "a24db9d33797d3de5a0c7e79a8ddd517908b3b7007813279a935f135d08d52f3"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.SpecializedEngineering.cs",
@@ -1304,7 +1308,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/LibraryDeepLogic.cs",
-                            "sha256":  "971b999815ffeb535480eccda654d0c9bd27ab8c341962b313c6bb9039545663"
+                            "sha256":  "9cd71b5e7a41348c206c7ee28bc7c8f6b2d560abdea43cefb9f22d1c4503dd17"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MigrationPages.cs",
@@ -1380,7 +1384,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.CertificateManagement.cs",
-                            "sha256":  "622a23936b96d3a2cee45b618acf285708251a6a8665783efb58b32ff131c5b7"
+                            "sha256":  "e22070aaf1da8363492e7e5d1409e17bbbeb9041b3fd3c30a45ff4d4a8c3cd5e"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
@@ -1448,7 +1452,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.LibraryDeep.cs",
-                            "sha256":  "1da7b4fb48e930fdea052cb719b31cd15cbb39584d5ed4424bcd24aee3fae487"
+                            "sha256":  "0878bf752c496001c9533445348c364fcbbedc48d33d62bad5c346837d8d5076"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.LibraryExchange.cs",
@@ -1456,11 +1460,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.LibraryLifecycle.cs",
-                            "sha256":  "10005fc791b963cb18c431d063e46b0dadc70714d6c9dd09a63c4c86ab292435"
+                            "sha256":  "816d7f8bdb8e87491073890a84a7435f44dd99972550c05a8d059899eef88008"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.LibraryManagement.cs",
-                            "sha256":  "8650535432f931e9aba3db3880996fa3b93f6beb25d01f1feab3f17914d90235"
+                            "sha256":  "53bf7b8e8b54d9b69bc597feb42754d65ab598be6600070cbff954d666fd1e3f"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MigrationRead.cs",
@@ -1520,7 +1524,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.ProjectSecurity.cs",
-                            "sha256":  "bffb20a6643db4f351f04065504d24873a12615430d33abaf73e3e9c30b423bf"
+                            "sha256":  "b4a44e63af77545ad2e7c81705da8f54faaf30fc6dfe0002cf66f758fc094352"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.RuntimeSettings.cs",
@@ -1529,6 +1533,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.SafetyManagement.cs",
                             "sha256":  "a80d3b5374071dd4f942cb58ab2d07b725fec0a7f12fdee735c1cd408f6ea5e4"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.SecurityDeep.cs",
+                            "sha256":  "c449b5452180ee975d3c845c2e8638a00c85c1024a12d60274a10a9cff0a4fb1"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.cs",
@@ -1608,7 +1616,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ProjectSecurityLogic.cs",
-                            "sha256":  "1716ae4e1214959329861c028e3542263d68533d7f2c95eb4a395cdb4f5fff6e"
+                            "sha256":  "9f540c9925d8b8ee3175f12b463eb0fb515144cf5bf5e07305eaa9a9ac9c2fc3"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/PropertyPathReader.cs",
@@ -1617,6 +1625,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SafetyLogic.cs",
                             "sha256":  "859009f883d502e6a073a57ac55cc646d002ce884b0ae20a8f52e3d4868d5446"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SecurityDeepLogic.cs",
+                            "sha256":  "78e0a560a9ad05571a8babf6697adbd200d3b9e553f3be024a35640d6f152cdf"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SoftwareContainerLookup.cs",
@@ -1632,11 +1644,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "6612ae0a2928c04a18ec3e03de1b79292d5381b6a5e781f860774f141d0533b4"
+                            "sha256":  "dd74e9ef93f14650c60ec02e221878e91ea57ecc3f03df01abc25435adf8039e"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "496f7d537b4eb2b8f48aa96d23259886d4975c561f6901d76e226f9f4f683da3"
+                            "sha256":  "2801df4dd04eee75dbeb2dfafba90d9a3680116896cba38204a33822aa558a8d"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/DeviceTransferShapeChecks.cs",
@@ -1672,7 +1684,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/LibraryDeepShapeChecks.cs",
-                            "sha256":  "5e0319cc945bac22a284ea7c2b3cda0d8aff821fabb551c3f2489949a0b195ef"
+                            "sha256":  "d4b44c8b4a9942fa947c0557fce4dc2302aa301e1728b657978c9560f281c627"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/MotionProDiagClassicHmiShapeChecks.cs",
@@ -1688,7 +1700,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/Program.cs",
-                            "sha256":  "3dca9ef492847995a0227f8fe68647f9e64dcb32d9f109b9752a6c612a119f01"
+                            "sha256":  "728010b6879e16c3468e5d8370beb559c2edd5cf841c357f0eb1a7e71d4bb723"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/ProjectSecurityShapeChecks.cs",
@@ -1705,6 +1717,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/SafetyShapeChecks.cs",
                             "sha256":  "c51e577e429e9fd1c99454040177a1be96986a63669206ec7908bbe355b777b4"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/SecurityDeepShapeChecks.cs",
+                            "sha256":  "94463e0878c9ca9477804d80049f1c10cc7ced4139468f3ffd75dfcb0fdbd3ab"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/SimulationDocumentationShapeChecks.cs",
@@ -1792,7 +1808,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/LibraryDeepTests.cs",
-                            "sha256":  "8d15a897a43a4781dc003ff835e97ae3ff2498ad57e8fd877a75852c87e3b77c"
+                            "sha256":  "1948908da0bf65cc9266cbd4d3f3c0e42c1021465982b1ab1a7bf702bf41ffa3"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/MigrationReadTests.cs",
@@ -1836,11 +1852,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs",
-                            "sha256":  "e8bd0342ef7f33863dd004b146050a61c56b974d0a2b5d5fd25947b8b4744db0"
+                            "sha256":  "ca6c1d617705204c677d187fd3439bee48016d8fef3a9749a42e1e0712842c50"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ProjectSecurityTests.cs",
-                            "sha256":  "a31ed16b175f59a837bf3da62707b860292ab5072423e6d52359a9b4a9941921"
+                            "sha256":  "3b36aff97027346d5fd417362b49216fb10a005b04d582c4b41e874e8a0f938c"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/RuntimeChannelsTests.cs",
@@ -1855,12 +1871,16 @@
                             "sha256":  "fe5afbbad2c26842580dbbe4c707f163fb9df7f2367639257535b8c450efe992"
                         },
                         {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/SecurityDeepTests.cs",
+                            "sha256":  "eb82efa99b4cff589968d8f370700fdc9ac6b1be39706dafb856ca3d7ec7bc5f"
+                        },
+                        {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/SoftwareContainerLookupTests.cs",
                             "sha256":  "4c0dac0d7be3e16f144ec9e6abb0c0d4c5a6aa637d740528ac05bfc40a37c9c8"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-                            "sha256":  "9608e9af29f3c5a7db0436209eb7bb5ee7de5bd0c16f00138aada48daed56291"
+                            "sha256":  "9c89af9eba31f5a95ec626b6a86f661758b9a60e5c1d3a845959ad0a47e23276"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ToolBridgeFixtures.cs",
