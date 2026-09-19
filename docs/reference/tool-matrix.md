@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-19 02:48:01
-- 引擎文件版本：2.7.37.0
-- 工具数量：413
+- 生成时间：2026-09-19 04:08:27
+- 引擎文件版本：2.7.38.0
+- 工具数量：421
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 125 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 156 |
+| `READ` | 读取已打开工程，不改动 | 128 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 161 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -31,10 +31,10 @@
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 35 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (7)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 57 | `Project` (24)、`Library` (13)、`VersionControl` (5)、`Security` (7)、`Validation` (8) |
-| `plc` | PLC 软件 / PLC software | 106 | `PLC-Software` (71)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (6)、`Safety` (4) |
+| `plc` | PLC 软件 / PLC software | 109 | `PLC-Software` (74)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 55 | `Hardware` (55) |
-| `hmi` | HMI 人机界面 / HMI | 119 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
 ## session — 会话与基础设施 / Session & infrastructure（35）
@@ -202,11 +202,11 @@
 | `RunOfflineReleaseValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. |
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markersJson default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 
-## plc — PLC 软件 / PLC software（106）
+## plc — PLC 软件 / PLC software（109）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
-### [PLC-Software]（71）
+### [PLC-Software]（74）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -270,6 +270,7 @@
 | `ManagePlcTableEntries` | L2 | WRITE | Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create) and deleteEntry (0-based entryIndex from a read, confirmDelete=true), each counted back; force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download. |
 | `ManagePlcTagDefinition` | L2 | WRITE | Native tag/constant read/create/update/delete in exact table path. Creation requires dataType and logical address or constant value. Public scalar edits; default preview, execution requires Offline. No runtime value write, save/compile/download. |
 | `ManagePlcUserGroup` | L2 | WRITE | Create, rename or deleteEmpty an exact nested PLC user group. family: blocks/types/tags/technology/watchTables/externalSources (PlcBlockUserGroup / PlcTypeUserGroup / PlcTagTableUserGroup / TechnologicalInstanceDBUserGroup / PlcWatchAndForceTableUserGroup / PlcExternalSourceUserGroup; the resulting group is read back as a typed row). groupPath is relative to the family's root. newName is one segment for rename. Default dryRun=true; actual edits require Offline and exclusive access. Missing parents are created; root and nonempty deletion refused. No save/compile/download. Partial failures may leave created parents; inspect errors. |
+| `ManageSivarcBlockDefinition` | L2 | WRITE | One SiVArc definition of a code block: kind tagDefinition (Name / Value / Comment; create / update / delete), textDefinition (Name / Expression / Comment plus textsJson {de-DE: text} per project language; create / update / delete), tagMemberSettings (UseCommonConfiguration; update), commonParameters or blockParameter=name (AcquisitionCycle, AcquisitionMode None\|CyclicContinuous\|CyclicInOperation\|OnDemand, Comment; update; V21). delete needs confirmDelete when real. Default preview; real edits need the SiVArc licence; never saves. |
 | `ManageTechnologyObject` | L2 | WRITE | Native technology object read/create/delete/setParameter. Exact objectPath relative to TechnologicalObjectGroup, including user folders. create requires official typeIdentifier and version. setParameter takes exact parameter name and scalar valueJson. dryRun=true default; writes require Offline. No save/compile/download; dependencies not analyzed. |
 | `MoveBlockToGroup` | L2 | WRITE* | Move/organize an existing block into a program-block group (found anywhere by exact name). Openness cannot reparent a block, so this exports the block, deletes it, and re-imports it into the target group (SIMATIC SD .s7dcl preferred, SimaticML XML fallback for STL/mixed-language). The block number and references are preserved. autoCreateGroup creates the target group path if missing. Requires: Connect + OpenProject + block consistent (compile first). After moving, call CompileAndDiagnosePlc to confirm 0 errors. Note: avoid moving OBs with event bindings via this round-trip. |
 | `ReadPlcChecksums` | L2 | READ | Native PlcChecksumProvider of the exact PLC software: Software (program checksum) and TextLists checksum strings, both read-only and null until the program is compiled; PLCs without checksum support (GetService returns null) answer supported=false. No modification. |
@@ -277,10 +278,12 @@
 | `ReadPlcSoftwareUnits` | L2 | READ | Typed read of the native software units of one exact PLC (PlcUnitProvider.UnitGroup): the PlcUnitSystemGroup (Name on V21, unit / safety-unit counts) and every PlcUnit / PlcSafetyUnit with Name, Author, NamespacePreset, Comment per culture, relations (RelatedObject / RelationType) and, with includeContents, the names in its BlockGroup (blocks, groups, system block groups), TypeGroup (types, groups, named value type documents), TagTableGroup, ExternalSourceGroup and PlcAlarmTextlistGroup (first 200 each). unitKind all/unit/safety, optional exact unitName. Paginated; PLCs without unit support answer NotSupported. No modification. |
 | `ReadPlcSystemGroups` | L2 | READ | Typed read of the system-generated groups of the exact PLC (or of a unit via unitName + unitKind): PlcBlockSystemGroup.SystemBlockGroups as a PlcSystemBlockGroup tree (Name, blocks with number / class / language when includeBlocks, nested Groups to maxDepth) and PlcTypeSystemGroup.SystemTypeGroups (PlcSystemTypeGroup Name / Types). First 200 objects per group. No modification. |
 | `ReadPlcTagTableConstants` | L2 | READ | Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification. |
+| `ReadSivarcBlockDefinitions` | L2 | READ | SiVArc data of one code block (blockPath Folder/Block under the PLC block group) through the SivarcDataProvider block service: tag definitions (name / value / comment), text definitions (name / expression / comment / multilingual text) and the V21 tag member settings (UseCommonConfiguration, CommonParameters, BlockParameters with acquisition cycle / mode). Answers NotSupported without the SiVArc option. Read-only. |
 | `RepairAndReimportBlock` | L2 | WRITE* | Try import a block XML; if compile fails, return diagnostics and best-effort suggestions (no destructive actions). |
 | `SeedProjectFromReference` | L2 | WRITE* | Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace) |
 | `SetPlcUnitObjectAccess` | L2 | WRITE | Publish/unpublish a block or PLC type inside an exact software unit using official Access attribute. access=Published/Unpublished. objectPath includes nested groups relative to the unit's block/type root; OB publication is refused by native API. dryRun=true default; writes require Offline and readback. No save/compile/download. |
 | `UpdatePlcProgram` | L2 | WRITE | Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. |
+| `UpgradeSivarcDefinitions` | L2 | WRITE | Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. |
 
 ### [PLC-Builders]（9）
 
@@ -431,11 +434,11 @@
 | `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
 | `UpdateDeviceItemChannel` | L2 | WRITE | SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. |
 
-## hmi — HMI 人机界面 / HMI（119）
+## hmi — HMI 人机界面 / HMI（124）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
-### [HMI]（25）
+### [HMI]（30）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -449,7 +452,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ExportHmiProgram` | L2 | FILE* | Batch export HMI screens/tagtables into a directory (best-effort) |
 | `ExportHmiScreen` | L2 | FILE* | Export one HMI screen to a file (best-effort; requires Openness export support) |
 | `ExportHmiTagTable` | L2 | FILE* | Export one HMI tag table to a file (best-effort; requires Openness export support) |
-| `GenerateSiVArc` | L2 | WRITE | Native SiVArc generation for one exact HMI device and explicit PLC paths. Requires native GenerationOptions. Default preview; can create/replace HMI objects according to rules. No automatic save/compile/download. |
+| `GenerateSiVArc` | L2 | WRITE | Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNamesJson (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with \| (AllTags\|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download. |
 | `GetHmiConnections` | L2 | READ* | List HMI connection names (Classic/Unified, best-effort) |
 | `GetHmiProgramInfo` | L2 | READ* | Get HMI software type (Classic/Basic/Unified), version, and list of all screen names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'HMI_RT_1'). Use to confirm HMI type before choosing Classic vs Unified tool variants. |
 | `GetHmiScreens` | L2 | READ* | List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: Connect + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist. |
@@ -461,9 +464,14 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ImportHmiTagTable` | L2 | WRITE* | Import one HMI tag table XML file into an HMI program (best-effort; Classic/Unified via reflection) |
 | `ImportHmiTagTablesFromDirectory` | L2 | WRITE* | Batch import HMI tag table .xml files from a directory (best-effort) |
 | `ListHmiScreenPaths` | L2 | READ* | List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens. |
+| `ManageSivarcRule` | L2 | WRITE | One SiVArc rule or rule group (kind rule / group) inside a rule table: rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace\|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None\|And\|Equal\|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} \| {kind:masterCopy\|libraryType\|masterCopyFolder\|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null clears}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves. |
 | `ManageSiVArcRule` | L2 | WRITE | Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty container deletion refused. Default preview; no generation/save/compile/download. |
+| `ManageSivarcRuleContainer` | L2 | WRITE | SiVArc rule folders and rule tables of one family: kind folder (*RuleFolderComposition.Create / Delete, empty folders only) or table (*RuleTableComposition.Create(name), createFromType with typePath + typeVersion of a *RuleTableType in the project or an open global library (libraryName), Delete of non-default tables). path is Folder/Sub/Name relative to the family's system folder; read returns the typed row. delete needs confirmDelete=true when dryRun=false. Default preview; real edits need the SiVArc licence; never generates or saves. |
+| `ManageSivarcScreenLayout` | L2 | WRITE | SiVArc layout fields of one screen (classic WinCC Screen or Unified HmiScreen) through the V21 LayoutData screen service: action export writes the YML file (must not exist; verified by size and SHA-256), import applies a YML file and returns state / numberOfLayouts. screenName is an exact name or an absolute /Group/Screen path. Import defaults to preview; NotSupported on V20 or without the SiVArc option; never saves. |
 | `ReadHmiScreenSnapshot` | L2 | READ* | Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachToOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExport. |
 | `ReadSiVArcRules` | L2 | READ | Exact SiVArc rule category and property-only JSON path; live scalar pagination with schema, complex values excluded. No generation. |
+| `ReadSivarcRuleTree` | L2 | READ | Typed SiVArc rule hierarchy of one family: category screens / tags / advancedTags / alarms / copies / textLists (Sivarc.ScreenRules ... TextlistRules). Without tablePath: the folder subtree from folderPath (user folders and rule tables with isDefault, counts and the connected library type version). With tablePath (Folder/Table): the table's top-level rules paged as records plus nested rule groups up to maxDepth (200 rules per group). Rule rows are typed per family (condition, operator, enabled, layout field, loop count, tag table, folder structure, program block / library references). Answers NotSupported without the SiVArc option. Never generates. |
+| `ResolveSivarcExpression` | L2 | READ | Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePathJson / itemPathJson name the HMI device item, libraryItemKind masterCopy \| libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. |
 
 ### [HMI-Unified]（70）
 
@@ -514,7 +522,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ManageUnifiedOpcUaAlarmType` | L2 | WRITE | Native create/update OPC UA alarm type with NodeId and existing HMI connection. Default preview. Native readback supplied, full binding verification separate. Read/delete via engineering-object tools. |
 | `ManageUnifiedPlantNode` | L2 | WRITE | Exact PlantView/node create/update/delete. Optional native CPM type for child creation. Leaf/empty deletion only. Default preview, no implicit save/compile/download. |
 | `ManageUnifiedScreenItem` | L2 | WRITE | Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial propertiesJson), update, delete (confirmDelete=true). propertiesJson nests parts as objects ({"Font":{"Size":14},"BackColor":"#FF0000FF"}) and multilingual texts per culture ({"Text":{"en-US":"Start"}}); every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization. |
-| `ManageUnifiedScreenLayout` | L2 | WRITE | Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete (confirmDelete=true; removes all items). No screen copy/duplicate or layout-field export/import exists in the public V21/V20 API. Default preview; readback verified; no save/compile/download. |
+| `ManageUnifiedScreenLayout` | L2 | WRITE | Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete (confirmDelete=true; removes all items). No screen copy/duplicate exists in the public V21/V20 API; layout-field export/import is the SiVArc option's LayoutData screen service (ManageSivarcScreenLayout, V21). Default preview; readback verified; no save/compile/download. |
 | `ReadUnifiedAlarmCommon` | L2 | READ | Read-only HmiAlarmCommon dump: alarmClasses with the four AlarmStatusVisuals states (colors as #AARRGGBB, flashing), or discreteAlarms/analogAlarms with AlarmBase scalars and every EventText/InfoText language. Exact optional name; live offset/limit pagination; AlarmParameterTags excluded. |
 | `ReadUnifiedAuditSettings` | L2 | READ | Read-only HmiAudit dump: alarmAuditClasses scalars (comment required, confirmation mode, GMP, function rights) or auditTrails with nested Backup/Segment/Settings and log durations. Exact optional name; live offset/limit pagination; no edit. |
 | `ReadUnifiedEngineeringObjects` | L2 | READ | Read paginated public scalar properties for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists/systemTags/systemTextLists/auditTrails/opcUaAlarmTypes. Optional exact name. Returns counts, nextOffset, field failures and excluded complex properties. Not a complete export of entries or bindings; live pagination requires unchanged collection. |
