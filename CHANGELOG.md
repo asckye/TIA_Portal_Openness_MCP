@@ -6,7 +6,7 @@
 
 - **新增**：`ReadClassicHmiScreenTree`（`ScreenSystemFolder` / `ScreenPopupSystemFolder` / `ScreenTemplateSystemFolder` / `ScreenSlideinSystemFolder` 及用户文件夹树、`ScreenOverview` / `ScreenGlobalElements`）、`ManageClassicHmiScreenObject`（`ScreenPopup` / `ScreenTemplate` / `ScreenSlidein` / `ScreenOverview` / `ScreenGlobalElements` 的读 / 导出 / 导入 / 删除）、`ManageClassicHmiFolder`（画面 / 弹出 / 模板 / 变量 / 脚本用户文件夹的读建删）、`ManageClassicHmiGraphic`（V21 `GraphicsProvider` 的 `MultiLingualGraphic`）。类型化改造：`ReadClassicHmiScripts` / `ManageClassicHmiScript`（`VBScriptSystemFolder` / `VBScriptUserFolder` / `VBScript`）、`ReadLibraryType typeKind`（四个经典 HMI 库类型子类）、`EngineeringScalarProperties.Json` 的引擎侧值渲染钩子（`ConstValue` / `NullableDateTime`）。
 - **审计**：有专用引用 469 → 505，完全未触及 357 → 322，未封装功能类型 133 / 585 → 107 / 515（经典 WinCC 24 / 59 → 0 / 0，WinCC.Extension 2 / 11 → 0 / 0；只剩选件包）。
-- **验证**：离线 1881 项（新增 45 项）；形状检查 V20 1957 / V21 2140（新增 78 / 95 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**（参考工程的 HMI 是 Unified，只能验拒绝文案与值渲染）。
+- **验证**：离线 1881 项（新增 45 项）；形状检查 V20 1957 / V21 2140（新增 78 / 95 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（V21 `AutomaticDipCoatingMachine`，2026-09-19）：四个新工具对 Unified `HMI_RT_1` 和 PLC 目标明确拒绝；`ReadLibraryType typeKind` 在 1,038 个工程库类型上核对（`codeBlock` 425 / `plcType` 454 / `hmiUdt` 4；Unified `ScriptModuleType` 与基类 `LibraryType` 面板回 `other`，2.7.38 补四个子类）；`ConstValue` / `NullableDateTime` 在 Unified 读取里不出现（经典 HMI 专属），钩子无回归。经典 WinCC 实做路径无经典 HMI 工程可验。
 
 ## [2.7.36] - 2026-09-19
 

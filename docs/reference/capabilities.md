@@ -11,7 +11,7 @@
 | 多语言图形 | `ManageClassicHmiGraphic` | `GraphicsProvider` 仅 V21；导出写 XML + 图片文件（默认语言后缀 `default`，同名自动编号）；不读图片字节 |
 | 类型化改造 | `ReadClassicHmiScripts` / `ManageClassicHmiScript`、`ReadLibraryType`（`typeKind`）、`EngineeringScalarProperties.Json`（`ConstValue` / `NullableDateTime` 渲染钩子） | 签名不变 |
 
-**真机待验**（参考工程 HMI 是 Unified，只能验拒绝文案与值渲染）；形状检查 V20 1957 / V21 2140 对本机 PublicAPI 逐成员核对通过。
+真机（V21 `AutomaticDipCoatingMachine`，2026-09-19）：四个工具对 Unified `HMI_RT_1` / PLC 目标按预期 NotSupported；`typeKind` 在 1,038 个工程库类型上核对（`hmiUdt` 4 个真实命中；Unified `ScriptModuleType` 与基类 `LibraryType` 面板暂回 `other`，2.7.38 补 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule`）；`ConstValue` / `NullableDateTime` 只出现在经典 HMI 动态属性里，Unified 工程验不到，钩子对 Unified 标量读取无回归。经典 WinCC 实做路径无经典 HMI 工程可验；形状检查 V20 1957 / V21 2140 对本机 PublicAPI 逐成员核对通过。
 
 ## 2.7.36 新增工具族（阶段 4 ④-③ 工艺对象映射，阶段 4 收口）
 
