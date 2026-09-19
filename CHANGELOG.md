@@ -7,7 +7,7 @@
 - **修复（2.7.34 真机）**：`ManagePlcSoftwareUnit` 的关系 Create / Delete 回读改为从单元组重新导航（旧组合代理 `Find` 回 null / 抛 `EngineeringObjectDisposedException`）。
 - **新增**：`ManagePlcExternalSources`（`PlcExternalSource(Group/UserGroup/SystemGroup)`：文件 / 母本建源、删除、生成块到指定用户组、用户组建改删）、`ReadPlcSystemGroups`（`PlcSystemBlockGroup` 树 + `PlcSystemTypeGroup`）、`ReadPlcTagTableConstants`（`PlcConstant` 行）、`ExchangePlcAlarmTextListsXlsx`（`PlcAlarmTextListProvider` 导出 / 导入）、`ManagePlcTableEntries`（`PlcWatchTableEntry` / `PlcForceTableEntry` / `PlcTableCommentEntry`）、`ExportPlcProDiagInfo`（`CodeBlock.ExportProDIAGInfo`）。类型化改造：监控 / 强制表访问规则、OPC UA `OpcUaCommunicationGroup` / `NamespaceAccessRestriction`、报警类与监控设置结果消息、库类型子类 `typeKind`、`ManagePlcUserGroup` 新增 `watchTables` / `externalSources` 族与类型化组行。
 - **审计**：有专用引用 417 → 451，完全未触及 406 → 370，未封装功能类型 162 / 695 → 139 / 637（Step7 28 / 100 → 5 / 42，只剩工艺对象映射）。
-- **验证**：离线 1825 项（新增 71 项）；形状检查 V20 1784 / V21 1929（新增 114 / 119 项）；两版 EXE 回归见 `manifest/release-build.json`。**真实工程验收待部署后重跑**。
+- **验证**：离线 1825 项（新增 71 项）；形状检查 V20 1784 / V21 1929（新增 114 / 119 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.35 真机结果](docs/releases/v2.7.35.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：关系回读修复、外部源全生命周期（SCL 文件 → 建源 → 生成 FC 到临时组 → 删）、系统组、79 个系统常量、文本列表 XLSX 的原生拒绝路径、监控表注释行、ProDiag 门控、类型化访问规则 / OPC UA 限制 / 报警类消息 / 库类型种类全部通过；一处缺陷记入 2.7.36（`createComment` 后旧组合代理 `Count` 陈旧）。
 
 ## [2.7.34] - 2026-09-19
 

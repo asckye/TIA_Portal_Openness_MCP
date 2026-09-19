@@ -9,11 +9,11 @@
 | 外部源 | `ManagePlcExternalSources` | 源文件必须已在 TIA Portal 机器上且是 ASCII（.scl / .awl / .stl / .db / .udt）；`PlcExternalSource` 在 PublicAPI 只有 `Name`；`generateBlocks` 原生覆盖同名对象、出错时工程回滚到调用前；用户组只删空组；V20 的 `PlcExternalSourceUserGroup.Name` 只读（改名 V21+）；从块生成源文件仍是 `GeneratePlcSourceFromBlocks` |
 | 系统组 / 常量 | `ReadPlcSystemGroups`、`ReadPlcTagTableConstants` | 系统组只读（TIA 生成）；每组最多列 200 个对象；用户常量的写入走 `ManagePlcTag kind=constant` |
 | 报警文本列表 XLSX | `ExchangePlcAlarmTextListsXlsx` | 过滤重载要求文本列表与语言同时给出；TIA 原生拒绝系统文本列表与未激活语言（`UserException`）；`ImportOptions.None` 遇到已有列表报错、`Override` 替换其条目；导出文件必须是新文件 |
-| 表条目 | `ManagePlcTableEntries` | 只读配置值不是在线值；强制表刻意只读（`PlcForceTableEntry` 不提供写）；`Create()` 只能追加注释行；删除按 0 基索引并回数 |
+| 表条目 | `ManagePlcTableEntries` | 只读配置值不是在线值；强制表刻意只读（`PlcForceTableEntry` 不提供写）；`Create()` 只能追加注释行（带地址的条目只能导入）；删除按 0 基索引并回数，但 TIA 拒绝删 Openness 建的空注释行（2.7.35 真机） |
 | ProDiag | `ExportPlcProDiagInfo` | 只对语言为 ProDiag 且一致的 FB；目录须已存在；输出 CSV |
 | 类型化改造 | `ManageWatchForceTableWebAccess`、`ReadOpcUaAccessControl` / `ManageOpcUaAccessControl`、`ExportAlarmClasses` / `ImportAlarmClasses`、`ManagePlcSupervision exportSettings/importSettings`、`ReadLibraryType`（`typeKind`）、`ManagePlcUserGroup`（新增 `watchTables` / `externalSources`） | 签名不变，行里多了原生类型信息；`AlarmClassDataProvider` 在 PLC 上拿不到时回退到工程 |
 
-**真机待验**；形状检查 V20 1784 / V21 1929 对本机 PublicAPI 逐成员核对通过。
+形状检查 V20 1784 / V21 1929 对本机 PublicAPI 逐成员核对通过；**真机（2026-09-19，`AutomaticDipCoatingMachine`）**：外部源从 SCL 文件建源、生成 FC 到临时用户组、删源 / 改名 / 删组全链通过；系统块组 / 类型组、默认变量表 79 个系统常量、类型化 OPC UA 限制行 / 报警类消息 / 库类型 `typeKind` 通过；文本列表 XLSX、ProDiag、Web 访问规则到达原生门控（无用户文本列表 / 无 ProDiag FB / Web 服务器未启用）。已知：`PlcTableCommentEntryComposition.Create()` 后同一代理 `Count` 陈旧（2.7.36 改为重新导航计数）；Openness 建的空注释行 `Delete` 被 TIA 拒绝；变量表路径要带组名（`IO/F_Input`）。
 
 ## 2.7.34 新增工具族（阶段 4 ④-① Step7 软件单元与 PlcSoftware 小服务）
 
