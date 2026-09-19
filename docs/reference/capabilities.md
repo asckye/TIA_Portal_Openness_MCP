@@ -13,7 +13,7 @@
 | 定义升级 / 生成 | `UpgradeSivarcDefinitions`、`GenerateSiVArc`（类型化改造，新增多设备重载） | 默认预览；生成结果按 `IsGenerationSuccessful` 判定 `operationSuccess`；HMI 未连到所选 PLC 时 TIA 抛异常 |
 | 类型化改造 | `ReadSiVArcRules` / `ManageSiVArcRule` 锚点、`ReadLibraryType`（`typeKind` 新增 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule` / `sivarc*` / `dccBlockType`） | 签名不变 |
 
-**真机不可验证**（虚拟机没有 SiVArc 许可；部署后只验 NotSupported 与 `typeKind`）；形状检查 V20 2301 / V21 2497 对本机 PublicAPI 逐成员核对通过。
+**真机（2026-09-19，虚拟机装有 SIMATIC Visualization Architect V21）**：六族规则树、规则文件夹 / 表建删（含 `confirmDelete` 门与重导航核对）、类型化规则行、`_Lib/TecUnit/MotorOnOff` 的变量 / 文本定义与采集设置建改删、`ExpressionResolver`（`Block.Name` / `Block.SymbolicName` / `Block.DB.SymbolicName` / `HmiApplication.Type`）、Unified 画面 `LayoutData` 导出、升级 / 生成预览、`typeKind` 新值全部通过；`ManageSivarcRule` 在 lite 模式经 `CallTool` 不可达（与旧 `ManageSiVArcRule` 只差大小写，映射不分大小写）、`GenerateSiVArc` 实做要传 PLC 设备名、通用 `ManageSiVArcRule delete` 后陈旧代理核对抛异常——三处 2.7.39 修。形状检查 V20 2301 / V21 2497 对本机 PublicAPI 逐成员核对通过。
 
 ## 2.7.37 新增工具族（阶段 5 经典 WinCC 文件夹层次，核心程序集收口）
 

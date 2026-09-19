@@ -2,11 +2,11 @@
 
 ## [2.7.38] - 2026-09-19
 
-引擎 2.7.38.0（V20/V21 均重建），工具 413 → 421，默认 lite 56 项不变。详见 [v2.7.38](docs/releases/v2.7.38.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-①：SiVArc 选件包——**SiVArc 功能类型缺口 33 / 198 归零**（形状检查，虚拟机无许可）。
+引擎 2.7.38.0（V20/V21 均重建），工具 413 → 421，默认 lite 56 项不变。详见 [v2.7.38](docs/releases/v2.7.38.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-①：SiVArc 选件包——**SiVArc 功能类型缺口 33 / 198 归零**（发布时按形状检查；部署后发现虚拟机装有 SiVArc 并完成真机验证）。
 
 - **新增**：`ReadSivarcRuleTree`（六个规则族的类型化文件夹 / 表 / 组 / 规则层次）、`ManageSivarcRuleContainer`（规则文件夹与规则表，含 `CreateFrom(*RuleTableTypeVersion)`）、`ManageSivarcRule`（规则与规则组的 create / createFromMasterCopy / update / delete，类型化属性、库对象与 PLC 块引用、PLC / HMI 设备列）、`ReadSivarcBlockDefinitions` / `ManageSivarcBlockDefinition`（`SivarcDataProvider` 的变量 / 文本定义与 V21 变量成员设置）、`ResolveSivarcExpression`（`ExpressionResolver`）、`ManageSivarcScreenLayout`（V21 `LayoutData`）、`UpgradeSivarcDefinitions`（`SivarcDefinitionsUpgrader`）。类型化改造：`GenerateSiVArc`（类型化 `Sivarc.Generate`、多设备重载、`SivarcGenerationResult` 与递归反馈消息）、`ReadSiVArcRules` / `ManageSiVArcRule` 锚点、`ReadLibraryType typeKind` 新增 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule` / `sivarc*` / `dccBlockType`。
 - **审计**：有专用引用 505 → 573，完全未触及 322 → 255，未封装功能类型 107 / 515 → 72 / 307（SiVArc 33 / 198 → 0 / 0；SafetyValidation 9 / 43 → 8 / 34 只是 `Condition` 记号的词法误判）。
-- **验证**：离线 1953 项（新增 72 项）；形状检查 V20 2301 / V21 2497（新增 344 / 357 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程不可验证（无 SiVArc 许可）；部署后只验 NotSupported 与 `typeKind`。
+- **验证**：离线 1953 项（新增 72 项）；形状检查 V20 2301 / V21 2497（新增 344 / 357 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（V21 `AutomaticDipCoatingMachine`，2026-09-19，虚拟机装有 SIMATIC Visualization Architect V21）：六族规则树、规则文件夹 / 表建删、类型化规则行、块的变量 / 文本定义与采集设置建改删、`ExpressionResolver`（3 个块实例）、Unified 画面 `LayoutData` 导出、升级 / 生成预览、`typeKind` `unifiedScriptModule` / `hmiUdt` 全部通过；三处缺陷留给 2.7.39（`ManageSivarcRule` 被同名异大小写的旧工具 `ManageSiVArcRule` 在 `CallTool` 映射里遮蔽、`GenerateSiVArc` 要传 PLC 设备名而非 `PlcSoftware.Name`、通用 `ManageSiVArcRule delete` 后在陈旧代理上核对抛 `EngineeringObjectDisposedException`）。
 
 ## [2.7.37] - 2026-09-19
 

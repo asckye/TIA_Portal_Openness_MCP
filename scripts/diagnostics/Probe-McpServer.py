@@ -105,6 +105,9 @@ def load_args(text):
 
 
 def print_result(r, bridge):
+    if isinstance(r, dict) and "error" in r:  # JSON-RPC error (unknown tool, lite roster refusal ...): show it instead of silence
+        print("** rpc error:", json.dumps(r["error"], ensure_ascii=False))
+        return
     res = r.get("result") or r
     for c in res.get("content", []):
         if c.get("type") != "text":
