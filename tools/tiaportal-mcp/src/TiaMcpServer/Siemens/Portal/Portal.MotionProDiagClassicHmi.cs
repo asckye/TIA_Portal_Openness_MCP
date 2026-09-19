@@ -312,6 +312,12 @@ namespace TiaMcpServer.Siemens
                     meta["mayHaveChanged"] = import; meta["mayHaveWrittenFiles"] = !import;
                     var result = EngineeringGroupOperations.Call(provider, method, new[] { typeof(FileInfo) }, file);
                     OfficialServiceAccess.AttachResult(meta, result);
+                    // 2.7.35: typed SupervisionSettingsExportImportResult (State / ErrorCount / WarningCount / Messages of SupervisionSettingsExportImportResultMessage).
+                    if (result is global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResult typed)
+                    {
+                        meta["errorCount"] = typed.ErrorCount; meta["warningCount"] = typed.WarningCount;
+                        meta["messages"] = new JsonArray(EngineeringGroupOperations.Items(typed.Messages).Cast<global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResultMessage>().Select(m => (JsonNode)m.Message).ToArray());
+                    }
                     var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString();
                     meta["nativeState"] = state; meta["nativeSuccessVerified"] = state == "Success";
                     if (state != "Success") meta["operationSuccess"] = false;

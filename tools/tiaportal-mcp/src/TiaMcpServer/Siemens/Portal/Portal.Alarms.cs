@@ -41,6 +41,16 @@ namespace TiaMcpServer.Siemens
     {
         #region alarms
 
+        // 2.7.35: typed AlarmClassExportImportResultMessage rows (Message + per-message State).
+        private static JsonArray AlarmClassMessages(AlarmClassExportImportResult? result)
+        {
+            var rows = new JsonArray();
+            if (result?.Messages == null) return rows;
+            foreach (AlarmClassExportImportResultMessage message in EngineeringGroupOperations.Items(result.Messages).Cast<AlarmClassExportImportResultMessage>())
+                rows.Add(new JsonObject { ["message"] = message.Message, ["state"] = message.State.ToString() });
+            return rows;
+        }
+
         public ResponseMessage ExportAlarmClasses(string softwarePath, string exportPath)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
@@ -49,21 +59,22 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var provider = plc.GetService<AlarmClassDataProvider>();
+                // Official "Export/Import of Alarm classes": the provider lives on ProjectBase; older TIA versions answered it on the PLC too.
+                var provider = plc.GetService<AlarmClassDataProvider>() ?? _project?.GetService<AlarmClassDataProvider>();
                 if (provider == null)
-                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC." };
+                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                var result = provider.Export(new FileInfo(exportPath));
-                var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString() ?? "Unknown";
-                var errCount = (int)(result?.GetType().GetProperty("ErrorCount")?.GetValue(result) ?? 0);
+                AlarmClassExportImportResult result = provider.Export(new FileInfo(exportPath));
+                var state = result?.State.ToString() ?? "Unknown";
+                var errCount = result?.ErrorCount ?? 0;
                 bool ok = state == "Success" || state == "Warning";
                 return new ResponseMessage
                 {
                     Message = ok
                         ? $"Alarm classes exported to '{exportPath}' (State={state}, Errors={errCount})."
                         : $"Alarm class export failed. State={state}, Errors={errCount}.",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["errorCount"] = errCount }
+                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["errorCount"] = errCount, ["warningCount"] = result?.WarningCount ?? 0, ["messages"] = AlarmClassMessages(result) }
                 };
             }
             catch (Exception ex)
@@ -81,20 +92,20 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var provider = plc.GetService<AlarmClassDataProvider>();
+                var provider = plc.GetService<AlarmClassDataProvider>() ?? _project?.GetService<AlarmClassDataProvider>();
                 if (provider == null)
-                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC." };
+                    return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
-                var result = provider.Import(new FileInfo(importPath));
-                var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString() ?? "Unknown";
-                var errCount = (int)(result?.GetType().GetProperty("ErrorCount")?.GetValue(result) ?? 0);
+                AlarmClassExportImportResult result = provider.Import(new FileInfo(importPath));
+                var state = result?.State.ToString() ?? "Unknown";
+                var errCount = result?.ErrorCount ?? 0;
                 bool ok = state == "Success" || state == "Warning";
                 return new ResponseMessage
                 {
                     Message = ok
                         ? $"Alarm classes imported from '{importPath}' (State={state}, Errors={errCount})."
                         : $"Alarm class import failed. State={state}, Errors={errCount}.",
-                    Meta = new JsonObject { ["importPath"] = importPath, ["state"] = state, ["errorCount"] = errCount }
+                    Meta = new JsonObject { ["importPath"] = importPath, ["state"] = state, ["errorCount"] = errCount, ["warningCount"] = result?.WarningCount ?? 0, ["messages"] = AlarmClassMessages(result) }
                 };
             }
             catch (Exception ex)

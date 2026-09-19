@@ -61,11 +61,19 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex) { row["masterCopiesContainingInstancesError"] = ex.GetBaseException().Message; }
             return row;
         }
+        // 2.7.35: the STEP 7 library type subclasses (CodeBlockLibraryType / PlcTypeLibraryType / PlcDocumentLibraryType) name what a version instantiates.
+        private static string LibraryTypeKind(LibraryType type) => type switch
+        {
+            global::Siemens.Engineering.SW.Blocks.CodeBlockLibraryType => "codeBlock",
+            global::Siemens.Engineering.SW.Types.PlcTypeLibraryType => "plcType",
+            global::Siemens.Engineering.SW.Types.PlcDocumentLibraryType => "plcDocument",
+            _ => "other"
+        };
         private static JsonObject TypeRow(LibraryType type, bool versions)
         {
             var row = new JsonObject
             {
-                ["name"] = type.Name, ["guid"] = type.Guid.ToString(), ["typeClass"] = type.GetType().Name, ["author"] = type.Author, ["namespace"] = type.Namespace,
+                ["name"] = type.Name, ["guid"] = type.Guid.ToString(), ["typeClass"] = type.GetType().Name, ["typeKind"] = LibraryTypeKind(type), ["author"] = type.Author, ["namespace"] = type.Namespace,
                 ["comment"] = MultilingualJson(type.Comment), ["doNotUse"] = type.DoNotUse, ["minimumTargetDeviceVersion"] = type.MinimumTargetDeviceVersion?.ToString()
             };
             try { row["setForUpdate"] = type.SetForUpdate; } catch (Exception ex) { row["setForUpdateError"] = ex.GetBaseException().Message; }

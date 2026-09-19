@@ -121,6 +121,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== Step7 软件单元深层纯逻辑：单元 / 安全单元请求、命名值类型与 UDT 文档请求、指纹、块写保护状态机、工程编译设置、目录快照 ==");
             SoftwareUnitDeepTests.Run(Check);
 
+            Console.WriteLine("== Step7 收尾纯逻辑：外部源（文件 / 母本 / 用户组 / 生成块）、系统组与常量请求、报警文本列表 XLSX、监控 / 强制表条目、ProDiag 门控 ==");
+            Step7LeftoversTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

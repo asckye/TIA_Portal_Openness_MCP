@@ -2,6 +2,19 @@
 
 本文说明 2.7.18 引擎的能力与缺口，沿用 v2.7.14–v2.7.15 的表格并追加 2.7.18 新增的工具族。静态清单 350 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**所有新增接口均未完成真实工程验收**。
 
+## 2.7.35 新增工具族（阶段 4 ④-② Step7 收尾）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| 外部源 | `ManagePlcExternalSources` | 源文件必须已在 TIA Portal 机器上且是 ASCII（.scl / .awl / .stl / .db / .udt）；`PlcExternalSource` 在 PublicAPI 只有 `Name`；`generateBlocks` 原生覆盖同名对象、出错时工程回滚到调用前；用户组只删空组；V20 的 `PlcExternalSourceUserGroup.Name` 只读（改名 V21+）；从块生成源文件仍是 `GeneratePlcSourceFromBlocks` |
+| 系统组 / 常量 | `ReadPlcSystemGroups`、`ReadPlcTagTableConstants` | 系统组只读（TIA 生成）；每组最多列 200 个对象；用户常量的写入走 `ManagePlcTag kind=constant` |
+| 报警文本列表 XLSX | `ExchangePlcAlarmTextListsXlsx` | 过滤重载要求文本列表与语言同时给出；TIA 原生拒绝系统文本列表与未激活语言（`UserException`）；`ImportOptions.None` 遇到已有列表报错、`Override` 替换其条目；导出文件必须是新文件 |
+| 表条目 | `ManagePlcTableEntries` | 只读配置值不是在线值；强制表刻意只读（`PlcForceTableEntry` 不提供写）；`Create()` 只能追加注释行；删除按 0 基索引并回数 |
+| ProDiag | `ExportPlcProDiagInfo` | 只对语言为 ProDiag 且一致的 FB；目录须已存在；输出 CSV |
+| 类型化改造 | `ManageWatchForceTableWebAccess`、`ReadOpcUaAccessControl` / `ManageOpcUaAccessControl`、`ExportAlarmClasses` / `ImportAlarmClasses`、`ManagePlcSupervision exportSettings/importSettings`、`ReadLibraryType`（`typeKind`）、`ManagePlcUserGroup`（新增 `watchTables` / `externalSources`） | 签名不变，行里多了原生类型信息；`AlarmClassDataProvider` 在 PLC 上拿不到时回退到工程 |
+
+**真机待验**；形状检查 V20 1784 / V21 1929 对本机 PublicAPI 逐成员核对通过。
+
 ## 2.7.34 新增工具族（阶段 4 ④-① Step7 软件单元与 PlcSoftware 小服务）
 
 | 族 | 工具 | 边界 |
@@ -104,7 +117,7 @@
 | 工具 | 已实现动作 | 参数重点 |
 |---|---|---|
 | CreatePlcTypeGroup | 类型组多级创建、幂等复用 | softwarePath、groupPath |
-| ManagePlcUserGroup | blocks/types/tags/technology 四类组的 create、rename、deleteEmpty | family、相对 groupPath、newName |
+| ManagePlcUserGroup | blocks/types/tags/technology/watchTables/externalSources 六类组的 create、rename、deleteEmpty，结果组读回为类型化行 | family、相对 groupPath、newName |
 | ManageTechnologyObject | read、create、delete、setParameter | objectPath；创建需官方 typeIdentifier/version；参数需 parameter/valueJson |
 | ImportPlcWatchTableOffline | 原生监视表 XML 导入 | filePath、现有 groupPath；仅离线、无覆盖、拒绝强制表/混合对象/DTD |
 | ManageHardwareObject | deleteDevice/deleteItem/moveItem/copyItem | devicePathJson/itemPathJson 精确名称数组；移动/复制需目的路径及 position，通过 CanPlug 检查 |

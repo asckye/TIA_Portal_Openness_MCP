@@ -123,10 +123,12 @@ namespace TiaMcpServer.Siemens
                 return "Connection created and read back; project not saved, compiled or downloaded.";
             });
 
+        // 2.7.35: typed rows (WatchTableAccessRule.WatchTable / ForceTableAccessRule.ForceTable carry the table; Access is writable natively).
         private static JsonObject ReadAccessRule(object rule, string tableProperty)
         {
             var row = EngineeringScalarProperties.Read(rule);
-            row["tableName"] = LinkName(rule, tableProperty);
+            row["tableName"] = rule switch { WatchTableAccessRule w => w.WatchTable?.Name, ForceTableAccessRule f => f.ForceTable?.Name, _ => LinkName(rule, tableProperty) };
+            row["ruleClass"] = rule.GetType().Name;
             return row;
         }
         public ResponseMessage ManageWatchForceTableWebAccess(string devicePathJson, string itemPathJson, string action = "read", string softwarePath = "",
@@ -151,10 +153,9 @@ namespace TiaMcpServer.Siemens
                 var table = EngineeringGroupOperations.Find(EngineeringGroupOperations.Get(group, tableKind == "watch" ? "WatchTables" : "ForceTables"), parts.Last())
                     ?? throw new PortalException(PortalErrorCode.NotFound, "Exact " + tableKind + " table not found: " + tablePath);
                 meta["tablePath"] = tablePath; meta["requestedAccess"] = requested.ToString();
-                object composition = tableKind == "watch" ? (object)manager.WatchtableAccessRules : manager.ForcetableAccessRules;
-                var tableType = tableKind == "watch" ? typeof(PlcWatchTable) : typeof(PlcForceTable);
-                object? Existing() => EngineeringGroupOperations.Call(composition, "Find", new[] { tableType }, table);
-                if (composition.GetType().GetMethod("Create", new[] { tableType, typeof(WatchAndForceTableAccess) }) == null) throw new NotSupportedException("AccessRuleComposition.Create is unavailable.");
+                WatchTableAccessRuleComposition watchRules = manager.WatchtableAccessRules; ForceTableAccessRuleComposition forceRules = manager.ForcetableAccessRules;
+                object? Existing() => tableKind == "watch" ? (object?)watchRules.Find((PlcWatchTable)table) : forceRules.Find((PlcForceTable)table);
+                object Create() => tableKind == "watch" ? (object)watchRules.Create((PlcWatchTable)table, requested) : forceRules.Create((PlcForceTable)table, requested);
                 var existing = Existing();
                 meta["before"] = existing == null ? null : ReadAccessRule(existing, tableKind == "watch" ? "WatchTable" : "ForceTable");
                 if (action == "unassign")
@@ -162,7 +163,7 @@ namespace TiaMcpServer.Siemens
                     if (existing == null) throw new PortalException(PortalErrorCode.NotFound, "No access rule exists for this table.");
                     if (dryRun) return "Unassign preview; nothing changed.";
                     meta["mayHaveChanged"] = true;
-                    EngineeringGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
+                    if (existing is WatchTableAccessRule watchRule) watchRule.Delete(); else if (existing is ForceTableAccessRule forceRule) forceRule.Delete(); else EngineeringGroupOperations.Call(existing, "Delete", Type.EmptyTypes);
                     if (Existing() != null) throw new InvalidOperationException("Access rule remains after Delete.");
                     meta["verifiedAbsent"] = true;
                     return "Table access rule removed and verified; project not saved, compiled or downloaded.";
@@ -172,8 +173,10 @@ namespace TiaMcpServer.Siemens
                 if (existing != null && accessProperty?.SetMethod?.IsPublic != true) throw new NotSupportedException("Existing rule Access is read-only; unassign first, then assign.");
                 if (dryRun) return "Assign preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
-                if (existing != null) accessProperty!.SetValue(existing, requested);
-                else EngineeringGroupOperations.Call(composition, "Create", new[] { tableType, typeof(WatchAndForceTableAccess) }, table, requested);
+                if (existing is WatchTableAccessRule existingWatch) existingWatch.Access = requested;
+                else if (existing is ForceTableAccessRule existingForce) existingForce.Access = requested;
+                else if (existing != null) accessProperty!.SetValue(existing, requested);
+                else Create();
                 var after = Existing() ?? throw new InvalidOperationException("Rule missing after assign.");
                 if (!Equals(after.GetType().GetProperty("Access")?.GetValue(after), requested)) throw new InvalidOperationException("Access readback differs from requested value.");
                 meta["after"] = ReadAccessRule(after, tableKind == "watch" ? "WatchTable" : "ForceTable");
@@ -221,6 +224,17 @@ namespace TiaMcpServer.Siemens
             row["namespacePermissions"] = new JsonArray(EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(role, "NamespacePermissions")).Select(p => (JsonNode)EngineeringScalarProperties.Read(p)).ToArray());
             return row;
         }
+        // 2.7.35: typed NamespaceAccessRestriction row (V21 only; the type does not exist in the V20 PublicAPI).
+        private static JsonObject RestrictionRow(object restriction)
+        {
+#if TIA_V20
+            return EngineeringScalarProperties.Read(restriction);
+#else
+            if (restriction is global::Siemens.Engineering.SW.OpcUa.AccessControl.NamespaceAccessRestriction r)
+                return new JsonObject { ["namespaceIndex"] = r.NamespaceIndex, ["namespaceUri"] = r.NamespaceUri, ["applyRestrictionsToBrowse"] = r.ApplyRestrictionsToBrowse, ["sessionRequired"] = r.SessionRequired, ["signingRequired"] = r.SigningRequired, ["encryptionRequired"] = r.EncryptionRequired, ["restrictionClass"] = r.GetType().Name };
+            return EngineeringScalarProperties.Read(restriction);
+#endif
+        }
         private static object ExactByNamespaceUri(object collection, string namespaceUri)
         {
             HardwareServicesLogic.RequireExactName(namespaceUri, "namespaceUri");
@@ -237,7 +251,7 @@ namespace TiaMcpServer.Siemens
                 var restrictions = EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(control, "NamespaceAccessRestrictions")).ToArray();
                 meta["roleCount"] = roles.Length; meta["restrictionCount"] = restrictions.Length; meta["section"] = section;
                 var all = section == "roles" ? roles : restrictions;
-                var rows = all.Skip(offset).Take(limit).Select(x => section == "roles" ? (JsonNode)ReadRole(x) : EngineeringScalarProperties.Read(x)).ToArray();
+                var rows = all.Skip(offset).Take(limit).Select(x => section == "roles" ? (JsonNode)ReadRole(x) : RestrictionRow(x)).ToArray();
                 meta["records"] = new JsonArray(rows);
                 foreach (var pair in HardwareServicesLogic.PageMeta(all.Length, offset, limit, rows.Length)) meta[pair.Key] = pair.Value?.DeepClone();
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
@@ -326,10 +340,10 @@ namespace TiaMcpServer.Siemens
                         var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                         if (changes.Count == 0) throw new ArgumentException("propertiesJson must contain at least one property.");
                         var prepared = EngineeringScalarProperties.Prepare(restriction.GetType(), changes);
-                        meta["before"] = EngineeringScalarProperties.Read(restriction); meta["requestedProperties"] = changes.DeepClone();
+                        meta["before"] = RestrictionRow(restriction); meta["requestedProperties"] = changes.DeepClone();
                         if (dryRun) return "Namespace restriction preview; properties validated, nothing changed.";
                         EngineeringScalarProperties.Apply(restriction, prepared, meta); meta["apiCallSuccess"] = true;
-                        meta["after"] = EngineeringScalarProperties.Read(restriction);
+                        meta["after"] = RestrictionRow(restriction);
                         return "OPC UA namespace restriction updated with readback; project not saved, compiled or downloaded.";
                     }
                 }

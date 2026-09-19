@@ -41,14 +41,15 @@ namespace TiaMcpServer.Siemens
     {
         #region opcua
 
-        /// <summary>Returns the ServerInterfaceGroup node via reflection chain.</summary>
+        /// <summary>Returns the ServerInterfaceGroup node (OpcUaProvider.CommunicationGroup.ServerInterfaceGroup, typed since 2.7.35).</summary>
         private static object? GetOpcUaServerInterfaceGroup(PlcSoftware plc)
         {
             var provider = plc.GetService<OpcUaProvider>();
             if (provider == null) return null;
-            var commGroup = TryGetPropertyValue(provider, "CommunicationGroup");
+            OpcUaCommunicationGroup? commGroup = provider.CommunicationGroup;
             if (commGroup == null) return null;
-            return TryGetPropertyValue(commGroup, "ServerInterfaceGroup");
+            ServerInterfaceGroup? group = commGroup.ServerInterfaceGroup;
+            return group;
         }
 
         public ModelContextProtocol.ResponseJsonReport GetOpcUaConfig(string softwarePath)
