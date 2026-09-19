@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-19 01:57:30
-- 引擎文件版本：2.7.36.0
-- 工具数量：409
+- 生成时间：2026-09-19 02:48:01
+- 引擎文件版本：2.7.37.0
+- 工具数量：413
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
-| `READ` | 读取已打开工程，不改动 | 124 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 153 |
+| `READ` | 读取已打开工程，不改动 | 125 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 156 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 22 |
@@ -34,7 +34,7 @@
 | `plc` | PLC 软件 / PLC software | 106 | `PLC-Software` (71)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (6)、`Safety` (4) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 55 | `Hardware` (55) |
-| `hmi` | HMI 人机界面 / HMI | 115 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (14)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 119 | `HMI` (25)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
 ## session — 会话与基础设施 / Session & infrastructure（35）
@@ -431,7 +431,7 @@
 | `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
 | `UpdateDeviceItemChannel` | L2 | WRITE | SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. |
 
-## hmi — HMI 人机界面 / HMI（115）
+## hmi — HMI 人机界面 / HMI（119）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
@@ -540,7 +540,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `UpdateUnifiedRuntimeSettings` | L2 | WRITE | Update supported root HMI Runtime settings using public Openness setters. changesJson is an object, e.g. {"StartScreen":"/Group/Main","ScreenResolution":"SR_1920X1080"}; use exact enum names from ReadUnifiedRuntimeSettings. StartScreen MUST be a full URI-escaped screen path: validates existence and unique name in the selected HMI before writing the API's name value. Default dryRun=true returns before/proposed/token. Apply identical changes with dryRun=false and expectedToken. Validates all requested fields before any write and verifies final readback. On failure inspect appliedFields/mayHaveChanged; multi-field writes are not atomic. No automatic rollback, save, compile, download, runtime restart or close. Unsupported/nested fields are rejected. |
 | `ValidateUnifiedObject` | L2 | READ | Call native parameterless Validate on one exact Unified object. Returns errors/warnings; apiCallSuccess and validationPassed differ. No compile, script SyntaxCheck or project edit. |
 
-### [HMI-Classic]（14）
+### [HMI-Classic]（18）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -548,10 +548,14 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `BuildClassicHmiScreenXml` | L2 | OFFLINE* | Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. |
 | `BuildClassicHmiTagTableXml` | L2 | OFFLINE* | Offline-only helper: build a Classic/Basic WinCC HMI tag table XML document from structured JSON. Supports plain HMI tags and symbolic PLC bindings through Connection + ControllerTag/PlcTag. It does not connect to TIA Portal, import tags, or modify projects. |
 | `ManageClassicHmiCycle` | L2 | WRITE | Classic HMI cycles: read (all or exact cycleName with advertised time/unit attributes), export (new XML file), import (Override needs confirmDelete=true), delete (confirmDelete=true; system cycles refused), setAttributes (readback verified). CycleComposition has no native Create. Default preview; no save/compile/download. |
+| `ManageClassicHmiFolder` | L2 | WRITE | Classic WinCC user folders of one family: folderKind screens (ScreenUserFolder), popups (ScreenPopupUserFolder), templates (ScreenTemplateUserFolder), tags (TagUserFolder; the TagSystemFolder row also names the DefaultTagTable) or scripts (VBScriptUserFolder). read returns the typed folder row (child names, one nested level); create adds newName under folderPath (empty = system folder) through the typed Folders.Create and reads it back; delete removes the empty user folder at folderPath (system folders and nonempty folders refused, confirmDelete=true). Default dryRun=true; no save/compile/download. |
+| `ManageClassicHmiGraphic` | L2 | WRITE | Multilingual graphics of a classic WinCC HMI device through the V21 GraphicsProvider service (MultiLingualGraphic): list, read, export (MultiLingualGraphic.Export writes a NEW XML file plus the image files beside it, per language with the 'default' suffix), import (MultiLingualGraphicComposition.Import, importOptions None/Override; graphics referenced by relative paths) and delete (confirmDelete=true, verified by Find). V20 answers NotSupported (no GraphicsProvider). Default dryRun=true; no save. |
+| `ManageClassicHmiScreenObject` | L2 | WRITE | Classic WinCC screen objects beyond plain screens: objectKind popup (ScreenPopup: read / export / delete, objectPath folder/.../name), template (ScreenTemplate: read / export / delete), slidein (ScreenSlidein addressed by SlideinType Top/Bottom/Left/Right: read / export; no native Delete), overview (ScreenOverview: read / export / import) and globalElements (ScreenGlobalElements: read / export / import). export writes a NEW absolute XML file and hashes it; import (objectPath = target folder for popups / templates, importOptions None/Override) uses ScreenPopupComposition / ScreenTemplateComposition / ScreenSlideinComposition.Import or HmiTarget.ImportScreenOverview / ImportScreenGlobalElements and returns the imported names. Deletion and Override import need confirmDelete=true besides dryRun=false; every delete is verified by Find. No save/compile/download; plain screens stay with the screen tools. |
 | `ManageClassicHmiScript` | L2 | WRITE | Exact classic VB script or folder: read, export (new XML file, hashed), import (scriptPath=target folder; Override needs confirmDelete=true), delete (confirmDelete=true), createFolder/deleteFolder (empty only), setAttributes (advertised writable attributes, readback verified). No Create-from-code exists natively; new scripts come from XML import. Default preview; no save/compile/download. |
 | `ManageClassicHmiTextGraphicList` | L2 | WRITE | Classic HMI text/graphic lists (listKind text/graphic): read (all or exact listName with advertised compositions), readEntries/createEntry/deleteEntry through an advertised compositionName (typeName from GetCreationInfos), export, import (Override needs confirmDelete=true), delete (confirmDelete=true), setAttributes. No native list Create; new lists arrive by XML import. Default preview; no save/compile/download. |
 | `ReadClassicHmiFaceplates` | L2 | READ | Classic HMI faceplate (or vbScript/cScript/all) library types with versions from the project library or an exact open global library, under an exact type folder path. Scalar properties only; live pagination; no instantiation. |
 | `ReadClassicHmiGlobalization` | L2 | READ | Classic HMI multilingual graphics via the native GraphicsProvider service: names, scalar properties and advertised attributes with live pagination. NotSupported on V20 (service type absent). Image bytes are not read. |
+| `ReadClassicHmiScreenTree` | L2 | READ | Typed folder tree of a classic (non-Unified) WinCC HMI device: ScreenSystemFolder / ScreenUserFolder (Screens, Folders), ScreenPopupSystemFolder / ScreenPopupUserFolder (ScreenPopups), ScreenTemplateSystemFolder / ScreenTemplateUserFolder (ScreenTemplates), ScreenSlideinSystemFolder (ScreenSlidein by SlideinType) plus ScreenOverview / ScreenGlobalElements presence. kind all/screens/popups/templates/slideins, optional folderPath under the family root, recursive to maxDepth; names only (first 500 per folder). Unified targets are refused. No modification. |
 | `ReadClassicHmiScripts` | L2 | READ | Classic (non-Unified) WinCC VB scripts under an exact script folder path: folder tree, script names and every readable attribute advertised by the object. Script source is not a typed Openness property; export it with ManageClassicHmiScript. Live pagination; Unified targets are refused. |
 | `RunClassicHmiOfflineValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the Classic/Basic HMI validation suite covering PLC symbol extraction, HMI package generation, HMI tag references, and PLC-HMI sync positive/negative gates. It writes reports only to the requested report directory. |
 | `RunClassicHmiTemporaryImportPreflight` | L2 | EXECUTE* | Offline-only helper: run the Classic/Basic HMI temporary-import preflight. It checks TIA V21 environment, Openness group, package files, PLC-HMI sync, and emits an import/readback plan without connecting to TIA Portal or creating projects. |
