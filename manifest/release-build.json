@@ -1,11 +1,11 @@
 {
-    "release":  "2.7.48",
+    "release":  "2.7.49",
     "releaseDate":  "20260921",
-    "fileVersion":  "2.7.48.0",
-    "package":  "TIA_MCP_Delivery_v2.7.48_20260921",
-    "generatedAt":  "2026-09-20T16:05:42.5047343+00:00",
+    "fileVersion":  "2.7.49.0",
+    "package":  "TIA_MCP_Delivery_v2.7.49_20260921",
+    "generatedAt":  "2026-09-20T17:08:15.6736665+00:00",
     "validation":  {
-                       "offlinePassed":  2163,
+                       "offlinePassed":  2179,
                        "runtimes":  {
                                         "V20":  {
                                                     "httpPassed":  28,
@@ -356,8 +356,8 @@
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
-                             "length":  3750400,
-                             "sha256":  "0003397992323006495b9e7ca06065fc64c5735d9fb4e3356d750b5e5f6e3ed7"
+                             "length":  3763712,
+                             "sha256":  "2c1c907b74c63b001ab0f651470563076746df37724181c2a33f779fb41207e6"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -686,8 +686,8 @@
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
-                             "length":  3805696,
-                             "sha256":  "e3079215946db353ef4f4947d004f42841ceb33f3a4d4a1261adee6021ada1e9"
+                             "length":  3819520,
+                             "sha256":  "8722f14ac8ae30dbc4a13a690d362bb0c83623c0634227770a96d41495d10d76"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -916,7 +916,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
-                            "sha256":  "5b831c5021c6b9c16e6bc8c071fc38d2949474f3f404356027f8a703de7250e8"
+                            "sha256":  "15e15426432104702aa6ef9ec60f7bb73e96aa90d349118a9068507a8d180c86"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/ToolBridgeStatus.cs",
@@ -1064,11 +1064,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-                            "sha256":  "5bdeef18a07d230b7fdd8a292e1431078578a131acc2812b64508f3fecfce8e8"
+                            "sha256":  "e012e52045f55d7d443d70f5fb6bf083f0d1c4e0090a7b0e32aa4297a9e5f715"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.cs",
-                            "sha256":  "d32d0332507c73532db5a2c520163ad88a2858a9cdbca339d3bf8774541ef1b1"
+                            "sha256":  "94510fe233c2f5c8b4e92753320af431b4331ee5d8197329799acf278d22d06c"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Profile.cs",
@@ -1204,7 +1204,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-                            "sha256":  "e26eeae624da1e867c2ecfc080a2cb88f4ddd530cf305bcf70c27e0860153d99"
+                            "sha256":  "61c25627fc48d5cb037b3c54d1161bc7e9cccd069550aafccb577c39f9b339b0"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedLogic.cs",
@@ -1416,7 +1416,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/PlcBlockServicesLogic.cs",
-                            "sha256":  "ae5a975ff4232e1a5db3d2695b418e5c94e2f70984ce2cf0c0907b16353ea3ae"
+                            "sha256":  "b7d3c8de925e2ccab34e0521208f90e9b958f80ffe4ea14e4a8e246456f41f2e"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/PlcListingRead.cs",
@@ -1484,11 +1484,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-                            "sha256":  "2f77069b5effaff90011c855e4cc9b22c4127510e7cd7ac07930eafe2c7ce369"
+                            "sha256":  "2481751655c309bd60a888794a0d62df6e81d07b83b4c66bd3784fc94c926d38"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-                            "sha256":  "42d7cb96bf8a391735283a94f2651d002e856adbb96b263f778965521e1e1581"
+                            "sha256":  "9b0e409502b16836fd6bf816d51c72dcaedf107b0475356fe9148ce3a0cb5d48"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.EngineeringGroups.cs",
@@ -1568,7 +1568,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-                            "sha256":  "cfaa58346a996f146564d4e7bf551ad34f2fae1f69450d7504b30340bc1b59b7"
+                            "sha256":  "6aaa0a88761db44ab0c37561c58c0fea9847b640ac53f4b34a1db7dfdf88128d"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.OpcUa.cs",
@@ -1584,7 +1584,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.PlcBlockServices.cs",
-                            "sha256":  "253fc217b73198b803f44640de08d81acb5f5fd982d99dfb0208658a9f845e39"
+                            "sha256":  "110d55ce1a3db3244da6720ab7047f4e13546427749ff16a417cee7e905550a7"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.PlcListing.cs",
@@ -1628,7 +1628,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.cs",
-                            "sha256":  "f9d0f34a79dde538276a59be9676bd85957698068413219588b6ace2501d1a5e"
+                            "sha256":  "a2da8eeac74d2a466ae67842adab147b5c4c7696469acabca327e91e39b88afd"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.SoftwareLookup.cs",
@@ -1780,11 +1780,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "5927b0f595f4af50bade31bcdffe5625ab75b5904bd243c12873f7add92719be"
+                            "sha256":  "f18c59dc3bf90ae7e9bcda9ac693996e828fc789d30a58cc5a5b325a0a479687"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "20b46e75ee0de1aca8647df200e75d07d930960e3e66e327a23f804faf528b81"
+                            "sha256":  "fcd5cd314a31e39634a5e1eb6c66df56e4b11cd777ac37a9e7036aa09d8726a2"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/BaseLeftoversShapeChecks.cs",
@@ -2032,7 +2032,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PlcBlockServicesTests.cs",
-                            "sha256":  "dca2220240c13bca27e51375364ef9111a2e042e9c59839faa54036a47c954f3"
+                            "sha256":  "07c5bd6206f4d33930933256990ca2707c877b7c6263d5a92061f04a3902d66a"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PlcDocumentationTests.cs",

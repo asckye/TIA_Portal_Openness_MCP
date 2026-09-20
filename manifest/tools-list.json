@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.48_20260921",
-    "generatedAt":  "2026-09-20T16:05:39.8576629+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.49_20260921",
+    "generatedAt":  "2026-09-20T17:08:13.0519383+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.48.0",
-    "exeSha256":  "e3079215946db353ef4f4947d004f42841ceb33f3a4d4a1261adee6021ada1e9",
+    "fileVersion":  "2.7.49.0",
+    "exeSha256":  "8722f14ac8ae30dbc4a13a690d362bb0c83623c0634227770a96d41495d10d76",
     "toolCount":  448,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -1256,9 +1256,10 @@
                                          "password",
                                          "userName",
                                          "userType",
-                                         "rhTarget"
+                                         "rhTarget",
+                                         "pgPcInterface"
                                      ],
-                      "description":  "[L1][Category:PLC-Online][ONLINE][PreCondition:Connect+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadToPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project\u0027s hardware configuration. If ipAddress is provided, overrides the configured IP for this session (useful for commissioning with a different IP). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
+                      "description":  "[L1][Category:PLC-Online][ONLINE][PreCondition:Connect+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadToPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project\u0027s hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface \u0027PLCSIM Virtual Ethernet Adapter\u0027 / \u0027PLCSIM\u0027). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
                   },
                   {
                       "name":  "GoOffline",
@@ -6905,7 +6906,7 @@
                       "parameters":  [
                                          "softwarePath"
                                      ],
-                      "description":  "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject] List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. Returns each TO\u0027s Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion). Use this to discover TO names before ExportTechnologyObject. No tool returns axis/TO parameter values directly — export the TO with ExportTechnologyObject and read the XML file. TOs are stored as TechnologicalInstanceDB instances in the TechnologicalObjectGroup."
+                      "description":  "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject] List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. - root group AND user folders (Folder = \u0027\u0027 for the root). Returns each TO\u0027s Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion). Use this to discover TO names before ExportTechnologyObject. No tool returns axis/TO parameter values directly — export the TO with ExportTechnologyObject and read the XML file. TOs are stored as TechnologicalInstanceDB instances in the TechnologicalObjectGroup."
                   },
                   {
                       "name":  "ExportTechnologyObject",
