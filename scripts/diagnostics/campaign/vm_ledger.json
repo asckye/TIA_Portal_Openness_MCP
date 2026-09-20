@@ -1,0 +1,649 @@
+{
+ "invoked": {
+  "AddDevice": [
+   "134f43d0"
+  ],
+  "AddDeviceWithFallback": [
+   "134f43d0"
+  ],
+  "AddHardwareCatalogDeviceWithProbe": [
+   "134f43d0"
+  ],
+  "AttachToOpenProject": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481",
+   "8a73dba0"
+  ],
+  "CallTool": [
+   "8a73dba0"
+  ],
+  "DescribeObjectProperty": [
+   "134f43d0"
+  ],
+  "Doctor": [
+   "8a73dba0"
+  ],
+  "ExchangeCfcCharts": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ExchangeTestSuiteCase": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ExchangeUnifiedTags": [
+   "8a73dba0"
+  ],
+  "ExportUnifiedEngineeringList": [
+   "8a73dba0"
+  ],
+  "FindTools": [
+   "8a73dba0"
+  ],
+  "GetDevicePlugLocations": [
+   "134f43d0"
+  ],
+  "GetDevices": [
+   "134f43d0"
+  ],
+  "GetExport": [
+   "78206481"
+  ],
+  "GetHmiScreens": [
+   "78206481"
+  ],
+  "GetObjectProperty": [
+   "134f43d0"
+  ],
+  "GetProjectTree": [
+   "134f43d0",
+   "8a73dba0"
+  ],
+  "GetState": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481",
+   "8a73dba0"
+  ],
+  "InvokeObject": [
+   "134f43d0"
+  ],
+  "ListPortalProcessProjects": [
+   "134f43d0",
+   "8a73dba0"
+  ],
+  "ManageCfcChartProtection": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageDcbLibraries": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageDccBlock": [
+   "134f43d0"
+  ],
+  "ManageDccChart": [
+   "134f43d0"
+  ],
+  "ManageDccChartInterface": [
+   "134f43d0"
+  ],
+  "ManageDccChartPartition": [
+   "134f43d0"
+  ],
+  "ManageDccPin": [
+   "134f43d0"
+  ],
+  "ManageDeviceUserGroup": [
+   "8a73dba0"
+  ],
+  "ManageDeviceUsers": [
+   "8a73dba0"
+  ],
+  "ManageDriveFunctions": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageDriveHardwareModule": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageDriveSafetyAcceptanceTest": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageDriveSecurity": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageDriveTelegrams": [
+   "78206481"
+  ],
+  "ManageHardwareObject": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageNetworkDomain": [
+   "8a73dba0"
+  ],
+  "ManageOnlineDriveFunctions": [
+   "78206481"
+  ],
+  "ManagePortInterconnection": [
+   "8a73dba0"
+  ],
+  "ManageSafetyActivationTest": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageSafetyActivationTestGroup": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageSafetyFunction": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageSafetyFunctionCondition": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageSivarcScreenLayout": [
+   "78206481"
+  ],
+  "ManageTeamcenterConnection": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageTeamcenterDataset": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageTeamcenterWorkflow": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageTechnologyExtensions": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ManageTestSuiteCase": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ManageUnifiedHmiGroup": [
+   "8a73dba0"
+  ],
+  "ManageUnifiedLoggingTag": [
+   "8a73dba0"
+  ],
+  "PlugDeviceItem": [
+   "134f43d0"
+  ],
+  "ReadDccCharts": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ReadDccObject": [
+   "134f43d0"
+  ],
+  "ReadDeviceAddressing": [
+   "8a73dba0"
+  ],
+  "ReadDeviceItemChannels": [
+   "8a73dba0"
+  ],
+  "ReadDriveObjects": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ReadDriveParameters": [
+   "78206481"
+  ],
+  "ReadHardwareFeatures": [
+   "8a73dba0"
+  ],
+  "ReadIoSystems": [
+   "8a73dba0"
+  ],
+  "ReadLibraryType": [
+   "78206481"
+  ],
+  "ReadNetworkDomains": [
+   "8a73dba0"
+  ],
+  "ReadOnlineDriveParameters": [
+   "78206481"
+  ],
+  "ReadPortalInfo": [
+   "134f43d0",
+   "78206481"
+  ],
+  "ReadSafetyActivationTests": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ReadSivarcRuleTree": [
+   "78206481"
+  ],
+  "ReadTestSuiteCases": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "ReadTransferAreas": [
+   "8a73dba0"
+  ],
+  "ReadUnifiedEngineeringObjects": [
+   "8a73dba0"
+  ],
+  "ReadUnifiedObjectProperties": [
+   "8a73dba0"
+  ],
+  "RunTestSuiteCase": [
+   "134f43d0",
+   "5d8df56d",
+   "78206481"
+  ],
+  "SearchHardwareCatalog": [
+   "134f43d0"
+  ],
+  "UpdateDeviceItemChannel": [
+   "8a73dba0"
+  ],
+  "ValidateUnifiedObject": [
+   "8a73dba0"
+  ],
+  "WritePlcWebVars": [
+   "f91ec8ac"
+  ]
+ },
+ "never": [
+  "AddGsdDeviceWithProbe",
+  "AnalyzeGlobalLibraryPackage",
+  "AnalyzeHmiTemplateReference",
+  "AnalyzeUnifiedHmiTemplateLayout",
+  "ApplyUnifiedHmiLayout",
+  "ApplyUnifiedHmiScreenDesignJson",
+  "ApplyUnifiedHmiTheme",
+  "ArchiveSavedProject",
+  "AttachDeviceNodeToSubnet",
+  "BindUnifiedHmiButtonPressedTag",
+  "BindUnifiedHmiTagDynamization",
+  "Bootstrap",
+  "BuildClassicHmiMinimalPackage",
+  "BuildClassicHmiScreenXml",
+  "BuildClassicHmiTagTableXml",
+  "BuildDeviceAmlDocument",
+  "BuildFlgNetCallXml",
+  "BuildPlcGlobalDbXml",
+  "BuildPlcSymbolManifestFromXmlPath",
+  "BuildPlcTagTableXml",
+  "BuildPlcUdtXml",
+  "BuildReleaseDiagnosticReport",
+  "BuildReleaseManifest",
+  "BuildReleaseRunbook",
+  "BuildStructuredTextXml",
+  "BuildUnifiedHmiButtonActionScript",
+  "BuildUnifiedHmiLayoutDesignJson",
+  "BuildUnifiedHmiTemplateApplyDesignJson",
+  "BuildUnifiedHmiTemplateApplyDesignManifest",
+  "BuildUnifiedHmiThemeDesignJson",
+  "CheckDownloadReadiness",
+  "CheckLibraryUpdates",
+  "ClearExports",
+  "CloseProject",
+  "CompareLibraries",
+  "CompareLibraryObjects",
+  "ComparePlcBlockDocuments",
+  "CompareProjects",
+  "CompareSoftwareToOnline",
+  "CompareUnifiedGraphicSelections",
+  "CompileAndDiagnoseHmi",
+  "CompileAndDiagnosePlc",
+  "CompileSoftware",
+  "ComposePlcFbBlockXml",
+  "ComposePlcFcBlockXml",
+  "ComposePlcLadFcBlockXml",
+  "ConfigureMotionHardwareConnection",
+  "Connect",
+  "ConnectDeviceNodesToProfinetSubnet",
+  "ConnectIsolated",
+  "ConnectProjectToWorkspace",
+  "CreateLibraryMasterCopy",
+  "CreatePlcBlockGroup",
+  "CreatePlcInstanceDb",
+  "CreatePlcTypeGroup",
+  "CreateProject",
+  "CreateVersionControlWorkspace",
+  "DeleteEmptyPlcBlockGroup",
+  "DeleteEmptyUnifiedHmiScreenGroup",
+  "DeleteExport",
+  "DeletePlcBlock",
+  "DeletePlcExternalSource",
+  "DeletePlcTagTable",
+  "DeletePlcType",
+  "DeleteUnifiedHmiButtonEvent",
+  "DeleteUnifiedHmiDynamization",
+  "DescribeBlockLogic",
+  "DescribeHmiScreen",
+  "DescribeHmiScreenItem",
+  "DescribeHmiSoftware",
+  "DescribeHmiTag",
+  "DescribeHmiTagTable",
+  "DescribeObject",
+  "DescribeService",
+  "DescribeUnifiedHmiButtonEventScript",
+  "DescribeUnifiedScreenItemType",
+  "Disconnect",
+  "DownloadPlcToFolder",
+  "DownloadToPlc",
+  "DumpDeviceAttributes",
+  "EnsureOpennessUserGroup",
+  "EnsureStartStopUnifiedHmi",
+  "EnsureSubnet",
+  "EnsureUnifiedHmiButtonAction",
+  "EnsureUnifiedHmiButtonEventHandler",
+  "EnsureUnifiedHmiConnection",
+  "EnsureUnifiedHmiDynamization",
+  "EnsureUnifiedHmiScreen",
+  "EnsureUnifiedHmiScreenItem",
+  "EnsureUnifiedHmiTag",
+  "EnsureUnifiedHmiTagTable",
+  "ExchangeMotionCamData",
+  "ExchangePlcAlarmTextListsXlsx",
+  "ExchangePlcSupervisions",
+  "ExchangeSystemDiagnosticsSettings",
+  "ExchangeUnifiedScriptModules",
+  "ExportAlarmClasses",
+  "ExportAlarmInstanceTexts",
+  "ExportAlarmTextLists",
+  "ExportAsDocuments",
+  "ExportBlock",
+  "ExportBlocks",
+  "ExportBlocksAsDocuments",
+  "ExportDeviceAml",
+  "ExportHmiConnection",
+  "ExportHmiProgram",
+  "ExportHmiScreen",
+  "ExportHmiTagTable",
+  "ExportOpcUaInterface",
+  "ExportPlcProDiagInfo",
+  "ExportPlcTagTable",
+  "ExportPlcWatchTable",
+  "ExportPlcWatchTablesToDirectory",
+  "ExportProjectTexts",
+  "ExportSafetyPrintout",
+  "ExportTechnologyObject",
+  "ExportTechnologyObjectsToDirectory",
+  "ExportType",
+  "ExportTypes",
+  "ExtractPlcBlockMetrics",
+  "GenerateAcceptanceReport",
+  "GenerateBlocksFromExternalSource",
+  "GenerateErrorReport",
+  "GeneratePlcDocumentation",
+  "GeneratePlcLoadableFile",
+  "GeneratePlcSourceFromBlocks",
+  "GenerateSiVArc",
+  "GetAuthoringGuide",
+  "GetBlockInfo",
+  "GetBlocks",
+  "GetBlocksWithHierarchy",
+  "GetCrossReferences",
+  "GetDeviceInfo",
+  "GetDeviceIpAddress",
+  "GetDeviceItemInfo",
+  "GetDeviceItemIoAddresses",
+  "GetDeviceItemNetworkInfo",
+  "GetDeviceItemTree",
+  "GetHmiConnections",
+  "GetHmiProgramInfo",
+  "GetHmiTagTables",
+  "GetHmiTags",
+  "GetOnlineState",
+  "GetOpcUaConfig",
+  "GetPlcExternalSources",
+  "GetPlcForceTables",
+  "GetPlcRunStateS7",
+  "GetPlcTagTables",
+  "GetPlcWatchTables",
+  "GetProject",
+  "GetProjectTopology",
+  "GetPutGetAccess",
+  "GetSoftwareInfo",
+  "GetSoftwareTree",
+  "GetTechnologyObjects",
+  "GetTypeInfo",
+  "GetTypes",
+  "GetUnifiedCrossReferences",
+  "GetVersionControlStatus",
+  "GetVersionControlWorkspaces",
+  "GoOffline",
+  "GoOfflineAll",
+  "GoOnline",
+  "ImportAlarmClasses",
+  "ImportAlarmTextLists",
+  "ImportBlock",
+  "ImportBlocksFromDirectory",
+  "ImportBlocksFromDocuments",
+  "ImportDeviceAml",
+  "ImportFromDocuments",
+  "ImportHmiConnection",
+  "ImportHmiScreen",
+  "ImportHmiScreensFromDirectory",
+  "ImportHmiTagTable",
+  "ImportHmiTagTablesFromDirectory",
+  "ImportLibraryTypeDocuments",
+  "ImportMasterCopyFromGlobalLibrary",
+  "ImportOpcUaInterface",
+  "ImportPlcAlarmInstanceTexts",
+  "ImportPlcExternalSource",
+  "ImportPlcProgramFromDirectory",
+  "ImportPlcTagTable",
+  "ImportPlcTagTablesFromDirectory",
+  "ImportPlcWatchTableOffline",
+  "ImportProjectTexts",
+  "ImportTechnologyObject",
+  "ImportTechnologyObjectsFromDirectory",
+  "ImportType",
+  "ImportUnifiedEngineeringList",
+  "ImportUnifiedOpcUaAlarms",
+  "InvokeService",
+  "LintPlcSclSource",
+  "ListExports",
+  "ListHmiScreenPaths",
+  "ListObjectChildren",
+  "ListToolCategories",
+  "ListUnifiedGlobalScripts",
+  "ListUnifiedHmiApiTypes",
+  "ListUnifiedLibraryFolder",
+  "ManageClassicHmiCycle",
+  "ManageClassicHmiFolder",
+  "ManageClassicHmiGraphic",
+  "ManageClassicHmiScreenObject",
+  "ManageClassicHmiScript",
+  "ManageClassicHmiTextGraphicList",
+  "ManageCommunicationConnection",
+  "ManageDeviceServiceObjects",
+  "ManageGlobalLibrary",
+  "ManageHardwareUtilities",
+  "ManageIoSystem",
+  "ManageLibraryFolder",
+  "ManageLibraryMasterCopy",
+  "ManageLibraryType",
+  "ManageLibraryTypeVersion",
+  "ManageMotionAxis",
+  "ManageMultiuserSession",
+  "ManageOpcUaAccessControl",
+  "ManagePasswordPolicy",
+  "ManagePlcAlarmTextList",
+  "ManagePlcBlockProtection",
+  "ManagePlcBlockWriteProtection",
+  "ManagePlcCertificate",
+  "ManagePlcDataBlockSnapshot",
+  "ManagePlcDocuments",
+  "ManagePlcExternalSources",
+  "ManagePlcSafety",
+  "ManagePlcSimAdvancedInstance",
+  "ManagePlcSoftwareUnit",
+  "ManagePlcSupervision",
+  "ManagePlcTableEntries",
+  "ManagePlcTagDefinition",
+  "ManagePlcUserGroup",
+  "ManageProjectCompilationSettings",
+  "ManageProjectLanguage",
+  "ManageProjectUserManagement",
+  "ManageSafetyGlobalSettings",
+  "ManageSiVArcRule",
+  "ManageSivarcBlockDefinition",
+  "ManageSivarcRuleContainer",
+  "ManageSivarcTableRule",
+  "ManageStartdriveParameter",
+  "ManageSyslogServers",
+  "ManageTechnologyObject",
+  "ManageTransferArea",
+  "ManageUmcUsers",
+  "ManageUnifiedDynamization",
+  "ManageUnifiedEngineeringObject",
+  "ManageUnifiedEvent",
+  "ManageUnifiedListEntries",
+  "ManageUnifiedObjectParts",
+  "ManageUnifiedOpcUaAlarmType",
+  "ManageUnifiedPlantNode",
+  "ManageUnifiedScreenItem",
+  "ManageUnifiedScreenLayout",
+  "ManageWatchForceTableWebAccess",
+  "MonitorWatchTableLiveS7",
+  "MoveBlockToGroup",
+  "OpenProject",
+  "PlanGlobalLibraryTemplateReuse",
+  "PlanHardwareNetworkConfiguration",
+  "PlanOnlineReadOnlyDataProvider",
+  "PlanOnlineReadOnlyMonitoring",
+  "PlcBuildAndImport",
+  "ProbeGlobalLibrary",
+  "ProbeHardwareHmiConnectionOwnerCandidates",
+  "ProbeHardwareHmiConnectionWhitelistedServices",
+  "ProbePlcMonitorOnlineCapabilities",
+  "ProbeS7CpuIdentity",
+  "ReadClassicHmiFaceplates",
+  "ReadClassicHmiGlobalization",
+  "ReadClassicHmiScreenTree",
+  "ReadClassicHmiScripts",
+  "ReadCommunicationConnections",
+  "ReadHmiScreenSnapshot",
+  "ReadLibraryOverview",
+  "ReadMotionAxisConfiguration",
+  "ReadObjectIdentifier",
+  "ReadOpcUaAccessControl",
+  "ReadPlcBlockFingerprints",
+  "ReadPlcChecksums",
+  "ReadPlcLiveValuesOpcUa",
+  "ReadPlcLiveValuesS7",
+  "ReadPlcObjectFingerprints",
+  "ReadPlcSimAdvancedInstances",
+  "ReadPlcSimAdvancedTags",
+  "ReadPlcSoftwareUnits",
+  "ReadPlcSystemGroups",
+  "ReadPlcTagTableConstants",
+  "ReadPlcWatchTableCurrentValuesReadOnly",
+  "ReadPlcWebDiagnostics",
+  "ReadPlcWebVars",
+  "ReadProjectProtection",
+  "ReadProjectSettings",
+  "ReadProjectUserManagement",
+  "ReadSafetyBlockSignatures",
+  "ReadSiVArcRules",
+  "ReadSivarcBlockDefinitions",
+  "ReadTechnologyObjectTree",
+  "ReadTransferRoutes",
+  "ReadUnifiedAlarmCommon",
+  "ReadUnifiedAuditSettings",
+  "ReadUnifiedFaceplateInstance",
+  "ReadUnifiedGlobalScript",
+  "ReadUnifiedGraphicSelection",
+  "ReadUnifiedHmiButtonEvent",
+  "ReadUnifiedHmiDynamization",
+  "ReadUnifiedHmiTexts",
+  "ReadUnifiedLibraryType",
+  "ReadUnifiedObjectEvents",
+  "ReadUnifiedPlantObject",
+  "ReadUnifiedRuntimeAlarms",
+  "ReadUnifiedRuntimeSettings",
+  "ReadUnifiedRuntimeTags",
+  "ReadUnifiedScreenBranch",
+  "ReadUnifiedTagDefinitions",
+  "RebuildReleaseHandoffArtifacts",
+  "ReleaseUnifiedReadCursor",
+  "RenderPlcBlockDocument",
+  "RepairAndReimportBlock",
+  "ResolveSivarcExpression",
+  "RetrieveProjectArchive",
+  "RunCapabilitySelfTest",
+  "RunClassicHmiOfflineValidationSuite",
+  "RunClassicHmiTemporaryImportPreflight",
+  "RunHmiActionScriptRecipeSafetySelfTest",
+  "RunHmiTemplatePlcSyncPrecheckSuite",
+  "RunOfflineReleaseValidationSuite",
+  "RunOnlineMonitoringSafetySelfTest",
+  "RunPlcSimAdvancedTestScenario",
+  "RunToolsInTransaction",
+  "SamplePlcLiveValuesS7",
+  "SaveAsProject",
+  "SaveExport",
+  "SaveProject",
+  "ScaffoldProject",
+  "ScanAccessibleDevices",
+  "ScanPlcSourceAnnotations",
+  "SearchInstalledGsdDevices",
+  "SeedProjectFromReference",
+  "SetCpuCommonSettings",
+  "SetDeviceItemAttribute",
+  "SetDeviceItemIoAddress",
+  "SetOpcUaInterfaceEnabled",
+  "SetPlcUnitObjectAccess",
+  "SetPlcWebOperatingMode",
+  "SetPutGetAccess",
+  "SetUnifiedHmiButtonEventScriptCode",
+  "SetUnifiedLogDuration",
+  "SetWatchTableModifyValue",
+  "ShowObjectInEditor",
+  "SyncVersionControlWorkspace",
+  "SynchronizeLibrary",
+  "TraceTagCause",
+  "TraceTagCauseLive",
+  "UnifiedOpenPipeRequest",
+  "UpdateDeviceAddress",
+  "UpdatePlcProgram",
+  "UpdateUnifiedGlobalScript",
+  "UpdateUnifiedMultilingualProperty",
+  "UpdateUnifiedObjectProperties",
+  "UpdateUnifiedPlantObject",
+  "UpdateUnifiedRuntimeSettings",
+  "UpgradeSivarcDefinitions",
+  "UploadDeviceParameters",
+  "UploadStationFromPlc",
+  "ValidateAutomationContext",
+  "ValidateClassicHmiMinimalPackageFiles",
+  "ValidateClassicHmiMinimalPackagePlcSync",
+  "WriteClassicHmiMinimalPackageFiles",
+  "WritePlcSclSourceFile",
+  "WritePlcSimAdvancedTags",
+  "WriteUnifiedRuntimeTags"
+ ]
+}

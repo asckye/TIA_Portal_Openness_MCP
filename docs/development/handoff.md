@@ -1,6 +1,6 @@
 # 接续工作交接（2.7.50 之后，2026-09-21）
 
-[文档目录](../README.md) · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)
+[文档目录](../README.md) · **[换机器交接单](handoff-checklist.md)** · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)
 
 换机器继续"官方 Openness API 全量对齐"计划时先读这一页。它记录**当前停在哪**、**下一步做什么**、**每个阶段的固定动作**、**发布闸门**和**只在真机上学到的 API 事实**——这些都不在代码里，也不在提交历史里。
 

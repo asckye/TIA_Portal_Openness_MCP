@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+import json, io, os
+P = "MCP_PLC"; D = r"C:\Users\SIEMENS\Desktop"
+def S(tool, note="", expect="ok", keys=None, **args): return {"tool": tool, "args": args, "note": note, "expect": expect, "keys": keys or []}
+plan = [
+    S("DeletePlcBlock", softwarePath=P, blockPath="MCP_G/MCP_FB_DB", dryRun=False, keys=["verifiedAbsent"]),
+    S("CreatePlcInstanceDb", softwarePath=P, fbPath="MCP_G/MCP_FB", name="MCP_FB_DB", groupPath="MCP_G", autoNumber=True, number=1, dryRun=False, keys=["after"]),
+    S("CompileAndDiagnosePlc", softwarePath=P, password="", keys=["errorCount", "warningCount"]),
+    S("GetCrossReferences", softwarePath=P, objectPath="MCP_G/MCP_FB", objectKind="Block", filter="AllObjects", keys=["items"]),
+    S("GetCrossReferences", softwarePath=P, objectPath="MCP_T/MCP_UDT", objectKind="Type", filter="AllObjects"),
+    # know-how / write protection
+    S("ManagePlcBlockProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="read", password="", confirmProtectionChange=False, dryRun=True, keys=["before"]),
+    S("ManagePlcBlockProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="protect", password="Mcp12345", confirmProtectionChange=True, dryRun=False, keys=["after"]),
+    S("ManagePlcBlockProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="unprotect", password="Mcp12345", confirmProtectionChange=True, dryRun=False, keys=["after"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="read", password="", newPassword="", confirmProtectionChange=False, dryRun=True, unitName="", unitKind="", keys=["before"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="define", password="Mcp12345", newPassword="", confirmProtectionChange=True, dryRun=False, unitName="", unitKind="", keys=["after"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="protect", password="Mcp12345", newPassword="", confirmProtectionChange=True, dryRun=False, unitName="", unitKind="", keys=["after"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="change", password="Mcp12345", newPassword="Mcp54321", confirmProtectionChange=True, dryRun=False, unitName="", unitKind="", keys=["after"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="unprotect", password="Mcp54321", newPassword="", confirmProtectionChange=True, dryRun=False, unitName="", unitKind="", keys=["after"]),
+    S("ManagePlcBlockWriteProtection", softwarePath=P, blockPath="MCP_G/MCP_FC", action="remove", password="Mcp54321", newPassword="", confirmProtectionChange=True, dryRun=False, unitName="", unitKind="", keys=["after"]),
+    # watch tables
+    S("ManagePlcTableEntries", softwarePath=P, tableKind="watch", tablePath="MCP_W/MCP_WT", action="read", entryIndex=-1, confirmDelete=False, dryRun=True, offset=0, limit=20, expect="error", note="no table yet"),
+    S("ImportPlcWatchTableOffline", softwarePath=P, filePath=D + r"\mcp46_wt.xml", groupPath="MCP_W", dryRun=True, expect="error", note="no file yet"),
+    S("ExportPlcWatchTablesToDirectory", softwarePath=P, dir=D + r"\mcp46_wt", regexName="", expect="any"),
+    # software units
+    S("ManagePlcSoftwareUnit", softwarePath=P, action="list", name="", relatedUnit="", relationType="", propertiesJson="{}", dryRun=True, unitKind="unit", commentsJson="{}", libraryName="", masterCopyPath="", copyMode="", keys=["rows"]),
+    S("ManagePlcSoftwareUnit", softwarePath=P, action="create", name="MCP_Unit", relatedUnit="", relationType="", propertiesJson="{}", dryRun=False, unitKind="unit", commentsJson="{}", libraryName="", masterCopyPath="", copyMode="", keys=["after"]),
+    S("ManagePlcSoftwareUnit", softwarePath=P, action="update", name="MCP_Unit", relatedUnit="", relationType="", propertiesJson=json.dumps({"Author": "MCP"}), dryRun=False, unitKind="unit", commentsJson=json.dumps({"zh-CN": "测试单元"}), libraryName="", masterCopyPath="", copyMode="", expect="any", keys=["after"]),
+    S("ManagePlcSoftwareUnit", softwarePath=P, action="read", name="MCP_Unit", relatedUnit="", relationType="", propertiesJson="{}", dryRun=True, unitKind="unit", commentsJson="{}", libraryName="", masterCopyPath="", copyMode="", keys=["before"]),
+    S("ReadPlcSoftwareUnits", softwarePath=P, unitName="MCP_Unit", unitKind="unit", includeContents=True, offset=0, limit=20, keys=["units"]),
+    S("ReadPlcSystemGroups", softwarePath=P, unitName="MCP_Unit", unitKind="unit", includeBlocks=False, maxDepth=2),
+    S("SetPlcUnitObjectAccess", softwarePath=P, unitName="MCP_Unit", objectKind="block", objectPath="Nope", access="Published", dryRun=True, expect="error", note="no block in unit"),
+    S("ManagePlcSoftwareUnit", softwarePath=P, action="createRelation", name="MCP_Unit", relatedUnit="MCP_Unit2", relationType="Uses", propertiesJson="{}", dryRun=True, unitKind="unit", commentsJson="{}", libraryName="", masterCopyPath="", copyMode="", expect="any", note="unknown related unit -> refusal expected"),
+    # documents / external sources / supervisions
+    S("ManagePlcDocuments", softwarePath=P, action="list", objectKind="type", name="", unitName="", unitKind="", groupPath="MCP_T", directoryPath="", importOption="", libraryName="", masterCopyPath="", copyMode="", typePath="", version="", updatePathsMode="", dryRun=True, expect="any", keys=["rows"]),
+    S("ManagePlcDocuments", softwarePath=P, action="export", objectKind="type", name="MCP_UDT", unitName="", unitKind="", groupPath="MCP_T", directoryPath=D + r"\mcp46_typedocs", importOption="", libraryName="", masterCopyPath="", copyMode="", typePath="", version="", updatePathsMode="", dryRun=False, expect="any", keys=["files"]),
+    S("ManagePlcExternalSources", softwarePath=P, action="import", name="mcp46_FC.scl", unitName="", unitKind="", groupPath="MCP_X", filePath=D + r"\mcp46_FC.scl", libraryName="", masterCopyPath="", copyMode="", generateOption="", targetKind="", targetGroupPath="", newName="", confirmDelete=False, dryRun=False, expect="any", keys=["after"]),
+    S("ManagePlcExternalSources", softwarePath=P, action="generate", name="mcp46_FC.scl", unitName="", unitKind="", groupPath="MCP_X", filePath="", libraryName="", masterCopyPath="", copyMode="", generateOption="KeepOnError", targetKind="", targetGroupPath="", newName="", confirmDelete=False, dryRun=False, expect="any", keys=["generated", "after"]),
+    S("ManagePlcExternalSources", softwarePath=P, action="delete", name="mcp46_FC.scl", unitName="", unitKind="", groupPath="MCP_X", filePath="", libraryName="", masterCopyPath="", copyMode="", generateOption="", targetKind="", targetGroupPath="", newName="", confirmDelete=True, dryRun=False, expect="any"),
+    S("ManagePlcSupervision", softwarePath=P, action="read", blockPath="MCP_G/MCP_FB", providerKind="", compositionName="", entryName="", typeName="", filePath="", attributesJson="{}", offset=0, limit=20, confirmDelete=False, dryRun=True, expect="any", keys=["provider", "compositions"]),
+    S("ExchangePlcSupervisions", softwarePath=P, action="export", filePath=D + r"\mcp46_prodiag.xlsx", importOptions="", dryRun=False, expect="any"),
+    S("ExportPlcProDiagInfo", softwarePath=P, blockPath="MCP_G/MCP_FB", directoryPath=D, unitName="", unitKind="", dryRun=True, expect="any", note="not a ProDiag FB -> refusal"),
+    S("ReadSivarcBlockDefinitions", softwarePath=P, blockPath="MCP_G/MCP_FB", includeBlockParameters=True, expect="any"),
+    S("ManageSivarcBlockDefinition", softwarePath=P, blockPath="MCP_G/MCP_FB", kind="tagDefinition", name="MCP_TD", action="create", propertiesJson=json.dumps({"Value": "1", "Comment": "c"}), textsJson="{}", confirmDelete=False, dryRun=False, expect="any", keys=["after"]),
+    S("ManageSivarcBlockDefinition", softwarePath=P, blockPath="MCP_G/MCP_FB", kind="tagDefinition", name="MCP_TD", action="delete", propertiesJson="{}", textsJson="{}", confirmDelete=True, dryRun=False, expect="any"),
+    S("UpgradeSivarcDefinitions", softwarePath=P, dryRun=True, expect="any"),
+    S("UpdatePlcProgram", softwarePath=P, confirmUpdate=False, dryRun=True, keys=["before"]),
+    # alarms / opc ua / tech objects
+    S("ExportAlarmClasses", softwarePath=P, exportPath=D + r"\mcp46_alarmclasses.xlsx", expect="any"),
+    S("ExportAlarmTextLists", softwarePath=P, exportPath=D + r"\mcp46_textlists.xlsx", expect="any"),
+    S("ExportAlarmInstanceTexts", softwarePath=P, exportPath=D + r"\mcp46_instancetexts.xlsx", expect="any"),
+    S("ImportAlarmClasses", softwarePath=P, importPath=D + r"\mcp46_alarmclasses.xlsx", expect="any"),
+    S("ImportAlarmTextLists", softwarePath=P, importPath=D + r"\mcp46_textlists.xlsx", expect="any"),
+    S("ImportPlcAlarmInstanceTexts", softwarePath=P, filePath=D + r"\mcp46_instancetexts.xlsx", culturesJson=json.dumps(["zh-CN"]), dryRun=True, expect="any"),
+    S("ExchangePlcAlarmTextListsXlsx", softwarePath=P, action="export", filePath=D + r"\mcp46_textlists2.xlsx", unitName="", unitKind="", textListNamesJson="[]", culturesJson="[]", importOption="", confirmImport=False, dryRun=False, expect="any"),
+    S("ManagePlcAlarmTextList", softwarePath=P, action="read", name="", libraryName="", masterCopyPath="", copyMode="", confirmDelete=False, offset=0, limit=20, dryRun=True, expect="any", keys=["rows"]),
+    S("GetOpcUaConfig", softwarePath=P, expect="any", keys=["values"]),
+    S("SetOpcUaInterfaceEnabled", softwarePath=P, interfaceName="", enabled=True, interfaceType="", expect="any"),
+    S("ExportOpcUaInterface", softwarePath=P, exportPath=D + r"\mcp46_opcua.xml", expect="any"),
+    S("ReadOpcUaAccessControl", softwarePath=P, expect="any"),
+    S("GetTechnologyObjects", softwarePath=P, expect="any"),
+    S("ReadTechnologyObjectTree", softwarePath=P, expect="any"),
+    S("ManageTechnologyObject", softwarePath=P, objectPath="MCP_Axis", action="create", typeIdentifier="TO_PositioningAxis", version="", parameter="", valueJson="", dryRun=False, expect="any", keys=["after"]),
+    S("GetTechnologyObjects", softwarePath=P, expect="any"),
+    S("ManageMotionAxis", softwarePath=P, objectPath="MCP_Axis", action="read", aspect="", name="", targetJson="", propertiesJson="{}", sensorIndex=-1, confirmDelete=False, dryRun=True, expect="any", keys=["before"]),
+    S("ReadMotionAxisConfiguration", softwarePath=P, objectPath="MCP_Axis", includeParameters=True, offset=0, limit=30, expect="any", keys=["values"]),
+    S("ExportTechnologyObject", softwarePath=P, toName="MCP_Axis", exportPath=D + r"\mcp46_axis.xml", expect="any"),
+    S("ExportTechnologyObjectsToDirectory", softwarePath=P, exportDir=D + r"\mcp46_to", regexName="", expect="any"),
+    S("CompileAndDiagnosePlc", softwarePath=P, password="", keys=["errorCount", "warningCount"]),
+]
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plan_plc3.json")
+io.open(out, "w", encoding="utf-8").write(json.dumps(plan, ensure_ascii=False, indent=0)); print(len(plan), "steps ->", out)

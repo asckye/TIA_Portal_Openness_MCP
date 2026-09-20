@@ -1,0 +1,90 @@
+# -*- coding: utf-8 -*-
+import json, io, os
+P = "MCP_PLC"; D = r"C:\Users\SIEMENS\Desktop"; H = "HMI_RT_1"; DRV = "MCP_S120"
+def S(tool, note="", expect="ok", keys=None, **args): return {"tool": tool, "args": args, "note": note, "expect": expect, "keys": keys or []}
+J = json.dumps
+AX = dict(devicePathJson=J([DRV]), itemPathJson=J(["驱动轴_1"]))
+plan = [
+    # lenient binding (objects / arrays / string numbers / casing) - args go through CallTool as given
+    {"tool": "GetDeviceInfo", "args": {"devicePath": P}, "expect": "ok", "note": "plain", "keys": []},
+    {"tool": "ReadIoSystems", "args": {"devicePathJson": [P], "itemPathJson": [P, "PROFINET 接口_1"]}, "expect": "ok", "note": "arrays for *Json", "keys": ["bridgeNormalizedArguments"]},
+    {"tool": "ManageProjectLanguage", "args": {"action": "Read", "culture": "", "dryRun": "true"}, "expect": "ok", "note": "casing + string bool", "keys": ["bridgeNormalizedArguments"]},
+    {"tool": "GetDevicePlugLocations", "args": {"deviceItemPath": P + "/导轨_0", "plugOnDevice": 0}, "expect": "ok", "note": "0 for bool", "keys": []},
+    {"tool": "ReadPlcSoftwareUnits", "args": {"softwarePath": P, "unitKind": "", "offset": "0", "limit": "5"}, "expect": "ok", "note": "string numbers + empty keyword", "keys": []},
+    # tag comments
+    S("ManagePlcTagDefinition", softwarePath=P, tablePath="MCP_Tags/MCP_Table", name="MCP_Start", kind="tag", action="update", propertiesJson=J({"Comment": "启动按钮"}), dryRun=False, keys=["commentAfter"]),
+    S("ManagePlcTagDefinition", softwarePath=P, tablePath="MCP_Tags/MCP_Table", name="MCP_Start", kind="tag", action="update", propertiesJson=J({"Comment": {"zh-CN": "启动"}, "ExternalVisible": True}), dryRun=False, keys=["commentAfter", "after"]),
+    S("ManagePlcTagDefinition", softwarePath=P, tablePath="MCP_Tags/MCP_Table", name="MCP_Start", kind="tag", action="update", propertiesJson=J({"Comment": {"en-US": "start"}}), dryRun=True, expect="error", note="inactive culture -> NotFound"),
+    S("ManagePlcTagDefinition", softwarePath=P, tablePath="MCP_Tags/MCP_Table", name="MCP_K2", kind="constant", action="create", dataType="Int", addressOrValue="7", propertiesJson=J({"Comment": "常量"}), dryRun=False, keys=["commentAfter"]),
+    S("ManagePlcTagDefinition", softwarePath=P, tablePath="MCP_Tags/MCP_Table", name="MCP_K2", kind="constant", action="delete", propertiesJson="{}", dryRun=False, keys=["verifiedAbsent"]),
+    # exports through the bridge + honest paths
+    S("ExportBlocks", softwarePath=P, exportPath=D + r"\mcp47_blocks", regexName="^MCP_", preservePath=False, keys=["exportedBlocks"]),
+    S("ExportTypes", softwarePath=P, exportPath=D + r"\mcp47_types", regexName="^MCP_", preservePath=False),
+    S("ExportBlock", softwarePath=P, blockPath="MCP_G/MCP_FC", exportPath=D + r"\mcp47_FC.xml", preservePath=False, keys=["exportedFile"]),
+    S("ExportType", softwarePath=P, exportPath=D + r"\mcp47_UDT.xml", typePath="MCP_T/MCP_UDT", preservePath=False),
+    S("DeletePlcBlock", softwarePath=P, blockPath="MCP_G/MCP_FC", dryRun=False, keys=["verifiedAbsent"]),
+    S("ImportBlock", softwarePath=P, groupPath="MCP_G", importPath=D + r"\mcp47_FC.xml", keys=["verified"]),
+    S("ImportType", softwarePath=P, groupPath="MCP_T", importPath=D + r"\mcp47_UDT.xml", expect="any", note="exists -> TIA decides"),
+    S("GetCrossReferences", softwarePath=P, objectPath="MCP_G/MCP_FB", objectKind="Block", filter="", keys=["items"]),
+    S("GetCrossReferences", softwarePath=P, objectPath="MCP_G/MCP_FB", objectKind="Block", filter="Bogus", expect="error", note="reason lists the enum"),
+    S("CreatePlcInstanceDb", softwarePath=P, fbPath="MCP_G/MCP_FB", name="MCP_FB_DB2", groupPath="MCP_G", autoNumber=True, number=0, dryRun=False, keys=["after"]),
+    S("DeletePlcBlock", softwarePath=P, blockPath="MCP_G/MCP_FB_DB2", dryRun=False, keys=["verifiedAbsent"]),
+    S("GeneratePlcLoadableFile", softwarePath=P, objectPathsJson=J(["MCP_G/MCP_FC"]), objectKind="block", targetOption="Normal", filePath=D + r"\mcp47_FC.loadable", dryRun=True, expect="error", note="lists None/Plc/PlcSim"),
+    S("GeneratePlcLoadableFile", softwarePath=P, objectPathsJson=J(["MCP_G/MCP_FC"]), objectKind="blocks", targetOption="PlcSim", filePath=D + r"\mcp47_FC.loadable", dryRun=True, expect="any"),
+    # alarms
+    S("ExportAlarmClasses", softwarePath=P, exportPath=D + r"\mcp47_alarmclasses.dat", keys=["state", "errorCount"]),
+    S("ImportAlarmClasses", softwarePath=P, importPath=D + r"\mcp47_alarmclasses.dat", keys=["state", "errorCount"]),
+    S("ExportAlarmClasses", softwarePath=P, exportPath=D + r"\mcp47_alarmclasses.xlsx", expect="error", note=".DAT gate"),
+    S("ExportAlarmTextLists", softwarePath=P, exportPath=D + r"\mcp47_textlists.xlsx", expect="any", note="no text lists on this PLC"),
+    S("ExportAlarmInstanceTexts", softwarePath=P, exportPath=D + r"\mcp47_instancetexts.xlsx", includeInfoText=True, includeAdditionalTexts=True, includeAlarmClass=True, expect="any", keys=["state", "fileExists"]),
+    S("ImportAlarmTextLists", softwarePath=P, importPath=D + r"\nope.xlsx", expect="any", note="file missing -> honest error"),
+    S("ExchangePlcSupervisions", softwarePath=P, action="export", filePath=D + r"\mcp47_prodiag.xlsx", importOptions="", dryRun=False, keys=["nativeState"]),
+    # hardware
+    S("ReadCommunicationConnections", devicePathJson=J([P]), itemPathJson=J([P]), offset=0, limit=20, expect="any", keys=["records", "expectedCount"]),
+    S("ManageCommunicationConnection", devicePathJson=J([P]), itemPathJson=J([P]), action="create", connectionType="HmiConnection", connectionName="MCP_HMI_Conn", localInterfaceItemPathJson=J([P, "PROFINET 接口_1"]), localNodeName="", partnerDevicePathJson=J(["MCP_TP700"]), partnerItemPathJson=J(["HMI_RT_1"]), partnerInterfaceItemPathJson=J(["MCP_TP700.IE_CP_1", "PROFINET Interface_1"]), partnerNodeName="", confirmDelete=False, dryRun=False, expect="any", keys=["after"]),
+    S("ReadCommunicationConnections", devicePathJson=J([P]), itemPathJson=J([P]), offset=0, limit=20, expect="any", keys=["records"]),
+    S("ExchangeSystemDiagnosticsSettings", action="export", filePath=D + r"\mcp47_sysdiag.dat", devicePathJson="[]", itemPathJson="[]", confirmImport=False, dryRun=False, keys=["file"]),
+    S("ExchangeSystemDiagnosticsSettings", action="import", filePath=D + r"\mcp47_sysdiag.dat", devicePathJson="[]", itemPathJson="[]", confirmImport=True, dryRun=True, expect="any"),
+    S("ConnectDeviceNodesToProfinetSubnet", firstRootPath=P, secondRootPath="MCP_TP700", subnetName="MCP_PN", keys=["subnetName"]),
+    S("PlugDeviceItem", deviceItemPath=P + "/导轨_0", orderNumber="6ES7 521-1BH00-0AB0", version="V2.2", positionNumber=2, name="MCP_DI", dryRun=False, plugOnDevice=False, keys=["result"]),
+    S("GetDeviceItemIoAddresses", deviceItemPath=P + "/MCP_DI/MCP_DI", expect="any", keys=["addresses"]),
+    S("SetDeviceItemIoAddress", deviceItemPath=P + "/MCP_DI/MCP_DI", ioType="Input", startAddress=20, dryRun=False, expect="any", keys=["after"]),
+    S("UpdateDeviceAddress", devicePathJson=J([P]), itemPathJson=J(["MCP_DI", "MCP_DI"]), ioType="Input", startAddress=20, propertiesJson=J({"StartAddress": 30}), attributesJson="{}", softwarePath="", processImageObName="", dryRun=False, expect="any", keys=["after"]),
+    S("ReadDeviceItemChannels", devicePathJson=J([P]), itemPathJson=J(["MCP_DI", "MCP_DI"]), channelType="", channelIoType="", channelNumber=-1, attributeNamesJson="[]", offset=0, limit=20, includeLinkedTags=True, expect="any", keys=["records"]),
+    S("UpdateDeviceItemChannel", devicePathJson=J([P]), itemPathJson=J(["MCP_DI", "MCP_DI"]), channelType="Digital", channelIoType="Input", channelNumber=0, attributesJson=J({"InputDelay": "3.2"}), dryRun=True, expect="any"),
+    S("ManageHardwareObject", devicePathJson=J([P]), action="deleteItem", itemPathJson=J(["MCP_DI"]), destinationDevicePathJson="[]", destinationItemPathJson="[]", position=0, dryRun=False, keys=["verifiedAbsent"]),
+    S("ManagePortInterconnection", devicePathJson=J(["MCP_TP700"]), itemPathJson=J(["MCP_TP700", "MCP_TP700.IE_CP_1", "PROFINET Interface_1", "Port_1"]), action="read", partnerDevicePathJson="[]", partnerItemPathJson="[]", dryRun=True, expect="any", note="head item -> Items fallback"),
+    S("ManagePortInterconnection", devicePathJson=J([P]), itemPathJson=J([P, "PROFINET 接口_1", "端口_1"]), action="connect", partnerDevicePathJson=J(["MCP_TP700"]), partnerItemPathJson=J(["MCP_TP700.IE_CP_1", "PROFINET Interface_1", "Port_1"]), dryRun=False, expect="any", keys=["after"]),
+    S("ManagePortInterconnection", devicePathJson=J([P]), itemPathJson=J([P, "PROFINET 接口_1", "端口_1"]), action="disconnect", partnerDevicePathJson="[]", partnerItemPathJson="[]", dryRun=False, expect="any"),
+    S("DumpDeviceAttributes", devicePath=P, nameFilter="Ip|Name|Cycle", keys=["count", "totalAttributes"]),
+    # classic HMI
+    S("GetHmiTagTables", softwarePath=H), S("GetHmiTags", softwarePath=H, tagTableName="MCP_HmiTags"), S("GetHmiTags", softwarePath=H, tagTableName="NoSuchTable", expect="error"),
+    S("DescribeHmiTagTable", softwarePath=H, tagTableName="MCP_HmiTags", maxMembers=10), S("DescribeHmiTag", softwarePath=H, tagTableName="MCP_HmiTags", tagName="MCP_Run", maxMembers=10),
+    S("ExportHmiTagTable", softwarePath=H, tagTableName="MCP_HmiTags", exportPath=D + r"\mcp47_hmitags.xml"),
+    S("ImportHmiScreen", softwarePath=H, folderPath="MCP_ScreenFolder", importPath=D + r"\mcp46_hmi\Classic_HMI_Minimal_Package_Screen.xml", keys=["verified"]),
+    S("GetHmiScreens", softwarePath=H), S("DescribeHmiScreen", softwarePath=H, screenName="MCP_Screen", maxMembers=10), S("DescribeHmiScreenItem", softwarePath=H, screenName="MCP_Screen", itemName="Btn", maxMembers=10),
+    S("ExportHmiScreen", softwarePath=H, screenName="MCP_Screen", exportPath=D + r"\mcp47_screen.xml"),
+    S("ReadHmiScreenSnapshot", softwarePath=H, screenPath="/MCP_ScreenFolder/MCP_Screen", maxDepth=3, maxNodes=200, keys=["apiCallSuccess"]),
+    S("ImportHmiScreensFromDirectory", softwarePath=H, folderPath="MCP_ScreenFolder", dir=D + r"\mcp46_hmi", regexName="Classic_HMI_Minimal_Package_Screen", overwrite=True, expect="any"),
+    S("ManageSivarcScreenLayout", softwarePath=H, screenName="MCP_Screen", action="export", filePath=D + r"\mcp47_layout.yml", dryRun=False, expect="any", keys=["file"]),
+    S("CompileAndDiagnoseHmi", softwarePath=H, expect="any", keys=["errorCount"]),
+    # libraries / opc ua / safety self-test / reflection / dcc
+    S("ManageGlobalLibrary", action="open", libraryName="MCP_GL", filePath=D + r"\mcp46_gl\MCP_GL\MCP_GL.al21", destinationDirectory="", openMode="", upgrade=False, archiveName="", archiveMode="", dryRun=False, expect="any", keys=["after"]),
+    S("ProbeGlobalLibrary", libraryPath=D + r"\mcp46_gl\MCP_GL\MCP_GL.al21", maxItems=20, keys=["warnings"]),
+    S("ManageGlobalLibrary", action="list", libraryName="", filePath="", destinationDirectory="", openMode="", upgrade=False, archiveName="", archiveMode="", dryRun=True, keys=["actualCount"]),
+    S("ManageGlobalLibrary", action="close", libraryName="MCP_GL", filePath="", destinationDirectory="", openMode="", upgrade=False, archiveName="", archiveMode="", dryRun=False, expect="any"),
+    S("ImportOpcUaInterface", softwarePath=P, importPath=D + r"\nope_opcua.xml", interfaceType="server", expect="error", note="missing file -> honest error, no interface created"),
+    S("GetOpcUaConfig", softwarePath=P),
+    S("RunOnlineMonitoringSafetySelfTest", keys=["ok"]),
+    S("InvokeObject", objectKind="Device", objectPath=P, methodName="GetAttributeInfos", args="[]", softwarePath="", allowWrite=False),
+    S("InvokeService", objectKind="Software", objectPath="", serviceTypeSuffix="PlcChecksumProvider", methodName="GetAttributeInfos", args="[]", softwarePath=P, allowWrite=False, expect="any"),
+    S("ManageDccChart", **AX, chartName="MCP_C47", action="create", dryRun=False, keys=["createdName"]),
+    S("ReadDccObject", **AX, objectPathJson=J([{"property": "Charts", "name": "MCP_C47"}]), offset=0, limit=10),
+    S("ManageDccChart", **AX, chartName="MCP_C47", action="delete", confirmDelete=True, dryRun=False, keys=["verifiedAbsent"]),
+    S("AddDevice", orderNumber="OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0", version="", deviceName="MCP_UCP_OLD", expect="error", note="crash 8 guard"),
+    S("AddHardwareCatalogDeviceWithProbe", keyword="MTP700 Unified", deviceName="MCP_UCP2", preferredText="21.0.0.0", expect="any", keys=["attempts"]),
+    S("ManageHardwareObject", devicePathJson=J(["MCP_UCP2"]), action="deleteDevice", itemPathJson="[]", destinationDevicePathJson="[]", destinationItemPathJson="[]", position=0, dryRun=False, expect="any", keys=["verifiedAbsent"]),
+    S("SaveProject"),
+]
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plan_rerun1.json")
+io.open(out, "w", encoding="utf-8").write(json.dumps(plan, ensure_ascii=False, indent=0)); print(len(plan), "steps ->", out)
