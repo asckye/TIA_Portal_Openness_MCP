@@ -183,8 +183,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageDccChart(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string chartName, string action, string filePath = "", string importOptions = "", string propertiesJson = "{}", bool dryRun = true, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1)
             => RunHmiStepTool("ManageDccChart", meta => DccStep(meta, () =>
             {
-                var r = Logic.ValidateChartRequest(chartName, action, filePath, importOptions, propertiesJson, confirmDelete, dryRun);
-                if (sequenceIndex >= 0 && action != "update") throw new ArgumentException("sequenceIndex (MoveInRuntimeSequence) applies to action update only.");
+                var r = Logic.ValidateChartRequest(chartName, action, filePath, importOptions, propertiesJson, confirmDelete, dryRun, sequenceIndex);   // 2.7.45: sequenceIndex alone is a valid update (real project: refused as "needs at least one property")
                 using var access = r.Writes ? AcquireHmiEditAccess() : null;
                 var drive = ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var container = ExactDccContainer(drive);
@@ -242,8 +241,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageDccBlock(string devicePathJson, string itemPathJson, string chartPath, string blockName = "", string action = "read", string blockType = "", string libraryName = "", string propertiesJson = "{}", ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1, bool dryRun = true)
             => RunHmiStepTool("ManageDccBlock", meta => DccStep(meta, () =>
             {
-                var r = Logic.ValidateBlockRequest(chartPath, blockName, action, blockType, libraryName, propertiesJson, confirmDelete, dryRun);
-                if (sequenceIndex >= 0 && action != "update") throw new ArgumentException("sequenceIndex (MoveInRuntimeSequence) applies to action update only.");
+                var r = Logic.ValidateBlockRequest(chartPath, blockName, action, blockType, libraryName, propertiesJson, confirmDelete, dryRun, sequenceIndex);
                 using var access = r.Writes ? AcquireHmiEditAccess() : null;
                 var drive = ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var chart = ExactDccChart(ExactDccContainer(drive), r.ChartPath);
@@ -280,6 +278,16 @@ namespace TiaMcpServer.Siemens
                 return "DCC block " + action + " executed and read back; no save, download or online drive command.";
             }));
 
+        // 2.7.45 real project (S120 V5.2 drive axis, ADD block): DccPin.Value is declared object but TIA only accepts the pin's own data
+        // type ("The specified value is of type System.Int32, which is not accepted in place of System.Single") - a JSON number is
+        // therefore converted to the CLR type of the current value (Single / Int32 / Boolean / ...) before the write.
+        private static List<(System.Reflection.PropertyInfo Property, object? Value)> TypedValueChanges(List<(System.Reflection.PropertyInfo Property, object? Value)> changes, JsonObject properties, object? currentValue)
+        {
+            if (currentValue == null || currentValue is IEngineeringObject || properties["Value"] == null) return changes;
+            var typed = EngineeringScalarProperties.ConvertValue(properties["Value"], currentValue.GetType());
+            return changes.Select(c => c.Property.Name == "Value" ? (c.Property, typed) : c).ToList();
+        }
+
         public ResponseMessage ManageDccPin(string devicePathJson, string itemPathJson, string chartPath, string blockName, string pinName, string action = "read", string propertiesJson = "{}", string partnerJson = "{}", bool setAsSignal = false, int parameterNumber = -1, int arrayIndex = -1, ushort driveObjectNumber = 0, int driveObjectIndex = -1, bool dryRun = true)
             => RunHmiStepTool("ManageDccPin", meta => DccStep(meta, () =>
             {
@@ -305,7 +313,7 @@ namespace TiaMcpServer.Siemens
                 meta["mayHaveChanged"] = true;
                 switch (action)
                 {
-                    case "update": EngineeringScalarProperties.Apply(pin, EngineeringScalarProperties.Prepare(typeof(DccPin), r.Properties), meta); break;
+                    case "update": EngineeringScalarProperties.Apply(pin, TypedValueChanges(EngineeringScalarProperties.Prepare(typeof(DccPin), r.Properties), r.Properties, pin.Value), meta); break;
                     case "connect":
                         meta["nativeSignature"] = partnerInterface != null ? "DccPin.Connect(DccChartInterface)" : "DccPin.Connect(DccPin)";
                         meta["connection"] = ConnectionRow(partnerInterface != null ? pin.Connect(partnerInterface) : pin.Connect(partnerPin!)); break;

@@ -1,6 +1,14 @@
 # 工程能力与验收边界
 
-本文说明 2.7.44 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 447 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.45 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 447 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.45 修复（空工程 `项目1` 上的自建设备测试之后）
+
+| 项 | 内容 | 边界 |
+|---|---|---|
+| 会话绑定 | `GetState` 重绑只接受与显式绑定同名的工程 | 真机：第二个 TIA 实例打开维护者工程后引擎曾静默切过去；仍建议测试时只开一个实例 |
+| 驱动组件插入 | `PlugDeviceItem` / `GetDevicePlugLocations` 的 `plugOnDevice=true` 以 Device 为宿主（电机模块）；电机 / 编码器插在机架项（`驱动轴_n`）上；槽位 65535 按名读回 | 真机：`6SLxx2x-1xxxx-xxxx` 电机模块、`1PH2092-4WG4x-xxxx` 电机、`XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202` 编码器；1FK7 / 1PH8 / 1LE1 通配标识 `CanPlugNew` 为 false |
+| DCC | 全族在 S120 V5.2 驱动轴上真机通过；`DccPin.Value` 按 Single 等当前类型写；`sequenceIndex` 单独 update | V5.1 驱动轴无 `DriveControlChartContainer`；`DccChartInterfaceComposition.Create` 在该固件上 "not supported"；DCB 扩展库导入无样本 |
 
 ## 2.7.43 守卫（2.7.42 真机重跑之后）
 

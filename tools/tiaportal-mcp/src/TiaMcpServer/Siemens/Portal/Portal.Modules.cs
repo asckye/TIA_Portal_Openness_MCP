@@ -90,16 +90,16 @@ namespace TiaMcpServer.Siemens
         /// 返回 null 表示「没连项目 / 设备项没找到」——和「这台设备一个空槽都没有」（空列表）是两回事。
         /// </summary>
         public (IReadOnlyList<PlugLocationInfo> free, IReadOnlyList<PluggedItemInfo> occupied)? GetDevicePlugLocations(
-            string deviceItemPath)
+            string deviceItemPath, bool plugOnDevice = false)
         {
-            _logger?.LogInformation($"Getting plug locations of: {deviceItemPath}");
+            _logger?.LogInformation($"Getting plug locations of: {deviceItemPath} (plugOnDevice={plugOnDevice})");
 
             if (IsProjectNull())
             {
                 return null;
             }
 
-            var item = GetDeviceItemByPath(deviceItemPath);
+            var item = ResolvePlugHost(deviceItemPath, plugOnDevice);
             if (item == null)
             {
                 return null;
@@ -108,7 +108,14 @@ namespace TiaMcpServer.Siemens
             return (ReadFreeSlots(item), ReadOccupiedSlots(item));
         }
 
-        private List<PlugLocationInfo> ReadFreeSlots(DeviceItem host)
+        // 2.7.45: Startdrive drive components (Motor Modules, and below them motors / encoders) are plugged on the Device itself -
+        // official "Creating a drive component": sdrDevice.PlugNew(@"OrderNumber:6SL3xxx-xxxxx-xxxx", "MotorModul", 65535). On the
+        // 2.7.44 real project CanPlugNew on the CU device item and on the rack item answered false for every motor-module identifier;
+        // a bare device name resolves to the head device item by default, so the Device host has to be asked for explicitly.
+        private HardwareObject? ResolvePlugHost(string path, bool plugOnDevice)
+            => plugOnDevice ? (HardwareObject?)GetDeviceByPath(path) : GetDeviceItemByPath(path);
+
+        private List<PlugLocationInfo> ReadFreeSlots(HardwareObject host)
         {
             var list = new List<PlugLocationInfo>();
             try
@@ -142,7 +149,7 @@ namespace TiaMcpServer.Siemens
             return list.OrderBy(x => x.PositionNumber).ToList();
         }
 
-        private static List<PluggedItemInfo> ReadOccupiedSlots(DeviceItem host)
+        private static List<PluggedItemInfo> ReadOccupiedSlots(HardwareObject host)
         {
             var list = new List<PluggedItemInfo>();
             var children = host.DeviceItems;
@@ -187,11 +194,11 @@ namespace TiaMcpServer.Siemens
         /// <param name="name">新模块名。留空则自动生成且避开同名兄弟。</param>
         /// <param name="dryRun">true 时只用 CanPlugNew 预检，绝不写工程。</param>
         public PlugResult PlugSubmodule(
-            string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun)
+            string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun, bool plugOnDevice = false)
         {
             _logger?.LogInformation(
                 $"Plug submodule: host={deviceItemPath}, order={orderNumber}, version={version}, "
-                + $"pos={positionNumber}, dryRun={dryRun}");
+                + $"pos={positionNumber}, dryRun={dryRun}, plugOnDevice={plugOnDevice}");
 
             var result = new PlugResult();
 
@@ -210,11 +217,13 @@ namespace TiaMcpServer.Siemens
                 return result;
             }
 
-            var host = GetDeviceItemByPath(deviceItemPath);
+            var host = ResolvePlugHost(deviceItemPath, plugOnDevice);
             if (host == null)
             {
                 result.Reason = "DeviceItemNotFound";
-                result.Message = $"设备项 '{deviceItemPath}' 没找到。信号板要插在 **CPU 本体** 上，"
+                result.Message = plugOnDevice
+                    ? $"设备 '{deviceItemPath}' 没找到（plugOnDevice=true 时路径是整机 / 站的名字，例如 'MCP_S120'）。"
+                    : $"设备项 '{deviceItemPath}' 没找到。信号板要插在 **CPU 本体** 上，"
                                + "路径形如 'PLC_1' 或 'PLC_1/PLC_1'；用 GetDeviceItemTree 确认每一段。";
                 return result;
             }
@@ -290,7 +299,7 @@ namespace TiaMcpServer.Siemens
                     {
                         // 一抛异常代理就可能死掉，必须重新取宿主句柄再继续试，否则后面全是 disposed 假象。
                         result.Attempts.Add($"slot={slot} {typeId} -> 预检异常: {ex.Message}");
-                        var again = GetDeviceItemByPath(deviceItemPath);
+                        var again = ResolvePlugHost(deviceItemPath, plugOnDevice);
                         if (again == null)
                         {
                             result.Reason = "PlugFailed";
@@ -383,7 +392,7 @@ namespace TiaMcpServer.Siemens
             }
 
             // ---- 读回验证：调用没报错 ≠ 模块真的在那个槽位上 ----
-            var verifyHost = GetDeviceItemByPath(deviceItemPath);
+            var verifyHost = ResolvePlugHost(deviceItemPath, plugOnDevice);
             if (verifyHost == null)
             {
                 result.Reason = "VerifyFailed";
@@ -391,7 +400,13 @@ namespace TiaMcpServer.Siemens
                 return result;
             }
 
-            var after = ReadOccupiedSlots(verifyHost).FirstOrDefault(x => x.PositionNumber == acceptedSlot);
+            // 2.7.45 real project (S120 drive components at position 65535 = "any"): TIA assigns the real position on insert (200 for the
+            // Motor Module, 1000 for the motor), so the readback matches by the created item's name first and by slot second.
+            string? createdName = null; try { createdName = created.Name; } catch { }
+            var occupiedAfter = ReadOccupiedSlots(verifyHost);
+            var after = (createdName != null ? occupiedAfter.FirstOrDefault(x => string.Equals(x.Name, createdName, StringComparison.Ordinal)) : null)
+                        ?? occupiedAfter.FirstOrDefault(x => x.PositionNumber == acceptedSlot);
+            if (after != null && acceptedSlot == 65535) { acceptedSlot = after.PositionNumber; result.PositionNumber = acceptedSlot; }
             if (after == null)
             {
                 result.Reason = "VerifyFailed";
@@ -497,7 +512,7 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>新模块名：用户没给就自动生成，并且避开同名兄弟（重名 PlugNew 会直接失败）。</summary>
-        private static string ResolveNewItemName(DeviceItem host, string? requested, int slot)
+        private static string ResolveNewItemName(HardwareObject host, string? requested, int slot)
         {
             var siblings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             try

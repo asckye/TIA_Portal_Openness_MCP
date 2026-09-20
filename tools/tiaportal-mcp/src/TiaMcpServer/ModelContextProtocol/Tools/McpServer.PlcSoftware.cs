@@ -3508,7 +3508,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " Export PLC alarm instance texts to an XLSX file." +
             " Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText)." +
             " Options control what additional columns are included in the export." +
-            " Typical use: export → fill in alarm descriptions → ImportInstanceTexts (not yet exposed — edit via TIA Portal UI).")]
+            " Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx).")]
         public static ResponseMessage ExportAlarmInstanceTexts(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("exportPath: full file path for the XLSX output")] string exportPath,

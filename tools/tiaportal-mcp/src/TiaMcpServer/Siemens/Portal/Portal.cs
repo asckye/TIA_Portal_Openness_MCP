@@ -512,16 +512,27 @@ namespace TiaMcpServer.Siemens
             }
             if (_portal != null)
             {
+                // 2.7.45 real project: with two TIA instances open (the maintainer's project in one, the scratch project in the other) this
+                // "first accessible project" rebind silently moved the session from the explicitly bound scratch project to the other
+                // instance's project, and the next AddDevice landed in the maintainer's project. With an explicit bind (_expectedProjectName)
+                // only a project of that name may be (re)bound; anything else is reported, never adopted.
+                bool Acceptable(ProjectBase? candidate)
+                {
+                    if (candidate == null) return false;
+                    if (_expectedProjectName == null) return true;
+                    try { return string.Equals(candidate.Name, _expectedProjectName, StringComparison.OrdinalIgnoreCase); } catch { return false; }
+                }
                 // check for existing local sessions
                 if (_portal.LocalSessions.Any())
                 {
-                    // pick first session whose Project is accessible
+                    // pick first session whose Project is accessible (and, once bound explicitly, named like the bound project)
                     foreach (var s in _portal.LocalSessions)
                     {
                         try
                         {
                             var p = s.Project;
                             var _ = p?.Name; // touch to validate not disposed
+                            if (!Acceptable(p)) continue;
                             _session = s;
                             _project = p;
                             break;
@@ -535,12 +546,13 @@ namespace TiaMcpServer.Siemens
                 // checks for existing projects
                 else if (_portal.Projects.Any())
                 {
-                    // pick first accessible project (avoid disposed placeholder)
+                    // pick first accessible project (avoid disposed placeholder; respect the explicit bind)
                     foreach (var p in _portal.Projects)
                     {
                         try
                         {
                             var _ = p?.Name;
+                            if (!Acceptable(p)) continue;
                             _project = p;
                             break;
                         }

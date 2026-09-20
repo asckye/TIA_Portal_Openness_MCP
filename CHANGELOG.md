@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.7.45] - 2026-09-20
+
+引擎 2.7.45.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.45](docs/releases/v2.7.45.md)。在维护者新建的空工程上用自建的临时 S120 首次真机跑通 DCC 全族，顺带修五处。
+
+- **修复（会话绑定）**：`GetState` 的"取第一个可访问工程"重绑现在尊重显式绑定——`AttachToOpenProject` 之后只接受同名工程，绝不静默切到另一 TIA 实例的工程（真机：第二个实例里打开维护者工程后，引擎从 `项目1` 切到 `AutomaticDipCoatingMachine`，临时面板建进了维护者的工程）。
+- **新增参数（硬件）**：`PlugDeviceItem` / `GetDevicePlugLocations` 的 `plugOnDevice=true` 以 Device（站）本身为宿主——Startdrive 驱动组件（电机模块，其下电机 / 编码器）只能这样插（官方 "Creating a drive component"，真机 `Device.CanPlugNew("OrderNumber:6SLxx2x-1xxxx-xxxx", name, 65535)` 为 true，设备项上全为 false）；槽位 65535（任意）插入后按新对象名读回并回报真实位置（此前报"未验证"）。
+- **修复（DCC）**：`ManageDccPin update` 的 `Value` 按当前值的 CLR 类型转换（真机：ADD 输入是 `System.Single`，Int32 / Double 被拒）；`ManageDccChart` / `ManageDccBlock` 只带 `sequenceIndex` 的 update 不再被拒；描述记录 V5.2 驱动轴才有 `DriveControlChartContainer`、`DccChartInterfaceComposition.Create` 在该固件上不支持。
+- **修复（其它）**：`AddDevice` 失败时列出每个 TypeIdentifier 变体的尝试与原因（真机：TP700 Comfort 只看到最后一个变体 `.../V14.0.1.0.0.0` 的错误，目录原样的 `.../14.0.1.0` 为何被拒不可见），并提示用 `SearchHardwareCatalog` 的原样标识；`ExportAlarmInstanceTexts` 描述改指 `ImportPlcAlarmInstanceTexts`（此前写着 "not yet exposed"）。
+- **验证**：离线 2146 项（新增 2 项）；形状检查 V20 2789 / V21 3077（新增 4 项）。真实工程（2.7.44 引擎，`项目1`，见 `docs/releases/v2.7.45.md#真机结果`）：DCC 图表 / 子图 / 块 / 引脚连接 / 发布 / 分区 / 顺序 / 导出导入 / 删除 / DCB 库全部通过；S120 电机 / 编码器插入通过，投影读取与 `changeType` 被 TIA 按其规则拒绝。
+
 ## [2.7.44] - 2026-09-20
 
 引擎 2.7.44.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.44](docs/releases/v2.7.44.md)。2.7.43 真机重跑首次看到 CFC 空导出的真实结构，修正预检解析器。

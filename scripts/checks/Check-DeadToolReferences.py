@@ -47,7 +47,6 @@ ALLOWED = {
     'DeleteDb': '描述原文即「没有单独的 DeleteDb/DeleteGlobalDb/DeleteFunctionBlock，用 DeletePlcBlock」',
     'DeleteGlobalDb': '同上',
     'DeleteFunctionBlock': '同上',
-    'ImportInstanceTexts': '描述原文即 "not yet exposed"',
     # 2.7.18 新工具族描述里点名的原生成员，都在说明底层调用，不是 MCP 工具名
     # 2.7.33 Base 收尾工具族描述里点名的原生成员，都在说明底层调用
     'AttachTime': 'Openness TiaPortalSession.AttachTime 属性名，由 ReadPortalInfo 读出',

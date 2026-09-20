@@ -220,6 +220,10 @@ namespace TiaMcpServer.Siemens
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
+                // 2.7.45: keep one line per variant - the real project (TP700 Comfort, catalog TypeIdentifier
+                // "OrderNumber:6AV2 124-0GC01-0AX0/14.0.1.0") only ever showed the LAST variant's error (".../V14.0.1.0.0.0"), so the
+                // reason the exact catalog identifier was refused stayed invisible.
+                var attempts = new List<string>();
                 foreach (var typeIdentifier in typeIdentifierVariants)
                 {
                     foreach (var itemName in new[] { deviceName, "Device_1", "Station_1" }.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -228,17 +232,24 @@ namespace TiaMcpServer.Siemens
                         {
                             var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
                             if (dev is Device d) return d;
+                            attempts.Add($"{typeIdentifier} [{itemName}] -> CreateWithItem returned null");
                         }
                         catch (Exception exTry)
                         {
                             // try next variant
                             lastVariantError = FormatExceptionDetail(exTry);
+                            attempts.Add($"{typeIdentifier} [{itemName}] -> {ShortExceptionMessage(exTry)}");
                         }
                     }
                 }
 
+                var shown = attempts.Take(24).ToList();
+                var more = attempts.Count > shown.Count ? $"\n... {attempts.Count - shown.Count} more" : "";
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    lastVariantError ?? $"AddDevice failed: no device created for OrderNumber={orderNumber} Version={version}");
+                    $"AddDevice failed: no device created for OrderNumber={orderNumber} Version={version}; {attempts.Count} CreateWithItem attempt(s):\n"
+                    + string.Join("\n", shown) + more
+                    + "\nHint: SearchHardwareCatalog / AddHardwareCatalogDeviceWithProbe report the catalog's exact TypeIdentifier (HMI panels carry the version without a 'V', e.g. '.../14.0.1.0'); pass that as orderNumber (a value starting with 'OrderNumber:' is used verbatim)."
+                    + (lastVariantError != null ? "\nLast error detail: " + lastVariantError : ""));
             }
             catch (PortalException)
             {
@@ -848,6 +859,14 @@ namespace TiaMcpServer.Siemens
             if (string.IsNullOrWhiteSpace(name)) name = "Device_1";
             if (char.IsDigit(name[0])) name = "Device_" + name;
             return name;
+        }
+
+        private static string ShortExceptionMessage(Exception ex)
+        {
+            var inner = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+            var text = (inner.Message ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
+            while (text.Contains("  ")) text = text.Replace("  ", " ");
+            return text.Length > 220 ? text.Substring(0, 220) + "..." : text;
         }
 
         private static string NormalizeOrderNumber(string s)

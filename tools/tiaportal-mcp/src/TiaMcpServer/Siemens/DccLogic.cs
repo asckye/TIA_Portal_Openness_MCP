@@ -46,7 +46,7 @@ namespace TiaMcpServer.Siemens
         // ---- charts ----------------------------------------------------------------------------------------------------------------
         internal static readonly string[] ChartActions = { "read", "readSequence", "create", "update", "delete", "export", "exportAll", "import", "optimizeSequence", "showEditor" };
         internal sealed class ChartRequest { public string Action = "", ImportOption = "None"; public string[] Path = Array.Empty<string>(); public bool AutoName, Writes, WritesFiles; public JsonObject Properties = new JsonObject(); }
-        internal static ChartRequest ValidateChartRequest(string chartPath, string action, string filePath, string importOptions, string propertiesJson, bool confirmDelete, bool dryRun)
+        internal static ChartRequest ValidateChartRequest(string chartPath, string action, string filePath, string importOptions, string propertiesJson, bool confirmDelete, bool dryRun, int sequenceIndex = -1)
         {
             RequireOneOf(action, ChartActions, "action");
             var r = new ChartRequest { Action = action };
@@ -62,8 +62,9 @@ namespace TiaMcpServer.Siemens
             else Refuse(filePath, "filePath", "applies to export / exportAll / import only.");
             if (action == "import") r.ImportOption = RequireOneOf(string.IsNullOrEmpty(importOptions) ? "None" : importOptions, ImportOptions, "importOptions");
             else Refuse(importOptions, "importOptions", "applies to action import only.");
-            if (action == "create" || action == "update") { r.Properties = ValidateProperties(propertiesJson, ChartProperties, "chart"); if (action == "create" && r.Properties.ContainsKey("Name")) throw new ArgumentException("Name on create is the chartPath (last segment)."); if (action == "update" && r.Properties.Count == 0) throw new ArgumentException("update needs at least one property."); }
+            if (action == "create" || action == "update") { r.Properties = ValidateProperties(propertiesJson, ChartProperties, "chart"); if (action == "create" && r.Properties.ContainsKey("Name")) throw new ArgumentException("Name on create is the chartPath (last segment)."); if (action == "update" && r.Properties.Count == 0 && sequenceIndex < 0) throw new ArgumentException("update needs at least one property or a sequenceIndex."); }
             else if (ParseObject(propertiesJson, "propertiesJson").Count > 0) throw new ArgumentException("propertiesJson applies to create / update only.");
+            if (sequenceIndex >= 0 && action != "update") throw new ArgumentException("sequenceIndex (MoveInRuntimeSequence) applies to action update only.");
             if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
             r.WritesFiles = (action == "export" || action == "exportAll") && !dryRun;
             r.Writes = action != "read" && action != "readSequence" && action != "export" && action != "exportAll" && !dryRun;
@@ -73,7 +74,7 @@ namespace TiaMcpServer.Siemens
         // ---- blocks ----------------------------------------------------------------------------------------------------------------
         internal static readonly string[] BlockActions = { "read", "create", "update", "delete", "setAsPredecessor" };
         internal sealed class BlockRequest { public string Action = "", BlockType = "", LibraryName = ""; public string[] ChartPath = Array.Empty<string>(); public string Name = ""; public bool Writes; public JsonObject Properties = new JsonObject(); }
-        internal static BlockRequest ValidateBlockRequest(string chartPath, string blockName, string action, string blockType, string libraryName, string propertiesJson, bool confirmDelete, bool dryRun)
+        internal static BlockRequest ValidateBlockRequest(string chartPath, string blockName, string action, string blockType, string libraryName, string propertiesJson, bool confirmDelete, bool dryRun, int sequenceIndex = -1)
         {
             RequireOneOf(action, BlockActions, "action");
             var r = new BlockRequest { Action = action, ChartPath = ChartParts(chartPath) };
@@ -81,8 +82,9 @@ namespace TiaMcpServer.Siemens
             r.Name = blockName;
             if (action == "create") { RequireText(blockType, "blockType", 128); r.BlockType = blockType; r.LibraryName = libraryName ?? ""; if (!string.IsNullOrEmpty(libraryName)) RequireText(libraryName, "libraryName", 128); }
             else { Refuse(blockType, "blockType", "applies to action create only."); Refuse(libraryName, "libraryName", "applies to action create only."); }
-            if (action == "create" || action == "update") { r.Properties = ValidateProperties(propertiesJson, BlockProperties, "block"); if (action == "create" && r.Properties.ContainsKey("Name")) throw new ArgumentException("Name on create is blockName."); if (action == "update" && r.Properties.Count == 0) throw new ArgumentException("update needs at least one property."); }
+            if (action == "create" || action == "update") { r.Properties = ValidateProperties(propertiesJson, BlockProperties, "block"); if (action == "create" && r.Properties.ContainsKey("Name")) throw new ArgumentException("Name on create is blockName."); if (action == "update" && r.Properties.Count == 0 && sequenceIndex < 0) throw new ArgumentException("update needs at least one property or a sequenceIndex."); }
             else if (ParseObject(propertiesJson, "propertiesJson").Count > 0) throw new ArgumentException("propertiesJson applies to create / update only.");
+            if (sequenceIndex >= 0 && action != "update") throw new ArgumentException("sequenceIndex (MoveInRuntimeSequence) applies to action update only.");
             if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
             r.Writes = action != "read" && !dryRun;
             return r;

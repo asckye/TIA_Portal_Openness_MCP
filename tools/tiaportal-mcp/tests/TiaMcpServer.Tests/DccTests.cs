@@ -41,6 +41,9 @@ namespace TiaMcpServer.Tests
 
             // ---- blocks ----
             DccLogic.BlockRequest B(string block, string action, string type = "", string lib = "", string props = "{}", bool confirm = false, bool dryRun = true) => DccLogic.ValidateBlockRequest("DCC_1", block, action, type, lib, props, confirm, dryRun);
+            // 2.7.45 real project (S120 V5.2 drive axis): a sequenceIndex-only update (MoveInRuntimeSequence) was refused as "needs at least one property"
+            check(!Fails<ArgumentException>(() => DccLogic.ValidateBlockRequest("DCC_1", "add_1", "update", "", "", "{}", false, false, 0)) && !Fails<ArgumentException>(() => DccLogic.ValidateChartRequest("DCC_1", "update", "", "", "{}", false, false, 1)), "dcc: sequenceIndex alone is a valid update");
+            check(Fails<ArgumentException>(() => DccLogic.ValidateBlockRequest("DCC_1", "add_1", "update", "", "", "{}", false, false)) && Fails<ArgumentException>(() => DccLogic.ValidateBlockRequest("DCC_1", "add_1", "read", "", "", "{}", false, true, 0)) && Fails<ArgumentException>(() => DccLogic.ValidateChartRequest("DCC_1", "read", "", "", "{}", false, true, 0)), "dcc: update without property and without sequenceIndex refused; sequenceIndex outside update refused");
             check(!B("", "read").Writes && !B("add_1", "read").Writes && B("add_1", "create", "ADD", dryRun: false).Writes && B("", "create", "ADD", dryRun: false).Name == "", "dcc blocks: read all / one, create named or auto");
             check(B("gear_1", "create", "gear", "GMC", "{\"PositionX\":110,\"Partition\":\"Partition_2\"}", dryRun: false).LibraryName == "GMC", "dcc blocks: create with library and properties");
             check(B("add_1", "update", props: "{\"Name\":\"add_3\",\"GenericInputsNumber\":4}", dryRun: false).Writes && B("add_1", "setAsPredecessor", dryRun: false).Writes, "dcc blocks: update / setAsPredecessor");

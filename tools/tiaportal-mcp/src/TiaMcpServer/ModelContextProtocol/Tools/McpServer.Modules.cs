@@ -28,13 +28,16 @@ namespace TiaMcpServer.ModelContextProtocol
             + "Call this BEFORE plugging a signal board (SB), signal module (SM) or communication module (CM) so the "
             + "slot / position number comes from TIA instead of a guess — slot numbers differ per CPU family and are "
             + "never hardcoded by this server. A signal board plugs into the CPU device item itself, so pass the CPU "
-            + "path (e.g. 'PLC_1'). Get paths from GetDeviceItemTree.")]
+            + "path (e.g. 'PLC_1'). Get paths from GetDeviceItemTree. plugOnDevice=true asks the Device (station) itself instead "
+            + "of a device item - that is where Startdrive drive components (Motor Modules; motors / encoders below them) plug "
+            + "(official 'Creating a drive component': Device.PlugNew(\"OrderNumber:6SL3xxx-xxxxx-xxxx\", name, 65535)).")]
         public static ResponseMessage GetDevicePlugLocations(
-            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU")] string deviceItemPath)
+            [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
+            [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
         {
             try
             {
-                var slots = Portal.GetDevicePlugLocations(deviceItemPath);
+                var slots = Portal.GetDevicePlugLocations(deviceItemPath, plugOnDevice);
 
                 if (slots == null)
                 {
@@ -108,18 +111,22 @@ namespace TiaMcpServer.ModelContextProtocol
             + "verified (IsPlugged / name / slot). This tool does NOT set addresses: to make the inputs start at %I2.0, "
             + "call SetDeviceItemIoAddress afterwards with startAddress=2, then CompileSoftware and SaveProject. "
             + "Failures are reported by category: SlotOccupied, SlotNotAvailable, OrderNumberNotFound, "
-            + "NotSupportedByDevice, PlugFailed, VerifyFailed.")]
+            + "NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: "
+            + "plugOnDevice=true with the station name, orderNumber '6SL3xxx-xxxxx-xxxx' (unspecified Motor Module) or a concrete "
+            + "MLFB, positionNumber 65535 (official 'Creating a drive component'); motors / encoders then plug below the Motor "
+            + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202').")]
         public static ResponseMessage PlugDeviceItem(
-            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'")] string deviceItemPath,
+            [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
             [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
             [Description("version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default")] string version = "",
             [Description("positionNumber: target slot. -1 (default) = pick the first free slot TIA accepts")] int positionNumber = -1,
             [Description("name: name for the new module. Empty = auto-generated and de-duplicated against siblings")] string name = "",
-            [Description("dryRun: true (default) only runs the CanPlugNew feasibility check; set false to actually plug")] bool dryRun = true)
+            [Description("dryRun: true (default) only runs the CanPlugNew feasibility check; set false to actually plug")] bool dryRun = true,
+            [Description("plugOnDevice: true = plug on the Device (station) itself, the host of Startdrive drive components")] bool plugOnDevice = false)
         {
             try
             {
-                var r = Portal.PlugSubmodule(deviceItemPath, orderNumber, version, positionNumber, name, dryRun);
+                var r = Portal.PlugSubmodule(deviceItemPath, orderNumber, version, positionNumber, name, dryRun, plugOnDevice);
 
                 // Reason=VerifyFailed 是 Portal 明写的"插完之后重新定位失败，无法确认结果"——
                 // 插没插上答不上来，既不能报成功也不能报失败。本线没有 Unknown 这一档，

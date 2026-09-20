@@ -173,5 +173,10 @@ internal static class StartdriveShapeChecks
         check(portal.GetMethod("ManageStartdriveParameter")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageStartdriveParameter takes driveObjectIndex (G120: DriveObjectNumber not retrievable)");
         check(portal.GetMethod("ReadDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue") && portal.GetMethod("ReadOnlineDriveParameters")!.GetParameters().Any(p=>p.Name=="includeValue"),"ReadDriveParameters / ReadOnlineDriveParameters take includeValue (2.7.40: Value read last and on request)");
         check(portal.GetMethod("GetPortalProcessHealth")!=null,"Portal.GetPortalProcessHealth exists (2.7.40: bound TIA process liveness after a crash)");
+        // 2.7.45: drive components (Motor Module, motor, encoder) plug on the Device / rack item through HardwareObject.CanPlugNew / PlugNew
+        var hardwareObject=T(core,"Siemens.Engineering.HW.HardwareObject");
+        foreach(var name in new[]{"CanPlugNew","PlugNew"}) check(hardwareObject.GetMethod(name,new[]{text,text,i32})!=null,"HardwareObject."+name+"(string, string, int) (Device-level drive component plugging, official 'Creating a drive component')");
+        check(hardwareObject.GetMethod("GetPlugLocations",Type.EmptyTypes)!=null && T(core,"Siemens.Engineering.HW.Device").IsSubclassOf(hardwareObject),"Device derives from HardwareObject and exposes GetPlugLocations");
+        check(portal.GetMethod("PlugSubmodule")!.GetParameters().Any(p=>p.Name=="plugOnDevice") && portal.GetMethod("GetDevicePlugLocations")!.GetParameters().Any(p=>p.Name=="plugOnDevice"),"PlugSubmodule / GetDevicePlugLocations take plugOnDevice (2.7.45)");
     }
 }
