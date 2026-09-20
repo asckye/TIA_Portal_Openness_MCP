@@ -552,25 +552,50 @@ namespace TiaMcpServer.Siemens
                 var table = FindOrCreateWatchTable(group, tableName);
                 if (table == null) return new ResponseMessage { Message = $"Could not find or create watch table '{tableName}'." };
 
-                var entry = FindOrCreateTableEntry(table, "Entries", address);
-                if (entry == null) return new ResponseMessage { Message = $"Could not create entry for address '{address}'." };
+                // 2.7.49 (PublicAPI + real machine): PlcWatchTable.Entries is a PlcTableCommentEntryComposition whose only factory is
+                // Create() (no arguments) and whose typed entry properties are read-only; values go through SetAttribute and are read
+                // back with GetAttribute. The old Create(address) overload never existed, so every call ended in "Could not create entry".
+                var entry = FindOrCreateTableEntry(table, "Entries", address, out var entryCreated);
+                if (entry == null) return new ResponseMessage { Message = $"Could not create entry for address '{address}': PlcWatchTable.Entries.Create() returned nothing." };
 
-                TrySetProperty(entry, "Address", address);
-                TrySetProperty(entry, "ModifyValue", modifyValue);
-                SetEnumPropertyByName(entry, "ModifyTrigger", trigger);
-
+                var refused = new JsonObject();
+                var wanted = new List<KeyValuePair<string, object?>>
+                {
+                    new KeyValuePair<string, object?>(WatchEntryAddressAttribute(address), address),
+                    new KeyValuePair<string, object?>("ModifyValue", modifyValue),
+                    new KeyValuePair<string, object?>("ModifyTrigger", trigger)
+                };
+                foreach (var kv in wanted) SetWatchEntryAttribute(entry, kv.Key, kv.Value, refused);
+                var after = ReadWatchEntryAttributes(entry, "Name", "Address", "ModifyValue", "ModifyTrigger", "MonitorTrigger", "DisplayFormat");
+                bool addressVerified = string.Equals(Convert.ToString(after["Address"]), address, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Convert.ToString(after["Name"]), address.Trim('"'), StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Convert.ToString(after["Name"]), address, StringComparison.OrdinalIgnoreCase);
+                bool valueVerified = string.Equals(Convert.ToString(after["ModifyValue"]), modifyValue, StringComparison.OrdinalIgnoreCase);
+                var meta = new JsonObject
+                {
+                    ["softwarePath"] = softwarePath,
+                    ["tableName"] = tableName,
+                    ["address"] = address,
+                    ["modifyValue"] = modifyValue,
+                    ["trigger"] = trigger,
+                    ["entryCreated"] = entryCreated,
+                    ["after"] = after,
+                    ["refusedAttributes"] = refused,
+                    ["readbackVerified"] = addressVerified && valueVerified,
+                    ["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires."
+                };
+                if (!addressVerified || !valueVerified)
+                    return new ResponseMessage
+                    {
+                        Message = $"Watch table '{tableName}': entry for '{address}' was {(entryCreated ? "created" : "found")} but the readback does not show the requested "
+                            + (!addressVerified ? "address/name" : "modify value") + " (refused: " + string.Join(", ", refused.Select(r => r.Key + "=" + r.Value)) + "). "
+                            + "Use ImportPlcWatchTableOffline with a full SimaticML watch table when the entry attributes are not writable on this CPU.",
+                        Meta = meta
+                    };
                 return new ResponseMessage
                 {
-                    Message = $"Watch table '{tableName}': entry '{address}' set to ModifyValue='{modifyValue}' Trigger={trigger}.",
-                    Meta = new JsonObject
-                    {
-                        ["softwarePath"] = softwarePath,
-                        ["tableName"] = tableName,
-                        ["address"] = address,
-                        ["modifyValue"] = modifyValue,
-                        ["trigger"] = trigger,
-                        ["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires."
-                    }
+                    Message = $"Watch table '{tableName}': entry '{address}' set to ModifyValue='{modifyValue}' Trigger={after["ModifyTrigger"]} (readback verified).",
+                    Meta = meta
                 };
             }
             catch (Exception ex)
@@ -598,23 +623,40 @@ namespace TiaMcpServer.Siemens
                 var table = FindOrCreateForceTable(group, tableName);
                 if (table == null) return new ResponseMessage { Message = $"Could not find or create force table '{tableName}'." };
 
-                var entry = FindOrCreateTableEntry(table, "Entries", address);
-                if (entry == null) return new ResponseMessage { Message = $"Could not create force entry for address '{address}'." };
+                var entry = FindOrCreateTableEntry(table, "Entries", address, out var entryCreated);
+                if (entry == null) return new ResponseMessage { Message = $"Could not create force entry for address '{address}': PlcForceTable.Entries.Create() returned nothing." };
 
-                TrySetProperty(entry, "Address", address);
-                TrySetProperty(entry, "ForceValue", forceValue);
-
+                var refused = new JsonObject();
+                SetWatchEntryAttribute(entry, WatchEntryAddressAttribute(address), address, refused);
+                SetWatchEntryAttribute(entry, "ForceValue", forceValue, refused);
+                var after = ReadWatchEntryAttributes(entry, "Name", "Address", "ForceValue", "ForceIntention", "MonitorTrigger", "DisplayFormat");
+                bool addressVerified = string.Equals(Convert.ToString(after["Address"]), address, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Convert.ToString(after["Name"]), address.Trim('"'), StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(Convert.ToString(after["Name"]), address, StringComparison.OrdinalIgnoreCase);
+                bool valueVerified = string.Equals(Convert.ToString(after["ForceValue"]), forceValue, StringComparison.OrdinalIgnoreCase);
+                var meta = new JsonObject
+                {
+                    ["softwarePath"] = softwarePath,
+                    ["tableName"] = tableName,
+                    ["address"] = address,
+                    ["forceValue"] = forceValue,
+                    ["entryCreated"] = entryCreated,
+                    ["after"] = after,
+                    ["refusedAttributes"] = refused,
+                    ["readbackVerified"] = addressVerified && valueVerified,
+                    ["note"] = "Force will be applied continuously while TIA Portal is online with this CPU."
+                };
+                if (!addressVerified || !valueVerified)
+                    return new ResponseMessage
+                    {
+                        Message = $"Force table '{tableName}': entry for '{address}' was {(entryCreated ? "created" : "found")} but the readback does not show the requested "
+                            + (!addressVerified ? "address/name" : "force value") + " (refused: " + string.Join(", ", refused.Select(r => r.Key + "=" + r.Value)) + ").",
+                        Meta = meta
+                    };
                 return new ResponseMessage
                 {
-                    Message = $"Force table '{tableName}': entry '{address}' set to ForceValue='{forceValue}'.",
-                    Meta = new JsonObject
-                    {
-                        ["softwarePath"] = softwarePath,
-                        ["tableName"] = tableName,
-                        ["address"] = address,
-                        ["forceValue"] = forceValue,
-                        ["note"] = "Force will be applied continuously while TIA Portal is online with this CPU."
-                    }
+                    Message = $"Force table '{tableName}': entry '{address}' set to ForceValue='{forceValue}' (readback verified).",
+                    Meta = meta
                 };
             }
             catch (Exception ex)
@@ -662,25 +704,62 @@ namespace TiaMcpServer.Siemens
             return TryInvokeMethodByName(forceTables, "Create", tableName);
         }
 
-        private static object? FindOrCreateTableEntry(object table, string entriesPropertyName, string address)
+        private static object? FindOrCreateTableEntry(object table, string entriesPropertyName, string address, out bool created)
         {
+            created = false;
             var entries = TryGetPropertyValue(table, entriesPropertyName, "WatchTableEntries", "ForceTableEntries", "Rows");
             if (entries == null) return null;
 
-            // Search existing entry with same address
+            // Search existing entry with the same address or symbolic name (both spellings: "Tag" and Tag)
+            var bare = address.Trim('"');
             if (entries is IEnumerable ee and not string)
             {
                 foreach (var e in ee)
                 {
                     if (e == null) continue;
-                    var addr = TryGetPropertyValue(e, "Address", "Name")?.ToString();
-                    if (string.Equals(addr, address, StringComparison.OrdinalIgnoreCase))
+                    var addr = TryGetPropertyValue(e, "Address")?.ToString();
+                    var name = TryGetPropertyValue(e, "Name")?.ToString();
+                    if (string.Equals(addr, address, StringComparison.OrdinalIgnoreCase)
+                        || (!string.IsNullOrEmpty(name) && (string.Equals(name, address, StringComparison.OrdinalIgnoreCase) || string.Equals(name, bare, StringComparison.OrdinalIgnoreCase))))
                         return e;
                 }
             }
 
-            // Create new entry
-            return TryInvokeMethodByName(entries, "Create", address);
+            // Official factory: PlcTableCommentEntryComposition.Create() - no arguments (2.7.49)
+            var entry = TryInvokeMethodByName(entries, "Create") ?? TryInvokeMethodByName(entries, "Create", address);
+            created = entry != null;
+            return entry;
+        }
+
+        private static string WatchEntryAddressAttribute(string address) => PlcBlockServicesLogic.WatchEntryAddressAttribute(address);
+
+        private static void SetWatchEntryAttribute(object entry, string name, object? value, JsonObject refused)
+        {
+            if (entry is not IEngineeringObject engineeringObject) { refused[name] = "entry is not an IEngineeringObject"; return; }
+            try
+            {
+                object? typedValue = value;
+                if (name is "ModifyTrigger" or "MonitorTrigger" && value is string triggerName)
+                {
+                    var enumType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
+                    try { typedValue = Enum.Parse(enumType, triggerName, true); }
+                    catch (ArgumentException) { refused[name] = "unknown trigger '" + triggerName + "'; valid: " + string.Join("/", Enum.GetNames(enumType)); return; }
+                }
+                engineeringObject.SetAttribute(name, typedValue);
+            }
+            catch (Exception ex) { refused[name] = ex.Message; }
+        }
+
+        private static JsonObject ReadWatchEntryAttributes(object entry, params string[] names)
+        {
+            var o = new JsonObject();
+            if (entry is not IEngineeringObject engineeringObject) return o;
+            foreach (var name in names)
+            {
+                try { var v = engineeringObject.GetAttribute(name); o[name] = v == null ? null : JsonValue.Create(Convert.ToString(v)); }
+                catch { /* attribute not on this entry kind */ }
+            }
+            return o;
         }
 
         private static object? TryInvokeMethodByName(object target, string methodName, params object?[] args)
@@ -1225,6 +1304,40 @@ namespace TiaMcpServer.Siemens
 
         // ── Technology Objects (TO) ──────────────────────────────────────────
 
+        // 2.7.49 (real machine): TOs inside a user folder (TechnologicalInstanceDBUserGroup, e.g. imported with folderPath) were invisible
+        // to GetTechnologyObjects / ExportTechnologyObject / ExportTechnologyObjectsToDirectory, which only read the root composition.
+        // Typed walk: TechnologicalInstanceDBGroup.TechnologicalObjects + Groups (recursive); folder = "" for the root.
+        private static List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB To, string Folder)> EnumerateTechnologyObjectsRecursive(PlcSoftware plc)
+        {
+            var list = new List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB, string)>();
+            void Walk(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup group, string folder)
+            {
+                foreach (var to in EngineeringGroupOperations.Items(group.TechnologicalObjects).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB>())
+                    list.Add((to, folder));
+                foreach (var sub in EngineeringGroupOperations.Items(group.Groups).Cast<global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBUserGroup>())
+                    Walk(sub, folder.Length == 0 ? sub.Name : folder + "/" + sub.Name);
+            }
+            Walk(plc.TechnologicalObjectGroup, "");
+            return list;
+        }
+
+        // Exact name, or folder path + name ("MCP_TO/MCP_PID"); a bare name that exists in several folders is ambiguous.
+        private static global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB? FindTechnologyObjectRecursive(PlcSoftware plc, string toName, out string? error)
+        {
+            error = null;
+            var all = EnumerateTechnologyObjectsRecursive(plc);
+            var text = (toName ?? "").Trim().Replace('\\', '/').Trim('/');
+            var slash = text.LastIndexOf('/');
+            var folder = slash < 0 ? null : text.Substring(0, slash);
+            var name = slash < 0 ? text : text.Substring(slash + 1);
+            var hits = all.Where(x => string.Equals(x.To.Name, name, StringComparison.OrdinalIgnoreCase)
+                && (folder == null || string.Equals(x.Folder, folder, StringComparison.OrdinalIgnoreCase))).ToList();
+            if (hits.Count == 1) return hits[0].To;
+            if (hits.Count > 1) { error = $"'{name}' exists in {hits.Count} folders ({string.Join(", ", hits.Select(h => h.Folder.Length == 0 ? "(root)" : h.Folder))}); give folder/name."; return null; }
+            error = $"Technology object '{toName}' not found. Available: {string.Join(", ", all.Select(x => x.Folder.Length == 0 ? x.To.Name : x.Folder + "/" + x.To.Name).Take(30))}";
+            return null;
+        }
+
         private static object? ResolveTechnologyObjectCollection(PlcSoftware plc)
         {
             var group = TryGetPropertyValue(plc,
@@ -1260,12 +1373,8 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var col = ResolveTechnologyObjectCollection(plc);
-                if (col is not IEnumerable items || col is string) return result;
-
-                foreach (var item in items)
+                foreach (var (item, folder) in EnumerateTechnologyObjectsRecursive(plc))
                 {
-                    if (item == null) continue;
                     var obj = new JsonObject();
                     foreach (var prop in new[] { "Name", "OfSystemLibElement", "OfSystemLibVersion" })
                     {
@@ -1275,6 +1384,7 @@ namespace TiaMcpServer.Siemens
                     // Try to get a "type" hint from class name as fallback
                     if (!obj.ContainsKey("OfSystemLibElement"))
                         obj["TypeHint"] = JsonValue.Create(item.GetType().Name);
+                    obj["Folder"] = JsonValue.Create(folder);
                     result.Add(obj);
                 }
             }
@@ -1298,10 +1408,9 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                var col = ResolveTechnologyObjectCollection(plc);
-                var to = FindByName(col, toName);
+                var to = FindTechnologyObjectRecursive(plc, toName, out var lookupError);
                 if (to == null)
-                    return new ResponseMessage { Message = $"Technology object '{toName}' not found in '{softwarePath}'." };
+                    return new ResponseMessage { Message = $"Technology object '{toName}' not found in '{softwarePath}': {lookupError}" };
 
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 TryExportEngineeringObject(to, exportPath, out var err);
@@ -1347,24 +1456,20 @@ namespace TiaMcpServer.Siemens
                 if (!string.IsNullOrWhiteSpace(regexName))
                     regex = new Regex(regexName, RegexOptions.IgnoreCase);
 
-                var col = ResolveTechnologyObjectCollection(plc);
-                if (col is not IEnumerable items || col is string)
+                foreach (var (item, folder) in EnumerateTechnologyObjectsRecursive(plc))
                 {
-                    failed.Add(new ImportFailure { Path = softwarePath, Error = "Technology object collection not accessible." });
-                    return new ResponseImportBatch { Imported = exported, Failed = failed };
-                }
-
-                foreach (var item in items)
-                {
-                    if (item == null) continue;
-                    var name = TryGetPropertyValue(item, "Name")?.ToString() ?? string.Empty;
+                    var name = item.Name ?? string.Empty;
                     if (string.IsNullOrEmpty(name)) continue;
                     if (regex != null && !regex.IsMatch(name)) continue;
 
-                    var path = Path.Combine(exportDir, name + ".xml");
+                    // TOs of a user folder land in a sub directory of the same name (ImportTechnologyObjectsFromDirectory takes folderPath)
+                    var directory = folder.Length == 0 ? exportDir : Path.Combine(exportDir, folder.Replace('/', Path.DirectorySeparatorChar));
+                    Directory.CreateDirectory(directory);
+                    var path = Path.Combine(directory, name + ".xml");
                     TryExportEngineeringObject(item, path, out var err);
-                    if (err == null) exported.Add(name);
-                    else failed.Add(new ImportFailure { Path = name, Error = err });
+                    var label = folder.Length == 0 ? name : folder + "/" + name;
+                    if (err == null) exported.Add(label);
+                    else failed.Add(new ImportFailure { Path = label, Error = err });
                 }
             }
             catch (Exception ex)

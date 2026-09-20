@@ -80,6 +80,12 @@ namespace TiaMcpServer.Tests
             check(PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.10", "").PcInterfaceName == "Ethernet", "route: unique IP selected (sentinel)");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.1", "")), "route: same IP via two adapters is ambiguous");
             check(PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.1", "plcsim").PcInterfaceName == "PLCSIM", "route: exact adapter name resolves ambiguity");
+
+            // 2.7.49 watch/force entries: absolute addresses go to Address, symbols to Name (PlcTableCommentEntryComposition.Create() + SetAttribute).
+            foreach (var abs in new[] { "%M0.0", "%DB1.DBX0.0", "M0.0", "DB1.DBW0", "I0.0", "Q4.7", "IW64", "PIW256", "db500.dbd4", "MB10" })
+                check(PlcBlockServicesLogic.WatchEntryAddressAttribute(abs) == "Address", "watch entry: absolute address " + abs);
+            foreach (var sym in new[] { "\"MCP_Start\"", "MCP_Start", "\"MCP_DB\".Counter", "Motor.Run", "DB_Name", "" })
+                check(PlcBlockServicesLogic.WatchEntryAddressAttribute(sym) == "Name", "watch entry: symbol " + sym);
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.1", "WLAN")), "route: unknown adapter refused");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.", "")), "route: prefix match is not an exact match");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(new List<PlcBlockServicesLogic.RouteCandidate>(), "192.168.0.1", "")), "route: no configured routes refused");

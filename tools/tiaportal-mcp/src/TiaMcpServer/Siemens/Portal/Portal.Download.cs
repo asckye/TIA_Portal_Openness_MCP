@@ -125,6 +125,15 @@ namespace TiaMcpServer.Siemens
                 object? downloadConfig = routeDiagnostics.Configuration ?? configuration;
                 _logger?.LogInformation("DownloadToPlc: PG/PC route = {Route}", routeDiagnostics.Description);
 
+                if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && rhTarget.Length == 0
+                    && routeDiagnostics.Target is IConfiguration targetConfiguration)
+                {
+                    // 2.7.49: "Download Hardware and Software to a target with specific IP-Address" - the official overload for an
+                    // address TIA has not seen on the target yet (PLCSIM Advanced instance before its first download, new CPU).
+                    DownloadResult createdResult = downloadProvider.Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, DownloadOptions.Software);
+                    return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy);
+                }
+
                 if (rhTarget.Length > 0)
                 {
                     // 2.7.33: R/H systems download to one CPU at a time through RHDownloadProvider (typed overloads; no reflection).
@@ -315,6 +324,49 @@ namespace TiaMcpServer.Siemens
             public string Description = "(no route selected — raw connection configuration)";
             public string? Error;           // set when an explicit pgPcInterface/targetIpAddress filter matched nothing
             public List<DownloadRoute> Candidates = new List<DownloadRoute>();
+            // 2.7.49: the exact ConfigurationAddress when the caller named a target IP. It comes from the target interface,
+            // from the PC interface's subnet / gateway (where TIA lists the CPU's configured IP - the target interface itself
+            // stays empty until the PG adapter can see the CPU), or it is created on the target interface (official
+            // ConfigurationAddressComposition.Create; first download to a PLCSIM Advanced instance / a factory-new CPU).
+            public ConfigurationAddress? Address;
+            public string AddressSource = "";   // targetInterface | subnet | gateway | created
+            public object? Target;              // the ConfigurationTargetInterface the address belongs to (for the 5-arg Download overload)
+        }
+
+        // Typed walk of one PC interface's subnets and gateways for an exact address (2.7.49, real machine: the route tree of a
+        // PLCSIM Advanced target listed 192.168.0.1 only under PcInterface.Subnets["MCP_PN"].Addresses, never under 1 X1).
+        private static ConfigurationAddress? FindSubnetOrGatewayAddress(object? pcInterface, string ipAddress, out string source)
+        {
+            source = "";
+            if (pcInterface is not ConfigurationPcInterface typed) return null;
+            try
+            {
+                foreach (ConfigurationSubnet subnet in EngineeringGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
+                {
+                    foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(subnet.Addresses).Cast<ConfigurationAddress>())
+                        if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "subnet " + subnet.Name; return address; }
+                    foreach (ConfigurationGateway gateway in EngineeringGroupOperations.Items(subnet.Gateways).Cast<ConfigurationGateway>())
+                        foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(gateway.Addresses).Cast<ConfigurationAddress>())
+                            if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        // Official ConfigurationAddressComposition.Create(address) on a target interface (V20 and V21). Returns null when the
+        // composition refuses (the exception text is handed back for the error message).
+        private static ConfigurationAddress? TryCreateTargetAddress(object? target, string ipAddress, out string error)
+        {
+            error = "";
+            if (target is not ConfigurationTargetInterface typed) { error = "target interface is not a ConfigurationTargetInterface"; return null; }
+            try
+            {
+                var existing = typed.Addresses.Find(ipAddress);
+                if (existing != null) return existing;
+                return typed.Addresses.Create(ipAddress);
+            }
+            catch (Exception ex) { error = ex.Message; return null; }
         }
 
         private static List<DownloadRoute> EnumerateDownloadRoutes(object? connectionConfiguration)
@@ -338,6 +390,12 @@ namespace TiaMcpServer.Siemens
                         });
                     }
             return routes;
+        }
+
+        private static object? ReadReflectedParent(object? owner)
+        {
+            try { return owner?.GetType().GetProperty("Parent")?.GetValue(owner); }
+            catch { return null; }
         }
 
         private static string ReadReflectedString(object? owner, string propertyName)
@@ -439,16 +497,69 @@ namespace TiaMcpServer.Siemens
                     var byIp = pool
                         .Where(r => r.TargetAddresses.Any(t => string.Equals(t, targetIpAddress, StringComparison.OrdinalIgnoreCase)))
                         .ToList();
-                    if (byIp.Count == 0)
+                    if (byIp.Count > 0)
                     {
-                        selection.Error =
-                            $"No download route reaches target IP '{targetIpAddress}'. Available routes: {DescribeRoutes(pool)}";
-                        return selection;
+                        pool = byIp;
+                        foreach (var route in pool)
+                            foreach (var candidate in EnumerateReflectedProperty(route.Target, "Addresses"))
+                                if (selection.Address == null && candidate is ConfigurationAddress typed && string.Equals(typed.Address, targetIpAddress, StringComparison.OrdinalIgnoreCase))
+                                { selection.Address = typed; selection.AddressSource = "targetInterface"; selection.Target = route.Target; }
                     }
-                    pool = byIp;
+                    else
+                    {
+                        // 2.7.49: the CPU's configured IP is usually listed under the PC interface's subnet (or a gateway) while the
+                        // target interface carries no address at all; a subnet / gateway ConfigurationAddress is an IConfiguration.
+                        var byPcInterface = pool.GroupBy(r => r.PcInterfaceName + "#" + r.PcInterfaceNumber).ToList();
+                        foreach (var group in byPcInterface)
+                        {
+                            var first = group.First();
+                            var pcInterface = ReadReflectedParent(first.Target);
+                            var found = FindSubnetOrGatewayAddress(pcInterface, targetIpAddress!, out var source);
+                            if (found == null) continue;
+                            selection.Address = found; selection.AddressSource = source; selection.Target = first.Target;
+                            pool = group.ToList();
+                            break;
+                        }
+                        if (selection.Address == null)
+                        {
+                            // Nothing lists the address: create it on the first target interface of the (filtered) pool - official
+                            // ConfigurationAddressComposition.Create. This is the first download to a PLCSIM Advanced instance or a
+                            // factory-new CPU whose address TIA has not seen yet.
+                            var ordered = pool.OrderBy(r => r.TargetName.IndexOf("X1", StringComparison.OrdinalIgnoreCase) >= 0 ? 0 : 1).ToList();
+                            var errors = new List<string>();
+                            foreach (var route in ordered)
+                            {
+                                var created = TryCreateTargetAddress(route.Target, targetIpAddress!, out var error);
+                                if (created == null) { errors.Add(route.TargetName + ": " + error); continue; }
+                                selection.Address = created; selection.AddressSource = "created"; selection.Target = route.Target;
+                                route.TargetAddresses.Add(targetIpAddress!);
+                                pool = new List<DownloadRoute> { route };
+                                break;
+                            }
+                            if (selection.Address == null)
+                            {
+                                selection.Error =
+                                    $"No download route reaches target IP '{targetIpAddress}'. The address could not be created on a target interface either ({string.Join("; ", errors)}). Available routes: {DescribeRoutes(pool)}";
+                                return selection;
+                            }
+                        }
+                    }
                 }
 
                 ScoreDownloadRoutes(pool, targetIpAddress);
+
+                // A subnet / gateway / created address is applied as such (ConnectionConfiguration.ApplyConfiguration(ConfigurationAddress))
+                // and handed to Download / GoOnline as the IConfiguration; the target interface is kept for the 5-arg Download overload.
+                // An address listed on the target interface keeps the field-verified path below (apply + hand over the target interface).
+                if (selection.Address != null && selection.AddressSource != "targetInterface" && connectionConfiguration is ConnectionConfiguration typedConfiguration)
+                {
+                    bool applied = false;
+                    try { applied = typedConfiguration.ApplyConfiguration(selection.Address); } catch { }
+                    selection.Configuration = selection.Address;
+                    var route = pool.OrderByDescending(r => r.Score).First();
+                    selection.Description = route.Describe() + " -> address " + selection.Address.Address + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
+                    return selection;
+                }
 
                 var applyMethod = connectionConfiguration.GetType()
                     .GetMethods(BindingFlags.Public | BindingFlags.Instance)
@@ -607,7 +718,9 @@ namespace TiaMcpServer.Siemens
                 // Which PG/PC adapter the download actually left through — the thing you need
                 // to see first when a multi-NIC PC downloads "successfully" to the wrong place.
                 ["pgPcRoute"] = route?.Description ?? string.Empty,
-                ["pgPcRouteCandidates"] = route?.Candidates.Count ?? 0
+                ["pgPcRouteCandidates"] = route?.Candidates.Count ?? 0,
+                ["targetAddress"] = route?.Address?.Address,
+                ["targetAddressSource"] = route?.AddressSource ?? string.Empty
             };
             if (prompts != null)
                 foreach (var kv in prompts.Summary()) meta[kv.Key] = kv.Value?.DeepClone();

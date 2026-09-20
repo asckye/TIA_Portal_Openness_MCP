@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.48 更新）
+# 路线图与待办（2026-09-17 审计，2.7.49 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.48 已完成
+## 5. 2.7.49 已完成
+
+- 2.7.48 真机：OPC UA 清理、PID 工艺对象往返、在线族对 PLCSIM Advanced（部分）；修下载 / 上线路由（子网地址、官方 `Addresses.Create`、5 参 `Download`、`GoOnline(ConfigurationAddress)` + `pgPcInterface`）、PLCSIM 接口 setter 与失败回报、监控表条目官方写法、`GetTechnologyObjects` 递归。
+
+## 5.0 2.7.48 已完成
 
 - 台账重跑（43/45 🔁 通过）、刻意绕开项（SaveAs / Retrieve / Scaffold / CreateProject、工艺对象 5.0 版本）通过；crash ⑩ 守卫（经典画面尺寸）；`ManageOpcUaInterface`（448 个工具）；PLCSIM `communicationInterface`；`ImportTechnologyObject` 类型化。
 

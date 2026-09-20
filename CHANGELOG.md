@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.7.49] - 2026-09-21
+
+引擎 2.7.49.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.49](docs/releases/v2.7.49.md)。2.7.48 部署后在 `项目1` 跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族——在线族被两处缺陷挡住，本版修。
+
+- **2.7.48 真机通过**：`ManageOpcUaInterface delete` 删掉空接口后 `MCP_PLC` 编译 Success；`PID_Compact 2.3` 的 `ExportTechnologyObject` / `ExportTechnologyObjectsToDirectory` / 删除 / `ImportTechnologyObject`（进 MCP_TO 文件夹）/ `ImportTechnologyObjectsFromDirectory` 全部通过（`TO_SpeedAxis 5.0` 没有驱动报文不能编译一致，TIA 按规则拒绝导出）；`ScanAccessibleDevices` 在 PLCSIM 虚拟网卡上按 MAC 找到实例；`ManagePlcDataBlockSnapshot createSnapshot / exportSnapshot`、`GetOnlineState` / `GoOffline` / `GoOfflineAll` / `CheckDownloadReadiness` 通过。
+- **下载 / 上线路由（真机）**：`DownloadToPlc {targetIpAddress:"192.168.0.1"}` 报 "No download route reaches"——路由树里 CPU 的配置 IP 只在 `ConfigurationPcInterface.Subnets["MCP_PN"].Addresses` 下（目标接口 `1 X1` 没有地址），而引擎只查 `TargetInterfaces[].Addresses`；`GoOnline` 从不套用路由（`GoOnline()` 用 TIA 上次的路由），首次上线永远 "The connection cannot be established"。现在：地址按目标接口 → 子网 / 网关 查找，都没有时按官方 `ConfigurationAddressComposition.Create(ip)` 在目标接口上建（首次下载到 PLCSIM Advanced 实例 / 出厂 CPU）并走 5 参 `Download(IConfiguration, ConfigurationAddress, …)`；`GoOnline` 新增 `pgPcInterface`，选路由后走 `GoOnline(ConfigurationAddress)`（V20 只有 `GoOnline()`，先 `ApplyConfiguration(address)`）；`ReadPlcBlockFingerprints` / `UploadDeviceParameters` / `UploadStationFromPlc` 同样接受子网 / 网关地址，站上载对扫描到的 IP / MAC 也能建地址。
+- **PLCSIM Advanced（真机）**：`ManagePlcSimAdvancedInstance register/powerOn … communicationInterface` 抛 "未找到属性设置方法"——运行时实例类的公开 `CommunicationInterface` / `OperatingMode` 是只读的，setter 在 `IInstance` 接口上；`RegisterInstance` 已经建出实例而工具报失败。现在经接口 setter 写；`WritePlcSimAdvancedTags` "Wrote 0/1" 与 `RunPlcSimAdvancedTestScenario` "Scenario FAILED" 不再报 `operationSuccess=true`；powerOff 后的空状态有文案。
+- **监控表（真机 + PublicAPI）**：`SetWatchTableModifyValue` 永远 "Could not create entry"——`PlcWatchTable.Entries` 是 `PlcTableCommentEntryComposition`，工厂只有无参 `Create()`，条目的类型化属性全部只读；改为 `Create()` + `SetAttribute("Address"|"Name" / "ModifyValue" / "ModifyTrigger")` 并 `GetAttribute` 读回，读回不符时如实报失败。
+- **工艺对象**：`GetTechnologyObjects` 只列根组（导入进 `MCP_TO` 文件夹的 TO 报 0 个）；现在递归用户文件夹并回报 `Folder`；`ExportTechnologyObject` 接受 `文件夹/名`；`ExportTechnologyObjectsToDirectory` 把文件夹里的 TO 导出到同名子目录。离线新增 16 项测试（2179）。
+
 ## [2.7.48] - 2026-09-21
 
 引擎 2.7.48.0（V20/V21 均重建），**工具 448**（新增 `ManageOpcUaInterface`），默认 lite 56 项不变。详见 [v2.7.48](docs/releases/v2.7.48.md)。2.7.46 / 2.7.47 部署后在 `项目1` 重跑台账 🔁 行与刻意绕开的项目的结果。

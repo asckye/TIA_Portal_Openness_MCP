@@ -57,6 +57,7 @@ ALLOWED = {
     'ImportDataPoints': 'Openness TelecontrolManagement.ImportDataPoints()，由 ManageDeviceServiceObjects import 封装',
     'GetIdentifier': 'Openness ObjectIdentifierProvider.GetIdentifier()，由 ReadObjectIdentifier 封装',
     'OpenWithUpgrade': 'Openness ProjectComposition.OpenWithUpgrade()，由 OpenProject 封装',
+    'ApplyConfiguration': 'Openness ConnectionConfiguration.ApplyConfiguration(ConfigurationAddress|ConfigurationTargetInterface)，由 GoOnline pgPcInterface / DownloadToPlc 的路由选择封装（2.7.49）',
     # 2.7.32 安全/UMC 工具族描述里点名的原生成员（ManageUmcUsers），都在说明底层调用
     'CreateOfflineUmcUser': 'Openness UmcUserComposition.CreateOfflineUmcUser(name)，由 ManageUmcUsers createOffline 封装',
     'CreateOfflineUmcUserGroup': 'Openness UmcUserGroupComposition.CreateOfflineUmcUserGroup()，由 ManageUmcUsers createOffline 封装',

@@ -70,6 +70,38 @@ namespace TiaMcpServer.Siemens
                     if (!string.IsNullOrWhiteSpace(value)) seen.Add(value);
                     if (string.Equals(value, targetIpAddress, StringComparison.OrdinalIgnoreCase) && address is ConfigurationAddress typed) return typed;
                 }
+            // 2.7.49: subnet / gateway addresses of the PC interface (where TIA lists configured CPU addresses)
+            var viaSubnet = FindSubnetOrGatewayAddress(pick.Interface, targetIpAddress, out _);
+            if (viaSubnet != null) return viaSubnet;
+            return null;
+        }
+
+        // 2.7.49: an address that ScanAccessibleDevices reported on the same PG/PC interface (IP or MAC of a station TIA has not
+        // seen in the route tree) is created on the first target interface - or, without target interfaces (project-level
+        // StationUploadProvider), on the first subnet - through the official ConfigurationAddressComposition.Create.
+        private static ConfigurationAddress? CreateScannedAddress(PcInterfacePick pick, string targetAddress, out string note)
+        {
+            note = "";
+            if (pick.Interface is not ConfigurationPcInterface typed) { note = "PC interface is not typed"; return null; }
+            var errors = new List<string>();
+            try
+            {
+                var accessible = typed.GetAccessibleDevices() ?? new List<ConfigurationAccessibleDevice>();
+                if (!accessible.Any(d => string.Equals(d.Address, targetAddress, StringComparison.OrdinalIgnoreCase) || string.Equals(d.MACAddress, targetAddress, StringComparison.OrdinalIgnoreCase)))
+                { note = "address not reported by the network scan on this PG/PC interface"; return null; }
+            }
+            catch (Exception ex) { note = "network scan failed: " + ex.Message; return null; }
+            foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(typed.TargetInterfaces).Cast<ConfigurationTargetInterface>())
+            {
+                try { var created = target.Addresses.Find(targetAddress) ?? target.Addresses.Create(targetAddress); note = "created on target interface " + target.Name; return created; }
+                catch (Exception ex) { errors.Add(target.Name + ": " + ex.Message); }
+            }
+            foreach (ConfigurationSubnet subnet in EngineeringGroupOperations.Items(typed.Subnets).Cast<ConfigurationSubnet>())
+            {
+                try { var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name; return created; }
+                catch (Exception ex) { errors.Add("subnet " + subnet.Name + ": " + ex.Message); }
+            }
+            note = errors.Count == 0 ? "no target interface or subnet to create the address on" : string.Join("; ", errors);
             return null;
         }
 
@@ -116,10 +148,13 @@ namespace TiaMcpServer.Siemens
                 var address = FindTargetAddress(pick, targetIpAddress, seen);
                 meta["pgPcInterface"] = new JsonObject { ["mode"] = pick.ModeName, ["name"] = pick.Name, ["number"] = pick.Number };
                 meta["knownTargetAddresses"] = string.Join(", ", seen.Distinct());
-                if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface. Run ScanAccessibleDevices on the same interface first; only exact addresses are accepted.");
+                string addressSource = "route tree";
+                if (address == null) { address = CreateScannedAddress(pick, targetIpAddress, out addressSource); meta["addressCreation"] = addressSource; }
+                if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). Run ScanAccessibleDevices on the same interface first; only exact addresses (IP or MAC as listed there) are accepted.");
+                meta["targetAddressSource"] = addressSource;
                 meta["targetAddress"] = address.Address; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["devicesBefore"] = _project.Devices.Count;
-                if (dryRun) return "Station upload preview: provider, PG/PC interface and target address resolved; no PLC contact, no project change.";
+                if (dryRun) return "Station upload preview: provider, PG/PC interface and target address resolved (" + addressSource + "); " + (addressSource == "route tree" ? "no PLC contact" : "only a DCP network scan was sent") + ", no project change.";
                 if (!confirmUpload) throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to execute.");
                 using var access = AcquireHmiEditAccess();
                 meta["mayHaveChanged"] = true;
@@ -156,9 +191,9 @@ namespace TiaMcpServer.Siemens
                 var route = SelectDownloadRoute(providerConfiguration, string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface, targetIpAddress);
                 if (route.Error != null) throw new PortalException(PortalErrorCode.NotFound, route.Error);
                 if (route.Configuration == null) throw new PortalException(PortalErrorCode.NotFound, "No PG/PC route to the target address; run ScanAccessibleDevices first.");
-                ConfigurationAddress? address = null;
-                foreach (var candidate in EnumerateReflectedProperty(route.Configuration, "Addresses"))
-                    if (string.Equals(ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase) && candidate is ConfigurationAddress typed) address = typed;
+                ConfigurationAddress? address = route.Address;   // 2.7.49: target interface, subnet / gateway or created address
+                foreach (var candidate in EnumerateReflectedProperty(route.Target ?? route.Configuration, "Addresses"))
+                    if (address == null && string.Equals(ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase) && candidate is ConfigurationAddress typed) address = typed;
                 if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Exact target address not found on the selected route: " + route.Description);
                 meta["route"] = route.Description; meta["targetAddress"] = address.Address; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["before"] = EngineeringScalarProperties.Read(owner);
@@ -167,7 +202,7 @@ namespace TiaMcpServer.Siemens
                 using var access = AcquireHmiEditAccess();
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
-                if (route.Configuration is not IConfiguration configuration) throw new NotSupportedException("Selected route is not an IConfiguration.");
+                if ((route.Target ?? route.Configuration) is not IConfiguration configuration) throw new NotSupportedException("Selected route is not an IConfiguration.");
                 try { uploadMethod.Invoke(provider, new object[] { configuration, address, handler }); }
                 catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
                 meta["apiCallSuccess"] = true;

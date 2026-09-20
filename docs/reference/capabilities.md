@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.48 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.49 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.49 下载 / 上线路由、PLCSIM 设置器、监控表条目、文件夹里的工艺对象
+
+2.7.48 部署后：OPC UA 清理与 PID 工艺对象往返通过；在线族对 PLCSIM Advanced 实例暴露两处引擎缺陷——`DownloadToPlc` 只在 `TargetInterfaces[].Addresses` 里找目标 IP（CPU 的配置 IP 实际在 `PcInterface.Subnets[].Addresses` 下），`GoOnline` 从不套用路由。现在地址按 目标接口 → 子网 / 网关 → 官方 `Addresses.Create(ip)` 三级取，新建地址走 5 参 `Download`，`GoOnline` 新增 `pgPcInterface` 并走 `GoOnline(ConfigurationAddress)`（V21）。`ManagePlcSimAdvancedInstance` 的 `communicationInterface` / 单步模式经 `IInstance` 接口 setter 写入；`WritePlcSimAdvancedTags` / `RunPlcSimAdvancedTestScenario` 的失败如实回报。`SetWatchTableModifyValue` 按官方 `Entries.Create()` + `SetAttribute` 建条目并读回。`GetTechnologyObjects` / `ExportTechnologyObject*` 递归用户文件夹。仍在 TIA 一侧的：`FingerprintDataProvider` 与 `ParameterUploadProvider` 在 1515F-2 PN V2.9 上不提供。详见 `docs/releases/v2.7.49.md` 与[真机台账](real-machine-ledger.md)。
 
 ## 2.7.48 台账重跑、crash ⑩ 守卫、`ManageOpcUaInterface`
 

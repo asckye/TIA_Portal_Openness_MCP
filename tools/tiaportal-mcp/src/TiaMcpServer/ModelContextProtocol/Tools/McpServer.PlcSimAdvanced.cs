@@ -35,8 +35,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var message = body(data, meta);
-                meta["success"] = true; meta["operationSuccess"] = true; meta["apiCallSuccess"] = true;
-                return new ResponseJsonReport { Ok = true, Message = message, Data = data, Meta = meta };
+                // 2.7.49: a body may downgrade the verdict itself (tags not written, scenario assertions failed) - keep it.
+                meta["success"] = true; meta["apiCallSuccess"] = true;
+                if (meta["operationSuccess"] == null) meta["operationSuccess"] = true;
+                return new ResponseJsonReport { Ok = meta["operationSuccess"]!.GetValue<bool>(), Message = message, Data = data, Meta = meta };
             }
             catch (Exception ex)
             {
@@ -118,7 +120,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         PlcSimAdvancedChannel.Dispose(PlcSimAdvancedChannel.Register(api, name, cpuType));   // the registration handle; the cached interface is opened below
                         instance = PlcSimAdvancedChannel.Acquire(api, name);
-                        if (!string.IsNullOrWhiteSpace(communicationInterface)) data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface);
+                        if (!string.IsNullOrWhiteSpace(communicationInterface))
+                        {
+                            // 2.7.49: the instance exists from here on - a setter failure must say so instead of looking like a failed registration.
+                            try { data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface); }
+                            catch (Exception ex) { throw new InvalidOperationException("Instance '" + name + "' was registered, but communicationInterface '" + communicationInterface + "' could not be applied: " + ex.Message + " (powerOff + unregister it, or keep its current setting).", ex); }
+                        }
                     }
                     else
                     {
@@ -131,7 +138,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     data["executed"] = true;
                     if (instance != null) data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance);
                     data["registeredAfter"] = PlcSimAdvancedChannel.RegisteredInstances(api).Any(r => r.name.Equals(name, StringComparison.OrdinalIgnoreCase));
-                    return act + " executed on PLCSIM Advanced instance '" + name + "'" + (instance != null ? "; state now " + data["stateAfter"]?["operatingState"] : "") + ".";
+                    var stateNow = instance == null ? "" : Convert.ToString(data["stateAfter"]?["operatingState"]) ?? "";
+                    return act + " executed on PLCSIM Advanced instance '" + name + "'" + (instance != null ? "; state now " + (stateNow.Length == 0 ? "(powered off - no operating state until the next powerOn)" : stateNow) : "") + ".";
                 }
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
@@ -241,6 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     data["items"] = items; data["executed"] = execute;
                     meta["mayHaveChanged"] = execute && failures < values.Count;
                     meta["dataComplete"] = failures == 0;
+                    meta["operationSuccess"] = failures == 0;   // 2.7.49: "Wrote 0/1" was reported as success (real machine)
                     return (execute ? "Wrote " : "Preview: would write ") + (values.Count - failures) + "/" + values.Count + " tag(s) on PLCSIM Advanced instance '" + name + "'" + (execute ? "." : ". Set dryRun=false and confirmWrite=true to write.");
                 }
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
@@ -341,6 +350,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 data["steps"] = results; data["executed"] = true;
                 data["executedSteps"] = executedSteps; data["assertionsPassed"] = passed; data["failedSteps"] = failed;
                 data["verdict"] = failed == 0 ? "passed" : "failed";
+                meta["operationSuccess"] = failed == 0;   // 2.7.49: a FAILED scenario was reported as success (real machine)
                 meta["mayHaveChanged"] = true;
                 meta["dataComplete"] = executedSteps == scenario.Steps.Count;
                 return "Scenario " + (failed == 0 ? "PASSED" : "FAILED") + ": " + executedSteps + "/" + scenario.Steps.Count + " step(s) executed, " + passed + " assertion(s) passed, " + failed + " failed on PLCSIM Advanced instance '" + scenario.Instance + "'.";

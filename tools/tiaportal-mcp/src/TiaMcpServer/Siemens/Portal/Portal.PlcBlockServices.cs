@@ -130,10 +130,23 @@ namespace TiaMcpServer.Siemens
                 var candidates = new List<PlcBlockServicesLogic.RouteCandidate>();
                 foreach (var mode in EnumerateReflectedProperty(configuration, "Modes"))
                     foreach (var pcInterface in EnumerateReflectedProperty(mode, "PcInterfaces"))
+                    {
                         foreach (var target in EnumerateReflectedProperty(pcInterface, "TargetInterfaces"))
                             foreach (var address in EnumerateReflectedProperty(target, "Addresses"))
                                 if (address is ConfigurationAddress native)
                                     candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = ReadReflectedString(mode, "Name"), PcInterfaceName = ReadReflectedString(pcInterface, "Name"), TargetName = ReadReflectedString(target, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                        // 2.7.49: the CPU's configured IP is listed under the PC interface's subnets / gateways (the target interface stays empty until the adapter sees the CPU)
+                        foreach (var subnet in EnumerateReflectedProperty(pcInterface, "Subnets"))
+                        {
+                            foreach (var address in EnumerateReflectedProperty(subnet, "Addresses"))
+                                if (address is ConfigurationAddress native)
+                                    candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = ReadReflectedString(mode, "Name"), PcInterfaceName = ReadReflectedString(pcInterface, "Name"), TargetName = "subnet " + ReadReflectedString(subnet, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                            foreach (var gateway in EnumerateReflectedProperty(subnet, "Gateways"))
+                                foreach (var address in EnumerateReflectedProperty(gateway, "Addresses"))
+                                    if (address is ConfigurationAddress native)
+                                        candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = ReadReflectedString(mode, "Name"), PcInterfaceName = ReadReflectedString(pcInterface, "Name"), TargetName = "gateway " + ReadReflectedString(gateway, "Name"), Address = native.Address ?? "", NativeAddress = native });
+                        }
+                    }
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["contactedPlc"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["candidateRoutes"] = new JsonArray(candidates.Take(100).Select(c => (JsonNode)JsonValue.Create(c.Describe())!).ToArray());
                 var route = PlcBlockServicesLogic.SelectFingerprintRoute(candidates, targetIpAddress, pgPcInterface);

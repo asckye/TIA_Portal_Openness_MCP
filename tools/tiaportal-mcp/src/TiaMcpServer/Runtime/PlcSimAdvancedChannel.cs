@@ -260,17 +260,33 @@ namespace TiaMcpServer.Runtime
             object value;
             try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
             catch (ArgumentException) { throw new ArgumentException("communicationInterface '" + communicationInterface + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
-            var prop = instance.GetType().GetProperty("CommunicationInterface", Any) ?? throw NotSupported("IInstance.CommunicationInterface");
-            prop.SetValue(instance, value);
-            return Convert.ToString(prop.GetValue(instance)) ?? "";
+            var prop = WritableProperty(instance, "CommunicationInterface") ?? throw NotSupported("IInstance.CommunicationInterface setter");
+            lock (Gate) prop.SetValue(instance, value);
+            return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
         }
 
         public static void SetOperatingMode(PlcSimApi api, object instance, string mode)
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");
             var value = Enum.Parse(enumType, mode, true);
-            var prop = instance.GetType().GetProperty("OperatingMode", Any) ?? throw NotSupported("IInstance.OperatingMode");
-            prop.SetValue(instance, value);
+            var prop = WritableProperty(instance, "OperatingMode") ?? throw NotSupported("IInstance.OperatingMode setter");
+            lock (Gate) prop.SetValue(instance, value);
+        }
+
+        // 2.7.49 (real machine): the runtime's instance class exposes CommunicationInterface / OperatingMode as read-only public
+        // properties and implements the IInstance setters explicitly, so PropertyInfo.SetValue on the concrete type threw
+        // "Property set method not found" (localized) - register with communicationInterface failed AFTER RegisterInstance had
+        // already created the instance. Look for a setter on the concrete type first, then on every interface the instance implements.
+        private static PropertyInfo? WritableProperty(object instance, string name)
+        {
+            var direct = instance.GetType().GetProperty(name, Any);
+            if (direct != null && direct.CanWrite && direct.SetMethod != null) return direct;
+            foreach (var itf in instance.GetType().GetInterfaces())
+            {
+                var p = itf.GetProperty(name, Any);
+                if (p != null && p.CanWrite && p.SetMethod != null) return p;
+            }
+            return null;
         }
 
         public static void RunToNextSyncPoint(object instance)

@@ -3126,7 +3126,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "GetTechnologyObjects"), Description(
             "[L2][Category:PLC-TechnologyObjects][PreCondition:Connect+OpenProject]" +
-            " List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc." +
+            " List all Technology Objects (TOs) in the PLC software: axes, cams, measuring inputs, etc. - root group AND user folders (Folder = '' for the root)." +
             " Returns each TO's Name, type (OfSystemLibElement), and firmware version (OfSystemLibVersion)." +
             " Use this to discover TO names before ExportTechnologyObject." +
             " No tool returns axis/TO parameter values directly — export the TO with ExportTechnologyObject and read the XML file." +
@@ -3143,6 +3143,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     OfSystemLibElement = jo["OfSystemLibElement"]?.GetValue<string>(),
                     OfSystemLibVersion = jo["OfSystemLibVersion"]?.GetValue<string>(),
                     TypeHint = jo["TypeHint"]?.GetValue<string>(),
+                    Folder = jo["Folder"]?.GetValue<string>(),
                 }).ToArray();
 
                 return new ResponseTechnologyObjectList
@@ -3612,7 +3613,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " Required before DownloadToPlc to confirm reachability, or for future online monitoring tools." +
             " Returns State=Online on success." +
             " If ipAddress is omitted, uses the IP address configured in the project's hardware configuration." +
-            " If ipAddress is provided, overrides the configured IP for this session (useful for commissioning with a different IP)." +
+            " If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM')." +
             " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch).")]
         public static ResponseOnlineState GoOnline(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
@@ -3620,7 +3621,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("password: optional CPU access password. Required when the CPU has read/write protection configured. Leave empty for unprotected CPUs.")] string password = "",
             [Description("userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.")] string userName = "",
             [Description("userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.")] string userType = "",
-            [Description("rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.")] string rhTarget = "")
+            [Description("rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.")] string rhTarget = "",
+            [Description("pgPcInterface: optional PG/PC adapter name substring (as listed by ReadTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).")] string pgPcInterface = "")
         {
             try
             {
@@ -3630,7 +3632,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     string.IsNullOrWhiteSpace(password) ? null : password,
                     string.IsNullOrWhiteSpace(userName) ? null : userName,
                     string.IsNullOrWhiteSpace(userType) ? null : userType,
-                    rhTarget ?? "");
+                    rhTarget ?? "",
+                    string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface);
             }
             catch (Exception ex) when (ex is not McpException)
             {

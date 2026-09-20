@@ -72,11 +72,17 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress = null, string? password = null) => GoOnline(softwarePath, ipAddress, password, null, null, "");
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress = null, string? password = null) => GoOnline(softwarePath, ipAddress, password, null, null, "", null);
+
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, null);
 
         // 2.7.33: userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
         // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget)
+        // 2.7.49 (real machine, PLCSIM Advanced): OnlineProvider.GoOnline() uses whatever route TIA last applied - on a fresh
+        // project nothing is applied and TIA answers "The connection cannot be established". The route is now selected like a
+        // download (pgPcInterface + ipAddress -> ConnectionConfiguration.ApplyConfiguration) and an explicit address goes through
+        // the official GoOnline(ConfigurationAddress) overload (V21; V20 applies the address and calls GoOnline()).
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface)
         {
             BaseLeftoversLogic.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
             rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget);
@@ -137,37 +143,24 @@ namespace TiaMcpServer.Siemens
 
                 using var passwordScope = AttachPasswordHandler(provider.Configuration, password, userName, userType, null);
 
-                OnlineState resultState;
-                if (!string.IsNullOrWhiteSpace(ipAddress))
+                string routeNote = "";
+                ConfigurationAddress? address = null;
+                if (!string.IsNullOrWhiteSpace(ipAddress) || !string.IsNullOrWhiteSpace(pgPcInterface))
                 {
-                    var goOnlineWithAddr = provider.GetType()
-                        .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                        .FirstOrDefault(m => m.Name == "GoOnline" && m.GetParameters().Length == 1);
+                    var selection = SelectDownloadRoute(provider.Configuration, pgPcInterface, ipAddress);
+                    if (selection.Error != null)
+                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "GoOnline not attempted: " + selection.Error };
+                    address = selection.Address;
+                    routeNote = " Route: " + selection.Description + ".";
+                }
 
-                    if (goOnlineWithAddr != null)
-                    {
-                        var addrType = goOnlineWithAddr.GetParameters()[0].ParameterType;
-                        var addrCtor = addrType.GetConstructor(new[] { typeof(string) });
-                        if (addrCtor != null)
-                        {
-                            var addr = addrCtor.Invoke(new object[] { ipAddress! });
-                            var rawState = goOnlineWithAddr.Invoke(provider, new[] { addr });
-                            resultState = rawState is OnlineState os ? os : OnlineState.Offline;
-                        }
-                        else
-                        {
-                            resultState = provider.GoOnline();
-                        }
-                    }
-                    else
-                    {
-                        resultState = provider.GoOnline();
-                    }
-                }
-                else
-                {
-                    resultState = provider.GoOnline();
-                }
+                OnlineState resultState;
+#if TIA_V20
+                // V20 has GoOnline() only; the address (when any) was applied through ApplyConfiguration by the route selection.
+                resultState = provider.GoOnline();
+#else
+                resultState = address != null ? provider.GoOnline(address) : provider.GoOnline();
+#endif
 
                 var stateName = resultState.ToString();
                 bool isOnline = stateName == "Online";
@@ -176,7 +169,7 @@ namespace TiaMcpServer.Siemens
                     State = stateName,
                     IsOnline = isOnline,
                     IsReachable = isOnline || stateName == "Protected",
-                    Message = BuildOnlineStateMessage(stateName, softwarePath)
+                    Message = BuildOnlineStateMessage(stateName, softwarePath) + routeNote
                 };
             }
             catch (Exception ex)
@@ -191,9 +184,13 @@ namespace TiaMcpServer.Siemens
         {
             foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
                 foreach (ConfigurationPcInterface pcInterface in EngineeringGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
+                {
                     foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
                         foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
+                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);   // 2.7.49
+                    if (viaSubnet != null) return viaSubnet;
+                }
             return null;
         }
 
