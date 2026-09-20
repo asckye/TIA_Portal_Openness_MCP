@@ -138,8 +138,22 @@ namespace TiaMcpServer.Siemens
             if (action == "update" && r.Properties.Count == 0) throw new ArgumentException("propertiesJson must name at least one property for update.");
             if (r.Properties["signalUsage"] is JsonValue usage) RequireOneOf(usage.GetValue<string>(), SignalUsages, "propertiesJson.signalUsage");
             foreach (var key in new[] { "initialInput", "executedInput", "response" }) if (r.Properties.ContainsKey(key)) ParseConditionValue(r.Properties[key], key);
+            if (action == "create") ValidateConditionValues(signalUsage, r.Properties);
+            else if (r.Properties["signalUsage"] is JsonValue newUsage) ValidateConditionValues(newUsage.GetValue<string>(), r.Properties);   // update without signalUsage: checked against the current usage by the portal
             r.Writes = action != "read" && action != "checkValidity" && !dryRun;
             return r;
+        }
+        // Which of the three inputs a signal usage owns (official examples: OperatingMode -> ExecutedInput, InputCondition -> InitialInput +
+        // ExecutedInput, Response -> Response). 2.7.42 real project: TIA refuses NotRelevant on an owned input ("'NotRelevant' is not
+        // supported when the signal usage is 'InputCondition'") - and the refusal came after Comment / SignalName had already been written,
+        // leaving the condition half updated; the following condition-level CheckValidity took TIA Portal V21 down. So the request is
+        // validated here before anything is written.
+        internal static string[] OwnedInputs(string signalUsage) => signalUsage switch { "OperatingMode" => new[] { "executedInput" }, "InputCondition" => new[] { "initialInput", "executedInput" }, "Response" => new[] { "response" }, _ => Array.Empty<string>() };
+        internal static void ValidateConditionValues(string signalUsage, JsonObject properties)
+        {
+            foreach (var key in OwnedInputs(signalUsage))
+                if (properties.ContainsKey(key) && ParseConditionValue(properties[key], key).EnumName == "NotRelevant")
+                    throw new ArgumentException("propertiesJson." + key + " cannot be NotRelevant while the signal usage is " + signalUsage + " (TIA refuses it natively; use true/false).");
         }
         // Condition.InitialInput / ExecutedInput / Response are typed Object: the official examples assign bool, the API also defines
         // ConditionValue (FALSE / TRUE / NotRelevant). JSON true/false -> bool, "TRUE"/"FALSE"/"NotRelevant" -> enum name.

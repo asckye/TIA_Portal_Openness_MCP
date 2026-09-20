@@ -96,5 +96,6 @@ internal static class TestSuiteShapeChecks
         var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
         foreach(var tool in new[]{"ReadTestSuiteCases","ExchangeTestSuiteCase","RunTestSuiteCase","ManageTestSuiteCase"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
         check(portal.GetMethod("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="namesJson") && portal.GetMethod("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="runAll") && portal.GetMethod("ReadTestSuiteCases")!.GetParameters().Any(p=>p.Name=="kind"),"Test Suite tools take namesJson / runAll / kind (2.7.42 typed retrofit)");
+        check(T(ts,at+"SupportSimulationNotEnabledException")!=null && T(core,"Siemens.Engineering.EngineeringTargetInvocationException")!=null,"empty-group Run failures are EngineeringTargetInvocationException (2.7.42 real project: application executor NRE, system executor 'No test case(s)') - runAll on an empty group is refused by the tool");
     }
 }

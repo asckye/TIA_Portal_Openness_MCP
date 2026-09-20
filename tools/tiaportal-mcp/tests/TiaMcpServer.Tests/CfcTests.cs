@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.Tests
@@ -26,6 +28,26 @@ namespace TiaMcpServer.Tests
             check(X("import", zip, delete: true, dryRun: false).Writes && !X("import", zip, delete: true, dryRun: false).WritesFile && X("exportInstructionData", Path.Combine(temp, "instr.txt"), model: "", dryRun: false).WritesFile, "cfc exchange: import / instruction data");
             check(Fails<ArgumentException>(() => X("export", "relative/Chart1.xml.zip")) && Fails<ArgumentException>(() => X("export", zip, model: "")) && Fails<ArgumentException>(() => X("export", zip, filter: -1)) && Fails<ArgumentException>(() => X("selectiveExport", zip)), "cfc exchange: missing arguments refused");
             check(Fails<ArgumentException>(() => X("export", zip, charts: "[\"CFC_1\"]")) && Fails<ArgumentException>(() => X("export", zip, delete: true)) && Fails<ArgumentException>(() => X("exportInstructionData", zip)) && Fails<ArgumentException>(() => X("exportInstructionData", zip, model: "", filter: 1)) && Fails<ArgumentException>(() => X("archive", zip)), "cfc exchange: stray arguments / unknown action refused");
+
+            // ---- export inventory (2.7.43 preflight: TIA V21 crashed on GetChartProtection / ExportInstructionData on a PLC without charts) ----
+            string inventoryZip = Path.Combine(temp, "mcp-cfc-inventory-" + Guid.NewGuid().ToString("N") + ".xml.zip");
+            try
+            {
+                using (var archive = ZipFile.Open(inventoryZip, ZipArchiveMode.Create))
+                {
+                    using (var w = new StreamWriter(archive.CreateEntry("Data.xml").Open(), new UTF8Encoding(false)))
+                        w.Write("<?xml version=\"1.0\"?><Document><Charts><CFCChart Name=\"CFC_1\"><Block Name=\"B1\"/></CFCChart><CFCChart Name=\"CFC_3\"/><CFCChart Name=\"CFC_1\"/></Charts><Tasks><Task Name=\"OB1\"/></Tasks></Document>");
+                    using (var w = new StreamWriter(archive.CreateEntry("readme.txt").Open())) w.Write("not xml");
+                }
+                var inventory = CfcLogic.InspectExport(inventoryZip);
+                check(inventory.Charts.SequenceEqual(new[] { "CFC_1", "CFC_3" }) && inventory.Entries.SequenceEqual(new[] { "Data.xml", "readme.txt" }) && inventory.Elements.Contains("CFCChart") && inventory.Elements.Contains("Task") && !inventory.Charts.Contains("OB1"), "cfc inventory: chart names from *Chart elements only, distinct, entries and elements reported");
+                File.Delete(inventoryZip);
+                using (var archive = ZipFile.Open(inventoryZip, ZipArchiveMode.Create))
+                    using (var w = new StreamWriter(archive.CreateEntry("Data.xml").Open(), new UTF8Encoding(false))) w.Write("<?xml version=\"1.0\"?><Document><Charts/></Document>");
+                var empty = CfcLogic.InspectExport(inventoryZip);
+                check(empty.Charts.Length == 0 && empty.Elements.SequenceEqual(new[] { "Charts", "Document" }), "cfc inventory: empty export has no charts (refused by the preflight)");
+            }
+            finally { try { File.Delete(inventoryZip); } catch { } }
 
             // ---- protection ----
             CfcLogic.ProtectionRequest P(string action, string chart = "CFC_1", string current = "", string hashed = "", bool dryRun = true)

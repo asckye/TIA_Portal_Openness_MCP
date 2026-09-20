@@ -95,5 +95,6 @@ internal static class SafetyValidationShapeChecks
         Method(sv,ns+"ConditionComposition","Create",new[]{deviceItem,T(sv,ns+"SignalUsage"),text},"Condition");
         Property(sv,ns+"TraceConfiguration","IsTraced","Boolean",true); check(serviceProvider.IsAssignableFrom(T(sv,ns+"TraceConfiguration")),"TraceConfiguration is a service provider (TestValidity)");
         check(T(core,"Siemens.Engineering.IEngineeringObject").GetMethod("SetAttribute",new[]{text,typeof(object)})!=null,"IEngineeringObject.SetAttribute (TraceConfiguration PretriggerTime / RecordingDuration / Signals per manual)");
+        check(server.GetType("TiaMcpServer.Siemens.SafetyValidationLogic",true)!.GetMethod("ValidateConditionValues",BindingFlags.NonPublic|BindingFlags.Static)!=null,"SafetyValidationLogic.ValidateConditionValues (2.7.43: NotRelevant refused per signal usage before any write)");
     }
 }

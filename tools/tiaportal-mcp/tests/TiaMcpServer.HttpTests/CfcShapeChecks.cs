@@ -38,5 +38,7 @@ internal static class CfcShapeChecks
         var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
         foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
         check(portal.GetMethod("ExchangeCfcCharts")!.GetParameters().Any(p=>p.Name=="chartNamesJson"),"ExchangeCfcCharts takes chartNamesJson (SelectiveExport, 2.7.42 typed retrofit)");
+        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(Equals(portal.GetMethod(tool)!.GetParameters().Single(p=>p.Name=="skipChartPreflight").DefaultValue,false),tool+" runs the CompleteExport preflight by default (2.7.43: TIA V21 crashed on a PLC without charts)");
+        check(server.GetType("TiaMcpServer.Siemens.CfcLogic",true)!.GetMethod("InspectExport",BindingFlags.NonPublic|BindingFlags.Static)!=null,"CfcLogic.InspectExport parses the exchange ZIP (chart inventory)");
     }
 }

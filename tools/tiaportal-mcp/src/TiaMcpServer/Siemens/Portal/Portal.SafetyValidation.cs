@@ -167,7 +167,7 @@ namespace TiaMcpServer.Siemens
                 if (action == "checkValidity") { meta["validity"] = CheckValidity(existing!); return "Activation test validity checked (TestValidity.CheckValidity); nothing changed."; }
                 DeviceItem? device = null;
                 if (action == "create") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");
-                if (action == "changeEvaluationDevice") device = ExactEvaluationDevice(existing!.AvailableDevices(), evaluationDeviceName, "evaluationDeviceName");
+                if (action == "changeEvaluationDevice") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");   // 2.7.42 real project: a drive from AvailableDevices is refused natively ("not a valid evaluation device")
                 if (device != null) meta["evaluationDevice"] = DeviceItemRef(device);
                 ActivationTest? source = action == "createFromTest" ? ExactActivationTest(scope.Tests, sourceName) : null;
                 MasterCopy? masterCopy = action == "createFromMasterCopy" ? ExactMasterCopy(libraryName, masterCopyPath) : null;
@@ -298,7 +298,8 @@ namespace TiaMcpServer.Siemens
                 Condition? existing = null;
                 if (action != "create") { var all = All(); if (index >= all.Length) throw new PortalException(PortalErrorCode.NotFound, "index " + index + " out of range: the safety function has " + all.Length + " condition(s)."); existing = all[index]; meta["before"] = ConditionRow(existing, index); }
                 if (action == "read") return "Condition read; nothing changed.";
-                if (action == "checkValidity") { meta["validity"] = CheckValidity(existing!); return "Condition validity checked (TestValidity.CheckValidity); nothing changed."; }
+                if (action == "checkValidity") { meta["validity"] = CheckValidity(existing!); return "Condition validity checked (TestValidity.CheckValidity); nothing changed. 2.7.42 real project: this call took TIA Portal V21 down once, right after an update that TIA had refused half-way - check the function-level validity first."; }
+                if (action == "update" && r.Properties["signalUsage"] == null) Logic.ValidateConditionValues(existing!.SignalUsage.ToString(), r.Properties);
                 DeviceItem? device = action == "create" ? ExactEvaluationDevice(test.AvailableDevices(), deviceName, "deviceName") : null;
                 if (device != null) meta["device"] = DeviceItemRef(device);
                 if (dryRun) return "Condition " + action + " preview; nothing changed.";
@@ -311,13 +312,14 @@ namespace TiaMcpServer.Siemens
                 }
                 void ApplyProperties(Condition c)
                 {
-                    if (r.Properties["comment"] is JsonValue comment) c.Comment = comment.GetValue<string>();
-                    if (r.Properties["deviceName"] is JsonValue dev) c.DeviceName = dev.GetValue<string>();
-                    if (r.Properties["signalName"] is JsonValue sig) c.SignalName = sig.GetValue<string>();
+                    // usage first, then the inputs it owns, then the descriptive fields - a refused input write leaves nothing half done
                     if (r.Properties["signalUsage"] is JsonValue usage) c.SignalUsage = (SignalUsage)Enum.Parse(typeof(SignalUsage), usage.GetValue<string>());
                     if (r.Properties.ContainsKey("initialInput")) c.InitialInput = ConditionValueOf("initialInput", c.InitialInput);
                     if (r.Properties.ContainsKey("executedInput")) c.ExecutedInput = ConditionValueOf("executedInput", c.ExecutedInput);
                     if (r.Properties.ContainsKey("response")) c.Response = ConditionValueOf("response", c.Response);
+                    if (r.Properties["comment"] is JsonValue comment) c.Comment = comment.GetValue<string>();
+                    if (r.Properties["deviceName"] is JsonValue dev) c.DeviceName = dev.GetValue<string>();
+                    if (r.Properties["signalName"] is JsonValue sig) c.SignalName = sig.GetValue<string>();
                 }
                 switch (action)
                 {

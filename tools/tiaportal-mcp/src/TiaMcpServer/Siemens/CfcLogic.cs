@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Xml;
 
 namespace TiaMcpServer.Siemens
 {
@@ -19,6 +22,32 @@ namespace TiaMcpServer.Siemens
         }
 
         internal static readonly string[] ExchangeActions = { "export", "selectiveExport", "import", "exportInstructionData" };
+
+        // ---- exchange file inventory (2.7.43 preflight) ------------------------------------------------------------------------------
+        // The exchange file is a ZIP holding Data.xml (S7TIA exchange model). Chart names are taken from every element whose name contains
+        // "Chart" and that carries a Name attribute; the distinct element names and ZIP entries are reported so an unexpected schema is visible.
+        internal sealed class ExportInventory { public string[] Charts = Array.Empty<string>(); public string[] Elements = Array.Empty<string>(); public string[] Entries = Array.Empty<string>(); }
+        internal static ExportInventory InspectExport(string zipPath)
+        {
+            var charts = new List<string>(); var elements = new HashSet<string>(StringComparer.Ordinal); var entries = new List<string>();
+            using (var archive = ZipFile.OpenRead(zipPath))
+                foreach (var entry in archive.Entries)
+                {
+                    entries.Add(entry.FullName);
+                    if (!entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)) continue;
+                    using var stream = entry.Open();
+                    using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore, IgnoreWhitespace = true, IgnoreComments = true });
+                    while (reader.Read())
+                    {
+                        if (reader.NodeType != XmlNodeType.Element) continue;
+                        if (elements.Count < 200) elements.Add(reader.LocalName);
+                        if (reader.LocalName.IndexOf("Chart", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        var name = reader.GetAttribute("Name") ?? reader.GetAttribute("name");
+                        if (!string.IsNullOrEmpty(name) && !charts.Contains(name, StringComparer.Ordinal)) charts.Add(name);
+                    }
+                }
+            return new ExportInventory { Charts = charts.ToArray(), Elements = elements.OrderBy(e => e, StringComparer.Ordinal).ToArray(), Entries = entries.ToArray() };
+        }
         internal static readonly string[] ProtectionActions = { "read", "add", "change", "remove" };
 
         // ---- exchange ------------------------------------------------------------------------------------------------------------

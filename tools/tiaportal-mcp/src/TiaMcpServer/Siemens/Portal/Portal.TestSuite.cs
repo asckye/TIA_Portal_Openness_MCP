@@ -188,6 +188,11 @@ namespace TiaMcpServer.Siemens
                 var targets = r.Names.Select(n => ExactTestSuiteItem(collection, n, Logic.CategoryLabel(category))).ToArray();
                 meta["before"] = new JsonArray(targets.Select(t => (JsonNode)TestSuiteRow(t)).ToArray());
                 if (runAll) Safe(meta, "expectedCount", () => EngineeringGroupOperations.Items(collection).Count()); else meta["expectedCount"] = targets.Length;
+                // 2.7.42 real project (empty groups): TestCaseExecutor.Run(ApplicationTestSystemGroup) threw a native NullReferenceException inside TIA and
+                // SystemTestCaseExecutor.Run(SystemTestSystemGroup) answered "No test case(s) in the selected project" - only the style-guide executor
+                // returns a Success result for an empty group. Nothing to run means nothing is asked of TIA.
+                if (runAll && meta["expectedCount"] is JsonValue count && count.TryGetValue<int>(out var total) && total == 0)
+                    throw new PortalException(PortalErrorCode.InvalidState, "The " + category + " system group holds no " + Logic.CategoryLabel(category) + "s; runAll is refused (TIA answers a native NullReferenceException for an empty application group and 'No test case(s) in the selected project' for an empty system group).");
                 if (dryRun) return "Native test execution preview. Application / system tests may start a PLCSIM Advanced instance or talk to the configured OPC UA server; real execution needs confirmExternalExecution=true. No test executed.";
                 meta["mayHaveExternalEffects"] = r.External;
                 TestResults results;

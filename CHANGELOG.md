@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.43] - 2026-09-20
+
+引擎 2.7.43.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.43](docs/releases/v2.7.43.md)。2.7.42 真机重跑让 TIA Portal V21 退出三次（CFC 两次、Safety Validation 一次），本版加守卫；引擎本身三次都活着。
+
+- **守卫（CFC）**：`ExchangeCfcCharts selectiveExport / exportInstructionData` 与 `ManageCfcChartProtection` 全部动作先做 `CompleteExport` 预检（临时 ZIP，解析 `Data.xml` 里带 `Name` 的 `*Chart` 元素得到图表清单，`meta.preflight` 报图表数 / 名字 / ZIP 条目 / XML 元素名），PLC 没有图表回 InvalidState、图表名不存在回 NotFound——真机上 `GetChartProtection("MCP_NONE")` 与 `ExportInstructionData` 在没有 CFC 图表文件夹的 1510SP F 上各让 TIA 退出一次；`skipChartPreflight=true` 可跳过（自担风险）；`export` 结果附带解析出的 `inventory`。两个 csproj 引用 `System.IO.Compression`。
+- **守卫（Test Suite）**：`RunTestSuiteCase runAll` 对空的系统组回 InvalidState（真机：application 空组 `TestCaseExecutor.Run` 在 TIA 内抛 NullReferenceException，system 空组回 "No test case(s) in the selected project"，只有样式指南空组回 Success）。
+- **守卫（Safety Validation）**：`ManageSafetyFunctionCondition create / update` 先按信号用途校验 NotRelevant（OperatingMode 拥有 executedInput，InputCondition 拥有 initialInput + executedInput，Response 拥有 response；TIA 原生拒绝但此前 `Comment` / `SignalName` 已写入，对象半更新，紧接的条件级 `CheckValidity` 让 TIA 退出），写入顺序改为用途 → 输入 → 描述字段；`changeEvaluationDevice` 改从 `DeviceQuery.EvaluationDevices()` 解析（真机：驱动被拒 "not a valid evaluation device"）；条件级 `checkValidity` 的描述标注真机崩溃过一次。
+- **验证**：离线 2143 项（新增 7 项：ZIP 清单解析、按用途的 NotRelevant 门）；形状检查 V20 2785 / V21 3073（新增 4 / 5 项）。真实工程：待部署后重跑 CFC 预检拒绝路径与 Test Suite 空组拒绝（交接页 §2）。
+
 ## [2.7.42] - 2026-09-20
 
 引擎 2.7.42.0（V20/V21 均重建），工具 437 → 447，默认 lite 56 项不变。详见 [v2.7.42](docs/releases/v2.7.42.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-③：SafetyValidation + Test Suite + Teamcenter + CFC 选件包——**最后 25 / 122 个功能类型缺口归零，阶段 6 收口**（SafetyValidation 与 Teamcenter 无许可 / 无环境，只有形状检查）。
@@ -9,7 +18,7 @@
 - **新增（Teamcenter Gateway）**：`ManageTeamcenterConnection`（connect（密码转 `SecureString`）/ connectSso / disconnect，会话内保存一份 `TcGatewayConnectionInfo`）、`ManageTeamcenterDataset`（checkout / checkin / cancelCheckout / search / download）、`ManageTeamcenterWorkflow`（readCustomAttributes 与九个保存动作，`confirmSave`；自定义属性经 `SetValue(value, ErrorCallback)`）。
 - **类型化改造（CFC）**：`ExchangeCfcCharts` 改为强类型并新增 `selectiveExport`（`chartNamesJson`）与 `exportInstructionData`；新增 `ManageCfcChartProtection`（read / add / change / remove）。
 - **审计**：有专用引用 629 → 668，完全未触及 158 → 116，未封装功能类型 25 / 122 → **0 / 0**（SafetyValidation 8 / 34、Test Suite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7 全部归零）。
-- **验证**：离线 2136 项（新增 80 项）；形状检查 V20 2781 / V21 3068（新增 190 / 257 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程：待部署后按交接页 §2 重跑（Test Suite 三组为空、CFC 无图表，只能验 NotFound / 空表 / NotSupported 路径）。
+- **验证**：离线 2136 项（新增 80 项）；形状检查 V20 2781 / V21 3068（新增 190 / 257 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-20，见 `docs/releases/v2.7.42.md#验证`）：Test Suite 三组空表与样式指南空组执行通过，application 空组 `Run` 在 TIA 内抛 NRE；CFC `CompleteExport` 通过，`GetChartProtection`（未知图表）与 `ExportInstructionData` 各让 TIA 退出一次；**Safety Validation Assistant 虚拟机有选件**，激活测试 / 组 / 安全功能 / 条件 / 跟踪 / 有效性 / 报告 / 导出导入 / 删除全链路通过，条件级 `CheckValidity` 在一次半拒绝的 update 之后让 TIA 退出；Teamcenter 提供者存在、无服务器。三次退出引擎都活着（2.7.41 存活路径首次真机验证）。守卫见 2.7.43。
 
 ## [2.7.41] - 2026-09-20
 
