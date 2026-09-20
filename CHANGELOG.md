@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.7.48] - 2026-09-21
+
+引擎 2.7.48.0（V20/V21 均重建），**工具 448**（新增 `ManageOpcUaInterface`），默认 lite 56 项不变。详见 [v2.7.48](docs/releases/v2.7.48.md)。2.7.46 / 2.7.47 部署后在 `项目1` 重跑台账 🔁 行与刻意绕开的项目的结果。
+
+- **重跑结果**：45 行 🔁 里 43 行转为通过（标签注释、桥接导出、真实文件路径、DB 编号、交叉引用、报警类 .DAT、ProDiag、系统诊断 .dat、PROFINET 子网连接 PLC↔TP700、导轨插 DI16 与地址改写、端口互连、属性多备选、经典变量表递归、`ImportHmiScreen` 剥属性后导入成功、全局库、`ImportOpcUaInterface` 诚实报错、安全自检、DCC 默认值、Unified 面板旧版本守卫……）；宽松绑定四类写法全部生效。
+- **刻意绕开的项也跑了**：`SaveAsProject` / `RetrieveProjectArchive` / `ScaffoldProject`（真建工程，7 步全过）/ `CreateProject` 通过；工艺对象 `PID_Compact 2.3`、`TO_SpeedAxis 5.0`、`TO_PositioningAxis 5.0` 都能建——**crash ⑨ 只在 `TO_PositioningAxis 6.0`**（CPU 不提供的版本不被干净拒绝而是退出），描述改为"用官方表的最低版本"；`ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ConfigureMotionHardwareConnection` 在自建轴上通过。
+- **新的 TIA 退出点 ⑩ 与守卫**：经典画面 XML 的 Width/Height 与面板不一致（构建器默认 640×480，TP700 是 800×480）→ `NonRecoverableException "The screen size does not match the device"`，TIA 退出。`ImportHmiScreen` 现在先比对面板已有画面或硬件目录描述里的分辨率（"800 x 480 像素"），不一致或查不到就拒绝；三个经典画面构建器的描述标明尺寸要求。
+- **修复**：`ImportTechnologyObject` 反射找错属性名（`TechnologyObjectGroup`），改为类型化 `TechnologicalObjectGroup`；`ExportTechnologyObjectsToDirectory` 空消息；`WriteClassicHmiMinimalPackageFiles` 忽略 `packageName`；8 处 "Invalid … action." 拒绝信息改为列出合法值（宽松绑定的大小写重试才有依据）。
+- **新增**：`ManageOpcUaInterface`（read / delete 一个 OPC UA 服务器接口 / SIMATIC 接口 / 引用命名空间）——2.7.45 假成功留下的空接口让整个 PLC 编译失败，此前没有任何工具能删它；`ManagePlcSimAdvancedInstance` 新增 `communicationInterface=TCPIP`（PLCSIM Advanced 实例走虚拟网卡，供 `DownloadToPlc` / `GoOnline` 安全地对虚拟 PLC 跑在线族）。
+- **事实更正**：虚拟机网段 192.168.0.1 上那台 "CPU 1510SP F（RUN）"是维护者当时开着的 PLCSIM Advanced 实例，不是真实 CPU（现已消失，实例表为空）。
+
 ## [2.7.47] - 2026-09-20
 
 引擎 2.7.47.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.47](docs/releases/v2.7.47.md)。针对维护者反映的"AI 调用工具反复出现格式错误"：`CallTool` 桥接做宽松绑定。

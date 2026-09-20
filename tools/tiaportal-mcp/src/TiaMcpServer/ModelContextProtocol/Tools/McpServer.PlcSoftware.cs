@@ -512,7 +512,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildClassicHmiScreenXml"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project.")]
+        [McpServerTool(Name = "BuildClassicHmiScreenXml"), Description("[L2][HMI-Classic]Offline-only helper: build a Classic/Basic WinCC HMI screen XML document from structured JSON. It does not connect to TIA Portal, import screens, or modify projects. Validate in a temporary Classic HMI project before using on a real project. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public static ResponseXmlBuild BuildClassicHmiScreenXml(
             [Description("designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties.")] string designJson)
         {
@@ -1009,7 +1009,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildClassicHmiMinimalPackage"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package from structured JSON. It returns tag-table XML, screen XML, import order, and readiness checks that screen item tag references are declared in the tag table. It does not connect to TIA Portal, import files, or modify projects.")]
+        [McpServerTool(Name = "BuildClassicHmiMinimalPackage"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package from structured JSON. It returns tag-table XML, screen XML, import order, and readiness checks that screen item tag references are declared in the tag table. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public static ResponseJsonReport BuildClassicHmiMinimalPackage(
             [Description("packageJson: JSON object with Name, ScreenDesign, and TagTable. Screen items may reference HMI tags through Tag/HmiTag/ProcessValueTag or Properties.*Tag.")] string packageJson)
         {
@@ -1036,7 +1036,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "WriteClassicHmiMinimalPackageFiles"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects.")]
+        [McpServerTool(Name = "WriteClassicHmiMinimalPackageFiles"), Description("[L2][HMI-Classic]Offline-only helper: build a minimal Classic/Basic HMI package and write tag-table XML, screen XML, and manifest JSON to an output directory. It does not connect to TIA Portal, import files, or modify projects. screen.width/height MUST equal the panel display (TP700 Comfort 800x480, TP900 800x480, TP1200 1280x800; the builder default is 640x480): a classic screen imported with another size makes TIA Portal V21 exit (crash 10, guarded by ImportHmiScreen when the panel already has a screen).")]
         public static ResponseJsonReport WriteClassicHmiMinimalPackageFiles(
             [Description("packageJson: JSON object with Name, ScreenDesign, and TagTable.")] string packageJson,
             [Description("outputDirectory: directory where tag-table XML, screen XML, and manifest JSON will be written.")] string outputDirectory)
@@ -3191,7 +3191,16 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("exportDir: directory to write XML files to, e.g. 'C:\\Temp\\TOs'")] string exportDir,
             [Description("regexName: optional regex filter on TO name; empty = export all")] string regexName = "")
         {
-            try { return Portal.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName); }
+            try
+            {
+                var result = Portal.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName);
+                // 2.7.48: the batch answered with an empty message on the real project; say what happened.
+                var exportedCount = result.Imported?.Count() ?? 0; var failedCount = result.Failed?.Count() ?? 0;
+                result.Message = $"Exported {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}" + (failedCount > 0 ? ": " + string.Join(" | ", result.Failed!.Take(5).Select(f => f.Path + " -> " + (f.Error ?? "").Split('\n')[0])) : "");
+                result.Meta ??= new JsonObject { ["timestamp"] = DateTime.Now };
+                result.Meta["success"] = failedCount == 0;
+                return result;
+            }
             catch (Exception ex) when (ex is not McpException)
             { throw new McpException($"Unexpected error batch-exporting technology objects: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
         }
@@ -3396,6 +3405,17 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) when (ex is not McpException)
             { throw new McpException($"Unexpected error reading OPC UA config: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
         }
+
+        [McpServerTool(Name = "ManageOpcUaInterface"), Description(
+            "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC (ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback)." +
+            " Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with 'The OPC UA server interface ... is empty or does not contain unique nodes'). Default preview; dryRun=false deletes; no save/compile/download.")]
+        public static ResponseMessage ManageOpcUaInterface(
+            [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
+            [Description("interfaceName: exact name as shown in GetOpcUaConfig")] string interfaceName,
+            [Description("action: read (default) or delete")] string action = "read",
+            [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
+            [Description("dryRun: true (default) previews; false deletes")] bool dryRun = true)
+            => Portal.ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun);
 
         [McpServerTool(Name = "SetOpcUaInterfaceEnabled"), Description(
             "[L2][Category:PLC-OpcUA][PreCondition:Connect+OpenProject]" +

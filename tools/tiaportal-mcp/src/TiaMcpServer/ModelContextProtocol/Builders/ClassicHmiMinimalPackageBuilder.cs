@@ -60,7 +60,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
             Directory.CreateDirectory(outputDirectory);
             var package = BuildFromJson(packageJson);
-            var packageName = SanitizeFileName(package["packageName"]?.ToString() ?? "Classic_HMI_Minimal_Package");
+            // 2.7.48: honour the caller's packageName (the files were always named Classic_HMI_Minimal_Package_* on the real project)
+            var requestedName = (JsonNode.Parse(packageJson) as JsonObject)?["packageName"]?.ToString();
+            var packageName = SanitizeFileName(!string.IsNullOrWhiteSpace(requestedName) ? requestedName! : package["packageName"]?.ToString() ?? "Classic_HMI_Minimal_Package");
             var tagTablePath = Path.Combine(outputDirectory, packageName + "_TagTable.xml");
             var screenPath = Path.Combine(outputDirectory, packageName + "_Screen.xml");
             var manifestPath = Path.Combine(outputDirectory, packageName + "_manifest.json");

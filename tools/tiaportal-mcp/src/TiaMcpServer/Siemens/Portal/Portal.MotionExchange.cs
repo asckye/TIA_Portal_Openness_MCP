@@ -36,7 +36,7 @@ namespace TiaMcpServer.Siemens
             });
         public ResponseMessage ConfigureMotionHardwareConnection(string softwarePath,string objectPath,string interfaceKind,string action,int inputBitAddress=0,int outputBitAddress=0,string connectOption="Default",int sensorIndex=0,bool dryRun=true)
             =>RunHmiStepTool("ConfigureMotionHardwareConnection",meta=>{
-                if(!new[]{"read","connect","disconnect"}.Contains(action))throw new ArgumentException("Invalid action.");
+                if (!new[] { "read", "connect", "disconnect" }.Contains(action)) throw new ArgumentException("action must be one of: read/connect/disconnect (case-sensitive).");
                 bool write=action!="read"&&!dryRun;using var access=write ? AcquireHmiEditAccess() : null;
                 var target=ExactTechnology(softwarePath,objectPath,write);
                 // 2.7.36: typed AxisHardwareConnectionProvider (ActorInterface / SensorInterface[i] : AxisEncoderHardwareConnectionInterface, TorqueInterface : TorqueHardwareConnectionInterface).

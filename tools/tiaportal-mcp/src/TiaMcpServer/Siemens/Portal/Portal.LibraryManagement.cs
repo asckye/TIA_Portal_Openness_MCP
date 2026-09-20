@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
             string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)
             => RunHmiStepTool("ManageLibraryTypeVersion", meta => {
-                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action)) throw new ArgumentException("Invalid library version action.");
+                if (!new[] { "read", "edit", "release", "setDefault", "deleteVersion", "updateInstances", "discard", "findInstances" }.Contains(action)) throw new ArgumentException("action must be one of: read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances (case-sensitive).");
                 bool writing = action != "read" && action != "findInstances" && !dryRun;
                 using var access = writing ? AcquireHmiEditAccess() : null;
                 var library = ExactOpenEngineeringLibrary(libraryName);

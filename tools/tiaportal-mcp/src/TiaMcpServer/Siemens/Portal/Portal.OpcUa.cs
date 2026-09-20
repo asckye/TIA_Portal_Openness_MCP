@@ -104,6 +104,31 @@ namespace TiaMcpServer.Siemens
             return arr;
         }
 
+        // 2.7.48: delete (or read) one OPC UA server interface / SIMATIC interface / reference namespace - there was no way to remove
+        // an interface (the 2.7.45 ImportOpcUaInterface bug left an empty server interface behind that made the whole PLC fail to
+        // compile: "The OPC UA server interface ... is empty or does not contain unique nodes").
+        public ResponseMessage ManageOpcUaInterface(string softwarePath, string interfaceName, string action = "read", string interfaceType = "ServerInterface", bool dryRun = true)
+            => RunHmiStepTool("ManageOpcUaInterface", meta => {
+                if (action != "read" && action != "delete") throw new ArgumentException("action must be read/delete.");
+                if (string.IsNullOrWhiteSpace(interfaceName)) throw new ArgumentException("Exact interfaceName required (GetOpcUaConfig lists them).");
+                bool writing = action == "delete" && !dryRun;
+                using var access = writing ? AcquireHmiEditAccess() : null;
+                var plc = ExactPlcForEngineering(softwarePath, writing);
+                var sig = GetOpcUaServerInterfaceGroup(plc) ?? throw new NotSupportedException("ServerInterfaceGroup not accessible on this PLC.");
+                string collectionProp = interfaceType switch { "SimaticInterface" => "SimaticInterfaces", "ReferenceNamespace" => "ReferenceNamespaces", "ServerInterface" => "ServerInterfaces", _ => throw new ArgumentException("interfaceType must be ServerInterface/SimaticInterface/ReferenceNamespace.") };
+                var collection = TryGetPropertyValue(sig, collectionProp) ?? throw new NotSupportedException(collectionProp + " not accessible.");
+                var item = FindByName(collection, interfaceName) ?? throw new PortalException(PortalErrorCode.NotFound, interfaceType + " '" + interfaceName + "' not found in '" + softwarePath + "'.");
+                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["interfaceType"] = interfaceType; meta["interfaceName"] = interfaceName;
+                meta["before"] = EngineeringScalarProperties.Read(item);
+                if (action == "read") return "OPC UA interface read; no changes.";
+                if (!writing) return "OPC UA interface deletion preview; nothing changed.";
+                meta["mayHaveChanged"] = true;
+                EngineeringGroupOperations.Call(item, "Delete", Type.EmptyTypes);
+                if (FindByName(TryGetPropertyValue(sig, collectionProp), interfaceName) != null) throw new InvalidOperationException("Interface still present after Delete.");
+                meta["verifiedAbsent"] = true;
+                return "OPC UA interface deleted and absence verified; compile afterwards, no save/download.";
+            });
+
         public ResponseMessage SetOpcUaInterfaceEnabled(string softwarePath, string interfaceName, bool enabled, string interfaceType = "ServerInterface")
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };

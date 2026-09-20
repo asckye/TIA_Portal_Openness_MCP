@@ -2,20 +2,20 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部 447 个工具各跑了一遍：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
-| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 265 |
+| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 314 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
-| ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 26 |
-| 🔁 2.7.46 已修 | 今天真机暴露了缺陷，2.7.46 源码已修，部署后要重跑 | 45 |
-| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 22 |
+| ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 25 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修（2.7.46 / 2.7.48），部署后要重跑 | 2 |
+| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 30 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 64 |
-| 🚫 不运行 | 刻意不跑 | 7 |
-| ❌ 未跑 | 未跑 | 12 |
+| 🚫 不运行 | 刻意不跑 | 0 |
+| ❌ 未跑 | 未跑 | 6 |
 
-TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified 面板用了 `/20.0.0.0` 标识（TIA V21）；⑨ `ManageTechnologyObject create TO_PositioningAxis 6.0`（1515F-2 PN V2.9）。
+TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified 面板用了 `/20.0.0.0` 标识（TIA V21，2.7.46 守卫）；⑨ `ManageTechnologyObject create TO_PositioningAxis 6.0`（1515F-2 PN V2.9；5.0 正常）；⑩ 经典画面 XML 的尺寸与面板不一致（640×480 导入 TP700 800×480，2.7.48 守卫）。
 
 ## Bootstrap（1）
 
@@ -30,7 +30,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `Doctor` | ✅ 通过 |  |
 | `RunCapabilitySelfTest` | ✅ 通过 |  |
 | `RunHmiActionScriptRecipeSafetySelfTest` | ✅ 通过 |  |
-| `RunOnlineMonitoringSafetySelfTest` | 🔁 2.7.46 已修 | 把 ManageWatchForceTableWebAccess 当强制写工具（名字启发式误报）；2.7.46 白名单 |
+| `RunOnlineMonitoringSafetySelfTest` | ✅ 通过 | 2.7.47 重跑通过 |
 | `ValidateAutomationContext` | ✅ 通过 |  |
 
 ## Exports（5）
@@ -54,32 +54,32 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CompileAndDiagnoseHmi` | ⛔ TIA/环境拒绝 | 新面板没有起始画面（'A start screen has not been configured'）——编译诊断本身正常 |
-| `DescribeHmiScreen` | 🔁 2.7.46 已修 | 依赖画面导入（见 ImportHmiScreen） |
-| `DescribeHmiScreenItem` | 🔁 2.7.46 已修 | 依赖画面导入（见 ImportHmiScreen） |
+| `DescribeHmiScreen` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
+| `DescribeHmiScreenItem` | ⚠ 参数/前置条件 | 画面导入后 ScreenItems 里没找到 Btn（经典构建器的按钮项名/结构待核） |
 | `DescribeHmiSoftware` | ✅ 通过 |  |
-| `DescribeHmiTag` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
-| `DescribeHmiTagTable` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
+| `DescribeHmiTag` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
+| `DescribeHmiTagTable` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
 | `ExportHmiConnection` | ⚠ 参数/前置条件 | 无 HMI 连接对象 / 文件不存在 |
 | `ExportHmiProgram` | ✅ 通过 |  |
-| `ExportHmiScreen` | 🔁 2.7.46 已修 | 依赖画面导入（见 ImportHmiScreen） |
-| `ExportHmiTagTable` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
+| `ExportHmiScreen` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
+| `ExportHmiTagTable` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
 | `GenerateSiVArc` | ✅ 通过 |  |
 | `GetHmiConnections` | ✅ 通过 |  |
 | `GetHmiProgramInfo` | ✅ 通过 |  |
 | `GetHmiScreens` | ✅ 通过 |  |
-| `GetHmiTagTables` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
-| `GetHmiTags` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
+| `GetHmiTagTables` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
+| `GetHmiTags` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
 | `ImportHmiConnection` | ⚠ 参数/前置条件 | 无 HMI 连接对象 / 文件不存在 |
-| `ImportHmiScreen` | 🔁 2.7.46 已修 | TP700 Comfort V17 拒绝 Button 的 <Visible>（set_Visible not supported）；2.7.46 剥掉该属性重试 |
-| `ImportHmiScreensFromDirectory` | 🔁 2.7.46 已修 | TP700 Comfort V17 拒绝 Button 的 <Visible>（set_Visible not supported）；2.7.46 剥掉该属性重试 |
-| `ImportHmiTagTable` | 🔁 2.7.46 已修 | 导入进用户文件夹后根级查找说没有；2.7.46 递归用户文件夹，未知表回 NotFound |
+| `ImportHmiScreen` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
+| `ImportHmiScreensFromDirectory` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
+| `ImportHmiTagTable` | ✅ 通过 | 2.7.47 重跑通过：用户文件夹里的表可见，未知表 NotFound |
 | `ImportHmiTagTablesFromDirectory` | ✅ 通过 |  |
 | `ListHmiScreenPaths` | ✅ 通过 |  |
 | `ManageSiVArcRule` | ⚠ 参数/前置条件 | 需要 rule 名/createOption/libraryItemKind；规则文件夹/表 create/delete、ReadSiVArcRules、GenerateSiVArc 预览通过 |
 | `ManageSivarcRuleContainer` | ✅ 通过 |  |
-| `ManageSivarcScreenLayout` | 🔁 2.7.46 已修 | 依赖画面导入（见 ImportHmiScreen） |
+| `ManageSivarcScreenLayout` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
 | `ManageSivarcTableRule` | ⚠ 参数/前置条件 | 需要 rule 名/createOption/libraryItemKind；规则文件夹/表 create/delete、ReadSiVArcRules、GenerateSiVArc 预览通过 |
-| `ReadHmiScreenSnapshot` | 🔁 2.7.46 已修 | 依赖画面导入（见 ImportHmiScreen） |
+| `ReadHmiScreenSnapshot` | ✅ 通过 | 2.7.47 重跑通过：800×480 画面导入 TP700（剥掉 Button.Visible）；640×480 = crash ⑩ |
 | `ReadSiVArcRules` | ✅ 通过 |  |
 | `ReadSivarcRuleTree` | ✅ 通过 |  |
 | `ResolveSivarcExpression` | ⚠ 参数/前置条件 | 需要 rule 名/createOption/libraryItemKind；规则文件夹/表 create/delete、ReadSiVArcRules、GenerateSiVArc 预览通过 |
@@ -114,9 +114,9 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `AnalyzeGlobalLibraryPackage` | ⚠ 参数/前置条件 | 离线助手：输入目录/文件/JSON 形状不满足（有明确的拒绝信息） |
 | `AnalyzeHmiTemplateReference` | ⚠ 参数/前置条件 | 离线助手：输入目录/文件/JSON 形状不满足（有明确的拒绝信息） |
 | `AnalyzeUnifiedHmiTemplateLayout` | ✅ 通过 |  |
-| `ImportMasterCopyFromGlobalLibrary` | 🔁 2.7.46 已修 | 会把已打开的库关掉；2.7.46 复用已打开的库不关闭（probe 今天通过；import 是画面向的助手，块主副本不适用） |
+| `ImportMasterCopyFromGlobalLibrary` | ⚠ 参数/前置条件 | 画面向的助手（把主副本放到 HMI 画面上）；库里只有块 / UDT / 设备主副本，没有画面主副本可用 |
 | `PlanGlobalLibraryTemplateReuse` | ✅ 通过 |  |
-| `ProbeGlobalLibrary` | 🔁 2.7.46 已修 | 会把已打开的库关掉；2.7.46 复用已打开的库不关闭（probe 今天通过；import 是画面向的助手，块主副本不适用） |
+| `ProbeGlobalLibrary` | ✅ 通过 | 2.7.47 重跑通过：openMode 为空可 open/close；探针不再关掉已打开的库 |
 
 ## HMI-Unified（70）
 
@@ -197,16 +197,16 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `AddDevice` | ✅ 通过 | 1515F-2 PN V2.9、TP700 Comfort V17、S120 V5.2、MTP700 Unified /21.0.0.0 通过；/20.0.0.0 让 TIA 退出（crash ⑧，2.7.46 守卫） |
+| `AddDevice` | ✅ 通过 | 1515F-2 PN V2.9、TP700 Comfort V17、S120 V5.2、MTP700 Unified /21.0.0.0 通过；/20.0.0.0 现被守卫拒绝（crash ⑧） |
 | `AddDeviceWithFallback` | ✅ 通过 |  |
 | `AddGsdDeviceWithProbe` | ✅ 通过 |  |
-| `AddHardwareCatalogDeviceWithProbe` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
+| `AddHardwareCatalogDeviceWithProbe` | ✅ 通过 | 2.7.47 重跑通过：MTP700 Unified 探针插入成功（41 s） |
 | `AttachDeviceNodeToSubnet` | ✅ 通过 |  |
 | `BuildDeviceAmlDocument` | ✅ 通过 |  |
-| `ConnectDeviceNodesToProfinetSubnet` | 🔁 2.7.46 已修 | Comfort 面板的以太网口在 IE_CP_1 下两层，扫描不递归硬件组件；2.7.46 递归 |
-| `DumpDeviceAttributes` | 🔁 2.7.46 已修 | nameFilter 只支持单个子串，2.7.46 支持 '/' 多备选（无过滤时今天通过，253 属性） |
+| `ConnectDeviceNodesToProfinetSubnet` | ✅ 通过 | 2.7.47 重跑通过：MCP_PLC ↔ MCP_TP700 接到 MCP_PN |
+| `DumpDeviceAttributes` | ✅ 通过 | 2.7.47 重跑通过：`Ip/Name/Cycle` 匹配 25 项 |
 | `EnsureSubnet` | ✅ 通过 |  |
-| `ExchangeSystemDiagnosticsSettings` | 🔁 2.7.46 已修 | 文件必须 .dat（真机 'Filename suffix must be .dat'），2.7.46 前置检查 |
+| `ExchangeSystemDiagnosticsSettings` | ✅ 通过 | 2.7.47 重跑通过：.dat 导出 407 字节 + import 预览 |
 | `ExportDeviceAml` | ✅ 通过 |  |
 | `GetDeviceInfo` | ✅ 通过 |  |
 | `GetDeviceIpAddress` | ✅ 通过 |  |
@@ -219,10 +219,10 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `GetProjectTopology` | ✅ 通过 |  |
 | `GetPutGetAccess` | ⛔ TIA/环境拒绝 | 1515F-2 PN V2.9 不把 PUT/GET 暴露为 Openness 属性（253 个属性里没有） |
 | `ImportDeviceAml` | ✅ 通过 |  |
-| `ManageCommunicationConnection` | 🔁 2.7.46 已修 | HW 连接组合不是服务，在 Features.CommunicationManagement.Connections 上；2.7.46 改取法 |
+| `ManageCommunicationConnection` | ⛔ TIA/环境拒绝 | create HmiConnection：原生 Create 返回对象但连接数不增（IsValid=false）——TIA 语义待查 |
 | `ManageDcbLibraries` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccBlock` | ✅ 通过 |  |
-| `ManageDccChart` | 🔁 2.7.46 已修 | driveObjectNumber 无默认值（同族其它工具默认 0），2.7.46 补默认；DCC 全族今天在 MCP_S120 V5.2 驱动轴上通过 |
+| `ManageDccChart` | ✅ 通过 | 2.7.47 重跑通过：不传 driveObjectNumber 也可 |
 | `ManageDccChartInterface` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccChartPartition` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccPin` | ✅ 通过 |  |
@@ -234,25 +234,25 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManageDriveSafetyAcceptanceTest` | ✅ 通过 |  |
 | `ManageDriveSecurity` | ✅ 通过 |  |
 | `ManageDriveTelegrams` | ✅ 通过 |  |
-| `ManageHardwareObject` | 🔁 2.7.46 已修 | 精确硬件路径解析不看 Items（面板子项 / 导轨模块），2.7.46 回退到 Items；deleteItem/deleteDevice/copyItem/moveItem 今天通过 |
+| `ManageHardwareObject` | ✅ 通过 | 2.7.47 重跑通过：面板端口经 Items 回退解析，PLC 端口 1 ↔ TP700 端口 1 connect 成功；deleteItem / deleteDevice 通过 |
 | `ManageHardwareUtilities` | ✅ 通过 |  |
 | `ManageIoSystem` | ✅ 通过 |  |
 | `ManageNetworkDomain` | ✅ 通过 |  |
 | `ManageOnlineDriveFunctions` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `ManagePortInterconnection` | 🔁 2.7.46 已修 | 精确硬件路径解析不看 Items（面板子项 / 导轨模块），2.7.46 回退到 Items；deleteItem/deleteDevice/copyItem/moveItem 今天通过 |
+| `ManagePortInterconnection` | ✅ 通过 | 2.7.47 重跑通过：面板端口经 Items 回退解析，PLC 端口 1 ↔ TP700 端口 1 connect 成功；deleteItem / deleteDevice 通过 |
 | `ManageStartdriveParameter` | ✅ 通过 |  |
 | `ManageTechnologyExtensions` | ✅ 通过 |  |
 | `ManageTransferArea` | ⚠ 参数/前置条件 | kind 须 standard/multicast；接口无传输区（ReadTransferAreas 通过） |
 | `ManageWatchForceTableWebAccess` | ✅ 通过 |  |
 | `PlanHardwareNetworkConfiguration` | ⚠ 参数/前置条件 | 计划校验按设计报错（subnetType 等） |
-| `PlugDeviceItem` | 🔁 2.7.46 已修 | S7-1500 导轨/S120 Device 级插入后读回失败（模块落在宿主之下一层）；2.7.46 按名递归读回；插入本身今天通过（DI16、电机模块、电机、编码器） |
+| `PlugDeviceItem` | ✅ 通过 | 2.7.47 重跑通过：导轨槽 2 插 DI16 读回 IsPlugged=true |
 | `ProbeHardwareHmiConnectionOwnerCandidates` | ✅ 通过 |  |
 | `ProbeHardwareHmiConnectionWhitelistedServices` | ✅ 通过 |  |
-| `ReadCommunicationConnections` | 🔁 2.7.46 已修 | HW 连接组合不是服务，在 Features.CommunicationManagement.Connections 上；2.7.46 改取法 |
+| `ReadCommunicationConnections` | ✅ 通过 | 2.7.47 重跑通过：经 CommunicationManagement 读到 0 条 |
 | `ReadDccCharts` | ✅ 通过 |  |
-| `ReadDccObject` | 🔁 2.7.46 已修 | driveObjectNumber 无默认值（同族其它工具默认 0），2.7.46 补默认；DCC 全族今天在 MCP_S120 V5.2 驱动轴上通过 |
+| `ReadDccObject` | ✅ 通过 | 2.7.47 重跑通过：不传 driveObjectNumber 也可 |
 | `ReadDeviceAddressing` | ✅ 通过 |  |
-| `ReadDeviceItemChannels` | ✅ 通过 |  |
+| `ReadDeviceItemChannels` | ✅ 通过 | 2.7.47 重跑通过：子项路径 MCP_DI/MCP_DI，起始地址 0→20→30，通道读取 |
 | `ReadDriveObjects` | ✅ 通过 |  |
 | `ReadDriveParameters` | ⚠ 参数/前置条件 | valueJson 须为对象 / source 为 read/write；2.7.45 真机在 S120 上 read 通过（见 handoff §6） |
 | `ReadHardwareFeatures` | ✅ 通过 |  |
@@ -264,10 +264,10 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `SearchInstalledGsdDevices` | ✅ 通过 |  |
 | `SetCpuCommonSettings` | ✅ 通过 |  |
 | `SetDeviceItemAttribute` | ✅ 通过 |  |
-| `SetDeviceItemIoAddress` | ⚠ 参数/前置条件 | DI 模块的地址在子项 MCP_DI/MCP_DI 上（工具已提示），通道更新需 attributesJson |
+| `SetDeviceItemIoAddress` | ✅ 通过 | 2.7.47 重跑通过：子项路径 MCP_DI/MCP_DI，起始地址 0→20→30，通道读取 |
 | `SetPutGetAccess` | ⛔ TIA/环境拒绝 | 1515F-2 PN V2.9 不把 PUT/GET 暴露为 Openness 属性（253 个属性里没有） |
-| `UpdateDeviceAddress` | ⚠ 参数/前置条件 | DI 模块的地址在子项 MCP_DI/MCP_DI 上（工具已提示），通道更新需 attributesJson |
-| `UpdateDeviceItemChannel` | ⚠ 参数/前置条件 | DI 模块的地址在子项 MCP_DI/MCP_DI 上（工具已提示），通道更新需 attributesJson |
+| `UpdateDeviceAddress` | ✅ 通过 | 2.7.47 重跑通过：子项路径 MCP_DI/MCP_DI，起始地址 0→20→30，通道读取 |
+| `UpdateDeviceItemChannel` | ⛔ TIA/环境拒绝 | DI16 通道属性 InputDelay 按 GetAttributeInfos 不可写（守卫正确） |
 
 ## Library（13）
 
@@ -278,7 +278,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `CompareLibraryObjects` | ⚠ 参数/前置条件 | 全局库里没有库类型（文档导入需要 .s7dcl 文件，今天路径不存在）；库文件夹/主副本/比较/更新检查通过 |
 | `CreateLibraryMasterCopy` | ✅ 通过 |  |
 | `ImportLibraryTypeDocuments` | ⚠ 参数/前置条件 | 全局库里没有库类型（文档导入需要 .s7dcl 文件，今天路径不存在）；库文件夹/主副本/比较/更新检查通过 |
-| `ManageGlobalLibrary` | 🔁 2.7.46 已修 | openMode 为空时 create/save/close 报 '要在此字符串中进行分析'；2.7.46 容忍；create/list/infos/save/archive/saveAs/open/close 今天通过，saveAs 后库名变成目录名（TIA 语义） |
+| `ManageGlobalLibrary` | ✅ 通过 | 2.7.47 重跑通过：openMode 为空可 open/close；探针不再关掉已打开的库 |
 | `ManageLibraryFolder` | ✅ 通过 |  |
 | `ManageLibraryMasterCopy` | ✅ 通过 |  |
 | `ManageLibraryType` | ⚠ 参数/前置条件 | 全局库里没有库类型（文档导入需要 .s7dcl 文件，今天路径不存在）；库文件夹/主副本/比较/更新检查通过 |
@@ -299,20 +299,20 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `GetPlcRunStateS7` | ✅ 通过 | 只读 S7 协议对 192.168.0.1（CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势采样、监控表实时值 |
-| `MonitorWatchTableLiveS7` | ✅ 通过 | 只读 S7 协议对 192.168.0.1（CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势采样、监控表实时值 |
+| `GetPlcRunStateS7` | ✅ 通过 | 只读 S7 协议对当时运行中的 PLCSIM Advanced 实例（192.168.0.1，CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势、监控表实时值 |
+| `MonitorWatchTableLiveS7` | ✅ 通过 | 只读 S7 协议对当时运行中的 PLCSIM Advanced 实例（192.168.0.1，CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势、监控表实时值 |
 | `PlanOnlineReadOnlyDataProvider` | ⚠ 参数/前置条件 | mode 须 current-values/watch-table-export-plan；数据源计划拒绝了未知标签（预期） |
 | `PlanOnlineReadOnlyMonitoring` | ⚠ 参数/前置条件 | mode 须 current-values/watch-table-export-plan；数据源计划拒绝了未知标签（预期） |
 | `ProbePlcMonitorOnlineCapabilities` | ✅ 通过 |  |
-| `ProbeS7CpuIdentity` | ✅ 通过 | 只读 S7 协议对 192.168.0.1（CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势采样、监控表实时值 |
+| `ProbeS7CpuIdentity` | ✅ 通过 | 只读 S7 协议对当时运行中的 PLCSIM Advanced 实例（192.168.0.1，CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势、监控表实时值 |
 | `ReadPlcLiveValuesOpcUa` | ⛔ TIA/环境拒绝 | 192.168.0.1:4840 拒绝连接（CPU 未开 OPC UA） |
-| `ReadPlcLiveValuesS7` | ✅ 通过 | 只读 S7 协议对 192.168.0.1（CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势采样、监控表实时值 |
+| `ReadPlcLiveValuesS7` | ✅ 通过 | 只读 S7 协议对当时运行中的 PLCSIM Advanced 实例（192.168.0.1，CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势、监控表实时值 |
 | `ReadPlcWatchTableCurrentValuesReadOnly` | ⛔ TIA/环境拒绝 | 离线监控表不暴露当前值属性 |
 | `ReadPlcWebDiagnostics` | ⚠ 参数/前置条件 | 需要 Web 服务器用户名；未对真实 CPU 发请求 |
 | `ReadPlcWebVars` | ⚠ 参数/前置条件 | 需要 Web 服务器用户名；未对真实 CPU 发请求 |
 | `ReadUnifiedRuntimeAlarms` | ⛔ TIA/环境拒绝 | 虚拟机上没有运行中的 WinCC Unified Runtime（Open Pipe 超时）；UnifiedOpenPipeRequest 预览通过 |
 | `ReadUnifiedRuntimeTags` | ⛔ TIA/环境拒绝 | 虚拟机上没有运行中的 WinCC Unified Runtime（Open Pipe 超时）；UnifiedOpenPipeRequest 预览通过 |
-| `SamplePlcLiveValuesS7` | ✅ 通过 | 只读 S7 协议对 192.168.0.1（CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势采样、监控表实时值 |
+| `SamplePlcLiveValuesS7` | ✅ 通过 | 只读 S7 协议对当时运行中的 PLCSIM Advanced 实例（192.168.0.1，CPU 1510SP F，RUN）：身份、运行态、M0.0、趋势、监控表实时值 |
 | `SetPlcWebOperatingMode` | ⚠ 参数/前置条件 | 需要 Web 服务器用户名；未对真实 CPU 发请求 |
 | `TraceTagCause` | ⛔ TIA/环境拒绝 | 块未编译一致时跳过（'compile first'），S7 读通道正常 |
 | `TraceTagCauseLive` | ⛔ TIA/环境拒绝 | 块未编译一致时跳过（'compile first'），S7 读通道正常 |
@@ -325,11 +325,11 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `ExchangePlcAlarmTextListsXlsx` | ⚠ 参数/前置条件 | 需要已存在的 xlsx / 空 PLC 无文本列表 |
-| `ExportAlarmClasses` | 🔁 2.7.46 已修 | 只接受 .DAT（官方格式），2.7.46 前置检查 |
-| `ExportAlarmInstanceTexts` | 🔁 2.7.46 已修 | 反射找错对象/传 null 语言，2.7.46 改类型化调用；空 PLC 上 ExportToXlsx 抛 TextListNotFoundException |
-| `ExportAlarmTextLists` | 🔁 2.7.46 已修 | 反射找错对象/传 null 语言，2.7.46 改类型化调用；空 PLC 上 ExportToXlsx 抛 TextListNotFoundException |
-| `ImportAlarmClasses` | 🔁 2.7.46 已修 | 只接受 .DAT（官方格式），2.7.46 前置检查 |
-| `ImportAlarmTextLists` | 🔁 2.7.46 已修 | 反射找错对象/传 null 语言，2.7.46 改类型化调用；空 PLC 上 ExportToXlsx 抛 TextListNotFoundException |
+| `ExportAlarmClasses` | ✅ 通过 | 2.7.47 重跑通过：.DAT 导出/导入 State=Success，其它扩展名前置拒绝 |
+| `ExportAlarmInstanceTexts` | ⛔ TIA/环境拒绝 | 类型化调用后 TIA 回 "There is no text list" / "没有可导出的报警"（空 PLC 的规则），异常信息完整 |
+| `ExportAlarmTextLists` | ⛔ TIA/环境拒绝 | 类型化调用后 TIA 回 "There is no text list" / "没有可导出的报警"（空 PLC 的规则），异常信息完整 |
+| `ImportAlarmClasses` | ✅ 通过 | 2.7.47 重跑通过：.DAT 导出/导入 State=Success，其它扩展名前置拒绝 |
+| `ImportAlarmTextLists` | ✅ 通过 | 2.7.47 重跑通过：文件不存在时诚实报错（导入本身需要 xlsx） |
 | `ImportPlcAlarmInstanceTexts` | ⚠ 参数/前置条件 | 需要已存在的 xlsx / 空 PLC 无文本列表 |
 | `ManagePlcAlarmTextList` | ✅ 通过 |  |
 
@@ -352,21 +352,21 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CheckDownloadReadiness` | ✅ 通过 |  |
-| `CompareSoftwareToOnline` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
+| `CompareSoftwareToOnline` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
 | `DownloadPlcToFolder` | ⚠ 参数/前置条件 | targetForSoftware 须 CPU/PlcSimulationAdvanced |
-| `DownloadToPlc` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
+| `DownloadToPlc` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
 | `GetOnlineState` | ✅ 通过 |  |
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 |  |
 | `GoOfflineAll` | ✅ 通过 |  |
-| `GoOnline` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
+| `GoOnline` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 |  |
-| `ReadPlcBlockFingerprints` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
+| `ReadPlcBlockFingerprints` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
 | `ReadTransferRoutes` | ✅ 通过 |  |
 | `ScanAccessibleDevices` | ⚠ 参数/前置条件 | PG/PC 接口名须精确（ReadTransferRoutes 列出 'Intel(R) 82574L Gigabit Network Connection'） |
 | `SetWatchTableModifyValue` | ✅ 通过 |  |
-| `UploadDeviceParameters` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
-| `UploadStationFromPlc` | 🚫 不运行 | 虚拟机网段 192.168.0.1 上有维护者的真实 CPU 1510SP F（RUN）；只做过只读 S7 探测，不上线/不下载 |
+| `UploadDeviceParameters` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
+| `UploadStationFromPlc` | ❌ 未跑 | 目标改为 PLCSIM Advanced 虚拟 PLC（2.7.48 加了 communicationInterface=TCPIP）；需要 PLC 先编译通过（空 OPC UA 接口待 2.7.48 的 ManageOpcUaInterface 删除） |
 
 ## PLC-OpcUA（6）
 
@@ -374,7 +374,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 |---|---|---|
 | `ExportOpcUaInterface` | ✅ 通过 |  |
 | `GetOpcUaConfig` | ✅ 通过 |  |
-| `ImportOpcUaInterface` | 🔁 2.7.46 已修 | 文件不存在也报 '已创建并导入' 并留下空接口；2.7.46 先查文件、导入失败回滚 |
+| `ImportOpcUaInterface` | ✅ 通过 | 2.7.47 重跑通过：文件不存在 → 诚实报错，不再建空接口 |
 | `ManageOpcUaAccessControl` | ⛔ TIA/环境拒绝 | ServerInterfaceGroup.AccessControl 在 FW 2.9 上不可用 |
 | `ReadOpcUaAccessControl` | ⛔ TIA/环境拒绝 | ServerInterfaceGroup.AccessControl 在 FW 2.9 上不可用 |
 | `SetOpcUaInterfaceEnabled` | ✅ 通过 |  |
@@ -386,7 +386,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `CompileAndDiagnosePlc` | ✅ 通过 |  |
 | `CompileSoftware` | ✅ 通过 |  |
 | `CreatePlcBlockGroup` | ✅ 通过 |  |
-| `CreatePlcInstanceDb` | 🔁 2.7.46 已修 | autoNumber 且 number=0 生成 DB0；2.7.46 传 1（number=1 今天通过） |
+| `CreatePlcInstanceDb` | ✅ 通过 | 2.7.47 重跑通过：autoNumber+number=0 不再生成 DB0 |
 | `CreatePlcTypeGroup` | ✅ 通过 |  |
 | `DeleteEmptyPlcBlockGroup` | ✅ 通过 |  |
 | `DeletePlcBlock` | ✅ 通过 |  |
@@ -395,24 +395,24 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `DeletePlcType` | ✅ 通过 |  |
 | `DescribeBlockLogic` | ✅ 通过 |  |
 | `ExchangeCfcCharts` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `ExchangePlcSupervisions` | 🔁 2.7.46 已修 | export 时 importOptions 为空被拒；2.7.46 只在 import 解析（export 今天 nativeState=Success） |
+| `ExchangePlcSupervisions` | ✅ 通过 | 2.7.47 重跑通过：export 不再解析 importOptions，nativeState=Success |
 | `ExportAsDocuments` | ✅ 通过 |  |
-| `ExportBlock` | ✅ 通过 |  |
-| `ExportBlocks` | 🔁 2.7.46 已修 | CallTool 桥接给不了 server/context（async 工具），2.7.46 桥接传 null 并等待 Task |
+| `ExportBlock` | ✅ 通过 | 2.7.47 重跑通过：.xml 结尾按文件写出并回报 exportedFile，随后导入成功 |
+| `ExportBlocks` | ✅ 通过 | 2.7.47 重跑通过：经 CallTool 桥接导出 4 块 / 1 类型 |
 | `ExportBlocksAsDocuments` | ✅ 通过 |  |
 | `ExportPlcProDiagInfo` | ⛔ TIA/环境拒绝 | 块不是 ProDiag FB（守卫正确） |
 | `ExportPlcTagTable` | ✅ 通过 |  |
 | `ExportPlcWatchTable` | ✅ 通过 |  |
 | `ExportPlcWatchTablesToDirectory` | ✅ 通过 |  |
-| `ExportType` | ✅ 通过 |  |
-| `ExportTypes` | 🔁 2.7.46 已修 | CallTool 桥接给不了 server/context（async 工具），2.7.46 桥接传 null 并等待 Task |
-| `GenerateBlocksFromExternalSource` | 🔁 2.7.46 已修 | 只搜根组的外部源（用户组里的找不到）；ManagePlcExternalSources generateBlocks 通过 |
-| `GeneratePlcLoadableFile` | 🔁 2.7.46 已修 | targetOption 枚举名是 None/Plc/PlcSim，2.7.46 错误里列出 |
+| `ExportType` | ✅ 通过 | 2.7.47 重跑通过：.xml 结尾按文件写出并回报 exportedFile，随后导入成功 |
+| `ExportTypes` | ✅ 通过 | 2.7.47 重跑通过：经 CallTool 桥接导出 4 块 / 1 类型 |
+| `GenerateBlocksFromExternalSource` | ⚠ 参数/前置条件 | 旧工具只搜根外部源组（用户组里的找不到，描述指向 ManagePlcExternalSources generateBlocks，后者通过） |
+| `GeneratePlcLoadableFile` | ⛔ TIA/环境拒绝 | targetOption 枚举名已列出（None/Plc/PlcSim）；`LoadableProvider` 在 1515F-2 PN V2.9 上不可用（GetService 为 null） |
 | `GeneratePlcSourceFromBlocks` | ✅ 通过 |  |
 | `GetBlockInfo` | ✅ 通过 |  |
 | `GetBlocks` | ✅ 通过 |  |
 | `GetBlocksWithHierarchy` | ✅ 通过 |  |
-| `GetCrossReferences` | 🔁 2.7.46 已修 | filter 为空 → 反射吞异常报 service unavailable；2.7.46 类型化并回报原因（filter=AllObjects 今天通过） |
+| `GetCrossReferences` | ✅ 通过 | 2.7.47 重跑通过：filter 为空按 AllObjects；非法 filter 列出合法值 |
 | `GetPlcExternalSources` | ✅ 通过 |  |
 | `GetPlcTagTables` | ✅ 通过 |  |
 | `GetPlcWatchTables` | ✅ 通过 |  |
@@ -420,7 +420,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `GetSoftwareTree` | ✅ 通过 |  |
 | `GetTypeInfo` | ✅ 通过 |  |
 | `GetTypes` | ✅ 通过 |  |
-| `ImportBlock` | 🔁 2.7.46 已修 | ExportBlock/ExportType 报的路径不是实际文件（目录 + Name.xml），2.7.46 报 exportedFile 且 .xml 结尾按文件处理；同名块导入另一组由 TIA 拒绝 |
+| `ImportBlock` | ✅ 通过 | 2.7.47 重跑通过：.xml 结尾按文件写出并回报 exportedFile，随后导入成功 |
 | `ImportBlocksFromDirectory` | ⚠ 参数/前置条件 | 同名块进另一组由 TIA 拒绝 |
 | `ImportBlocksFromDocuments` | ✅ 通过 |  |
 | `ImportFromDocuments` | ✅ 通过 |  |
@@ -429,9 +429,9 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ImportPlcTagTable` | ✅ 通过 |  |
 | `ImportPlcTagTablesFromDirectory` | ✅ 通过 |  |
 | `ImportPlcWatchTableOffline` | ✅ 通过 |  |
-| `ImportTechnologyObject` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ImportTechnologyObjectsFromDirectory` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ImportType` | 🔁 2.7.46 已修 | ExportBlock/ExportType 报的路径不是实际文件（目录 + Name.xml），2.7.46 报 exportedFile 且 .xml 结尾按文件处理；同名块导入另一组由 TIA 拒绝 |
+| `ImportTechnologyObject` | 🔁 已修待重跑 | 反射找错属性名（TechnologyObjectGroup），2.7.48 类型化；待编译通过后导出再导入 |
+| `ImportTechnologyObjectsFromDirectory` | 🔁 已修待重跑 | 反射找错属性名（TechnologyObjectGroup），2.7.48 类型化；待编译通过后导出再导入 |
+| `ImportType` | ✅ 通过 | 2.7.47 重跑通过：.xml 结尾按文件写出并回报 exportedFile，随后导入成功 |
 | `ManageCfcChartProtection` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManagePlcBlockProtection` | ✅ 通过 |  |
 | `ManagePlcBlockWriteProtection` | ✅ 通过 |  |
@@ -440,10 +440,10 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManagePlcSoftwareUnit` | ✅ 通过 |  |
 | `ManagePlcSupervision` | ✅ 通过 |  |
 | `ManagePlcTableEntries` | ✅ 通过 |  |
-| `ManagePlcTagDefinition` | 🔁 2.7.46 已修 | 注释是 MultilingualText，2.7.45 拒绝；2.7.46 按语言写（标量 update/create/delete 今天通过） |
+| `ManagePlcTagDefinition` | ✅ 通过 | 2.7.47 重跑通过：注释按语言写入/读回（字符串 → 编辑语言，对象 → 指定语言，未激活语言 NotFound） |
 | `ManagePlcUserGroup` | ✅ 通过 |  |
 | `ManageSivarcBlockDefinition` | ✅ 通过 |  |
-| `ManageTechnologyObject` | 🚫 不运行（会退出 TIA） | crash ⑨：TO_PositioningAxis V6.0 在 1515F-2 PN V2.9 上 Create 抛 NonRecoverableException，TIA 退出；2.7.46 描述里标明，优先 ImportTechnologyObject |
+| `ManageTechnologyObject` | ✅ 通过 | PID_Compact 2.3 / TO_SpeedAxis 5.0 / TO_PositioningAxis 5.0 可建、读、删；crash ⑨ 只在 TO_PositioningAxis 6.0；setParameter 对 PID 2.3 被 TIA 拒（set_Value not supported） |
 | `MoveBlockToGroup` | ✅ 通过 |  |
 | `PlcBuildAndImport` | ✅ 通过 |  |
 | `ReadPlcChecksums` | ✅ 通过 |  |
@@ -463,13 +463,13 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `ConfigureMotionHardwareConnection` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ExchangeMotionCamData` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ExportTechnologyObject` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ExportTechnologyObjectsToDirectory` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
+| `ConfigureMotionHardwareConnection` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
+| `ExchangeMotionCamData` | ⛔ TIA/环境拒绝 | CamDataSupport 只有 TO_Cam 提供（轴上按规则拒绝）；无 S7-1500T |
+| `ExportTechnologyObject` | ⛔ TIA/环境拒绝 | TO 未编译一致（PLC 因空 OPC UA 接口编译失败）→ TIA 拒绝导出；2.7.48 删接口后重跑 |
+| `ExportTechnologyObjectsToDirectory` | ⛔ TIA/环境拒绝 | TO 未编译一致（PLC 因空 OPC UA 接口编译失败）→ TIA 拒绝导出；2.7.48 删接口后重跑 |
 | `GetTechnologyObjects` | ✅ 通过 |  |
-| `ManageMotionAxis` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
-| `ReadMotionAxisConfiguration` | ❌ 未跑 | 需要一个工艺对象；Openness 建 TO 会让 TIA 退出（crash ⑨），未从参考工程拿到 TO XML |
+| `ManageMotionAxis` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
+| `ReadMotionAxisConfiguration` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
 | `ReadTechnologyObjectTree` | ✅ 通过 |  |
 
 ## Portal（7）
@@ -492,7 +492,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `AttachToOpenProject` | ✅ 手工单跑 | Close → OpenProject(path) → Disconnect → Connect → Attach 往返通过 |
 | `CloseProject` | ✅ 手工单跑 | Close → OpenProject(path) → Disconnect → Connect → Attach 往返通过 |
 | `CompareProjects` | ⚠ 参数/前置条件 | kind 为 software/softwareToLibrary/hardware，且源目标须不同 |
-| `CreateProject` | ❌ 未跑 | 会在维护者的 UI 实例里新建/切换工程，未在 `项目1` 会话里跑 |
+| `CreateProject` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
 | `ExchangeTestSuiteCase` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ExportProjectTexts` | ✅ 通过 |  |
 | `GetProject` | ✅ 通过 |  |
@@ -506,12 +506,12 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ReadObjectIdentifier` | ✅ 通过 |  |
 | `ReadProjectSettings` | ✅ 通过 |  |
 | `ReadTestSuiteCases` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `RetrieveProjectArchive` | ❌ 未跑 | 会在维护者的 UI 实例里新建/切换工程，未在 `项目1` 会话里跑 |
+| `RetrieveProjectArchive` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
 | `RunTestSuiteCase` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `RunToolsInTransaction` | ✅ 通过 |  |
-| `SaveAsProject` | ❌ 未跑 | 会在维护者的 UI 实例里新建/切换工程，未在 `项目1` 会话里跑 |
+| `SaveAsProject` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
 | `SaveProject` | ✅ 通过 |  |
-| `ScaffoldProject` | ❌ 未跑 | 会在维护者的 UI 实例里新建/切换工程，未在 `项目1` 会话里跑 |
+| `ScaffoldProject` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
 | `ShowObjectInEditor` | ✅ 通过 |  |
 
 ## Reflection（7）
@@ -522,8 +522,8 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `DescribeObjectProperty` | ✅ 通过 |  |
 | `DescribeService` | ✅ 通过 |  |
 | `GetObjectProperty` | ✅ 通过 |  |
-| `InvokeObject` | 🔁 2.7.46 已修 | args 传 JSON 字符串被拒；2.7.46 桥接接受字符串数组（数组形式今天通过） |
-| `InvokeService` | 🔁 2.7.46 已修 | args 传 JSON 字符串被拒；2.7.46 桥接接受字符串数组（数组形式今天通过） |
+| `InvokeObject` | ✅ 通过 | 2.7.47 重跑通过：args 给 JSON 字符串也可 |
+| `InvokeService` | ✅ 通过 | 2.7.47 重跑通过：args 给 JSON 字符串也可 |
 | `ListObjectChildren` | ✅ 通过 |  |
 
 ## Reports（6）

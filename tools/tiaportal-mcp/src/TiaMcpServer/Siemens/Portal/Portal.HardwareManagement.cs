@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageHardwareObject(string devicePathJson, string action, string itemPathJson = "[]",
             string destinationDevicePathJson = "[]", string destinationItemPathJson = "[]", int position = -1, bool dryRun = true)
             => RunHmiStepTool("ManageHardwareObject", meta => {
-                if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action)) throw new ArgumentException("Invalid hardware action.");
+                if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action)) throw new ArgumentException("action must be one of: deleteDevice/deleteItem/moveItem/copyItem (case-sensitive).");
                 using var access = dryRun ? null : AcquireHmiEditAccess();
                 var source = ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["source"] = EngineeringScalarProperties.Read(source); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;

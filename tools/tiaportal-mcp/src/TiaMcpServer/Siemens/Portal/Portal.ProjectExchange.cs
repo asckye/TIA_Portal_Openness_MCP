@@ -11,7 +11,7 @@ namespace TiaMcpServer.Siemens
     {
         public ResponseMessage ManageProjectLanguage(string action="read", string culture="", bool dryRun=true)
             => RunHmiStepTool("ManageProjectLanguage", meta => {
-                if(!new[]{"read","activate","deactivate","setEditing","setReference"}.Contains(action)) throw new ArgumentException("Invalid language action.");
+                if (!new[] { "read", "activate", "deactivate", "setEditing", "setReference" }.Contains(action)) throw new ArgumentException("action must be one of: read/activate/deactivate/setEditing/setReference (case-sensitive).");
                 var settings=_project!.LanguageSettings;
                 JsonObject Snapshot() => new JsonObject {
                     ["activeCultures"]=new JsonArray(settings.ActiveLanguages.Select(x=>(JsonNode)JsonValue.Create(x.Culture.Name)!).ToArray()),

@@ -251,6 +251,20 @@ namespace TiaMcpServer.Runtime
             Invoke(plain, instance);
         }
 
+        // 2.7.48: ECommunicationInterface (None / Softbus / TCPIP). TCPIP makes the instance reachable through the "Siemens PLCSIM
+        // Virtual Ethernet Adapter" PG/PC interface at its IP suite (API default 192.168.0.1/24 on X1), which is what a TIA download
+        // needs; must be set before PowerOn.
+        public static string SetCommunicationInterface(PlcSimApi api, object instance, string communicationInterface)
+        {
+            var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECommunicationInterface", false) ?? throw NotSupported("ECommunicationInterface");
+            object value;
+            try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
+            catch (ArgumentException) { throw new ArgumentException("communicationInterface '" + communicationInterface + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
+            var prop = instance.GetType().GetProperty("CommunicationInterface", Any) ?? throw NotSupported("IInstance.CommunicationInterface");
+            prop.SetValue(instance, value);
+            return Convert.ToString(prop.GetValue(instance)) ?? "";
+        }
+
         public static void SetOperatingMode(PlcSimApi api, object instance, string mode)
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");

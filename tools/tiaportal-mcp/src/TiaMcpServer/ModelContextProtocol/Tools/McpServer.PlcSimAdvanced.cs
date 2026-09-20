@@ -75,7 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return items.Count + " PLCSIM Advanced instance(s) registered (API " + api.Version + ").";
             });
 
-        [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.")]
+        [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.")]
         public static ResponseJsonReport ManagePlcSimAdvancedInstance(
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
             [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
@@ -83,11 +83,13 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("timeoutMs: wait budget for powerOn/run/stop/powerOff/memoryReset (1000..600000).")] int timeoutMs = 60000,
             [Description("confirmInstanceChange: must be true together with dryRun=false to execute the action.")] bool confirmInstanceChange = false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
-            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "")
+            [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "",
+            [Description("communicationInterface: for register / powerOn only - ECommunicationInterface name TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadToPlc / GoOnline need) or Softbus; empty = leave the API default.")] string communicationInterface = "")
             => RunPlcSimTool("ManagePlcSimAdvancedInstance", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
                 var act = PlcSimAdvancedLogic.NormalizeAction(action);
+                if (!string.IsNullOrWhiteSpace(communicationInterface) && act != "register" && act != "powerOn") throw new ArgumentException("communicationInterface applies to register / powerOn only.");
                 if (timeoutMs < 1000 || timeoutMs > 600000) throw new ArgumentException("timeoutMs must be between 1000 and 600000.");
                 var api = PlcSimAdvancedChannel.Load(apiPath);
                 data["api"] = PlcSimAdvancedChannel.Describe(api);
@@ -116,9 +118,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         PlcSimAdvancedChannel.Dispose(PlcSimAdvancedChannel.Register(api, name, cpuType));   // the registration handle; the cached interface is opened below
                         instance = PlcSimAdvancedChannel.Acquire(api, name);
+                        if (!string.IsNullOrWhiteSpace(communicationInterface)) data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface);
                     }
                     else
                     {
+                        if (act == "powerOn" && !string.IsNullOrWhiteSpace(communicationInterface)) data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance!, communicationInterface);
                         PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
                         if (act == "unregister") { PlcSimAdvancedChannel.Forget(name); instance = null; }
                         else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel.Forget(name);   // the tag list is stale after these; the next call reopens

@@ -18,7 +18,7 @@ namespace TiaMcpServer.Siemens
         }
         public ResponseMessage ManageLibraryMasterCopy(string sourcePath,string action,string libraryName="",string destinationLibraryName="",string destinationPath="",bool dryRun=true)
             =>RunHmiStepTool("ManageLibraryMasterCopy",meta=>{
-                if(!new[]{"read","copy","compare","delete"}.Contains(action))throw new ArgumentException("Invalid master-copy action.");
+                if (!new[] { "read", "copy", "compare", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/copy/compare/delete (case-sensitive).");
                 using var access=!dryRun&&(action=="copy"||action=="delete") ? AcquireHmiEditAccess() : null;
                 var source=ExactMasterCopy(libraryName,sourcePath);meta["before"]=EngineeringObjectAddress.Read(source);meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 if(action=="read")return "Master copy scalar properties read.";

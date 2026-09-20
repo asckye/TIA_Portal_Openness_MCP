@@ -9,7 +9,7 @@ namespace TiaMcpServer.Siemens
     {
         public ResponseMessage ManageUnifiedLoggingTag(string softwarePath, string tagPathJson, string action = "read", string name = "", string propertiesJson = "{}", bool dryRun = true)
             => RunHmiStepTool("ManageUnifiedLoggingTag", meta => {
-                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("Invalid action.");
+                if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/create/update/delete (case-sensitive).");
                 bool write = action != "read" && !dryRun;
                 using var access = write ? AcquireHmiEditAccess() : null;
                 var root = ExactUnifiedRoot(softwarePath); var tag = EngineeringObjectAddress.Resolve(root, tagPathJson);

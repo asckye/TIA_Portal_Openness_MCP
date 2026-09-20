@@ -1163,16 +1163,10 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                object root = TryGetPropertyValue(plc, "TechnologyObjectGroup", "TechnologicalObjects", "TechnologyObjects") ?? plc;
-                var group = TryResolveChildGroupByPath(root, folderPath) ?? root;
-
-                // collection name varies; try likely ones
-                var col = TryGetPropertyValue(group, "TechnologicalObjects", "TechnologyObjects", "Instances", "Objects") ??
-                          TryGetPropertyValue(root, "TechnologicalObjects", "TechnologyObjects", "Instances", "Objects");
-
-                if (col == null)
-                    throw new PortalException(PortalErrorCode.NotFound, $"TechnologyObjects collection not found. plcType={plc.GetType().FullName} groupType={group.GetType().FullName}");
-
+                // 2.7.48: typed - the reflective lookup asked for "TechnologyObjectGroup" (the property is TechnologicalObjectGroup) and
+                // always fell through to the PLC ("TechnologyObjects collection not found", real project).
+                var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, folderPath ?? "");
+                var col = group.TechnologicalObjects;
                 if (TryImportEngineeringObjectIntoCollection(col, importPath, out _, out var err)) return;
                 throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportTechnologyObject failed");
             }
@@ -4901,6 +4895,7 @@ namespace TiaMcpServer.Siemens
             try
             {
                 var sw = softwareContainer.Software;
+                GuardClassicScreenSize(sw, importPath);
 
                 // Resolve screen folder then groups by folderPath
                 object rootGroup = TryGetPropertyValue(sw, "ScreenFolder") ?? sw;
@@ -4959,6 +4954,97 @@ namespace TiaMcpServer.Siemens
 
         // 2.7.46: notes of the last ImportHmiScreen (e.g. attributes stripped for the panel version), consumed by the tool wrapper.
         public string? LastImportNotes { get; private set; }
+
+        // 2.7.48 (crash ⑩): importing a classic screen whose Width / Height differ from the panel's display made TIA Portal V21
+        // exit with NonRecoverableException "The screen size does not match the device" (TP700 Comfort 800x480, builder default
+        // 640x480). The size is compared with an existing screen of the device (or its display attributes) before Import.
+        private void GuardClassicScreenSize(object hmiSoftware, string importPath)
+        {
+            if (hmiSoftware is global::Siemens.Engineering.HmiUnified.HmiSoftware) return;       // Unified screens scale; the crash is a classic-panel behaviour
+            int? xmlWidth = null, xmlHeight = null;
+            try
+            {
+                var document = XDocument.Load(importPath);
+                var screen = document.Descendants().FirstOrDefault(e => e.Name.LocalName == "Hmi.Screen.Screen");
+                var attributes = screen?.Element("AttributeList");
+                if (int.TryParse(attributes?.Element("Width")?.Value, out var w)) xmlWidth = w;
+                if (int.TryParse(attributes?.Element("Height")?.Value, out var h)) xmlHeight = h;
+            }
+            catch (Exception) { return; }                                              // not a screen document we understand - TIA reports its own error
+            if (xmlWidth == null || xmlHeight == null) return;
+
+            int? deviceWidth = null, deviceHeight = null; string source = "";
+            try
+            {
+                var root = TryGetPropertyValue(hmiSoftware, "ScreenFolder");
+                var existing = root == null ? null : EnumerateClassicScreens(root).FirstOrDefault();
+                if (existing is IEngineeringObject engineeringScreen)
+                {
+                    deviceWidth = Convert.ToInt32(engineeringScreen.GetAttribute("Width")); deviceHeight = Convert.ToInt32(engineeringScreen.GetAttribute("Height"));
+                    source = "existing screen '" + TryGetName(existing) + "'";
+                }
+            }
+            catch (Exception) { deviceWidth = null; }
+            if (deviceWidth == null && hmiSoftware is IEngineeringObject software)
+            {
+                foreach (var pair in new[] { ("ScreenWidth", "ScreenHeight"), ("DisplayWidth", "DisplayHeight"), ("ResolutionWidth", "ResolutionHeight") })
+                {
+                    try { deviceWidth = Convert.ToInt32(software.GetAttribute(pair.Item1)); deviceHeight = Convert.ToInt32(software.GetAttribute(pair.Item2)); source = "HMI attributes " + pair.Item1 + "/" + pair.Item2; break; }
+                    catch (Exception) { deviceWidth = null; }
+                }
+            }
+            if (deviceWidth == null)
+            {
+                // A fresh classic panel has no screen and no display attribute; the hardware catalog description of its head item
+                // carries the display ("7" TFT 显示屏，800 x 480 像素").
+                var resolution = TryReadPanelResolutionFromCatalog(hmiSoftware);
+                if (resolution != null) { deviceWidth = resolution.Value.width; deviceHeight = resolution.Value.height; source = "hardware catalog description"; }
+            }
+            if (deviceWidth == null)
+                throw new PortalException(PortalErrorCode.InvalidState, "Screen size " + xmlWidth + "x" + xmlHeight + " could not be checked against the panel (no existing screen, no display attribute, no catalog resolution) and a mismatch makes TIA Portal exit (real project, crash 10); import a screen of the panel's own size first or check the panel in TIA.");
+            if (deviceWidth != xmlWidth || deviceHeight != xmlHeight)
+                throw new PortalException(PortalErrorCode.InvalidParams, "Screen size " + xmlWidth + "x" + xmlHeight + " in the XML does not match the panel (" + deviceWidth + "x" + deviceHeight + " from " + source
+                    + "); TIA Portal V21 exits with NonRecoverableException on such an import (real project, crash 10). Rebuild the screen with width/height " + deviceWidth + "/" + deviceHeight + ".");
+        }
+
+        private (int width, int height)? TryReadPanelResolutionFromCatalog(object hmiSoftware)
+        {
+            try
+            {
+                // HmiTarget -> DeviceItem (HMI_RT_x) -> its Container (the head item, TypeIdentifier "OrderNumber:6AV2 124-0GC01-0AX0/17.0.0.0")
+                object? item = TryGetPropertyValue(hmiSoftware, "Parent");
+                string? typeIdentifier = null;
+                for (int hop = 0; hop < 4 && item != null && string.IsNullOrEmpty(typeIdentifier); hop++)
+                {
+                    typeIdentifier = TryGetPropertyValue(item, "TypeIdentifier")?.ToString();
+                    if (string.IsNullOrEmpty(typeIdentifier)) item = TryGetPropertyValue(item, "Container") ?? TryGetPropertyValue(item, "Parent");
+                }
+                if (string.IsNullOrEmpty(typeIdentifier) || _portal == null) return null;
+                var catalog = TryGetPropertyValue(_portal, "HardwareCatalog");
+                if (catalog == null) return null;
+                var orderNumber = typeIdentifier!.Replace("OrderNumber:", "").Split('/')[0].Trim();
+                foreach (var entry in FindHardwareCatalogEntries(catalog, orderNumber))
+                {
+                    var entryIdentifier = TryGetPropertyValue(entry, "TypeIdentifier")?.ToString();
+                    if (!string.Equals(entryIdentifier, typeIdentifier, StringComparison.OrdinalIgnoreCase)) continue;
+                    var description = TryGetPropertyValue(entry, "Description")?.ToString() ?? "";
+                    var match = Regex.Match(description, @"(\d{3,4})\s*[x×X]\s*(\d{3,4})");
+                    if (match.Success) return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
+                }
+            }
+            catch (Exception) { }
+            return null;
+        }
+
+        private static IEnumerable<object> EnumerateClassicScreens(object folder, int depth = 0)
+        {
+            if (depth > 16) yield break;
+            if (TryGetPropertyValue(folder, "Screens") is IEnumerable screens)
+                foreach (var screen in screens) if (screen != null) yield return screen;
+            if (TryGetPropertyValue(folder, "Folders") is IEnumerable folders)
+                foreach (var child in folders)
+                    if (child != null) foreach (var screen in EnumerateClassicScreens(child, depth + 1)) yield return screen;
+        }
 
         public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
         {

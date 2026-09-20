@@ -14,7 +14,7 @@ namespace TiaMcpServer.Siemens
             string archiveName="", string archiveMode="Compressed", bool dryRun=true)
             => RunHmiStepTool("ManageGlobalLibrary", meta => {
                 if (_portal == null) throw new InvalidOperationException("Connect to TIA first.");
-                if (!new[] { "list", "infos", "create", "open", "openInfo", "retrieve", "save", "saveAs", "close", "archive" }.Contains(action)) throw new ArgumentException("Invalid global library action.");
+                if (!new[] { "list", "infos", "create", "open", "openInfo", "retrieve", "save", "saveAs", "close", "archive" }.Contains(action)) throw new ArgumentException("action must be one of: list/infos/create/open/openInfo/retrieve/save/saveAs/close/archive (case-sensitive).");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 GlobalLibraryComposition libraries = _portal.GlobalLibraries;
                 if (action == "list") {
@@ -104,7 +104,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageLibraryFolder(string folderKind, string folderPath, string action, string libraryName="", string newName="", bool dryRun=true)
             => RunHmiStepTool("ManageLibraryFolder", meta => {
                 if (folderKind != "types" && folderKind != "masterCopies") throw new ArgumentException("folderKind must be types/masterCopies.");
-                if (!new[] { "read", "create", "rename", "delete" }.Contains(action)) throw new ArgumentException("Invalid action.");
+                if (!new[] { "read", "create", "rename", "delete" }.Contains(action)) throw new ArgumentException("action must be one of: read/create/rename/delete (case-sensitive).");
                 var parts = EngineeringGroupOperations.Parts(folderPath); // Root cannot be mutated.
                 var library = ExactOpenEngineeringLibrary(libraryName);
                 var parent = EngineeringLibraryFolder(library,string.Join("/",parts.Take(parts.Length-1)),folderKind=="types" ? "TypeFolder" : "MasterCopyFolder");
