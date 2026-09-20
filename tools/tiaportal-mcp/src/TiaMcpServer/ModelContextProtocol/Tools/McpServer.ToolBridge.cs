@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -235,7 +236,18 @@ namespace TiaMcpServer.ModelContextProtocol
             "Example: name='ExportPlcWatchTable', argumentsJson='{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}'.")]
         public static ResponseMessage CallTool(
             [Description("name: exact tool name from FindTools, e.g. 'ExportPlcWatchTable'.")] string name,
-            [Description("argumentsJson: JSON object of the tool's arguments, e.g. '{\"softwarePath\":\"PLC_1\"}'. Omit or '{}' for a no-argument tool.")] string argumentsJson = "")
+            [Description("argumentsJson: the tool's arguments as a JSON object - either the object itself ({\"softwarePath\":\"PLC_1\"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings.")] JsonElement? argumentsJson = null)
+        {
+            // 2.7.47: AI callers routinely send the arguments as an object instead of a string (a binding error before this
+            // overload existed) - both forms are accepted. Nullable on purpose: the tool factory cannot serialize default(JsonElement)
+            // as a parameter default (the stdio host died in AIFunctionFactory.Build during the 2.7.47 build).
+            var element = argumentsJson ?? default;
+            string text = argumentsJson == null || element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null ? ""
+                : element.ValueKind == JsonValueKind.String ? (element.GetString() ?? "") : element.GetRawText();
+            return CallTool(name, text);
+        }
+
+        public static ResponseMessage CallTool(string name, string argumentsJson)
         {
             string target = (name ?? "").Trim();
             try
@@ -306,6 +318,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var ps = method.GetParameters();
                 var call = new object?[ps.Length];
                 var missing = new List<string>();
+                JsonObject? normalized = null;
                 for (int i = 0; i < ps.Length; i++)
                 {
                     var p = ps[i];
@@ -339,6 +352,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         try { value = JsonNode.Parse(encodedText); } catch (JsonException) { }
                     }
+                    // 2.7.47: lenient coercion - the recurring "format errors" of AI callers. A *Json / string parameter given as the
+                    // object or array itself becomes its JSON text; numbers and booleans given as strings (or 0/1) are parsed; a
+                    // string parameter given as a number / boolean takes its text.
+                    var coerced = CoerceArgument(value!, p.ParameterType);
+                    if (coerced != null) { value = coerced; normalized ??= new JsonObject(); normalized[p.Name!] = value.DeepClone(); }
                     try { call[i] = value!.Deserialize(p.ParameterType, BridgeJson); }
                     catch (Exception cx)
                     {
@@ -362,12 +380,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                object? result = method!.Invoke(null, call);
-                if (result is Task task)
+                object? result = InvokeToolMethod(method!, call);
+                // 2.7.47: a refusal such as "action must be one of: read/create/delete (case-sensitive)" whose given value matches one of
+                // the alternatives except for casing is retried once with the canonical spelling; the normalization is reported.
+                var refusal = (result as ResponseMessage)?.Message;
+                if (refusal != null && TryCanonicalizeEnumArgument(refusal, ps, call, out var canonicalName, out var canonicalValue))
                 {
-                    task.GetAwaiter().GetResult();
-                    var resultProperty = task.GetType().GetProperty("Result");
-                    result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
+                    normalized ??= new JsonObject(); normalized[canonicalName] = canonicalValue;
+                    result = InvokeToolMethod(method!, call);
                 }
                 // Tools return their own strongly-typed response objects; hand that JSON through
                 // unchanged so the model sees exactly what a direct call would have produced.
@@ -375,10 +395,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     ? "null"
                     : JsonSerializer.Serialize(result, result.GetType(), BridgeJson);
 
+                var bridgeMeta = ToolBridgeStatus.Create(true, (result as ResponseMessage)?.Meta);
+                if (normalized != null) bridgeMeta["bridgeNormalizedArguments"] = normalized;
                 return new ResponseMessage
                 {
                     Message = payload,
-                    Meta = ToolBridgeStatus.Create(true, (result as ResponseMessage)?.Meta),
+                    Meta = bridgeMeta,
                 };
             }
             catch (TargetInvocationException tie)
@@ -390,6 +412,64 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return new ResponseMessage { Message = "CallTool('" + target + "') failed: " + ex.Message, Meta = BridgeMeta(false) };
             }
+        }
+
+        private static object? InvokeToolMethod(MethodInfo method, object?[] call)
+        {
+            object? result = method.Invoke(null, call);
+            if (result is Task task)
+            {
+                task.GetAwaiter().GetResult();
+                var resultProperty = task.GetType().GetProperty("Result");
+                result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
+            }
+            return result;
+        }
+
+        private static readonly Regex EnumRefusal = new Regex(@"(?<name>[A-Za-z][A-Za-z0-9]*) must be (?:one of:?\s*)?(?<values>[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)+)", RegexOptions.Compiled);
+
+        internal static bool TryCanonicalizeEnumArgument(string refusal, ParameterInfo[] ps, object?[] call, out string name, out string canonical)
+        {
+            name = ""; canonical = "";
+            var match = EnumRefusal.Match(refusal ?? "");
+            if (!match.Success) return false;
+            var parameterName = match.Groups["name"].Value;
+            var alternatives = match.Groups["values"].Value.Split('/');
+            for (int i = 0; i < ps.Length; i++)
+            {
+                if (!string.Equals(ps[i].Name, parameterName, StringComparison.OrdinalIgnoreCase) || ps[i].ParameterType != typeof(string)) continue;
+                var given = call[i] as string;
+                if (string.IsNullOrEmpty(given)) return false;
+                var hit = alternatives.FirstOrDefault(a => string.Equals(a, given, StringComparison.OrdinalIgnoreCase) && !string.Equals(a, given, StringComparison.Ordinal));
+                if (hit == null) return false;
+                call[i] = hit; name = ps[i].Name!; canonical = hit;
+                return true;
+            }
+            return false;
+        }
+
+        // Returns the coerced node, or null when the value already fits (or cannot be coerced safely).
+        internal static JsonNode? CoerceArgument(JsonNode value, Type type)
+        {
+            if (value == null) return null;
+            if (type == typeof(string))
+            {
+                if (value is JsonObject || value is JsonArray) return JsonValue.Create(value.ToJsonString());
+                if (value is JsonValue v && !v.TryGetValue<string>(out _)) return JsonValue.Create(v.ToJsonString());
+                return null;
+            }
+            if (value is JsonValue scalar && scalar.TryGetValue<string>(out var text))
+            {
+                var t = text.Trim();
+                if (type == typeof(bool)) return bool.TryParse(t, out var b) ? JsonValue.Create(b) : t == "1" ? JsonValue.Create(true) : t == "0" ? JsonValue.Create(false) : null;
+                if (type == typeof(int) || type == typeof(ushort) || type == typeof(long) || type == typeof(short) || type == typeof(byte) || type == typeof(uint))
+                    return long.TryParse(t, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var l) ? JsonValue.Create(l) : null;
+                if (type == typeof(double) || type == typeof(float) || type == typeof(decimal))
+                    return double.TryParse(t, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? JsonValue.Create(d) : null;
+                return null;
+            }
+            if (type == typeof(bool) && value is JsonValue num && num.TryGetValue<int>(out var n) && (n == 0 || n == 1)) return JsonValue.Create(n == 1);
+            return null;
         }
 
         private static int CommonPrefixLength(string a, string b)

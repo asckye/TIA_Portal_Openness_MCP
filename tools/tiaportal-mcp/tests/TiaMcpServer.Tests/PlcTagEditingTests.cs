@@ -32,7 +32,19 @@ namespace TiaMcpServer.Tests
 
             // 2.7.46 CallTool bridge binding rules (real project: ExportBlocks / ExportTypes unreachable, "" for keyword defaults, args as a JSON string)
             check(TiaMcpServer.ModelContextProtocol.McpServer.IsInfrastructureParameter(typeof(IMcpServer)) && !TiaMcpServer.ModelContextProtocol.McpServer.IsInfrastructureParameter(typeof(string)), "bridge: infrastructure parameter detection by name");
+
+            // 2.7.47 lenient binding: object/array for a *Json string, string numbers / booleans, enum casing retry
+            var M = typeof(TiaMcpServer.ModelContextProtocol.McpServer);
+            check(TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonNode.Parse("[\"PLC_1\"]")!, typeof(string))!.GetValue<string>() == "[\"PLC_1\"]", "bridge: array for a *Json string parameter becomes its JSON text");
+            check(TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create("42")!, typeof(int))!.GetValue<long>() == 42 && TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create("true")!, typeof(bool))!.GetValue<bool>() && TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create(1)!, typeof(bool))!.GetValue<bool>(), "bridge: string number / string boolean / 0-1 boolean coerced");
+            check(TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create(4.6)!, typeof(string))!.GetValue<string>() == "4.6" && TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create("x")!, typeof(string)) == null && TiaMcpServer.ModelContextProtocol.McpServer.CoerceArgument(JsonValue.Create("abc")!, typeof(int)) == null, "bridge: number for a string takes its text; fitting or unparsable values untouched");
+            var ps = typeof(PlcTagEditingTests).GetMethod(nameof(EnumSample), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!.GetParameters();
+            var call = new object?[] { "PLC", "Export" };
+            check(TiaMcpServer.ModelContextProtocol.McpServer.TryCanonicalizeEnumArgument("action must be one of: export/import (case-sensitive).", ps, call, out var en, out var ev) && en == "action" && ev == "export" && (string)call[1]! == "export", "bridge: case-insensitive enum retry rewrites the argument");
+            check(!TiaMcpServer.ModelContextProtocol.McpServer.TryCanonicalizeEnumArgument("action must be one of: export/import (case-sensitive).", ps, new object?[] { "PLC", "delete" }, out _, out _), "bridge: no retry when the value is not an alternative");
         }
+
+        private static void EnumSample(string softwarePath, string action) { }
 
         private sealed class IMcpServer { }
     }
