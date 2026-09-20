@@ -4,8 +4,8 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-20 07:56:21
-- 引擎文件版本：2.7.46.0
+- 生成时间：2026-09-20 08:16:37
+- 引擎文件版本：2.7.47.0
 - 工具数量：447
 
 ## 读法
