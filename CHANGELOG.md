@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.7.44] - 2026-09-20
+
+引擎 2.7.44.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.44](docs/releases/v2.7.44.md)。2.7.43 真机重跑首次看到 CFC 空导出的真实结构，修正预检解析器。
+
+- **修复（CFC 预检）**：空导出是 `Document > DocumentInfo / FunctionChartsFolder(Name="Charts") > ObjectList / UsedAlarmClasses`，2.7.43 的解析器把文件夹元素当成一张图表（清单 `["Charts"]`），于是没有图表的 PLC 上 `exportInstructionData` 不会被"无图表"分支拒绝（未跑，否则会再让 TIA 退出）；2.7.44 只认名字含 Chart、且不含 Folder / List、不以 s 结尾的元素（`CfcLogic.IsChartElement`），离线测试改用真实的导出形状。
+- **验证**：离线 2144 项（新增 1 项）；形状检查 V20 2785 / V21 3073 不变。真实工程（2.7.43 引擎）：Test Suite 空组拒绝、条件 NotRelevant 引擎侧拒绝（对象未动）、合法条件 update、`changeEvaluationDevice` 驱动拒绝、CFC 未知图表 NotFound 全部通过，TIA 未退出。
+
 ## [2.7.43] - 2026-09-20
 
 引擎 2.7.43.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.43](docs/releases/v2.7.43.md)。2.7.42 真机重跑让 TIA Portal V21 退出三次（CFC 两次、Safety Validation 一次），本版加守卫；引擎本身三次都活着。
@@ -7,7 +14,7 @@
 - **守卫（CFC）**：`ExchangeCfcCharts selectiveExport / exportInstructionData` 与 `ManageCfcChartProtection` 全部动作先做 `CompleteExport` 预检（临时 ZIP，解析 `Data.xml` 里带 `Name` 的 `*Chart` 元素得到图表清单，`meta.preflight` 报图表数 / 名字 / ZIP 条目 / XML 元素名），PLC 没有图表回 InvalidState、图表名不存在回 NotFound——真机上 `GetChartProtection("MCP_NONE")` 与 `ExportInstructionData` 在没有 CFC 图表文件夹的 1510SP F 上各让 TIA 退出一次；`skipChartPreflight=true` 可跳过（自担风险）；`export` 结果附带解析出的 `inventory`。两个 csproj 引用 `System.IO.Compression`。
 - **守卫（Test Suite）**：`RunTestSuiteCase runAll` 对空的系统组回 InvalidState（真机：application 空组 `TestCaseExecutor.Run` 在 TIA 内抛 NullReferenceException，system 空组回 "No test case(s) in the selected project"，只有样式指南空组回 Success）。
 - **守卫（Safety Validation）**：`ManageSafetyFunctionCondition create / update` 先按信号用途校验 NotRelevant（OperatingMode 拥有 executedInput，InputCondition 拥有 initialInput + executedInput，Response 拥有 response；TIA 原生拒绝但此前 `Comment` / `SignalName` 已写入，对象半更新，紧接的条件级 `CheckValidity` 让 TIA 退出），写入顺序改为用途 → 输入 → 描述字段；`changeEvaluationDevice` 改从 `DeviceQuery.EvaluationDevices()` 解析（真机：驱动被拒 "not a valid evaluation device"）；条件级 `checkValidity` 的描述标注真机崩溃过一次。
-- **验证**：离线 2143 项（新增 7 项：ZIP 清单解析、按用途的 NotRelevant 门）；形状检查 V20 2785 / V21 3073（新增 4 / 5 项）。真实工程：待部署后重跑 CFC 预检拒绝路径与 Test Suite 空组拒绝（交接页 §2）。
+- **验证**：离线 2143 项（新增 7 项：ZIP 清单解析、按用途的 NotRelevant 门）；形状检查 V20 2785 / V21 3073（新增 4 / 5 项）。真实工程（2026-09-20，见 `docs/releases/v2.7.43.md#验证`）：三处守卫都拦住了，TIA 未退出；但 CFC 清单解析把 `FunctionChartsFolder Name="Charts"` 当成图表（2.7.44 修）。
 
 ## [2.7.42] - 2026-09-20
 

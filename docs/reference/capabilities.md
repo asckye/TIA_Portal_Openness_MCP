@@ -1,12 +1,12 @@
 # 工程能力与验收边界
 
-本文说明 2.7.43 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 447 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.44 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 447 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
 
 ## 2.7.43 守卫（2.7.42 真机重跑之后）
 
 | 项 | 内容 | 边界 |
 |---|---|---|
-| CFC 预检 | `ExchangeCfcCharts selectiveExport / exportInstructionData` 与 `ManageCfcChartProtection` 先 `CompleteExport` 到临时 ZIP 并解析图表清单；无图表 → InvalidState，图表名不存在 → NotFound；`skipChartPreflight=true` 跳过 | 真机：没有 CFC 图表文件夹的 1510SP F 上 `GetChartProtection` / `ExportInstructionData` 让 TIA 退出；清单解析靠 `*Chart` 元素的 `Name` 属性，`meta.preflight.xmlElements` 暴露实际元素名 |
+| CFC 预检 | `ExchangeCfcCharts selectiveExport / exportInstructionData` 与 `ManageCfcChartProtection` 先 `CompleteExport` 到临时 ZIP 并解析图表清单；无图表 → InvalidState，图表名不存在 → NotFound；`skipChartPreflight=true` 跳过 | 真机：没有 CFC 图表文件夹的 1510SP F 上 `GetChartProtection` / `ExportInstructionData` 让 TIA 退出；清单解析靠名字含 Chart 且非 Folder / List / 复数容器的元素的 `Name` 属性（2.7.44；空导出实为 `FunctionChartsFolder(Name="Charts") > ObjectList`），`meta.preflight.xmlElements` 暴露实际元素名；2.7.43 真机：三处守卫通过，TIA 未退出 |
 | Test Suite 空组 | `RunTestSuiteCase runAll` 对空组拒绝 | 真机：application 空组 NRE、system 空组原生消息、样式指南空组 Success |
 | Safety Validation 条件 | NotRelevant 按信号用途在引擎侧拒绝；`changeEvaluationDevice` 只认 `EvaluationDevices()` | 真机：半更新的条件上条件级 `CheckValidity` 让 TIA 退出；条件级检查仍可用但描述已标注 |
 
