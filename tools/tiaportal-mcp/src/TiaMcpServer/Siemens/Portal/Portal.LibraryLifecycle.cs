@@ -60,7 +60,10 @@ namespace TiaMcpServer.Siemens
                     if (created.Length == 0) { meta["operationSuccess"] = false; return "Archive returned but no new entry appeared in the destination directory; inspect the directory before retrying."; }
                     return "User global library archived; new directory entries listed. The library stays open at its original location.";
                 }
-                var mode = (OpenMode)EngineeringScalarProperties.ConvertValue(JsonValue.Create(openMode), typeof(OpenMode))!;
+                // 2.7.46: an empty openMode (create / save / close do not open anything) only produced "要在此字符串中进行分析，必须指定有效信息".
+                if (string.IsNullOrWhiteSpace(openMode)) openMode = "ReadOnly";
+                if (!System.Enum.GetNames(typeof(OpenMode)).Contains(openMode)) throw new ArgumentException("openMode must be one of: " + string.Join("/", System.Enum.GetNames(typeof(OpenMode))) + ".");
+                var mode = (OpenMode)System.Enum.Parse(typeof(OpenMode), openMode);
                 UserGlobalLibrary? library = null; FileInfo? file = null; DirectoryInfo? directory = null;
                 if (action == "create" || action == "open" || action == "retrieve") {
                     if (string.IsNullOrWhiteSpace(libraryName)) throw new ArgumentException("Expected library name required.");

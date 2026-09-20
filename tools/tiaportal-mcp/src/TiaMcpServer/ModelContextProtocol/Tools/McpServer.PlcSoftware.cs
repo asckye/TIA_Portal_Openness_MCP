@@ -2138,7 +2138,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Portal.ImportHmiScreen(softwarePath, folderPath, importPath);
                 return new ResponseMessage
                 {
-                    Message = $"HMI screen imported from '{importPath}'",
+                    Message = $"HMI screen imported from '{importPath}'" + (Portal.LastImportNotes != null ? " - " + Portal.LastImportNotes : ""),
                     Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
                 };
             }
@@ -2260,7 +2260,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var items = Portal.GetCrossReferences(softwarePath, objectPath, objectKind, filter);
+                var items = Portal.GetCrossReferences(softwarePath, objectPath, objectKind, filter, out var reason);
                 if (items != null)
                 {
                     return new ResponseCrossReferences
@@ -2271,7 +2271,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                throw new McpException($"Cross reference service not available for {objectKind} '{objectPath}'", McpErrorCode.InternalError);
+                throw new McpException($"Cross references unavailable for {objectKind} '{objectPath}': {reason ?? "unknown reason"}", McpErrorCode.InvalidParams);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -3725,7 +3725,7 @@ namespace TiaMcpServer.ModelContextProtocol
             " name, access mode (read-only vs read/write), current value, value type." +
             " Run this ONCE per CPU/firmware to learn what is actually exposed, then drive hardware reads/writes from that" +
             " ground truth instead of guessing attribute names. Optional nameFilter narrows to attributes whose name contains" +
-            " a substring (e.g. 'protection', 'putget', 'ip'). NOTE: GetAttributeInfos() does not enumerate every gettable" +
+            " a substring; several alternatives can be given separated by '|' or ',' (e.g. 'protection', 'putget|webserver', 'ip'). NOTE: GetAttributeInfos() does not enumerate every gettable" +
             " attribute on all CPUs, so absence here means 'not enumerated', not a guaranteed 'no interface'.")]
         public static ResponseJsonReport DumpDeviceAttributes(
             [Description("devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', '安全PLC', 'S7-1500/ET200MP station_1').")] string devicePath,

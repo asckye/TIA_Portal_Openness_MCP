@@ -150,6 +150,7 @@ namespace TiaMcpServer.Siemens
 
                 var orderRaw = orderNumber ?? "";
                 var verRaw = version ?? "";
+                GuardUnifiedPanelVersion(orderRaw, verRaw);
 
                 var orderVariants = new List<string>
                 {
@@ -497,6 +498,7 @@ namespace TiaMcpServer.Siemens
                 var typeIdentifier = candidate.TypeIdentifier!.Trim();
                 try
                 {
+                    GuardUnifiedPanelVersion(typeIdentifier, "");        // 2.7.46 crash ⑧ guard also for catalog candidates
                     var itemName = MakeEngineeringName(deviceName);
                     var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
                     if (dev is Device d)
@@ -507,6 +509,11 @@ namespace TiaMcpServer.Siemens
 
                     lastError = "CreateWithItem returned null";
                     attempts.Add($"{typeIdentifier} -> FAIL: {lastError}");
+                }
+                catch (PortalException pex) when (pex.Code == PortalErrorCode.InvalidParams)
+                {
+                    lastError = pex.Message;
+                    attempts.Add($"{typeIdentifier} -> SKIPPED: {pex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -867,6 +874,25 @@ namespace TiaMcpServer.Siemens
             var text = (inner.Message ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
             while (text.Contains("  ")) text = text.Replace("  ", " ");
             return text.Length > 220 ? text.Substring(0, 220) + "..." : text;
+        }
+
+#if TIA_V20
+        private const int PortalMajorVersion = 20;
+#else
+        private const int PortalMajorVersion = 21;
+#endif
+        // 2.7.46 real project (crash ⑧): Devices.CreateWithItem("OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0", ...) - a WinCC Unified
+        // Comfort panel of the PREVIOUS device version - made TIA Portal V21 exit; the same panel with /21.0.0.0 was created normally.
+        // The device version of a Unified panel has to match the Portal major version.
+        private static void GuardUnifiedPanelVersion(string orderNumber, string version)
+        {
+            var text = (orderNumber ?? "") + "/" + (version ?? "");
+            if (NormalizeOrderNumber(text).IndexOf("6AV2128-", StringComparison.OrdinalIgnoreCase) < 0) return;
+            var match = Regex.Match(text, @"/V?(\d+)\.(\d+)");
+            if (!match.Success) return;
+            if (int.Parse(match.Groups[1].Value) != PortalMajorVersion)
+                throw new PortalException(PortalErrorCode.InvalidParams, "WinCC Unified panel version " + match.Value.TrimStart('/') + " does not match TIA Portal V" + PortalMajorVersion
+                    + ": on the real machine a Unified Comfort panel created with a /20.0.0.0 identifier made TIA Portal V21 exit (NonRecoverable). Use the catalog entry ending in /" + PortalMajorVersion + ".0.0.0 (SearchHardwareCatalog).");
         }
 
         private static string NormalizeOrderNumber(string s)
@@ -1300,8 +1326,9 @@ namespace TiaMcpServer.Siemens
             var device = GetDevice(devicePath);
             if (device == null) return new JsonObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
-            var filter = NormalizeAttrName(nameFilter);
-            var hasFilter = !string.IsNullOrEmpty(filter);
+            // 2.7.46: several alternatives separated by '|' or ',' (real project: "Ip|Name|Cycle" matched nothing as one substring).
+            var filters = (nameFilter ?? string.Empty).Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(NormalizeAttrName).Where(f => f.Length > 0).ToArray();
+            var hasFilter = filters.Length > 0;
 
             var itemsArr = new JsonArray();
             int itemCount = 0;
@@ -1323,7 +1350,7 @@ namespace TiaMcpServer.Siemens
                     {
                         var name = info?.Name ?? string.Empty;
                         if (string.IsNullOrEmpty(name)) continue;
-                        if (hasFilter && !NormalizeAttrName(name).Contains(filter)) continue;
+                        if (hasFilter && !filters.Any(f => NormalizeAttrName(name).Contains(f))) continue;
 
                         var access = TryGetAttributeInfoAccess(info!);
                         object? val = null; bool readErr = false;
@@ -2266,20 +2293,35 @@ namespace TiaMcpServer.Siemens
         }
 
         private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root, string path)
+            => TraverseDeviceItemsAndHardware(root, path, new HashSet<DeviceItem>());
+
+        // 2.7.46: hardware components that are DeviceItems of their own (Comfort panel: the head item lists MCP_TP700.IE_CP_1 only
+        // in Items, and the PROFINET interface sits two levels below it) are walked as well, so the panel's Ethernet node is found
+        // (real project: ConnectDeviceNodesToProfinetSubnet "Selected HMI node: <none>" on a TP700 Comfort V17).
+        private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root, string path, HashSet<DeviceItem> visited)
         {
+            if (!visited.Add(root)) yield break;
             yield return (root, root, path, "DeviceItem");
 
+            var hardwareItems = new List<DeviceItem>();
             foreach (var hardware in root.Items)
             {
-                if (hardware != null)
-                {
-                    yield return (hardware, root, path + "#" + (TryGetName(hardware) ?? hardware.GetType().Name), "HardwareComponent");
-                }
+                if (hardware == null) continue;
+                yield return (hardware, root, path + "#" + (TryGetName(hardware) ?? hardware.GetType().Name), "HardwareComponent");
+                if (hardware is DeviceItem hardwareItem) hardwareItems.Add(hardwareItem);
             }
 
             foreach (var child in root.DeviceItems)
             {
-                foreach (var nested in TraverseDeviceItemsAndHardware(child, path + "/" + child.Name))
+                foreach (var nested in TraverseDeviceItemsAndHardware(child, path + "/" + child.Name, visited))
+                {
+                    yield return nested;
+                }
+            }
+
+            foreach (var hardwareItem in hardwareItems)
+            {
+                foreach (var nested in TraverseDeviceItemsAndHardware(hardwareItem, path + "/" + hardwareItem.Name, visited))
                 {
                     yield return nested;
                 }

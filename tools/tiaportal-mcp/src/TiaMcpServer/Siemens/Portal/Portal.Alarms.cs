@@ -64,6 +64,9 @@ namespace TiaMcpServer.Siemens
                 if (provider == null)
                     return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
+                // 2.7.46 real project: any other extension is refused by TIA with "invalid file extension" (official page: the format is .DAT).
+                if (!exportPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
+                    return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = new JsonObject { ["success"] = false } };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
                 AlarmClassExportImportResult result = provider.Export(new FileInfo(exportPath));
                 var state = result?.State.ToString() ?? "Unknown";
@@ -96,6 +99,8 @@ namespace TiaMcpServer.Siemens
                 if (provider == null)
                     return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
+                if (!importPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase) || !File.Exists(importPath))
+                    return new ResponseMessage { Message = "importPath must be an existing .DAT file written by ExportAlarmClasses (official AlarmClassDataProvider format); got '" + importPath + "'.", Meta = new JsonObject { ["success"] = false } };
                 AlarmClassExportImportResult result = provider.Import(new FileInfo(importPath));
                 var state = result?.State.ToString() ?? "Unknown";
                 var errCount = result?.ErrorCount ?? 0;
@@ -115,36 +120,31 @@ namespace TiaMcpServer.Siemens
             }
         }
 
+        // 2.7.46: typed PlcAlarmTextListProvider (the reflective ExportToXlsx / ImportFromXlsx lookup on PlcAlarmTextlistGroup never found the
+        // methods - they live on the provider service). Real project (fresh 1515F, no text lists): TIA throws TextListNotFoundException.
         public ResponseMessage ExportAlarmTextLists(string softwarePath, string exportPath)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
-
             try
             {
-                // PlcAlarmTextlistGroup is a property on PlcSoftware
-                var textListGroup = TryGetPropertyValue(plc, "PlcAlarmTextlistGroup", "AlarmTextlistGroup");
-                if (textListGroup == null)
-                    return new ResponseMessage { Message = "PlcAlarmTextlistGroup not accessible on this PLC." };
-
+                var provider = plc.GetService<PlcAlarmTextListProvider>();
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = new JsonObject { ["success"] = false } };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-                // ExportToXlsx(FileInfo) — overload with no filters
-                var result = TryInvokeMethodByName(textListGroup, "ExportToXlsx", new FileInfo(exportPath));
-                var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString() ?? "Unknown";
-                bool ok = state == "OK" || state == "Warning";
+                TextListXlsxResult result = provider.ExportToXlsx(new FileInfo(exportPath));
+                var state = result?.State.ToString() ?? "Unknown";
+                bool ok = result?.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
                 {
-                    Message = ok
-                        ? $"Alarm text lists exported to '{exportPath}' (State={state})."
-                        : $"Alarm text list export had issues. State={state}.",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state }
+                    Message = ok ? $"Alarm text lists exported to '{exportPath}' (State={state})." : $"Alarm text list export reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
+                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["success"] = ok }
                 };
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "ExportAlarmTextLists failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Export failed: {ex.Message}" };
+                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message} (a PLC without any alarm text list answers TextListNotFoundException - create one in TIA or via ManagePlcAlarmTextList createFromMasterCopy first).", Meta = new JsonObject { ["success"] = false } };
             }
         }
 
@@ -153,110 +153,57 @@ namespace TiaMcpServer.Siemens
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
-
             try
             {
-                var textListGroup = TryGetPropertyValue(plc, "PlcAlarmTextlistGroup", "AlarmTextlistGroup");
-                if (textListGroup == null)
-                    return new ResponseMessage { Message = "PlcAlarmTextlistGroup not accessible on this PLC." };
-
-                // ImportFromXlsx(FileInfo, ImportOptions) — use None import options via reflection
-                var importMethod = textListGroup.GetType()
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .FirstOrDefault(m => m.Name == "ImportFromXlsx" && m.GetParameters().Length >= 1);
-
-                if (importMethod == null)
-                    return new ResponseMessage { Message = "ImportFromXlsx method not found." };
-
-                var parms = importMethod.GetParameters();
-                object?[] args;
-                if (parms.Length == 2 && parms[1].ParameterType.IsEnum)
-                {
-                    // ImportOptions enum — use value 0 (None/Default)
-                    args = new object?[] { new FileInfo(importPath), Enum.ToObject(parms[1].ParameterType, 0) };
-                }
-                else
-                {
-                    args = new object?[] { new FileInfo(importPath) };
-                }
-
-                var result = importMethod.Invoke(textListGroup, args);
-                var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString() ?? "Unknown";
-                bool ok = state == "OK" || state == "Warning";
+                var provider = plc.GetService<PlcAlarmTextListProvider>();
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextListProvider service not available on this PLC.", Meta = new JsonObject { ["success"] = false } };
+                if (!File.Exists(importPath)) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = new JsonObject { ["success"] = false } };
+                TextListXlsxResult result = provider.ImportFromXlsx(new FileInfo(importPath), ImportOptions.None);
+                var state = result?.State.ToString() ?? "Unknown";
+                bool ok = result?.State != TextListXlsxResultState.Error;
                 return new ResponseMessage
                 {
-                    Message = ok
-                        ? $"Alarm text lists imported from '{importPath}' (State={state})."
-                        : $"Alarm text list import had issues. State={state}.",
-                    Meta = new JsonObject { ["importPath"] = importPath, ["state"] = state }
+                    Message = ok ? $"Alarm text lists imported from '{importPath}' (State={state}); compile afterwards." : $"Alarm text list import reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
+                    Meta = new JsonObject { ["importPath"] = importPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["success"] = ok }
                 };
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "ImportAlarmTextLists failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Import failed: {ex.Message}" };
+                return new ResponseMessage { Message = $"Import failed: {ex.GetBaseException().Message}", Meta = new JsonObject { ["success"] = false } };
             }
         }
 
+        // 2.7.46: typed ExportInstanceTextsToXlsx(file, languages, option) - the reflective call passed null languages and only reported
+        // the TargetInvocationException wrapper text; all active project languages are exported now.
         public ResponseMessage ExportAlarmInstanceTexts(string softwarePath, string exportPath, bool includeInfoText = true, bool includeAdditionalTexts = true, bool includeAlarmClass = true)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
-
             try
             {
                 var provider = plc.GetService<PlcAlarmTextProvider>();
-                if (provider == null)
-                    return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC." };
-
+                if (provider == null) return new ResponseMessage { Message = "PlcAlarmTextProvider service not available for this PLC.", Meta = new JsonObject { ["success"] = false } };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
-
-                // ExportInstanceTextsToXlsx(FileInfo, IEnumerable<Language>, PlcAlarmTextXlsxExportOption)
-                // Use reflection to handle Language and flags enum
-                var exportMethod = provider.GetType()
-                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                    .FirstOrDefault(m => m.Name == "ExportInstanceTextsToXlsx");
-
-                if (exportMethod == null)
-                    return new ResponseMessage { Message = "ExportInstanceTextsToXlsx method not found." };
-
-                var parms = exportMethod.GetParameters();
-                // Build options flags value: All = typically 7 (IncludeInfoText|IncludeAdditionalTexts|IncludeAlarmClass)
-                object optionsValue;
-                if (parms.Length >= 3 && parms[2].ParameterType.IsEnum)
-                {
-                    int flags = 0;
-                    if (includeInfoText) flags |= 1;
-                    if (includeAdditionalTexts) flags |= 2;
-                    if (includeAlarmClass) flags |= 4;
-                    optionsValue = Enum.ToObject(parms[2].ParameterType, flags);
-                }
-                else
-                {
-                    optionsValue = 7; // All
-                }
-
-                // Pass null for languages (export all)
-                object?[] args = parms.Length == 3
-                    ? new object?[] { new FileInfo(exportPath), null, optionsValue }
-                    : new object?[] { new FileInfo(exportPath) };
-
-                var result = exportMethod.Invoke(provider, args);
-                var state = result?.GetType().GetProperty("State")?.GetValue(result)?.ToString() ?? "Unknown";
-                bool ok = state == "OK" || state == "Warning";
+                var option = PlcAlarmTextXlsxExportOption.None;
+                if (includeInfoText) option |= PlcAlarmTextXlsxExportOption.IncludeInfoText;
+                if (includeAdditionalTexts) option |= PlcAlarmTextXlsxExportOption.IncludeAdditionalTexts;
+                if (includeAlarmClass) option |= PlcAlarmTextXlsxExportOption.IncludeAlarmClass;
+                var languages = EngineeringGroupOperations.Items(_project!.LanguageSettings.ActiveLanguages).Cast<Language>().ToList();
+                PlcAlarmTextXlsxResult result = provider.ExportInstanceTextsToXlsx(new FileInfo(exportPath), languages, option);
+                var state = result?.State.ToString() ?? "Unknown";
+                bool ok = result?.State != PlcAlarmTextXlsxResultState.Error;
                 return new ResponseMessage
                 {
-                    Message = ok
-                        ? $"Alarm instance texts exported to '{exportPath}' (State={state})."
-                        : $"Alarm instance text export had issues. State={state}.",
-                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state }
+                    Message = ok ? $"Alarm instance texts exported to '{exportPath}' (State={state}, languages {string.Join(", ", languages.Select(l => l.Culture?.Name))})." : $"Alarm instance text export reported Error (State={state}, log {result?.LogFilePath?.FullName}).",
+                    Meta = new JsonObject { ["exportPath"] = exportPath, ["state"] = state, ["logFile"] = result?.LogFilePath?.FullName, ["fileExists"] = File.Exists(exportPath), ["option"] = option.ToString(), ["success"] = ok }
                 };
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "ExportAlarmInstanceTexts failed for {SoftwarePath}", softwarePath);
-                return new ResponseMessage { Message = $"Export failed: {ex.Message}" };
+                return new ResponseMessage { Message = $"Export failed: {ex.GetBaseException().Message}", Meta = new JsonObject { ["success"] = false } };
             }
         }
 

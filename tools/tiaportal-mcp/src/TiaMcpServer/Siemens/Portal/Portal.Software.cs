@@ -919,7 +919,12 @@ namespace TiaMcpServer.Siemens
                     };
                 }
 
-                object? library = TryOpenGlobalLibrary(globalLibraries, resolved!, out var openError);
+                // 2.7.46: a library the user (or ManageGlobalLibrary) already opened is reused and NOT closed afterwards - the probe
+                // closed the maintainer's open library on the real project.
+                bool wasAlreadyOpen = false;
+                object? library = FindOpenGlobalLibraryByFile(globalLibraries, resolved!);
+                string? openError = null;
+                if (library != null) wasAlreadyOpen = true; else library = TryOpenGlobalLibrary(globalLibraries, resolved!, out openError);
                 if (library == null)
                 {
                     return new ModelContextProtocol.ResponseGlobalLibraryProbe
@@ -947,7 +952,7 @@ namespace TiaMcpServer.Siemens
                 raw["typeCount"] = types.Count;
                 raw["folderCount"] = folders.Count;
 
-                TryCloseOrDispose(library);
+                if (!wasAlreadyOpen) TryCloseOrDispose(library); else warnings.Add("Library was already open; it stays open.");
 
                 warnings.Add("This probe only opens and lists library metadata; it does not import master copies or library types into a project.");
                 if (masterCopies.Count == 0 && types.Count == 0)
@@ -1048,7 +1053,12 @@ namespace TiaMcpServer.Siemens
                 var before = ListNamedChildren(screenItems, 200);
                 raw["screenItemsBefore"] = ToJsonArray(before);
 
-                object? library = TryOpenGlobalLibrary(globalLibraries, resolved!, out var openError);
+                // 2.7.46: a library the user (or ManageGlobalLibrary) already opened is reused and NOT closed afterwards - the probe
+                // closed the maintainer's open library on the real project.
+                bool wasAlreadyOpen = false;
+                object? library = FindOpenGlobalLibraryByFile(globalLibraries, resolved!);
+                string? openError = null;
+                if (library != null) wasAlreadyOpen = true; else library = TryOpenGlobalLibrary(globalLibraries, resolved!, out openError);
                 if (library == null)
                 {
                     return GlobalLibraryImportFailure(openError ?? "Failed to open global library.");
@@ -1115,7 +1125,7 @@ namespace TiaMcpServer.Siemens
                 }
                 finally
                 {
-                    TryCloseOrDispose(library);
+                    if (!wasAlreadyOpen) TryCloseOrDispose(library);
                 }
             }
             catch (Exception ex)
@@ -3025,6 +3035,8 @@ namespace TiaMcpServer.Siemens
                 if (create == null) throw new InvalidOperationException($"Create(enum) not found on {eventHandlers.GetType().FullName}.");
 
                 var enumType = create.GetParameters()[0].ParameterType;
+                if (!Enum.GetNames(enumType).Any(n => string.Equals(n, eventType, StringComparison.OrdinalIgnoreCase)))
+                    throw new ArgumentException("Invalid event name: " + eventType + " (valid for " + enumType.Name + ": " + string.Join("/", Enum.GetNames(enumType)) + "; a WinCC Unified button click is 'Tapped').");
                 var enumValue = Enum.Parse(enumType, eventType, ignoreCase: true);
 
                 object? handler = null;
@@ -3559,7 +3571,20 @@ namespace TiaMcpServer.Siemens
             var root = TryGetHmiTagRoot(hmiSoftware);
             return TryFindByNameInCollection(root, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
                    ?? TryFindByNameInCollection(hmiSoftware, new[] { "TagTables", "HmiTagTables", "Tables" }, tagTableName)
-                   ?? FindExistingByName(TryGetHmiTagTablesCollection(hmiSoftware) ?? root, tagTableName);
+                   ?? FindExistingByName(TryGetHmiTagTablesCollection(hmiSoftware) ?? root, tagTableName)
+                   ?? (root == null ? null : EnumerateHmiTagTablesRecursive(root).FirstOrDefault(t => string.Equals(TryGetName(t)?.Trim(), tagTableName, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // 2.7.46: tag tables inside user folders (TagUserFolder.Folders, nested) - the root-only lookup answered "not found" for a
+        // table just imported into a folder on the real project (classic TP700, ImportHmiTagTable into MCP_TagFolder).
+        private static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0)
+        {
+            if (depth > 32) yield break;
+            if (TryGetPropertyValue(folder, "TagTables") is IEnumerable tables)
+                foreach (var table in tables) if (table != null) yield return table;
+            if (TryGetPropertyValue(folder, "Folders") is IEnumerable folders)
+                foreach (var child in folders)
+                    if (child != null) foreach (var table in EnumerateHmiTagTablesRecursive(child, depth + 1)) yield return table;
         }
 
         private static object? FindExistingByName(object compositionOrEnumerable, string name)
@@ -4621,7 +4646,16 @@ namespace TiaMcpServer.Siemens
             var sw = softwareContainer.Software;
             var tables = TryGetHmiTagTablesCollection(sw);
             if (tables == null) return new List<string>();
-            return TryListNamesFromCollection(tables, Array.Empty<string>(), "TagTables");
+            var names = TryListNamesFromCollection(tables, Array.Empty<string>(), "TagTables");
+            // 2.7.46: tables inside user folders are listed too (name only; ManageClassicHmiFolder read shows the folder).
+            var root = TryGetHmiTagRoot(sw);
+            if (root != null)
+                foreach (var table in EnumerateHmiTagTablesRecursive(root))
+                {
+                    var name = TryGetName(table);
+                    if (!string.IsNullOrWhiteSpace(name) && !names.Contains(name!, StringComparer.Ordinal)) names.Add(name!);
+                }
+            return names;
         }
 
         public List<string>? GetHmiTags(string softwarePath, string tagTableName = "")
@@ -4635,6 +4669,9 @@ namespace TiaMcpServer.Siemens
             object? tagTable = string.IsNullOrWhiteSpace(tagTableName)
                 ? null
                 : TryFindHmiTagTable(sw, tagTableName);
+            // 2.7.46: an unknown table answered "0 tags, success" - that is a lookup failure, not an empty table.
+            if (!string.IsNullOrWhiteSpace(tagTableName) && tagTable == null)
+                throw new PortalException(PortalErrorCode.NotFound, "HMI tag table not found: " + tagTableName + " (tables: " + string.Join(", ", GetHmiTagTables(softwarePath) ?? new List<string>()) + ").");
 
             var root = tagTable ?? tagRoot;
             return TryListNamesFromCollection(root, new[] { "Tags" }, "Tags");
@@ -4860,6 +4897,7 @@ namespace TiaMcpServer.Siemens
             var softwareContainer = GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI software not found: {softwarePath}");
 
+            LastImportNotes = null;
             try
             {
                 var sw = softwareContainer.Software;
@@ -4885,7 +4923,29 @@ namespace TiaMcpServer.Siemens
                 if (TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err))
                     return;
 
-                throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportHmiScreen failed");
+                // 2.7.46: panel versions differ in the attributes their screen items accept (real project: a TP700 Comfort V17.0
+                // refused the builder's <Visible> on Button with "'set_Visible' is not supported by type '...Button'"). The named
+                // attribute is stripped for that item type from a temp copy and the import retried, up to five times; what was
+                // stripped is reported in the error text of a final failure and in LastImportNotes on success.
+                var stripped = new List<string>();
+                var currentPath = importPath;
+                for (int attempt = 0; attempt < 5 && err != null; attempt++)
+                {
+                    var match = Regex.Match(err, @"'set_(\w+)' is not supported by type '([\w.]+)'");
+                    if (!match.Success) break;
+                    var attribute = match.Groups[1].Value; var typeName = match.Groups[2].Value.Split('.').Last();
+                    var document = XDocument.Load(currentPath);
+                    var removed = document.Descendants().Where(e => e.Name.LocalName.EndsWith("." + typeName, StringComparison.Ordinal) || e.Name.LocalName == typeName)
+                        .SelectMany(e => e.Elements("AttributeList").Elements(attribute)).ToList();
+                    if (removed.Count == 0) break;
+                    removed.ForEach(e => e.Remove());
+                    currentPath = Path.Combine(Path.GetTempPath(), "tia_mcp_hmi_screen_" + Guid.NewGuid().ToString("N") + ".xml");
+                    document.Save(currentPath);
+                    stripped.Add(typeName + "." + attribute);
+                    if (TryImportEngineeringObjectIntoCollection(screens, currentPath, out _, out err)) { LastImportNotes = "Imported after stripping unsupported attributes: " + string.Join(", ", stripped); return; }
+                }
+
+                throw new PortalException(PortalErrorCode.ImportFailed, (err ?? "ImportHmiScreen failed") + (stripped.Count > 0 ? " (after stripping " + string.Join(", ", stripped) + ")" : ""));
             }
             catch (PortalException)
             {
@@ -4896,6 +4956,9 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.ImportFailed, ex.Message, null, ex);
             }
         }
+
+        // 2.7.46: notes of the last ImportHmiScreen (e.g. attributes stripped for the panel version), consumed by the tool wrapper.
+        public string? LastImportNotes { get; private set; }
 
         public void ImportHmiTagTable(string softwarePath, string folderPath, string importPath)
         {
@@ -5228,6 +5291,22 @@ namespace TiaMcpServer.Siemens
                 .OrderByDescending(x => x.EndsWith(".al21", StringComparison.OrdinalIgnoreCase))
                 .ThenBy(x => x)
                 .FirstOrDefault();
+        }
+
+        private static object? FindOpenGlobalLibraryByFile(object globalLibraries, string libraryFile)
+        {
+            try
+            {
+                if (globalLibraries is not IEnumerable open) return null;
+                foreach (var candidate in open)
+                {
+                    var path = TryGetPropertyValue(candidate, "Path");
+                    var full = path is FileInfo fi ? fi.FullName : path?.ToString();
+                    if (!string.IsNullOrEmpty(full) && string.Equals(Path.GetFullPath(full!), Path.GetFullPath(libraryFile), StringComparison.OrdinalIgnoreCase)) return candidate;
+                }
+            }
+            catch { }
+            return null;
         }
 
         private static object? TryOpenGlobalLibrary(object globalLibraries, string libraryFile, out string? error)
@@ -6360,26 +6439,35 @@ namespace TiaMcpServer.Siemens
         }
 
         public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind = "Block", string filter = "AllObjects")
+            => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out _);
+
+        // 2.7.46: typed CrossReferenceService / CrossReferenceFilter (Siemens.Engineering.CrossReference, V20 and V21) with the real
+        // reason for a null result - the reflective lookup swallowed everything (real project: filter "" -> Enum.Parse threw ->
+        // "Cross reference service not available", although the service was there).
+        public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason)
         {
-            if (IsProjectNull()) return null;
+            reason = null;
+            if (IsProjectNull()) { reason = "No project is open."; return null; }
 
-            object? target = null;
-            if (string.Equals(objectKind, "Type", StringComparison.OrdinalIgnoreCase))
+            IEngineeringServiceProvider? target = string.Equals(objectKind, "Type", StringComparison.OrdinalIgnoreCase)
+                ? GetType(softwarePath, objectPath)
+                : GetBlock(softwarePath, objectPath);
+            if (target == null) { reason = objectKind + " not found: " + objectPath; return null; }
+
+            if (string.IsNullOrWhiteSpace(filter)) filter = "AllObjects";
+            if (!Enum.TryParse<global::Siemens.Engineering.CrossReference.CrossReferenceFilter>(filter, true, out var filterValue))
             {
-                target = GetType(softwarePath, objectPath);
-            }
-            else
-            {
-                target = GetBlock(softwarePath, objectPath);
+                reason = "filter must be one of: " + string.Join("/", Enum.GetNames(typeof(global::Siemens.Engineering.CrossReference.CrossReferenceFilter))) + " (got '" + filter + "').";
+                return null;
             }
 
-            if (target == null) return null;
+            var crossReferenceService = target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>();
+            if (crossReferenceService == null) { reason = "CrossReferenceService is not provided by this " + objectKind + " (TIA answers it for blocks and types; not for software / device level)."; return null; }
 
-            var crossReferenceService = TryGetServiceByTypeSuffix(target, "CrossReferenceService");
-            if (crossReferenceService == null) return null;
-
-            var result = TryInvokeGetCrossReferences(crossReferenceService, filter);
-            if (result == null) return null;
+            global::Siemens.Engineering.CrossReference.CrossReferenceResult result;
+            try { result = crossReferenceService.GetCrossReferences(filterValue); }
+            catch (Exception ex) { reason = "GetCrossReferences(" + filterValue + ") failed: " + ex.GetBaseException().Message; return null; }
+            if (result == null) { reason = "GetCrossReferences returned null."; return null; }
 
             return TryFlattenCrossReferenceResult(result, objectPath);
         }

@@ -150,6 +150,7 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== CFC 纯逻辑：完整 / 选择导出、导入、指令数据与图表密码请求 ==");
             CfcTests.Run(Check);
+            PlcTagEditingTests.Run(Check);
 
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."

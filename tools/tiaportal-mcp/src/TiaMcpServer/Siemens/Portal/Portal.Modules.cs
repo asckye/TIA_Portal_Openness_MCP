@@ -152,23 +152,39 @@ namespace TiaMcpServer.Siemens
         private static List<PluggedItemInfo> ReadOccupiedSlots(HardwareObject host)
         {
             var list = new List<PluggedItemInfo>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            void Add(DeviceItem? child)
+            {
+                if (child == null) return;
+                var info = DescribeItem(child);
+                if (seen.Add(info.Name + "@" + info.PositionNumber)) list.Add(info);
+            }
             var children = host.DeviceItems;
-            if (children == null)
-            {
-                return list;
-            }
-
-            foreach (DeviceItem child in children)
-            {
-                if (child == null)
-                {
-                    continue;
-                }
-
-                list.Add(DescribeItem(child));
-            }
+            if (children != null) foreach (DeviceItem child in children) Add(child);
+            // 2.7.46: on an S7-1500 rail the plugged modules are Device-level DeviceItems; the rail itself lists them only as hardware
+            // components (HardwareObject.Items) - without this the readback after PlugNew found "no module in slot 2" (real project).
+            try { foreach (var item in host.Items) Add(item as DeviceItem); } catch { }
 
             return list.OrderBy(x => x.PositionNumber).ToList();
+        }
+
+        private static DeviceItem? FindDescendantByName(HardwareObject host, string name, int depth)
+        {
+            if (depth < 0) return null;
+            var children = new List<DeviceItem>();
+            try { foreach (DeviceItem child in host.DeviceItems) if (child != null) children.Add(child); } catch { }
+            try { foreach (var item in host.Items) if (item is DeviceItem child && !children.Contains(child)) children.Add(child); } catch { }
+            foreach (var child in children)
+            {
+                string? childName = null; try { childName = child.Name; } catch { }
+                if (string.Equals(childName, name, StringComparison.Ordinal)) return child;
+            }
+            foreach (var child in children)
+            {
+                var nested = FindDescendantByName(child, name, depth - 1);
+                if (nested != null) return nested;
+            }
+            return null;
         }
 
         private static PluggedItemInfo DescribeItem(DeviceItem item)
@@ -406,6 +422,13 @@ namespace TiaMcpServer.Siemens
             var occupiedAfter = ReadOccupiedSlots(verifyHost);
             var after = (createdName != null ? occupiedAfter.FirstOrDefault(x => string.Equals(x.Name, createdName, StringComparison.Ordinal)) : null)
                         ?? occupiedAfter.FirstOrDefault(x => x.PositionNumber == acceptedSlot);
+            // 2.7.46: a Device-level PlugNew of a Startdrive Motor Module creates the rack item (驱动轴_n) AND the module below it - the
+            // created object sits one level deeper than the host (real project: "no module in slot 65535" although MCP_MM existed).
+            if (after == null && createdName != null)
+            {
+                var nested = FindDescendantByName(verifyHost, createdName, 3);
+                if (nested != null) { after = DescribeItem(nested); result.Attempts.Add("readback: '" + createdName + "' found below the host at position " + after.PositionNumber); }
+            }
             if (after != null && acceptedSlot == 65535) { acceptedSlot = after.PositionNumber; result.PositionNumber = acceptedSlot; }
             if (after == null)
             {

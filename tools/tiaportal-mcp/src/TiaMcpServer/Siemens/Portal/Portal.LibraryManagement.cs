@@ -37,7 +37,7 @@ namespace TiaMcpServer.Siemens
             var root = block ? (object)plc.BlockGroup : plc.TypeGroup;
             var group = EngineeringGroupOperations.Group(root, string.Join("/", parts.Take(parts.Length - 1)));
             return EngineeringGroupOperations.Find(EngineeringGroupOperations.Get(group, block ? "Blocks" : "Types"), parts.Last())
-                ?? throw new InvalidOperationException("Exact PLC master-copy source not found.");
+                ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC " + (block ? "block" : "type") + " not found: " + sourcePath + " (path under " + (block ? "Program blocks" : "PLC data types") + ", groups separated by '/', see GetSoftwareTree).");
         }
         public ResponseMessage ManageLibraryTypeVersion(string typePath, string version, string action, string libraryName = "",
             string newVersion = "", string dependenciesMode = "", string author = "", string comment = "", string targetSoftwarePath = "", bool dryRun = true)

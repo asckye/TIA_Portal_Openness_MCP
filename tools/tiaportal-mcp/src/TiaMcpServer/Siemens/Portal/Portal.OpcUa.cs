@@ -201,25 +201,32 @@ namespace TiaMcpServer.Siemens
 
                 // ServerInterfaceComposition.Create(name) then Import(file)
                 // OR find existing and call Import
+                // 2.7.46 real project: a missing file still answered "created and imported" and left an EMPTY server interface behind,
+                // because the reflective Import swallowed its exception - the file is checked first and Import errors are propagated
+                // (a freshly created interface is removed again when its import fails).
                 var fi = new FileInfo(importPath);
+                if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = new JsonObject { ["success"] = false } };
                 var interfaceName = Path.GetFileNameWithoutExtension(importPath);
                 var existing = FindByName(collection, interfaceName);
 
-                if (existing != null)
+                object? target = existing; bool createdNow = false;
+                if (target == null)
                 {
-                    TryInvokeMethodByName(existing, "Import", fi);
-                    return new ResponseMessage { Message = $"Existing {interfaceType} '{interfaceName}' updated from '{importPath}'." };
+                    target = TryInvokeMethodByName(collection, "Create", interfaceName);
+                    if (target == null) return new ResponseMessage { Message = $"Could not create {interfaceType} '{interfaceName}'.", Meta = new JsonObject { ["success"] = false } };
+                    createdNow = true;
                 }
-                else
+                var import = target.GetType().GetMethod("Import", new[] { typeof(FileInfo) });
+                if (import == null) return new ResponseMessage { Message = $"Import(FileInfo) is not exposed by {target.GetType().Name}.", Meta = new JsonObject { ["success"] = false } };
+                try { import.Invoke(target, new object[] { fi }); }
+                catch (TargetInvocationException tie)
                 {
-                    // Try Create then Import
-                    var created = TryInvokeMethodByName(collection, "Create", interfaceName);
-                    if (created != null)
-                        TryInvokeMethodByName(created, "Import", fi);
-                    return new ResponseMessage { Message = created != null
-                        ? $"{interfaceType} '{interfaceName}' created and imported from '{importPath}'."
-                        : $"Could not create {interfaceType} '{interfaceName}'. Try importing via ExportOpcUaInterface first." };
+                    if (createdNow) { try { target.GetType().GetMethod("Delete", Type.EmptyTypes)?.Invoke(target, null); } catch { } }
+                    return new ResponseMessage { Message = $"Import failed: {(tie.InnerException ?? tie).Message}" + (createdNow ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), Meta = new JsonObject { ["success"] = false } };
                 }
+                return new ResponseMessage { Message = createdNow
+                    ? $"{interfaceType} '{interfaceName}' created and imported from '{importPath}'."
+                    : $"Existing {interfaceType} '{interfaceName}' updated from '{importPath}'.", Meta = new JsonObject { ["success"] = true, ["created"] = createdNow } };
             }
             catch (Exception ex)
             {

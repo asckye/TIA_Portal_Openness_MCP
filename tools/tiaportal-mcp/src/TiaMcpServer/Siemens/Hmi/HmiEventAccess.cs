@@ -14,7 +14,7 @@ namespace TiaMcpServer.Siemens
                 ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "Event Find(enum) is unavailable.");
             var enumType = find.GetParameters()[0].ParameterType;
             var name = Enum.GetNames(enumType).SingleOrDefault(n => string.Equals(n, eventType, StringComparison.OrdinalIgnoreCase))
-                ?? throw new PortalException(PortalErrorCode.InvalidParams, "Invalid event name: " + eventType);
+                ?? throw new PortalException(PortalErrorCode.InvalidParams, "Invalid event name: " + eventType + " (valid for " + enumType.Name + ": " + string.Join("/", Enum.GetNames(enumType)) + "; a WinCC Unified button click is 'Tapped').");
             var value = Enum.Parse(enumType, name);
             var handler = find.Invoke(handlers, new[] { value });
             if (handler != null) return handler;

@@ -86,7 +86,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
         {
             var startTime = DateTime.Now;
-            var progressToken = context.Params?.ProgressToken;
+            var progressToken = context?.Params?.ProgressToken;
             
             try
             {
@@ -367,7 +367,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("importOption: ImportDocumentOptions value (None, Override, SkipInactiveCultures, ActivateInactiveCultures)")] string importOption = "Override")
         {
             var startTime = DateTime.Now;
-            var progressToken = context.Params?.ProgressToken;
+            var progressToken = context?.Params?.ProgressToken;
 
             try
             {

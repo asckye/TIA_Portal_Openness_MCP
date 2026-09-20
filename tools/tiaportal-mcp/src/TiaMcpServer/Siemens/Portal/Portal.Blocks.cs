@@ -264,9 +264,20 @@ namespace TiaMcpServer.Siemens
             return list;
         }
 
+        // 2.7.46: the file actually written by the last ExportBlock / ExportType (exportPath is a directory unless it ends in .xml).
+        public string? LastExportedFile { get; private set; }
+
+        private static string ResolveExportFile(string exportPath, string name, string groupPath, bool preservePath)
+        {
+            if (!preservePath && exportPath.EndsWith(".xml", StringComparison.OrdinalIgnoreCase) && !Directory.Exists(exportPath))
+                return exportPath;
+            return preservePath ? Path.Combine(exportPath, groupPath.Replace('/', '\\'), name + ".xml") : Path.Combine(exportPath, name + ".xml");
+        }
+
         public PlcBlock? ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false)
         {
             _logger?.LogInformation($"Exporting block by path: {blockPath}");
+            LastExportedFile = null;
 
             try
             {
@@ -277,20 +288,8 @@ namespace TiaMcpServer.Siemens
 
                 var block = Guard.RequireNotNull(GetBlock(softwarePath, blockPath), "Block", blockPath);
 
-                if (preservePath)
-                {
-                    var groupPath = "";
-                    if (block.Parent is PlcBlockGroup parentGroup)
-                    {
-                        groupPath = GetPlcBlockGroupPath(parentGroup);
-                    }
-
-                    exportPath = Path.Combine(exportPath, groupPath.Replace('/', '\\'), $"{block.Name}.xml");
-                }
-                else
-                {
-                    exportPath = Path.Combine(exportPath, $"{block.Name}.xml");
-                }
+                var blockGroupPath = block.Parent is PlcBlockGroup parentGroup ? GetPlcBlockGroupPath(parentGroup) : "";
+                exportPath = ResolveExportFile(exportPath, block.Name, blockGroupPath, preservePath);
 
                 // TIA Portal never exports inconsistent blocks
                 if (!block.IsConsistent)
@@ -304,6 +303,7 @@ namespace TiaMcpServer.Siemens
                 }
 
                 block.Export(new FileInfo(exportPath), ExportOptions.None);
+                LastExportedFile = exportPath;
 
                 return block;
             }
@@ -324,6 +324,7 @@ namespace TiaMcpServer.Siemens
         public PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false)
         {
             _logger?.LogInformation($"Exporting type by path: {typePath}");
+            LastExportedFile = null;
 
             try
             {
@@ -340,20 +341,8 @@ namespace TiaMcpServer.Siemens
                     throw new PortalException(PortalErrorCode.InvalidState, "Type is inconsistent; TIA Portal does not export inconsistent types.");
                 }
 
-                if (preservePath)
-                {
-                    var groupPath = "";
-                    if (type.Parent is PlcTypeGroup parentGroup)
-                    {
-                        groupPath = GetPlcTypeGroupPath(parentGroup);
-                    }
-
-                    exportPath = Path.Combine(exportPath, groupPath.Replace('/', '\\'), $"{type.Name}.xml");
-                }
-                else
-                {
-                    exportPath = Path.Combine(exportPath, $"{type.Name}.xml");
-                }
+                var typeGroupPath = type.Parent is PlcTypeGroup parentTypeGroup ? GetPlcTypeGroupPath(parentTypeGroup) : "";
+                exportPath = ResolveExportFile(exportPath, type.Name, typeGroupPath, preservePath);
 
                 if (File.Exists(exportPath))
                 {
@@ -361,6 +350,7 @@ namespace TiaMcpServer.Siemens
                 }
 
                 type.Export(new FileInfo(exportPath), ExportOptions.None);
+                LastExportedFile = exportPath;
 
                 return type;
             }

@@ -30,7 +30,9 @@ namespace TiaMcpServer.Siemens
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true;
-                    var db = group.Blocks.CreateInstanceDB(name, autoNumber, number, fb.Name);
+                    // 2.7.46 real project: CreateInstanceDB(name, true, 0, fb) created "DB0" and the compile failed with "invalid number 0" -
+                    // auto-numbering still needs a valid seed, so 1 is passed and TIA assigns the free number.
+                    var db = group.Blocks.CreateInstanceDB(name, autoNumber, autoNumber && number < 1 ? 1 : number, fb.Name);
                     if (db == null || group.Blocks.Find(name) == null) throw new InvalidOperationException("Native instance DB not found after creation.");
                     meta["after"] = EngineeringScalarProperties.Read(db);
                 }
@@ -52,9 +54,11 @@ namespace TiaMcpServer.Siemens
             });
         public ResponseMessage GeneratePlcLoadableFile(string softwarePath, string objectPathsJson, string objectKind, string targetOption, string filePath, bool dryRun = true)
             => RunHmiStepTool("GeneratePlcLoadableFile", meta => {
+                if (objectKind == "block" || objectKind == "unit") objectKind += "s";
                 if (objectKind != "blocks" && objectKind != "units") throw new ArgumentException("objectKind must be blocks/units.");
                 var names = ExactNameList(objectPathsJson); var file = NativeFileOutput.Plan(filePath);
                 var plc = ExactPlcForEngineering(softwarePath, false);
+                if (!Enum.GetNames(typeof(TargetOption)).Contains(targetOption)) throw new ArgumentException("targetOption must be one of: " + string.Join("/", Enum.GetNames(typeof(TargetOption))) + " (Siemens.Engineering.SW.Loader.TargetOption).");
                 var option = (TargetOption)EngineeringScalarProperties.ConvertValue(JsonValue.Create(targetOption), typeof(TargetOption))!;
                 var service = plc.GetService<LoadableProvider>() ?? throw new NotSupportedException("LoadableProvider unavailable.");
                 var blocks = objectKind == "blocks" ? names.Select(n => (PlcBlock)ExactMasterCopyPlcSource(softwarePath, n, true)).ToArray() : Array.Empty<PlcBlock>();

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading.Tasks;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -47,6 +48,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>Renders one tool's signature the way the model needs to call it through CallTool.</summary>
+        // Name-based on purpose: the offline test project links this file without the MCP SDK.
+        internal static bool IsInfrastructureParameter(Type type)
+            => type.Name == "IMcpServer" || (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("RequestContext", StringComparison.Ordinal))
+               || (type.Namespace != null && type.Namespace.StartsWith("ModelContextProtocol", StringComparison.Ordinal));
+
         private static string RenderSignature(string name, MethodInfo m)
         {
             var parts = new List<string>();
@@ -303,6 +309,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 for (int i = 0; i < ps.Length; i++)
                 {
                     var p = ps[i];
+                    // 2.7.46: infrastructure parameters of the async export tools (IMcpServer, RequestContext<...>) are not tool
+                    // arguments; the bridge has no request context of its own, so they are passed as null and the tools only send
+                    // progress notifications when a progress token exists (real project: ExportBlocks / ExportTypes were uncallable
+                    // through CallTool - "missing required argument(s): server, context").
+                    if (IsInfrastructureParameter(p.ParameterType)) { call[i] = null; continue; }
                     // Match case-insensitively: models routinely send PascalCase for a camelCase param.
                     JsonNode? value = null;
                     bool found = false;
@@ -317,6 +328,16 @@ namespace TiaMcpServer.ModelContextProtocol
                         missing.Add(p.Name!);
                         call[i] = p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null;
                         continue;
+                    }
+                    // 2.7.46: an empty string for a parameter whose documented default is a non-empty keyword (unitKind="all",
+                    // kind="all", action="read") means "the default" - callers routinely pass "" for "not specified".
+                    if (p.ParameterType == typeof(string) && p.HasDefaultValue && p.DefaultValue is string defaultText && defaultText.Length > 0
+                        && value is JsonValue emptyCandidate && emptyCandidate.TryGetValue<string>(out var candidateText) && candidateText.Length == 0)
+                    { call[i] = defaultText; continue; }
+                    // 2.7.46: an array parameter (InvokeObject / InvokeService args: JsonElement[]) given as a JSON-encoded string.
+                    if (p.ParameterType.IsArray && value is JsonValue encodedArray && encodedArray.TryGetValue<string>(out var encodedText) && encodedText.TrimStart().StartsWith("["))
+                    {
+                        try { value = JsonNode.Parse(encodedText); } catch (JsonException) { }
                     }
                     try { call[i] = value!.Deserialize(p.ParameterType, BridgeJson); }
                     catch (Exception cx)
@@ -342,6 +363,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 object? result = method!.Invoke(null, call);
+                if (result is Task task)
+                {
+                    task.GetAwaiter().GetResult();
+                    var resultProperty = task.GetType().GetProperty("Result");
+                    result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
+                }
                 // Tools return their own strongly-typed response objects; hand that JSON through
                 // unchanged so the model sees exactly what a direct call would have produced.
                 string payload = result == null

@@ -34,7 +34,9 @@ namespace TiaMcpServer.Siemens
                 {
                     if (target != null) throw new InvalidOperationException("Technology object already exists.");
                     if (string.IsNullOrWhiteSpace(typeIdentifier)) throw new ArgumentException("Official technology type identifier required.");
-                    var apiVersion = Version.Parse(version);
+                    // 2.7.46: Version.Parse("") only said "版本字符串部分太短或太长" - say what is expected (real project 1515F FW V2.9: TO V6.0).
+                    if (!Version.TryParse(version, out var apiVersion) || apiVersion.Major < 1)
+                        throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"6.0\" (TIA V17 / FW 2.9), \"7.0\" (FW 3.0), \"8.0\" (FW 3.1); got '" + version + "'. TIA rejects a version the CPU firmware does not support.");
                     meta["typeIdentifier"] = typeIdentifier; meta["version"] = version;
                     if (writing)
                     {

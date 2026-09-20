@@ -126,7 +126,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     return new ResponseExportType
                     {
-                        Message = $"Type exported from '{typePath}' to '{exportPath}'",
+                        Message = $"Type exported from '{typePath}' to '{Portal.LastExportedFile ?? exportPath}'",
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -254,7 +254,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
         {
             var startTime = DateTime.Now;
-            var progressToken = context.Params?.ProgressToken;
+            var progressToken = context?.Params?.ProgressToken;
             
             try
             {

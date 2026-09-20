@@ -151,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseExportBlock ExportBlock(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("blockPath: full path to the block in the project structure, e.g. 'Group/Subgroup/Name' (single names are ambiguous)")] string blockPath,
-            [Description("exportPath: defines the path where to export the block")] string exportPath,
+            [Description("exportPath: directory that receives '<BlockName>.xml' - or, when it ends in .xml, the target file itself; the response reports the file written (Meta.exportedFile)")] string exportPath,
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
         {
             try
@@ -161,11 +161,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     return new ResponseExportBlock
                     {
-                        Message = $"Block exported from '{blockPath}' to '{exportPath}'",
+                        Message = $"Block exported from '{blockPath}' to '{Portal.LastExportedFile ?? exportPath}'",
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
-                            ["success"] = true
+                            ["success"] = true,
+                            ["exportedFile"] = Portal.LastExportedFile
                         }
                     };
                 }
@@ -753,7 +754,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("preservePath: preserves the path/structure of the plc software")] bool preservePath = false)
         {
             var startTime = DateTime.Now;
-            var progressToken = context.Params?.ProgressToken;
+            var progressToken = context?.Params?.ProgressToken;
             
             try
             {
