@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.44_20260920",
-    "generatedAt":  "2026-09-20T09:34:16.4348990+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.45_20260920",
+    "generatedAt":  "2026-09-20T12:30:11.8779470+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.44.0",
-    "exeSha256":  "c56820bb8438e602fa4700be90935b61f6d1db64c32c8a32842ac0818b4a2e1e",
+    "fileVersion":  "2.7.45.0",
+    "exeSha256":  "343a00f0acbf92a47df7031133ae6b6eda5f0d611a4731ffe35a508a0087c9b8",
     "toolCount":  447,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -1107,9 +1107,10 @@
                       "method":  "GetDevicePlugLocations",
                       "returnType":  "ResponseMessage",
                       "parameters":  [
-                                         "deviceItemPath"
+                                         "deviceItemPath",
+                                         "plugOnDevice"
                                      ],
-                      "description":  "[L2][Hardware] READ-ONLY. List the plug slots of one device item: which slot numbers are FREE (as reported by TIA at runtime) and which are already OCCUPIED (by name / order number / built-in). Call this BEFORE plugging a signal board (SB), signal module (SM) or communication module (CM) so the slot / position number comes from TIA instead of a guess — slot numbers differ per CPU family and are never hardcoded by this server. A signal board plugs into the CPU device item itself, so pass the CPU path (e.g. \u0027PLC_1\u0027). Get paths from GetDeviceItemTree."
+                      "description":  "[L2][Hardware] READ-ONLY. List the plug slots of one device item: which slot numbers are FREE (as reported by TIA at runtime) and which are already OCCUPIED (by name / order number / built-in). Call this BEFORE plugging a signal board (SB), signal module (SM) or communication module (CM) so the slot / position number comes from TIA instead of a guess — slot numbers differ per CPU family and are never hardcoded by this server. A signal board plugs into the CPU device item itself, so pass the CPU path (e.g. \u0027PLC_1\u0027). Get paths from GetDeviceItemTree. plugOnDevice=true asks the Device (station) itself instead of a device item - that is where Startdrive drive components (Motor Modules; motors / encoders below them) plug (official \u0027Creating a drive component\u0027: Device.PlugNew(\"OrderNumber:6SL3xxx-xxxxx-xxxx\", name, 65535))."
                   },
                   {
                       "name":  "PlugDeviceItem",
@@ -1126,9 +1127,10 @@
                                          "version",
                                          "positionNumber",
                                          "name",
-                                         "dryRun"
+                                         "dryRun",
+                                         "plugOnDevice"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 6ES7221-3BD30-0XB0), signal module (SM), or communication module (CM). This is the \u0027InsertDeviceItem\u0027 / \u0027AddSignalBoard\u0027 operation — AddDevice only creates whole stations and cannot plug boards into a CPU. Defaults to dryRun=true, which runs a REAL TIA feasibility check (CanPlugNew) without writing. Pass positionNumber=-1 to let the server pick a free slot reported by TIA; slot numbers are never hardcoded — use GetDevicePlugLocations to see them. After a successful plug the module is read back and verified (IsPlugged / name / slot). This tool does NOT set addresses: to make the inputs start at %I2.0, call SetDeviceItemIoAddress afterwards with startAddress=2, then CompileSoftware and SaveProject. Failures are reported by category: SlotOccupied, SlotNotAvailable, OrderNumberNotFound, NotSupportedByDevice, PlugFailed, VerifyFailed."
+                      "description":  "[L2][Hardware][WRITE] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 6ES7221-3BD30-0XB0), signal module (SM), or communication module (CM). This is the \u0027InsertDeviceItem\u0027 / \u0027AddSignalBoard\u0027 operation — AddDevice only creates whole stations and cannot plug boards into a CPU. Defaults to dryRun=true, which runs a REAL TIA feasibility check (CanPlugNew) without writing. Pass positionNumber=-1 to let the server pick a free slot reported by TIA; slot numbers are never hardcoded — use GetDevicePlugLocations to see them. After a successful plug the module is read back and verified (IsPlugged / name / slot). This tool does NOT set addresses: to make the inputs start at %I2.0, call SetDeviceItemIoAddress afterwards with startAddress=2, then CompileSoftware and SaveProject. Failures are reported by category: SlotOccupied, SlotNotAvailable, OrderNumberNotFound, NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: plugOnDevice=true with the station name, orderNumber \u00276SL3xxx-xxxxx-xxxx\u0027 (unspecified Motor Module) or a concrete MLFB, positionNumber 65535 (official \u0027Creating a drive component\u0027); motors / encoders then plug below the Motor Module item (\u0027OrderNumber:1PH2092-4WG4x-xxxx\u0027, \u0027OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202\u0027)."
                   },
                   {
                       "name":  "ReadMotionAxisConfiguration",
@@ -1529,7 +1531,7 @@
                                          "includeAdditionalTexts",
                                          "includeAlarmClass"
                                      ],
-                      "description":  "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportInstanceTexts (not yet exposed — edit via TIA Portal UI)."
+                      "description":  "[L2][Category:PLC-Alarms][PreCondition:Connect+OpenProject] Export PLC alarm instance texts to an XLSX file. Instance texts are the alarm messages tied to specific FB/FC instances (e.g. Motor_01.AlarmText). Options control what additional columns are included in the export. Typical use: export → fill in alarm descriptions → ImportPlcAlarmInstanceTexts (PlcAlarmTextProvider.ImportInstanceTextsFromXlsx)."
                   },
                   {
                       "name":  "CompileSoftware",
@@ -2511,7 +2513,7 @@
                                          "driveObjectIndex",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] One pin of a DCC block: read (value / unit / comment / invisible / forTest / isInput / isPublished, the published DccParameter, connections with typed sink and source), update (propertiesJson Comment / Value / Unit / Invisible / ForTest), connect (partnerJson {block, pin} = DccPin.Connect(DccPin) or {chartInterface} = Connect(DccChartInterface)), disconnect (deletes the DccConnection to that partner), publish (Publish(setAsSignal) automatic number, Publish(setAsSignal, parameterNumber) or Publish(parameterNumber, arrayIndex, setAsSignal) for indexed signal parameters, SINAMICS FW V6.1+), unpublish (Unpublish, removes its connections), updateParameter (published DccParameter Number / ArrayIndex / ParameterText / IsSignal). Default preview; readback verifies publish / unpublish; no save or download."
+                      "description":  "[L2][Hardware][WRITE] One pin of a DCC block: read (value / unit / comment / invisible / forTest / isInput / isPublished, the published DccParameter, connections with typed sink and source), update (propertiesJson Comment / Value / Unit / Invisible / ForTest; Value is converted to the pin\u0027s own data type - real project: an ADD input is System.Single and TIA refuses Int32 / Double), connect (partnerJson {block, pin} = DccPin.Connect(DccPin) or {chartInterface} = Connect(DccChartInterface)), disconnect (deletes the DccConnection to that partner), publish (Publish(setAsSignal) automatic number, Publish(setAsSignal, parameterNumber) or Publish(parameterNumber, arrayIndex, setAsSignal) for indexed signal parameters, SINAMICS FW V6.1+), unpublish (Unpublish, removes its connections), updateParameter (published DccParameter Number / ArrayIndex / ParameterText / IsSignal). Default preview; readback verifies publish / unpublish; no save or download."
                   },
                   {
                       "name":  "ManageDccChartInterface",
@@ -2536,7 +2538,7 @@
                                          "confirmDelete",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] Chart interfaces of one DCC chart (DccChartInterfaceComposition): read (all, or one by interfaceName), create (Create(DccPin) from sourceBlock + sourcePin; the interface is named after the pin), update (propertiesJson Comment / Value / Unit / Invisible / ForTest), delete (confirmDelete when real). Default preview; no save or download."
+                      "description":  "[L2][Hardware][WRITE] Chart interfaces of one DCC chart (DccChartInterfaceComposition): read (all, or one by interfaceName), create (Create(DccPin) from sourceBlock + sourcePin; the interface is named after the pin), update (propertiesJson Comment / Value / Unit / Invisible / ForTest), delete (confirmDelete when real). Real project (S120 V5.2 drive axis, DCC/5201000): DccChartInterfaceComposition.Create(DccPin) answered \u0027This operation is not supported\u0027 on the root chart and on a subchart alike - chart interfaces are not creatable through Openness on that firmware. Default preview; no save or download."
                   },
                   {
                       "name":  "ManageDccChartPartition",
@@ -2581,7 +2583,7 @@
                                          "includePins",
                                          "includeLibraries"
                                      ],
-                      "description":  "[L2][Hardware][READ] Typed DCC chart container of one drive object (DriveControlChartContainer): without chartPath every root chart with subcharts to maxDepth, partitions, chart interfaces, blocks (includeBlocks) and pins (includePins), the DCB libraries with block types (includeLibraries) and the execution order (GetChartSequence); with chartPath one chart plus its run sequence (GetRunSequence). NotSupported when the drive object provides no DCC. Read-only."
+                      "description":  "[L2][Hardware][READ] Typed DCC chart container of one drive object (DriveControlChartContainer; real project: provided by a drive axis of an S120 CU320-2 PN V5.2 whose technology extensions include DCC, not by the CU drive object nor by a V5.1 axis): without chartPath every root chart with subcharts to maxDepth, partitions, chart interfaces, blocks (includeBlocks) and pins (includePins), the DCB libraries with block types (includeLibraries) and the execution order (GetChartSequence); with chartPath one chart plus its run sequence (GetRunSequence). NotSupported when the drive object provides no DCC. Read-only."
                   },
                   {
                       "name":  "ManageDccChart",
