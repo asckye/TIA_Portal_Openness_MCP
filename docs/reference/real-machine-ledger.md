@@ -2,14 +2,14 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
-| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 318 |
+| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 320 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
 | ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 25 |
-| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修（2.7.49），部署后要重跑 | 9 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修（2.7.50），部署后要重跑 | 7 |
 | ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 30 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 60 |
 | 🚫 不运行 | 刻意不跑 | 0 |
@@ -354,19 +354,19 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `CheckDownloadReadiness` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线（GoOnline 未成）；2.7.49 上线后重跑 |
 | `DownloadPlcToFolder` | ⚠ 参数/前置条件 | targetForSoftware 须 CPU/PlcSimulationAdvanced |
-| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.48 真机：路由树里 192.168.0.1 只在 PcInterface.Subnets[MCP_PN].Addresses 下、目标接口 1 X1 无地址 → 'No download route reaches'；2.7.49 取子网/网关地址，没有时官方 Addresses.Create + 5 参 Download；虚拟网卡无 IP（[no IP]）时还要在虚拟机给它配 192.168.0.x，或实例改 Softbus |
+| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.49 真机：路由选择通过（'-> address 192.168.0.1 (subnet MCP_PN)'），TIA 真正发起下载，失败在 PG 侧 '连接到模块 MCP_PLC 失败'（虚拟网卡无 IP）；给网卡配 192.168.0.x 或实例改 Softbus 后重跑 |
 | `GetOnlineState` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GoOfflineAll` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `GoOnline` | 🔁 已修待重跑 | 2.7.48 真机：从不套用路由（GoOnline() 用 TIA 上次的路由）→ 'The connection cannot be established'；2.7.49 选路由 + GoOnline(ConfigurationAddress)，新增 pgPcInterface |
+| `GoOnline` | 🔁 已修待重跑 | 2.7.49 真机：路由套用后 TIA 真正尝试连接（'The connection partner is not responding'，PG 侧无 IP）；网卡配 IP 后重跑 |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 | 2.7.48 真机：createSnapshot 原生返回 + exportSnapshot 2602 字节（离线；值不可独立核验） |
 | `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.48 真机：FingerprintDataProvider 在 1515F-2 PN V2.9（TIA V21）上 GetService 为 null（PlcSoftware 与 CPU 项都没有） |
 | `ReadTransferRoutes` | ✅ 通过 |  |
 | `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `SetWatchTableModifyValue` | 🔁 已修待重跑 | 2.7.48 真机：Entries.Create(address) 不存在（官方是 PlcTableCommentEntryComposition.Create() + SetAttribute）→ 'Could not create entry'；2.7.49 改官方写法并读回 |
+| `SetWatchTableModifyValue` | 🔁 已修待重跑 | 2.7.49 真机：官方 Entries.Create() 只建注释行，Address/Name/ModifyValue 对 PlcTableCommentEntry 都 'not supported'；且旧代码只在根级找表，每次调用新建一张 MCP_WT_n；2.7.50 改 SimaticML 往返（导出 → 加行 → Override 导入 → 读回）并递归找表 |
 | `UploadDeviceParameters` | ⛔ TIA/环境拒绝 | 2.7.48 真机：ParameterUploadProvider 在 1515F 的 Device / 导轨 / CPU 项上都不可用（GetService 为 null） |
-| `UploadStationFromPlc` | 🔁 已修待重跑 | 2.7.48 真机：扫描到的 PLCSIM 实例只有 MAC（无 IP），路由树无该地址 → 拒绝；2.7.49 对扫描到的地址 Addresses.Create 后再选 |
+| `UploadStationFromPlc` | 🔁 已修待重跑 | 2.7.49 真机：工程级 StationUploadProvider 的 PC 接口既无目标接口也无子网，MAC 地址建不了；2.7.50 再试 PcInterface.Addresses.Create |
 
 ## PLC-OpcUA（7）
 
@@ -440,7 +440,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManagePlcExternalSources` | ✅ 通过 |  |
 | `ManagePlcSoftwareUnit` | ✅ 通过 |  |
 | `ManagePlcSupervision` | ✅ 通过 |  |
-| `ManagePlcTableEntries` | ✅ 通过 |  |
+| `ManagePlcTableEntries` | 🔁 已修待重跑 | 2.7.50 新增 deleteTable（删掉真机上留下的 MCP_WT_1…5）；read / createComment / deleteEntry 早期真机通过 |
 | `ManagePlcTagDefinition` | ✅ 通过 | 2.7.47 重跑通过：注释按语言写入/读回（字符串 → 编辑语言，对象 → 指定语言，未激活语言 NotFound） |
 | `ManagePlcUserGroup` | ✅ 通过 |  |
 | `ManageSivarcBlockDefinition` | ✅ 通过 |  |
@@ -466,9 +466,9 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 |---|---|---|
 | `ConfigureMotionHardwareConnection` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
 | `ExchangeMotionCamData` | ⛔ TIA/环境拒绝 | CamDataSupport 只有 TO_Cam 提供（轴上按规则拒绝）；无 S7-1500T |
-| `ExportTechnologyObject` | ✅ 通过 | 2.7.48 真机：PID_Compact 2.3 单个导出 / 批量导出 1；TO_SpeedAxis 5.0 没有驱动报文不能编译一致 → TIA 拒绝导出（规则）；2.7.49 起也导出用户文件夹里的 TO |
-| `ExportTechnologyObjectsToDirectory` | ✅ 通过 | 2.7.48 真机：PID_Compact 2.3 单个导出 / 批量导出 1；TO_SpeedAxis 5.0 没有驱动报文不能编译一致 → TIA 拒绝导出（规则）；2.7.49 起也导出用户文件夹里的 TO |
-| `GetTechnologyObjects` | 🔁 已修待重跑 | 2.7.48 真机：只列根级——导入进 MCP_TO 的 TO 报 0 个（ReadTechnologyObjectTree 能看到）；2.7.49 递归用户文件夹并回报 Folder |
+| `ExportTechnologyObject` | ✅ 通过 | 2.7.48 真机：PID_Compact 2.3 编译后单个 / 批量导出通过；2.7.49 真机：刚导入未编译的 TO 被 TIA 拒 'Inconsistent blocks … cannot be exported'（规则：导入后先编译） |
+| `ExportTechnologyObjectsToDirectory` | ✅ 通过 | 2.7.48 真机：PID_Compact 2.3 编译后单个 / 批量导出通过；2.7.49 真机：刚导入未编译的 TO 被 TIA 拒 'Inconsistent blocks … cannot be exported'（规则：导入后先编译） |
+| `GetTechnologyObjects` | ✅ 通过 | 2.7.49 真机：MCP_TO 文件夹里的 PID 列出 1 个，删除后 0 个（递归生效） |
 | `ManageMotionAxis` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
 | `ReadMotionAxisConfiguration` | ✅ 通过 | 在自建 TO_SpeedAxis 5.0 上通过（硬件连接 read：AxisEncoderHardwareConnectionInterface） |
 | `ReadTechnologyObjectTree` | ✅ 通过 |  |
@@ -568,11 +568,11 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `ManagePlcSimAdvancedInstance` | 🔁 已修待重跑 | 2.7.48 真机：register/powerOn 带 communicationInterface 时 PropertyInfo.SetValue 抛 '未找到属性设置方法'（实例类的公开属性只读，setter 在 IInstance 接口上）——实例已被 RegisterInstance 建出但工具报失败；2.7.49 经接口 setter；powerOff 后 'state now .' 改文案；stop/powerOff/unregister 通过 |
+| `ManagePlcSimAdvancedInstance` | 🔁 已修待重跑 | 2.7.49 真机：register … communicationInterface=Softbus 仍失败——实例类与其全部接口都没有可写的 CommunicationInterface 属性（8.0 API）；2.7.50 再试 SetCommunicationInterface()/set_ 方法并把匹配成员列进拒绝信息；powerOff/unregister/register/powerOn 本身通过 |
 | `ReadPlcSimAdvancedInstances` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `ReadPlcSimAdvancedTags` | ✅ 通过 | 2.7.48 真机：实例未下载程序时 0 标签（列表 / 按名读都如实报 0） |
-| `RunPlcSimAdvancedTestScenario` | 🔁 已修待重跑 | 2.7.48 真机：'Scenario FAILED' 却 operationSuccess=true；2.7.49 改为 false（步骤解析、模式恢复通过） |
-| `WritePlcSimAdvancedTags` | 🔁 已修待重跑 | 2.7.48 真机：不存在的标签 'Wrote 0/1' 却 operationSuccess=true；2.7.49 改为 false |
+| `RunPlcSimAdvancedTestScenario` | ✅ 通过 | 2.7.49 真机：不存在的标签 / 失败场景现在 operationSuccess=false（实例无程序，读写内容待下载后） |
+| `WritePlcSimAdvancedTags` | ✅ 通过 | 2.7.49 真机：不存在的标签 / 失败场景现在 operationSuccess=false（实例无程序，读写内容待下载后） |
 
 ## Validation（8）
 

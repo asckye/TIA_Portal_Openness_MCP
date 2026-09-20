@@ -533,6 +533,10 @@ namespace TiaMcpServer.Siemens
             }
         }
 
+        // 2.7.50 (real machine, 项目1): PlcWatchTable.Entries.Create() only yields a comment row and the typed entry properties are
+        // read-only, so no Openness call adds a tag row. The official route is the SimaticML round trip: export the table, add or
+        // update the row in the XML, import it back with ImportOptions.Override into the table's own group, then read the row back.
+        // The old code also looked for the table at the root only and created a fresh one on every call (MCP_WT_1 … MCP_WT_5).
         public ResponseMessage EnsureWatchTableEntry(
             string softwarePath,
             string tableName,
@@ -543,66 +547,116 @@ namespace TiaMcpServer.Siemens
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(address)) return new ResponseMessage { Message = "tableName and address are required." };
+            var triggerType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
+            object triggerValue;
+            try { triggerValue = Enum.Parse(triggerType, (trigger ?? "").Trim(), true); }
+            catch (ArgumentException) { return new ResponseMessage { Message = "trigger must be one of: " + string.Join("/", Enum.GetNames(triggerType)) + " (case-sensitive)." }; }
+            var triggerName = triggerValue.ToString();
 
+            var meta = new JsonObject
+            {
+                ["softwarePath"] = softwarePath, ["tableName"] = tableName, ["address"] = address, ["modifyValue"] = modifyValue, ["trigger"] = triggerName,
+                ["mayHaveChanged"] = false, ["readbackVerified"] = false,
+                ["method"] = "SimaticML round trip: PlcWatchTable.Export -> XML upsert -> PlcWatchTableComposition.Import(ImportOptions.Override) (the typed API cannot create tag rows)"
+            };
+            string? tempFile = null;
             try
             {
-                var group = ResolvePlcWatchAndForceTableGroup(plc);
-                if (group == null) return new ResponseMessage { Message = "WatchAndForceTableGroup not accessible." };
+                var root = plc.WatchAndForceTableGroup;
+                var (table, group, resolvedPath, ambiguity) = ResolveWatchTable(root, tableName);
+                if (ambiguity != null) return new ResponseMessage { Message = ambiguity, Meta = meta };
+                meta["resolvedTablePath"] = resolvedPath;
+                meta["tableExisted"] = table != null;
 
-                var table = FindOrCreateWatchTable(group, tableName);
-                if (table == null) return new ResponseMessage { Message = $"Could not find or create watch table '{tableName}'." };
+                XDocument doc;
+                if (table != null)
+                {
+                    tempFile = Path.Combine(Path.GetTempPath(), "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
+                    if (File.Exists(tempFile)) File.Delete(tempFile);
+                    table.Export(new FileInfo(tempFile), ExportOptions.None);
+                    doc = XDocument.Load(tempFile);
+                    meta["entriesBefore"] = WatchTableEntryXml.Entries(doc).Count();
+                }
+                else
+                {
+                    doc = WatchTableEntryXml.NewTable(resolvedPath.Contains("/") ? resolvedPath.Substring(resolvedPath.LastIndexOf('/') + 1) : resolvedPath, PortalMajorVersion);
+                    meta["entriesBefore"] = 0;
+                }
+                var action = WatchTableEntryXml.Upsert(doc, address, modifyValue, triggerName);
+                meta["rowAction"] = action;
+                tempFile ??= Path.Combine(Path.GetTempPath(), "tia-mcp-wt-" + Guid.NewGuid().ToString("N") + ".xml");
+                doc.Save(tempFile);
 
-                // 2.7.49 (PublicAPI + real machine): PlcWatchTable.Entries is a PlcTableCommentEntryComposition whose only factory is
-                // Create() (no arguments) and whose typed entry properties are read-only; values go through SetAttribute and are read
-                // back with GetAttribute. The old Create(address) overload never existed, so every call ended in "Could not create entry".
-                var entry = FindOrCreateTableEntry(table, "Entries", address, out var entryCreated);
-                if (entry == null) return new ResponseMessage { Message = $"Could not create entry for address '{address}': PlcWatchTable.Entries.Create() returned nothing." };
+                meta["mayHaveChanged"] = true;
+                var imported = group.WatchTables.Import(new FileInfo(tempFile), ImportOptions.Override).ToArray();
+                meta["importedCount"] = imported.Length;
+                meta["apiCallSuccess"] = true;
 
-                var refused = new JsonObject();
-                var wanted = new List<KeyValuePair<string, object?>>
+                // readback from a fresh navigation (the old proxy is dead after Override)
+                var (after, _, _, _) = ResolveWatchTable(plc.WatchAndForceTableGroup, resolvedPath);
+                if (after == null) return new ResponseMessage { Message = $"Watch table '{resolvedPath}' is missing after the import; nothing verified.", Meta = meta };
+                var rows = EngineeringGroupOperations.Items(after.Entries).ToArray();
+                meta["entriesAfter"] = rows.Length;
+                global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableEntry? hit = null;
+                var attribute = WatchTableEntryXml.AttributeFor(address);
+                foreach (var row in rows.OfType<global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableEntry>())
                 {
-                    new KeyValuePair<string, object?>(WatchEntryAddressAttribute(address), address),
-                    new KeyValuePair<string, object?>("ModifyValue", modifyValue),
-                    new KeyValuePair<string, object?>("ModifyTrigger", trigger)
-                };
-                foreach (var kv in wanted) SetWatchEntryAttribute(entry, kv.Key, kv.Value, refused);
-                var after = ReadWatchEntryAttributes(entry, "Name", "Address", "ModifyValue", "ModifyTrigger", "MonitorTrigger", "DisplayFormat");
-                bool addressVerified = string.Equals(Convert.ToString(after["Address"]), address, StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(Convert.ToString(after["Name"]), address.Trim('"'), StringComparison.OrdinalIgnoreCase)
-                    || string.Equals(Convert.ToString(after["Name"]), address, StringComparison.OrdinalIgnoreCase);
-                bool valueVerified = string.Equals(Convert.ToString(after["ModifyValue"]), modifyValue, StringComparison.OrdinalIgnoreCase);
-                var meta = new JsonObject
-                {
-                    ["softwarePath"] = softwarePath,
-                    ["tableName"] = tableName,
-                    ["address"] = address,
-                    ["modifyValue"] = modifyValue,
-                    ["trigger"] = trigger,
-                    ["entryCreated"] = entryCreated,
-                    ["after"] = after,
-                    ["refusedAttributes"] = refused,
-                    ["readbackVerified"] = addressVerified && valueVerified,
-                    ["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires."
-                };
-                if (!addressVerified || !valueVerified)
-                    return new ResponseMessage
-                    {
-                        Message = $"Watch table '{tableName}': entry for '{address}' was {(entryCreated ? "created" : "found")} but the readback does not show the requested "
-                            + (!addressVerified ? "address/name" : "modify value") + " (refused: " + string.Join(", ", refused.Select(r => r.Key + "=" + r.Value)) + "). "
-                            + "Use ImportPlcWatchTableOffline with a full SimaticML watch table when the entry attributes are not writable on this CPU.",
-                        Meta = meta
-                    };
-                return new ResponseMessage
-                {
-                    Message = $"Watch table '{tableName}': entry '{address}' set to ModifyValue='{modifyValue}' Trigger={after["ModifyTrigger"]} (readback verified).",
-                    Meta = meta
-                };
+                    var key = attribute == "Address" ? row.Address ?? "" : row.Name ?? "";
+                    if (attribute == "Address" ? string.Equals(key, address.Trim(), StringComparison.OrdinalIgnoreCase) : WatchTableEntryXml.SameSymbol(key, address)) { hit = row; break; }
+                }
+                if (hit == null)
+                    return new ResponseMessage { Message = $"Watch table '{resolvedPath}' was re-imported ({rows.Length} rows) but no row for '{address}' came back; TIA may have rejected the row (check the address / symbol).", Meta = meta };
+                meta["after"] = new JsonObject { ["Name"] = hit.Name, ["Address"] = hit.Address, ["DisplayFormat"] = hit.DisplayFormat.ToString(), ["ModifyValue"] = hit.ModifyValue, ["ModifyTrigger"] = hit.ModifyTrigger.ToString(), ["MonitorTrigger"] = hit.MonitorTrigger.ToString(), ["ModifyIntention"] = hit.ModifyIntention };
+                bool valueOk = string.Equals(hit.ModifyValue ?? "", modifyValue ?? "", StringComparison.OrdinalIgnoreCase);
+                bool triggerOk = string.Equals(hit.ModifyTrigger.ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
+                meta["readbackVerified"] = valueOk && triggerOk;
+                meta["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires. Project not saved.";
+                if (!valueOk || !triggerOk)
+                    return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{hit.ModifyValue}' Trigger={hit.ModifyTrigger} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
+                return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action} with ModifyValue='{modifyValue}' Trigger={triggerName} (readback verified; {rows.Length} rows).", Meta = meta };
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "EnsureWatchTableEntry failed");
-                return new ResponseMessage { Message = $"Error: {ex.Message}" };
+                meta["error"] = ex.Message;
+                return new ResponseMessage { Message = $"Error: {ex.Message}", Meta = meta };
             }
+            finally
+            {
+                try { if (tempFile != null && File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+            }
+        }
+
+        // Exact group-qualified path first ("MCP_W/MCP_WT"); a bare name is searched through every user group. Returns the table
+        // (null when absent), the group that owns or would own it, the resolved path, and an ambiguity message when a bare name
+        // exists in several groups.
+        private static (global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable? Table, global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup Group, string Path, string? Ambiguity)
+            ResolveWatchTable(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup root, string tableName)
+        {
+            var wanted = tableName.Replace('\\', '/').Trim('/');
+            var parts = EngineeringGroupOperations.Parts(wanted);
+            var groupPath = string.Join("/", parts.Take(parts.Length - 1));
+            var leaf = parts.Last();
+            var group = (global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup)EngineeringGroupOperations.Group(root, groupPath);
+            var direct = group.WatchTables.Find(leaf);
+            if (direct != null || parts.Length > 1) return (direct, group, wanted, null);
+
+            var hits = new List<(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTable, global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup, string)>();
+            void Walk(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableGroup g, string path)
+            {
+                foreach (var sub in EngineeringGroupOperations.Items(g.Groups).Cast<global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTableUserGroup>())
+                {
+                    var subPath = path.Length == 0 ? sub.Name : path + "/" + sub.Name;
+                    var t = sub.WatchTables.Find(leaf);
+                    if (t != null) hits.Add((t, sub, subPath + "/" + leaf));
+                    Walk(sub, subPath);
+                }
+            }
+            Walk(root, "");
+            if (hits.Count == 1) return (hits[0].Item1, hits[0].Item2, hits[0].Item3, null);
+            if (hits.Count > 1) return (null, group, wanted, $"'{leaf}' exists in {hits.Count} groups ({string.Join(", ", hits.Select(h => h.Item3))}); give the group-qualified path.");
+            return (null, group, wanted, null);
         }
 
         public ResponseMessage EnsureForceTableEntry(

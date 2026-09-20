@@ -101,7 +101,11 @@ namespace TiaMcpServer.Siemens
                 try { var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name; return created; }
                 catch (Exception ex) { errors.Add("subnet " + subnet.Name + ": " + ex.Message); }
             }
-            note = errors.Count == 0 ? "no target interface or subnet to create the address on" : string.Join("; ", errors);
+            // 2.7.50 (real machine): the project-level StationUploadProvider lists the PC interface with neither target interfaces nor
+            // subnets, so the last composition left is the PC interface's own ConfigurationPcInterface.Addresses.
+            try { var created = typed.Addresses.Find(targetAddress) ?? typed.Addresses.Create(targetAddress); note = "created on PC interface " + typed.Name; return created; }
+            catch (Exception ex) { errors.Add("PC interface " + typed.Name + ": " + ex.Message); }
+            note = errors.Count == 0 ? "no target interface, subnet or PC interface composition to create the address on" : string.Join("; ", errors);
             return null;
         }
 

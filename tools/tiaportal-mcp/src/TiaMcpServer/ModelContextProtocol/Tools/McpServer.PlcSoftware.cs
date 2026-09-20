@@ -2506,11 +2506,13 @@ namespace TiaMcpServer.ModelContextProtocol
             " Not a Force: this writes the value once per trigger event and the variable then follows PLC logic again" +
             " (a force would keep overriding the program continuously). This server exposes no tool for force entries —" +
             " GetPlcForceTables only lists them; use TIA Portal directly to force a value." +
+            " Implementation (2.7.50): the typed Openness API cannot create tag rows (PlcWatchTable.Entries.Create() only makes comment rows), so the table is exported," +
+            " the row added or updated in the SimaticML and the table re-imported (override mode) into its own group; the row is read back (meta.after, readbackVerified). Project not saved." +
             " Example: SetWatchTableModifyValue('PLC_1', 'Debug_WT', 'DB1.DBX0.0', 'TRUE', 'OnceOnlyAtStart')")]
         public static ResponseMessage SetWatchTableModifyValue(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
-            [Description("tableName: name of the watch table to configure (created if not existing)")] string tableName,
-            [Description("address: variable address, e.g. 'DB1.DBX0.0', '%M0.0', 'MyTag'")] string address,
+            [Description("tableName: watch table name or group-qualified path (e.g. 'MCP_W/MCP_WT'); a bare name is searched through every group (ambiguity refused) and the table is created at the root only when it exists nowhere")] string tableName,
+            [Description("address: absolute address ('%M0.0', 'DB1.DBX0.0') goes to the row's Address; a symbol ('MyTag', '\"DB\".Member') goes to its Name (quoted per segment like TIA)")] string address,
             [Description("modifyValue: value to write, e.g. 'TRUE', '42', '3.14'")] string modifyValue,
             [Description("trigger: when to apply the write — Permanent | PermanentAtStart | OnceOnlyAtStart | PermanentAtEnd | OnceOnlyAtEnd | OnceOnlyAtStop (default: Permanent)")] string trigger = "Permanent")
         {

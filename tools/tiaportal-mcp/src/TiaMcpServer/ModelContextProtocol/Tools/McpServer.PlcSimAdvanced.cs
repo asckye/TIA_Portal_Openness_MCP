@@ -54,7 +54,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "ReadPlcSimAdvancedInstances"), Description("[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server.")]
         public static ResponseJsonReport ReadPlcSimAdvancedInstances(
             [Description("includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.")] bool includeState = true,
-            [Description("apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.")] string apiPath = "")
+            [Description("apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.")] string apiPath = "",
+            [Description("memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface') - a diagnostic for API differences between PLCSIM Advanced versions.")] string memberFilter = "")
             => RunPlcSimTool("ReadPlcSimAdvancedInstances", null, (data, meta) =>
             {
                 var api = PlcSimAdvancedChannel.Load(apiPath);
@@ -66,7 +67,11 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (includeState)
                     {
                         object? instance = null;
-                        try { instance = PlcSimAdvancedChannel.Acquire(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] = kv.Value?.DeepClone(); }
+                        try
+                        {
+                            instance = PlcSimAdvancedChannel.Acquire(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] = kv.Value?.DeepClone();
+                            if (!string.IsNullOrWhiteSpace(memberFilter)) o["members"] = PlcSimAdvancedChannel.DescribeMembers(instance, memberFilter.Trim());
+                        }
                         catch (Exception ex) { o["stateError"] = ex.Message; PlcSimAdvancedChannel.Forget(name); }
                     }
                     items.Add(o);

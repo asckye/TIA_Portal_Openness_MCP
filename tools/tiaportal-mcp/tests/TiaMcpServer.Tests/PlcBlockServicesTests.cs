@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.Tests
@@ -86,6 +87,24 @@ namespace TiaMcpServer.Tests
                 check(PlcBlockServicesLogic.WatchEntryAddressAttribute(abs) == "Address", "watch entry: absolute address " + abs);
             foreach (var sym in new[] { "\"MCP_Start\"", "MCP_Start", "\"MCP_DB\".Counter", "Motor.Run", "DB_Name", "" })
                 check(PlcBlockServicesLogic.WatchEntryAddressAttribute(sym) == "Name", "watch entry: symbol " + sym);
+
+            // 2.7.50 watch table rows travel as SimaticML: symbols quoted per segment, upsert appends or updates, IDs stay unique (hex).
+            check(WatchTableEntryXml.QuoteSymbol("MCP_Start") == "\"MCP_Start\"" && WatchTableEntryXml.QuoteSymbol("\"MCP_Start\"") == "\"MCP_Start\"", "watch xml: bare symbol quoted once");
+            check(WatchTableEntryXml.QuoteSymbol("MCP_DB.Counter") == "\"MCP_DB\".Counter" && WatchTableEntryXml.QuoteSymbol("\"MCP_DB\".Counter") == "\"MCP_DB\".Counter", "watch xml: DB member quoted on the first segment only");
+            check(WatchTableEntryXml.SameSymbol("MCP_Start", "\"mcp_start\""), "watch xml: symbol comparison ignores quoting and case");
+            var doc = WatchTableEntryXml.NewTable("WT", 21);
+            check(WatchTableEntryXml.TableName(doc) == "WT" && !WatchTableEntryXml.Entries(doc).Any(), "watch xml: new table is empty and named");
+            check(WatchTableEntryXml.Upsert(doc, "%M0.0", "TRUE", "OnceOnlyAtStart") == "appended" && WatchTableEntryXml.Entries(doc).Count() == 1, "watch xml: first row appended");
+            check(WatchTableEntryXml.Upsert(doc, "MCP_Start", "FALSE", "Permanent") == "appended" && WatchTableEntryXml.Entries(doc).Count() == 2, "watch xml: symbol row appended");
+            check(WatchTableEntryXml.Upsert(doc, "%m0.0", "FALSE", "Permanent") == "updated" && WatchTableEntryXml.Entries(doc).Count() == 2, "watch xml: same address updates in place");
+            var first = WatchTableEntryXml.FindEntry(doc, "%M0.0")!.Element("AttributeList")!;
+            check(first.Element("ModifyValue")!.Value == "FALSE" && first.Element("ModifyTrigger")!.Value == "Permanent" && first.Element("Address")!.Value == "%M0.0" && first.Element("Name") == null, "watch xml: absolute row carries Address, the new value and trigger, no Name");
+            var second = WatchTableEntryXml.FindEntry(doc, "\"MCP_Start\"")!.Element("AttributeList")!;
+            check(second.Element("Name")!.Value == "\"MCP_Start\"" && second.Element("Address") == null && second.Element("MonitorTrigger")!.Value == "Permanent", "watch xml: symbol row carries the quoted Name and a monitor trigger");
+            check(string.Join(",", first.Elements().Select(e => e.Name.LocalName)) == "Address,ModifyIntention,ModifyTrigger,ModifyValue,MonitorTrigger", "watch xml: attributes in TIA's alphabetical order");
+            var ids = WatchTableEntryXml.Entries(doc).Select(e => (string)e.Attribute("ID")!).ToArray();
+            check(ids.Distinct().Count() == 2 && ids.All(i => i != "0") && WatchTableEntryXml.NextId(doc) == "3", "watch xml: entry IDs unique, hex, after the table's 0");
+            check(WatchTableEntryXml.Entries(doc).All(e => (string?)e.Attribute("CompositionName") == "Entries"), "watch xml: rows belong to the Entries composition");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.1", "WLAN")), "route: unknown adapter refused");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(routes, "192.168.0.", "")), "route: prefix match is not an exact match");
             check(Fails<PortalException>(() => PlcBlockServicesLogic.SelectFingerprintRoute(new List<PlcBlockServicesLogic.RouteCandidate>(), "192.168.0.1", "")), "route: no configured routes refused");

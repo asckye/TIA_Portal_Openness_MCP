@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.49 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.50 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.50 监控表条目走 SimaticML 往返、`deleteTable`、PLCSIM setter 诊断
+
+2.7.49 真机：下载 / 上线的路由选择通过，卡在 PG 侧（虚拟网卡无 IP）；`GetTechnologyObjects` 递归生效。类型化 API 建不了带变量的监控表行（`Entries.Create()` 只有注释行），`SetWatchTableModifyValue` 改为 导出 → XML 加行 → `Import(Override)` → 读回，表按组路径 / 全树查找；`ManagePlcTableEntries deleteTable` 删表。PLCSIM 8.0 的实例对象没有可写的 `CommunicationInterface` 属性，改试 setter 方法并可用 `memberFilter` 列成员。详见 `docs/releases/v2.7.50.md`。
 
 ## 2.7.49 下载 / 上线路由、PLCSIM 设置器、监控表条目、文件夹里的工艺对象
 

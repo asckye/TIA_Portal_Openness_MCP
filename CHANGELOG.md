@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.50] - 2026-09-21
+
+引擎 2.7.50.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.50](docs/releases/v2.7.50.md)。2.7.49 部署后的真机结果与两处再修。
+
+- **2.7.49 真机**：`DownloadToPlc` / `GoOnline` 的路由选择通过（`-> address 192.168.0.1 (subnet MCP_PN)`），TIA 真正发起下载 / 连接，失败在 PG 侧（虚拟网卡 "Siemens PLCSIM Virtual Ethernet Adapter" 没有 IP："连接到模块 MCP_PLC 失败" / "The connection partner is not responding"）——环境项，给网卡配 192.168.0.x 后重跑；`GetTechnologyObjects` 递归生效（MCP_TO 里的 PID 列出）；`WritePlcSimAdvancedTags` / `RunPlcSimAdvancedTestScenario` 的失败如实回报；powerOff 文案正确。
+- **监控表条目（真机 + PublicAPI）**：2.7.49 的 `Entries.Create()` + `SetAttribute` 也不行——`Create()` 只建注释行（`PlcTableCommentEntry`），`Address` / `Name` / `ModifyValue` 对它都 "not supported"；类型化 API 根本建不了带变量的行。而且旧代码只在根级找表，`MCP_WT` 在 `MCP_W` 文件夹里，于是每次调用都新建一张（真机留下 `MCP_WT_1` … `MCP_WT_5`）。`SetWatchTableModifyValue` 现在走官方 SimaticML 往返：`PlcWatchTable.Export` → XML 里加 / 改 `PlcWatchTableEntry` 行（绝对地址进 `Address`，符号按 TIA 的写法逐段加引号进 `Name`）→ `PlcWatchTableComposition.Import(ImportOptions.Override)` 回它自己的组 → 类型化读回（`meta.after` / `readbackVerified`）；表按组路径或全树查找，多处同名拒绝。`ManagePlcTableEntries` 新增 `deleteTable`（此前没有任何工具能删监控表）。离线新增 12 项测试（2191）。
+- **PLCSIM Advanced**：`register … communicationInterface` 在 8.0 API 上仍失败——实例类与其全部接口都没有可写的 `CommunicationInterface` 属性；现在再试 `SetCommunicationInterface()` / `set_CommunicationInterface()` 方法，仍不行时拒绝信息列出所有同名成员；`ReadPlcSimAdvancedInstances` 新增 `memberFilter` 诊断参数。
+- **站上载**：工程级 `StationUploadProvider` 的 PC 接口既无目标接口也无子网，扫描到的 MAC 建不了地址；再加 `ConfigurationPcInterface.Addresses.Create` 一级。
+
 ## [2.7.49] - 2026-09-21
 
 引擎 2.7.49.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.49](docs/releases/v2.7.49.md)。2.7.48 部署后在 `项目1` 跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族——在线族被两处缺陷挡住，本版修。

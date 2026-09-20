@@ -249,11 +249,25 @@ namespace TiaMcpServer.Siemens
                 using var access = writing ? AcquireHmiEditAccess() : null;
                 var plc = ExactPlcForEngineering(softwarePath, writing);
                 PlcWatchAndForceTableGroup root = plc.WatchAndForceTableGroup;
-                PlcTableCommentEntryComposition entries; string tableName; bool consistent;
-                if (tableKind == "watch") { var table = (PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
+                PlcTableCommentEntryComposition entries; string tableName; bool consistent; PlcWatchTable? watchTable = null;
+                if (tableKind == "watch") { var table = (PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); watchTable = table; entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
                 else { var table = (PlcForceTable)ExactObjectUnder(root, tablePath, "ForceTables", "force table"); entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["table"] = new JsonObject { ["name"] = tableName, ["kind"] = tableKind, ["isConsistent"] = consistent, ["entryCount"] = entries.Count };
                 var all = EngineeringGroupOperations.Items(entries).Cast<PlcTableCommentEntry>().ToArray();
+                if (action == "deleteTable")
+                {
+                    // 2.7.50: no tool could delete a watch table (the old SetWatchTableModifyValue left MCP_WT_1 … MCP_WT_5 behind on the real machine).
+                    meta["before"] = new JsonArray(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray());
+                    if (!writing) return "Watch table deletion preview (" + all.Length + " rows would go with it); no changes.";
+                    meta["mayHaveChanged"] = true;
+                    watchTable!.Delete(); meta["apiCallSuccess"] = true;
+                    bool absent;
+                    try { ExactObjectUnder(plc.WatchAndForceTableGroup, tablePath, "WatchTables", "watch table"); absent = false; }
+                    catch (PortalException) { absent = true; }
+                    meta["verifiedAbsent"] = absent;
+                    if (!absent) throw new InvalidOperationException("Watch table still resolvable after Delete().");
+                    return "Watch table '" + tableName + "' deleted and verified absent; project not saved.";
+                }
                 if (action == "read")
                 {
                     Page(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray(), offset, limit, meta);

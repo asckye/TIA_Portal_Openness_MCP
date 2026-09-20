@@ -260,8 +260,7 @@ namespace TiaMcpServer.Runtime
             object value;
             try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
             catch (ArgumentException) { throw new ArgumentException("communicationInterface '" + communicationInterface + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
-            var prop = WritableProperty(instance, "CommunicationInterface") ?? throw NotSupported("IInstance.CommunicationInterface setter");
-            lock (Gate) prop.SetValue(instance, value);
+            SetThroughPropertyOrMethod(instance, "CommunicationInterface", value, enumType);
             return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
         }
 
@@ -269,8 +268,46 @@ namespace TiaMcpServer.Runtime
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");
             var value = Enum.Parse(enumType, mode, true);
-            var prop = WritableProperty(instance, "OperatingMode") ?? throw NotSupported("IInstance.OperatingMode setter");
-            lock (Gate) prop.SetValue(instance, value);
+            SetThroughPropertyOrMethod(instance, "OperatingMode", value, enumType);
+        }
+
+        // 2.7.50 (real machine, PLCSIM Advanced 8.0): neither the instance class nor any interface it implements carries a writable
+        // CommunicationInterface / OperatingMode property, so the setter must be a method (the manual lists SetCommunicationInterface()
+        // beside the property). Try the property, then Set<Name>(value) / set_<Name>(value) on the class and its interfaces; when nothing
+        // fits, the refusal lists every member whose name contains <Name> so the next release can be built on facts.
+        private static void SetThroughPropertyOrMethod(object instance, string name, object value, Type valueType)
+        {
+            var prop = WritableProperty(instance, name);
+            if (prop != null) { lock (Gate) prop.SetValue(instance, value); return; }
+            var method = FindSetter(instance, name, valueType);
+            if (method != null) { Invoke(method, instance, value); return; }
+            throw NotSupported("IInstance." + name + " setter (members seen: " + DescribeMembers(instance, name) + ")");
+        }
+
+        private static MethodInfo? FindSetter(object instance, string name, Type valueType)
+        {
+            var candidates = new[] { "Set" + name, "set_" + name };
+            foreach (var type in new[] { instance.GetType() }.Concat(instance.GetType().GetInterfaces()))
+                foreach (var method in type.GetMethods(Any))
+                {
+                    if (!candidates.Contains(method.Name, StringComparer.OrdinalIgnoreCase)) continue;
+                    var ps = method.GetParameters();
+                    if (ps.Length == 1 && (ps[0].ParameterType == valueType || ps[0].ParameterType.IsAssignableFrom(valueType))) return method;
+                }
+            return null;
+        }
+
+        public static string DescribeMembers(object instance, string contains)
+        {
+            var seen = new List<string>();
+            foreach (var type in new[] { instance.GetType() }.Concat(instance.GetType().GetInterfaces()))
+            {
+                foreach (var p in type.GetProperties(Any))
+                    if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen.Add(type.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
+                foreach (var m in type.GetMethods(Any))
+                    if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen.Add(type.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
+            }
+            return seen.Count == 0 ? "none" : string.Join("; ", seen.Distinct().Take(40));
         }
 
         // 2.7.49 (real machine): the runtime's instance class exposes CommunicationInterface / OperatingMode as read-only public

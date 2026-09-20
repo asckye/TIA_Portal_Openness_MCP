@@ -128,7 +128,7 @@ namespace TiaMcpServer.Siemens
 
         // ---- watch / force table entries -----------------------------------------------------------------------------------------------
         internal static readonly string[] TableKinds = { "watch", "force" };
-        internal static readonly string[] TableEntryActions = { "read", "createComment", "deleteEntry" };
+        internal static readonly string[] TableEntryActions = { "read", "createComment", "deleteEntry", "deleteTable" };
         internal static bool ValidateTableEntryRequest(string tableKind, string tablePath, string action, int entryIndex, bool confirmDelete, bool dryRun, int offset, int limit)
         {
             RequireOneOf(tableKind, TableKinds, "tableKind");
@@ -142,6 +142,7 @@ namespace TiaMcpServer.Siemens
             if (action == "read") return false;
             if (dryRun) return false;
             if (action == "deleteEntry" && !confirmDelete) throw new ArgumentException("Real entry deletion requires confirmDelete=true besides dryRun=false.");
+            if (action == "deleteTable" && !confirmDelete) throw new ArgumentException("Real table deletion requires confirmDelete=true besides dryRun=false.");
             return true;
         }
 

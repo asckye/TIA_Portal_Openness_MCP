@@ -90,6 +90,7 @@
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolTaxonomy.cs" Link="ToolTaxonomy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\DownloadPromptPolicy.cs" Link="DownloadPromptPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\WatchTableEntryXml.cs" Link="WatchTableEntryXml.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SafetyLogic.cs" Link="SafetyLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareNetworkLogic.cs" Link="HardwareNetworkLogic.cs" />
