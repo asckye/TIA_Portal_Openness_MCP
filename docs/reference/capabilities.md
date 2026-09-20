@@ -1,6 +1,15 @@
 # 工程能力与验收边界
 
-本文说明 2.7.41 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.42 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 447 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.42 新增工具族（阶段 6 ⑥-③ SafetyValidation + Test Suite + Teamcenter + CFC，阶段 6 收口）
+
+| 族 | 工具 | 边界 |
+|---|---|---|
+| Safety Validation Assistant（V21，域 Safety） | `ReadSafetyActivationTests`、`ManageSafetyActivationTest`、`ManageSafetyActivationTestGroup`、`ManageSafetyFunction`、`ManageSafetyFunctionCondition` | `Project.GetService<SafetyValidationAssistant>()`；`groupPathJson` 逐级走 `ActivationTestGroups → Groups`；评估设备来自 `DeviceQuery.EvaluationDevices()`，条件设备来自 `ActivationTest.AvailableDevices()`；`SafetyFunction.Name` 是生成的只读名，`TestName` 可写（按 Name 再按唯一 TestName 选）；条件按 `Conditions` 位置 `index` 选，三种输入取 true/false 或 `FALSE`/`TRUE`/`NotRelevant`；`TraceConfiguration` 的 `PretriggerTime` / `RecordingDuration` / `Signals` 是动态属性；导出 / 报告文件新建并按大小 + SHA-256 核对；V20 全部回 NotSupportedOnVersion；本机与虚拟机都没有该选件许可，只做形状检查 |
+| Test Suite（域 Project，类型化改造） | `ReadTestSuiteCases`（+`kind` testSet）、`ExchangeTestSuiteCase`（+`importTestSets`、`kind`）、`RunTestSuiteCase`（+`namesJson` / `runAll` / `kind`）、`ManageTestSuiteCase`（新） | `Project.GetService<TestSuiteService>()` 三个系统组；`LoadFromFile` 的第三个参数按类别是 `RSLoadOptions`（可 `|` 组合）/ `TCLoadOptions` / `TSLoadOptions`；执行器是系统组的服务，`Run` 按单个 / 列表 / 整组走对应重载，`TestResults.Messages` 递归读到深 12 / 2000 条；application / system 执行要 `confirmExternalExecution=true`（会起 PLCSIM Advanced 或连 OPC UA 服务器）；样式指南 `SetScope` 的对象由 `scopeJson` 描述（project / deviceGroup / plc / blocks / tags / types / units）；虚拟机装有 Test Suite Advanced，三组均可达但为空——真机只能验空表与 NotFound |
+| Teamcenter Gateway（域 VersionControl） | `ManageTeamcenterConnection`、`ManageTeamcenterDataset`、`ManageTeamcenterWorkflow` | `TiaPortal.GetService<TeamcenterConnectionProvider>()` 的 `Connect`（密码转 `SecureString`，不记录）/ `ConnectSSO` 回加密的 `TcGatewayConnectionInfo`，引擎按会话保存一份，只回 group / role / 令牌 SHA-256 前缀；数据集锁与搜索 / 下载在 `TiaPortal` 上，工作流在 `Project` / `GlobalLibrary` 上；九个保存动作都会经网关保存打开的对象，需 `confirmSave=true`；`saveAsNew*` 的自定义属性先 `GetTeamcenterCustomAttributes` 再 `SetValue(value, ErrorCallback)`，任一错误则不保存；无 Teamcenter 环境，只做形状检查 |
+| CFC（域 PLC-Software） | `ExchangeCfcCharts`（类型化改造，+`selectiveExport` / `exportInstructionData` / `chartNamesJson`）、`ManageCfcChartProtection`（新） | `PlcSoftware.GetService<ChartProviderS7>()`（未装 CFC 为 null → NotSupported）；官方要求 PLC 离线（import 要求确认的 Offline 状态）、受密码保护的图表被导出跳过、导入的块类型须已存在并编译；`filter` 在当前 CFC 版本不生效；密码只防误编辑；虚拟机装有 CFC，参考工程无 CFC 图表——真机只能验空导出 |
 
 ## 2.7.41 引擎存活（2.7.40 真机重跑之后）
 
@@ -301,7 +310,7 @@ V20 的 PlantViews 是工程属性，V21 是 PlantViewsProvider 服务，分别�
 2.7.18 之后仍未实现或官方无 API 的项（全量对照见 [官方 API 覆盖清单](openness-coverage.md)）：
 
 - **官方无 API，保持明确拒绝**：独立 RUN/STOP（只能经运行时通道或下载附带）、清除强制、诊断缓冲区、按块选择性下载、Unified 画面复制、Unified 列表条目类型、经典 HMI 脚本/周期/列表的 `Create(string)`、ProDiag 类型化监督组合、阈值/数据网格/报警行列的 `Create`、工程级"已保护"标量。
-- **选件与协作**：SafetyValidation / Teamcenter（无任何入口）与 TestSuite / CFC 的剩余动作（⑥-③，2.7.40）；Startdrive / DCC 已在 2.7.39 类型化；UMC 服务器在线同步与启用/停用工程保护（工程无 UMC 服务器；工程级保护官方无 API）；V20 `Connect(Telegram, …)` 重载。SiVArc（2.7.38）、UMC 离线用户/组（2.7.32）、`CompareLibraryObjects` 的详细比较（2.7.31）、`Connect(Channel)`（2.7.36）已做。
+- **选件与协作**：SafetyValidation / Teamcenter / Test Suite / CFC 已在 2.7.42 类型化（⑥-③，阶段 6 收口；SafetyValidation 与 Teamcenter 无许可 / 无环境，只有形状检查）；Startdrive / DCC 已在 2.7.39 类型化；UMC 服务器在线同步与启用/停用工程保护（工程无 UMC 服务器；工程级保护官方无 API）；V20 `Connect(Telegram, …)` 重载。SiVArc（2.7.38）、UMC 离线用户/组（2.7.32）、`CompareLibraryObjects` 的详细比较（2.7.31）、`Connect(Channel)`（2.7.36）已做。
 - **硬件杂项**：App ID、批量硬件参数、Software Controller PSC/资源配置、自定义 Logo、CiR、I-Device PN-GSD 导出、共享设备、GSDX 签名状态、向 PLC 下载附加用户文件；`SelectiveDeleteDownload`、`Upgrade/DowngradeTargetDevice`、`TurnOffSequence`、`OverwriteHmiData`、Startdrive 下载提示无内置默认，需经 `promptAnswersJson` 显式指定。
 - **库**：实例清理/更新全部流程、HMI-Library 之外的模板分析。
 - **未纳入组件表的 V21 程序集**：`Siemens.Engineering.ScadaExporter.dll`、`SafeKinematics.dll`、`Sinumerik.dll`。

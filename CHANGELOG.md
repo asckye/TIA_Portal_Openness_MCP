@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.7.42] - 2026-09-20
+
+引擎 2.7.42.0（V20/V21 均重建），工具 437 → 447，默认 lite 56 项不变。详见 [v2.7.42](docs/releases/v2.7.42.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-③：SafetyValidation + Test Suite + Teamcenter + CFC 选件包——**最后 25 / 122 个功能类型缺口归零，阶段 6 收口**（SafetyValidation 与 Teamcenter 无许可 / 无环境，只有形状检查）。
+
+- **新增（Safety Validation Assistant，V21）**：`ReadSafetyActivationTests`（激活测试 / 用户组 / 评估设备、单个测试的可用设备与 `TestValidity`）、`ManageSafetyActivationTest`（create / createFromTest / createFromMasterCopy / rename / setAuthor / changeEvaluationDevice / checkValidity / generateReport（.xlsx）/ export / import / delete）、`ManageSafetyActivationTestGroup`、`ManageSafetyFunction`（create / createFrom / update / resetTestResult / checkValidity / setTrace / checkTraceValidity / export / import / delete）、`ManageSafetyFunctionCondition`（按 `Conditions` 位置：create / update / checkValidity / delete）；V20 全部回 NotSupportedOnVersion。
+- **类型化改造（Test Suite）**：`ReadTestSuiteCases` / `ExchangeTestSuiteCase` / `RunTestSuiteCase` 改为强类型（`RuleSet` / `TestCase` / `SystemTestCase` / `ApplicationTestSet`，三类 `LoadFromFile` 的 `RSLoadOptions` / `TCLoadOptions` / `TSLoadOptions`，执行器全部 `Run` 重载，`TestResultsMessage` 递归读取），新增 `kind` testSet、`importTestSets`、`namesJson` / `runAll`；新增 `ManageTestSuiteCase`（rename / setScope（样式指南 `scopeJson` 对象、应用测试 `PlcSoftware` + 实例 + `ExecutionMode`、系统测试 OPC UA 地址 + 接口类型 + 目录）/ copyScope / createFromMasterCopy / showInEditor）。
+- **新增（Teamcenter Gateway）**：`ManageTeamcenterConnection`（connect（密码转 `SecureString`）/ connectSso / disconnect，会话内保存一份 `TcGatewayConnectionInfo`）、`ManageTeamcenterDataset`（checkout / checkin / cancelCheckout / search / download）、`ManageTeamcenterWorkflow`（readCustomAttributes 与九个保存动作，`confirmSave`；自定义属性经 `SetValue(value, ErrorCallback)`）。
+- **类型化改造（CFC）**：`ExchangeCfcCharts` 改为强类型并新增 `selectiveExport`（`chartNamesJson`）与 `exportInstructionData`；新增 `ManageCfcChartProtection`（read / add / change / remove）。
+- **审计**：有专用引用 629 → 668，完全未触及 158 → 116，未封装功能类型 25 / 122 → **0 / 0**（SafetyValidation 8 / 34、Test Suite 9 / 44、Teamcenter 7 / 37、CFC 1 / 7 全部归零）。
+- **验证**：离线 2136 项（新增 80 项）；形状检查 V20 2781 / V21 3068（新增 190 / 257 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程：待部署后按交接页 §2 重跑（Test Suite 三组为空、CFC 无图表，只能验 NotFound / 空表 / NotSupported 路径）。
+
 ## [2.7.41] - 2026-09-20
 
 引擎 2.7.41.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.41](docs/releases/v2.7.41.md)。2.7.40 真机：TIA Portal 退出后 MCP 引擎进程也随之崩溃（退出码 0xE0434352，"Exception.ToString() 失败"），本版让引擎活下来并再加一处 Startdrive 守卫。

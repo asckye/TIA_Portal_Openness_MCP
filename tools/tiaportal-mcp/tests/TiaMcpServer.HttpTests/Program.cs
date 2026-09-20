@@ -352,6 +352,10 @@ internal static class Program
                     SivarcShapeChecks.Run(Server, shapeCheck);
                     StartdriveShapeChecks.Run(Server, shapeCheck);
                     DccShapeChecks.Run(Server, shapeCheck);
+                    SafetyValidationShapeChecks.Run(Server, shapeCheck);
+                    TestSuiteShapeChecks.Run(Server, shapeCheck);
+                    TeamcenterShapeChecks.Run(Server, shapeCheck);
+                    CfcShapeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }

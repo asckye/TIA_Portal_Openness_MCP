@@ -4,9 +4,9 @@
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
-    <AssemblyVersion>2.7.41</AssemblyVersion>
-    <FileVersion>2.7.41.0</FileVersion>
-    <InformationalVersion>2.7.41</InformationalVersion>
+    <AssemblyVersion>2.7.42</AssemblyVersion>
+    <FileVersion>2.7.42.0</FileVersion>
+    <InformationalVersion>2.7.42</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <AssemblyName>TiaMcpServer</AssemblyName>
     <RootNamespace>TiaMcpServer</RootNamespace>

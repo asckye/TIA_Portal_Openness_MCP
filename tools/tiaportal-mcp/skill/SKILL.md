@@ -7,7 +7,7 @@ description: Drive Siemens TIA Portal (博途) end-to-end through the TiaMcpServ
 
 This is the operating skill for TIA Portal MCP automation. The
 companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
-**437** MCP tools (default lite profile: 56; exact runtime set: call `tools/list` on the running server) covering
+**447** MCP tools (default lite profile: 56; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -111,8 +111,8 @@ The domain tag belongs to one of 7 categories (call `ListToolCategories` for liv
 | Category | Domains | What lives there |
 |---|---|---|
 | `session` | Bootstrap, Guide, Meta, Portal, Diagnostics, Reflection, Exports, Reports | connect/attach, self-tests, FindTools/CallTool, generic reflection, export store, reports |
-| `project` | Project, Library, VersionControl, Security, Validation | open/save/archive, texts, libraries, VCI, users/certificates/protection, offline validation, block diff, Markdown/Mermaid block rendering, program handbook, SCL lint |
-| `plc` | PLC-Software, PLC-Builders, PLC-Alarms, PLC-TechnologyObjects, PLC-OpcUA, Safety | blocks/UDTs/tags/sources/units, SCL/LAD builders, alarm texts, Motion/TO, OPC UA server config, Safety |
+| `project` | Project, Library, VersionControl, Security, Validation | open/save/archive, texts, libraries, VCI, Teamcenter Gateway connection / datasets / save workflows (2.7.42), users/certificates/protection, offline validation, TIA Portal Test Suite rule sets / test cases / test sets / system tests (typed 2.7.42), block diff, Markdown/Mermaid block rendering, program handbook, SCL lint |
+| `plc` | PLC-Software, PLC-Builders, PLC-Alarms, PLC-TechnologyObjects, PLC-OpcUA, Safety | blocks/UDTs/tags/sources/units, CFC chart exchange / passwords (typed 2.7.42), SCL/LAD builders, alarm texts, Motion/TO, OPC UA server config, Safety, Safety Validation Assistant activation tests / safety functions / conditions (V21, 2.7.42) |
 | `plc-online` | PLC-Online | go online/offline, download, memory-card image, station upload, accessible-device scan, online compare |
 | `hardware` | Hardware | devices/modules, catalog, subnets, communication connections, system diagnostics settings, AML, Startdrive drive objects / parameters / telegrams / functions (2.7.39), DCC charts / blocks / pins (2.7.39) |
 | `hmi` | HMI, HMI-Unified, HMI-Classic, HMI-Library | Unified screens/tags/alarms/logs/scripts/events/dynamization/parts, classic HMI scripts/cycles/lists, shared read/export, library templates, SiVArc |
@@ -1132,7 +1132,7 @@ Honest scope so you don't over-promise. Quote this when a user asks "can it do X
 | OPC UA read (live values, monitoring) | ✅ read-only (`ReadPlcLiveValuesOpcUa`) | ✅ | ✅ browser+subscribe+trend |
 | Download to CPU | ✅ fixed, verified on real CPU (§13) | ✅ | ✅ |
 | **Safety F-block author / compile / signature** | partial: F-administration, runtime groups, signatures, printout (`ManagePlcSafety` / `ReadSafetyBlockSignatures` / `ExportSafetyPrintout`, 2.7.25); F-compile is not in the PublicAPI | ✅ full | ✅ full |
-| **PLCSIM simulation / unit testing** | ✕ **不做(主动放弃)** | ✅ simulate | ✅ PLCSIM Advanced tests |
+| **PLCSIM simulation / unit testing** | partial: PLCSIM Advanced instance / tag tools under `runtime`; TIA Portal Test Suite typed (`ReadTestSuiteCases` / `ExchangeTestSuiteCase` / `RunTestSuiteCase` / `ManageTestSuiteCase`, 2.7.42 — style-guide rule sets, application test cases / test sets against PLCSIM Advanced, OPC UA system tests; shape-checked, execution needs the Test Suite licence) | ✅ simulate | ✅ PLCSIM Advanced tests |
 | Native Git / VCI | ✕ 不做(用文本导出替代 §16) | ✅ Git+CI | ✅ full Git UI |
 | Block protection / encrypted vault | partial: know-how / write protection (`ManagePlcBlockProtection`, `ManagePlcBlockWriteProtection`), no vault | partial | ✅ AES vault |
 | UMAC user/rights, SiVArc auto-screens | ✅ UMAC users / roles / UMC offline users (`ManageProjectUserManagement`, `ManageUmcUsers`, 2.7.32–2.7.33); ✅ SiVArc rules / definitions / generation typed (2.7.38, verified on the VM with the SiVArc option; the typed rule tool is `ManageSivarcTableRule` since 2.7.39) | ✅ | partial |

@@ -102,6 +102,10 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SivarcLogic.cs" Link="SivarcLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\StartdriveLogic.cs" Link="StartdriveLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\DccLogic.cs" Link="DccLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\SafetyValidationLogic.cs" Link="SafetyValidationLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\TestSuiteLogic.cs" Link="TestSuiteLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\TeamcenterLogic.cs" Link="TeamcenterLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\CfcLogic.cs" Link="CfcLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />

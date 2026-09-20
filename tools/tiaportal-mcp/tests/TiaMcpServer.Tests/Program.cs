@@ -139,6 +139,18 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== DCC 纯逻辑：图表 / 块 / 引脚 / 图表接口 / 分区 / DCB 库请求、可写属性目录、导入选项与文件门 ==");
             DccTests.Run(Check);
 
+            Console.WriteLine("== SafetyValidation 纯逻辑：激活测试组路径、激活测试 / 组 / 安全功能 / 条件请求、导出导入选项与条件值 ==");
+            SafetyValidationTests.Run(Check);
+
+            Console.WriteLine("== Test Suite 纯逻辑：类别 / 种类、加载选项语法、交换 / 执行 / 管理请求与样式指南作用域条目 ==");
+            TestSuiteTests.Run(Check);
+
+            Console.WriteLine("== Teamcenter 纯逻辑：连接 / 数据集 / 工作流请求、条目与修订详情、自定义属性 ==");
+            TeamcenterTests.Run(Check);
+
+            Console.WriteLine("== CFC 纯逻辑：完整 / 选择导出、导入、指令数据与图表密码请求 ==");
+            CfcTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

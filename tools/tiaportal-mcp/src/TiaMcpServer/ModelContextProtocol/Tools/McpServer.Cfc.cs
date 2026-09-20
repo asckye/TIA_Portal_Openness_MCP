@@ -1,0 +1,16 @@
+using System.ComponentModel;
+using ModelContextProtocol.Server;
+using TiaMcpServer.Siemens;
+namespace TiaMcpServer.ModelContextProtocol
+{
+    // Phase 6 ⑥-③ (2.7.42): typed CFC option package (PlcSoftware.GetService<ChartProviderS7>; identical on V20 / V21).
+    public static partial class McpServer
+    {
+        [McpServerTool(Name="ExchangeCfcCharts"), Description("[L2][PLC-Software][WRITE] Typed CFC chart exchange of one PLC software (ChartProviderS7): export (ChartProvider.CompleteExport(path, modelVersion e.g. V2.0, filter, unattended) - every chart with block types, task assignment and run sequence, written as XML packed in a ZIP such as Chart1.xml.zip), selectiveExport (SelectiveExport(path, chartNamesJson [..], modelVersion, filter, unattended) - the named charts only), import (Import(path, modelVersion, filter, unattended, deleteAtTarget) - the ZIP from a complete or selective export; deleteAtTarget removes charts missing from the file), exportInstructionData (ChartProviderS7.ExportInstructionData(path)). Official requirements: PLC offline (import requires the confirmed Offline state), password-protected charts are skipped by the exports, the imported block types must exist and be compiled. Output files are new and verified by size / SHA-256. Default preview; no save / compile / download.")]
+        public static ResponseMessage ExchangeCfcCharts(string softwarePath, string action, string filePath, string modelVersion="", long filter=0, bool unattended=true, bool deleteAtTarget=false, bool dryRun=true, string chartNamesJson="[]")
+            => Portal.ExchangeCfcCharts(softwarePath,action,filePath,modelVersion,filter,unattended,deleteAtTarget,dryRun,chartNamesJson);
+        [McpServerTool(Name="ManageCfcChartProtection"), Description("[L2][PLC-Software][WRITE] CFC chart password of one chart (ChartProviderS7 on the PLC software): read (GetChartProtection -> password hash, empty = unprotected), add (AddChartProtection(chartName, newHashedPassword - the hash as TIA displays it)), change (ChangeChartProtection(chartName, currentPassword as SecureString, newHashedPassword)), remove (RemoveChartProtection(chartName, currentPassword)). Official: the password only protects against unintentional editing (no know-how protection); native bool reported and the hash read back. Passwords are never logged. Default preview; no automatic save.")]
+        public static ResponseMessage ManageCfcChartProtection(string softwarePath, string chartName, string action="read", string currentPassword="", string newHashedPassword="", bool dryRun=true)
+            => Portal.ManageCfcChartProtection(softwarePath,chartName,action,currentPassword,newHashedPassword,dryRun);
+    }
+}

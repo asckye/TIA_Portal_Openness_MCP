@@ -7,18 +7,6 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ExchangePlcSupervisions"), Description("[L2][PLC-Software][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import requires offline PLC; output is new and hashed. Default preview; no save/compile/download.")]
         public static ResponseMessage ExchangePlcSupervisions(string softwarePath,string action,string filePath,string importOptions="None",bool dryRun=true)
             => Portal.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun);
-        [McpServerTool(Name="ExchangeCfcCharts"), Description("[L2][PLC-Software][WRITE] CFC ChartProviderS7 native ZIP exchange; explicit modelVersion/filter. deleteAtTarget=false; default preview. Native chart completeness not asserted. Import requires offline PLC; no save/compile/download.")]
-        public static ResponseMessage ExchangeCfcCharts(string softwarePath,string action,string filePath,string modelVersion,long filter,bool unattended=true,bool deleteAtTarget=false,bool dryRun=true)
-            => Portal.ExchangeCfcCharts(softwarePath,action,filePath,modelVersion,filter,unattended,deleteAtTarget,dryRun);
-        [McpServerTool(Name="ReadTestSuiteCases"), Description("[L2][Project][READ] Siemens Test Suite styleGuide/application/system case or rule-set scalar read. Exact name or live offset pagination. Does not execute tests.")]
-        public static ResponseMessage ReadTestSuiteCases(string category,string name="",int offset=0,int limit=100)
-            => Portal.ReadTestSuiteCases(category,name,offset,limit);
-        [McpServerTool(Name="ExchangeTestSuiteCase"), Description("[L2][Project][WRITE] Native Test Suite definition import/export/delete. Import has explicit native loadOptions and may affect multiple definitions. Default preview; no test execution. New output files, hashed.")]
-        public static ResponseMessage ExchangeTestSuiteCase(string category,string action,string name,string filePath="",string importOptions="None",string loadOptions="",bool dryRun=true)
-            => Portal.ExchangeTestSuiteCase(category,action,name,filePath,importOptions,loadOptions,dryRun);
-        [McpServerTool(Name="RunTestSuiteCase"), Description("[L2][Project][EXECUTE] Execute one exact Siemens Test Suite rule set/case. Default preview; application/system require confirmExternalExecution=true because configured simulation or servers may be affected. Returns actual testPassed and native diagnostics.")]
-        public static ResponseMessage RunTestSuiteCase(string category,string name,bool confirmExternalExecution=false,bool dryRun=true)
-            => Portal.RunTestSuiteCase(category,name,confirmExternalExecution,dryRun);
         [McpServerTool(Name="ExchangeMotionCamData"), Description("[L2][PLC-TechnologyObjects][WRITE] Native cam text/binary/point-list export and text/binary import. Explicit native format/separator, new output file, default preview. Import requires Offline. No drive/motion command.")]
         public static ResponseMessage ExchangeMotionCamData(string softwarePath,string objectPath,string action,string filePath,string format="",string separator="",int pointCount=0,bool dryRun=true)
             => Portal.ExchangeMotionCamData(softwarePath,objectPath,action,filePath,format,separator,pointCount,dryRun);

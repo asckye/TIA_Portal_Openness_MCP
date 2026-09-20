@@ -31,25 +31,5 @@ namespace TiaMcpServer.Siemens
                 if(!write)meta["file"]=NativeFileOutput.Verify(file);
                 return "Native ProDiag exchange returned; inspect native state and diagnostics. No save/compile/download.";
             });
-        public ResponseMessage ExchangeCfcCharts(string softwarePath,string action,string filePath,string modelVersion,long filter,bool unattended=true,bool deleteAtTarget=false,bool dryRun=true)
-            =>RunHmiStepTool("ExchangeCfcCharts",meta=>{
-                if(action!="export"&&action!="import") throw new ArgumentException("action must be export/import.");
-                if(string.IsNullOrWhiteSpace(modelVersion))throw new ArgumentException("Explicit S7TIA exchange model version required.");
-                bool write=action=="import";using var access=write&&!dryRun ? AcquireHmiEditAccess() : null;
-                var plc=ExactPlcForEngineering(softwarePath,write&&!dryRun);
-                var service=OfficialServiceAccess.Require(plc,"Siemens.Engineering.SW.FunctionCharts.ChartProviderS7","Siemens.Engineering.CFC");
-                var file=write ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
-                if(write&&!file.Exists)throw new FileNotFoundException("CFC input file not found.");
-                var signature=write ? new[]{typeof(string),typeof(string),typeof(long),typeof(bool),typeof(bool)} : new[]{typeof(string),typeof(string),typeof(long),typeof(bool)};
-                var method=write ? "Import" : "CompleteExport";
-                if(service.GetType().GetMethod(method,signature)==null)throw new NotSupportedException("Native CFC exchange signature unavailable.");
-                meta["dryRun"]=dryRun;meta["deleteAtTarget"]=deleteAtTarget;meta["mayHaveChanged"]=false;meta["mayHaveWrittenFiles"]=false;
-                if(dryRun)return "Native CFC exchange preview. Import deleteAtTarget removes objects omitted from the input when explicitly enabled.";
-                meta["mayHaveChanged"]=write;meta["mayHaveWrittenFiles"]=!write;
-                var result=write ? EngineeringGroupOperations.Call(service,method,signature,file.FullName,modelVersion,filter,unattended,deleteAtTarget) : EngineeringGroupOperations.Call(service,method,signature,file.FullName,modelVersion,filter,unattended);
-                OfficialServiceAccess.AttachResult(meta,result);if(result is bool accepted && !accepted)meta["operationSuccess"]=false;
-                if(!write)meta["file"]=NativeFileOutput.Verify(file);
-                return "Native CFC operation returned; no independent chart semantic verification or automatic save/compile/download.";
-            });
     }
 }

@@ -114,6 +114,20 @@ ALLOWED = {
     'MoveInRuntimeSequence': 'Openness Statement.MoveInRuntimeSequence(uint)，由 ManageDccChart / ManageDccBlock 的 sequenceIndex 封装',
     'ImportDcbLibrary': 'Openness DcbLibraryImporter.ImportDcbLibrary()，由 ManageDcbLibraries import 封装',
     'RenameOnConflict': 'Openness DccImportOptions 枚举值（importOptions 参数取值）',
+    # 2.7.42 SafetyValidation / Test Suite / Teamcenter / CFC 工具族描述里点名的原生成员 / 枚举值，都在说明底层调用，不是 MCP 工具名
+    'CheckValidity': 'Openness SafetyValidation.TestValidity.CheckValidity()，由 ManageSafetyActivationTest / ManageSafetyFunction / ManageSafetyFunctionCondition 的 checkValidity 动作封装',
+    'ExportOptions': 'Openness Siemens.Engineering.ExportOptions 枚举类型名（exportOptions 参数取值）',
+    'ExportSetting': 'Openness DocumentInfoOptions 枚举值（documentInfoOptions 参数取值）',
+    'GetScope': 'Openness TestSuite TestCase.GetScope()，由 ReadTestSuiteCases 读出',
+    'SetScope': 'Openness TestSuite RuleSet / TestCase / SystemTestCase.SetScope()，由 ManageTestSuiteCase setScope 封装',
+    'SaveToFile': 'Openness TestSuite RuleSet / TestCase / SystemTestCase.SaveToFile()，由 ExchangeTestSuiteCase export 封装',
+    'ConnectSSO': 'Openness TeamcenterConnectionProvider.ConnectSSO()，由 ManageTeamcenterConnection connectSso 封装',
+    'GetTeamcenterCustomAttributes': 'Openness TcGatewayWorkflowProvider.GetTeamcenterCustomAttributes()，由 ManageTeamcenterWorkflow readCustomAttributes 封装',
+    'SaveWithProxyObject': 'Openness TcGatewayWorkflowProvider.SaveWithProxyObject()，由 ManageTeamcenterWorkflow saveWithProxyObject 封装',
+    'SetValue': 'Openness TeamcenterProperty.SetValue(string, ErrorCallback)，由 ManageTeamcenterWorkflow customAttributesJson 封装',
+    'AddChartProtection': 'Openness CFC ChartProvider.AddChartProtection()，由 ManageCfcChartProtection add 封装',
+    'GetChartProtection': 'Openness CFC ChartProvider.GetChartProtection()，由 ManageCfcChartProtection read 封装',
+    'ExportInstructionData': 'Openness CFC ChartProviderS7.ExportInstructionData()，由 ExchangeCfcCharts exportInstructionData 封装',
 }
 
 VERB = re.compile(
