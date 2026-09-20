@@ -7,7 +7,7 @@
 - **引擎存活**：`App.config` 启用 `legacyUnhandledExceptionPolicy`（Openness 后台线程在 TIA 退出后抛出的异常不再终止进程），`Program.cs` 以不调用 `ToString()` / `Message` 优先的方式把未处理异常与未观察的任务异常记进诊断日志；`GetState` 在绑定的 TIA 进程已不在时直接回 `isConnected=false` + `portalProcess.processAlive=false`，不再抛 "disposed"。
 - **守卫（Startdrive）**：`ManageDriveTelegrams` 对没有任何报文（未联网）的驱动对象拒绝 check / insert / erase（新建 G120C 上 `CanInsertAdditionalTelegram` 抛 "Invalid operation"、`CanInsertTelegram(700, SupplementaryTelegram)` 让 TIA 退出）。
 - **PLCSIM Advanced 桥**：维护者报告 2.7.38 在连续读写 15–30 次后引擎崩溃 5 次（与并发无关）——桥不再每次调用都 `CreateInterface` / `UpdateTagList` / `Dispose`，改为每个实例名缓存一个 `IInstance` 接口、变量表只装载一次（"not found" 时刷新重试）、所有 API 调用串行；`unregister` / `powerOff` / `memoryReset` 与异常后释放接口；结果里 `interface` 报缓存状态。未在真实 PLCSIM 上验证。
-- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811 不变；真实工程按交接页 §2 待重跑（2.7.40 的真机结果见其发布说明）。
+- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811 不变。真实工程（2026-09-20，临时 G120C + 临时 S120 CU320-2 PN，全程 TIA 未退出）：报文守卫生效；G120C 的 `setMotorType` → `readMotorConfiguration` → `projectMotorConfiguration` 实做通过，编码器投影被 TIA 拒绝（设备不支持）；S120 的驱动对象号、类型处理器、激活、`Security`、工艺扩展 `activate` / `deactivate` 实做（TRCDATA 0 → 250 参数）、`DriveItemHardwareModule`、CU 参数枚举表通过；门户级 `readPackages` 列出已装 .tec 包；DCC / 在线 / 验收测试在这两台设备上按设计回 NotSupported，DCC 全族仍待带 DCC 的驱动轴对象。
 
 ## [2.7.40] - 2026-09-20
 

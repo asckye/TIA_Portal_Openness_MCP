@@ -31,7 +31,7 @@
 | 在线 | `ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE，`confirmOnline`） | 需要驱动已在线；恢复出厂 / RAM→ROM 作用于真实驱动，写保护钩子按 ONLINE-WRITE 拦截 |
 | DCC | `ReadDccCharts`、`ManageDccChart`（类型化改造：子图路径、自动命名、`exportAll` / `readSequence` / `showEditor`、`sequenceIndex`、`confirmDelete`）、`ManageDccBlock`、`ManageDccPin`、`ManageDccChartInterface`、`ManageDccChartPartition`、`ManageDcbLibraries`、`ReadDccObject` | `DriveControlChartContainer` 是驱动对象的服务，不支持 DCC 的驱动回 NotSupported；DCC 异常按类型回报（`dccException.type / family / licenceMissing`）；`DcbLibraryImporter` 仅 V21；导出文件必须不存在 |
 
-**真机（2026-09-20，临时设备 `MCP_TMP_G120C` + 现有 G120C 只读）**：`ReadDriveObjects`、`ReadDriveParameters`（按名 / 按号 / 分页 / 枚举表 / `Bits`）、`ManageStartdriveParameter`（`p1120[0]` 写回、BICO `p1070[0] ← r2050[1]`）通过；`ManageDriveTelegrams check` 在已有主报文时让 TIA 退出（2.7.40 守卫）；驱动功能 / 安全 / 工艺扩展 / 硬件模块 / 验收测试 / DCC / 在线工具待 2.7.40 部署后验。形状检查 V20 2589 / V21 2809 对本机 PublicAPI 逐成员核对通过。
+**真机（2026-09-20，临时设备 `MCP_TMP_G120C` / `MCP_TMP_S120` + 现有 G120C 只读；2.7.39–2.7.41 三轮）**：`ReadDriveObjects`、`ReadDriveParameters`（按名 / 按号 / 分页 / 枚举表 / `Bits` / `includeValue=false`）、`ManageStartdriveParameter`（`p1120[0]` 写回、BICO `p1070[0] ← r2050[1]`）、`ManageDriveFunctions`（G120C `setMotorType` → `readMotorConfiguration` → `projectMotorConfiguration` 实做；S120 类型处理器 / 激活读与预览）、`ManageDriveSecurity read`（S120 `Security` 提供、UMAC / DDE 为 null）、`ManageTechnologyExtensions`（S120 `activate` / `deactivate` 实做、门户 `readPackages`）、`ManageDriveHardwareModule read`（S120 机架项）通过；报文 `Can*` 在 G120C 上让 TIA 退出（2.7.40 / 2.7.41 守卫）；编码器投影在 G120C 上被 TIA 拒绝；验收测试 / DCC / 在线在这两台设备上回 NotSupported（DCC 待带 DCC 的驱动轴对象）。形状检查 V20 2591 / V21 2811 对本机 PublicAPI 逐成员核对通过。
 
 ## 2.7.38 新增工具族（阶段 6 ⑥-① SiVArc 选件包）
 
