@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "2.7.45",
-    "packageName":  "TIA_MCP_Delivery_v2.7.45_20260920",
+    "bundleVersion":  "2.7.46",
+    "packageName":  "TIA_MCP_Delivery_v2.7.46_20260920",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-09-20T12:30:17.2902795+00:00",
+    "refreshedAt":  "2026-09-20T14:56:26.6628255+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -115,8 +115,8 @@
                                              "note":  "All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "2.7.45.0",
-    "validationStatus":  "Delivery 2.7.45; engine 2.7.45 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "2.7.46.0",
+    "validationStatus":  "Delivery 2.7.46; engine 2.7.46 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",
