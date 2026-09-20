@@ -5,7 +5,7 @@
 引擎 2.7.44.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.44](docs/releases/v2.7.44.md)。2.7.43 真机重跑首次看到 CFC 空导出的真实结构，修正预检解析器。
 
 - **修复（CFC 预检）**：空导出是 `Document > DocumentInfo / FunctionChartsFolder(Name="Charts") > ObjectList / UsedAlarmClasses`，2.7.43 的解析器把文件夹元素当成一张图表（清单 `["Charts"]`），于是没有图表的 PLC 上 `exportInstructionData` 不会被"无图表"分支拒绝（未跑，否则会再让 TIA 退出）；2.7.44 只认名字含 Chart、且不含 Folder / List、不以 s 结尾的元素（`CfcLogic.IsChartElement`），离线测试改用真实的导出形状。
-- **验证**：离线 2144 项（新增 1 项）；形状检查 V20 2785 / V21 3073 不变。真实工程（2.7.43 引擎）：Test Suite 空组拒绝、条件 NotRelevant 引擎侧拒绝（对象未动）、合法条件 update、`changeEvaluationDevice` 驱动拒绝、CFC 未知图表 NotFound 全部通过，TIA 未退出。
+- **验证**：离线 2144 项（新增 1 项）；形状检查 V20 2785 / V21 3073 不变。真实工程（2.7.43 引擎）：Test Suite 空组拒绝、条件 NotRelevant 引擎侧拒绝（对象未动）、合法条件 update、`changeEvaluationDevice` 驱动拒绝、CFC 未知图表 NotFound 全部通过，TIA 未退出。真实工程（2.7.44 引擎，同日）：CFC 预检对没有图表的 PLC 回 InvalidState（`read MCP_NONE` / `exportInstructionData` / `selectiveExport`），`export` 附 `inventory`（0 张图表），TIA 未退出。
 
 ## [2.7.43] - 2026-09-20
 
