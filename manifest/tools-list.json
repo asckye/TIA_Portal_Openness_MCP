@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.40_20260920",
-    "generatedAt":  "2026-09-19T16:55:24.9571730+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.41_20260920",
+    "generatedAt":  "2026-09-20T01:55:48.2892402+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.40.0",
-    "exeSha256":  "a550748e4061a3b2de0519ab036bc686b9b1af1a990d81b8cacca01ebba9a43d",
+    "fileVersion":  "2.7.41.0",
+    "exeSha256":  "f5a766000c465bba4f81f96c97687d344c61f56a8019ed2aebf0f88e0318e23a",
     "toolCount":  437,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -5109,7 +5109,7 @@
                                          "connectOption",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] Telegrams of one drive object (TelegramComposition): read; check (CanInsertTelegram / CanInsertMainTelegram / CanInsertSupplementaryTelegram / CanInsertSafetyTelegram / CanInsertTorqueTelegram / CanInsertAdditionalTelegram(inputSize, outputSize) and CanChangeTelegram); insert (typed Insert* per telegramType MainTelegram / SupplementaryTelegram / AdditionalTelegram / SafetyTelegram / TorqueTelegram / EdgeTelegram, telegramNumber 999 = free telegram); erase (EraseTelegram, main telegrams only on G220); while a MainTelegram exists, check / insert for MainTelegram skip the native Can* / Insert* (TIA Portal V21 crashed on a G120C there) - use changeNumber / changeSize; changeNumber (Telegram.TelegramNumber after CanChangeTelegram); changeSize (Telegram.ChangeSize(direction Input|Output, size words, keepOriginalAddress) after CanChangeSize); connectTechnologyObject (V21 AxisHardwareConnectionSDRProvider / EncoderHardwareConnectionSDRProvider SDR interfaces, V20 base interfaces: interfaceKind actor / sensor (sensorIndex) / torque / encoder of the technology object at softwarePath + objectPath, optional connectOption Default | AllowAllModules). Default preview; telegrams are read back on a fresh navigation because TIA invalidates Telegram objects after size changes. No download."
+                      "description":  "[L2][Hardware][WRITE] Telegrams of one drive object (TelegramComposition): read; check (CanInsertTelegram / CanInsertMainTelegram / CanInsertSupplementaryTelegram / CanInsertSafetyTelegram / CanInsertTorqueTelegram / CanInsertAdditionalTelegram(inputSize, outputSize) and CanChangeTelegram); insert (typed Insert* per telegramType MainTelegram / SupplementaryTelegram / AdditionalTelegram / SafetyTelegram / TorqueTelegram / EdgeTelegram, telegramNumber 999 = free telegram); erase (EraseTelegram, main telegrams only on G220); while a MainTelegram exists, check / insert for MainTelegram skip the native Can* / Insert* (TIA Portal V21 crashed on a G120C there) - use changeNumber / changeSize; a drive object without any telegram (not networked) refuses every check / insert / erase (same crash on a fresh G120C); changeNumber (Telegram.TelegramNumber after CanChangeTelegram); changeSize (Telegram.ChangeSize(direction Input|Output, size words, keepOriginalAddress) after CanChangeSize); connectTechnologyObject (V21 AxisHardwareConnectionSDRProvider / EncoderHardwareConnectionSDRProvider SDR interfaces, V20 base interfaces: interfaceKind actor / sensor (sensorIndex) / torque / encoder of the technology object at softwarePath + objectPath, optional connectOption Default | AllowAllModules). Default preview; telegrams are read back on a fresh navigation because TIA invalidates Telegram objects after size changes. No download."
                   },
                   {
                       "name":  "ReadUnifiedRuntimeAlarms",
