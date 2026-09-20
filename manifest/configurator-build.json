@@ -1,10 +1,10 @@
 {
-    "generatedAt":  "2026-09-20T07:39:28.8935198+00:00",
+    "generatedAt":  "2026-09-20T07:41:00.5239118+00:00",
     "testsPassed":  88,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "82248846a725bcd27590b7aff630640f89239a1f4789ce4c7645f62db85a8bcc"
+                       "sha256":  "e9801d556d5d1b5b7f2568334e33776bbc55407b6b9eceadfe9ba3b230207824"
                    },
     "sourceFiles":  [
                         {
