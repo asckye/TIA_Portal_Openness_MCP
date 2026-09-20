@@ -49,6 +49,71 @@ namespace TiaMcpServer.Runtime
     {
         private static readonly object Gate = new object();
         private static PlcSimApi? _api;
+        // 2.7.41: one IInstance interface per instance name, kept open across tool calls. 2.7.38-2.7.40 created and disposed an
+        // interface per call and rebuilt the tag list every time; on the maintainer's machine the engine died after 15-30 consecutive
+        // reads / writes (exit 0xE0434352 from the PLCSIM Advanced API's own thread). Interfaces are re-created only when the cached one
+        // no longer answers, and every API call is serialized on Gate (the API is not documented as thread-safe).
+        private sealed class CachedInterface { public object Instance = null!; public bool TagListLoaded; public DateTime Opened; public int Uses; }
+        private static readonly Dictionary<string, CachedInterface> Interfaces = new Dictionary<string, CachedInterface>(StringComparer.OrdinalIgnoreCase);
+        public static object Acquire(PlcSimApi api, string name)
+        {
+            lock (Gate)
+            {
+                if (Interfaces.TryGetValue(name, out var cached))
+                {
+                    try { _ = OperatingState(cached.Instance); cached.Uses++; return cached.Instance; }
+                    catch (Exception) { Forget(name); }
+                }
+                var created = OpenInterface(api, name);
+                Interfaces[name] = new CachedInterface { Instance = created, Opened = DateTime.Now, Uses = 1 };
+                return created;
+            }
+        }
+        // Loads the tag list once per cached interface; force=true after a download / register or when a tag is not found.
+        public static void EnsureTagList(PlcSimApi api, string name, object instance, bool force = false)
+        {
+            lock (Gate)
+            {
+                Interfaces.TryGetValue(name, out var cached);
+                if (!force && cached != null && cached.TagListLoaded && ReferenceEquals(cached.Instance, instance)) return;
+                UpdateTagList(api, instance);
+                if (cached != null && ReferenceEquals(cached.Instance, instance)) cached.TagListLoaded = true;
+            }
+        }
+        public static void Forget(string name)
+        {
+            lock (Gate)
+            {
+                if (!Interfaces.TryGetValue(name, out var cached)) return;
+                Interfaces.Remove(name);
+                Dispose(cached.Instance);
+            }
+        }
+        public static JsonObject CacheState(string name)
+        {
+            lock (Gate)
+            {
+                return Interfaces.TryGetValue(name, out var cached)
+                    ? new JsonObject { ["cachedInterface"] = true, ["openedAt"] = cached.Opened, ["uses"] = cached.Uses, ["tagListLoaded"] = cached.TagListLoaded }
+                    : new JsonObject { ["cachedInterface"] = false };
+            }
+        }
+        // Read / Write with one tag-list refresh when PLCSIM reports the tag as unknown (new download since the list was loaded).
+        public static (string type, object? value) ReadWithRefresh(PlcSimApi api, string name, object instance, string tagName)
+        {
+            try { return Read(api, instance, tagName); }
+            catch (InvalidOperationException ex) when (LooksLikeUnknownTag(ex)) { EnsureTagList(api, name, instance, true); return Read(api, instance, tagName); }
+        }
+        public static string WriteWithRefresh(PlcSimApi api, string name, object instance, string tagName, JsonNode? value)
+        {
+            try { return Write(api, instance, tagName, value); }
+            catch (InvalidOperationException ex) when (LooksLikeUnknownTag(ex)) { EnsureTagList(api, name, instance, true); return Write(api, instance, tagName, value); }
+        }
+        private static bool LooksLikeUnknownTag(Exception ex)
+        {
+            var m = ex.Message;
+            return m.IndexOf("not found", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("NotFound", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("does not exist", StringComparison.OrdinalIgnoreCase) >= 0 || m.IndexOf("DoesNotExist", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
         private const BindingFlags Any = BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.IgnoreCase;
 
         // ------------------------------------------------------------------ loading
@@ -269,9 +334,9 @@ namespace TiaMcpServer.Runtime
         private static object? GetMember(Type type, object? target, string name)
         {
             var prop = type.GetProperty(name, Any);
-            if (prop != null) return prop.GetValue(target);
+            if (prop != null) { lock (Gate) return prop.GetValue(target); }
             var field = type.GetField(name, Any);
-            if (field != null) return field.GetValue(target);
+            if (field != null) { lock (Gate) return field.GetValue(target); }
             throw NotSupported(type.Name + "." + name);
         }
 
@@ -295,7 +360,7 @@ namespace TiaMcpServer.Runtime
 
         private static object? Invoke(MethodInfo m, object? target, params object?[] args)
         {
-            try { return m.Invoke(target, args); }
+            try { lock (Gate) return m.Invoke(target, args); }
             catch (TargetInvocationException tie) when (tie.InnerException != null)
             {
                 var inner = tie.InnerException;

@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.41] - 2026-09-20
+
+引擎 2.7.41.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.41](docs/releases/v2.7.41.md)。2.7.40 真机：TIA Portal 退出后 MCP 引擎进程也随之崩溃（退出码 0xE0434352，"Exception.ToString() 失败"），本版让引擎活下来并再加一处 Startdrive 守卫。
+
+- **引擎存活**：`App.config` 启用 `legacyUnhandledExceptionPolicy`（Openness 后台线程在 TIA 退出后抛出的异常不再终止进程），`Program.cs` 以不调用 `ToString()` / `Message` 优先的方式把未处理异常与未观察的任务异常记进诊断日志；`GetState` 在绑定的 TIA 进程已不在时直接回 `isConnected=false` + `portalProcess.processAlive=false`，不再抛 "disposed"。
+- **守卫（Startdrive）**：`ManageDriveTelegrams` 对没有任何报文（未联网）的驱动对象拒绝 check / insert / erase（新建 G120C 上 `CanInsertAdditionalTelegram` 抛 "Invalid operation"、`CanInsertTelegram(700, SupplementaryTelegram)` 让 TIA 退出）。
+- **PLCSIM Advanced 桥**：维护者报告 2.7.38 在连续读写 15–30 次后引擎崩溃 5 次（与并发无关）——桥不再每次调用都 `CreateInterface` / `UpdateTagList` / `Dispose`，改为每个实例名缓存一个 `IInstance` 接口、变量表只装载一次（"not found" 时刷新重试）、所有 API 调用串行；`unregister` / `powerOff` / `memoryReset` 与异常后释放接口；结果里 `interface` 报缓存状态。未在真实 PLCSIM 上验证。
+- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811 不变；真实工程按交接页 §2 待重跑（2.7.40 的真机结果见其发布说明）。
+
 ## [2.7.40] - 2026-09-20
 
 引擎 2.7.40.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.40](docs/releases/v2.7.40.md)。2.7.39 真机重跑暴露了三处让 TIA Portal V21 整个退出的 Startdrive 调用（G120C），本版加守卫与诊断。
@@ -7,7 +16,7 @@
 - **守卫（Startdrive）**：`ManageDriveTelegrams` 在驱动对象已有主报文时不再调用 `CanInsertMainTelegram` / `InsertMainTelegram`（真机上 TIA 在此崩溃；主报文只在 G220 上可增删），`check` 回 `mainTelegramPresent`，`insert` 明确拒绝；`ReadDriveParameters` / `ReadOnlineDriveParameters` 新增 `includeValue`（默认 true），`Value` 改为最后读且可关闭——先读元数据再决定是否读值（真机上读 `r2139` 与新建驱动上未接线的 `p840[0]` 的值让 TIA 退出）；位参数名（`r722.0`）经父参数 `Bits` 解析（`Find` 对点名回 null），`ManageStartdriveParameter` 的读写与 BICO 源同样支持。
 - **诊断**：引擎记住所绑定的 TIA Portal 进程 id；`GetState` 的 `hmiReadHealth.portalProcess`、连接失败保护的记录与 `GetState` 失败文案都报告该进程是否还在（`processAlive=false` 时直接说"TIA Portal 进程已不在，重启并重新打开工程后 AttachToOpenProject"），不再让人猜"disposed"到底是句柄陈旧还是进程没了。
 - **SiVArc**：`GenerateSiVArc` 先按 `PlcSoftware.Name` 再按所属设备名调 `Sivarc.Generate`，两次都报 "PLC device not found" 时以 InvalidState 说明 SiVArc 只认 HMI 已连接的 PLC（`meta.attempts` 记录两次）；`ManageSivarcTableRule` 描述改正：`ProgramBlock` 赋 null 会被 TIA 拒绝。
-- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811（新增 2 项）；真实工程按交接页 §2 待重跑（2.7.39 的真机结果见其发布说明）。
+- **验证**：离线 2056 项；形状检查 V20 2591 / V21 2811（新增 2 项）。真实工程（2026-09-20，临时设备）：`processAlive` 诊断、`includeValue=false` 元数据读取、`Bits` 位名解析通过；新建未联网 G120C 上的报文 `Can*` 让 TIA 退出，随后引擎进程也崩溃——2.7.41 修。
 
 ## [2.7.39] - 2026-09-19
 

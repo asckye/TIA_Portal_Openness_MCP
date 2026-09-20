@@ -268,6 +268,11 @@ namespace TiaMcpServer.Siemens
                 var type = (TelegramType)Enum.Parse(typeof(TelegramType), r.TelegramType);
                 Telegram? existing = telegrams.Find(type);
                 var checks = new JsonObject();
+                // 2.7.40 real project (freshly added G120C without a bus interface, Telegrams empty): CanInsertAdditionalTelegram(2, 4) threw
+                // "Invalid operation" and CanInsertTelegram(700, SupplementaryTelegram) took TIA Portal V21 down. The Can* / Insert* family
+                // presupposes a networked drive object with its main telegram; without any telegram nothing is asked of TIA.
+                if (telegrams.Count == 0 && action != "read")
+                    throw new PortalException(PortalErrorCode.InvalidState, "This drive object has no telegram yet (not connected to a PROFINET / PROFIBUS IO system): TelegramComposition.Can* / Insert* / Erase are not called in this state (TIA Portal V21 crashed on a G120C here). Connect the drive to the IO system first, then retry.");
                 // 2.7.39 real project (G120C, main telegram present): CanInsertTelegram(1, MainTelegram) answered false and the following
                 // CanInsertMainTelegram(1) took TIA Portal V21 down. Official: main telegrams are only inserted / erased on G220 drives, so
                 // neither Can* nor Insert* is called while a main telegram exists - changeNumber / changeSize edit the existing one.

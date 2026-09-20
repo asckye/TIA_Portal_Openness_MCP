@@ -1,6 +1,14 @@
 # 工程能力与验收边界
 
-本文说明 2.7.40 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.41 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 437 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.39：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与选件包 SiVArc / Startdrive / DCC 的功能类型缺口为 0，其余选件包剩 25 类型 / 122 成员）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.41 引擎存活（2.7.40 真机重跑之后）
+
+| 项 | 内容 | 边界 |
+|---|---|---|
+| 进程不随 TIA 退出 | `App.config` `legacyUnhandledExceptionPolicy` + `Program.cs` 安全记录未处理异常；`GetState` 对已退出的 TIA 进程回 `isConnected=false` / `processAlive=false` | 引擎活着但绑定已失效：重启 TIA、重开工程、`AttachToOpenProject`；未保存工程的临时对象已随 TIA 消失 |
+| Startdrive 守卫 | `ManageDriveTelegrams` 对没有报文的驱动对象拒绝 check / insert / erase | 真机：新建未联网 G120C 上 `CanInsertTelegram` 让 TIA 退出 |
+| PLCSIM Advanced 桥 | 每实例缓存一个 `IInstance` 接口、变量表装载一次、API 调用串行（`interface` 字段报缓存状态） | 针对维护者报告的"连续读写 15–30 次后引擎崩溃"；本机无 PLCSIM，未验 |
 
 ## 2.7.40 守卫与诊断（2.7.39 真机重跑之后）
 
@@ -143,7 +151,7 @@
 
 | 族 | 工具 | 边界 |
 |---|---|---|
-| PLCSIM Advanced（`Simulation` 域） | `ReadPlcSimAdvancedInstances`、`ManagePlcSimAdvancedInstance`、`ReadPlcSimAdvancedTags`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario` | 官方 `Siemens.Simatic.Simulation.Runtime` API 运行时定位并反射调用，DLL 不随包分发；未安装返回 `ApiNotFound`。实例变更 / 写值 / 场景默认预览，需 `confirmInstanceChange` / `confirmWrite` / `confirmRun`。**本机无 PLCSIM Advanced，未做真实运行验证**：API 成员名按官方 V4–V7 文档，版本差异（如 `UpdateTagList` 重载）已做回退，仍可能在真实环境暴露差异 |
+| PLCSIM Advanced（`Simulation` 域） | `ReadPlcSimAdvancedInstances`、`ManagePlcSimAdvancedInstance`、`ReadPlcSimAdvancedTags`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario` | 官方 `Siemens.Simatic.Simulation.Runtime` API 运行时定位并反射调用，DLL 不随包分发；未安装返回 `ApiNotFound`。实例变更 / 写值 / 场景默认预览，需 `confirmInstanceChange` / `confirmWrite` / `confirmRun`。**本机无 PLCSIM Advanced，未做真实运行验证**：API 成员名按官方 V4–V7 文档，版本差异（如 `UpdateTagList` 重载）已做回退，仍可能在真实环境暴露差异。2.7.41 起接口按实例名缓存、变量表只装载一次、调用串行（维护者报告 2.7.38 连续读写 15–30 次后崩溃） |
 | 离线文档 | `RenderPlcBlockDocument`、`GeneratePlcDocumentation` | Mermaid 图按导出连线生成，不是梯形图版式；SCL 由令牌还原，不可回导；手册最多 2000 个文档 |
 | SCL 预检 | `LintPlcSclSource` | 13 条启发式规则，"无发现"不等于可编译；`CompileSoftware` 是判决 |
 | AML 生成 | `BuildDeviceAmlDocument` | 推荐传 `referenceAmlPath`（`ExportDeviceAml` 导出）复用版本匹配的头部与角色类库；内置骨架**未经真实导入验证**，`Meta.importVerified=false` |

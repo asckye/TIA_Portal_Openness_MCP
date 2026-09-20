@@ -64,9 +64,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (includeState)
                     {
                         object? instance = null;
-                        try { instance = PlcSimAdvancedChannel.OpenInterface(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] = kv.Value?.DeepClone(); }
-                        catch (Exception ex) { o["stateError"] = ex.Message; }
-                        finally { PlcSimAdvancedChannel.Dispose(instance); }
+                        try { instance = PlcSimAdvancedChannel.Acquire(api, name); foreach (var kv in PlcSimAdvancedChannel.InstanceState(instance)) o[kv.Key] = kv.Value?.DeepClone(); }
+                        catch (Exception ex) { o["stateError"] = ex.Message; PlcSimAdvancedChannel.Forget(name); }
                     }
                     items.Add(o);
                 }
@@ -101,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (registered)
                     {
-                        instance = PlcSimAdvancedChannel.OpenInterface(api, name);
+                        instance = PlcSimAdvancedChannel.Acquire(api, name);
                         data["stateBefore"] = PlcSimAdvancedChannel.InstanceState(instance);
                     }
                     if (act == "register" && registered) throw new ArgumentException("Instance '" + name + "' is already registered; use powerOn/run instead.");
@@ -115,12 +114,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     if (act == "register")
                     {
-                        instance = PlcSimAdvancedChannel.Register(api, name, cpuType);
+                        PlcSimAdvancedChannel.Dispose(PlcSimAdvancedChannel.Register(api, name, cpuType));   // the registration handle; the cached interface is opened below
+                        instance = PlcSimAdvancedChannel.Acquire(api, name);
                     }
                     else
                     {
                         PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
-                        if (act == "unregister") { PlcSimAdvancedChannel.Dispose(instance); instance = null; }
+                        if (act == "unregister") { PlcSimAdvancedChannel.Forget(name); instance = null; }
+                        else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel.Forget(name);   // the tag list is stale after these; the next call reopens
                     }
                     meta["mayHaveChanged"] = true;
                     data["executed"] = true;
@@ -128,7 +129,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     data["registeredAfter"] = PlcSimAdvancedChannel.RegisteredInstances(api).Any(r => r.name.Equals(name, StringComparison.OrdinalIgnoreCase));
                     return act + " executed on PLCSIM Advanced instance '" + name + "'" + (instance != null ? "; state now " + data["stateAfter"]?["operatingState"] : "") + ".";
                 }
-                finally { PlcSimAdvancedChannel.Dispose(instance); }
+                catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
         [McpServerTool(Name = "ReadPlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE] Read from ONE S7-PLCSIM Advanced instance: with namesJson (JSON array or comma list of PLCSIM tag names, e.g. [\"\\\"Start\\\"\", \"\\\"DB_Motor\\\".Speed\", \"%I0.0\" is NOT supported — use symbolic names as PLCSIM lists them]) the current value and primitive type of each tag; without namesJson the tag list of the instance (UpdateTagList + TagInfos) filtered by areaFilter (Input/Output/Marker/DataBlock/... or empty) and nameContains, paginated with offset/limit (max 500). Read-only; requires the instance to be powered on with a loaded program. Per-tag errors are reported in items[].error.")]
@@ -151,9 +152,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 object? instance = null;
                 try
                 {
-                    instance = PlcSimAdvancedChannel.OpenInterface(api, name);
+                    instance = PlcSimAdvancedChannel.Acquire(api, name);
                     data["state"] = PlcSimAdvancedChannel.OperatingState(instance);
-                    PlcSimAdvancedChannel.UpdateTagList(api, instance);
+                    PlcSimAdvancedChannel.EnsureTagList(api, name, instance, names.Count == 0);   // listing always refreshes; reads reuse the cached list
+                    data["interface"] = PlcSimAdvancedChannel.CacheState(name);
                     var items = new JsonArray();
                     if (names.Count > 0)
                     {
@@ -163,7 +165,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             var o = new JsonObject { ["name"] = tag };
                             try
                             {
-                                var (type, value) = PlcSimAdvancedChannel.Read(api, instance, tag);
+                                var (type, value) = PlcSimAdvancedChannel.ReadWithRefresh(api, name, instance, tag);
                                 o["type"] = type; o["value"] = PlcSimAdvancedLogic.ToJson(value);
                                 if (value == null) o["note"] = "non-primitive (struct/array): read elements individually";
                             }
@@ -183,7 +185,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["dataComplete"] = offset + items.Count >= tags.Count;
                     return items.Count + " of " + tags.Count + " tag(s) listed for PLCSIM Advanced instance '" + name + "' (state " + data["state"] + ").";
                 }
-                finally { PlcSimAdvancedChannel.Dispose(instance); }
+                catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
         [McpServerTool(Name = "WritePlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE-WRITE] Write values into ONE S7-PLCSIM Advanced instance (inputs, markers, DB elements) by symbolic name: valuesJson is {\"\\\"Start\\\"\":true,\"\\\"DB_Motor\\\".Speed\":50} or [{name,value}]. Each tag is read first to learn its primitive type; values are converted (Bool/Int8..Int64/UInt8..UInt64/Float/Double/Char/WChar; 16#hex accepted; structs must be written per element). Default dryRun=true reports current values and the conversion plan; writing needs dryRun=false AND confirmWrite=true. Per-tag errors in items[].error; readBack shows the value after the write. Virtual CPU only, no physical PLC, no TIA project.")]
@@ -206,9 +208,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 object? instance = null;
                 try
                 {
-                    instance = PlcSimAdvancedChannel.OpenInterface(api, name);
+                    instance = PlcSimAdvancedChannel.Acquire(api, name);
                     data["state"] = PlcSimAdvancedChannel.OperatingState(instance);
-                    PlcSimAdvancedChannel.UpdateTagList(api, instance);
+                    PlcSimAdvancedChannel.EnsureTagList(api, name, instance);
+                    data["interface"] = PlcSimAdvancedChannel.CacheState(name);
                     var items = new JsonArray();
                     var failures = 0;
                     foreach (var kv in values)
@@ -216,13 +219,13 @@ namespace TiaMcpServer.ModelContextProtocol
                         var o = new JsonObject { ["name"] = kv.Key, ["requested"] = kv.Value?.DeepClone() };
                         try
                         {
-                            var (type, current) = PlcSimAdvancedChannel.Read(api, instance, kv.Key);
+                            var (type, current) = PlcSimAdvancedChannel.ReadWithRefresh(api, name, instance, kv.Key);
                             o["type"] = type; o["before"] = PlcSimAdvancedLogic.ToJson(current);
                             var converted = PlcSimAdvancedLogic.ConvertValue(kv.Value, type);
                             o["converted"] = PlcSimAdvancedLogic.ToJson(converted);
                             if (execute)
                             {
-                                PlcSimAdvancedChannel.Write(api, instance, kv.Key, kv.Value);
+                                PlcSimAdvancedChannel.WriteWithRefresh(api, name, instance, kv.Key, kv.Value);
                                 o["written"] = true;
                                 o["readBack"] = PlcSimAdvancedLogic.ToJson(PlcSimAdvancedChannel.Read(api, instance, kv.Key).value);
                             }
@@ -236,7 +239,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     meta["dataComplete"] = failures == 0;
                     return (execute ? "Wrote " : "Preview: would write ") + (values.Count - failures) + "/" + values.Count + " tag(s) on PLCSIM Advanced instance '" + name + "'" + (execute ? "." : ". Set dryRun=false and confirmWrite=true to write.");
                 }
-                finally { PlcSimAdvancedChannel.Dispose(instance); }
+                catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
             });
 
         [McpServerTool(Name = "RunPlcSimAdvancedTestScenario"), Description("[L2][Simulation][EXECUTE] Run a closed-loop test scenario against ONE S7-PLCSIM Advanced instance (the PLCSIM.UnitTest idea without a separate runner): scenarioJson = {\"instance\":\"PLC_1\",\"mode\":\"singleStep\"|\"default\",\"stopOnFailure\":true,\"steps\":[{\"write\":{\"\\\"Start\\\"\":true}},{\"cycles\":5},{\"waitMs\":200},{\"assert\":{\"\\\"Running\\\"\":true},\"tolerance\":0.001,\"note\":\"motor starts\"},{\"run\":true},{\"stop\":true},{\"powerOn\":true}]}. mode singleStep sets the instance to SingleStep and advances exactly N cycles per {cycles} step via RunToNextSyncPoint (deterministic); mode default keeps free running and {cycles} becomes a wait of N*10 ms. Default dryRun=true validates and returns the plan; execution needs dryRun=false AND confirmRun=true. Result: per-step outcome, failed assertions with expected/actual, passed/failed counts; the instance is left in the operating mode it had before. Virtual CPU only — no physical PLC and no TIA project is touched.")]
@@ -265,9 +268,10 @@ namespace TiaMcpServer.ModelContextProtocol
                 int passed = 0, failed = 0, executedSteps = 0;
                 try
                 {
-                    instance = PlcSimAdvancedChannel.OpenInterface(api, scenario.Instance);
+                    instance = PlcSimAdvancedChannel.Acquire(api, scenario.Instance);
                     data["stateBefore"] = PlcSimAdvancedChannel.InstanceState(instance);
-                    PlcSimAdvancedChannel.UpdateTagList(api, instance);
+                    PlcSimAdvancedChannel.EnsureTagList(api, scenario.Instance, instance);
+                    data["interface"] = PlcSimAdvancedChannel.CacheState(scenario.Instance);
                     if (scenario.Mode == "singleStep")
                     {
                         originalMode = Convert.ToString(data["stateBefore"]?["operatingMode"]);
@@ -284,7 +288,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             {
                                 case "write":
                                     var written = new JsonArray();
-                                    foreach (var kv in step.Values) { var type = PlcSimAdvancedChannel.Write(api, instance, kv.Key, kv.Value); written.Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["value"] = kv.Value?.DeepClone() }); }
+                                    foreach (var kv in step.Values) { var type = PlcSimAdvancedChannel.WriteWithRefresh(api, scenario.Instance, instance, kv.Key, kv.Value); written.Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["value"] = kv.Value?.DeepClone() }); }
                                     r["written"] = written;
                                     break;
                                 case "cycles":
@@ -299,7 +303,7 @@ namespace TiaMcpServer.ModelContextProtocol
                                     var checks = new JsonArray();
                                     foreach (var kv in step.Values)
                                     {
-                                        var (type, actual) = PlcSimAdvancedChannel.Read(api, instance, kv.Key);
+                                        var (type, actual) = PlcSimAdvancedChannel.ReadWithRefresh(api, scenario.Instance, instance, kv.Key);
                                         var ok = PlcSimAdvancedLogic.ValuesMatch(actual, kv.Value, step.Tolerance);
                                         if (!ok) stepOk = false;
                                         checks.Add(new JsonObject { ["name"] = kv.Key, ["type"] = type, ["expected"] = kv.Value?.DeepClone(), ["actual"] = PlcSimAdvancedLogic.ToJson(actual), ["ok"] = ok });
@@ -328,8 +332,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         try { PlcSimAdvancedChannel.SetOperatingMode(api, instance, originalMode); data["operatingModeRestored"] = originalMode; }
                         catch (Exception ex) { data["operatingModeRestoreError"] = ex.Message; }
                     }
-                    if (instance != null) { try { data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance); } catch (Exception) { } }
-                    PlcSimAdvancedChannel.Dispose(instance);
+                    if (instance != null) { try { data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance); } catch (Exception) { PlcSimAdvancedChannel.Forget(scenario.Instance); } }
                 }
                 data["steps"] = results; data["executed"] = true;
                 data["executedSteps"] = executedSteps; data["assertionsPassed"] = passed; data["failedSteps"] = failed;

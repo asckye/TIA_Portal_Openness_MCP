@@ -503,6 +503,13 @@ namespace TiaMcpServer.Siemens
         public State GetState()
         {
             _logger?.LogInformation("Getting TIA Portal state...");
+            // 2.7.40 real project: after TIA Portal exits, every touch of _portal throws EngineeringObjectDisposedException. Answer
+            // "not connected" and let the meta's portalProcess (processAlive=false) say why instead of throwing.
+            if (_portal != null && GetPortalProcessHealth()["processAlive"] is JsonValue aliveValue && aliveValue.TryGetValue<bool>(out var alive) && !alive)
+            {
+                _logger?.LogWarning("GetState: the bound TIA Portal process {Pid} is no longer running.", _boundProcessId);
+                return new State { IsConnected = false, Project = "-", Session = "-" };
+            }
             if (_portal != null)
             {
                 // check for existing local sessions

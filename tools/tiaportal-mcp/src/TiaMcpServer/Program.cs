@@ -78,6 +78,11 @@ namespace TiaMcpServer
                 }
 
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveFromBaseDir;
+                // 2.7.41: with legacyUnhandledExceptionPolicy (App.config) a background-thread exception no longer kills the server;
+                // record it without calling ToString()/Message on the exception object itself first - the Openness exceptions that
+                // surface after TIA Portal has died fail inside ToString() ("Exception.ToString() failed" was all the crash left).
+                AppDomain.CurrentDomain.UnhandledException += (_, e) => LogDiag("UNHANDLED (" + (e.IsTerminating ? "terminating" : "non-terminating, process kept alive") + "): " + DescribeSafely(e.ExceptionObject));
+                System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, e) => { LogDiag("UNOBSERVED TASK: " + DescribeSafely(e.Exception)); e.SetObserved(); };
 
                 LogDiag($"=== {DateTime.Now:O} PID={System.Diagnostics.Process.GetCurrentProcess().Id} ===");
                 LogDiag($"BaseDir: {AppContext.BaseDirectory}");
@@ -804,6 +809,14 @@ namespace TiaMcpServer
             }
         }
 
+        private static string DescribeSafely(object? exception)
+        {
+            if (exception == null) return "<null>";
+            var text = exception.GetType().FullName ?? "<unknown type>";
+            try { if (exception is Exception ex) text += ": " + ex.Message; } catch { text += " (Message unavailable)"; }
+            try { if (exception is Exception ex && ex.InnerException != null) text += " <- " + (ex.InnerException.GetType().FullName ?? ""); } catch { }
+            return text;
+        }
         private static void LogDiag(string message)
         {
             // Console may be swallowed by host; always persist to %TEMP%.
