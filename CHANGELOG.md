@@ -6,6 +6,16 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.8.1] - 2026-09-21
+
+发布模型改动（PATCH：引擎与工具不变，工具 453、lite 59、离线 2456）。维护者推翻 2.8.0 记下的决定：**不提交 exe，发布 ZIP 由本机 `Release.ps1` 直接上传**；同时“需要清理分支，只保留 master”“英文文档就全部用英文”。详见 [v2.8.1](docs/releases/v2.8.1.md)。
+
+- **二进制不入库**：`.gitignore` 忽略 `runtime/v20/`、`runtime/v21/`、`TiaMcpConfigurator.exe`，索引里的 133 个二进制文件移除（历史保留）；它们由本机 `Build-Release.ps1` 生成，逐文件哈希仍在提交的 `manifest/release-build.json` / `manifest/configurator-build.json`。`Package-Release.py` 取 Git 树 + 本机二进制打包（缺一个或二进制被跟踪都拒绝）；新脚本 `scripts/checks/Verify-ReleaseAsset.py` 证明 ZIP = 提交树的每个文件（字节相同）+ 清单里记录哈希的二进制 + `RELEASE_STATUS.txt` / `release-file-hashes.json` 的源码提交。
+- **本机上传**：新脚本 `scripts/build/Publish-Release.ps1`（令牌：`-Token` / `GITHUB_TOKEN` / Git Credential Manager 存的 github.com 凭据）——核对包 = master HEAD = tag → 草稿 Release（正文 = 发布说明 + 包名 / 文件数 / 字节 / 源码提交 / SHA-256）→ 上传 ZIP 与 `.sha256`、逐个回读 `state` / 大小 / `digest`（最多 6 次，草稿上的残留资产先删）→ 发布并置 latest；已发布的 Release 永不改动。`Release.ps1` 改为一次提交 `Release X.Y.Z: <summary>`、打包 + 本地验证、推送、带令牌查 Actions API 等两条工作流、tag、调用 Publish-Release、等 `Verify published release`；`-Resume` 从提交后接着走。`Publish-Release.cjs` 删除。
+- **工作流**：`validate-bundle` 在没有二进制的 checkout 上跑（`Check-Repository.py --no-binaries`、`Validate-Bundle.ps1 -Strict -NoBinaries`：清单、版本、启动器语法、源码哈希照查，二进制存在性 / 版本 / 哈希跳过）；`release.yml` 改为 **Verify published release**（`release: published` 触发）：tag = `v` + `delivery.json` 且指向 master HEAD，下载 ZIP + `.sha256` 校验，`Verify-ReleaseAsset.py`，解包后 `Validate-Bundle.ps1 -Strict` + `Check-Repository.py`；不改 Release，红了就出补丁版本。
+- **仓库整理**：只保留 `master`——4 个 Dependabot 分支的 action 升级（checkout v7、github-script v9、setup-dotnet v6、setup-python v7）手动合进 master 后删除分支与 `.github/dependabot.yml`，CONTRIBUTING 写明；README、SKILL.md、英文指南里不再有中文（界面按钮用英文写、示例数据英文、本地化错误信息用英文原文并注明、真机记录里的中文工程 / 设备名换成中性占位；SKILL.md 的工具数改为 453 / 59），正文是中文的 `natural-language-recipes.md` 改中文标题。
+- 文档：`release-workflow.md`、handoff §4、交接单、CONTRIBUTING、`runtime/README.md`、`repository-layout.md`、`scripts/README.md`、CLAUDE.md 按新模型改写。
+
 ## [2.8.0] - 2026-09-21
 
 引擎按族拆分、配置器菜单栏更新、更新器改用 robocopy（工具 453、lite 59 不变；从本版起按语义化版本）。详见 [v2.8.0](docs/releases/v2.8.0.md)。维护者：“开始做 2.8.0”“Update-Engine.ps1 不能做成 UI 吗”“更新做成到菜单栏里”“Zhipu GLM 直接改为 GLM”。
@@ -522,7 +532,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...HEAD
+[2.8.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...v2.8.0
 [2.7.62]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...v2.7.62
 [2.7.61]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...v2.7.61

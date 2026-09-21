@@ -1,48 +1,66 @@
-name: Publish complete release
+name: Verify published release
+run-name: Verify ${{ github.event.release.tag_name }}
+
+# Since 2.8.1 the delivery ZIP is built and uploaded from the maintainer's machine by scripts/build/Release.ps1
+# (the engine cannot be compiled on hosted runners: Siemens PublicAPI is not redistributable, and the binaries are
+# not tracked in Git). This workflow is the independent check that runs when a release is published:
+#   - the tag equals "v" + manifest/delivery.json release and points at master HEAD;
+#   - the ZIP + .sha256 assets download, the digest matches;
+#   - the ZIP holds every tracked file byte-for-byte, the runtimes with the hashes recorded in
+#     manifest/release-build.json and the configurator with manifest/configurator-build.json
+#     (scripts/checks/Verify-ReleaseAsset.py), and the unpacked package passes Validate-Bundle.ps1 -Strict.
+# A red run means the published asset does not match the reviewed source: fix and re-release (new patch version);
+# nothing here modifies the release.
 
 on:
-  # Pushing a version tag on master publishes the same way as a manual dispatch;
-  # the tag must equal "v" + manifest/delivery.json release and point at master HEAD.
-  push:
-    tags: ['v[0-9]+.[0-9]+.[0-9]+']
-  workflow_dispatch:
-    inputs:
-      archive_legacy:
-        description: 'Move historical releases with fork/feature suffixes to drafts'
-        type: boolean
-        required: false
-        default: false
+  release:
+    types: [published]
 
 permissions:
   contents: read
 
-concurrency:
-  group: complete-release
-  cancel-in-progress: false
-
 jobs:
-  release:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+  verify:
+    if: startsWith(github.event.release.tag_name, 'v')
     runs-on: windows-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Pushed tag must match the delivery version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Tag must match manifest/delivery.json and point at master HEAD
         shell: pwsh
         run: |
+          $tag = "${{ github.event.release.tag_name }}"
           $delivery = Get-Content manifest/delivery.json -Raw | ConvertFrom-Json
-          if ($env:GITHUB_REF_NAME -ne "v$($delivery.release)") { throw "Tag $env:GITHUB_REF_NAME does not match manifest/delivery.json release $($delivery.release)" }
-      - name: Validate and package complete V20/V21 delivery
+          if ($tag -ne "v$($delivery.release)") { throw "Release tag $tag does not match manifest/delivery.json release $($delivery.release)" }
+          $head = (git rev-parse HEAD).Trim()
+          $tagCommit = (git rev-list -n 1 $tag).Trim()
+          if ($tagCommit -ne $head) { throw "Tag $tag points at $tagCommit but master HEAD is $head" }
+          "tag=$tag" >> $env:GITHUB_ENV
+          "package=$($delivery.package)" >> $env:GITHUB_ENV
+      - name: Download the ZIP and its .sha256 from the release
         shell: pwsh
-        run: python scripts/build/Package-Release.py
-      - name: Publish verified assets and optionally archive legacy releases
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const publish = require('./scripts/build/Publish-Release.cjs');
-            await publish({github, context, core});
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          New-Item -ItemType Directory -Force -Path assets | Out-Null
+          gh release download $env:tag --repo ${{ github.repository }} --dir assets --pattern "$env:package.zip" --pattern "$env:package.sha256"
+          Get-ChildItem assets | ForEach-Object { "{0}  {1} bytes" -f $_.Name, $_.Length }
+          if (-not (Test-Path "assets/$env:package.zip") -or -not (Test-Path "assets/$env:package.sha256")) { throw "release $env:tag lacks $env:package.zip or its .sha256" }
+      - name: ZIP equals the reviewed tree plus the validated binaries
+        run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip"
+      - name: Unpacked package passes the strict bundle validation
+        shell: pwsh
+        run: |
+          Expand-Archive -LiteralPath "assets/$env:package.zip" -DestinationPath unpacked -Force
+          ./scripts/checks/Validate-Bundle.ps1 -BundleRoot "unpacked/$env:package" -Strict
+          python scripts/checks/Check-Repository.py --root "unpacked/$env:package"
+      - name: Summary
+        shell: pwsh
+        run: |
+          $digest = (Get-FileHash "assets/$env:package.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "## $env:tag verified`n`n$env:package.zip - SHA-256 $digest - matches master $((git rev-parse HEAD).Trim())" >> $env:GITHUB_STEP_SUMMARY

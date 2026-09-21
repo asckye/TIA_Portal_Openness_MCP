@@ -2,6 +2,10 @@
 
 本文说明 2.8.0 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 453 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
 
+## 2.8.1 二进制不入库 + 本机上传发布
+
+`runtime/v20`、`runtime/v21`、`TiaMcpConfigurator.exe` 不再进 Git（哈希仍在 `manifest/*.json`）；`Release.ps1` 一次提交、本机打包、`Verify-ReleaseAsset.py` 校验、`Publish-Release.ps1` 从本机上传到 GitHub Release，`Verify published release` 工作流发布后复核。仓库只剩 master；英文文档不含中文。引擎与 2.8.0 相同。详见 `docs/releases/v2.8.1.md`。
+
 ## 2.8.0 引擎拆分 + 配置器菜单栏更新 + 更新器 robocopy
 
 `Portal.Software.cs` / `McpServer.PlcSoftware.cs` 按族拆成 `*.Software.<Family>.cs` / `*.PlcSoftware.<Family>.cs`（行为不变，数字不变）；配置器菜单“更新”检查 GitHub、关闭自身后在新窗口运行更新器并自动重开；更新器所有目录复制 / 删除改走 robocopy，修了 260 字符长路径缺陷；从本版起按语义化版本。详见 `docs/releases/v2.8.0.md`。

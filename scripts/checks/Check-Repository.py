@@ -28,7 +28,7 @@ def local_target(root, source, target):
     return None
 
 
-def check(root):
+def check(root, no_binaries=False):
     errors = []
     count = 0
     for source in documents(root):
@@ -44,7 +44,11 @@ def check(root):
         return json.loads((root / name).read_text(encoding='utf-8-sig'))
     def required(name, label):
         target = (root / name).resolve()
-        if not target.is_relative_to(root.resolve()) or not target.exists():
+        if not target.is_relative_to(root.resolve()):
+            errors.append(f'{label}: external path: {name}')
+        elif no_binaries and (name.endswith('.exe') or name.startswith('runtime/')):
+            return   # build outputs live outside Git since 2.8.1
+        elif not target.exists():
             errors.append(f'{label}: missing or external path: {name}')
     package = read('manifest/package-manifest.json')
     for key, value in package['entrypoints'].items():
@@ -67,13 +71,15 @@ def check(root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, default=ROOT)
+    parser.add_argument('--no-binaries', action='store_true',
+                        help='source checkout without build outputs: skip the existence of runtime/*/TiaMcpServer.exe and TiaMcpConfigurator.exe (not tracked since 2.8.1)')
     args = parser.parse_args()
     # Negative sentinel: a broken link and a traversal must fail; a valid file must pass.
     source = args.root / 'docs/README.md'
     assert local_target(args.root, source, '../README.md') is None
     assert local_target(args.root, source, '../__missing_repository_check__.md')
     assert local_target(args.root, source, '../../../__outside__.md')
-    count, errors = check(args.root)
+    count, errors = check(args.root, args.no_binaries)
     for error in errors:
         print('[FAIL] ' + error)
     print(f'Checked {count} Markdown files and repository entrypoints; {len(errors)} issue(s).')

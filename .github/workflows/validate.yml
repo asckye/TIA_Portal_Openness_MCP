@@ -3,8 +3,11 @@ name: validate-bundle
 # Note: a full compile-CI is NOT possible on hosted runners — the build needs
 # Siemens.Engineering.dll from a licensed TIA Portal install, which GitHub
 # runners don't have. This offline check validates bundle integrity instead
-# (required files, JSON parse, blueprint list, tool roster). For compile checks,
-# use a self-hosted runner with TIA Portal installed.
+# (required files, JSON parse, blueprint list, tool roster, recorded source
+# hashes). Since 2.8.1 the engine runtimes and TiaMcpConfigurator.exe are not
+# tracked in Git (the maintainer builds them locally and Release.ps1 uploads the
+# delivery ZIP), so the checks run with --no-binaries / -NoBinaries here; the
+# uploaded ZIP is verified by the "Verify published release" workflow.
 
 on:
   push:
@@ -20,10 +23,10 @@ jobs:
         with:
           python-version: '3.12'
       - name: Documentation links and repository entrypoints
-        run: python scripts/checks/Check-Repository.py
+        run: python scripts/checks/Check-Repository.py --no-binaries
       - name: Offline bundle validation
         shell: pwsh
-        run: ./scripts/checks/Validate-Bundle.ps1 -Strict
+        run: ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries
       - name: Build and test WPF configurator
         shell: powershell
         run: ./scripts/build/Build-Configurator.ps1 -Test

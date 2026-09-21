@@ -1,7 +1,7 @@
 ﻿#requires -Version 5.1
 <#
 .SYNOPSIS
-  One-shot release: version bump -> Build-Release -> local gates -> 3 commits -> push -> CI -> tag -> publish check.
+  One-shot release: version bump -> Build-Release -> local gates -> commit -> package -> push -> CI -> tag -> upload -> verify.
 
 .DESCRIPTION
   Wraps the maintainer's release routine (docs/development/release-workflow.md, handoff.md section 4) into one command.
@@ -15,17 +15,22 @@
        both csproj, docs/README.md current-release link, docs/reference/capabilities.md intro, docs/development/roadmap.md title.
     3. scripts/build/Build-Release.ps1 (both engines, offline suite, shape checks, configurator, manifests, tool matrix).
     4. Local gates: Check-Repository.py, Check-DeadToolReferences.py, Validate-Bundle.ps1 -Strict.
-    5. Commits "Release X.Y.Z (1/3)" (source + docs), "(2/3)" (runtime/v20 exe), "(3/3)" (runtime/v21 exe + configurator +
-       manifest/* + tool-matrix.md); then Package-Release.py as a local dry run.
-    6. Push each commit on its own (large exes; http.postBuffer raised), wait for validate-bundle + offline-checks.
-    7. Annotated tag vX.Y.Z, push it, wait for "Publish complete release", verify the ZIP asset on the release page.
+    5. One commit "Release X.Y.Z: <summary>" (source + docs + manifest/* + tool-matrix.md). The binaries (runtime/v20,
+       runtime/v21, TiaMcpConfigurator.exe) are NOT tracked since 2.8.1; Package-Release.py builds the delivery ZIP from
+       the commit plus the local binaries and Verify-ReleaseAsset.py proves the ZIP equals the tree + the recorded hashes.
+    6. Push, wait for validate-bundle + offline-checks (GitHub API with the same token as the upload).
+    7. Annotated tag vX.Y.Z, push it, then Publish-Release.ps1 uploads the ZIP + .sha256 from this machine (draft ->
+       verified assets -> published) and the "Verify published release" workflow re-checks the asset against master.
 
+  Token: -Token, else GITHUB_TOKEN, else the credential Git Credential Manager holds for github.com.
   Nothing here writes prose: after a green publish, record it in handoff.md / handoff-checklist.md yourself.
 
 .PARAMETER Version
   X.Y.Z of the release (must match the newest CHANGELOG entry).
 .PARAMETER Summary
-  Text for the (1/3) commit message after "Release X.Y.Z (1/3): ". Default: the intro line of the CHANGELOG entry.
+  Text for the commit message after "Release X.Y.Z: " (English only). Default: the intro line of the CHANGELOG entry.
+.PARAMETER Token
+  GitHub token with repo scope for the Actions API and the release upload. Default: GITHUB_TOKEN, else git credential fill.
 .PARAMETER ReleaseDate
   yyyyMMdd for the delivery ZIP name. Default: today.
 .PARAMETER V20ReferenceRoot / V21ReferenceRoot
@@ -35,7 +40,7 @@
 .PARAMETER SkipBuild
   Reuse the last Build-Release output (only when nothing under tools/tiaportal-mcp changed since; the hash gate will catch a lie).
 .PARAMETER NoPush
-  Stop after the three commits and the packaging dry run.
+  Stop after the commit, the package and its verification.
 .PARAMETER NoTag
   Push the commits and wait for CI, but do not tag.
 .PARAMETER NoWait
@@ -45,8 +50,8 @@
 .PARAMETER KillStrayEngine
   Kill a TiaMcpServer.exe left behind on this host (it locks runtime\v21\TiaMcpServer.exe) instead of refusing.
 .PARAMETER Resume
-  The three release commits already exist locally (tree clean): skip bump, build, gates and commits and continue with
-  push, CI, tag (on HEAD - the publish workflow requires the tag to be master HEAD) and publish (for a run that stopped after committing).
+  The release commit already exists locally (tree clean): skip bump, build, gates and commit; re-package from HEAD when
+  needed and continue with push, CI, tag (on HEAD - the verify workflow requires the tag to be master HEAD) and upload.
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Release.ps1 -Version 2.7.57 -Summary "short description of the change"
@@ -60,6 +65,7 @@ param(
     [string]$V21ReferenceRoot = '',
     [string]$Python = '',
     [string]$Git = 'git',
+    [string]$Token = '',
     [switch]$SkipBuild,
     [switch]$NoPush,
     [switch]$NoTag,
@@ -152,15 +158,14 @@ Say ("Summary = " + $Summary)
 # ---------------------------------------------------------------- resume after the commits
 $resumed = $false
 if ($Resume) {
-    # The (3/3) commit may already be followed by a docs/scripts commit (for instance the fix for whatever stopped the
-    # first run). The publish workflow insists that the tag points at master HEAD ("Master changed" otherwise - the
-    # 2.7.57 run 58 failure), so the tag goes on HEAD; every push triggers validate-bundle / offline-checks, which are
-    # waited for on HEAD's own commit title.
-    $threeOfThree = @(& $Git log --pretty='%H %s' -20) | Where-Object { $_ -like ('* Release ' + $Version + ' (3/3)*') } | Select-Object -First 1
+    # The release commit may already be followed by a docs/scripts commit (for instance the fix for whatever stopped the
+    # first run). The verify workflow insists that the tag points at master HEAD, so the tag goes on HEAD and the package
+    # must come from HEAD as well (re-packaged below when package-result.json names another commit).
+    $releaseCommit = @(& $Git log --pretty='%H %s' -20) | Where-Object { $_ -like ('* Release ' + $Version + ':*') -or $_ -like ('* Release ' + $Version + ' (3/3)*') } | Select-Object -First 1
     $dirtyNow = (& $Git status --porcelain) | Where-Object { $_ -notmatch '^\?\?' }
-    if (-not $threeOfThree) { Fail ('-Resume needs the "Release ' + $Version + ' (3/3)" commit within the last 20 commits') }
+    if (-not $releaseCommit) { Fail ('-Resume needs the "Release ' + $Version + ':" commit within the last 20 commits') }
     if ($dirtyNow) { Fail ('-Resume needs a clean tree; dirty: ' + ($dirtyNow -join '; ')) }
-    Say ('resuming after the three commits (' + ($threeOfThree -split ' ')[0].Substring(0, 7) + '); the tag goes on HEAD')
+    Say ('resuming after the release commit (' + ($releaseCommit -split ' ')[0].Substring(0, 7) + '); the tag goes on HEAD')
     $resumed = $true
 }
 if (-not $resumed) {
@@ -218,101 +223,113 @@ Run $Python @((Join-Path $repo 'scripts\checks\Check-Repository.py')) 'Check-Rep
 Run $Python @((Join-Path $repo 'scripts\checks\Check-DeadToolReferences.py')) 'Check-DeadToolReferences.py'
 Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts\checks\Validate-Bundle.ps1'), '-Strict') 'Validate-Bundle.ps1 -Strict'
 
-# ---------------------------------------------------------------- 5. commits
-$part3 = @('runtime/v21/TiaMcpServer.exe', 'TiaMcpConfigurator.exe', 'manifest/configurator-build.json', 'manifest/delivery.json', 'manifest/package-manifest.json', 'manifest/release-build.json', 'manifest/tools-list.json', 'docs/reference/tool-matrix.md')
-$part2 = @('runtime/v20/TiaMcpServer.exe')
-# stage tracked changes plus new files under the known source/doc roots only - never "git add -A" at the repo root
+# ---------------------------------------------------------------- 5. commit + package
+# stage tracked changes plus new files under the known source/doc roots only - never "git add -A" at the repo root;
+# the binaries are ignored by .gitignore since 2.8.1, so they can never end up in the commit
 & $Git add -u
 & $Git add -- docs tools scripts templates hooks manifest .claude-plugin .github CHANGELOG.md CLAUDE.md README.md README.zh-CN.md NOTICE.md
-& $Git reset -q -- $part2 $part3
-$staged = (& $Git diff --cached --name-only)
+$staged = @(& $Git diff --cached --name-only)
+$binariesStaged = @($staged | Where-Object { $_ -like 'runtime/v2*' -or $_ -eq 'TiaMcpConfigurator.exe' })
+if ($binariesStaged) { & $Git reset -q; Fail ('binaries must not be committed (2.8.1 policy): ' + ($binariesStaged -join ', ')) }
 $others = (& $Git status --porcelain) | Where-Object { $_ -match '^\?\?' }
 if ($others) { Say ("untracked files left out (add them by hand if they belong to the release): " + (($others | ForEach-Object { $_.Substring(3) }) -join ', ')) }
-Say ("(1/3) will contain " + (@($staged).Count) + " file(s)")
+Say ("the release commit will contain " + $staged.Count + " file(s)")
 if ($DryRun) {
-    Say '--- DryRun: nothing committed. Staged for (1/3):'
+    Say '--- DryRun: nothing committed. Staged:'
     $staged | ForEach-Object { Say ("    " + $_) }
-    Say ('--- (2/3): ' + ($part2 -join ', '))
-    Say ('--- (3/3): ' + ($part3 -join ', '))
     & $Git reset -q
     exit 0
 }
-if (-not $staged) { Fail 'nothing to commit for (1/3) - did the bump run?' }
-CommitWithMessage ('Release ' + $Version + ' (1/3): ' + $Summary) 'commit (1/3)'
-& $Git add -- $part2
-CommitWithMessage ('Release ' + $Version + ' (2/3): V20 runtime ' + $Version + '.0') 'commit (2/3)'
-& $Git add -- $part3
-CommitWithMessage ('Release ' + $Version + ' (3/3): V21 runtime, configurator and validated manifests') 'commit (3/3)'
+if (-not $staged) { Fail 'nothing to commit - did the bump run?' }
+CommitWithMessage ('Release ' + $Version + ': ' + $Summary) 'release commit'
 $dirty = (& $Git status --porcelain) | Where-Object { $_ -notmatch '^\?\?' }
-if ($dirty) { Fail ('working tree still dirty after the three commits: ' + ($dirty -join '; ')) }
-Say 'three release commits created'
+if ($dirty) { Fail ('working tree still dirty after the commit: ' + ($dirty -join '; ')) }
+Say 'release commit created'
+}
+# ---------------------------------------------------------------- 5b. package from HEAD (also on -Resume when the package is stale)
 $gitExe = (Get-Command $Git).Source
+$head = (& $Git rev-parse HEAD).Trim()
 $pkgDir = Join-Path $repo ('bin-build\releases\v' + $Version)
 $pkgName = ((Get-Content -LiteralPath (Join-Path $repo 'manifest\delivery.json') -Raw) | ConvertFrom-Json).package
-foreach ($leftover in @((Join-Path $pkgDir $pkgName), (Join-Path $pkgDir ($pkgName + '.zip')))) {
-    if (Test-Path -LiteralPath $leftover) { Remove-Item -LiteralPath $leftover -Recurse -Force; Say ('removed earlier dry-run output ' + $leftover) }
+$resultPath = Join-Path $pkgDir 'package-result.json'
+$packaged = $null
+if ($resumed -and (Test-Path -LiteralPath $resultPath)) { $packaged = (Get-Content -LiteralPath $resultPath -Raw | ConvertFrom-Json).sourceCommit }
+if ($packaged -eq $head -and (Test-Path -LiteralPath (Join-Path $pkgDir ($pkgName + '.zip')))) { Say ('package from ' + $head.Substring(0, 12) + ' already exists') }
+else {
+    foreach ($leftover in @((Join-Path $pkgDir $pkgName), (Join-Path $pkgDir ($pkgName + '.zip')), (Join-Path $pkgDir ($pkgName + '.sha256')), $resultPath)) {
+        if (Test-Path -LiteralPath $leftover) { Remove-Item -LiteralPath $leftover -Recurse -Force; Say ('removed earlier output ' + $leftover) }
+    }
+    Run $Python @((Join-Path $repo 'scripts\build\Package-Release.py'), '--git', $gitExe) 'Package-Release.py'
 }
-Run $Python @((Join-Path $repo 'scripts\build\Package-Release.py'), '--git', $gitExe) 'Package-Release.py (local dry run)'
+Run $Python @((Join-Path $repo 'scripts\checks\Verify-ReleaseAsset.py'), (Join-Path $pkgDir ($pkgName + '.zip')), '--git', $gitExe) 'Verify-ReleaseAsset.py (ZIP = tree + recorded binaries)'
 if ($NoPush) { Say 'stopped before push (-NoPush)'; exit 0 }
-}
 
-# ---------------------------------------------------------------- 6. push + CI
-$shas = (& $Git rev-list --reverse --first-parent origin/master..master)
-foreach ($sha in $shas) {
-    Run $Git @('-c', 'http.postBuffer=157286400', 'push', 'origin', ($sha + ':refs/heads/master')) ('push ' + $sha)
-}
-# CI runs are found by the commit title on the workflow pages; HEAD is the (3/3) commit unless a follow-up commit was added before -Resume.
-$headTitle = (& $Git log -1 --pretty=%s).Trim()
-$title3 = $(if ($headTitle.Length -gt 60) { $headTitle.Substring(0, 60) } else { $headTitle })
-function WorkflowState([string]$workflow, [string]$titlePart) {
-    # GitHub's unauthenticated API is rate-limited from here; the workflow page's aria-labels carry the same information.
+# ---------------------------------------------------------------- 6. push + CI (GitHub API with the release token)
+if (-not $Token) { $Token = $env:GITHUB_TOKEN }
+function GitCredentialToken([string]$gitExe) {
+    # git credential fill with the request piped by cmd from a temp file: PowerShell's own pipeline and .NET's
+    # redirected stdin both make git answer "missing protocol field" (encoding / launcher quirks), cmd does not
+    $tmp = Join-Path $env:TEMP ('git-credential-' + [guid]::NewGuid().ToString('N') + '.txt')
+    [IO.File]::WriteAllBytes($tmp, [Text.Encoding]::ASCII.GetBytes("protocol=https`nhost=github.com`n`n"))
     try {
-        $html = (Invoke-WebRequest -UseBasicParsing -Uri ('https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/' + $workflow) -TimeoutSec 60).Content
-    } catch { return 'unreachable' }
-    $m = [regex]::Match($html, 'aria-label="([^"]*' + [regex]::Escape($titlePart) + '[^"]*)"')
-    if (-not $m.Success) { return 'not listed yet' }
-    $label = $m.Groups[1].Value
-    if ($label -like 'completed successfully*') { return 'success' }
-    if ($label -like '*failed*' -or $label -like '*cancelled*') { return 'failed: ' + $label }
-    return 'running: ' + $label
+        $exe = (Get-Command $gitExe).Source
+        $text = (& cmd.exe /c ('type "' + $tmp + '" | "' + $exe + '" credential fill 2>nul')) -join "`n"
+    } finally { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+    $m = [regex]::Match([string]$text, '(?m)^password=(.+)$')
+    if ($m.Success) { return $m.Groups[1].Value.Trim() }
+    return ''
 }
-function WaitWorkflows([string[]]$workflows, [string]$titlePart) {
+if (-not $Token) { $Token = GitCredentialToken $Git }
+if (-not $Token) { Fail 'no GitHub token for the Actions API and the upload: pass -Token, set GITHUB_TOKEN, or push once so Git Credential Manager stores one' }
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+$apiHeaders = @{ Authorization = ('Bearer ' + $Token); Accept = 'application/vnd.github+json'; 'X-GitHub-Api-Version' = '2022-11-28'; 'User-Agent' = 'TiaMcp-Release' }
+$apiBase = 'https://api.github.com/repos/asckye/TIA_Portal_Openness_MCP'
+Run $Git @('push', 'origin', 'master') 'push master'
+function WorkflowState([string]$workflowName, [string]$sha) {
+    try { $runs = Invoke-RestMethod -Uri ($apiBase + '/actions/runs?head_sha=' + $sha + '&per_page=50') -Headers $apiHeaders -TimeoutSec 60 } catch { return 'api unreachable: ' + $_.Exception.Message }
+    $run = @($runs.workflow_runs | Where-Object { $_.name -eq $workflowName } | Sort-Object run_number -Descending) | Select-Object -First 1
+    if (-not $run) { return 'not listed yet' }
+    if ($run.status -ne 'completed') { return $run.status + ' (run ' + $run.run_number + ')' }
+    if ($run.conclusion -eq 'success') { return 'success' }
+    return 'failed: ' + $run.conclusion + ' ' + $run.html_url
+}
+function WaitWorkflows([string[]]$workflows, [string]$sha) {
     $deadline = (Get-Date).AddMinutes($CiTimeoutMinutes)
     while ($true) {
         $states = @{}
-        foreach ($w in $workflows) { $states[$w] = WorkflowState $w $titlePart }
+        foreach ($w in $workflows) { $states[$w] = WorkflowState $w $sha }
         $summary = ($workflows | ForEach-Object { $_ + '=' + $states[$_] }) -join ' | '
         Say ('  CI: ' + $summary)
         if (($states.Values | Where-Object { $_ -like 'failed*' })) { Fail ('CI failed: ' + $summary) }
         if (-not ($states.Values | Where-Object { $_ -ne 'success' })) { return }
         if ((Get-Date) -gt $deadline) { Fail ('CI did not finish within ' + $CiTimeoutMinutes + ' min: ' + $summary) }
-        Start-Sleep -Seconds 45
+        Start-Sleep -Seconds 30
     }
 }
-if ($NoWait) { Say 'not waiting for CI (-NoWait)' } else { WaitWorkflows @('validate.yml', 'offline-checks.yml') $title3 }
+if ($NoWait) { Say 'not waiting for CI (-NoWait)' } else { WaitWorkflows @('validate-bundle', 'offline-checks') $head }
 if ($NoTag) { Say 'stopped before tag (-NoTag)'; exit 0 }
 
-# ---------------------------------------------------------------- 7. tag + publish
+# ---------------------------------------------------------------- 7. tag + upload + verify
 $tag = 'v' + $Version
-$head = (& $Git rev-parse HEAD).Trim()
-$tagMsg = Join-Path $env:TEMP ('release-tag-' + [guid]::NewGuid().ToString('N') + '.txt')
-[IO.File]::WriteAllText($tagMsg, ($tag + ': ' + $Summary), (New-Object System.Text.UTF8Encoding($false)))
-& $Git tag -a $tag -F $tagMsg $head
-Remove-Item -LiteralPath $tagMsg -Force -ErrorAction SilentlyContinue
-if ($LASTEXITCODE -ne 0) { Fail ('tag ' + $tag + ' failed (already exists?)') }
+if ((& $Git tag -l $tag).Trim() -eq $tag) {
+    $tagged = (& $Git rev-list -n 1 $tag).Trim()
+    if ($tagged -ne $head) { Fail ('local tag ' + $tag + ' points at ' + $tagged + ', not HEAD ' + $head) }
+    Say ('tag ' + $tag + ' already exists on HEAD')
+} else {
+    $tagMsg = Join-Path $env:TEMP ('release-tag-' + [guid]::NewGuid().ToString('N') + '.txt')
+    [IO.File]::WriteAllText($tagMsg, ($tag + ': ' + $Summary), (New-Object System.Text.UTF8Encoding($false)))
+    & $Git tag -a $tag -F $tagMsg $head
+    Remove-Item -LiteralPath $tagMsg -Force -ErrorAction SilentlyContinue
+    if ($LASTEXITCODE -ne 0) { Fail ('tag ' + $tag + ' failed') }
+}
 Run $Git @('push', 'origin', $tag) ('push tag ' + $tag)
-Say ('tag ' + $tag + ' pushed -> Publish complete release')
+Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts\build\Publish-Release.ps1'), '-Version', $Version, '-Token', $Token) 'Publish-Release.ps1 (draft -> upload -> verify -> publish)'
+$publishedPath = Join-Path $pkgDir 'published-release.json'
+if (-not (Test-Path -LiteralPath $publishedPath)) { Fail 'Publish-Release.ps1 left no published-release.json' }
+$publishedRelease = Get-Content -LiteralPath $publishedPath -Raw | ConvertFrom-Json
+Say ('published: ' + $publishedRelease.html_url)
 if (-not $NoWait) {
-    WaitWorkflows @('release.yml') $title3
-    # the ZIP carries the date recorded by Build-Release (may differ from today after -SkipBuild)
-    $delivery = (Get-Content -LiteralPath (Join-Path $repo 'manifest\delivery.json') -Raw) | ConvertFrom-Json
-    $asset = $delivery.package + '.zip'
-    $found = $false
-    for ($i = 0; $i -lt 12 -and -not $found; $i++) {
-        try { $page = (Invoke-WebRequest -UseBasicParsing -Uri ('https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/' + $tag) -TimeoutSec 60).Content; $found = $page.Contains($asset) } catch { }
-        if (-not $found) { Start-Sleep -Seconds 10 }
-    }
-    if (-not $found) { Fail ('release page does not list ' + $asset + ' yet - check https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/' + $tag) }
-    Say ('published: ' + $asset)
+    Say 'waiting for "Verify published release" (release event on the tag commit)'
+    WaitWorkflows @('Verify published release') $head
 }
 Say ('DONE ' + $tag + '. Now record the publication in docs/development/handoff.md and handoff-checklist.md and commit that separately.')

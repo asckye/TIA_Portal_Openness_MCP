@@ -24,7 +24,7 @@
 
 旧 Build-DefectFix、Build-MultilingualFix、Package-DefectFix、Package-ReadOnlyV21 和 Python 预热桥接已删除。发布统一见 [发布流程](release-workflow.md)（一键入口 `scripts/build/Release.ps1`），预热使用原生 CLI；取证、预热和拖放生成仍有用途，保留在相应分类。
 
-交付和 checkout 均使用 `runtime/v20`、`runtime/v21`，不再创建旧 `tools/.../bin[-v20]/Release/net48` 副本。
+交付和 checkout 均使用 `runtime/v20`、`runtime/v21`，不再创建旧 `tools/.../bin[-v20]/Release/net48` 副本。2.8.1 起这两个目录和根目录的 `TiaMcpConfigurator.exe` 不进 Git（`.gitignore`），由本机 `Build-Release.ps1` 生成、`manifest/*.json` 记录哈希、`Release.ps1` 把交付 ZIP 直接上传到 GitHub Release。
 
 ## 引擎源码布局（2.7.18 起）
 

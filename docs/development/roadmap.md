@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.8.0 已完成
+## 5. 2.8.1 已完成
+
+- 发布模型：二进制不入库（`.gitignore`），`Package-Release.py` 树 + 本机二进制，`Verify-ReleaseAsset.py`，`Publish-Release.ps1` 本机上传（草稿 → 回读 → 发布），`Release.ps1` 一次提交 + API 查 CI，`Verify published release` 工作流复核，`validate-bundle` 无二进制模式。只保留 master（Dependabot 分支合并后删除）；英文文档不含中文。
+
+## 5.0 2.8.0 已完成
 
 - 引擎拆分：`Portal.Software.cs` → 1 + 10 个族文件，`McpServer.PlcSoftware.cs` → 1 + 11 个族文件，`Program.ReportBuilders.cs` / `Program.CliProbes.cs` → `Cli/`；行为与数字不变。配置器菜单栏（更新 / 帮助）：检查 GitHub、关闭自身后在新窗口跑更新器、自动重开。更新器 robocopy 化修 260 字符长路径缺陷，`-WaitForPid` / `-RelaunchConfigurator`。GLM 卡片。语义化版本自本版起。决定：继续提交 exe、不用自托管 runner。
 

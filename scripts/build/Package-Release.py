@@ -1,4 +1,10 @@
-"""Build the complete public delivery ZIP from clean, committed, validated files."""
+"""Build the complete public delivery ZIP from the clean, committed tree plus the local build outputs.
+
+Since 2.8.1 the engine runtimes (runtime/v20, runtime/v21) and TiaMcpConfigurator.exe are not tracked in Git:
+Build-Release.ps1 produces them locally and records their hashes in manifest/release-build.json and
+manifest/configurator-build.json, which ARE committed. Packaging takes the tracked files from Git, adds the local
+binaries and refuses when a binary is missing or differs from its validated hash. Release.ps1 uploads the ZIP.
+"""
 import argparse
 from datetime import datetime
 import hashlib
@@ -31,14 +37,18 @@ def main():
         return subprocess.check_output([args.git, *values], cwd=root)
 
     require(not git('status', '--porcelain', '--untracked-files=normal').strip(),
-            'Review and commit the source, both runtimes and manifests before packaging')
+            'Review and commit the source and manifests before packaging')
     commit = git('rev-parse', 'HEAD').decode().strip()
     files = {}
-    for name in git('ls-files', '-z').decode('utf-8').split('\0'):
-        if not name:
-            continue
+    tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
+    require(not any(name.startswith(('runtime/v20/', 'runtime/v21/')) or name == 'TiaMcpConfigurator.exe' for name in tracked),
+            'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaMcpConfigurator.exe')
+    # Local build outputs (ignored by Git): every file under runtime/v20 and runtime/v21 plus the configurator.
+    binaries = ['TiaMcpConfigurator.exe'] + sorted(
+        p.relative_to(root).as_posix() for folder in ('runtime/v20', 'runtime/v21') for p in (root / folder).rglob('*') if p.is_file())
+    for name in tracked + binaries:
         path = (root / name).resolve()
-        require(path.is_relative_to(root) and path.is_file(), f'Invalid tracked path: {name}')
+        require(path.is_relative_to(root) and path.is_file(), f'Missing file (run Build-Release.ps1 for the binaries): {name}')
         require(not re.search(r'(^|/)(\.git|bin-build|PublicAPI|source-review|obj|obj-v20)(/|$)', name, re.I), f'Private/build path: {name}')
         require(not name.lower().endswith(('.log', '.pdb', '.patch', '.user', '.pfx', '.key')),
                 f'Unexpected release file: {name}')

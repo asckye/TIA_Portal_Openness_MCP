@@ -7,9 +7,9 @@
 | 构建 | [Build-Configurator.ps1](build/Build-Configurator.ps1) | 编译 WPF；`-Test` 执行隔离测试并更新记录 |
 | 构建 | [Build-Release.ps1](build/Build-Release.ps1) | 使用 Siemens PublicAPI 构建/验证两版引擎 |
 | 构建 | [Prepare-Delivery.ps1](build/Prepare-Delivery.ps1) | 沿用已验证引擎，更新交付与 GUI 记录 |
-| 发布 | [Release.ps1](build/Release.ps1) | 一键发布：前置检查 → 版本号 8 处 → Build-Release → 本地闸门 → 三段提交 → Package-Release 干跑 → 逐 sha 推送 → CI → tag → 发布检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |
-| 发布 | [Package-Release.py](build/Package-Release.py)、[Publish-Release.cjs](build/Publish-Release.cjs) | 干净提交打包；Actions 上传并核对附件后发布 |
-| 检查 | [Check-Repository.py](checks/Check-Repository.py)、[Validate-Bundle.ps1](checks/Validate-Bundle.ps1) | 文档/路径与交付内容校验 |
+| 发布 | [Release.ps1](build/Release.ps1) | 一键发布：前置检查 → 版本号 8 处 → Build-Release → 本地闸门 → 一次提交 → Package-Release → Verify-ReleaseAsset → 推送 → CI（API）→ tag → Publish-Release 上传 → 等验证工作流检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |
+| 发布 | [Package-Release.py](build/Package-Release.py)、[Publish-Release.ps1](build/Publish-Release.ps1) | 干净提交 + 本机二进制打包；本机建草稿 Release、上传 ZIP 与 `.sha256`、回读校验后发布（2.8.1 起二进制不入库、不再由 Actions 打包） |
+| 检查 | [Check-Repository.py](checks/Check-Repository.py)、[Validate-Bundle.ps1](checks/Validate-Bundle.ps1)、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`--no-binaries` / `-NoBinaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
 | 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归，反射已发布的 V21 EXE；均由 Build-Release 调用（路由测试需 -PublicApiDirectory） |

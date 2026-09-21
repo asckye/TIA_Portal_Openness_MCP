@@ -9,11 +9,16 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\checks\Validate-Bundle.ps1
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\checks\Validate-Bundle.ps1 -BundleRoot "D:\kits\TIA_MCP_交付包"
+.PARAMETER NoBinaries
+    Source checkout without build outputs (CI, or a fresh clone before Build-Release.ps1): since 2.8.1 runtime\v20,
+    runtime\v21 and TiaMcpConfigurator.exe are not tracked in Git, so their presence, versions and hashes are skipped;
+    manifests, versions, launchers' syntax and the recorded source hashes are still checked.
 #>
 param(
     [Parameter(Mandatory = $false)]
     [string]$BundleRoot = "",
-    [switch]$Strict
+    [switch]$Strict,
+    [switch]$NoBinaries
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,14 +51,17 @@ function FileHash([string]$path) {
 
 Write-Host "Bundle root: $root"
 
+if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
 foreach ($guiFile in @('TiaMcpConfigurator.exe', 'docs\getting-started\configuration.md', 'scripts\build\Build-Configurator.ps1')) {
+    if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
     if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
     else { Fail "Missing GUI entry: $guiFile" }
 }
 
 # The checkout and delivery use the same canonical runtime paths.
 $exe = Join-Path $root 'runtime/v21/TiaMcpServer.exe'
-if (!(Test-Path -LiteralPath $exe)) { Fail "Missing V21 runtime: $exe"; $exe=$null }
+if ($NoBinaries) { $exe = $null }
+elseif (!(Test-Path -LiteralPath $exe)) { Fail "Missing V21 runtime: $exe"; $exe=$null }
 else { Ok "TiaMcpServer.exe present ($exe)" }
 
 # Sentinel: every launcher must point at an engine that actually exists in this checkout.
@@ -71,6 +79,7 @@ foreach ($rel in $launchers) {
     $refs = @([regex]::Matches($text, '%~dp0([^"%]*TiaMcpServer\.exe)') |
               ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique)
     if ($refs.Count -eq 0) { Fail ($rel + ': references no TiaMcpServer.exe path'); continue }
+    if ($NoBinaries) { Ok ($rel + ' -> ' + ($refs -join ' ; ') + ' (existence not checked without binaries)'); continue }
     $anyPresent = $false
     foreach ($r in $refs) { if (Test-Path -LiteralPath (Join-Path $ldir $r)) { $anyPresent = $true } }
     if ($anyPresent) { Ok ($rel + ' -> an engine present in this checkout') }
@@ -221,7 +230,7 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
 
         # The shipped engine is a binary, so a stale runtime/ is invisible in a diff.
         $exe = Join-Path $root "runtime\v21\TiaMcpServer.exe"
-        if (Test-Path -LiteralPath $exe) {
+        if (-not $NoBinaries -and (Test-Path -LiteralPath $exe)) {
             $fileVersion = (Get-Item -LiteralPath $exe).VersionInfo.FileVersion
             if ($fileVersion -ne $build.fileVersion) {
                 Fail ("Engine version mismatch: validated build says {0}, runtime reports {1}" -f $build.fileVersion, $fileVersion)
@@ -241,7 +250,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
     }
     $gui = Get-Content (Join-Path $root 'manifest/configurator-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($gui.testsPassed -le 0) { Fail 'Configurator test result missing' }
-    if ((FileHash (Join-Path $root $gui.executable.path)) -ne $gui.executable.sha256) { Fail 'Configurator EXE changed after validation' }
+    if (-not $NoBinaries -and (FileHash (Join-Path $root $gui.executable.path)) -ne $gui.executable.sha256) { Fail 'Configurator EXE changed after validation' }
     $licensePath = Join-Path $root 'LICENSE'
     if (!(Test-Path -LiteralPath (Join-Path $root 'NOTICE.md'))) { Fail 'Source and copyright notice missing: NOTICE.md' }
     if (!(Test-Path -LiteralPath $licensePath) -or
@@ -259,14 +268,16 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         if ($digest -ne $row.sha256) { Fail "Source changed after validation: $($row.path)" }
     }
     foreach ($major in @(20,21)) {
-        $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
-        if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
-        if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
         $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.V21.csproj' }
         [xml]$projectXml = Get-Content -LiteralPath (Join-Path $root "tools/tiaportal-mcp/src/TiaMcpServer/$projectName") -Raw
         if ($projectXml.Project.PropertyGroup.FileVersion -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
+        if ($NoBinaries) { continue }
+        $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
+        if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
+        if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
     }
     foreach ($row in $build.runtimeFiles) {
+        if ($NoBinaries) { break }
         $file = Join-Path $root $row.path
         if (!(Test-Path -LiteralPath $file)) { Fail "Runtime dependency missing: $($row.path)" }
         else {
@@ -277,7 +288,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             if ($digest -ne $row.sha256) { Fail "Runtime hash differs: $($row.path)" }
         }
     }
-    if ($failures.Count -eq 0) { Ok 'Both runtime versions and all build manifest hashes match' }
+    if ($failures.Count -eq 0) { Ok $(if ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
 }
 
 if ($failures.Count -gt 0) {
