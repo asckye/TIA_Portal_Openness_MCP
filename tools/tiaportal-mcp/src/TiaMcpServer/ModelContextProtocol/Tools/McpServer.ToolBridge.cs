@@ -212,13 +212,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     lines.Add(RenderSignature(h.Value, m)
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
+                    // 2.7.57: a worked call next to the signature is what stops the guess-and-retry loop.
+                    var example = ToolExamples.Find(h.Value);
+                    if (example != null) lines.Add("    " + ToolExamples.Render(example));
                 }
 
                 return new ResponseStringList
                 {
                     Message = hits.Count + " of " + scored.Count + " matching tools (roster: " + all.Count + " total). " +
                               "Tools marked [call via CallTool] are not in this session's tool list - " +
-                              "invoke them with CallTool(name, argumentsJson).",
+                              "invoke them with CallTool(name, argumentsJson); PreflightToolCall(name, argumentsJson) checks a planned call without executing it.",
                     Items = lines,
                     Meta = BridgeMeta(true),
                 };
@@ -372,10 +375,13 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (missing.Count > 0)
                 {
+                    var example = ToolExamples.Find(target);
                     return new ResponseMessage
                     {
                         Message = target + " is missing required argument(s): " + string.Join(", ", missing) +
-                                  ". Expected signature: " + RenderSignature(target, method!),
+                                  ". Expected signature: " + RenderSignature(target, method!) +
+                                  (example != null ? " " + ToolExamples.Render(example) : "") +
+                                  " PreflightToolCall(name, argumentsJson) checks a corrected call without executing it.",
                         Meta = BridgeMeta(false),
                     };
                 }
@@ -412,6 +418,163 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 return new ResponseMessage { Message = "CallTool('" + target + "') failed: " + ex.Message, Meta = BridgeMeta(false) };
             }
+        }
+
+        // 2.7.57 --------------------------------------------------------------------------------------------------
+        // PreflightToolCall: the same name resolution and parameter matching as CallTool, but nothing is invoked.
+        // The maintainer's request: when a call is wrong, the AI should be told what is wrong and re-plan from that,
+        // instead of trying variants against TIA. The report is built by PreflightLogic (pure, offline-tested); only
+        // the session state comes from the engine, through a partial method the offline suite does not implement.
+
+        [McpServerTool(Name = "PreflightToolCall"), Description(
+            "[L0][Meta][SESSION] Check a planned tool call WITHOUT executing it. Resolves the tool name (suggests the right one on a typo), " +
+            "validates argumentsJson against the real signature (missing required parameters, unknown or mis-cased names, type mismatches, values outside the documented alternatives, " +
+            "what CallTool would coerce), reports what the call would do (operation class, dryRun / confirm flags, precautions), whether the session prerequisites hold " +
+            "(connected, project bound) and one worked example. Use it before an unfamiliar call and after a correction from the user: fix the plan from this report, " +
+            "then call the tool (directly or through CallTool). Nothing touches TIA Portal or the project.")]
+        public static ResponseStringList PreflightToolCall(
+            [Description("name: the tool to check, e.g. 'DownloadToPlc' (case-insensitive; a near miss is corrected).")] string name,
+            [Description("argumentsJson: the arguments you intend to send - the JSON object itself or that object as a JSON string. Omit to see the signature, example and prerequisites only.")] JsonElement? argumentsJson = null)
+        {
+            string target = (name ?? "").Trim();
+            try
+            {
+                var element = argumentsJson ?? default;
+                string text = argumentsJson == null || element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null ? ""
+                    : element.ValueKind == JsonValueKind.String ? (element.GetString() ?? "") : element.GetRawText();
+                return PreflightToolCall(target, text);
+            }
+            catch (Exception ex)
+            {
+                return new ResponseStringList { Message = "PreflightToolCall('" + target + "') failed: " + ex.Message, Meta = BridgeMeta(false) };
+            }
+        }
+
+        public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
+        {
+            string target = (name ?? "").Trim();
+            var meta = new JsonObject { ["timestamp"] = DateTime.Now };
+            if (target.Length == 0)
+                return new ResponseStringList { Message = "PreflightToolCall: 'name' is required.", Meta = BridgeMeta(false) };
+            var all = AllToolMethods();
+            if (!all.TryGetValue(target, out var method))
+            {
+                var near = all.Keys
+                    .Where(k => k.IndexOf(target, StringComparison.OrdinalIgnoreCase) >= 0 || target.IndexOf(k, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .OrderBy(k => k, StringComparer.Ordinal).Take(8).ToList();
+                if (near.Count == 0)
+                    near = all.Keys.Select(k => new KeyValuePair<int, string>(CommonPrefixLength(k, target), k))
+                        .Where(x => x.Key >= 6).OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal).Take(5).Select(x => x.Value).ToList();
+                meta["success"] = false; meta["ok"] = false; meta["toolFound"] = false;
+                meta["suggestions"] = new JsonArray(near.Select(n => (JsonNode)n).ToArray());
+                return new ResponseStringList
+                {
+                    Message = "No tool named '" + target + "'." + (near.Count > 0 ? " Did you mean: " + string.Join(", ", near) + "? Re-run PreflightToolCall with that name." : " Call FindTools with capability words to find it."),
+                    Meta = meta,
+                };
+            }
+            // Canonical spelling (the dictionary is case-insensitive).
+            string canonical = all.Keys.First(k => string.Equals(k, target, StringComparison.OrdinalIgnoreCase));
+
+            JsonObject args;
+            if (string.IsNullOrWhiteSpace(argumentsJson) || argumentsJson.Trim() == "{}") args = new JsonObject();
+            else
+            {
+                JsonNode? parsed;
+                try { parsed = JsonNode.Parse(argumentsJson); }
+                catch (JsonException jx)
+                {
+                    meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
+                    return new ResponseStringList { Message = "argumentsJson is not valid JSON (" + jx.Message + "). Expected signature: " + RenderSignature(canonical, method), Meta = meta };
+                }
+                if (!(parsed is JsonObject obj))
+                {
+                    meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
+                    return new ResponseStringList { Message = "argumentsJson must be a JSON object. Expected signature: " + RenderSignature(canonical, method), Meta = meta };
+                }
+                args = obj;
+            }
+
+            var specs = new List<PreflightLogic.ParameterSpec>();
+            foreach (var p in method.GetParameters())
+            {
+                if (IsInfrastructureParameter(p.ParameterType)) continue;
+                string? def = null;
+                if (p.HasDefaultValue)
+                    def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\"" : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
+                var d = p.GetCustomAttribute<DescriptionAttribute>();
+                specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, d?.Description ?? ""));
+            }
+            var report = PreflightLogic.Analyze(specs, args);
+
+            string description = ToolDescription(method);
+            var tag = ToolTaxonomy.Parse(description);
+            var op = ToolTaxonomy.OperationOf(canonical, description);
+            var precautions = PreflightLogic.Precautions(op.Operation, report.DryRunSupported).ToList();
+
+            bool? connected = null; string? project = null;
+            ReadSessionState(ref connected, ref project);
+            bool needsProject = PreflightLogic.NeedsProject(op.Operation, canonical);
+            bool projectBound = !string.IsNullOrWhiteSpace(project) && project != "-";
+            bool? prerequisitesOk = connected == null ? (bool?)null : !needsProject || (connected == true && projectBound);
+            var prerequisites = new List<string>();
+            if (needsProject)
+            {
+                if (connected == false) prerequisites.Add("Not connected to TIA Portal - call Connect (or AttachToOpenProject with the project name) first.");
+                else if (connected == true && !projectBound) prerequisites.Add("Connected but no project bound - AttachToOpenProject / OpenProject first.");
+                else if (connected == null) prerequisites.Add("Session state unknown here; GetState tells whether a project is bound.");
+                else prerequisites.Add("Project '" + project + "' is bound.");
+            }
+
+            var lines = new List<string> { "Signature: " + RenderSignature(canonical, method), "Class: " + tag.Layer + " " + tag.Domain + " " + op.Operation + (op.Inferred ? " (inferred)" : "") };
+            foreach (var m in report.Missing) lines.Add("MISSING required parameter: " + m);
+            foreach (var u in report.Unknown) lines.Add("UNKNOWN parameter: " + u);
+            foreach (var t in report.TypeProblems) lines.Add("TYPE: " + t);
+            foreach (var c in report.CaseFixes) lines.Add("Case: " + c + " (CallTool accepts it; a direct call needs the exact spelling)");
+            foreach (var c in report.Coercions) lines.Add("Coercion: " + c);
+            foreach (var w in report.Warnings) lines.Add("Warning: " + w);
+            if (report.DryRunSupported)
+                lines.Add("dryRun: " + (report.DryRunGiven == null ? "not given -> default " + (report.DryRunDefault ? "true (preview only)" : "false (executes)") : report.DryRunGiven == true ? "true (preview only)" : "false (EXECUTES" + (report.ConfirmFlags.Count > 0 ? "; confirm flags set: " + (report.ConfirmFlagsSet.Count > 0 ? string.Join(", ", report.ConfirmFlagsSet) : "none") : "") + ")"));
+            foreach (var p in precautions) lines.Add("Precaution: " + p);
+            foreach (var p in prerequisites) lines.Add("Prerequisite: " + p);
+            var example = ToolExamples.Find(canonical);
+            if (example != null) lines.Add(ToolExamples.Render(example));
+            lines.Add("Description: " + description);
+
+            bool ready = report.Ok && prerequisitesOk != false;
+            meta["success"] = ready; meta["ok"] = report.Ok; meta["toolFound"] = true; meta["tool"] = canonical;
+            meta["signature"] = RenderSignature(canonical, method);
+            meta["layer"] = tag.Layer; meta["domain"] = tag.Domain; meta["operation"] = op.Operation;
+            meta["missing"] = new JsonArray(report.Missing.Select(x => (JsonNode)x).ToArray());
+            meta["unknown"] = new JsonArray(report.Unknown.Select(x => (JsonNode)x).ToArray());
+            meta["caseFixes"] = new JsonArray(report.CaseFixes.Select(x => (JsonNode)x).ToArray());
+            meta["typeProblems"] = new JsonArray(report.TypeProblems.Select(x => (JsonNode)x).ToArray());
+            meta["coercions"] = new JsonArray(report.Coercions.Select(x => (JsonNode)x).ToArray());
+            meta["warnings"] = new JsonArray(report.Warnings.Select(x => (JsonNode)x).ToArray());
+            meta["dryRun"] = new JsonObject { ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.Effective, ["confirmFlags"] = new JsonArray(report.ConfirmFlags.Select(x => (JsonNode)x).ToArray()), ["confirmFlagsSet"] = new JsonArray(report.ConfirmFlagsSet.Select(x => (JsonNode)x).ToArray()) };
+            meta["precautions"] = new JsonArray(precautions.Select(x => (JsonNode)x).ToArray());
+            meta["prerequisites"] = new JsonObject { ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
+            if (example != null) meta["example"] = JsonNode.Parse(example.ArgumentsJson);
+            string verdict = !report.Ok
+                ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count) + " problem(s) listed in Items, then preflight again."
+                : prerequisitesOk == false ? "Arguments fit; the session prerequisite is not met (see Items)."
+                : "READY: " + canonical + " would bind" + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count) + " automatic correction(s) (CallTool only)" : "") + (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : "") + ".";
+            return new ResponseStringList { Message = verdict, Items = lines, Meta = meta };
+        }
+
+        // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.
+        static partial void ReadSessionState(ref bool? connected, ref string? project);
+
+        /// <summary>Build gate (Generate-ToolsListFromAssembly.ps1): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
+        public static IReadOnlyList<string> ValidateToolExamples()
+        {
+            var all = AllToolMethods();
+            return ToolExamples.ValidateAgainst(tool =>
+            {
+                if (!all.Keys.Any(k => string.Equals(k, tool, StringComparison.Ordinal))) return null;
+                return all[tool].GetParameters().Where(p => !IsInfrastructureParameter(p.ParameterType))
+                    .Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
+            });
         }
 
         private static object? InvokeToolMethod(MethodInfo method, object?[] call)

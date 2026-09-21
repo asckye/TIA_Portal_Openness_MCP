@@ -23,6 +23,9 @@ namespace TiaMcpServer.ModelContextProtocol
             // L0 — the bridge to everything not listed here. Without these, lite is a
             // dead end: the model cannot even discover that the other ~300 tools exist.
             "FindTools", "CallTool", "ListToolCategories",
+            // 2.7.57: the preflight belongs next to the bridge - the point is to check a call before it is
+            // made, in every profile; the update check is what a maintainer asks first when something is off.
+            "PreflightToolCall", "CheckForUpdate",
             // L0 — orientation / diagnostics
             "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
             "GenerateAcceptanceReport", "GenerateErrorReport",
@@ -73,7 +76,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var name = attr.Name ?? method.Name;
                 if (LiteToolNames.Contains(name))
                 {
-                    tools.Add(McpServerTool.Create(method));
+                    tools.Add(CreateTool(name, method));
                 }
             }
             return tools;
@@ -90,9 +93,20 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var method in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
             {
                 if (method.GetCustomAttribute<McpServerToolAttribute>() == null) continue;
-                tools.Add(McpServerTool.Create(method));
+                tools.Add(CreateTool(method.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? method.Name, method));
             }
             return tools;
+        }
+
+        // 2.7.57: the protocol description carries the worked example from ToolExamples (one table, validated at build
+        // time), so the model sees a correct call next to every listed tool without editing 80 attribute strings.
+        private static McpServerTool CreateTool(string name, MethodInfo method)
+        {
+            var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
+            var description = attribute?.Description ?? "";
+            var decorated = ToolExamples.Decorate(name, description);
+            if (ReferenceEquals(decorated, description) || decorated == description) return McpServerTool.Create(method);
+            return McpServerTool.Create(method, options: new McpServerToolCreateOptions { Name = name, Description = decorated });
         }
 
         // ---- Profile resolution -----------------------------------------------------------------

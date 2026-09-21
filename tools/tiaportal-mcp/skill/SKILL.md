@@ -7,7 +7,7 @@ description: Drive Siemens TIA Portal (博途) end-to-end through the TiaMcpServ
 
 This is the operating skill for TIA Portal MCP automation. The
 companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
-**450** MCP tools (default lite profile: 56; exact runtime set: call `tools/list` on the running server) covering
+**452** MCP tools (default lite profile: 58; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -48,6 +48,8 @@ else unless one of these tools' output explicitly tells you to call another:
 `recommendedNextTool` 走。② 路径只从 `GetProjectTree` 拿，绝不自己编。③ 写操作前先
 `dryRun=true`。④ 收尾必须 `CompileAndDiagnosePlc`(0 错) + `SaveProject`。⑤ 拿不准
 参数名时，照本表/§8 的"精确参数名"抄，不要猜。HMI 美化看 §12，库复用看 §15。
+
+**先预检、再调用（2.7.57 起）：** 每个列出的工具描述末尾都带一条 `Example: {...}`；调用不熟悉的工具之前、以及**用户纠正之后**，先 `PreflightToolCall(name, argumentsJson)`——它按真实签名检查参数（缺参 / 未知或大小写错误的参数名 / 类型不对 / 不在文档备选值里）、说明这次调用会做什么（dryRun / confirm 标志、注意事项）和会话前提（是否已连接、是否已绑工程），**不执行任何东西**；按报告改好计划后再调一次，不要对着 TIA 反复试错。`FindTools` 的结果与 `CallTool` 的缺参拒绝也带同一条示例。
 
 **降门槛三件套(已内置，弱模型友好):**
 - **Lite 工具档位** — 默认直接暴露 52 个常用入口，其余经 `FindTools` 查找、`CallTool` 调用。

@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.7.57] - 2026-09-21
+
+引擎 2.7.57.0（V20/V21 均重建），工具 **452**（+`PreflightToolCall`、`CheckForUpdate`），默认 lite 58 项（两个新工具都在 L0）。详见 [v2.7.57](docs/releases/v2.7.57.md)。维护者 2026-09-21 定下的第二件事：更新器 + 规范 AI 调用；2.7.56 真机通过（`Connect` 多进程按名附加、不自启）。
+
+- **更新器 `scripts/operations/Update-Engine.ps1`**（随交付包）：在解压好的交付包里就地更新——读 `manifest/delivery.json` 的当前版本；**引擎（`TiaMcpServer.exe` / `TiaMcpConfigurator.exe`）在运行就拒绝并列出 pid，从不杀进程**（维护者要求"先关再更"，不做热更新）；从 GitHub Releases 取最新版（API 被限流时改读发布页的重定向与 expanded_assets 片段），或 `-ZipPath` 离线更新；下载 ZIP + `.sha256` 并校验（无 sidecar 需显式 `-SkipHashCheck`）；备份当前安装到 `.previous\<包名>\`（留两份），整体替换 `runtime\` / `manifest\`、覆盖其余文件；`-Check` 只比版本，`-Rollback` 换回上一版，`-Version vX.Y.Z` 指定版本，`-Force` 重装。本机在 2.7.55 的解压包上验证：离线更新到 2.7.56、回滚到 2.7.55、`-Check` 走发布页回退、伪 `TiaMcpServer.exe` 在跑时拒绝。
+- **`CheckForUpdate`**（只读，`[L0][Diagnostics][SESSION]`）：比较引擎版本与最新 Release，回报 ZIP 名 / 大小 / 下载地址 / `.sha256`、`installRoot`、`updaterScript` 与四步更新说明；API 限流时自动改读发布页；不改任何文件。
+- **`PreflightToolCall(name, argumentsJson)`**（`[L0][Meta][SESSION]`）：**不执行**地检查一次计划中的调用——工具名解析（打错字给候选）、按真实签名校验参数（缺必填 / 未知或大小写错的参数名并给最接近的名字 / 类型不对 / 不在文档备选值里 / `CallTool` 会做的自动转换）、操作类别与注意事项、`dryRun` / `confirm*` 标志的实际效果、会话前提（是否已连接、是否已绑工程）、一条示例；`Meta.ok` = 参数能绑定，`Meta.success` = 还满足前提。纯逻辑 `PreflightLogic`（备选值解析支持 `a | b`、`a/b`、`(a, b)` 三种写法，排除 `e.g.` 与带连字符的散文）。
+- **工具示例表 `ToolExamples`**（80 条，常用与真机验证过的工具）：附在每个列出工具的协议描述末尾（`Example: {...} (说明).`，lite 档 58 个里 43 个有）、`FindTools` 结果、`CallTool` 缺参拒绝与 `PreflightToolCall`；`Generate-ToolsListFromAssembly.ps1` 在构建时按真实签名校验每条示例（参数名精确、必填齐全、工具存在），`manifest/tools-list.json` 每行新增 `example`。
+- 服务器指令与 `Bootstrap` 规则新增 "PLAN, DO NOT PROBE"：调用不熟悉的工具之前、用户纠正之后先 `PreflightToolCall`；`SKILL.md` 同步。
+- `Connect`：名字不存在时消息末尾不再双句号。离线 2356（+138）。
+
 ## [2.7.56] - 2026-09-21
 
 引擎 2.7.56.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.56](docs/releases/v2.7.56.md)。2.7.55 部署后的收口结果与 `Connect` 的多进程修复。

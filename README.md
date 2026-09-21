@@ -12,7 +12,7 @@ The complete release ZIP includes both runtimes and dependencies. Install Siemen
 
 ## Start here
 
-Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root.
+Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place: stop the engine, then run `scripts\operations\Update-Engine.ps1` inside the extracted folder (fetches the latest release; `-ZipPath` for an offline ZIP, `-Rollback` to go back); the engine's `CheckForUpdate` tool only reports versions.
 
 | Scenario | Configuration |
 |---|---|
@@ -40,7 +40,7 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 ## Capabilities and limits
 
-The static inventory contains **450 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **56**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+The static inventory contains **452 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **58**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
 Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 

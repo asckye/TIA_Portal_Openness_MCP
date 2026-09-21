@@ -24,6 +24,11 @@ try {
     $taxonomy=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
     $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('Parse'); $operationOf=$taxonomy.GetMethod('OperationOf')
     $categories=@(foreach($c in $taxonomy.GetField('Categories').GetValue($null)){[ordered]@{key=$c.Key;nameZh=$c.NameZh;nameEn=$c.NameEn;description=$c.Description;domains=@($c.Domains)}})
+    # 2.7.57: the worked examples (ToolExamples) are appended to listed tool descriptions and printed by FindTools / PreflightToolCall;
+    # an example that no longer fits its tool (renamed parameter, dropped tool) fails the build here rather than misleading callers.
+    $exampleProblems=@($type.GetMethod('ValidateToolExamples').Invoke($null,@()))
+    if($exampleProblems.Count){throw "Tool examples do not fit their tools (fix ToolExamples.cs): $($exampleProblems -join '; ')"}
+    $findExample=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolExamples',$true).GetMethod('Find')
     $rows=@(foreach($method in $type.GetMethods([Reflection.BindingFlags]'Public,Static')){
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
         $tool=$attributes | Where-Object { $_.AttributeType.Name -eq 'McpServerToolAttribute' } | Select-Object -First 1
@@ -36,8 +41,9 @@ try {
         $layer=[string]$tag.Item1; $domain=[string]$tag.Item2
         $op=$operationOf.Invoke($null,@($name,$description)); $operation=[string]$op.Item1; $operationInferred=[bool]$op.Item2
         $category=[string]$categoryOf.Invoke($null,@($domain))
+        $example=$findExample.Invoke($null,@($name))
         [ordered]@{name=$name;layer=$layer;category=$category;domain=$domain;operation=$operation;operationInferred=$operationInferred;method=$method.Name;returnType=$method.ReturnType.Name;
-            parameters=@($method.GetParameters() | ForEach-Object Name);description=$description}
+            parameters=@($method.GetParameters() | ForEach-Object Name);description=$description;example=$(if($example){$example.ArgumentsJson}else{$null})}
     })
     $uncategorized=@($rows | Where-Object { $_.category -eq 'uncategorized' } | ForEach-Object { $_.name })
     if($uncategorized.Count){throw "Tools with an unregistered domain tag (register the domain in ToolTaxonomy or fix the description prefix): $($uncategorized -join ', ')"}
@@ -51,6 +57,6 @@ try {
         tools=@($rows | Sort-Object name)
     }
     [IO.File]::WriteAllText($OutputPath,($data|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
-    Write-Output "Compiled EXE tool metadata: $($rows.Count) tools"
+    Write-Output "Compiled EXE tool metadata: $($rows.Count) tools; $(@($rows | Where-Object { $_.example }).Count) with a validated example"
 }
 finally{[AppDomain]::CurrentDomain.remove_AssemblyResolve($resolver)}

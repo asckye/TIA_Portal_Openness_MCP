@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.56 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.57 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 452 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 58 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.57 更新器、`CheckForUpdate`、`PreflightToolCall` 与工具示例表
+
+2.7.56 真机通过（两个 TIA 进程时 `Connect {projectName:"项目1"}` 70 ms 附加到持有工程的进程、不自启、进程数不增）。本版是维护者定下的第二件事：**更新器**——`scripts/operations/Update-Engine.ps1` 随交付包，在解压目录里就地更新到最新 Release 或 `-ZipPath` 离线包，引擎在运行就拒绝并列出 pid（不做热更新、不杀进程），ZIP + `.sha256` 校验、备份到 `.previous\`、整体替换 `runtime\` / `manifest\`，`-Check` / `-Rollback` / `-Version` / `-Force`；引擎侧只读的 **`CheckForUpdate`**（API 限流时改读发布页）。**规范 AI 调用**——`PreflightToolCall(name, argumentsJson)` 不执行地按真实签名检查一次计划中的调用（缺参 / 未知或大小写错的参数名 / 类型 / 文档备选值 / `CallTool` 会做的转换 / dryRun 与 confirm 标志的实际效果 / 操作类别注意事项 / 会话前提 / 示例）；80 条工具示例（`ToolExamples`）附在每个列出工具的描述末尾、`FindTools` 结果与 `CallTool` 缺参拒绝里，构建时按真实签名校验；服务器指令与 `Bootstrap` 规则加 "PLAN, DO NOT PROBE"。工具 452，lite 58。详见 `docs/releases/v2.7.57.md`。
 
 ## 2.7.56 `Connect` 遇到多个 TIA 进程只附加、不再自启
 

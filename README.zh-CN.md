@@ -12,7 +12,7 @@
 
 ## 从这里开始
 
-从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。
+从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。以后升级不必重新解压：先停掉引擎，在解压目录里运行 `scripts\operations\Update-Engine.ps1`（在线取最新版；没有外网用 `-ZipPath` 指向新 ZIP；`-Rollback` 换回上一版），引擎内的 `CheckForUpdate` 工具只报版本、不改文件。
 
 | 使用方式 | 配置步骤 |
 |---|---|
@@ -38,7 +38,7 @@
 
 ## 能力与验证范围
 
-当前静态清单共 **450 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **56 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+当前静态清单共 **452 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **58 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
 
 覆盖工程/会话、PLC 块/类型/变量、硬件网络、Unified HMI、文件交换、库、版本控制及在线只读监视。详细范围见 [工具矩阵](docs/reference/tool-matrix.md) 和 [能力边界](docs/reference/capabilities.md)。实现工具、API 签名检查与真实工程验收是不同状态，不代表覆盖西门子全部 API。
 

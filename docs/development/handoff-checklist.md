@@ -37,7 +37,8 @@
 
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
-1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。**下一次部署（2.7.57）后**：`CheckForUpdate` 回报最新版与本机版；`PreflightToolCall` 对一个写工具给缺参数 / 全参数各跑一次看回报；`Connect` 名字不存在时消息末尾不再双句号。
+1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
+2. **2.7.57 部署后**（`docs/releases/v2.7.57.md` "待真机"）：`Bootstrap` 版本 2.7.57.0；`PreflightToolCall {name:"downloadtoplc", argumentsJson:{SoftwarePath:"MCP_STD", targetIp:"192.168.0.3"}}` 应 `NOT READY` 并列出 `targetIp (did you mean 'targetIpAddress'?)`、`Case: SoftwarePath -> softwarePath`、前提 = 已绑 `项目1`；`CheckForUpdate`（虚拟机有外网则 `latestVersion 2.7.57`、`updateAvailable false`，无外网则 `success false` + 离线步骤）。**从 2.7.58 起部署用更新器**：先停引擎，`Update-Engine.ps1 -ZipPath <新 ZIP>`（`.sha256` 放旁边），重启后 `Bootstrap` 看版本；出问题 `-Rollback`。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：
