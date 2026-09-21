@@ -1,9 +1,9 @@
 {
-    "release":  "2.7.61",
+    "release":  "2.7.62",
     "releaseDate":  "20260921",
-    "fileVersion":  "2.7.61.0",
-    "package":  "TIA_MCP_Delivery_v2.7.61_20260921",
-    "generatedAt":  "2026-09-21T08:56:03.7821676+00:00",
+    "fileVersion":  "2.7.62.0",
+    "package":  "TIA_MCP_Delivery_v2.7.62_20260921",
+    "generatedAt":  "2026-09-21T09:10:19.6581991+00:00",
     "validation":  {
                        "offlinePassed":  2456,
                        "runtimes":  {
@@ -357,7 +357,7 @@
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
                              "length":  3974144,
-                             "sha256":  "d7f2433e6e66a9d5f983f257736bc068829edee0aaad8c536cd9f6fdaf3b8598"
+                             "sha256":  "f62cab823ecf852b0facf6eb783b2d59004797c4e0f6971791c0a25513ac5876"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -687,7 +687,7 @@
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
                              "length":  4029440,
-                             "sha256":  "41b05a844fe6facf316c2566d5f24f7d138c7cf493fb8d9e9aa0791708014ce1"
+                             "sha256":  "30f86b0cb6938b9ca9f792f3312cfbd17b369e9854f2d1de1ad049151d9e553f"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -1056,7 +1056,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs",
-                            "sha256":  "9798e73b738dafa595f9268a672158b76fc2b2cbe5ce31cda83b8af04edd24c3"
+                            "sha256":  "45d3066d29dff4689f76855492815ba78efbb5dfb040d5860362700f379113ed"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.MigrationRead.cs",
@@ -1204,7 +1204,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/UpdateLogic.cs",
-                            "sha256":  "52441f6aa7486ce3b65177e4ddf149e26e170c331571d917379f762b92d51b8e"
+                            "sha256":  "85ab9f8574a086a97bbfa14cdc188561077d35670ecf9316edc6477dfd6f93d1"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Program.CliProbes.cs",
@@ -1828,11 +1828,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "401a5be833218ad12d42f9a55e2f8db15d5c23fc531c556949ee60ab4e7c0103"
+                            "sha256":  "f56bb3001340caeaedd25247e4e634106afb53fda6eabafb4e66cc947df1e9b7"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "7a01d6710e43a9f39cd583065c923b98f20e0415e07c42ac879cd9de41b29855"
+                            "sha256":  "0996f26e7e06fc6939c0a39367a20a424d45e116b359dd48b17aa18d6163a16e"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/BaseLeftoversShapeChecks.cs",
@@ -2108,7 +2108,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PreflightAndUpdateTests.cs",
-                            "sha256":  "d0b67e97a62381aa298ce845fb88e61c972e84c0944b8eb5b403074e69835c35"
+                            "sha256":  "10bccc07682e5c20b0e873dc61355a43319bb772a47d5410bc721a09d0d17589"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs",

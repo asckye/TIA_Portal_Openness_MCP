@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.61_20260921",
-    "generatedAt":  "2026-09-21T08:56:01.0532571+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.62_20260921",
+    "generatedAt":  "2026-09-21T09:10:17.0475171+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.61.0",
-    "exeSha256":  "41b05a844fe6facf316c2566d5f24f7d138c7cf493fb8d9e9aa0791708014ce1",
+    "fileVersion":  "2.7.62.0",
+    "exeSha256":  "30f86b0cb6938b9ca9f792f3312cfbd17b369e9854f2d1de1ad049151d9e553f",
     "toolCount":  453,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
@@ -1113,7 +1113,7 @@
                                          "repository",
                                          "timeoutSeconds"
                                      ],
-                      "description":  "[L0][Diagnostics][SESSION] Read-only update check: compares this engine\u0027s version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -ZipPath updates offline, -Rollback restores the previous install). Needs internet on the TIA machine; without it the tool reports the release page URL and the offline procedure. Nothing touches TIA Portal.",
+                      "description":  "[L0][Diagnostics][SESSION] Read-only update check: compares this engine\u0027s version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.",
                       "example":  "{}"
                   },
                   {

@@ -4,8 +4,8 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-21 01:56:01
-- 引擎文件版本：2.7.61.0
+- 生成时间：2026-09-21 02:10:17
+- 引擎文件版本：2.7.62.0
 - 工具数量：453
 
 ## 读法
@@ -79,7 +79,7 @@
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
-| `CheckForUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -ZipPath updates offline, -Rollback restores the previous install). Needs internet on the TIA machine; without it the tool reports the release page URL and the offline procedure. Nothing touches TIA Portal. |
+| `CheckForUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. |
 | `Doctor` | L0 | SESSION* | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. |
 | `RunCapabilitySelfTest` | L0 | EXECUTE* | Run a read-only MCP/TIA readiness self-test. It checks Openness group membership, connection state, visible portal processes, optional automation context, and optional project tree readback without writing to the project. |
 | `RunOnlineMonitoringSafetySelfTest` | L0 | EXECUTE* | Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. |
