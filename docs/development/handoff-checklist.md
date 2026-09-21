@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.52 本机构建、待推送发布与虚拟机部署；2.7.51 上在线族被 TLS 信任提示挡住）
+# 换机器交接单（2026-09-21，2.7.52 已发布、待虚拟机部署；2.7.51 上在线族被 TLS 信任提示挡住）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.52 发布说明](../releases/v2.7.52.md)
 
@@ -7,7 +7,7 @@
 ## 0. 一句话现状
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.7.51**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.51_20260921.zip` 已上传）。448 个工具，离线 2197 项，形状 V20 2789 / V21 3077。
-- 虚拟机上跑的是 **2.7.51**（2026-09-21 部署）；**2.7.52 已在本机 Build-Release 通过**（离线 2199，448 个工具），三段提交 + 推送 + tag 见 §5，ZIP 待发布后部署。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.52**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.52_20260921.zip` 已上传）。448 个工具，离线 2199 项。虚拟机上跑的是 **2.7.51**；2.7.52 的 ZIP 还没部署。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；还剩 🔁 `DownloadToPlc` / `GoOnline` / `CompareSoftwareToOnline`——2.7.51 上 TIA 报 "The device is not trusted. Please check the certificate."（FW 2.9 TLS 信任提示无人应答），2.7.52 修。
 - 在线族：PG 侧阻塞已解除（`MCP_SIM` Softbus → TIA 路由树只剩 "PLCSIM" 接口，`CheckDownloadReadiness` Ready，扫描看到 `S7-1500 CPU:192.168.0.1`），不再需要给虚拟网卡配 IP；剩下的是 TLS 证书信任提示（2.7.52 `trustDeviceCertificate` 应答）。
 
