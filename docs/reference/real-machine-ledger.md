@@ -2,7 +2,7 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口（在线族可跑）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
@@ -352,18 +352,18 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CheckDownloadReadiness` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
-| `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线（GoOnline 未成）；2.7.50 真机：未重跑，同上 |
+| `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线（GoOnline 未成）；2.7.51 真机：仍等在线（TLS 信任）；2.7.52 后重跑 |
 | `DownloadPlcToFolder` | ⚠ 参数/前置条件 | targetForSoftware 须 CPU/PlcSimulationAdvanced |
-| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.49 真机：路由选择通过（'-> address 192.168.0.1 (subnet MCP_PN)'），TIA 真正发起下载，失败在 PG 侧 '连接到模块 MCP_PLC 失败'（虚拟网卡无 IP）；2.7.50 真机：PG 侧未变（网卡无 IP），未重跑；给网卡配 192.168.0.x 或 2.7.51 的 Softbus 网络模式后重跑 |
+| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.49 真机：路由选择通过、失败在 PG 侧（虚拟网卡无 IP）；2.7.51 真机：Softbus 后路由 'PLCSIM [no IP] -> 1 X1 -> address 192.168.0.1 (subnet MCP_PN)'，TIA 报 '连接到模块 MCP_PLC 失败'——同 GoOnline，FW 2.9 的 TLS 信任提示无人应答；2.7.52 总是订阅 OnlineLegitimation 并按 trustDeviceCertificate 答 Trusted |
 | `GetOnlineState` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GoOfflineAll` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `GoOnline` | 🔁 已修待重跑 | 2.7.49 真机：路由套用后 TIA 真正尝试连接（'The connection partner is not responding'，PG 侧无 IP）；2.7.50 真机：未重跑，同上 |
+| `GoOnline` | 🔁 已修待重跑 | 2.7.49 真机：路由套用后 'The connection partner is not responding'（PG 侧无 IP）；2.7.51 真机：经 'PLCSIM' 接口 TIA 报 'Connection to device cannot be established. The device is not trusted. Please check the certificate.'——TlsVerificationConfiguration 从没被应答（处理器只在有密码时订阅）；2.7.52 修 |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 | 2.7.48 真机：createSnapshot 原生返回 + exportSnapshot 2602 字节（离线；值不可独立核验） |
 | `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.48 真机：FingerprintDataProvider 在 1515F-2 PN V2.9（TIA V21）上 GetService 为 null（PlcSoftware 与 CPU 项都没有） |
 | `ReadTransferRoutes` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
-| `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 找到实例；2.7.50 真机：重注册后 MAC 02-C0-A8-00-C8-00 'S7-1500 (PLCSIM)' |
+| `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 找到实例；2.7.50 真机：重注册后 MAC 02-C0-A8-00-C8-00 'S7-1500 (PLCSIM)'；2.7.51 真机：Softbus 下在 'PLCSIM' 接口上看到 'S7-1500 CPU:192.168.0.1'（MAC FF-FF-C0-A8-00-01） |
 | `SetWatchTableModifyValue` | ✅ 通过 | 2.7.51 真机：%M0.0 行 appended（DisplayFormat 由 TIA 定为 Bool）、"MCP_Start" 行 updated（保留 %I0.0），readbackVerified 都 true，ManagePlcTableEntries read 核对 2 行；ModifyIntention 读回仍 false（TIA 不按 ModifyValue 推导，Openness 也写不了） |
 | `UploadDeviceParameters` | ⛔ TIA/环境拒绝 | 2.7.48 真机：ParameterUploadProvider 在 1515F 的 Device / 导轨 / CPU 项上都不可用（GetService 为 null） |
 | `UploadStationFromPlc` | ⛔ TIA/环境拒绝 | 2.7.50 真机：PcInterface.Addresses.Create(MAC) 被 TIA 拒 "'02-C0-A8-00-C8-00' does not specify a valid address"——ConfigurationAddressComposition.Create 只收 IP（官方页只用 IP），未下载过的 PLCSIM 实例 IP 为 0.0.0.0；2.7.51 拒绝信息明说；有 IP 后再跑 |
@@ -385,7 +385,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CompileAndDiagnosePlc` | ✅ 通过 |  |
-| `CompileSoftware` | ✅ 通过 |  |
+| `CompileSoftware` | ✅ 通过 | 2.7.51 真机：MCP_PLC 编译 Success（0/0，安全程序一致） |
 | `CreatePlcBlockGroup` | ✅ 通过 |  |
 | `CreatePlcInstanceDb` | ✅ 通过 | 2.7.47 重跑通过：autoNumber+number=0 不再生成 DB0 |
 | `CreatePlcTypeGroup` | ✅ 通过 |  |

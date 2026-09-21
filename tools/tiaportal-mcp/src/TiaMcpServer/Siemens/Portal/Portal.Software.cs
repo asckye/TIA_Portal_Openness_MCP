@@ -612,6 +612,7 @@ namespace TiaMcpServer.Siemens
                 bool triggerOk = string.Equals(hit.ModifyTrigger.ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
                 meta["readbackVerified"] = valueOk && triggerOk;
                 meta["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires. Project not saved.";
+                meta["success"] = valueOk && triggerOk;   // 2.7.52: the bridge reads Meta.success (was missing -> operationStatus unknown)
                 if (!valueOk || !triggerOk)
                     return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{hit.ModifyValue}' Trigger={hit.ModifyTrigger} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
                 return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action} with ModifyValue='{modifyValue}' Trigger={triggerName} (readback verified; {rows.Length} rows).", Meta = meta };
@@ -619,6 +620,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "EnsureWatchTableEntry failed");
+                meta["success"] = false;
                 meta["error"] = ex.Message;
                 return new ResponseMessage { Message = $"Error: {ex.Message}", Meta = meta };
             }

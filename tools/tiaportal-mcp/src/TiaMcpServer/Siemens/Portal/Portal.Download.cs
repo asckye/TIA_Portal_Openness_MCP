@@ -57,8 +57,10 @@ namespace TiaMcpServer.Siemens
             string? moduleAccessPassword = null,
             string? blockBindingPassword = null,
             string? masterSecretPassword = null,
-            string rhTarget = "")
+            string rhTarget = "",
+            bool trustDeviceCertificate = true)
         {
+            var legitimation = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // 2.7.52: TLS prompt record
             _logger?.LogInformation(
                 "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
@@ -104,7 +106,7 @@ namespace TiaMcpServer.Siemens
                         Message = "No connection configuration found. Configure the PLC's PROFINET/IP address in hardware configuration first."
                     };
 
-                using var passwordScope = AttachPasswordHandler(configuration, password);
+                using var legitimationScope = AttachOnlineLegitimationHandler(configuration, password, legitimation, trustDeviceCertificate);
 
                 DownloadConfigurationDelegate preDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
                 DownloadConfigurationDelegate postDelegate = (config) => ApplyDownloadPrompt(config, promptPolicy);
@@ -131,7 +133,7 @@ namespace TiaMcpServer.Siemens
                     // 2.7.49: "Download Hardware and Software to a target with specific IP-Address" - the official overload for an
                     // address TIA has not seen on the target yet (PLCSIM Advanced instance before its first download, new CPU).
                     DownloadResult createdResult = downloadProvider.Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, DownloadOptions.Software);
-                    return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy);
+                    return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy, legitimation);
                 }
 
                 if (rhTarget.Length > 0)
@@ -143,7 +145,7 @@ namespace TiaMcpServer.Siemens
                     DownloadResult rhResult = rhTarget == "primary"
                         ? rh.DownloadToPrimary(rhConfiguration, preDelegate, postDelegate, DownloadOptions.Software)
                         : rh.DownloadToBackup(rhConfiguration, preDelegate, postDelegate, DownloadOptions.Software);
-                    var rhResponse = BuildDownloadResponse(rhResult, softwarePath, routeDiagnostics, promptPolicy);
+                    var rhResponse = BuildDownloadResponse(rhResult, softwarePath, routeDiagnostics, promptPolicy, legitimation);
                     rhResponse.Message = "[R/H " + rhTarget + "] " + rhResponse.Message;
                     return rhResponse;
                 }
@@ -174,7 +176,7 @@ namespace TiaMcpServer.Siemens
                 if (rawResult is not DownloadResult result)
                     return new ResponseDownload { Ok = false, Message = "Download returned an unexpected result type." };
 
-                return BuildDownloadResponse(result, softwarePath, routeDiagnostics, promptPolicy);
+                return BuildDownloadResponse(result, softwarePath, routeDiagnostics, promptPolicy, legitimation);
             }
             catch (Exception ex)
             {
@@ -195,12 +197,15 @@ namespace TiaMcpServer.Siemens
                             + " Pass pgPcInterface / targetIpAddress to DownloadToPlc to pick one explicitly."
                           : string.Empty);
 
+                var failureMeta = promptPolicy.Summary();
+                foreach (var kv in legitimation) failureMeta[kv.Key] = kv.Value?.DeepClone();
+                failureMeta["success"] = false;
                 return new ResponseDownload
                 {
                     Ok = false,
                     Message = $"Download failed: {real.Message}{routeHint}{promptPolicy.UnansweredSummary()}",
                     Errors = new[] { real.Message },
-                    Meta = promptPolicy.Summary()
+                    Meta = failureMeta
                 };
             }
         }
@@ -687,6 +692,7 @@ namespace TiaMcpServer.Siemens
                 Issues = issues.Count > 0 ? issues.ToArray() : null,
                 Meta = new JsonObject
                 {
+                    ["success"] = true,   // 2.7.52: the check itself ran; Ready carries the verdict
                     ["downloadRouteCount"] = routes.Count,
                     // Ordered best-first — the same ranking DownloadToPlc applies. preferred=true
                     // means the PG/PC adapter shares an IPv4 /24 with the CPU it has to reach.
@@ -700,7 +706,8 @@ namespace TiaMcpServer.Siemens
             DownloadResult result,
             string softwarePath,
             DownloadRouteSelection? route,
-            DownloadPromptPolicy? prompts = null)
+            DownloadPromptPolicy? prompts = null,
+            JsonObject? legitimation = null)
         {
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -724,6 +731,9 @@ namespace TiaMcpServer.Siemens
             };
             if (prompts != null)
                 foreach (var kv in prompts.Summary()) meta[kv.Key] = kv.Value?.DeepClone();
+            if (legitimation != null)
+                foreach (var kv in legitimation) meta[kv.Key] = kv.Value?.DeepClone();
+            meta["success"] = ok;
 
             return new ResponseDownload
             {

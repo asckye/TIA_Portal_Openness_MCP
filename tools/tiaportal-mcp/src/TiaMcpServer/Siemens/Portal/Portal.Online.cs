@@ -76,16 +76,20 @@ namespace TiaMcpServer.Siemens
 
         public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, null);
 
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, pgPcInterface, true);
+
         // 2.7.33: userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
         // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
         // 2.7.49 (real machine, PLCSIM Advanced): OnlineProvider.GoOnline() uses whatever route TIA last applied - on a fresh
         // project nothing is applied and TIA answers "The connection cannot be established". The route is now selected like a
         // download (pgPcInterface + ipAddress -> ConnectionConfiguration.ApplyConfiguration) and an explicit address goes through
         // the official GoOnline(ConfigurationAddress) overload (V21; V20 applies the address and calls GoOnline()).
-        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface)
+        // 2.7.52: trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision).
+        public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate)
         {
             BaseLeftoversLogic.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
             rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget);
+            var meta = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
             // 这两条原来都返回 State="Offline"。那是**给一个没测过的问题一个确定的答案**：
             // 调用方读 isOnline=false 会当成「已确认这台 PLC 不在线」，而真相是
             // 「没连项目」或「路径写错，压根没这台 PLC」。比不回答更糟。
@@ -110,7 +114,7 @@ namespace TiaMcpServer.Siemens
                 {
                     RHOnlineProvider rh = ResolvePlcService<RHOnlineProvider>(softwarePath, plcSoftware)
                         ?? throw new PortalException(PortalErrorCode.NotFound, "RHOnlineProvider service not available on this PLC (rhTarget applies to R/H systems only).");
-                    using var rhScope = AttachPasswordHandler(rh.Configuration, password, userName, userType, null);
+                    using var rhScope = AttachOnlineLegitimationHandler(rh.Configuration, password, userName, userType, meta, trustDeviceCertificate);
                     // ConfigurationAddress has no public constructor: the address object comes from the route tree (target interfaces).
                     ConfigurationAddress? rhAddress = string.IsNullOrWhiteSpace(ipAddress) ? null : FindConfigurationAddress(rh.Configuration, ipAddress!);
                     if (!string.IsNullOrWhiteSpace(ipAddress) && rhAddress == null) _logger?.LogWarning("GoOnline R/H: no ConfigurationAddress {Ip} in the route tree; using the configured address", ipAddress);
@@ -123,8 +127,9 @@ namespace TiaMcpServer.Siemens
                         : (rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress));
 #endif
                     var rhName = rhState.ToString();
+                    meta["success"] = rhName == "Online";
                     return new ResponseOnlineState { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
-                        Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})" };
+                        Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})", Meta = meta };
                 }
                 var provider = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
                 if (provider == null)
@@ -141,7 +146,7 @@ namespace TiaMcpServer.Siemens
                     };
                 }
 
-                using var passwordScope = AttachPasswordHandler(provider.Configuration, password, userName, userType, null);
+                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, userName, userType, meta, trustDeviceCertificate);
 
                 string routeNote = "";
                 ConfigurationAddress? address = null;
@@ -149,9 +154,13 @@ namespace TiaMcpServer.Siemens
                 {
                     var selection = SelectDownloadRoute(provider.Configuration, pgPcInterface, ipAddress);
                     if (selection.Error != null)
-                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "GoOnline not attempted: " + selection.Error };
+                    {
+                        meta["success"] = false;
+                        return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = "GoOnline not attempted: " + selection.Error, Meta = meta };
+                    }
                     address = selection.Address;
                     routeNote = " Route: " + selection.Description + ".";
+                    meta["route"] = selection.Description;
                 }
 
                 OnlineState resultState;
@@ -164,18 +173,21 @@ namespace TiaMcpServer.Siemens
 
                 var stateName = resultState.ToString();
                 bool isOnline = stateName == "Online";
+                meta["success"] = isOnline;
                 return new ResponseOnlineState
                 {
                     State = stateName,
                     IsOnline = isOnline,
                     IsReachable = isOnline || stateName == "Protected",
-                    Message = BuildOnlineStateMessage(stateName, softwarePath) + routeNote
+                    Message = BuildOnlineStateMessage(stateName, softwarePath) + routeNote,
+                    Meta = meta
                 };
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
-                return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = $"GoOnline failed: {ex.Message}" };
+                meta["success"] = false; meta["error"] = ex.Message;
+                return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = $"GoOnline failed: {ex.Message}", Meta = meta };
             }
         }
 

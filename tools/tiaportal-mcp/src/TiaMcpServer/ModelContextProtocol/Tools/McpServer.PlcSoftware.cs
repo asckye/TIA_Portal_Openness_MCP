@@ -3616,7 +3616,8 @@ namespace TiaMcpServer.ModelContextProtocol
             " Returns State=Online on success." +
             " If ipAddress is omitted, uses the IP address configured in the project's hardware configuration." +
             " If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface 'PLCSIM Virtual Ethernet Adapter' / 'PLCSIM')." +
-            " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch).")]
+            " Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)." +
+            " S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=true (default) answers Trusted - the same prompt TIA shows in the UI - and Meta.tlsVerification records PlcName / VerificationInfo / the selection; with false the connection is refused by TIA ('The device is not trusted').")]
         public static ResponseOnlineState GoOnline(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("ipAddress: optional IP address override, e.g. '192.168.1.10'. Leave empty to use the project's configured IP.")] string ipAddress = "",
@@ -3624,7 +3625,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("userName: optional user for UMAC-protected PLCs (answers OnlineAuthenticationConfiguration with password); leave empty for legacy password-only protection.")] string userName = "",
             [Description("userType: optional OnlineCredentials.Type (None/AnonymousUser/GlobalUser/ProjectUser/SingleSignOnUser/PasswordOnly); default ProjectUser when userName is given.")] string userType = "",
             [Description("rhTarget: empty for standard CPUs; primary or backup goes online to that CPU of an R/H system through RHOnlineProvider.")] string rhTarget = "",
-            [Description("pgPcInterface: optional PG/PC adapter name substring (as listed by ReadTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).")] string pgPcInterface = "")
+            [Description("pgPcInterface: optional PG/PC adapter name substring (as listed by ReadTransferRoutes / ScanAccessibleDevices, e.g. 'PLCSIM Virtual Ethernet Adapter'); with ipAddress the route is applied before going online (ConnectionConfiguration.ApplyConfiguration).")] string pgPcInterface = "",
+            [Description("trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.")] bool trustDeviceCertificate = true)
         {
             try
             {
@@ -3635,7 +3637,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     string.IsNullOrWhiteSpace(userName) ? null : userName,
                     string.IsNullOrWhiteSpace(userType) ? null : userType,
                     rhTarget ?? "",
-                    string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface);
+                    string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface,
+                    trustDeviceCertificate);
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -3919,7 +3922,8 @@ namespace TiaMcpServer.ModelContextProtocol
             " Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios." +
             " Set keepActualValues=false only when DB initial values must be reset — this is irreversible." +
             " On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU);" +
-            " Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong.")]
+            " Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong." +
+            " S7-1500 FW >= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=true (default) answers Trusted and Meta.tlsVerification records it, false makes TIA refuse the connection.")]
         public static ResponseDownload DownloadToPlc(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("consistentBlocksOnly: true=download only consistent blocks (safe default), false=download all blocks even inconsistent ones")] bool consistentBlocksOnly = true,
@@ -3934,7 +3938,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("moduleAccessPassword: optional password for ModuleReadAccessPassword / ModuleWriteAccessPassword prompts; defaults to 'password' when empty. Never logged.")] string moduleAccessPassword = "",
             [Description("blockBindingPassword: optional password for the BlockBindingPassword prompt (know-how protected blocks bound to a CPU/card). Never logged.")] string blockBindingPassword = "",
             [Description("masterSecretPassword: optional password for the PlcMasterSecretPassword prompt. Never logged.")] string masterSecretPassword = "",
-            [Description("rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup.")] string rhTarget = "")
+            [Description("rhTarget: empty for standard CPUs; primary or backup downloads to that CPU of an R/H system through RHDownloadProvider.DownloadToPrimary/DownloadToBackup.")] string rhTarget = "",
+            [Description("trustDeviceCertificate: true (default) answers the TLS certificate prompt of FW >= 2.9 CPUs with Trusted for this call; false leaves it unanswered and TIA refuses the connection.")] bool trustDeviceCertificate = true)
         {
             try
             {
@@ -3952,7 +3957,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     string.IsNullOrWhiteSpace(moduleAccessPassword) ? null : moduleAccessPassword,
                     string.IsNullOrWhiteSpace(blockBindingPassword) ? null : blockBindingPassword,
                     string.IsNullOrWhiteSpace(masterSecretPassword) ? null : masterSecretPassword,
-                    rhTarget ?? "");
+                    rhTarget ?? "",
+                    trustDeviceCertificate);
 
                 if (result.Ok == false && result.Errors != null && result.Errors.Length > 0)
                     throw new McpException(

@@ -153,7 +153,16 @@ namespace TiaMcpServer.Siemens
                 meta["selectedRoute"] = route.Describe();
                 if (dryRun) return "Fingerprint read preview: route resolved, PLC not contacted.";
                 using var secure = string.IsNullOrEmpty(password) ? null : PlcBlockServicesLogic.ToSecureString(password);
-                OnlineConfigurationDelegate handler = cfg => { if (secure != null && cfg is OnlinePasswordConfiguration pwd) pwd.SetPassword(secure); };
+                OnlineConfigurationDelegate handler = cfg =>
+                {
+                    if (secure != null && cfg is OnlinePasswordConfiguration pwd) pwd.SetPassword(secure);
+                    else if (cfg is TlsVerificationConfiguration tls)   // 2.7.52: FW >= 2.9 CPUs ask for certificate trust before any online read
+                    {
+                        var before = tls.CurrentSelection.ToString();
+                        if (BaseLeftoversLogic.TlsSelectionToApply(true, before) != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
+                        meta["tlsVerification"] = new JsonObject { ["plcName"] = tls.PlcName, ["verificationInfo"] = tls.VerificationInfo, ["selectionBefore"] = before, ["selectionAfter"] = tls.CurrentSelection.ToString() };
+                    }
+                };
                 meta["contactedPlc"] = true;
                 var result = provider.GetFingerprintData((ConfigurationAddress)route.NativeAddress!, handler) ?? throw new InvalidOperationException("GetFingerprintData returned no result.");
                 meta["apiCallSuccess"] = true;

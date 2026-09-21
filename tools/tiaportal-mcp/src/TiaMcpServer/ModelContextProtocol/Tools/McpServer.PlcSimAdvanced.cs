@@ -147,6 +147,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     meta["mayHaveChanged"] = true;
                     data["executed"] = true;
+                    data["api"] = PlcSimAdvancedChannel.Describe(api);   // 2.7.52: networkMode after the action, not the call-start snapshot
                     if (instance != null) data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance);
                     data["registeredAfter"] = PlcSimAdvancedChannel.RegisteredInstances(api).Any(r => r.name.Equals(name, StringComparison.OrdinalIgnoreCase));
                     var stateNow = instance == null ? "" : Convert.ToString(data["stateAfter"]?["operatingState"]) ?? "";

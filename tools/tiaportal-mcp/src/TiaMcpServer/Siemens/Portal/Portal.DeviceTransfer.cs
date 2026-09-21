@@ -168,6 +168,7 @@ namespace TiaMcpServer.Siemens
                 if (dryRun) return "Station upload preview: provider, PG/PC interface and target address resolved (" + addressSource + "); " + (addressSource == "route tree" ? "no PLC contact" : "only a DCP network scan was sent") + ", no project change.";
                 if (!confirmUpload) throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to execute.");
                 using var access = AcquireHmiEditAccess();
+                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, meta, true);   // 2.7.52: TLS trust prompt of FW >= 2.9 CPUs
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 var result = provider.StationUpload(address, handler);
@@ -217,6 +218,7 @@ namespace TiaMcpServer.Siemens
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 if ((route.Target ?? route.Configuration) is not IConfiguration configuration) throw new NotSupportedException("Selected route is not an IConfiguration.");
+                using var legitimationScope = AttachOnlineLegitimationHandler(providerConfiguration, password, meta, true);   // 2.7.52: TLS trust prompt of FW >= 2.9 CPUs
                 try { uploadMethod.Invoke(provider, new object[] { configuration, address, handler }); }
                 catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
                 meta["apiCallSuccess"] = true;

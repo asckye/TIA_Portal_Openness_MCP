@@ -4,9 +4,9 @@
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
-    <AssemblyVersion>2.7.51</AssemblyVersion>
-    <FileVersion>2.7.51.0</FileVersion>
-    <InformationalVersion>2.7.51</InformationalVersion>
+    <AssemblyVersion>2.7.52</AssemblyVersion>
+    <FileVersion>2.7.52.0</FileVersion>
+    <InformationalVersion>2.7.52</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <DebugType Condition="'$(Configuration)'=='Release'">none</DebugType>
     <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>

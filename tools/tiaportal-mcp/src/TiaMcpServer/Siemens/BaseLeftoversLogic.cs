@@ -158,6 +158,16 @@ namespace TiaMcpServer.Siemens
             if (!string.IsNullOrEmpty(userName) && string.IsNullOrEmpty(password)) throw new ArgumentException("userName needs a password (online authentication for UMAC-protected PLCs).");
             if (!string.IsNullOrEmpty(userType)) { RequireOneOf(userType, OnlineUserTypes, "userType"); if (string.IsNullOrEmpty(userName) && userType != "None" && userType != "AnonymousUser" && userType != "PasswordOnly") throw new ArgumentException("userType " + userType + " needs a userName."); }
         }
+        // 2.7.52 (real machine, PLCSIM Advanced MCP_SIM via Softbus): every first online contact with an S7-1500 FW >= 2.9 raises
+        // TlsVerificationConfiguration on ConnectionConfiguration.OnlineLegitimation ("The device is not trusted. Please check the
+        // certificate." when nobody answers). The official answer is CurrentSelection = Trusted; the decision is the caller's
+        // (trustDeviceCertificate) and the selection TIA reported before it is kept for the record.
+        internal static readonly string[] TlsSelections = { "NonVerified", "Trusted", "NonTrusted" };
+        internal static string? TlsSelectionToApply(bool trustDeviceCertificate, string currentSelection)
+        {
+            if (!trustDeviceCertificate) return null;
+            return string.Equals(currentSelection, "Trusted", StringComparison.Ordinal) ? null : "Trusted";
+        }
         internal static string ValidateRhTarget(string rhTarget)
         {
             var value = rhTarget ?? "";

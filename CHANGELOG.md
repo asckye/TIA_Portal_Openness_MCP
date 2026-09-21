@@ -1,5 +1,13 @@
 # Change Log
 
+## [2.7.52] - 2026-09-21
+
+引擎 2.7.52.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.52](docs/releases/v2.7.52.md)。2.7.51 部署后的真机结果与在线族的 TLS 信任修复。
+
+- **2.7.51 真机通过**：`SetWatchTableModifyValue` 绝对地址行 appended（TIA 定 `DisplayFormat` Bool）、符号行 updated（保留 `%I0.0`），`readbackVerified` 都 true，`ManagePlcTableEntries read` 核对 2 行——`ModifyIntention` 读回仍 false：TIA 不按 `ModifyValue` 推导，它是行的"修改"勾选框且 Openness 只读，经 API 只能预置值和触发器。`ReadPlcSimAdvancedInstances` 报 `api.networkMode=TCPIPSingleAdapter`、`managerMembers='SimulationRuntimeManager.NetworkMode {get;set}'`；`powerOff → unregister → register … Softbus` 经全局网络模式通过（`TCPIPSingleAdapter → Softbus`，实例读回 Softbus，`powerOn` 后 `controllerIP 192.168.0.1`）；`ReadTransferRoutes` 只剩 PC 接口 "PLCSIM"（两块物理网卡不再列出），`CheckDownloadReadiness` Ready，`ScanAccessibleDevices` 在 PLCSIM 接口上看到 `S7-1500 CPU:192.168.0.1`——PG 侧不再需要网卡 IP。
+- **在线族的真正阻塞（真机 + 官方页）**：`GoOnline {ipAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}` 报 "Connection to device cannot be established. The device is not trusted. Please check the certificate."，`DownloadToPlc` 同路由报 "连接到模块 MCP_PLC 失败"——S7-1500 FW ≥ 2.9（含 PLCSIM Advanced）首次连接会在 `ConnectionConfiguration.OnlineLegitimation` 上抛 `TlsVerificationConfiguration`，官方答法是 `CurrentSelection = Trusted`；引擎的处理器只在给了密码时才订阅，所以提示从没被应答。现在 `GoOnline` / `DownloadToPlc` / `UploadStationFromPlc` / `UploadDeviceParameters` / `ReadPlcBlockFingerprints` 总是订阅 `OnlineLegitimation`，新参数 `trustDeviceCertificate`（默认 true）把提示答成 `Trusted`（与 TIA 界面里的同一个提示；false 时 TIA 拒绝连接），`Meta.tlsVerification` 记录 `plcName` / `verificationInfo` / 前后选择。纯逻辑 `BaseLeftoversLogic.TlsSelectionToApply`（离线 +2 = 2199）。
+- **顺手补齐**：`GoOnline` 的响应现在带 Meta（`success` / `route` / `tlsVerification` / `error`）；`SetWatchTableModifyValue`、`CheckDownloadReadiness`、`DownloadToPlc` 的 Meta 带 `success`（此前桥接报 `operationStatus unknown`）；`ManagePlcSimAdvancedInstance` 的 `data.api.networkMode` 改为动作之后的值。
+
 ## [2.7.51] - 2026-09-21
 
 引擎 2.7.51.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.51](docs/releases/v2.7.51.md)。2.7.50 部署后的真机结果与三处再修。

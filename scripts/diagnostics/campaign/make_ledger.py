@@ -190,6 +190,11 @@ o("SetWatchTableModifyValue", PASS, D51 + "：%M0.0 行 appended（DisplayFormat
 o("ReadPlcSimAdvancedInstances", PASS, D50 + "：memberFilter 列出实例成员；" + D51 + "：api.networkMode=TCPIPSingleAdapter、managerMembers='SimulationRuntimeManager.NetworkMode {get;set}'")
 o("ManagePlcSimAdvancedInstance", PASS, D51 + "：powerOff → unregister → register CPU1500_Unspecified communicationInterface=Softbus：route=SimulationRuntimeManager.NetworkMode，TCPIPSingleAdapter → Softbus，实例读回 Softbus；powerOn 后 Stop、controllerIP 192.168.0.1（Softbus 下自带默认 IP，TCPIP 下曾是 0.0.0.0）")
 o("ReadTransferRoutes CheckDownloadReadiness", PASS, D51 + "：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由")
+o("ScanAccessibleDevices", PASS, D48 + "：扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 找到实例；" + D50 + "：重注册后 MAC 02-C0-A8-00-C8-00 'S7-1500 (PLCSIM)'；" + D51 + "：Softbus 下在 'PLCSIM' 接口上看到 'S7-1500 CPU:192.168.0.1'（MAC FF-FF-C0-A8-00-01）")
+o("DownloadToPlc", FIXED, D49 + "：路由选择通过、失败在 PG 侧（虚拟网卡无 IP）；" + D51 + "：Softbus 后路由 'PLCSIM [no IP] -> 1 X1 -> address 192.168.0.1 (subnet MCP_PN)'，TIA 报 '连接到模块 MCP_PLC 失败'——同 GoOnline，FW 2.9 的 TLS 信任提示无人应答；2.7.52 总是订阅 OnlineLegitimation 并按 trustDeviceCertificate 答 Trusted")
+o("GoOnline", FIXED, D49 + "：路由套用后 'The connection partner is not responding'（PG 侧无 IP）；" + D51 + "：经 'PLCSIM' 接口 TIA 报 'Connection to device cannot be established. The device is not trusted. Please check the certificate.'——TlsVerificationConfiguration 从没被应答（处理器只在有密码时订阅）；2.7.52 修")
+o("CompareSoftwareToOnline", FIXED, D48 + "：依赖在线（GoOnline 未成）；" + D51 + "：仍等在线（TLS 信任）；2.7.52 后重跑")
+o("CompileSoftware", PASS, D51 + "：MCP_PLC 编译 Success（0/0，安全程序一致）")
 
 def status_of(n):
     if n in O: return O[n]
@@ -204,7 +209,7 @@ by = collections.defaultdict(list)
 for n, x in tools.items(): by[x["domain"]].append(n)
 counts = collections.Counter(status_of(n)[0].split("（")[0] for n in tools)
 lines = ["# 真机台账（逐工具）", "", "[文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)", "",
-    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口（在线族可跑）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
+    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
     "", "| 状态 | 含义 | 数量 |", "|---|---|---:|"]
 for k, m in ((PASS, "该工具至少一次真实调用成功（读回验证）"), (MANUAL, "会话级工具，单独手工跑通"), (EARLY, "今天没跑，但 2.7.39–2.7.45 的真机会话跑过"), (FIXED, "真机暴露了缺陷，源码已修，部署后要重跑"), (TIA, "调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷）"), (PARAM, "只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入）"), (REALCPU, "刻意不跑"), (SKIP, "未跑")):
     lines.append(f"| {k} | {m} | {counts.get(k, 0)} |")

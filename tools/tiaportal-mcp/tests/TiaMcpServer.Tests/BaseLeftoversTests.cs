@@ -89,6 +89,9 @@ namespace TiaMcpServer.Tests
             BaseLeftoversLogic.ValidateOnlineCredentials("", "", ""); BaseLeftoversLogic.ValidateOnlineCredentials("", "pw", ""); BaseLeftoversLogic.ValidateOnlineCredentials("user", "pw", "ProjectUser"); BaseLeftoversLogic.ValidateOnlineCredentials("", "pw", "PasswordOnly");
             check(true, "baseleft: online credentials accepted");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ValidateOnlineCredentials("user", "", "")), "baseleft: online user without password refused");
+            // 2.7.52 TLS trust decision for FW >= 2.9 PLCs (TlsVerificationConfiguration on OnlineLegitimation)
+            check(BaseLeftoversLogic.TlsSelectionToApply(true, "NonVerified") == "Trusted" && BaseLeftoversLogic.TlsSelectionToApply(true, "NonTrusted") == "Trusted", "baseleft: unverified / untrusted certificate is answered Trusted when the caller allows it");
+            check(BaseLeftoversLogic.TlsSelectionToApply(true, "Trusted") == null && BaseLeftoversLogic.TlsSelectionToApply(false, "NonVerified") == null, "baseleft: already trusted or trust refused -> nothing applied");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ValidateOnlineCredentials("", "pw", "GlobalUser")), "baseleft: GlobalUser type without user name refused");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ValidateOnlineCredentials("user", "pw", "Admin")), "baseleft: unknown online user type refused");
             check(BaseLeftoversLogic.ValidateRhTarget("") == "" && BaseLeftoversLogic.ValidateRhTarget("primary") == "primary" && BaseLeftoversLogic.ValidateRhTarget("backup") == "backup", "baseleft: R/H targets");

@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.51 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.52 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.52 应答 FW 2.9 CPU 的 TLS 证书信任提示（`trustDeviceCertificate`）
+
+2.7.51 真机：监控表行往返通过（`ModifyIntention` 读回仍 false——TIA 不推导、Openness 写不了）；`register … Softbus` 经全局 `NetworkMode` 通过，TIA 路由树只剩 "PLCSIM" 接口；但 `GoOnline` / `DownloadToPlc` 到 PLCSIM Advanced 实例被 TIA 拒 "The device is not trusted. Please check the certificate." / "连接到模块 MCP_PLC 失败"——S7-1500 FW ≥ 2.9 的 TLS 信任提示（`TlsVerificationConfiguration`，官方页 "Supporting secure S7 communication TLS"）从没被应答，因为 `OnlineLegitimation` 只在给了密码时才订阅。现在 `GoOnline` / `DownloadToPlc` / `UploadStationFromPlc` / `UploadDeviceParameters` / `ReadPlcBlockFingerprints` 总是订阅，`trustDeviceCertificate`（默认 true）把提示答成 `Trusted`（与 TIA 界面里的同一个提示），`Meta.tlsVerification` 记录 `plcName` / `verificationInfo` / 前后选择；`GoOnline` 的响应有 Meta 了，`SetWatchTableModifyValue` / `CheckDownloadReadiness` / `DownloadToPlc` 的 Meta 带 `success`，`ManagePlcSimAdvancedInstance` 的 `data.api.networkMode` 是动作之后的值。详见 `docs/releases/v2.7.52.md`。
 
 ## 2.7.51 监控表行去掉只读 `ModifyIntention`、PLCSIM Advanced 6+ 的全局 `NetworkMode`、站上载只收 IP
 

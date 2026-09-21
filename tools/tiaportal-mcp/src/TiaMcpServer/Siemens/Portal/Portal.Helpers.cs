@@ -594,30 +594,55 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
-        /// Subscribes a password handler to the OnlineLegitimation event so a protected CPU
-        /// can be authenticated during GoOnline / Download. Returns an IDisposable that
-        /// unsubscribes when disposed; callers MUST dispose to avoid handler leaks.
-        /// Returns null when no password is provided or the configuration object is not a
-        /// ConnectionConfiguration (no event to hook).
+        /// Subscribes the OnlineLegitimation handler of a ConnectionConfiguration for the duration of a GoOnline / Download /
+        /// Upload call: password prompts (legacy and UMAC) are answered from the given credentials, and the TLS trust prompt of
+        /// S7-1500 FW >= 2.9 CPUs (TlsVerificationConfiguration) is answered Trusted when trustDeviceCertificate is set. Returns
+        /// an IDisposable that unsubscribes when disposed; callers MUST dispose to avoid handler leaks. Returns null when the
+        /// configuration object is not a ConnectionConfiguration (no event to hook).
         /// </summary>
-        private static IDisposable? AttachPasswordHandler(object? configuration, string? password) => AttachPasswordHandler(configuration, password, null, null, null);
+        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, JsonObject? meta, bool trustDeviceCertificate)
+            => AttachOnlineLegitimationHandler(configuration, password, null, null, meta, trustDeviceCertificate);
 
         // 2.7.33: besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
         // password + UserType, IsSecureCommunication, GetSupportedAuthenticationTypes); the answered prompts are reported to meta.
-        private static IDisposable? AttachPasswordHandler(object? configuration, string? password, string? userName, string? userType, JsonObject? meta)
+        // 2.7.52 (real machine, PLCSIM Advanced MCP_SIM over Softbus): the handler was only subscribed when a password was given, so
+        // the TLS prompt of a FW 2.9 CPU (TlsVerificationConfiguration, official page "Supporting secure S7 communication TLS") was
+        // never answered and every first GoOnline / Download failed with "The device is not trusted. Please check the certificate."
+        // / "连接到模块 ... 失败". The handler is now always subscribed; the trust decision is the caller's (trustDeviceCertificate) and
+        // meta.tlsVerification records PlcName / VerificationInfo / the selection before and after.
+        private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, JsonObject? meta, bool trustDeviceCertificate)
         {
-            if (string.IsNullOrEmpty(password) || configuration is not ConnectionConfiguration conn)
+            if (configuration is not ConnectionConfiguration conn)
                 return null;
 
             // Build the SecureString once. The same instance can be reused across multiple
             // legitimation prompts within the same call (e.g., read-then-write access).
-            var secure = new SecureString();
-            foreach (var c in password!) secure.AppendChar(c);
-            secure.MakeReadOnly();
+            SecureString? secure = null;
+            if (!string.IsNullOrEmpty(password))
+            {
+                secure = new SecureString();
+                foreach (var c in password!) secure.AppendChar(c);
+                secure.MakeReadOnly();
+            }
 
             OnlineConfigurationDelegate handler = (cfg) =>
             {
-                if (cfg is OnlineAuthenticationConfiguration auth)
+                if (cfg is TlsVerificationConfiguration tls)
+                {
+                    var before = tls.CurrentSelection.ToString();
+                    var apply = BaseLeftoversLogic.TlsSelectionToApply(trustDeviceCertificate, before);
+                    if (apply != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
+                    if (meta != null)
+                        meta["tlsVerification"] = new JsonObject
+                        {
+                            ["plcName"] = tls.PlcName, ["verificationInfo"] = tls.VerificationInfo,
+                            ["selectionBefore"] = before, ["selectionAfter"] = tls.CurrentSelection.ToString(),
+                            ["trustDeviceCertificate"] = trustDeviceCertificate,
+                            ["note"] = apply != null ? "Certificate trusted for this call on the caller's decision (trustDeviceCertificate=true); the same prompt TIA shows in the UI." : trustDeviceCertificate ? "Already trusted." : "Left untrusted (trustDeviceCertificate=false); TIA refuses the connection."
+                        };
+                }
+                else if (secure == null) return;
+                else if (cfg is OnlineAuthenticationConfiguration auth)
                 {
                     OnlineCredentials credentials = auth.OnlineCredentials;
                     var supported = new JsonArray();
@@ -639,7 +664,7 @@ namespace TiaMcpServer.Siemens
                 }
             };
             conn.OnlineLegitimation += handler;
-            return new HandlerScope(() => conn.OnlineLegitimation -= handler);
+            return new HandlerScope(() => { conn.OnlineLegitimation -= handler; secure?.Dispose(); });
         }
 
         private sealed class HandlerScope : IDisposable
