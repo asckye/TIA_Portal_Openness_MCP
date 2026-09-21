@@ -84,6 +84,18 @@ namespace TiaMcpServer.Runtime
             throw new ArgumentException("communicationInterface '" + communicationInterface + "' cannot be mapped to a network mode; valid: TCPIP, " + string.Join(", ", NetworkModes) + ".");
         }
 
+        // 2.7.54 (real machine, PLCSIM Advanced 8.0 + manual "EOperatingMode"): the single-step mode is no longer one value - the API has
+        // SingleStep_C / _CT / _P / _CP / _CPT / _Bus (and TimespanSynchronized_*); Enum.Parse("SingleStep") threw. A scenario's
+        // "singleStep" is the classic cyclic-program + process-image step (SingleStep_CP), older APIs keep the plain name.
+        public static string[] OperatingModeCandidates(string? mode)
+        {
+            var m = (mode ?? "").Trim();
+            if (m.Equals("singleStep", StringComparison.OrdinalIgnoreCase) || m.Equals("SingleStep", StringComparison.Ordinal))
+                return new[] { "SingleStep_CP", "SingleStep_C", "SingleStep" };
+            if (m.Equals("default", StringComparison.OrdinalIgnoreCase)) return new[] { "Default" };
+            return new[] { m };
+        }
+
         public static string RequireInstanceName(string? name)
         {
             var n = (name ?? "").Trim();

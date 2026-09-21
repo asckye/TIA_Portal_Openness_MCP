@@ -320,11 +320,16 @@ namespace TiaMcpServer.Runtime
             return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
         }
 
-        public static void SetOperatingMode(PlcSimApi api, object instance, string mode)
+        // Returns the EOperatingMode name actually applied (2.7.54: the first candidate the installed API defines).
+        public static string SetOperatingMode(PlcSimApi api, object instance, string mode)
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");
-            var value = Enum.Parse(enumType, mode, true);
+            var candidates = PlcSimAdvancedLogic.OperatingModeCandidates(mode);
+            var name = candidates.FirstOrDefault(c => Enum.GetNames(enumType).Any(n => n.Equals(c, StringComparison.OrdinalIgnoreCase)))
+                ?? throw new ArgumentException("operating mode '" + mode + "' is not defined by this PLCSIM Advanced API (tried " + string.Join(" / ", candidates) + "); valid: " + string.Join(", ", Enum.GetNames(enumType)));
+            var value = Enum.Parse(enumType, name, true);
             SetThroughPropertyOrMethod(instance, "OperatingMode", value, enumType);
+            return Convert.ToString(GetMember(instance.GetType(), instance, "OperatingMode")) ?? name;
         }
 
         // 2.7.50 (real machine, PLCSIM Advanced 8.0): neither the instance class nor any interface it implements carries a writable

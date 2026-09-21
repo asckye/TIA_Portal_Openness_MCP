@@ -186,8 +186,16 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
-                meta["success"] = false; meta["error"] = ex.Message;
-                return new ResponseOnlineState { State = "NotReachable", IsOnline = false, IsReachable = false, Message = $"GoOnline failed: {ex.Message}", Meta = meta };
+                // 2.7.54 (real machine): EngineeringTargetInvocationException carries only "Error when calling method 'GoOnline'" - the
+                // reason ("Incompatible" against a never-downloaded PLCSIM instance) sits in the inner chain; surface it and the state TIA holds.
+                var chain = new List<string>();
+                for (var e = ex; e != null && chain.Count < 6; e = e.InnerException) if (!string.IsNullOrWhiteSpace(e.Message) && !chain.Contains(e.Message)) chain.Add(e.Message);
+                string stateNow = "";
+                try { stateNow = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* diagnostics only */ }
+                meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
+                if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
+                var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadToPlc), then go online." : "";
+                return new ResponseOnlineState { State = stateNow.Length > 0 && stateNow != "Online" ? stateNow : "NotReachable", IsOnline = false, IsReachable = stateNow == "Incompatible" || stateNow == "Protected", Message = $"GoOnline failed: {string.Join(" <- ", chain)}{hint}", Meta = meta };
             }
         }
 

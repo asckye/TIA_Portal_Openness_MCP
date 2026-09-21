@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.53 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.54 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.54 在线族真机走通（PLCSIM Advanced 下载 / 上线 / 比较 / 读写 / 场景）
+
+2.7.53 真机：`ManagePlcProtection` 把 `MCP_PLC` / 新建的标准 CPU `MCP_STD`（1515-2 PN V2.9，TIA V21 新建默认同样是 `NoAccess` + `WithoutPassword`）改成 `FullAccessIncludingFailsafe` / `FullAccess` + `WithPassword`，`CompileDevice` 0 错；F-CPU 的下载被 TIA 拒 "Loading or overloading fail-safe data in Openness is not permitted"（Openness 规则，不是引擎缺陷）；标准 CPU `MCP_STD` 走通全链：`DownloadToPlc`（首次用 created 地址 192.168.0.1 + `masterSecretPassword` 应答 `PlcMasterSecretPassword` 提示，实例随之变成 CPU1515 / 192.168.0.3；第二次走子网路由）→ `GoOnline` Online → `CompareSoftwareToOnline` 0 差异 → `ReadPlcSimAdvancedTags` 列出 DB 标签并读值 → `WritePlcSimAdvancedTags` 写回读 → `RunPlcSimAdvancedTestScenario`（default 模式）PASSED → `GoOffline`。三处修：场景 singleStep 模式在 8.0 API 上 `EOperatingMode` 只有 `SingleStep_C/_CT/_P/_CP/…`（`OperatingModeCandidates` 先试 `SingleStep_CP`）；工程级 `StationUploadProvider` 把 "PLCSIM (#1)" 按模式列了三遍、`UploadStationFromPlc` 误判歧义（同名同号视为一块网卡，PN/IE 优先）；`GoOnline` 失败把内层异常链与 TIA 当前在线状态一起回报（Incompatible 提示先下载）。详见 `docs/releases/v2.7.54.md`。
 
 ## 2.7.53 `ManagePlcProtection`（访问级别 / 机密组态数据密码）与 `CompileDevice`（硬件编译）
 

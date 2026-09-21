@@ -1,5 +1,14 @@
 # Change Log
 
+## [2.7.54] - 2026-09-21
+
+引擎 2.7.54.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.54](docs/releases/v2.7.54.md)。2.7.53 部署后**在线族在 PLCSIM Advanced 上全链走通**，三处小修。
+
+- **2.7.53 真机通过**：`ManagePlcProtection read` 报 `MCP_PLC` `NoAccess` / `WithoutPassword`；`setAccessLevel FullAccessIncludingFailsafe` 与 `protectMasterSecret` 读回一致；`CompileDevice MCP_PLC` 0 错 3 警。F-CPU 的 `DownloadToPlc` 被 TIA 拒 "Loading or overloading fail-safe data in Openness is not permitted."——Openness 不能下载故障安全数据，是官方规则，`MCP_PLC` 上的在线族到此为止。按维护者规则新建标准 CPU **`MCP_STD`**（CPU 1515-2 PN V2.9，`AddDeviceWithFallback` + `ConnectDeviceNodesToProfinetSubnet MCP_PN`，X1 192.168.0.3；TIA V21 新建默认同样 `NoAccess` + `WithoutPassword`）→ `setAccessLevel FullAccess` + `protectMasterSecret` → `CompileDevice` 0 错 → `DownloadToPlc {pgPcInterface:"PLCSIM", targetIpAddress:"192.168.0.1", masterSecretPassword}` **Success**（首次走 created 地址，`PlcMasterSecretPassword` 提示由 `masterSecretPassword` 应答；实例变成 CPU1515 "MCP_STD" 192.168.0.3 RUN）→ `GoOnline` **Online** → `GetOnlineState` Online → `CompareSoftwareToOnline` 0 差异 → SCL 外部源生成 `MCP_SimDB` / `MCP_SimLogic` / `Main`（`WritePlcSclSourceFile` + `ManagePlcExternalSources createFromFile / generateBlocks`；SCL 里 `Counter` 是保留字）→ 再次下载 Success（子网路由）→ `ReadPlcSimAdvancedTags` 列出 5 个 DB 标签并读值 → `WritePlcSimAdvancedTags` `Speed 12.5` 写回读 → `RunPlcSimAdvancedTestScenario`（default 模式）**PASSED** 6/6、2/2 断言 → `GoOffline`。`ReadPlcBlockFingerprints` 在 1515-2 PN V2.9 上同样 `FingerprintDataProvider` 为 null（TIA 侧）。
+- **修 `RunPlcSimAdvancedTestScenario singleStep`**：8.0 API 的 `EOperatingMode` 没有 `SingleStep`，只有 `SingleStep_C / _CT / _P / _CP / _CPT / _Bus` 与 `TimespanSynchronized_*`（手册 "EOperatingMode"）；`PlcSimAdvancedLogic.OperatingModeCandidates` 先试 `SingleStep_CP`（循环程序 + 过程映像，即旧的 SingleStep）再 `SingleStep_C` 再 `SingleStep`，`data.operatingModeApplied` 回报实际名。离线 +2（2210）。
+- **修 `UploadStationFromPlc` 的接口歧义**：Softbus 下工程级 `StationUploadProvider.Configuration` 把 "PLCSIM (#1)" 按连接模式列了三遍（PN/IE / PROFIBUS / MPI），精确名匹配到 3 个被当成歧义拒绝；同名同号视为同一块网卡，PN/IE 模式优先，歧义信息带模式名。
+- **`GoOnline` 失败文案**：`EngineeringTargetInvocationException` 外层只有 "Error when calling method 'GoOnline'"，现在把内层异常链（` <- ` 连接）与 TIA 当前 `OnlineProvider.State` 一起回报（`State` 用 TIA 的值，`Incompatible` 附"先下载"提示）。
+
 ## [2.7.53] - 2026-09-21
 
 引擎 2.7.53.0（V20/V21 均重建），**工具 450**（新增 `ManagePlcProtection`、`CompileDevice`），默认 lite 56 项不变。详见 [v2.7.53](docs/releases/v2.7.53.md)。2.7.52 部署后的真机结果：在线族过了 TLS，卡在 F-CPU V2.9 的安全设置——本版补工具。

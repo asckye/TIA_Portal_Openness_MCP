@@ -209,6 +209,22 @@ o("DumpDeviceAttributes", PASS, D52 + "：nameFilter 'protect|access|password|se
 o("GetDeviceItemTree", PASS, D52 + "：MCP_PLC 两层树；反射工具的 DeviceItem objectPath 用 'MCP_PLC'（不是 'MCP_PLC/导轨_0/MCP_PLC'）")
 o("ManagePlcProtection CompileDevice", FIXED, "2.7.53 新增（" + D52 + " 暴露的缺口：F-CPU V2.9 访问级别 NoAccess 无密码、机密组态数据无密码，硬件编译 3 错拒绝下载）；部署后先 read → setAccessLevel FullAccessIncludingFailsafe → protectMasterSecret → CompileDevice 0 错")
 
+# ---- 2.7.53 deployment (2026-09-21): the online family runs end to end on the standard CPU MCP_STD + PLCSIM Advanced ----
+D53 = "2.7.53 真机"
+o("ManagePlcProtection", PASS, D53 + "：MCP_PLC / 新建 MCP_STD 都读到 NoAccess + WithoutPassword（TIA V21 新建默认）；setAccessLevel FullAccessIncludingFailsafe / FullAccess、protectMasterSecret 读回 WithPassword，readbackVerified 都 true")
+o("CompileDevice", PASS, D53 + "：MCP_PLC 与 MCP_STD 硬件编译 0 错 3 警（无保护级别、显示屏无密码、MCP_S120 未分配 IO 控制器），诊断树摊平")
+o("DownloadToPlc", PASS, D53 + "：MCP_PLC（F-CPU）被 TIA 拒 'Loading or overloading fail-safe data in Openness is not permitted'（官方规则）；标准 CPU MCP_STD 到 PLCSIM Advanced 实例 Success ×2——首次 created 地址 192.168.0.1 + masterSecretPassword 应答 PlcMasterSecretPassword（实例变 CPU1515 / 192.168.0.3），第二次子网路由（Stop/Start 提示应答）")
+o("GoOnline", PASS, D53 + "：MCP_STD {ipAddress 192.168.0.3, pgPcInterface PLCSIM} Online（路由 PLCSIM -> 1 X1 -> 192.168.0.3 subnet MCP_PN），两次；" + D52 + " 的无正文异常 2.7.54 摊平内层链")
+o("GetOnlineState", PASS, D52 + "：Incompatible（未下载）；" + D53 + "：下载后 Online")
+o("CompareSoftwareToOnline", PASS, D53 + "：MCP_STD 在线比较 0 差异（6 文件夹 / 2→4 对象一致）")
+o("ReadPlcSimAdvancedTags", PASS, D48 + "：无程序时 0 标签；" + D53 + "：下载后列出 MCP_SimDB + 4 成员，按名读 4/4")
+o("WritePlcSimAdvancedTags", PASS, D53 + "：MCP_SimDB.Speed 12.5 写入 1/1、readBack 12.5")
+o("RunPlcSimAdvancedTestScenario", FIXED, D53 + "：default 模式 PASSED（6/6 步、2/2 断言，Running 跟随 Start）；singleStep 模式 '未找到请求的值 SingleStep'——8.0 API 只有 SingleStep_C/_CT/_P/_CP/…；2.7.54 先试 SingleStep_CP")
+o("UploadStationFromPlc", FIXED, D53 + "：{targetIpAddress 192.168.0.3, pgPcInterface PLCSIM} 被引擎拒 'pgPcInterface is ambiguous … PLCSIM (#1) ×3'（工程级提供者按模式重复列出同一网卡）；2.7.54 同名同号视为一块网卡")
+o("ReadPlcBlockFingerprints", TIA, D49 + "：1515F-2 PN V2.9 服务为 null；" + D53 + "：1515-2 PN V2.9 同样 FingerprintDataProvider unavailable（TIA 侧）")
+o("AddDeviceWithFallback ConnectDeviceNodesToProfinetSubnet GetDeviceIpAddress SearchHardwareCatalog", PASS, D53 + "：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3")
+o("WritePlcSclSourceFile ManagePlcExternalSources", PASS, D53 + "：SCL 写到桌面（Counter 是 SCL 保留字，改 Cycles）→ createFromFile → generateBlocks 生成 GlobalDB / FC / OB（SCL OB1 覆盖默认 Main）")
+
 def status_of(n):
     if n in O: return O[n]
     rs = runs.get(n)
@@ -222,7 +238,7 @@ by = collections.defaultdict(list)
 for n, x in tools.items(): by[x["domain"]].append(n)
 counts = collections.Counter(status_of(n)[0].split("（")[0] for n in tools)
 lines = ["# 真机台账（逐工具）", "", "[文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)", "",
-    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置（访问级别 / 机密组态数据密码）挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
+    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
     "", "| 状态 | 含义 | 数量 |", "|---|---|---:|"]
 for k, m in ((PASS, "该工具至少一次真实调用成功（读回验证）"), (MANUAL, "会话级工具，单独手工跑通"), (EARLY, "今天没跑，但 2.7.39–2.7.45 的真机会话跑过"), (FIXED, "真机暴露了缺陷，源码已修，部署后要重跑"), (TIA, "调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷）"), (PARAM, "只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入）"), (REALCPU, "刻意不跑"), (SKIP, "未跑")):
     lines.append(f"| {k} | {m} | {counts.get(k, 0)} |")

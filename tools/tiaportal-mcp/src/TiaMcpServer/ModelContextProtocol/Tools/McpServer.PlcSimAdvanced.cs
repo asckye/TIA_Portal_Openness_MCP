@@ -300,7 +300,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (scenario.Mode == "singleStep")
                     {
                         originalMode = Convert.ToString(data["stateBefore"]?["operatingMode"]);
-                        PlcSimAdvancedChannel.SetOperatingMode(api, instance, "SingleStep");
+                        data["operatingModeApplied"] = PlcSimAdvancedChannel.SetOperatingMode(api, instance, "singleStep");   // 2.7.54: SingleStep_CP on API 4+
                     }
                     foreach (var step in scenario.Steps)
                     {

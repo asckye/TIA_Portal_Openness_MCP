@@ -2,15 +2,15 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置（访问级别 / 机密组态数据密码）挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
-| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 323 |
+| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 328 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
-| ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 25 |
-| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 5 |
-| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 31 |
+| ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 24 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 2 |
+| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 30 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 60 |
 | 🚫 不运行 | 刻意不跑 | 0 |
 | ❌ 未跑 | 未跑 | 0 |
@@ -198,19 +198,19 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `AddDevice` | ✅ 通过 | 1515F-2 PN V2.9、TP700 Comfort V17、S120 V5.2、MTP700 Unified /21.0.0.0 通过；/20.0.0.0 现被守卫拒绝（crash ⑧） |
-| `AddDeviceWithFallback` | ✅ 通过 |  |
+| `AddDeviceWithFallback` | ✅ 通过 | 2.7.53 真机：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3 |
 | `AddGsdDeviceWithProbe` | ✅ 通过 |  |
 | `AddHardwareCatalogDeviceWithProbe` | ✅ 通过 | 2.7.47 重跑通过：MTP700 Unified 探针插入成功（41 s） |
 | `AttachDeviceNodeToSubnet` | ✅ 通过 |  |
 | `BuildDeviceAmlDocument` | ✅ 通过 |  |
-| `CompileDevice` | 🔁 已修待重跑 | 2.7.53 新增（2.7.52 真机 暴露的缺口：F-CPU V2.9 访问级别 NoAccess 无密码、机密组态数据无密码，硬件编译 3 错拒绝下载）；部署后先 read → setAccessLevel FullAccessIncludingFailsafe → protectMasterSecret → CompileDevice 0 错 |
-| `ConnectDeviceNodesToProfinetSubnet` | ✅ 通过 | 2.7.47 重跑通过：MCP_PLC ↔ MCP_TP700 接到 MCP_PN |
+| `CompileDevice` | ✅ 通过 | 2.7.53 真机：MCP_PLC 与 MCP_STD 硬件编译 0 错 3 警（无保护级别、显示屏无密码、MCP_S120 未分配 IO 控制器），诊断树摊平 |
+| `ConnectDeviceNodesToProfinetSubnet` | ✅ 通过 | 2.7.53 真机：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3 |
 | `DumpDeviceAttributes` | ✅ 通过 | 2.7.52 真机：nameFilter 'protect/access/password/secret/certificate' 只见 PlcCommunicationCertificate / Protection* / DisplayProtection——访问级别与主密钥不在属性表里 |
 | `EnsureSubnet` | ✅ 通过 |  |
 | `ExchangeSystemDiagnosticsSettings` | ✅ 通过 | 2.7.47 重跑通过：.dat 导出 407 字节 + import 预览 |
 | `ExportDeviceAml` | ✅ 通过 |  |
 | `GetDeviceInfo` | ✅ 通过 |  |
-| `GetDeviceIpAddress` | ✅ 通过 |  |
+| `GetDeviceIpAddress` | ✅ 通过 | 2.7.53 真机：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3 |
 | `GetDeviceItemInfo` | ✅ 通过 |  |
 | `GetDeviceItemIoAddresses` | ✅ 通过 |  |
 | `GetDeviceItemNetworkInfo` | ✅ 通过 |  |
@@ -240,7 +240,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManageIoSystem` | ✅ 通过 |  |
 | `ManageNetworkDomain` | ✅ 通过 |  |
 | `ManageOnlineDriveFunctions` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `ManagePlcProtection` | 🔁 已修待重跑 | 2.7.53 新增（2.7.52 真机 暴露的缺口：F-CPU V2.9 访问级别 NoAccess 无密码、机密组态数据无密码，硬件编译 3 错拒绝下载）；部署后先 read → setAccessLevel FullAccessIncludingFailsafe → protectMasterSecret → CompileDevice 0 错 |
+| `ManagePlcProtection` | ✅ 通过 | 2.7.53 真机：MCP_PLC / 新建 MCP_STD 都读到 NoAccess + WithoutPassword（TIA V21 新建默认）；setAccessLevel FullAccessIncludingFailsafe / FullAccess、protectMasterSecret 读回 WithPassword，readbackVerified 都 true |
 | `ManagePortInterconnection` | ✅ 通过 | 2.7.47 重跑通过：面板端口经 Items 回退解析，PLC 端口 1 ↔ TP700 端口 1 connect 成功；deleteItem / deleteDevice 通过 |
 | `ManageStartdriveParameter` | ✅ 通过 |  |
 | `ManageTechnologyExtensions` | ✅ 通过 |  |
@@ -262,7 +262,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ReadNetworkDomains` | ✅ 通过 |  |
 | `ReadOnlineDriveParameters` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ReadTransferAreas` | ✅ 通过 |  |
-| `SearchHardwareCatalog` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
+| `SearchHardwareCatalog` | ✅ 通过 | 2.7.53 真机：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3 |
 | `SearchInstalledGsdDevices` | ✅ 通过 |  |
 | `SetCpuCommonSettings` | ✅ 通过 |  |
 | `SetDeviceItemAttribute` | ✅ 通过 |  |
@@ -354,21 +354,21 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CheckDownloadReadiness` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
-| `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线；2.7.52 真机：仍等下载后的在线；2.7.53 后重跑 |
+| `CompareSoftwareToOnline` | ✅ 通过 | 2.7.53 真机：MCP_STD 在线比较 0 差异（6 文件夹 / 2→4 对象一致） |
 | `DownloadPlcToFolder` | ⚠ 参数/前置条件 | targetForSoftware 须 CPU/PlcSimulationAdvanced |
-| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.51 真机：'连接到模块 MCP_PLC 失败'（TLS）；2.7.52 真机：过了 TLS，TIA 报 '硬件配置编译完成，但出现错误'——F-CPU V2.9 访问级别 NoAccess 无完全访问密码、机密组态数据无密码、通信证书建不了；2.7.53 新增 ManagePlcProtection / CompileDevice 后重跑 |
-| `GetOnlineState` | ✅ 通过 | 2.7.48 真机：Offline；2.7.52 真机：TLS 应答后 Incompatible（'online but firmware/config mismatch. Download required.'）——连接已建立 |
+| `DownloadToPlc` | ✅ 通过 | 2.7.53 真机：MCP_PLC（F-CPU）被 TIA 拒 'Loading or overloading fail-safe data in Openness is not permitted'（官方规则）；标准 CPU MCP_STD 到 PLCSIM Advanced 实例 Success ×2——首次 created 地址 192.168.0.1 + masterSecretPassword 应答 PlcMasterSecretPassword（实例变 CPU1515 / 192.168.0.3），第二次子网路由（Stop/Start 提示应答） |
+| `GetOnlineState` | ✅ 通过 | 2.7.52 真机：Incompatible（未下载）；2.7.53 真机：下载后 Online |
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GoOfflineAll` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `GoOnline` | 🔁 已修待重跑 | 2.7.51 真机：'The device is not trusted'；2.7.52 真机：meta.tlsVerification {plcName MCP_PLC, verificationInfo 'certificate not matching', NonVerified -> Trusted}，提示已应答、TIA 记住；GoOnline 仍抛无正文异常但 GetOnlineState=Incompatible（实例未下载过，预期）；2.7.53 补 ManagePlcProtection 后随下载重跑 |
+| `GoOnline` | ✅ 通过 | 2.7.53 真机：MCP_STD {ipAddress 192.168.0.3, pgPcInterface PLCSIM} Online（路由 PLCSIM -> 1 X1 -> 192.168.0.3 subnet MCP_PN），两次；2.7.52 真机 的无正文异常 2.7.54 摊平内层链 |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 | 2.7.48 真机：createSnapshot 原生返回 + exportSnapshot 2602 字节（离线；值不可独立核验） |
-| `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.48 真机：FingerprintDataProvider 在 1515F-2 PN V2.9（TIA V21）上 GetService 为 null（PlcSoftware 与 CPU 项都没有） |
+| `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.49 真机：1515F-2 PN V2.9 服务为 null；2.7.53 真机：1515-2 PN V2.9 同样 FingerprintDataProvider unavailable（TIA 侧） |
 | `ReadTransferRoutes` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
 | `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 找到实例；2.7.50 真机：重注册后 MAC 02-C0-A8-00-C8-00 'S7-1500 (PLCSIM)'；2.7.51 真机：Softbus 下在 'PLCSIM' 接口上看到 'S7-1500 CPU:192.168.0.1'（MAC FF-FF-C0-A8-00-01） |
 | `SetWatchTableModifyValue` | ✅ 通过 | 2.7.51 真机：%M0.0 行 appended（DisplayFormat 由 TIA 定为 Bool）、"MCP_Start" 行 updated（保留 %I0.0），readbackVerified 都 true，ManagePlcTableEntries read 核对 2 行；ModifyIntention 读回仍 false（TIA 不按 ModifyValue 推导，Openness 也写不了） |
 | `UploadDeviceParameters` | ⛔ TIA/环境拒绝 | 2.7.48 真机：ParameterUploadProvider 在 1515F 的 Device / 导轨 / CPU 项上都不可用（GetService 为 null） |
-| `UploadStationFromPlc` | ⛔ TIA/环境拒绝 | 2.7.50 真机：PcInterface.Addresses.Create(MAC) 被 TIA 拒 "'02-C0-A8-00-C8-00' does not specify a valid address"——ConfigurationAddressComposition.Create 只收 IP（官方页只用 IP），未下载过的 PLCSIM 实例 IP 为 0.0.0.0；2.7.51 拒绝信息明说；有 IP 后再跑 |
+| `UploadStationFromPlc` | 🔁 已修待重跑 | 2.7.53 真机：{targetIpAddress 192.168.0.3, pgPcInterface PLCSIM} 被引擎拒 'pgPcInterface is ambiguous … PLCSIM (#1) ×3'（工程级提供者按模式重复列出同一网卡）；2.7.54 同名同号视为一块网卡 |
 
 ## PLC-OpcUA（7）
 
@@ -439,7 +439,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManagePlcBlockProtection` | ✅ 通过 |  |
 | `ManagePlcBlockWriteProtection` | ✅ 通过 |  |
 | `ManagePlcDocuments` | ✅ 通过 |  |
-| `ManagePlcExternalSources` | ✅ 通过 |  |
+| `ManagePlcExternalSources` | ✅ 通过 | 2.7.53 真机：SCL 写到桌面（Counter 是 SCL 保留字，改 Cycles）→ createFromFile → generateBlocks 生成 GlobalDB / FC / OB（SCL OB1 覆盖默认 Main） |
 | `ManagePlcSoftwareUnit` | ✅ 通过 |  |
 | `ManagePlcSupervision` | ✅ 通过 |  |
 | `ManagePlcTableEntries` | ✅ 通过 | 2.7.50 真机：deleteTable 把根级 MCP_WT_1…MCP_WT_5 逐张删掉并读回缺席（dryRun 先报 0 行），GetPlcWatchTables 只剩 MCP_W/MCP_WT，工程已保存；read / createComment / deleteEntry 早期真机通过 |
@@ -460,7 +460,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `SetPlcUnitObjectAccess` | ⚠ 参数/前置条件 | 单元里没有块 |
 | `UpdatePlcProgram` | ✅ 通过 |  |
 | `UpgradeSivarcDefinitions` | ✅ 通过 |  |
-| `WritePlcSclSourceFile` | ✅ 通过 |  |
+| `WritePlcSclSourceFile` | ✅ 通过 | 2.7.53 真机：SCL 写到桌面（Counter 是 SCL 保留字，改 Cycles）→ createFromFile → generateBlocks 生成 GlobalDB / FC / OB（SCL OB1 覆盖默认 Main） |
 
 ## PLC-TechnologyObjects（8）
 
@@ -572,9 +572,9 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 |---|---|---|
 | `ManagePlcSimAdvancedInstance` | ✅ 通过 | 2.7.51 真机：powerOff → unregister → register CPU1500_Unspecified communicationInterface=Softbus：route=SimulationRuntimeManager.NetworkMode，TCPIPSingleAdapter → Softbus，实例读回 Softbus；powerOn 后 Stop、controllerIP 192.168.0.1（Softbus 下自带默认 IP，TCPIP 下曾是 0.0.0.0） |
 | `ReadPlcSimAdvancedInstances` | ✅ 通过 | 2.7.50 真机：memberFilter 列出实例成员；2.7.51 真机：api.networkMode=TCPIPSingleAdapter、managerMembers='SimulationRuntimeManager.NetworkMode {get;set}' |
-| `ReadPlcSimAdvancedTags` | ✅ 通过 | 2.7.48 真机：实例未下载程序时 0 标签（列表 / 按名读都如实报 0） |
-| `RunPlcSimAdvancedTestScenario` | ✅ 通过 | 2.7.49 真机：不存在的标签 / 失败场景现在 operationSuccess=false（实例无程序，读写内容待下载后） |
-| `WritePlcSimAdvancedTags` | ✅ 通过 | 2.7.49 真机：不存在的标签 / 失败场景现在 operationSuccess=false（实例无程序，读写内容待下载后） |
+| `ReadPlcSimAdvancedTags` | ✅ 通过 | 2.7.48 真机：无程序时 0 标签；2.7.53 真机：下载后列出 MCP_SimDB + 4 成员，按名读 4/4 |
+| `RunPlcSimAdvancedTestScenario` | 🔁 已修待重跑 | 2.7.53 真机：default 模式 PASSED（6/6 步、2/2 断言，Running 跟随 Start）；singleStep 模式 '未找到请求的值 SingleStep'——8.0 API 只有 SingleStep_C/_CT/_P/_CP/…；2.7.54 先试 SingleStep_CP |
+| `WritePlcSimAdvancedTags` | ✅ 通过 | 2.7.53 真机：MCP_SimDB.Speed 12.5 写入 1/1、readBack 12.5 |
 
 ## Validation（8）
 

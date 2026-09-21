@@ -43,6 +43,10 @@ namespace TiaMcpServer.Tests
             check(PlcSimAdvancedLogic.NetworkModeFor("tcpipsingleadapter", "Softbus") == "TCPIPSingleAdapter", "network mode: an ENetworkMode name is taken literally, case-insensitive");
             check(Fails(() => PlcSimAdvancedLogic.NetworkModeFor("None", "Softbus")) && Fails(() => PlcSimAdvancedLogic.NetworkModeFor("", "Softbus")), "[sentinel] None / empty cannot be mapped to a network mode");
 
+            // ---- 2.7.54 operating mode names (PLCSIM Advanced 4+: SingleStep_C / _CT / _P / _CP / ...; "SingleStep" alone no longer exists)
+            check(PlcSimAdvancedLogic.OperatingModeCandidates("singleStep").SequenceEqual(new[] { "SingleStep_CP", "SingleStep_C", "SingleStep" }), "operating mode: singleStep tries the cyclic+process step first, then the legacy name");
+            check(PlcSimAdvancedLogic.OperatingModeCandidates("default").SequenceEqual(new[] { "Default" }) && PlcSimAdvancedLogic.OperatingModeCandidates("TimespanSynchronized_CP").SequenceEqual(new[] { "TimespanSynchronized_CP" }), "operating mode: default and literal names pass through");
+
             // ---- value map / name list
             var map = PlcSimAdvancedLogic.ParseValueMap("{\"\\\"Start\\\"\": true, \"\\\"DB\\\".Speed\": 50}", "valuesJson");
             check(map.Count == 2 && map[0].Key == "\"Start\"" && map[1].Key == "\"DB\".Speed", "object form keeps quoted names");

@@ -51,13 +51,26 @@ namespace TiaMcpServer.Siemens
             if (picks.Count == 0) throw new PortalException(PortalErrorCode.NotFound, "No PG/PC interface available in this connection configuration.");
             if (string.IsNullOrWhiteSpace(pgPcInterface))
             {
-                if (picks.Count == 1) return picks[0];
-                throw new ArgumentException("pgPcInterface is required because several PG/PC interfaces exist: " + string.Join("; ", picks.Select(p => $"{p.Name} (#{p.Number})")));
+                var single = SameAdapter(picks);
+                if (single != null) return single;
+                throw new ArgumentException("pgPcInterface is required because several PG/PC interfaces exist: " + string.Join("; ", picks.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
             }
             var matches = picks.Where(p => string.Equals(p.Name, pgPcInterface, StringComparison.Ordinal) || (int.TryParse(pgPcInterface, out var n) && p.Number == n)).ToList();
             if (matches.Count == 1) return matches[0];
             if (matches.Count == 0) throw new PortalException(PortalErrorCode.NotFound, "PG/PC interface not found (exact name or number required): " + pgPcInterface);
-            throw new ArgumentException("pgPcInterface is ambiguous; use the interface number: " + string.Join("; ", matches.Select(p => $"{p.Name} (#{p.Number})")));
+            var same = SameAdapter(matches);
+            if (same != null) return same;
+            throw new ArgumentException("pgPcInterface is ambiguous; use the interface number: " + string.Join("; ", matches.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
+        }
+
+        // 2.7.54 (real machine, Softbus): the project-level StationUploadProvider configuration lists the same adapter once per
+        // connection mode ("PLCSIM (#1)" under PN/IE, PROFIBUS and MPI), so an exact name matched three picks and was refused as
+        // ambiguous. Picks that share name and number are one adapter; the PN/IE mode wins, otherwise the first.
+        private static PcInterfacePick? SameAdapter(List<PcInterfacePick> picks)
+        {
+            if (picks.Count == 0) return null;
+            if (picks.Select(p => p.Name + "#" + p.Number).Distinct(StringComparer.Ordinal).Count() != 1) return null;
+            return picks.FirstOrDefault(p => string.Equals(p.ModeName, "PN/IE", StringComparison.OrdinalIgnoreCase)) ?? picks[0];
         }
 
         // 在所选 PG/PC 接口的 TargetInterfaces.Addresses 中精确匹配目标地址。扫描后 TIA 才会填充可达目标。
