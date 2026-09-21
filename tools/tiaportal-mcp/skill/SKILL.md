@@ -1,6 +1,6 @@
 ---
 name: tiaportal-mcp
-description: Drive Siemens TIA Portal (博途) end-to-end through the TiaMcpServer MCP plugin. Use whenever the user mentions TIA Portal, 博途, STEP 7, WinCC, S7-1200/1500, PLC, HMI, SCL, LAD, STL, Openness, or asks to create/modify/compile/download a project. Always start by calling the `Bootstrap` tool — it returns environment status and the recommended next tool.
+description: Drive Siemens TIA Portal end-to-end through the TiaMcpServer MCP plugin. Use whenever the user mentions TIA Portal (also by its Chinese name Botu), STEP 7, WinCC, S7-1200/1500, PLC, HMI, SCL, LAD, STL, Openness, or asks to create/modify/compile/download a project. Always start by calling the `Bootstrap` tool — it returns environment status and the recommended next tool.
 ---
 
 # TIA Portal MCP — Single Skill
@@ -19,57 +19,57 @@ project, hardware, PLC, HMI, and online operations.
 4. Read-before-write loop                ← inspect, smallest change, compile, save
 ```
 
-**交付包内最短路径（仅读包内文件时）**  
-根目录 `README.zh-CN.md` → `TiaMcpConfigurator.exe` 配置连接（手动示例在 `docs/getting-started/cursor.example.json`）→ `scripts/checks/Validate-Bundle.ps1` 脱机校验 → 执行顺序见 `docs/guides/project-generation.md` 与 `templates/project-blueprints/full_plc_hmi_project.json`。
+**Shortest path inside the delivery (when you can only read the package files)**  
+`README.md` at the root → `TiaMcpConfigurator.exe` to configure the connection (a hand-written example is `docs/getting-started/cursor.example.json`) → `scripts/checks/Validate-Bundle.ps1` for the offline check → the execution order is in `docs/guides/project-generation.md` and `templates/project-blueprints/full_plc_hmi_project.json`.
 
 Never guess paths. Never invent SCL/LAD XML. If a tool exists for the task, use
 it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
 `InvokeObject`/`InvokeService`.
 
-## 0.1 弱模型 / 新手：你一辈子只需要这 15 个工具（其余的先忽略）
+## 0.1 Small models / newcomers: these 15 tools are all you ever need (ignore the rest at first)
 
-This server contains 298 tools, with 52 exposed by default. **You do NOT need most of them.** A small or
+This server contains 453 tools, with 59 exposed by default (the lite profile). **You do NOT need most of them.** A small or
 non-expert model should pick **only** from this whitelist and ignore everything
 else unless one of these tools' output explicitly tells you to call another:
 
-| 想做的事 | 用这个，别的别碰 |
+| What you want | Use this and nothing else |
 |---|---|
-| 开局/看环境 | `Bootstrap` → 然后照它返回的 `recommendedNextTool` 做 |
-| 连接 TIA | `Connect`（新工程）或 `AttachToOpenProject`（已打开的工程） |
-| 看工程里有什么 | `GetProjectTree`（拿真实 `softwarePath`，如 `PLC_1`），细看用 `GetSoftwareTree` / `GetBlocks` |
-| **做一个完整项目** | `ScaffoldProject`（一次调用搞定 PLC+HMI，见 §0.5） |
-| 加一段 PLC 逻辑/变量/DB/UDT | `PlcBuildAndImport`（先 `dryRun=true`，见 §6.2/§10） |
-| 复杂 SCL（带 FOR/CASE/表达式） | `ImportPlcExternalSource` → `GenerateBlocksFromExternalSource`（§14） |
-| 编译验证 | `CompileAndDiagnosePlc`（必须 `errorCount=0`） |
-| 存盘/收尾 | `SaveProject` → `Disconnect` |
-| 环境报错/装不上 | **`Doctor`** — 一次性体检(TIA装没装/Openness组/连接状态)，每项给出修复办法；`fix=true`(默认)会自动把你加进 Openness 组(可能弹 UAC) |
+| Start / look at the environment | `Bootstrap` → then follow the `recommendedNextTool` it returns |
+| Connect to TIA | `Connect` (new project) or `AttachToOpenProject` (a project already open in TIA) |
+| See what is in the project | `GetProjectTree` (the real `softwarePath`, e.g. `PLC_1`); details with `GetSoftwareTree` / `GetBlocks` |
+| **Build a complete project** | `ScaffoldProject` (PLC + HMI in one call, see §0.5) |
+| Add PLC logic / tags / a DB / a UDT | `PlcBuildAndImport` (`dryRun=true` first, see §6.2 / §10) |
+| Complex SCL (FOR / CASE / expressions) | `ImportPlcExternalSource` → `GenerateBlocksFromExternalSource` (§14) |
+| Compile and verify | `CompileAndDiagnosePlc` (must report `errorCount=0`) |
+| Save / finish | `SaveProject` → `Disconnect` |
+| Environment errors / nothing connects | **`Doctor`** - one-shot check-up (TIA installed? Openness group? connection state), each finding with its fix; `fix=true` (default) adds you to the Openness group (may show a UAC prompt) |
 
-**铁律(弱模型尤其要守):** ① 永远先 `Bootstrap`(或装不上时先 `Doctor`)，照
-`recommendedNextTool` 走。② 路径只从 `GetProjectTree` 拿，绝不自己编。③ 写操作前先
-`dryRun=true`。④ 收尾必须 `CompileAndDiagnosePlc`(0 错) + `SaveProject`。⑤ 拿不准
-参数名时，照本表/§8 的"精确参数名"抄，不要猜。HMI 美化看 §12，库复用看 §15。
+**Iron rules (small models especially):** (1) always `Bootstrap` first (or `Doctor` when nothing works) and follow
+`recommendedNextTool`. (2) Paths come only from `GetProjectTree`, never invented. (3) `dryRun=true` before every
+write. (4) Finish with `CompileAndDiagnosePlc` (0 errors) + `SaveProject`. (5) When unsure about a parameter name,
+copy it from this table or the "exact parameter names" in §8 - do not guess. HMI styling is §12, library reuse §15.
 
-**先预检、再调用（2.7.57 起）：** 每个列出的工具描述末尾都带一条 `Example: {...}`；调用不熟悉的工具之前、以及**用户纠正之后**，先 `PreflightToolCall(name, argumentsJson)`——它按真实签名检查参数（缺参 / 未知或大小写错误的参数名 / 类型不对 / 不在文档备选值里）、说明这次调用会做什么（dryRun / confirm 标志、注意事项）和会话前提（是否已连接、是否已绑工程），**不执行任何东西**；按报告改好计划后再调一次，不要对着 TIA 反复试错。`FindTools` 的结果与 `CallTool` 的缺参拒绝也带同一条示例。**2.7.58 起引擎自动做这件事**：每个工具的 `inputSchema` 带 `enum` / `default` / `examples`（有文档备选值的参数）；任何失败响应带 `meta.preflight`（缺什么 / 参数名 / 该用的值 / 前提 / 示例 / 下一步）——先读它再调，不要试变体；多步任务先 `GetRecipe(topic)`（connect-project、plc-scl-block、plc-s7dcl-import、plc-builder、watch-table、cpu-protection、download-plcsim、plcsim-test、hardware-device、hmi-unified-screen、export-import-block、large-response）按步照抄。
+**Preflight, then call (since 2.7.57):** every listed tool description ends with an `Example: {...}`; before an unfamiliar tool, and **after any correction from the user**, run `PreflightToolCall(name, argumentsJson)` - it checks the arguments against the real signature (missing / unknown or wrongly cased names / wrong types / values outside the documented alternatives), explains what the call would do (dryRun / confirm flags, precautions) and the session prerequisites (connected? project bound?), and **executes nothing**; fix the plan from that report and call once instead of trial-and-error against TIA. `FindTools` results and `CallTool` missing-argument refusals carry the same example. **Since 2.7.58 the engine does this automatically**: every tool's `inputSchema` carries `enum` / `default` / `examples` for parameters with documented alternatives, and every failed response carries `meta.preflight` (what is missing / the parameter names / the values to use / prerequisites / example / next step) - read it before the next call instead of trying variants; for multi-step jobs start with `GetRecipe(topic)` (connect-project, plc-scl-block, plc-s7dcl-import, plc-builder, watch-table, cpu-protection, download-plcsim, plcsim-test, hardware-device, hmi-unified-screen, export-import-block, large-response) and follow it step by step.
 
-**降门槛三件套(已内置，弱模型友好):**
-- **Lite 工具档位** — 默认直接暴露 52 个常用入口，其余经 `FindTools` 查找、`CallTool` 调用。
-  可显式设置 `TIA_MCP_PROFILE=lite`；全量暴露使用 `--profile full` 或 `TIA_MCP_PROFILE=full`。
-  完整静态清单在 `manifest/tools-list.json`，实际运行列表以 `tools/list` 为准。
-- **参数容错** — `softwarePath` 现在容忍多余空格/大小写，单 PLC 工程或唯一匹配时
-  传"PLC"也能自动认到 `PLC_1`；找不到时报错会**列出可用 PLC 路径**。少数易错工具
-  接受别名(`tableJson`↔`tagTableJson`、`screenJson`↔`designJson`、
-  `blockJson`↔`fcBlockJson`、`name`↔`projectName`)。即便如此，**优先传准确值**。
-- **一键自检自修** — 见上表 `Doctor`。
+**Three built-in helpers for small models:**
+- **Lite tool profile** - 59 common entry points are exposed by default; the rest are found with `FindTools` and called with `CallTool`.
+  `TIA_MCP_PROFILE=lite` sets it explicitly; `--profile full` or `TIA_MCP_PROFILE=full` exposes everything.
+  The full static list is `manifest/tools-list.json`; the live list is whatever `tools/list` returns.
+- **Tolerant parameters** - `softwarePath` tolerates extra spaces and case; in a single-PLC project or with a unique match
+  "PLC" resolves to `PLC_1`; when nothing matches the error **lists the available PLC paths**. A few error-prone tools
+  accept aliases (`tableJson`↔`tagTableJson`, `screenJson`↔`designJson`,
+  `blockJson`↔`fcBlockJson`, `name`↔`projectName`). Even so, **prefer the exact value**.
+- **One-shot self-check and repair** - `Doctor` in the table above.
 
 ## 0.5 Fastest path — generate a whole project in ONE call (`ScaffoldProject`)
 
-When the user asks to **create/generate a complete project** (PLC + HMI, "做一个启停/电机/控制项目"), do **not** hand-orchestrate the 20-step runbook. Call **`ScaffoldProject`** once with a single JSON `spec`; it auto-connects, creates the project, adds PLC (+optional Unified HMI) hardware, builds UDTs/DBs/tag tables, imports SCL + LAD blocks, compiles, sets up the HMI connection/screens/tags, and saves — returning a per-step report with compile error counts. This is one model turn instead of twenty, and far less error-prone.
+When the user asks to **create/generate a complete project** (PLC + HMI, e.g. "build a start/stop or motor control project"), do **not** hand-orchestrate the 20-step runbook. Call **`ScaffoldProject`** once with a single JSON `spec`; it auto-connects, creates the project, adds PLC (+optional Unified HMI) hardware, builds UDTs/DBs/tag tables, imports SCL + LAD blocks, compiles, sets up the HMI connection/screens/tags, and saves — returning a per-step report with compile error counts. This is one model turn instead of twenty, and far less error-prone.
 
 **Ready-made specs** (copy, then replace `__BUNDLE__` with the bundle root absolute path; all blocks/HMI are verified to compile with 0 errors):
 
 ```
-templates/project-blueprints/scaffold_spec_start_stop.json   启停控制 (PLC+HMI)
-templates/project-blueprints/scaffold_spec_motor.json        电机控制 (启停闭锁 + 速度标定 + HMI)
+templates/project-blueprints/scaffold_spec_start_stop.json   start/stop control (PLC+HMI)
+templates/project-blueprints/scaffold_spec_motor.json        motor control (start/stop interlock + speed scaling + HMI)
 ```
 
 Minimal spec (everything else has defaults — only `projectName` is required):
@@ -83,7 +83,7 @@ Minimal spec (everything else has defaults — only `projectName` is required):
   "tagTable": [ { /* kind=tagtable json */ } ],
   "sclSourceFiles": [ "C:\\bundle\\templates\\plc\\scl-examples\\FB_BasicLatch.scl" ],
   "ladDocs": [ { "importPath": "C:\\bundle\\...\\skill\\lad-cookbook", "name": "MCPVerify_FC_LAD" } ],
-  "hmiScreens": [ { "screenName": "主画面", "width": 800, "height": 480, "designJson": { /* §6.3 schema */ } } ],
+  "hmiScreens": [ { "screenName": "MainScreen", "width": 800, "height": 480, "designJson": { /* §6.3 schema */ } } ],
   "hmiTags": [ { "tagTableName": "Default tag table", "tagName": "Tag_Run", "hmiDataType": "Bool", "address": "%DB100.DBX0.0" } ],
   "compile": true, "save": true }
 ```
@@ -183,13 +183,13 @@ message event (for spec-compliant clients). Otherwise the response is plain JSON
 calls may include it for client-side correlation. State is **not** isolated
 across sessions because TIA Portal itself is process-wide.
 
-### 调用方式怎么选（避免踩坑）
+### Which way to call it (avoid the traps)
 
-| 场景 | 推荐 |
+| Scenario | Recommendation |
 |------|------|
-| **Cursor / Claude Desktop / VS Code（MCP stdio）** | `mcpServers.command` 指向包内 `TiaMcpServer.exe`，`args: []`。由客户端完成 MCP 握手，直接调 `tools/call`。 |
-| **健康检查 / 是否已启动** | `GET /mcp/health`（仅探活，不替代 MCP 协议） |
-| **HTTP 自写脚本** | 需实现 **完整** MCP JSON-RPC 会话（如 `initialize`、部分场景下 SSE / `Mcp-Session-Id`），**不要**对 `POST /mcp` 只发单条裸 `tools/call` 就期望返回，否则易长时间阻塞。 |
+| **Cursor / Claude Desktop / VS Code (MCP stdio)** | `mcpServers.command` points at the `TiaMcpServer.exe` inside the package, `args: []`. The client performs the MCP handshake; call `tools/call` directly. |
+| **Health check / is it running** | `GET /mcp/health` (liveness only, not a substitute for the MCP protocol) |
+| **Your own HTTP script** | Implement the **complete** MCP JSON-RPC session (`initialize`, and in some setups SSE / `Mcp-Session-Id`); **do not** post a single bare `tools/call` to `POST /mcp` and expect an answer - it tends to block for a long time. |
 
 ## 3. Read-before-write workflow (the only one that matters)
 
@@ -247,7 +247,7 @@ Full list (this bundle): `docs/troubleshooting/openness-limitations.md` (bundle 
 
 - Reading stdio responses: cache the pending `ReadLineAsync` task between
   iterations. Calling `ReadLineAsync` twice on the same stream before the
-  first one completes throws `"流正在由其上的前一操作使用"`.
+  first one completes throws `"The stream is currently in use by a previous operation on the stream"` (localized on non-English Windows).
 
   ```powershell
   if ($null -eq $script:pending) { $script:pending = $proc.StandardOutput.ReadLineAsync() }
@@ -382,7 +382,7 @@ Bootstrap → Connect → CreateProject(<dir>, <name>_<timestamp>)
 
 ### Build a *complete* example project (not a 2-tag toy)
 
-When the user asks for a "demo / 示例 / example project", the minimal recipe above
+When the user asks for a "demo / example project", the minimal recipe above
 produces something that looks empty. A good example **must** include, at minimum:
 
 - **PLC:** ≥1 UDT (e.g. `UDT_Motor`), a global DB instanced from it, a tag table
@@ -481,18 +481,18 @@ GetOnlineState / CheckDownloadReadiness       ← read-only diagnostics
 Disconnect
 ```
 
-### Real-write on a Chinese-named device (verified 2026-05-11 against `安全PLC`)
+### Real-write on a device with a non-ASCII (Chinese) name (verified 2026-05-11)
 
 ```
 Connect
-GetProject                                     → "江夏测试项目V21-260511"
-AttachToOpenProject(projectName="江夏测试项目V21-260511")
-GetProjectTree                                → discover "PlcSoftware: 安全PLC"
-PlcBuildAndImport(softwarePath="安全PLC", kind="tagtable", json=…, dryRun=false) → 10s, ok
-PlcBuildAndImport(softwarePath="安全PLC", kind="globaldb", json=…, dryRun=false) → 5s, ok
-PlcBuildAndImport(softwarePath="安全PLC", kind="fc",       json=…, dryRun=false) → 5s, ok
-GetBlocks(softwarePath="安全PLC", namePattern="MCPVerify_*") → confirms imported blocks
-CompileSoftware(softwarePath="安全PLC")        → 18s, errorCount=0 (warnings ok)
+GetProject                                     → "TestProject-V21-260511"
+AttachToOpenProject(projectName="TestProject-V21-260511")
+GetProjectTree                                → discover "PlcSoftware: SafetyPLC" (the real device carries a Chinese name)
+PlcBuildAndImport(softwarePath="SafetyPLC", kind="tagtable", json=…, dryRun=false) → 10s, ok
+PlcBuildAndImport(softwarePath="SafetyPLC", kind="globaldb", json=…, dryRun=false) → 5s, ok
+PlcBuildAndImport(softwarePath="SafetyPLC", kind="fc",       json=…, dryRun=false) → 5s, ok
+GetBlocks(softwarePath="SafetyPLC", namePattern="MCPVerify_*") → confirms imported blocks
+CompileSoftware(softwarePath="SafetyPLC")        → 18s, errorCount=0 (warnings ok)
 CheckDownloadReadiness / GetOnlineState        → ready=true / state=Offline
 SaveProject → Disconnect
 ```
@@ -526,7 +526,7 @@ $resp = Send-Request 'tools/call' @{ name='PlcBuildAndImport'; arguments=@{
 |---|---|---|
 | Any contact / coil / SR / compare / Move / math ladder | **S7DCL text** (`.s7dcl` + `.s7res`), import via `ImportBlocksFromDocuments` (documents path) | Concise, LLM-writable, round-trips, no UId/wire bookkeeping. The only practical way to author general ladder. |
 | A network that is purely *call one FC with parameters* | `ComposePlcLadFcBlockXml` / `BuildFlgNetCallXml` tool | The single supported XML builder — it **only** does FC-call networks |
-| General ladder as hand-written FlgNet XML | **avoid** | Brittle (decimal-vs-hex `UId`, manual wire graph, entity escaping). This is the usual cause of "梯形图报错". |
+| General ladder as hand-written FlgNet XML | **avoid** | Brittle (decimal-vs-hex `UId`, manual wire graph, entity escaping). This is the usual cause of "ladder import errors". |
 
 There is **no MCP tool that builds contact/coil/compare FlgNet XML** (`LadNetworkBuilder` is not wired up). So for normal ladder, **write `.s7dcl`** — do not hand-roll FlgNet XML.
 
@@ -538,10 +538,10 @@ Author two paired files, **both UTF-8 *with* BOM**:
 
 Verified references — copy these, change names + logic:
 ```
-skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl    + .s7res  (FC: 串联/并联/SR/比较/Move/Add)
-skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl + .s7res  (FB: 定时器放 Static)
-skill/lad-cookbook/MCPVerify_Mixed_LADSCL.s7dcl + .s7res  (FB: LAD+SCL 混编 — 互锁/比较+定时/SCL算术/边沿,
-                                                          全部 import-verified 形式; 2026-06-11 编译0错)
+skill/lad-cookbook/MCPVerify_FC_LAD.s7dcl    + .s7res  (FC: series / parallel / SR / compare / Move / Add)
+skill/lad-cookbook/MCPVerify_FB_LAD_v3.s7dcl + .s7res  (FB: timers in Static)
+skill/lad-cookbook/MCPVerify_Mixed_LADSCL.s7dcl + .s7res  (FB: mixed LAD+SCL - interlock / compare + timer / SCL arithmetic / edges,
+                                                          all in the import-verified form; compiled with 0 errors 2026-06-11)
 ```
 
 Grammar (distilled from the verified sample):
@@ -588,19 +588,19 @@ Element vocabulary: `Contact`/`Coil`/`S_Coil`/`R_Coil`, parallel branches joined
 `wire#wN` label, `GT_Contact`/`LT_Contact`/… + `{ S7_Templates := "SrcType := Int" }`,
 `Move( in:=, out1=> )`, `Add`/`Sub`/`Mul`/`Div( in1:=, in2:=, out=> )`. `.s7res` `id:`
 values must match every `MLC_*` referenced in `.s7dcl`. For instructions not shown here
-(常闭/negated contact, edges, timers, `Calc`…), **export a real block that uses them with
+(negated contact, edges, timers, `Calc`...), **export a real block that uses them with
 `ExportBlocksAsDocuments` and copy the exact `.s7dcl` syntax** — BUT beware: **the export form of
 several instructions does NOT re-import** (export grammar ≠ import grammar). Verified 2026-06-11:
 `Gt`/`Lt`/`Ne`/`Eq{ SrcType }( IN1, IN2 )`, `PBox(...)`, and `Move{ Card:=1; DisableENO:=TRUE }( IN, OUT1 )`
 (all from real-block *exports*) **fail `ImportFromDocuments`** with a generic "Failed importing".
 The **import-verified** forms are below.
 
-**Real-block verified vocabulary — IMPORT forms** (江夏5T车, hand-authored blocks, compile 0 errors,
+**Real-block verified vocabulary - IMPORT forms** (a real 5-t crane project, hand-authored blocks, compile 0 errors,
 2026-06-11). ⚠️ author the import form (left), never the export form (right):
 
 | Need | S7DCL **import** form (author this) | Export form (do NOT author) |
 |---|---|---|
-| 常开 / 常闭 contact | `Contact( #x )` / `I_Contact( #x )` | — |
+| NO / NC contact | `Contact( #x )` / `I_Contact( #x )` | — |
 | Negate power flow | `Not()` | — |
 | Coil / Set / Reset | `Coil( … )` / `S_Coil( … )` / `R_Coil( … )` | — |
 | Compare | `GT_Contact`/`LT_Contact`/`EQ_Contact`/`NE_Contact``{ SrcType := DInt }( in1 := …, in2 := … )` | `Gt`/`Lt`/`Eq`/`Ne{ … }( IN1, IN2 )` ✗ |
@@ -617,7 +617,7 @@ The **import-verified** forms are below.
 that point) + join *in* (`… END_RUNG wire#wN` = OR back into junction wN).
 
 **Titles must be `MLC_*` refs (in `.s7res`) or omitted** — inline literal titles
-(`S7_NetworkTitle := "中文"`) **fail on import**; strip or convert to `MLC_*`.
+(`S7_NetworkTitle := "..."` with non-ASCII text) **fail on import**; strip or convert to `MLC_*`.
 
 **Mixed LAD+SCL (verified V21):** a block with `S7_PreferredLanguage := "LAD"` can interleave
 `{ S7_Language := "SCL" } NETWORK <scl statements> END_NETWORK` with LAD networks. A pure-SCL block
@@ -627,7 +627,7 @@ cannot hold LAD networks — author in LAD when you need the mix. See cookbook
 **Per-network LAD/SCL judgment** — author **LAD** for interlock / limit / brake-timer / workstep-trigger
 / indicator logic (electricians read power-flow); keep **SCL** for arithmetic/scaling, multi-param
 FC/FB calls, state machines, comms, complex condition aggregation. **Do not force LAD.** (Validated on
-江夏5T车: 02/03/04/09 + A3_2/3/5 reauthored mixed, 0 errors; A0_1/A4_1/comms kept SCL.)
+the 5-t crane project: 02/03/04/09 + A3_2/3/5 reauthored mixed, 0 errors; A0_1/A4_1/comms kept SCL.)
 
 Import (verified MCP workflow, 2026-06-11):
 ```
@@ -674,31 +674,31 @@ It exercises:
 Verified `Part Name` registry (more exist; these are the ones live-tested):
 
 ```
-Contact          常开触点 (add <Negated Name="operand"/> for 常闭)
-Coil / SCoil / RCoil   线圈 / 置位 / 复位
-O                并联 OR-box (TemplateValue Name="Card" = inputs count)
-PBox / NBox      上升沿 / 下降沿
-Gt / Lt / Eq / Ne / Ge / Le   比较 (TemplateValue SrcType=Int|DInt|Real|Word|...)
-Add / Sub / Mul / Div         算术 (SrcType + Card templates)
-Move             传送 (Card=1 normally)
-TON / TOF / TP   IEC 定时器 (require <Instance Scope="LocalVariable|GlobalVariable" UId="…"><Component Name="..."/></Instance>; only inside FB or with explicit IDB)
-Calc             表达式块 (<Equation>...</Equation> + Card + SrcType)
-Serialize / Deserialize / SCATTER / GATHER   字节级转换
+Contact          NO contact (add <Negated Name="operand"/> for NC)
+Coil / SCoil / RCoil   coil / set / reset
+O                parallel OR-box (TemplateValue Name="Card" = inputs count)
+PBox / NBox      rising / falling edge
+Gt / Lt / Eq / Ne / Ge / Le   compare (TemplateValue SrcType=Int|DInt|Real|Word|...)
+Add / Sub / Mul / Div         arithmetic (SrcType + Card templates)
+Move             move (Card=1 normally)
+TON / TOF / TP   IEC timers (require <Instance Scope="LocalVariable|GlobalVariable" UId="…"><Component Name="..."/></Instance>; only inside FB or with explicit IDB)
+Calc             expression box (<Equation>...</Equation> + Card + SrcType)
+Serialize / Deserialize / SCATTER / GATHER   byte-level conversion
 ```
 
 Connection reference (`Wires` rules):
 
 ```
 <Wire UId="…">
-  <Powerrail/>                左端母线（能流入口）
-  <NameCon UId="P" Name="…"/> 接到 Part P 的命名引脚
-  <NameCon UId="P2" Name="…"/> 多个 NameCon = 并联同时驱动多个 Part
+  <Powerrail/>                left power rail (power-flow entry)
+  <NameCon UId="P" Name="..."/> connects to the named pin of Part P
+  <NameCon UId="P2" Name="..."/> several NameCon = parallel, drives several Parts at once
 </Wire>
 
 <Wire><IdentCon UId="V"/><NameCon UId="P" Name="operand"/></Wire>
-                                     变量/字面量 V 接到 P 的 operand/in/...
+                                     variable / literal V wired to operand/in/... of P
 <Wire><NameCon UId="P1" Name="out"/><NameCon UId="P2" Name="in"/></Wire>
-                                     P1.out 串联到 P2.in
+                                     P1.out in series to P2.in
 ```
 
 ### LAD pitfalls (these all bit me — read once, save hours)
@@ -706,10 +706,10 @@ Connection reference (`Wires` rules):
 1. **`UId` inside `<FlgNet>` MUST be decimal `xs:int`**, NOT hex. Block-level
    `ID` attributes ARE hex strings (`"A"`, `"B"`, `"10"`, `"1A"`...) and they
    live in a separate namespace. Mixing them gives the cryptic Simatic ML
-   error: `UId 属性无效 - 类型 …XMLSchema:int 的值 "2A" 无效`.
+   error: `The UId attribute is invalid - the value "2A" is invalid for the type ...XMLSchema:int` (localized on Chinese TIA).
 2. **Strip every `<!-- -->` XML comment** before import — Openness rejects them.
 3. **Escape `&` `<` `>`** in any `<Text>`/comment — TIA reports
-   `分析 EntityName 时出错。 第 N`.
+   `An error occurred while parsing EntityName. Line N` (localized on Chinese TIA).
 4. The `ProgrammingLanguage` element appears **twice**: once at block level
    (`<SW.Blocks.FC>/AttributeList/ProgrammingLanguage>LAD`) and once per
    `CompileUnit` (`AttributeList/ProgrammingLanguage>LAD`). Mixing SCL and LAD
@@ -761,7 +761,7 @@ DSL. Verified ops: `assignment`, `if`, `else`, `endif`, `line`, `token`,
   name** only — NOT expressions like `Mode = 1`, `Setpoint - Actual`,
   `Disable OR FaultLatch`, `ABS(x)`, or the literals `TRUE`/`FALSE`.
   **The builder now hard-errors at build/`dryRun`** on such input (e.g.
-  `SCL 局部符号非法："RawMax <> RawMin"`) instead of silently emitting a
+  `invalid SCL local symbol: "RawMax <> RawMin"`) instead of silently emitting a
   variable named after the whole expression — which used to slip through
   `dryRun` and only blow up at TIA compile as `Tag #"…" not defined`.
 - For multi-variable conditions, fall back to `op:"line"` (free-form token
@@ -775,7 +775,7 @@ DSL. Verified ops: `assignment`, `if`, `else`, `endif`, `line`, `token`,
 - `String`/`WString` outputs may compile-error in some safety standard groups;
   test with `dryRun=true` first.
 
-## 11. LAD v2 — extended instructions (verified 2026-05-11 against `安全PLC`, errorCount=0)
+## 11. LAD v2 - extended instructions (verified 2026-05-11 against the safety PLC, errorCount=0)
 
 A second cookbook FC adds 10 more instructions on top of §9. Imports cleanly
 and compiles with errorCount=0 on Safety PLC standard side:
@@ -806,12 +806,12 @@ the FC encodes the v2 instruction sweep (8 networks).
 
 ### LAD v3 — timers **must not** live in FC `Temp` on F-CPU; use FB `Static` or DB
 
-**Rule (F-CPU / 安全 PLC):** `TON` / `TOF` / `TP` **IEC timer instances** must
+**Rule (F-CPU / safety PLC):** `TON` / `TOF` / `TP` **IEC timer instances** must
 **not** be declared in an **FC** `Temp` section (not allowed → compile errors).
 Valid options: **(1)** `TON_TIME` in **`FB` → `Static`** (with `SetPoint` on the
 static member when the export shows it — see `Speed_Ctrl.xml`), **(2)** timer
 in a **global DB** and `Instance Scope="GlobalVariable"` in LAD (see
-`07-操作选择.xml`), **(3)** author in TIA and `ExportBlock`.
+`07-OperationSelect.xml`, a block exported from the real project), **(3)** author in TIA and `ExportBlock`.
 
 **Repo layout:**
 
@@ -825,7 +825,7 @@ Stage both XML files to a temp folder, import **FC then FB** with
 `CompileSoftware` until `errorCount=0`.
 
 **`PBox` wiring:** same operand for contact and `bit` needs **two** `Access`
-entries with **different** `UId`s (two `IdentCon`s) — see `07-操作选择.xml` in a
+entries with **different** `UId`s (two `IdentCon`s) — see `07-OperationSelect.xml` in a
 full repo export if you have one; otherwise follow the `MCPVerify_FB_LAD_v3`
 export in `lad-cookbook`.
 
@@ -873,7 +873,7 @@ All keys are **lowercase**. Colors are TIA ARGB hex `0xAARRGGBB` strings.
       "type": "Rectangle" | "Text" | "Button" | "IOField" | "<full CLR type>",
       "name": "TitleBar",                    // unique on this screen
       "left": 0, "top": 0, "width": 1024, "height": 72,
-      "text": "可选文本，自动包成 zh-CN MultilingualText",
+      "text": "optional text, wrapped automatically into a zh-CN MultilingualText",
       "textProperty": "Text",                // optional, default "Text"
       "properties": {                         // forwarded to reflection setter
         "BackColor": "0xFF0F172A",
@@ -897,7 +897,7 @@ write failures, e.g. unknown property name).
 A 1024×768 starting point that looks finished — dark title bar, two status cards,
 Start/Stop buttons, a speed `IOField`, and a run-state lamp. Uses **only** the
 verified keys above; adjust text/positions, then bind buttons (`EnsureUnifiedHmiButtonAction`)
-and the IOField/lamp tags. This is the "rich + 美化" target; do not stop short of it.
+and the IOField/lamp tags. This is the "rich + styled" target; do not stop short of it.
 
 ```jsonc
 {
@@ -906,13 +906,13 @@ and the IOField/lamp tags. This is the "rich + 美化" target; do not stop short
     { "type": "Rectangle", "name": "TitleBar", "left": 0, "top": 0, "width": 1024, "height": 72,
       "properties": { "BackColor": "0xFF0F172A" } },
     { "type": "Text", "name": "TitleText", "left": 24, "top": 20, "width": 600, "height": 36,
-      "text": "电机控制 · Motor Control", "font": { "Size": 22 },
+      "text": "Motor Control", "font": { "Size": 22 },
       "properties": { "ForeColor": "0xFFF8FAFC", "BackColor": "0x000F172A" } },
 
     { "type": "Rectangle", "name": "CardRun", "left": 32, "top": 110, "width": 300, "height": 150,
       "properties": { "BackColor": "0xFFFFFFFF", "BorderColor": "0xFFCBD5E1", "BorderWidth": 1 } },
     { "type": "Text", "name": "CardRunLabel", "left": 52, "top": 126, "width": 260, "height": 28,
-      "text": "运行状态", "font": { "Size": 16 }, "properties": { "ForeColor": "0xFF334155", "BackColor": "0x00FFFFFF" } },
+      "text": "Run state", "font": { "Size": 16 }, "properties": { "ForeColor": "0xFF334155", "BackColor": "0x00FFFFFF" } },
     { "type": "Rectangle", "name": "RunLamp", "left": 52, "top": 170, "width": 40, "height": 40,
       "properties": { "BackColor": "0xFF22C55E", "BorderColor": "0xFF15803D", "BorderWidth": 2 } },
     { "type": "Text", "name": "RunLampText", "left": 104, "top": 176, "width": 200, "height": 28,
@@ -921,15 +921,15 @@ and the IOField/lamp tags. This is the "rich + 美化" target; do not stop short
     { "type": "Rectangle", "name": "CardSpeed", "left": 364, "top": 110, "width": 300, "height": 150,
       "properties": { "BackColor": "0xFFFFFFFF", "BorderColor": "0xFFCBD5E1", "BorderWidth": 1 } },
     { "type": "Text", "name": "CardSpeedLabel", "left": 384, "top": 126, "width": 260, "height": 28,
-      "text": "转速 (rpm)", "font": { "Size": 16 }, "properties": { "ForeColor": "0xFF334155", "BackColor": "0x00FFFFFF" } },
+      "text": "Speed (rpm)", "font": { "Size": 16 }, "properties": { "ForeColor": "0xFF334155", "BackColor": "0x00FFFFFF" } },
     { "type": "IOField", "name": "SpeedIO", "left": 384, "top": 168, "width": 180, "height": 44,
       "properties": { "BackColor": "0xFFF8FAFC", "BorderColor": "0xFFCBD5E1", "BorderWidth": 1 }, "font": { "Size": 20 } },
 
     { "type": "Button", "name": "StartBtn", "left": 720, "top": 120, "width": 260, "height": 64,
-      "text": "启动 START", "font": { "Size": 20 },
+      "text": "START", "font": { "Size": 20 },
       "properties": { "BackColor": "0xFF16A34A", "ForeColor": "0xFFFFFFFF", "BorderColor": "0xFF15803D", "BorderWidth": 1 } },
     { "type": "Button", "name": "StopBtn", "left": 720, "top": 200, "width": 260, "height": 64,
-      "text": "停止 STOP", "font": { "Size": 20 },
+      "text": "STOP", "font": { "Size": 20 },
       "properties": { "BackColor": "0xFFDC2626", "ForeColor": "0xFFFFFFFF", "BorderColor": "0xFFB91C1C", "BorderWidth": 1 } }
   ]
 }
@@ -946,7 +946,7 @@ None, Activated, Deactivated, Tapped, KeyDown, KeyUp, Down, Up, ContextTapped
 ```
 
 `Down` = press, `Up` = release. **`Pressed` / `Released` / `Press` / `Release` /
-`Click` are NOT valid** in V21 and produce `System.ArgumentException: 未找到请求的值`
+`Click` are NOT valid** in V21 and produce `System.ArgumentException: Requested value was not found` (localized on Chinese Windows)
 deep inside `SetUnifiedHmiButtonEventScriptCode`.
 
 ### `EnsureUnifiedHmiButtonAction` `actionKind` values
@@ -969,10 +969,10 @@ handler, then runs SyntaxCheck.
    the verified runtime address such as `%DB200.DBX0.0`. The HMI interface DB is standard
    access (`MemoryLayout=Standard`, `DB200`), so absolute HMI addresses connect to real
    PLC memory even when Unified symbolic readback is empty on a local TIA build.
-3. `EnsureStartStopUnifiedHmi` — 会先调用 `EnsureUnifiedHmiConnection`，再用与
-   `EnsureUnifiedHmiTag` **相同** 的规则写 **符号互连**（清掉错误的 `%DB1…` 绝对地址），
-   可选参数：`plcName`、`connectionName`（默认 `HMI_Connection_1`）。HMI 标签表名
-   默认 `默认变量表`，PLC 符号需与 `StartPB`/`StopPB`/`EStop`/`RunOut` 一致。
+3. `EnsureStartStopUnifiedHmi` - calls `EnsureUnifiedHmiConnection` first, then writes the **symbolic
+   binding** with the **same** rules as `EnsureUnifiedHmiTag` (clearing wrong `%DB1...` absolute addresses);
+   optional parameters `plcName`, `connectionName` (default `HMI_Connection_1`). The HMI tag table name
+   defaults to the default tag table (named "Default tag table" or its localized equivalent); the PLC symbols must match `StartPB`/`StopPB`/`EStop`/`RunOut`.
 4. **Full visuals vs. “chat minimal JSON”** — `ApplyUnifiedHmiScreenDesignJson` only draws
    what you pass in `designJson`. The **curated multi-page layouts** live under
    `templates/hmi/unified_*.json` (shadows, cards, IO fields, footers). For production-like
@@ -997,8 +997,8 @@ matches **§12** in this file; exercise it on your own Unified RT project.
 `DownloadToPlc(softwarePath=…)` used to fail on V21 with:
 
 ```
-类型 "Siemens.Engineering.Connection.ConnectionConfiguration" 的对象
-无法转换为类型 "Siemens.Engineering.Connection.IConfiguration"
+Unable to cast object of type "Siemens.Engineering.Connection.ConnectionConfiguration"
+to type "Siemens.Engineering.Connection.IConfiguration" (localized on Chinese Windows)
 ```
 
 Root cause + fix in `Portal.cs::DownloadToPlc` (each step verified against the V21 PublicAPI):
@@ -1015,7 +1015,7 @@ Root cause + fix in `Portal.cs::DownloadToPlc` (each step verified against the V
 3. Reflection-invoke failures are now unwrapped (`TargetInvocationException`) so the caller sees
    the real reason.
 
-**Verified 2026-06-17 on a real S7-1200 (江夏 安全PLC): `DownloadToPlc` →
+**Verified 2026-06-17 on a real S7-1200 (the safety PLC of a customer project): `DownloadToPlc` →
 `state=Success, 0 errors` (stop → download existing program → restart).**
 
 `CheckDownloadReadiness` is project-side only (`ready=true` ⇒ blocks consistent + a network
@@ -1060,7 +1060,7 @@ that is **not** evidence that the import pipeline is wrong.
   `ImportBlock`**; hand-writing `<StructuredText v4>` token XML is possible but
   extremely verbose.
 
-## 15. Reusable libraries, master copies & types (泛用性 — reuse across projects)
+## 15. Reusable libraries, master copies & types (reuse across projects)
 
 Don't re-author the same UDT/FB/screen for every project. The roster already
 exposes a reuse path; document and use it instead of regenerating.
@@ -1121,7 +1121,7 @@ as `MLC_*` IDs in the paired `.s7res` (`zh-CN:` + `en-US:`); HMI texts are
 or the SD import can fail (§9a boundary note). Round-trip alarm/text exports
 through these tools rather than hand-editing project XML.
 
-## 18. Capability boundary vs competitors (对标 — read before promising)
+## 18. Capability boundary vs competitors (read before promising)
 
 Honest scope so you don't over-promise. Quote this when a user asks "can it do X".
 
@@ -1135,7 +1135,7 @@ Honest scope so you don't over-promise. Quote this when a user asks "can it do X
 | Download to CPU | ✅ fixed, verified on real CPU (§13) | ✅ | ✅ |
 | **Safety F-block author / compile / signature** | partial: F-administration, runtime groups, signatures, printout (`ManagePlcSafety` / `ReadSafetyBlockSignatures` / `ExportSafetyPrintout`, 2.7.25); F-compile is not in the PublicAPI | ✅ full | ✅ full |
 | **PLCSIM simulation / unit testing** | partial: PLCSIM Advanced instance / tag tools under `runtime`; TIA Portal Test Suite typed (`ReadTestSuiteCases` / `ExchangeTestSuiteCase` / `RunTestSuiteCase` / `ManageTestSuiteCase`, 2.7.42 — style-guide rule sets, application test cases / test sets against PLCSIM Advanced, OPC UA system tests; shape-checked, execution needs the Test Suite licence) | ✅ simulate | ✅ PLCSIM Advanced tests |
-| Native Git / VCI | ✕ 不做(用文本导出替代 §16) | ✅ Git+CI | ✅ full Git UI |
+| Native Git / VCI | ✕ not done (text export instead, §16) | ✅ Git+CI | ✅ full Git UI |
 | Block protection / encrypted vault | partial: know-how / write protection (`ManagePlcBlockProtection`, `ManagePlcBlockWriteProtection`), no vault | partial | ✅ AES vault |
 | UMAC user/rights, SiVArc auto-screens | ✅ UMAC users / roles / UMC offline users (`ManageProjectUserManagement`, `ManageUmcUsers`, 2.7.32–2.7.33); ✅ SiVArc rules / definitions / generation typed (2.7.38, verified on the VM with the SiVArc option; the typed rule tool is `ManageSivarcTableRule` since 2.7.39) | ✅ | partial |
 

@@ -2,7 +2,7 @@
 
 Document id: `hardware-network`
 
-这些工具用于把硬件网络配置拆成可组合、可验证的原语。核心原则是：路径必须来自 TIA 读回，写入后必须返回 readback 证据，不根据名字猜 CPU、HMI、接口或属性。
+These tools split hardware / network configuration into small, composable, verifiable primitives. The core rule: every path comes from a TIA read-back, every write returns read-back evidence, and nothing guesses a CPU, HMI, interface or attribute from its name.
 
 ## Safe Workflow
 

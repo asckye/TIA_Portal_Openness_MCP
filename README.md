@@ -1,6 +1,6 @@
 # TIA Portal Openness MCP
 
-[简体中文](README.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
+[Chinese](README.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
 
@@ -12,13 +12,13 @@ The complete release ZIP includes both runtimes and dependencies. Install Siemen
 
 ## Start here
 
-Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place from the configurator's **更新 → 更新引擎…** menu (stop the engine first; the configurator closes itself, `scripts\operations\Update-Engine.ps1` downloads and verifies the latest release in its own window, backs up to `.previous\`, replaces the files with robocopy and reopens the configurator; the TIA machine needs access to github.com; `-Rollback` goes back). The same script can be run by hand; the engine's `CheckForUpdate` tool only reports versions.
+Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place from the configurator's **Update → Update engine** menu (the configurator's interface is Chinese; stop the engine first; the configurator closes itself, `scripts\operations\Update-Engine.ps1` downloads and verifies the latest release in its own window, backs up to `.previous\`, replaces the files with robocopy and reopens the configurator; the TIA machine needs access to github.com; `-Rollback` goes back). The same script can be run by hand; the engine's `CheckForUpdate` tool only reports versions.
 
 | Scenario | Configuration |
 |---|---|
-| TIA in a virtual machine | Keep the **虚拟机 ↔ 宿主机** (VM ↔ host) mode. On the VM fill pane **A**: TIA version, installation root, IPv4, port and the shared key, then **网络权限** (network permissions) and **启动服务** (start). |
-| AI on the host | Copy the configurator EXE to the host, enter the same address, port and key, pick clients in pane **B**, then **测试连接** (test) and **写入客户端配置** (write client config). TIA is not required on the host. |
-| TIA and AI on one computer | Switch to **同一台电脑** (same computer). Pane A only needs version and path; clients launch the matching engine over stdio, so no address, port or key is used. |
+| TIA in a virtual machine | Keep the **VM ↔ host** mode. On the VM fill pane **A**: TIA version, installation root, IPv4, port and the shared key, then **Network permissions** and **Start service**. |
+| AI on the host | Copy the configurator EXE to the host, enter the same address, port and key, pick clients in pane **B**, then **Test connection** and **Write client config**. TIA is not required on the host. |
+| TIA and AI on one computer | Switch to **Same computer**. Pane A only needs version and path; clients launch the matching engine over stdio, so no address, port or key is used. |
 
 The configurator UI is Chinese-only; the labels above are its exact button names.
 

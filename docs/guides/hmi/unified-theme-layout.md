@@ -42,8 +42,8 @@ Colors must use TIA ARGB strings such as `0xFFF4F6F8`.
   "cellWidth": 160,
   "cellHeight": 80,
   "items": [
-    { "name": "Card_Run", "type": "Rectangle", "text": "运行" },
-    { "name": "Card_Fault", "type": "Rectangle", "colSpan": 2, "text": "故障" }
+    { "name": "Card_Run", "type": "Rectangle", "text": "Run" },
+    { "name": "Card_Fault", "type": "Rectangle", "colSpan": 2, "text": "Fault" }
   ]
 }
 ```

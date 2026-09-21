@@ -43,12 +43,12 @@ Input:
       "name": "FaultActive",
       "datatype": "Bool",
       "externalWritable": true,
-      "commentZhCn": "故障激活"
+      "comment": "Fault active"
     },
     {
       "name": "FaultCode",
       "datatype": "Int",
-      "commentZhCn": "故障代码"
+      "comment": "Fault code"
     }
   ]
 }
@@ -67,7 +67,7 @@ Optional fields:
 | Path | Meaning |
 |---|---|
 | `$.members[].externalWritable` | Emits `ExternalWritable` boolean attribute |
-| `$.members[].commentZhCn` / `comment` | Chinese comment text |
+| `$.members[].comment` (alias `commentZhCn`) | Member comment text, any language |
 
 ## BuildPlcTagTableXml
 
@@ -107,13 +107,13 @@ Input:
       "name": "MotorRun",
       "datatype": "Bool",
       "externalWritable": true,
-      "commentZhCn": "电机运行",
+      "comment": "Motor running",
       "startValue": "false"
     },
     {
       "name": "SpeedSet",
       "datatype": "Int",
-      "commentZhCn": "速度设定",
+      "comment": "Speed setpoint",
       "startValue": "0"
     }
   ]

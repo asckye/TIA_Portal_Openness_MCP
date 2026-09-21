@@ -1,9 +1,8 @@
-# TIA Portal MCP — Natural-Language Intent Recipes
+# TIA Portal MCP：自然语言意图配方
 
-This document maps natural-language user intents to deterministic MCP tool sequences.
-Every recipe ends with a readback step and a clear success criterion.
+本文把用户的自然语言意图映射为确定的 MCP 工具序列；每条配方都以读回步骤和明确的成功判据收尾。
 
-> **Status convention**: `verified` = tested on real hardware, `manual-derived` = derived from API knowledge, `probe-required` = needs live TIA test to confirm.
+> **状态约定**：`verified` = 真机验证过；`manual-derived` = 按 API 知识推导；`probe-required` = 需要在 TIA 上实测确认。
 
 ---
 
