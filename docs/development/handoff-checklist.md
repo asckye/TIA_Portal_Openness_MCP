@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.53 本机构建、待推送发布与虚拟机部署；2.7.52 上在线族过了 TLS、卡在 F-CPU 安全设置）
+# 换机器交接单（2026-09-21，2.7.53 已发布、待虚拟机部署；2.7.52 上在线族过了 TLS、卡在 F-CPU 安全设置）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.53 发布说明](../releases/v2.7.53.md)
 
@@ -7,7 +7,7 @@
 ## 0. 一句话现状
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.7.51**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.51_20260921.zip` 已上传）。448 个工具，离线 2197 项，形状 V20 2789 / V21 3077。
-- 最后一次发布 **v2.7.52**；**2.7.53 已在本机 Build-Release 通过**（离线 2208，形状 V20 2805 / V21 3097，**450 个工具**），三段提交 + 推送 + tag 见 §5。虚拟机上跑的是 **2.7.52**；2.7.53 的 ZIP 待发布后部署。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.53**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.53_20260921.zip` 已上传）。**450 个工具**，离线 2208，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.52**；2.7.53 的 ZIP 还没部署。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；还剩 🔁 `DownloadToPlc` / `GoOnline` / `CompareSoftwareToOnline`——2.7.52 上 TLS 已过（`GetOnlineState` Incompatible），下载被 F-CPU V2.9 的安全设置挡住（访问级别 `NoAccess` 无完全访问密码、机密组态数据无密码），2.7.53 的 `ManagePlcProtection` 改它。
 - 在线族：PG 侧（Softbus → "PLCSIM" 接口）与 TLS 信任（`trustDeviceCertificate`）都已解决；剩 CPU 保护设置（2.7.53 `ManagePlcProtection` + `CompileDevice` 核对）。
 
