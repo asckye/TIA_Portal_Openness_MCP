@@ -6,6 +6,13 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.9.0] - 2026-09-21
+
+删除类工具的交叉引用查询改为显式开关（MINOR：三个工具各加一个参数；工具 453、lite 59、离线 2456 不变）。维护者 2026-09-21 真机：“`DeletePlcBlock` 干跑（它会做交叉引用查询）把 TIA 搞挂了。”详见 [v2.9.0](docs/releases/v2.9.0.md)。
+
+- **`DeletePlcBlock` / `DeletePlcType` / `DeletePlcTagTable`**：新参数 `crossReferences`（默认 `false`）。默认不再调用 `CrossReferenceService.GetCrossReferences`，干跑只解析目标（钉号、警告），响应带 `crossReferenceQueried=false` 与警告“交叉引用未查询——不等于没人引用它”；`crossReferences=true` 才查（描述里写明该查询在真机上让 TIA Portal V21 整个退出，先 SaveProject 再开）。`GetCrossReferences` 描述标明同一风险。
+- 台账：`GetCrossReferences` / 三个删除工具的备注记下此事；handoff §4 退出点 ⑧。
+
 ## [2.8.1] - 2026-09-21
 
 发布模型改动（PATCH：引擎与工具不变，工具 453、lite 59、离线 2456）。维护者推翻 2.8.0 记下的决定：**不提交 exe，发布 ZIP 由本机 `Release.ps1` 直接上传**；同时“需要清理分支，只保留 master”“英文文档就全部用英文”。详见 [v2.8.1](docs/releases/v2.8.1.md)。
@@ -532,7 +539,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...HEAD
+[2.9.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...v2.9.0
 [2.8.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...v2.8.0
 [2.7.62]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...v2.7.62

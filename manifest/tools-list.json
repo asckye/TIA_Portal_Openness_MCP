@@ -1,19 +1,19 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.8.1_20260921",
-    "generatedAt":  "2026-09-21T10:28:51.9712290+00:00",
+    "package":  "TIA_MCP_Delivery_v2.9.0_20260921",
+    "generatedAt":  "2026-09-21T11:05:47.2012178+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.8.1.0",
-    "exeSha256":  "c04eb256f862d7bd9f5c972c8e891e9a85face200515f7efc17dd1322fb67293",
+    "fileVersion":  "2.9.0.0",
+    "exeSha256":  "2edbffd500386e3665b55103b65b9f631e47d83bbe4b8dc52dc90830932df086",
     "toolCount":  453,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
-                           "parameters":  2204,
+                           "parameters":  2207,
                            "parametersUndocumented":  894,
                            "parametersFromVocabulary":  894,
                            "toolsWithUndocumentedParameters":  198,
                            "toolsWithEnumHints":  119,
                            "enumHints":  185,
-                           "defaultHints":  1323,
+                           "defaultHints":  1326,
                            "examplesCurated":  80,
                            "recipes":  12
                        },
@@ -2321,9 +2321,10 @@
                       "parameters":  [
                                          "softwarePath",
                                          "blockPath",
-                                         "dryRun"
+                                         "dryRun",
+                                         "crossReferences"
                                      ],
-                      "description":  "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target plus its cross references. It never deletes instance DBs or callers automatically. Before dryRun=false, review the previewed cross references (or run GetCrossReferences) and back the block up with ExportAsDocuments; compile with CompileSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType.",
+                      "description":  "[L2][PLC-Software][WRITE] Preview or delete exactly one PLC block by its exact path, including blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports the resolved target (pinned block number, warnings). Cross references are queried only with crossReferences=true: on the maintainer\u0027s real project (2026-09-21) that CrossReferenceService query took TIA Portal V21 down during a dry run, so it is off by default and the response says \u0027not queried\u0027 - never read that as \u0027nobody uses it\u0027. It never deletes instance DBs or callers automatically. Before dryRun=false, back the block up with ExportAsDocuments (and, on a saved project, check GetCrossReferences); compile with CompileSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use DeletePlcType.",
                       "example":  null
                   },
                   {
@@ -2338,9 +2339,10 @@
                       "parameters":  [
                                          "softwarePath",
                                          "tagTableName",
-                                         "dryRun"
+                                         "dryRun",
+                                         "crossReferences"
                                      ],
-                      "description":  "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list and cross references first. The default tag table (IsDefault) is refused. Cross references are attempted but may be unavailable at tag-table level; the response says explicitly whether they were obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable.",
+                      "description":  "[L2][PLC-Software][WRITE] Preview or delete ONE PLC tag table (variable table / tag list) by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the HMI silently loses its bindings - always review the previewed tag list first. Cross references are queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer\u0027s project, 2026-09-21) and may be unavailable at tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and wildcards are rejected. Back up first with ExportPlcTagTable.",
                       "example":  null
                   },
                   {
@@ -2355,9 +2357,10 @@
                       "parameters":  [
                                          "softwarePath",
                                          "typePath",
-                                         "dryRun"
+                                         "dryRun",
+                                         "crossReferences"
                                      ],
-                      "description":  "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it, so the preview reports its cross references (GetCrossReferences works at type level) before you commit - review them first. Regex and wildcards are rejected. Export the type first with ExportType, and CompileSoftware afterwards.",
+                      "description":  "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; its cross references are queried only with crossReferences=true (the TIA CrossReferenceService query took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer\u0027s project, 2026-09-21), so review them on a saved project before you commit. Regex and wildcards are rejected. Export the type first with ExportType, and CompileSoftware afterwards.",
                       "example":  null
                   },
                   {
@@ -8558,7 +8561,7 @@
                                          "objectKind",
                                          "filter"
                                      ],
-                      "description":  "[L2][PLC-Software]Get cross references for a Step7 block/type (best-effort). Requires applicable object and Openness support.",
+                      "description":  "[L2][PLC-Software] Get cross references for a Step7 block/type (best-effort; CrossReferenceService.GetCrossReferences with the filter). Requires applicable object and Openness support. KNOWN RISK: on the maintainer\u0027s real project (TIA Portal V21, 2026-09-21) this query took the whole TIA Portal process down while DeletePlcBlock ran it in a dry run - save the project first and expect a possible TIA restart; the delete tools no longer call it unless crossReferences=true.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"objectPath\":\"Main\",\"objectKind\":\"Block\",\"filter\":\"AllObjects\"}"
                   },
                   {

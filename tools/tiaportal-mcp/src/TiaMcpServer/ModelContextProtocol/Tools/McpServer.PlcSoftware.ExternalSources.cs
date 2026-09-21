@@ -25,7 +25,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region plc software - ExternalSources
 
-        [McpServerTool(Name = "GetCrossReferences"), Description("[L2][PLC-Software]Get cross references for a Step7 block/type (best-effort). Requires applicable object and Openness support.")]
+        [McpServerTool(Name = "GetCrossReferences"), Description("[L2][PLC-Software] Get cross references for a Step7 block/type (best-effort; CrossReferenceService.GetCrossReferences with the filter). Requires applicable object and Openness support. KNOWN RISK: on the maintainer's real project (TIA Portal V21, 2026-09-21) this query took the whole TIA Portal process down while DeletePlcBlock ran it in a dry run - save the project first and expect a possible TIA restart; the delete tools no longer call it unless crossReferences=true.")]
         public static ResponseCrossReferences GetCrossReferences(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
             [Description("objectPath: blockPath or typePath inside the PLC software")] string objectPath,

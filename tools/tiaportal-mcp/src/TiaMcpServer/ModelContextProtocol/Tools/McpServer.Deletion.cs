@@ -31,19 +31,22 @@ namespace TiaMcpServer.ModelContextProtocol
             + "blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, "
             + "ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / "
             + "DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports "
-            + "the resolved target plus its cross references. It never deletes instance DBs or callers "
-            + "automatically. Before dryRun=false, review the previewed cross references (or run GetCrossReferences) "
-            + "and back the block up with ExportAsDocuments; compile with CompileSoftware after deletion and before "
-            + "SaveProject. Regex and wildcards are rejected. To delete a tag table use DeletePlcTagTable, a UDT use "
-            + "DeletePlcType.")]
+            + "the resolved target (pinned block number, warnings). Cross references are queried only with "
+            + "crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took "
+            + "TIA Portal V21 down during a dry run, so it is off by default and the response says 'not queried' - never "
+            + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
+            + "back the block up with ExportAsDocuments (and, on a saved project, check GetCrossReferences); compile with "
+            + "CompileSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
+            + "table use DeletePlcTagTable, a UDT use DeletePlcType.")]
         public static ResponseJsonReport DeletePlcBlock(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
-            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true)
+            [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {
-                var data = Portal.DeletePlcBlock(softwarePath, blockPath, dryRun);
+                var data = Portal.DeletePlcBlock(softwarePath, blockPath, dryRun, crossReferences);
                 bool crossRefOk = data["crossReferenceAvailable"]?.GetValue<bool>() ?? false;
                 int? pinned = data["pinnedBlockNumber"]?.GetValue<int>();
 
@@ -96,18 +99,20 @@ namespace TiaMcpServer.ModelContextProtocol
             + "by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what "
             + "the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every "
             + "tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the "
-            + "HMI silently loses its bindings - always review the previewed tag list and cross references first. "
-            + "The default tag table (IsDefault) is refused. Cross references are attempted but may be unavailable "
-            + "at tag-table level; the response says explicitly whether they were obtained. Regex and wildcards are "
-            + "rejected. Back up first with ExportPlcTagTable.")]
+            + "HMI silently loses its bindings - always review the previewed tag list first. Cross references are "
+            + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
+            + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
+            + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
+            + "wildcards are rejected. Back up first with ExportPlcTagTable.")]
         public static ResponseJsonReport DeletePlcTagTable(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tagTableName: bare table name, or the group-qualified path from GetPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
-            [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true)
+            [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true,
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {
-                var data = Portal.DeletePlcTagTable(softwarePath, tagTableName, dryRun);
+                var data = Portal.DeletePlcTagTable(softwarePath, tagTableName, dryRun, crossReferences);
                 int tagCount = data["tagCount"]?.GetValue<int>() ?? 0;
                 bool crossRefOk = data["crossReferenceAvailable"]?.GetValue<bool>() ?? false;
 
@@ -149,18 +154,20 @@ namespace TiaMcpServer.ModelContextProtocol
 
         [McpServerTool(Name = "DeletePlcType"), Description(
             "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
-            + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it, "
-            + "so the preview reports its cross references (GetCrossReferences works at type level) before you "
-            + "commit - review them first. Regex and wildcards are rejected. Export the type first with ExportType, "
-            + "and CompileSoftware afterwards.")]
+            + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; "
+            + "its cross references are queried only with crossReferences=true (the TIA CrossReferenceService query "
+            + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
+            + "review them on a saved project before you commit. Regex and wildcards are rejected. Export the type "
+            + "first with ExportType, and CompileSoftware afterwards.")]
         public static ResponseJsonReport DeletePlcType(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
-            [Description("dryRun: true (default) only resolves the type and reports its cross references; false performs Delete() and verifies the type is absent")] bool dryRun = true)
+            [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {
-                var data = Portal.DeletePlcType(softwarePath, typePath, dryRun);
+                var data = Portal.DeletePlcType(softwarePath, typePath, dryRun, crossReferences);
                 bool crossRefOk = data["crossReferenceAvailable"]?.GetValue<bool>() ?? false;
 
                 return BuildDeletionReport(
@@ -220,10 +227,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 预览路径：工程一行没动。交叉引用是预览的全部价值，取不到就必须明说，
                 // 否则「成功」会被读成「确认可以删」—— 删除类工具里这是代价最大的错档。
                 ok = true;
+                bool queried = data["crossReferenceQueried"]?.GetValue<bool>() ?? true;
                 message = $"[dryRun] 未做任何改动。目标 {objectLabel}，"
                         + (crossRefOk
                             ? $"交叉引用 {data["crossReferenceCount"]} 条（见 data.crossReferences）。"
-                            : "⚠️ 交叉引用查不到 —— 这不等于没人引用它，请先自行核对。")
+                            : queried
+                                ? "⚠️ 交叉引用查不到 —— 这不等于没人引用它，请先自行核对。"
+                                : "交叉引用未查询（crossReferences=false，默认；该查询在真机上让 TIA 退出过）—— 这不等于没人引用它。")
                         + dryRunTail;
             }
             else if (deleted && verifiedAbsent)
