@@ -1,19 +1,19 @@
 {
-    "generatedAt":  "2026-09-21T09:10:22.4352181+00:00",
-    "testsPassed":  96,
+    "generatedAt":  "2026-09-21T09:50:26.5091997+00:00",
+    "testsPassed":  111,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "9b69ca4e4f0eb8e5f4b5cecd44f9bb223d1a326c543088334a94edb6016e9c65"
+                       "sha256":  "522e269bf09c53b4095ded81d6def2f888c34854b188cff7054e190a083d7372"
                    },
     "sourceFiles":  [
                         {
                             "path":  "scripts/build/Build-Configurator.ps1",
-                            "sha256":  "dd661258f4d9fe844f1d147f43ebb862e73de213da408f830c2bd711c67cbdc2"
+                            "sha256":  "2ea4144a6ab256c7bd62aa6d0f7a49f35ecf5d14a0f1c2101727e188a8952650"
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
-                            "sha256":  "5a81ec72adfa243b534e03ed4926e950eab97a6b103d87634e8df71ee484a9ee"
+                            "sha256":  "a09519f85a88ebfa9feb099f479bb58d787796b7b333104581601ec0d3284377"
                         },
                         {
                             "path":  "tools/mcp-configurator/ConfigCore.cs",
@@ -21,15 +21,19 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "e0dc7c0640cd121e7fa5aab24e1310cc4824e9458b204c95a6acf14478156801"
+                            "sha256":  "731312b86f4e08ccf613a99a5c3fe062afc42f7010ffbf9a474c3552723c5c1e"
                         },
                         {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
-                            "sha256":  "1144a340cc21d4d5aba3b3646e87799bc8612329971d60749fa5f8e8f7655b3a"
+                            "sha256":  "17835f6ab885b94400746d43354b623046f4de33992bcd6a0a97795d2b563891"
                         },
                         {
                             "path":  "tools/mcp-configurator/Tests.cs",
-                            "sha256":  "2ccf52bd20b766852ad77af7f3a82d8f9465bcb246516367e2dbba005398cf40"
+                            "sha256":  "ebc6b76dceaae88a637efa819f9d06d701547e397fa10f48abfafad1c2313ec4"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/UpdateCheck.cs",
+                            "sha256":  "b6ed2304bc57bb85563eef14620c26d7fad1cd1746c9dadb20a59a19c23667dc"
                         }
                     ]
 }
