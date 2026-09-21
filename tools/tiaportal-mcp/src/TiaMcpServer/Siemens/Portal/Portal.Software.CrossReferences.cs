@@ -64,6 +64,10 @@ namespace TiaMcpServer.Siemens
                 return null;
             }
 
+            // 2.9.1: never query while the PLC holds uncompiled blocks (stale cross-reference index took TIA down, see CrossReferenceGuardLogic)
+            var refusal = CrossReferenceRefusal(softwarePath);
+            if (refusal != null) { reason = refusal; return null; }
+
             var crossReferenceService = target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>();
             if (crossReferenceService == null) { reason = "CrossReferenceService is not provided by this " + objectKind + " (TIA answers it for blocks and types; not for software / device level)."; return null; }
 
@@ -73,6 +77,26 @@ namespace TiaMcpServer.Siemens
             if (result == null) { reason = "GetCrossReferences returned null."; return null; }
 
             return TryFlattenCrossReferenceResult(result, objectPath);
+        }
+
+        /// <summary>
+        /// 2.9.1: the refusal text when any block of the PLC is not compiled (IsConsistent=false), else null. Reading the
+        /// block list fails closed: a PLC whose blocks cannot be listed does not get a cross-reference query either.
+        /// </summary>
+        public string? CrossReferenceRefusal(string softwarePath)
+        {
+            List<PlcBlock>? blocks;
+            try { blocks = GetBlocks(softwarePath); }
+            catch (Exception ex) { return "refused: the block list of '" + softwarePath + "' could not be read (" + ex.GetBaseException().Message + "), so the compile state is unknown; cross references are only queried on a compiled PLC."; }
+            if (blocks == null) return "refused: no project is open.";
+            var rows = new List<(string Path, bool? Consistent)>(blocks.Count);
+            foreach (var b in blocks)
+            {
+                bool? consistent = null;
+                try { consistent = b.IsConsistent; } catch { }
+                rows.Add((b.Name, consistent));
+            }
+            return CrossReferenceGuardLogic.Refusal(rows, softwarePath);
         }
 
         private static object? TryGetServiceByTypeSuffix(object target, string serviceTypeNameSuffix)

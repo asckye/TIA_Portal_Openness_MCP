@@ -248,8 +248,8 @@ namespace TiaMcpServer.Siemens
 
             // 交叉引用：2.9.0 起只在 crossReferences=true 时查（同 DeletePlcBlock，真机上该查询让 TIA 退出过）。
             result["crossReferenceQueried"] = crossReferences;
-            string? crossRefReason = crossReferences ? null : "not queried (crossReferences=false)";
-            var refs = crossReferences ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason) : null;
+            string? crossRefReason = crossReferences ? CrossReferenceRefusal(softwarePath) : "not queried (crossReferences=false)";
+            var refs = crossReferences && crossRefReason == null ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason) : null;
             result["crossReferenceAvailable"] = refs != null;
             result["crossReferenceUnavailableReason"] = crossRefReason;
             if (refs != null)

@@ -418,7 +418,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `GetBlockInfo` | ✅ 通过 | 2.7.50 真机：读块信息；2.7.58 真机：不存在的块 → Block not found + preflight（示例 + '消息已点明原因'） |
 | `GetBlocks` | ✅ 通过 | 2.7.50 真机：MCP_PLC 用户块；2.7.58 真机：故意错的直接调用 {SoftwarePath, regex} 被参数诊断拒绝（未执行）并附 preflight（unknown regex → regexName、SoftwarePath → softwarePath、示例、下一步）；正确调用 {softwarePath:MCP_STD, regexName:x} 正常回空表 |
 | `GetBlocksWithHierarchy` | ✅ 通过 |  |
-| `GetCrossReferences` | ✅ 通过 | 2.7.47 重跑通过：filter 为空按 AllObjects；非法 filter 列出合法值；2.8.1 真机（维护者工程）：DeletePlcBlock 干跑里的同一查询让 TIA Portal V21 整个退出（handoff §4 退出点 ⑧）→ 2.9.0 删除类工具默认不查，描述标明风险 |
+| `GetCrossReferences` | ✅ 通过 | 2.7.47 重跑通过：filter 为空按 AllObjects；非法 filter 列出合法值；2.8.1 真机（维护者工程）：Override 重导 5 块未编译后查旧 IDB，查询返回后 TIA Portal V21 自行退出（事件 3000 SELF，-1；handoff §4 退出点 ⑧）→ 2.9.0 删除类工具默认不查，2.9.1 PLC 有未编译块即拒绝并点名 |
 | `GetPlcExternalSources` | ✅ 通过 |  |
 | `GetPlcTagTables` | ✅ 通过 |  |
 | `GetPlcWatchTables` | ✅ 通过 | 2.7.50 真机：删表后列出 MCP_W/MCP_WT；导出到桌面 mcp50_wt.xml；路由树两块网卡仍 addresses: []（PG 侧无 IP） |

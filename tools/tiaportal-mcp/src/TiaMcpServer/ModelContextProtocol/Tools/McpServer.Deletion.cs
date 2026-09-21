@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
             [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tagTableName: bare table name, or the group-qualified path from GetPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
             [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {
@@ -163,7 +163,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
             [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run, so leave it false unless the project is saved and a TIA restart is acceptable - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
         {
             try
             {

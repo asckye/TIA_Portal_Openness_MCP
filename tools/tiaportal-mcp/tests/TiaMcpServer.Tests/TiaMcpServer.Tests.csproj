@@ -106,6 +106,8 @@
     <!-- 2.7.58：schema 提示与配方表，零依赖。 -->
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\SchemaHintsLogic.cs" Link="SchemaHintsLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolRecipes.cs" Link="ToolRecipes.cs" />
+    <!-- 2.9.1: cross-reference guard (refuse the query while blocks are uncompiled), zero dependencies. -->
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\CrossReferenceGuardLogic.cs" Link="CrossReferenceGuardLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ParameterVocabulary.cs" Link="ParameterVocabulary.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareUnitDeepLogic.cs" Link="SoftwareUnitDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Step7LeftoversLogic.cs" Link="Step7LeftoversLogic.cs" />

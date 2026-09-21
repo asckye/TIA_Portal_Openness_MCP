@@ -154,6 +154,8 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== 2.7.57 预检与更新纯逻辑：PreflightToolCall 参数分析 / 备选值解析 / 桥接、示例表校验、版本比较与 GitHub Release JSON ==");
             PreflightAndUpdateTests.Run(Check);
+            Console.WriteLine("== 2.9.1 交叉引用护栏纯逻辑：PLC 有未编译块时拒绝查询并点名（真机 2026-09-21 TIA 自行退出）==");
+            CrossReferenceGuardTests.Run(Check);
 
             Console.WriteLine("== 2.7.58 调用纪律纯逻辑：schema enum / default / examples、按签名派生示例、失败附带的预检摘要、配方表与 GetRecipe ==");
             CallDisciplineTests.Run(Check);

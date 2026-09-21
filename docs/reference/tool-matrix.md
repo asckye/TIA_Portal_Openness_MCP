@@ -4,8 +4,8 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-21 04:05:47
-- 引擎文件版本：2.9.0.0
+- 生成时间：2026-09-21 04:21:00
+- 引擎文件版本：2.9.1.0
 - 工具数量：453
 
 ## 读法
@@ -253,7 +253,7 @@
 | `GetBlockInfo` | L2 | READ* | Get detailed info for one block (attributes, language, number, modification time). Requires: Connect + OpenProject. blockPath must be fully qualified: 'Group/Subgroup/BlockName' — get it from GetSoftwareTree or GetBlocksWithHierarchy. Returns: IsConsistent (false = must compile before export). |
 | `GetBlocks` | L2 | READ* | Get a flat list of user-group blocks in PLC software. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. Use GetBlocksWithHierarchy instead when you need group/folder paths for ExportBlock. Returns: block name, number, type (OB/FC/FB/GlobalDB/InstanceDB), programming language. |
 | `GetBlocksWithHierarchy` | L2 | READ* | Get user blocks with their group hierarchy. System block groups are excluded; inspect meta.dataComplete for unreadable attributes. |
-| `GetCrossReferences` | L2 | READ* | Get cross references for a Step7 block/type (best-effort; CrossReferenceService.GetCrossReferences with the filter). Requires applicable object and Openness support. KNOWN RISK: on the maintainer's real project (TIA Portal V21, 2026-09-21) this query took the whole TIA Portal process down while DeletePlcBlock ran it in a dry run - save the project first and expect a possible TIA restart; the delete tools no longer call it unless crossReferences=true. |
+| `GetCrossReferences` | L2 | READ* | Get cross references for a Step7 block/type (best-effort; CrossReferenceService.GetCrossReferences with the filter). Requires applicable object and Openness support. KNOWN RISK: on the maintainer's real project (TIA Portal V21, 2026-09-21) this query took the whole TIA Portal process down right after five blocks had been re-imported with Override without a compile (the query answered from the stale index, then TIA exited). Since 2.9.1 the query is REFUSED while any block of the PLC is uncompiled (IsConsistent=false) and the refusal names them: run CompileSoftware first. Save the project before querying anyway; the delete tools only call it with crossReferences=true. |
 | `GetPlcExternalSources` | L2 | READ* | List PLC external source names (best-effort) |
 | `GetPlcTagTables` | L2 | READ* | List all PLC tag table names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). Use before ExportPlcTagTable to get exact table names, or before ImportPlcTagTable to check for conflicts. |
 | `GetPlcWatchTables` | L2 | READ* | List PLC watch/monitor table names (PlcWatchTable). Read-only. |

@@ -6,6 +6,14 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.9.1] - 2026-09-21
+
+交叉引用查询的护栏（PATCH：无新参数，`GetCrossReferences` 与 `crossReferences=true` 在 PLC 有未编译块时拒绝）。维护者补了崩溃时间线与事件日志：Override 重导 5 个块、没编译、紧接着对旧 IDB 查交叉引用（返回了 26 条旧引用）→ TIA Portal V21 **自行退出**（Process Exit Monitor 3000 `EVENT_PROCESSTERMINATION_SELF`，退出码 -1，10:42:38Z）。详见 [v2.9.1](docs/releases/v2.9.1.md)。
+
+- **`CrossReferenceGuardLogic`**（新，纯逻辑）：PLC 里任一块 `IsConsistent=false` 就拒绝查询，点名前 10 个并说明“先 CompileSoftware”；`IsConsistent` 读不到的块不算。`Portal.GetCrossReferences` 与 `DeletePlcTagTable(crossReferences=true)` 的表级查询都先过这道门；块列表读不出来也拒绝（宁可不查）。
+- `GetCrossReferences` / 三个删除工具的描述改为“未编译就拒绝”，写明真机事实。离线测试 +5（2461）。
+- handoff §4 退出点 ⑧ 补时间线、事件日志证据与排除项；`docs/releases/v2.9.1.md` 给出查实步骤（TIA 日志、事件日志、`项目1` 上的受控复现）。
+
 ## [2.9.0] - 2026-09-21
 
 删除类工具的交叉引用查询改为显式开关（MINOR：三个工具各加一个参数；工具 453、lite 59、离线 2456 不变）。维护者 2026-09-21 真机：“`DeletePlcBlock` 干跑（它会做交叉引用查询）把 TIA 搞挂了。”详见 [v2.9.0](docs/releases/v2.9.0.md)。
@@ -539,7 +547,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.1...HEAD
+[2.9.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...v2.9.0
 [2.8.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...v2.8.1
 [2.8.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...v2.8.0

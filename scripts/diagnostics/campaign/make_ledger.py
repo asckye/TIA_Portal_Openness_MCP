@@ -103,7 +103,7 @@ D281 = "2.8.1 真机（维护者工程）"
 o("ManagePlcTagDefinition", PASS, RERUN + "：注释按语言写入/读回（字符串 → 编辑语言，对象 → 指定语言，未激活语言 NotFound）")
 o("ExportBlocks ExportTypes", PASS, RERUN + "：经 CallTool 桥接导出 4 块 / 1 类型")
 o("ExportBlock ExportType ImportBlock ImportType", PASS, RERUN + "：.xml 结尾按文件写出并回报 exportedFile，随后导入成功")
-o("GetCrossReferences", PASS, RERUN + "：filter 为空按 AllObjects；非法 filter 列出合法值；" + D281 + "：DeletePlcBlock 干跑里的同一查询让 TIA Portal V21 整个退出（handoff §4 退出点 ⑧）→ 2.9.0 删除类工具默认不查，描述标明风险")
+o("GetCrossReferences", PASS, RERUN + "：filter 为空按 AllObjects；非法 filter 列出合法值；" + D281 + "：Override 重导 5 块未编译后查旧 IDB，查询返回后 TIA Portal V21 自行退出（事件 3000 SELF，-1；handoff §4 退出点 ⑧）→ 2.9.0 删除类工具默认不查，2.9.1 PLC 有未编译块即拒绝并点名")
 o("DeletePlcBlock", PASS, "2.7.46 真机通过；" + D281 + "：干跑里的交叉引用查询让 TIA 退出 → 2.9.0 新参数 crossReferences（默认 false），响应标 crossReferenceQueried=false")
 o("DeletePlcType", PASS, "2.7.46 真机通过；2.9.0 与 DeletePlcBlock 同样改为 crossReferences 显式开关")
 o("DeletePlcTagTable", PASS, "2.7.46 真机通过；2.9.0 与 DeletePlcBlock 同样改为 crossReferences 显式开关")
