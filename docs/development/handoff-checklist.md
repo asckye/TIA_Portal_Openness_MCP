@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.55 已发布、待虚拟机部署；在线族收口）
+# 换机器交接单（2026-09-21，2.7.55 已部署、在线族收口、`项目1` 已保存；下一版 2.7.56 修 Connect 多进程）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.55 发布说明](../releases/v2.7.55.md)
 
@@ -7,8 +7,8 @@
 ## 0. 一句话现状
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.7.51**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.51_20260921.zip` 已上传）。448 个工具，离线 2197 项，形状 V20 2789 / V21 3077。
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.55**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.55_20260921.zip` 已上传）。450 个工具，离线 2211，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.54**；2.7.55 的 ZIP 还没部署。
-- 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；在线族全链通过，还剩 🔁 `RunPlcSimAdvancedTestScenario` singleStep（2.7.55 按同步点等待）；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.55**（tag、三条工作流全绿，ZIP 已上传）。450 个工具，离线 2211，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.55**（2026-09-21 部署）。
+- 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**（singleStep 也通过），🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。下一个源码项：`Connect` 多 TIA 进程时不自启（2.7.56）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
 ## 1. 新机器要准备的
@@ -21,14 +21,14 @@
 | 代理 | 宿主机若设了 `HTTP_PROXY`，Claude Code 的 MCP 客户端会把局域网请求送进代理，会话一开始就报 "tia-portal-vm CONNECT_TIMEOUT"——**这不是服务器坏了**，探针脚本与 `camp.py` 都绕过代理直连；把虚拟机地址加进 `NO_PROXY` 即可让 MCP 客户端也通 |
 | Claude 记忆 | 记忆文件不随仓库走。旧机器记忆里、仓库里没有的几条已并入本页 §5；其余都在 handoff.md |
 
-## 2. 虚拟机现在的样子（2026-09-21，2.7.54 收尾之后）
+## 2. 虚拟机现在的样子（2026-09-21，2.7.55 之后）
 
-- TIA Portal V21 一个实例，打开着测试工程 **`项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，已按维护者同意保存）。**只开一个 TIA 实例**；每次写操作前看 `GetState.project`。绝不碰维护者的 `AutomaticDipCoatingMachine`。
+- **三个 TIA Portal V21 进程**（2026-09-21 深夜）：pid 4840 = 测试工程 **`项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，**已保存**，含 MCP_STD 等全部改动）；pid 15100 = 维护者的 `AutomaticDipCoatingMachine`（绝不碰）；pid 15748 = 引擎 `Connect` 误启的空实例（无工程，请维护者手动关掉）。接手时先 `ListPortalProcessProjects`，再 `AttachToOpenProject {projectName:"项目1"}`，每次写操作前看 `GetState` 的 `boundProcessId` 是 4840 / `project` 是 `项目1`。规则仍是只开一个 TIA 实例。
 - `项目1` 里引擎自建的东西：`MCP_PLC`（CPU 1515F-2 PN V2.9，X1 = 192.168.0.1 在子网 `MCP_PN`；块 MCP_G/MCP_FC/MCP_FB/MCP_FB_DB/MCP_DB，类型 MCP_T/MCP_UDT，变量表 MCP_Tags/MCP_Table，监控表在文件夹 **`MCP_W/MCP_WT`**（2 行：`"MCP_Start"` %I0.0 ModifyValue FALSE / Permanent，`%M0.0` TRUE / OnceOnlyAtStart——2.7.51 写入，**工程未保存**；桌面 `mcp50_wt.xml` 是 1 行时的导出），外部源 MCP_X，工艺对象文件夹 MCP_TO（当前为空），单元 MCP_Unit）、`MCP_TP700`（Comfort V17，800×480）、`MCP_UCP`（MTP700 Unified V21）、`MCP_S120`（V5.2 + 驱动轴_1）、项目库主副本、全局库 `MCP_GL`（桌面 `mcp46_gl`）。
 - ~~根级五张空监控表 `MCP_WT_1` … `MCP_WT_5`~~ 已用 2.7.50 的 `ManagePlcTableEntries deleteTable` 删掉并保存（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`）。
 - `MCP_PLC` 的 CPU 保护已改为 `FullAccessIncludingFailsafe` + 机密组态数据密码 `McpTest2753!`（一次性测试密码，只在 `项目1`）；硬件编译 0 错；但 F-CPU 不能经 Openness 下载。
 - **新设备 `MCP_STD`**（CPU 1515-2 PN V2.9，`6ES7 515-2AM02-0AB0`，X1 192.168.0.3 在 `MCP_PN`，访问级别 `FullAccess`、机密组态数据密码同上）：程序 = SCL 生成的 `MCP_SimDB`（Start / Running / Cycles / Speed）、`MCP_SimLogic`（FC1）、`Main`（SCL OB1 调 FC）；外部源 `mcp53_sim`（带错的第一版）/ `mcp53_sim2` / `mcp53_main`；桌面 `mcp53_sim*.scl`、`mcp53_main.scl`。**已下载到 `MCP_SIM`**，实例现在是 CPU1515 "MCP_STD" 192.168.0.3 RUN。
-- **工程未保存**（MCP_STD、两台 CPU 的保护设置、监控表两行都在未保存状态）——保存与否由维护者定。
+- 工程已于 2026-09-21 05:48 UTC 保存（MCP_STD + 程序、两台 CPU 的保护设置、监控表两行）。
 - PLCSIM Advanced 8.0：全局网络模式 **Softbus**，实例 **`MCP_SIM`** 已下载 `MCP_STD`（CPU1515，`controllerIP 192.168.0.3 / 192.168.1.1`，RUN、`Default` 模式，`MCP_SimDB.Speed` = 12.5，`Start` = false，`Cycles` ≈ 304）；虚拟机再重启就要再注册（网络模式是否保留待观察）。TIA 路由树现在只有 PC 接口 "PLCSIM"；要回到虚拟网卡模式就 `register`/`powerOn` 时给 `communicationInterface:"TCPIPSingleAdapter"`（原值）。虚拟网卡本身仍无 IP。`ScanAccessibleDevices` 在该网卡上能按 MAC 看到（每次注册 MAC 会变：2.7.49 是 `02-C0-A8-00-F1-00`，2.7.50 重注册后 `02-C0-A8-00-C8-00`） "S7-1500 (PLCSIM)"。
 - 接手先 `python scripts/diagnostics/Probe-McpServer.py tools` 确认能通、`Bootstrap` 看 `serverVersion`（部署 2.7.51 后应为 2.7.51.0）；引擎重启后要先 `Connect` 再 `AttachToOpenProject {projectName:"项目1"}`。
 - 桌面上的产物：`mcp46_*` / `mcp47_*` / `mcp48_*` / `mcp49_*`（`mcp48_pid.xml` = PID_Compact 2.3 的 TO 导出，可再导入；`mcp47_projects\` 下有 SaveAs / Scaffold / Retrieve 出来的副本工程）。
@@ -38,7 +38,7 @@
 
 先 `Connect`、`AttachToOpenProject {projectName:"项目1"}`，`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；2.7.54 收尾：站上载 ⛔ TIA 不支持、F-CPU GoOnline 文案 ✅、singleStep 只推进 1 周期 → 2.7.55。）
 
-000. **2.7.55**：`ReadPlcSimAdvancedTags` 看 `Cycles` 当前值 c → `RunPlcSimAdvancedTestScenario {scenarioJson:{instance:"MCP_SIM", mode:"singleStep", steps:[{write:{"MCP_SimDB.Start":true}},{cycles:5},{assert:{"MCP_SimDB.Cycles":c+5},tolerance:0},{write:{"MCP_SimDB.Start":false}},{cycles:2},{assert:{"MCP_SimDB.Cycles":c+5},tolerance:0}]}, dryRun:false, confirmRun:true}` → `operatingModeApplied SingleStep_C`、`cyclesStepped 5`、Cycles 恰好 +5。
+000. ~~**2.7.55** singleStep 场景~~ 已通过（SingleStep_C，Cycles 304→309）。**下一步（2.7.56 部署后）**：引擎重启后只 `Connect` 一次，看它是否附加到已有进程而不再自启（`ListPortalProcessProjects` 进程数不增）。
 00. **2.7.54 收尾**（已跑）：`RunPlcSimAdvancedTestScenario {scenarioJson:{instance:"MCP_SIM", mode:"singleStep", steps:[{write:{"MCP_SimDB.Start":true}},{cycles:5},{assert:{"MCP_SimDB.Running":true}},{assert:{"MCP_SimDB.Cycles":<当前值+5>},tolerance:0}]}, dryRun:false, confirmRun:true}`（先 `ReadPlcSimAdvancedTags` 看 Cycles 当前值）；`UploadStationFromPlc {targetIpAddress:"192.168.0.3", pgPcInterface:"PLCSIM", dryRun:true}` → 真跑 `confirmUpload:true` → `ManageHardwareObject deleteDevice` 删掉上载出来的设备；`GoOnline {softwarePath:"MCP_PLC", ipAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}` 看新文案。
 0. **CPU 保护**（2.7.53，已通过；新 CPU 都要做一遍）：`ManagePlcProtection {devicePathJson:["MCP_PLC"], action:"read"}`（预期 `accessLevel NoAccess`、`masterSecret WithoutPassword`）→ `{…, action:"setAccessLevel", accessLevel:"FullAccessIncludingFailsafe", dryRun:false, confirmChange:true}` → `{…, action:"protectMasterSecret", password:"<测试密码>", dryRun:false, confirmChange:true}` → `CompileDevice {devicePathJson:["MCP_PLC"]}` 应 0 错（还剩 2 个警告无妨）。密码只在这个一次性测试工程里用，记进台账说明即可。
 1. **监控表往返**（已通过，只在改了 XML 时重跑）：`SetWatchTableModifyValue {softwarePath:"MCP_PLC", tableName:"MCP_W/MCP_WT", address:"%M0.0", modifyValue:"TRUE", trigger:"OnceOnlyAtStart"}` 与 `address:"MCP_Start"`，看 `meta.readbackVerified` / `meta.after`（`ModifyIntention` 应由 TIA 置 true）；`ManagePlcTableEntries read` 核对行；再被拒就看 `meta.error` 原文——XML 在 `Siemens/WatchTableEntryXml.cs`（`ReadOnlyEntryAttributes` 列表可再加名字）。

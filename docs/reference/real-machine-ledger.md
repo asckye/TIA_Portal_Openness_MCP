@@ -2,14 +2,14 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）；2.7.55 部署后（2026-09-21）单步场景恰好 +5 通过、工程已保存，Connect 在多 TIA 进程时误启新实例（2.7.56 修）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
-| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 328 |
-| ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
+| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 330 |
+| ✅ 手工单跑 | 会话级工具，单独手工跑通 | 5 |
 | ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 24 |
-| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 1 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 0 |
 | ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 31 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 60 |
 | 🚫 不运行 | 刻意不跑 | 0 |
@@ -479,12 +479,12 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `Connect` | ✅ 手工单跑 | Close → OpenProject(path) → Disconnect → Connect → Attach 往返通过 |
+| `Connect` | ✅ 通过 | 2.7.55 真机：虚拟机上同时开着维护者的 AutomaticDipCoatingMachine（pid 15100）与 项目1（4840）时，Connect 没有附加而是又启动了一个空 TIA（pid 15748，MCP 调用超时 60 s 后返回）——ListPortalProcessProjects 列出三个进程，AttachToOpenProject 按名重新绑到 4840；空实例只能在虚拟机上手动关；2.7.56 要改 Connect：有进程时附加 / 拒绝，不再自启 |
 | `ConnectIsolated` | ✅ 手工单跑 | 已有连接时按设计拒绝（'Start a fresh MCP process'） |
 | `Disconnect` | ✅ 手工单跑 | Close → OpenProject(path) → Disconnect → Connect → Attach 往返通过 |
 | `EnsureOpennessUserGroup` | ✅ 通过 |  |
 | `GetState` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `ListPortalProcessProjects` | ✅ 通过 |  |
+| `ListPortalProcessProjects` | ✅ 通过 | 2.7.55 真机：虚拟机上同时开着维护者的 AutomaticDipCoatingMachine（pid 15100）与 项目1（4840）时，Connect 没有附加而是又启动了一个空 TIA（pid 15748，MCP 调用超时 60 s 后返回）——ListPortalProcessProjects 列出三个进程，AttachToOpenProject 按名重新绑到 4840；空实例只能在虚拟机上手动关；2.7.56 要改 Connect：有进程时附加 / 拒绝，不再自启 |
 | `ReadPortalInfo` | ✅ 通过 |  |
 
 ## Project（25）
@@ -513,7 +513,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `RunTestSuiteCase` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `RunToolsInTransaction` | ✅ 通过 |  |
 | `SaveAsProject` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
-| `SaveProject` | ✅ 通过 |  |
+| `SaveProject` | ✅ 通过 | 2.7.50 真机：删垃圾表后保存；2.7.55 真机：保存 MCP_STD + 程序、两台 CPU 的保护设置、监控表两行（IsModified false） |
 | `ScaffoldProject` | ✅ 通过 | 2.7.47 真跑：SaveAs 到副本、.zap21 还原绑定、Scaffold 新建工程 7 步全过、CreateProject 通过（外来工程时拒绝） |
 | `ShowObjectInEditor` | ✅ 通过 |  |
 
@@ -573,7 +573,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManagePlcSimAdvancedInstance` | ✅ 通过 | 2.7.51 真机：powerOff → unregister → register CPU1500_Unspecified communicationInterface=Softbus：route=SimulationRuntimeManager.NetworkMode，TCPIPSingleAdapter → Softbus，实例读回 Softbus；powerOn 后 Stop、controllerIP 192.168.0.1（Softbus 下自带默认 IP，TCPIP 下曾是 0.0.0.0） |
 | `ReadPlcSimAdvancedInstances` | ✅ 通过 | 2.7.50 真机：memberFilter 列出实例成员；2.7.51 真机：api.networkMode=TCPIPSingleAdapter、managerMembers='SimulationRuntimeManager.NetworkMode {get;set}' |
 | `ReadPlcSimAdvancedTags` | ✅ 通过 | 2.7.48 真机：无程序时 0 标签；2.7.53 真机：下载后列出 MCP_SimDB + 4 成员，按名读 4/4 |
-| `RunPlcSimAdvancedTestScenario` | 🔁 已修待重跑 | 2.7.53 真机：default 模式 PASSED；2.7.54 真机：singleStep 模式切换生效（operatingModeApplied SingleStep_CP，步间 Freeze），Running 断言过，但 {cycles:5} 只推进 1 周期（303→304）——RunToNextSyncPoint 异步、连发被吞；2.7.55 每周期等 Freeze 并优先 SingleStep_C |
+| `RunPlcSimAdvancedTestScenario` | ✅ 通过 | 2.7.53 真机：default 模式 PASSED；2.7.55 真机：singleStep PASSED 8/8、4/4——operatingModeApplied SingleStep_C，cyclesStepped 5（71 ms），Cycles 304→309 恰好 +5，Start=false 后 2 周期不再增加 |
 | `WritePlcSimAdvancedTags` | ✅ 通过 | 2.7.53 真机：MCP_SimDB.Speed 12.5 写入 1/1、readBack 12.5 |
 
 ## Validation（8）
