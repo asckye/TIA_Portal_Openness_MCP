@@ -6,6 +6,10 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.9.2] - 2026-09-21
+
+小修（PATCH）：`DeletePlcBlock` / `DeletePlcType` 传 `crossReferences=true` 被护栏挡住时，结果多一个 `crossReferenceUnavailableReason`、警告里带上原因（2.9.1 真机：只说“取不到”，看不出是“未编译”）。详见 [v2.9.2](docs/releases/v2.9.2.md)。
+
 ## [2.9.1] - 2026-09-21
 
 交叉引用查询的护栏（PATCH：无新参数，`GetCrossReferences` 与 `crossReferences=true` 在 PLC 有未编译块时拒绝）。维护者补了崩溃时间线与事件日志：Override 重导 5 个块、没编译、紧接着对旧 IDB 查交叉引用（返回了 26 条旧引用）→ TIA Portal V21 **自行退出**（Process Exit Monitor 3000 `EVENT_PROCESSTERMINATION_SELF`，退出码 -1，10:42:38Z）。详见 [v2.9.1](docs/releases/v2.9.1.md)。
@@ -547,7 +551,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.1...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.2...HEAD
+[2.9.2]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.1...v2.9.2
 [2.9.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.0...v2.9.1
 [2.9.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.1...v2.9.0
 [2.8.1]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...v2.8.1

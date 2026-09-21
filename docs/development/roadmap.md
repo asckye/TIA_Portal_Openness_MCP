@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.9.1 更新）
+# 路线图与待办（2026-09-17 审计，2.9.2 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.9.1 已完成
+## 5. 2.9.2 已完成
+
+- 删除工具 `crossReferences=true` 被挡时带上拒绝原因（`crossReferenceUnavailableReason`）。
+
+## 5.0 2.9.1 已完成
 
 - `CrossReferenceGuardLogic`：PLC 有未编译块就拒绝交叉引用查询并点名（真机：Override 重导未编译 + 查询 → TIA 自退，事件 3000 SELF / -1）。
 

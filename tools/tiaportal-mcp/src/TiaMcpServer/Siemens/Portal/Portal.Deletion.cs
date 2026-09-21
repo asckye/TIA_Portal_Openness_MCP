@@ -114,7 +114,9 @@ namespace TiaMcpServer.Siemens
             // CrossReferenceService.GetCrossReferences 让 TIA Portal V21 整个退出（handoff §4 退出点 ⑧）。默认不查，
             // 并明说「没查」，不是「没人用」。
             result["crossReferenceQueried"] = crossReferences;
-            var refs = crossReferences ? GetCrossReferences(softwarePath, resolvedPath, "Block") : null;
+            string? crossRefReason = null;
+            var refs = crossReferences ? GetCrossReferences(softwarePath, resolvedPath, "Block", "AllObjects", out crossRefReason) : null;
+            if (crossReferences) result["crossReferenceUnavailableReason"] = crossRefReason;
             result["crossReferenceAvailable"] = refs != null;
             if (refs != null)
             {
@@ -129,7 +131,7 @@ namespace TiaMcpServer.Siemens
                 warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
                     + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
                     + "再传 crossReferences=true 或单独调 GetCrossReferences。");
-                else warnings.Add("⚠️ 取不到这个块的交叉引用，这**不等于**没人调用它。"
+                else warnings.Add("⚠️ 取不到这个块的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人调用它。"
                     + "删前请先 ExportAsDocuments 备份，删后必须 CompileSoftware 看错误。");
             }
             result["warnings"] = warnings;
@@ -349,7 +351,9 @@ namespace TiaMcpServer.Siemens
 
             // 2.9.0 起只在 crossReferences=true 时查（同 DeletePlcBlock，真机上该查询让 TIA 退出过）。
             result["crossReferenceQueried"] = crossReferences;
-            var refs = crossReferences ? GetCrossReferences(softwarePath, typePath, "Type") : null;
+            string? crossRefReason = null;
+            var refs = crossReferences ? GetCrossReferences(softwarePath, typePath, "Type", "AllObjects", out crossRefReason) : null;
+            if (crossReferences) result["crossReferenceUnavailableReason"] = crossRefReason;
             result["crossReferenceAvailable"] = refs != null;
             if (refs != null)
             {
@@ -364,7 +368,7 @@ namespace TiaMcpServer.Siemens
                 warnings.Add("交叉引用未查询（crossReferences=false，默认）。真机上 CrossReferenceService.GetCrossReferences "
                     + "曾在 DeletePlcBlock 干跑时让 TIA Portal V21 整个退出，所以不再自动查；要看谁在引用它，先 SaveProject，"
                     + "再传 crossReferences=true 或单独调 GetCrossReferences。");
-                else warnings.Add("⚠️ 取不到这个 UDT 的交叉引用，这**不等于**没人用它。"
+                else warnings.Add("⚠️ 取不到这个 UDT 的交叉引用（" + (crossRefReason ?? "原因未知") + "），这**不等于**没人用它。"
                     + "删前请先 ExportType 备份，删后必须 CompileSoftware 看错误。");
             }
             result["warnings"] = warnings;
