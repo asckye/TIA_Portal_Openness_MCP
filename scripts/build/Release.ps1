@@ -44,6 +44,9 @@
   Bump + build + gates only; show what would be committed, commit nothing.
 .PARAMETER KillStrayEngine
   Kill a TiaMcpServer.exe left behind on this host (it locks runtime\v21\TiaMcpServer.exe) instead of refusing.
+.PARAMETER Resume
+  The three release commits already exist locally (HEAD is "Release X.Y.Z (3/3)", tree clean): skip bump, build, gates and
+  commits and continue with push, CI, tag and publish (for a run that stopped after committing).
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Release.ps1 -Version 2.7.57 -Summary "short description of the change"
@@ -63,6 +66,7 @@ param(
     [switch]$NoWait,
     [switch]$DryRun,
     [switch]$KillStrayEngine,
+    [switch]$Resume,
     [int]$CiTimeoutMinutes = 30
 )
 $ErrorActionPreference = 'Stop'
@@ -73,7 +77,10 @@ function Say([string]$text) { $line = "[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss
 function Fail([string]$text) { Say ("FAIL: " + $text); exit 1 }
 function Run([string]$exe, [string[]]$arguments, [string]$what) {
     Say ("> " + $what)
-    & $exe @arguments 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 }
+    # Native programs (git in particular) write ordinary progress to stderr; under $ErrorActionPreference = 'Stop' PowerShell 5.1
+    # turns a redirected stderr line into a terminating error, so the preference is relaxed around the call and only the exit code counts.
+    $previous = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { & $exe @arguments 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 } } finally { $ErrorActionPreference = $previous }
     if ($LASTEXITCODE -ne 0) { Fail ($what + " exited with " + $LASTEXITCODE + " (see release.log)") }
 }
 function ReadText([string]$path) { [IO.File]::ReadAllText($path) }
@@ -142,6 +149,20 @@ if (-not $Summary) {
 }
 Say ("Summary = " + $Summary)
 
+# ---------------------------------------------------------------- resume after the commits
+$resumed = $false
+if ($Resume) {
+    # The (3/3) commit may already be followed by a docs/scripts commit (for instance the fix for whatever stopped the
+    # first run); the tag still goes on the validated (3/3) commit, later commits are pushed with it.
+    $threeOfThree = @(& $Git log --pretty='%H %s' -20) | Where-Object { $_ -like ('* Release ' + $Version + ' (3/3)*') } | Select-Object -First 1
+    $dirtyNow = (& $Git status --porcelain) | Where-Object { $_ -notmatch '^\?\?' }
+    if (-not $threeOfThree) { Fail ('-Resume needs the "Release ' + $Version + ' (3/3)" commit within the last 20 commits') }
+    if ($dirtyNow) { Fail ('-Resume needs a clean tree; dirty: ' + ($dirtyNow -join '; ')) }
+    $tagTarget = ($threeOfThree -split ' ')[0]
+    Say ('resuming after the three commits (tag target ' + $tagTarget + ')')
+    $resumed = $true
+}
+if (-not $resumed) {
 # ---------------------------------------------------------------- 2. version bump (mechanical places)
 $csproj21 = Join-Path $repo 'tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.V21.csproj'
 $previous = [regex]::Match((ReadText $csproj21), '<InformationalVersion>(\d+\.\d+\.\d+)</InformationalVersion>').Groups[1].Value
@@ -232,13 +253,12 @@ foreach ($leftover in @((Join-Path $pkgDir $pkgName), (Join-Path $pkgDir ($pkgNa
 }
 Run $Python @((Join-Path $repo 'scripts\build\Package-Release.py'), '--git', $gitExe) 'Package-Release.py (local dry run)'
 if ($NoPush) { Say 'stopped before push (-NoPush)'; exit 0 }
+}
 
 # ---------------------------------------------------------------- 6. push + CI
 $shas = (& $Git rev-list --reverse --first-parent origin/master..master)
 foreach ($sha in $shas) {
-    Say ('push ' + $sha)
-    & $Git -c http.postBuffer=157286400 push origin ($sha + ':refs/heads/master') 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 }
-    if ($LASTEXITCODE -ne 0) { Fail ('push of ' + $sha + ' failed') }
+    Run $Git @('-c', 'http.postBuffer=157286400', 'push', 'origin', ($sha + ':refs/heads/master')) ('push ' + $sha)
 }
 $title3 = 'Release ' + $Version + ' (3/3)'
 function WorkflowState([string]$workflow, [string]$titlePart) {
@@ -271,14 +291,13 @@ if ($NoTag) { Say 'stopped before tag (-NoTag)'; exit 0 }
 
 # ---------------------------------------------------------------- 7. tag + publish
 $tag = 'v' + $Version
-$head = (& $Git rev-parse HEAD).Trim()
+$head = $(if ($resumed) { $tagTarget } else { (& $Git rev-parse HEAD).Trim() })
 $tagMsg = Join-Path $env:TEMP ('release-tag-' + [guid]::NewGuid().ToString('N') + '.txt')
 [IO.File]::WriteAllText($tagMsg, ($tag + ': ' + $Summary), (New-Object System.Text.UTF8Encoding($false)))
 & $Git tag -a $tag -F $tagMsg $head
 Remove-Item -LiteralPath $tagMsg -Force -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) { Fail ('tag ' + $tag + ' failed (already exists?)') }
-& $Git push origin $tag 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value ([string]$_) -Encoding UTF8 }
-if ($LASTEXITCODE -ne 0) { Fail ('push of tag ' + $tag + ' failed') }
+Run $Git @('push', 'origin', $tag) ('push tag ' + $tag)
 Say ('tag ' + $tag + ' pushed -> Publish complete release')
 if (-not $NoWait) {
     WaitWorkflows @('release.yml') $title3
