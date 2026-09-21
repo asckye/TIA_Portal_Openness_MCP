@@ -43,9 +43,13 @@ def main():
     tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
     require(not any(name.startswith(('runtime/v20/', 'runtime/v21/')) or name == 'TiaMcpConfigurator.exe' for name in tracked),
             'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaMcpConfigurator.exe')
-    # Local build outputs (ignored by Git): every file under runtime/v20 and runtime/v21 plus the configurator.
-    binaries = ['TiaMcpConfigurator.exe'] + sorted(
-        p.relative_to(root).as_posix() for folder in ('runtime/v20', 'runtime/v21') for p in (root / folder).rglob('*') if p.is_file())
+    # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
+    # configurator - never "whatever is on disk" (an engine started locally leaves TiaMcpServer.startup.log there).
+    inventory = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))['runtimeFiles']
+    binaries = ['TiaMcpConfigurator.exe'] + sorted(row['path'] for row in inventory)
+    on_disk = {p.relative_to(root).as_posix() for folder in ('runtime/v20', 'runtime/v21') for p in (root / folder).rglob('*') if p.is_file()}
+    for extra in sorted(on_disk - set(binaries)):
+        print(f'note: {extra} is on disk but not in the validated runtime inventory; left out of the package')
     for name in tracked + binaries:
         path = (root / name).resolve()
         require(path.is_relative_to(root) and path.is_file(), f'Missing file (run Build-Release.ps1 for the binaries): {name}')
