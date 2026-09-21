@@ -21,6 +21,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 
 GitHub `offline-checks` 和 `validate-bundle` 运行对应检查。完整引擎编译需要 Siemens PublicAPI，托管 runner 不具备该环境。
 
+`Build-Release.ps1` 里的 `Generate-ToolsListFromAssembly.ps1` 另有三道构建门（2.7.57–2.7.58）：每条工具示例（`ToolExamples`）与配方步骤（`ToolRecipes`）必须对上真实签名（参数名精确、必填齐全、工具存在）；没有自己的 `[Description]` 的参数数量只能下降（`manifest/tools-list.json` 的 `callDiscipline`）。一键发布 `scripts/build/Release.ps1` 把这些检查、离线套件、三段提交、推送、CI 与 tag 串成一条命令。
+
 ## PublicAPI / 实际 EXE 检查
 
 [Build-Release.ps1](../../scripts/build/Build-Release.ps1) 使用本地匹配 PublicAPI 构建 V20/V21，执行实际 EXE 的 HTTP、资源发现、HMI 遍历、文件代理和 API 签名检查。测试数量和日期写入 release-build，不在本页重复维护版本快照。

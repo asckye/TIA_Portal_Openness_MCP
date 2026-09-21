@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/README.md
+    about: Setup, guides, references, troubleshooting - read before opening an issue.
+  - name: Support
+    url: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/.github/SUPPORT.md
+    about: Where to ask questions and what to include.
+  - name: Report a security vulnerability
+    url: https://github.com/asckye/TIA_Portal_Openness_MCP/security/advisories/new
+    about: Private reporting - never a public issue.

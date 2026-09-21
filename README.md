@@ -59,6 +59,6 @@ Delivery and engine versions are independent. [Delivery metadata](manifest/deliv
 
 Root launch/configuration CMD/BAT files were replaced by the GUI. Delivery ZIPs no longer duplicate runtimes into legacy `bin/Release` paths; use `runtime/v20` or `runtime/v21`.
 
-Read [CONTRIBUTING](.github/CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. See [CHANGELOG](CHANGELOG.md) and [archived release notes](docs/archive/release-notes.md).
+Read [CONTRIBUTING](.github/CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. Questions: [SUPPORT](.github/SUPPORT.md); vulnerabilities: [SECURITY](.github/SECURITY.md) (private reporting, never a public issue). History: [CHANGELOG](CHANGELOG.md), per-version notes in [docs/releases](docs/releases/), [archived release notes](docs/archive/release-notes.md) for v2.7.2–v2.7.15.
 
 Independently maintained by asckye. Provenance and third-party notices remain in [NOTICE](NOTICE.md) and [LICENSE](LICENSE).

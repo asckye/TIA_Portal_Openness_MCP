@@ -24,7 +24,7 @@
 
 ## 2. 官方 Openness API 缺口优先级
 
-基线：[能力与验收边界](../reference/capabilities.md)"尚未完成"清单 + [v2.7.14 覆盖审计](../archive/openness-audit-v2.7.14.md)。2026-09-17 对照官方 V21 在线目录（698 个条目）刷新，并用本机 V21 PublicAPI XML 做了逐成员词法盘点（[官方 API 覆盖清单](../reference/openness-coverage.md)：4,490 个领域成员，2.7.17 时方法已引用 169/1,239、类型完全未触及 1,030/1,217，2.7.18 后成员已引用 609、类型有专用引用 208——口径与低估原因见该页）。结论：**无 V22**；V21 Update 1/2 不新增 Openness API；下一次核对点为 SPS（11 月）。
+基线：[能力与验收边界](../reference/capabilities.md)"尚未完成"清单 + v2.7.14 覆盖审计（已归档删除，现行版本是[官方 API 覆盖清单](../reference/openness-coverage.md)）。2026-09-17 对照官方 V21 在线目录（698 个条目）刷新，并用本机 V21 PublicAPI XML 做了逐成员词法盘点（[官方 API 覆盖清单](../reference/openness-coverage.md)：4,490 个领域成员，2.7.17 时方法已引用 169/1,239、类型完全未触及 1,030/1,217，2.7.18 后成员已引用 609、类型有专用引用 208——口径与低估原因见该页）。结论：**无 V22**；V21 Update 1/2 不新增 Openness API；下一次核对点为 SPS（11 月）。
 
 ### 2.0 官方 API 全量对齐计划（2.7.25 起）
 

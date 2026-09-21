@@ -1,5 +1,11 @@
 # Change Log
 
+格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号目前按 `2.7.x` 递增（每版都可能新增工具），2.8.0 起改为语义化版本。
+
+## [Unreleased]
+
+- （未发布的改动写在这里，发版时移到版本标题下。）
+
 ## [2.7.58] - 2026-09-21
 
 引擎 2.7.58.0（V20/V21 均重建），工具 **453**（+`GetRecipe`），默认 lite 59。详见 [v2.7.58](docs/releases/v2.7.58.md)。维护者 2026-09-21 明确：目标是**规范 AI 对所有工具的调用、不再试错**（不是教它写程序）——本版全部机制由引擎自动执行、对 453 个工具都生效。
@@ -473,3 +479,58 @@
 - [v2.7.4](docs/archive/release-notes.md#v274)
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
+
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...HEAD
+[2.7.58]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.57...v2.7.58
+[2.7.57]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.56...v2.7.57
+[2.7.56]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.55...v2.7.56
+[2.7.55]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.54...v2.7.55
+[2.7.54]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.53...v2.7.54
+[2.7.53]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.52...v2.7.53
+[2.7.52]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.51...v2.7.52
+[2.7.51]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.50...v2.7.51
+[2.7.50]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.49...v2.7.50
+[2.7.49]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.48...v2.7.49
+[2.7.48]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.47...v2.7.48
+[2.7.47]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.46...v2.7.47
+[2.7.46]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.45...v2.7.46
+[2.7.45]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.44...v2.7.45
+[2.7.44]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.43...v2.7.44
+[2.7.43]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.42...v2.7.43
+[2.7.42]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.41...v2.7.42
+[2.7.41]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.40...v2.7.41
+[2.7.40]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.39...v2.7.40
+[2.7.39]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.38...v2.7.39
+[2.7.38]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.37...v2.7.38
+[2.7.37]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.36...v2.7.37
+[2.7.36]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.35...v2.7.36
+[2.7.35]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.34...v2.7.35
+[2.7.34]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.33...v2.7.34
+[2.7.33]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.32...v2.7.33
+[2.7.32]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.31...v2.7.32
+[2.7.31]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.30...v2.7.31
+[2.7.30]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.29...v2.7.30
+[2.7.29]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.28...v2.7.29
+[2.7.28]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.27...v2.7.28
+[2.7.27]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.26...v2.7.27
+[2.7.26]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.25...v2.7.26
+[2.7.25]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.24...v2.7.25
+[2.7.24]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.23...v2.7.24
+[2.7.23]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.22...v2.7.23
+[2.7.22]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.21...v2.7.22
+[2.7.21]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.20...v2.7.21
+[2.7.20]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.19...v2.7.20
+[2.7.19]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.17...v2.7.19
+[2.7.18]: https://github.com/asckye/TIA_Portal_Openness_MCP/blob/master/docs/releases/v2.7.18.md
+[2.7.17]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.16...v2.7.17
+[2.7.16]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.15...v2.7.16
+[2.7.15]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.14...v2.7.15
+[2.7.14]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.13...v2.7.14
+[2.7.13]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.12...v2.7.13
+[2.7.12]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.11...v2.7.12
+[2.7.11]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.10...v2.7.11
+[2.7.10]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.9...v2.7.10
+[2.7.9]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.8...v2.7.9
+[2.7.8]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.7...v2.7.8
+[2.7.7]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.6...v2.7.7
+[2.7.6]: https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v2.7.6

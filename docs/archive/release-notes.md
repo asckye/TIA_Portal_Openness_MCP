@@ -446,4 +446,4 @@ screenPath 可用唯一裸名称；同名画面必须用 ListHmiScreenPaths 返�
 
 **尚未替换虚拟机 MCP 服务，修复版实际 TIA 验收未执行。发布成功不代表现场服务已修复。** 本轮只读核查确认旧服务仍可复现 Culture.Parent 循环错误。必须完成三语言 before/after 回读、保存重开、HMI 编译及布局/Logo/脚本/PLC 绑定保持检查后，才能确认现场修复。
 
-操作不是事务，失败可能保留部分工程变更；HTML 回读采用严格原文比较，TIA 正规化导致不一致时会报告失败，需按报告核实。部署与回退步骤详见仓库 `docs/archive/multilingual-fix.md`。
+操作不是事务，失败可能保留部分工程变更；HTML 回读采用严格原文比较，TIA 正规化导致不一致时会报告失败，需按报告核实。部署与回退步骤详见仓库 `docs/archive/multilingual-fix.md`（该报告已删除，见 Git 历史）。

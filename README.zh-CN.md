@@ -57,6 +57,6 @@
 
 原根目录配置及启动 CMD/BAT 已由 GUI 替代。交付包不再附带 `bin/Release` 引擎副本，统一使用 `runtime/v20`、`runtime/v21`。调整对照见 [仓库结构说明](docs/development/repository-layout.md)。
 
-开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
+开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。提问看 [支持说明](.github/SUPPORT.md)；安全问题按 [安全策略](.github/SECURITY.md) 私下报告，不要开公开 issue。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
 
 本项目由 asckye 独立维护，原始来源和依赖声明保留于 [NOTICE](NOTICE.md) 与 [LICENSE](LICENSE)。
