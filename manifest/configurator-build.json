@@ -1,10 +1,10 @@
 {
-    "generatedAt":  "2026-09-21T08:45:49.8721676+00:00",
-    "testsPassed":  88,
+    "generatedAt":  "2026-09-21T08:56:06.5736201+00:00",
+    "testsPassed":  95,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "108a394b2839a78b600a158f0bf416ed415d7b10339a41f99f1a77454c4b7d85"
+                       "sha256":  "454a3b4328d97755ccf26ebfc5dbf6b11e4d80b61011334277f8db7bf1151063"
                    },
     "sourceFiles":  [
                         {
@@ -13,7 +13,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
-                            "sha256":  "ee2322d5d9a8d663a7cf6b9bac64bd609cf1c56f860d429764c35fa829c80e26"
+                            "sha256":  "ed68f33a9c2b7bfabfc05053ac4647a03261d4aca8212cc6e57aa95991ff1bdd"
                         },
                         {
                             "path":  "tools/mcp-configurator/ConfigCore.cs",
@@ -21,15 +21,15 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "bdb0495aa711e31005b3e8cb14bec17cdc1eb9a5e43cfe93925ac2f6b54a1e29"
+                            "sha256":  "d545c9f6ffc78f6d82826870821b4894e53574142f8474c8ac133893e74505ee"
                         },
                         {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
-                            "sha256":  "6eedd2820c9613bd8dc719f5da49f50e87bc3098769f342f10f67bd28582cfc5"
+                            "sha256":  "1144a340cc21d4d5aba3b3646e87799bc8612329971d60749fa5f8e8f7655b3a"
                         },
                         {
                             "path":  "tools/mcp-configurator/Tests.cs",
-                            "sha256":  "39638efc7934de8e70676d29bc6e2f3223f86c279f6e805656aa7cd4bd937c63"
+                            "sha256":  "e2aa82a07ee22ff16148e6fe1e2fb97704bac0384f2cd0af0a92273613f9f3db"
                         }
                     ]
 }

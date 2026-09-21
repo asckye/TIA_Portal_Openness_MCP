@@ -1,9 +1,9 @@
 {
-    "release":  "2.7.60",
+    "release":  "2.7.61",
     "releaseDate":  "20260921",
-    "fileVersion":  "2.7.60.0",
-    "package":  "TIA_MCP_Delivery_v2.7.60_20260921",
-    "generatedAt":  "2026-09-21T08:45:46.8777640+00:00",
+    "fileVersion":  "2.7.61.0",
+    "package":  "TIA_MCP_Delivery_v2.7.61_20260921",
+    "generatedAt":  "2026-09-21T08:56:03.7821676+00:00",
     "validation":  {
                        "offlinePassed":  2456,
                        "runtimes":  {
@@ -357,7 +357,7 @@
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
                              "length":  3974144,
-                             "sha256":  "f6cff28330b60389da4004ad8af39bb72213d1d0a24f4f2baecc8247efd4c0ec"
+                             "sha256":  "d7f2433e6e66a9d5f983f257736bc068829edee0aaad8c536cd9f6fdaf3b8598"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -687,7 +687,7 @@
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
                              "length":  4029440,
-                             "sha256":  "08e9393b29273b1cf8ee13ce72b47e72fe2ab0c30158b5296373e4ef73dcaaf8"
+                             "sha256":  "41b05a844fe6facf316c2566d5f24f7d138c7cf493fb8d9e9aa0791708014ce1"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -1828,11 +1828,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "b0bda344b5d979e54e242633e2ffe8651ddac1bd7ec1741a5783c3ca3bb7cf23"
+                            "sha256":  "401a5be833218ad12d42f9a55e2f8db15d5c23fc531c556949ee60ab4e7c0103"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "c0da174bac6ebb2d00aacf65d0241fac5c10ef545f0edf71af39d07146d7bef8"
+                            "sha256":  "7a01d6710e43a9f39cd583065c923b98f20e0415e07c42ac879cd9de41b29855"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/BaseLeftoversShapeChecks.cs",
