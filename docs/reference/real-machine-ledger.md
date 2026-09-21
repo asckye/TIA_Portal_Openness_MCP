@@ -2,11 +2,11 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）；2.7.55 部署后（2026-09-21）单步场景恰好 +5 通过、工程已保存，Connect 在多 TIA 进程时误启新实例（2.7.56 修）；2.7.56 部署后（2026-09-21）Connect 按 projectName 附加到持有 项目1 的进程、不再自启（进程数不增）；2.7.57 部署后（2026-09-21，用更新器）示例进描述、PreflightToolCall 报告、CheckForUpdate 通过：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）；2.7.55 部署后（2026-09-21）单步场景恰好 +5 通过、工程已保存，Connect 在多 TIA 进程时误启新实例（2.7.56 修）；2.7.56 部署后（2026-09-21）Connect 按 projectName 附加到持有 项目1 的进程、不再自启（进程数不增）；2.7.57 部署后（2026-09-21，用更新器）示例进描述、PreflightToolCall 报告、CheckForUpdate 通过；2.7.58 部署后（2026-09-21，更新器在线）schema enum / default / examples、失败自动 preflight、GetRecipe 通过：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
-| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 332 |
+| ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 333 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 5 |
 | ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 24 |
 | 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 0 |
@@ -21,7 +21,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `Bootstrap` | ✅ 通过 | 2.7.57 真机：serverVersion 2.7.57.0，lite 58 / 452，规则含 PLAN, DO NOT PROBE；tools/list 里 45 个描述末尾带 Example |
+| `Bootstrap` | ✅ 通过 | 2.7.57 真机：2.7.57.0；2.7.58 真机：serverVersion 2.7.58.0，lite 59 / 453，tools/list 59 个工具 0 个属性缺 description，GetAuthoringGuide.topic / ImportFromDocuments.importOption / PlcBuildAndImport.kind 带 enum，default / examples 到位 |
 
 ## Diagnostics（6）
 
@@ -44,11 +44,12 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ListExports` | ✅ 通过 |  |
 | `SaveExport` | ✅ 通过 |  |
 
-## Guide（1）
+## Guide（2）
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `GetAuthoringGuide` | ✅ 通过 |  |
+| `GetRecipe` | ✅ 通过 | 2.7.58 真机：无参列出 12 条配方（topics）；{topic:watch-table} 3 步精确调用 |
 
 ## HMI（30）
 
@@ -407,15 +408,15 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ExportBlocksAsDocuments` | ✅ 通过 |  |
 | `ExportPlcProDiagInfo` | ⛔ TIA/环境拒绝 | 块不是 ProDiag FB（守卫正确） |
 | `ExportPlcTagTable` | ✅ 通过 |  |
-| `ExportPlcWatchTable` | ✅ 通过 | 2.7.50 真机：删表后列出 MCP_W/MCP_WT；导出到桌面 mcp50_wt.xml；路由树两块网卡仍 addresses: []（PG 侧无 IP） |
+| `ExportPlcWatchTable` | ✅ 通过 | 2.7.50 真机：导出监控表；2.7.58 真机：经 CallTool 缺 watchTableName/exportPath → Meta.preflight.missing + 示例 |
 | `ExportPlcWatchTablesToDirectory` | ✅ 通过 |  |
 | `ExportType` | ✅ 通过 | 2.7.47 重跑通过：.xml 结尾按文件写出并回报 exportedFile，随后导入成功 |
 | `ExportTypes` | ✅ 通过 | 2.7.47 重跑通过：经 CallTool 桥接导出 4 块 / 1 类型 |
 | `GenerateBlocksFromExternalSource` | ⚠ 参数/前置条件 | 旧工具只搜根外部源组（用户组里的找不到，描述指向 ManagePlcExternalSources generateBlocks，后者通过） |
 | `GeneratePlcLoadableFile` | ⛔ TIA/环境拒绝 | targetOption 枚举名已列出（None/Plc/PlcSim）；`LoadableProvider` 在 1515F-2 PN V2.9 上不可用（GetService 为 null） |
 | `GeneratePlcSourceFromBlocks` | ✅ 通过 |  |
-| `GetBlockInfo` | ✅ 通过 |  |
-| `GetBlocks` | ✅ 通过 |  |
+| `GetBlockInfo` | ✅ 通过 | 2.7.50 真机：读块信息；2.7.58 真机：不存在的块 → Block not found + preflight（示例 + '消息已点明原因'） |
+| `GetBlocks` | ✅ 通过 | 2.7.50 真机：MCP_PLC 用户块；2.7.58 真机：故意错的直接调用 {SoftwarePath, regex} 被参数诊断拒绝（未执行）并附 preflight（unknown regex → regexName、SoftwarePath → softwarePath、示例、下一步）；正确调用 {softwarePath:MCP_STD, regexName:x} 正常回空表 |
 | `GetBlocksWithHierarchy` | ✅ 通过 |  |
 | `GetCrossReferences` | ✅ 通过 | 2.7.47 重跑通过：filter 为空按 AllObjects；非法 filter 列出合法值 |
 | `GetPlcExternalSources` | ✅ 通过 |  |

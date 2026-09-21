@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.58 已发布、待部署；`项目1` 目前未打开）
+# 换机器交接单（2026-09-21，2.7.58 已部署并真机通过；TIA 只开着 `项目1`）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -6,7 +6,7 @@
 
 ## 0. 一句话现状
 
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.58**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.58_20260921.zip` 已上传；`Release.ps1 -Version 2.7.58 -Summary ...` 一条命令全程自动）。453 个工具（lite 59），离线 2453，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.57**（2026-09-21 用 `Update-Engine.ps1` 部署，安装目录 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.57_20260921`，虚拟机有外网）。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（在线）或 `-ZipPath <ZIP>`，**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.58**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.58_20260921.zip` 已上传；`Release.ps1 -Version 2.7.58 -Summary ...` 一条命令全程自动）。453 个工具（lite 59），离线 2453，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.58**（2026-09-21 `Update-Engine.ps1` 在线更新；安装目录 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.57_20260921`，虚拟机有外网）。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（在线）或 `-ZipPath <ZIP>`，**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷，**真机已通过**（按名附加到 4840、不自启、进程数不增）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
@@ -22,7 +22,7 @@
 
 ## 2. 虚拟机现在的样子（2026-09-21，2.7.56 之后）
 
-- **2026-09-21 下午起 TIA 只有一个进程 pid 11104 = 维护者的 `AutomaticDipCoatingMachine`（绝不碰）；测试工程 `项目1`（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，已保存，含 MCP_STD 等全部改动）目前没有打开**——要跑写类 / 在线真机测试时先请维护者在 TIA 里打开 `项目1`（引擎不能在别人的实例里 `OpenProject` 换掉他的工程）。之后 `Connect {projectName:"项目1"}` 即可（按名附加、不自启），每次写操作前看 `GetState` 的 `project` 是 `项目1`。规则仍是只开一个 TIA 实例。
+- **2026-09-21 晚：TIA 只有一个进程 pid 12060 = 测试工程 `项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，已保存，含 `MCP_PLC` / `MCP_STD` 等全部改动）；维护者的 `AutomaticDipCoatingMachine` 此刻没开（开着时绝不碰）。`Connect {projectName:"项目1"}` 即可（按名附加、不自启），每次写操作前看 `GetState` 的 `project` 是 `项目1`。规则仍是只开一个 TIA 实例。
 - `项目1` 里引擎自建的东西：`MCP_PLC`（CPU 1515F-2 PN V2.9，X1 = 192.168.0.1 在子网 `MCP_PN`；块 MCP_G/MCP_FC/MCP_FB/MCP_FB_DB/MCP_DB，类型 MCP_T/MCP_UDT，变量表 MCP_Tags/MCP_Table，监控表在文件夹 **`MCP_W/MCP_WT`**（2 行：`"MCP_Start"` %I0.0 ModifyValue FALSE / Permanent，`%M0.0` TRUE / OnceOnlyAtStart——2.7.51 写入，**工程未保存**；桌面 `mcp50_wt.xml` 是 1 行时的导出），外部源 MCP_X，工艺对象文件夹 MCP_TO（当前为空），单元 MCP_Unit）、`MCP_TP700`（Comfort V17，800×480）、`MCP_UCP`（MTP700 Unified V21）、`MCP_S120`（V5.2 + 驱动轴_1）、项目库主副本、全局库 `MCP_GL`（桌面 `mcp46_gl`）。
 - ~~根级五张空监控表 `MCP_WT_1` … `MCP_WT_5`~~ 已用 2.7.50 的 `ManagePlcTableEntries deleteTable` 删掉并保存（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`）。
 - `MCP_PLC` 的 CPU 保护已改为 `FullAccessIncludingFailsafe` + 机密组态数据密码 `McpTest2753!`（一次性测试密码，只在 `项目1`）；硬件编译 0 错；但 F-CPU 不能经 Openness 下载。
@@ -38,7 +38,7 @@
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
 1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
-2. ~~**2.7.57 部署后**~~ 通过（2026-09-21）。**2.7.58 部署后**（`docs/releases/v2.7.58.md` "待真机" 1–4）：`tools/list` 的 `ManagePlcTableEntries.tableKind` 有 `enum`；故意错的 `GetBlocks {SoftwarePath, regex}` 与 `CallTool ExportPlcWatchTable {softwarePath}` 的响应带 `preflight`；`GetRecipe` 列表 + `watch-table`；一次真实业务失败的 `preflight.next`。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线）即可更新。
+2. ~~**2.7.57 / 2.7.58 部署后**~~ 都通过（2026-09-21；见各自发布说明的"真机结果"）。**下一次源码改动后**：参数描述批次 2（`manifest/tools-list.json` 的 `callDiscipline.undocumentedTools`，199 个工具），部署后抽查新 enum；虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线）即可更新，更新完手动重启引擎。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：
