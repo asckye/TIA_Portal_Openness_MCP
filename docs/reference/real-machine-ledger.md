@@ -2,7 +2,7 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）；2.7.55 部署后（2026-09-21）单步场景恰好 +5 通过、工程已保存，Connect 在多 TIA 进程时误启新实例（2.7.56 修）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）；2.7.55 部署后（2026-09-21）单步场景恰好 +5 通过、工程已保存，Connect 在多 TIA 进程时误启新实例（2.7.56 修）；2.7.56 部署后（2026-09-21）Connect 按 projectName 附加到持有 项目1 的进程、不再自启（进程数不增）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
@@ -479,12 +479,12 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `Connect` | ✅ 通过 | 2.7.55 真机：虚拟机上同时开着维护者的 AutomaticDipCoatingMachine（pid 15100）与 项目1（4840）时，Connect 没有附加而是又启动了一个空 TIA（pid 15748，MCP 调用超时 60 s 后返回）——ListPortalProcessProjects 列出三个进程，AttachToOpenProject 按名重新绑到 4840；空实例只能在虚拟机上手动关；2.7.56 要改 Connect：有进程时附加 / 拒绝，不再自启 |
+| `Connect` | ✅ 通过 | 2.7.55 真机：两个 TIA 进程时 Connect 误启第三个空实例（15748）；2.7.56 真机：引擎重启后两个进程（4840 项目1、15100 维护者工程），Connect {projectName:项目1} 70 ms 附加到 4840、startedNew false、命中即停（candidates 只列 4840），进程数前后都是 2；名字不存在时探测两个进程后绑 4840 并带 warning，仍不自启；GetState boundProcessId 4840 / project 项目1 |
 | `ConnectIsolated` | ✅ 手工单跑 | 已有连接时按设计拒绝（'Start a fresh MCP process'） |
 | `Disconnect` | ✅ 手工单跑 | Close → OpenProject(path) → Disconnect → Connect → Attach 往返通过 |
 | `EnsureOpennessUserGroup` | ✅ 通过 |  |
 | `GetState` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `ListPortalProcessProjects` | ✅ 通过 | 2.7.55 真机：虚拟机上同时开着维护者的 AutomaticDipCoatingMachine（pid 15100）与 项目1（4840）时，Connect 没有附加而是又启动了一个空 TIA（pid 15748，MCP 调用超时 60 s 后返回）——ListPortalProcessProjects 列出三个进程，AttachToOpenProject 按名重新绑到 4840；空实例只能在虚拟机上手动关；2.7.56 要改 Connect：有进程时附加 / 拒绝，不再自启 |
+| `ListPortalProcessProjects` | ✅ 通过 | 2.7.55 真机：两个 TIA 进程时 Connect 误启第三个空实例（15748）；2.7.56 真机：引擎重启后两个进程（4840 项目1、15100 维护者工程），Connect {projectName:项目1} 70 ms 附加到 4840、startedNew false、命中即停（candidates 只列 4840），进程数前后都是 2；名字不存在时探测两个进程后绑 4840 并带 warning，仍不自启；GetState boundProcessId 4840 / project 项目1 |
 | `ReadPortalInfo` | ✅ 通过 |  |
 
 ## Project（25）

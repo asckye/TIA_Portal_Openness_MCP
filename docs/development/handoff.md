@@ -9,17 +9,17 @@
 | 项 | 值 |
 |---|---|
 | 最新发布 | **v2.7.56**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.56_20260921.zip` + `.sha256` 已上传；见 `docs/releases/v2.7.56.md`）：`Connect` 有 TIA 进程时只附加（`projectName` / `allowStart`），不再自启空实例 |
-| 虚拟机 | 跑的是 **2.7.55**；2.7.56 待部署。虚拟机上仍有引擎误启的空 TIA pid 15748 待维护者手动关；`项目1` 已保存（2026-09-21 05:48 UTC，含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行） |
+| 虚拟机 | 跑的是 **2.7.56**（2026-09-21 部署，`Connect` 多进程行为真机通过：`{projectName:"项目1"}` 70 ms 附加到 4840、`startedNew false`、进程数不增；名字不存在时绑 4840 并带 `warning`）。误启的 15748 已关；`项目1` 已保存（2026-09-21 05:48 UTC，含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行） |
 | 规模 | 工具 450、默认 lite 56；离线套件 2218；引擎 API 形状检查 V20 2805 / V21 3097（`Build-Release.ps1` 第 73 行硬编码这两个数） |
 | 真机 | 台账 `docs/reference/real-machine-ledger.md`：✅ 330 / 手工 5 / 早期 24 / ⛔ 31 / ⚠ 60 / 🔁 0。**在线族收口**（标准 CPU `MCP_STD` + PLCSIM Advanced Softbus：下载 / 上线 / 比较 / 标签读写 / default 与 singleStep 场景全部通过）；F-CPU 不能经 Openness 下载（TIA 规则）；站上载对 PLCSIM 实例是 TIA 侧不支持 |
 | API 对齐 | 阶段 1–6 全部收口，所有程序集功能类型缺口 0 / 0（2.7.42 审计）；DCC 与在线驱动工具真机待有对象 |
-| 待办 | 部署 2.7.56 后验证 `Connect {projectName:"项目1"}`（§2 第 1 条）；之后按 §2 第 2 条的既定顺序 |
+| 待办 | ~~部署 2.7.56 后验证 `Connect`~~ 已通过；按 §2 第 2 条的既定顺序做 2.7.57（更新器 + `PreflightToolCall` + 示例；顺手修名字不存在时 `Connect` 消息末尾的双句号） |
 
 逐版本记录（2.7.41–2.7.56 每版做了什么、部署后真机结果）、2.7.42 覆盖审计与阶段收口清单都在 [交接历史](handoff-history.md)；各版详情在 `docs/releases/`，变更摘要在 `CHANGELOG.md`。**新发布后**：本表改现状，`handoff-history.md` §1 顶部加一条，不再往本页堆每版条目。
 
 ## 2. 下一步（按顺序）
 
-1. **部署 2.7.56，验证 `Connect` 附加而不自启**（`docs/releases/v2.7.56.md` "待真机" 1–2）：引擎重启后 `ListPortalProcessProjects` 记进程数 → `Connect {projectName:"项目1"}` → `Meta.boundProcessId` 是持有 `项目1` 的进程、`startedNew false`、进程数不增，`GetState.project` = `项目1`；全部附不上时应得到逐进程说明的拒绝而不是新实例。结果记进台账 `Connect` 行、本页 §1 与 `handoff-history.md`。
+1. ~~部署 2.7.56，验证 `Connect` 附加而不自启~~ **已通过**（2026-09-21，`docs/releases/v2.7.56.md` "真机结果"）：两个 TIA 进程时 `Connect {projectName:"项目1"}` 70 ms 附加到 4840、命中即停、`startedNew false`、进程数不增；名字不存在时绑 4840 并带 `warning`。未跑的只剩"只开维护者工程时按名 Connect 应带 warning 绑过去"（要关 `项目1`）。
 2. **维护者 2026-09-21 定下的后续顺序**（热更新 / GitHub Actions 发布 / 全项目整理 / 规范 AI 调用，按建议的顺序做）：
    1. ~~一键发布脚本 + 文档整理~~ 已做（2026-09-21 提交）：`scripts/build/Release.ps1`（§4 第一条）、本页 §1 压缩 + `handoff-history.md`、`docs/README.md` / `scripts/README.md` / `release-workflow.md` / `handoff-checklist.md` 对齐。托管 runner 编不了引擎（Openness NuGet 只有 targets、PublicAPI 不可分发），所以"用 Actions 完成发布"= 本机一键脚本 + 现有 tag 触发的发布工作流；自托管 runner 留到 2.8.0 一起决定。
    2. **2.7.57 更新器 + 调用规范**（维护者 2026-09-21 定：不要热更新，改成"检测到引擎在运行就要求先关掉，再更新"）：交付包里加 `scripts/operations/Update-Engine.ps1`（或配置器里的按钮）——查 GitHub Releases 最新 tag 与本机 `manifest/delivery.json` 版本比较；发现 `TiaMcpServer.exe` 在运行就列出 pid 并拒绝，让维护者先关；下载 ZIP + `.sha256`、校验、把当前 `runtime/` 备份到 `runtime.bak/`、解压覆盖、`-Rollback` 换回备份；虚拟机没有外网时收 `-ZipPath` 离线更新。引擎侧只加只读的 `CheckForUpdate`（回报最新版本与本机版本，不改文件）。同时加 `PreflightToolCall(name, argumentsJson)`（只做参数门控 + 依赖检查，不碰 TIA，返回"会做什么 / 缺什么 / 该先调什么"），并给常用工具在描述里加一条调用示例，让 AI 先预检再调用、被纠正后按预检结果重规划而不是反复试错；纠正后的做法写进 `SKILL.md` / `GetAuthoringGuide` / 自然语言配方，让它持久。

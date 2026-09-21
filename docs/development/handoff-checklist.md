@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.56 已发布、待虚拟机部署；在线族收口、`项目1` 已保存）
+# 换机器交接单（2026-09-21，2.7.56 已部署并真机通过；在线族收口、`项目1` 已保存；下一版 2.7.57 更新器 + 调用规范）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -6,8 +6,8 @@
 
 ## 0. 一句话现状
 
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.56**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.56_20260921.zip` 已上传）。450 个工具，离线 2218，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.55**；2.7.56 的 ZIP 还没部署。
-- 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷（部署后验证）。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.56**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.56_20260921.zip` 已上传）。450 个工具，离线 2218，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.56**（2026-09-21 部署）。
+- 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷，**真机已通过**（按名附加到 4840、不自启、进程数不增）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
 ## 1. 新机器要准备的
@@ -20,9 +20,9 @@
 | 代理 | 宿主机若设了 `HTTP_PROXY`，Claude Code 的 MCP 客户端会把局域网请求送进代理，会话一开始就报 "tia-portal-vm CONNECT_TIMEOUT"——**这不是服务器坏了**，探针脚本与 `camp.py` 都绕过代理直连；把虚拟机地址加进 `NO_PROXY` 即可让 MCP 客户端也通 |
 | Claude 记忆 | 记忆文件不随仓库走。旧机器记忆里、仓库里没有的几条已并入本页 §5；其余都在 handoff.md |
 
-## 2. 虚拟机现在的样子（2026-09-21，2.7.55 之后）
+## 2. 虚拟机现在的样子（2026-09-21，2.7.56 之后）
 
-- **三个 TIA Portal V21 进程**（2026-09-21 深夜）：pid 4840 = 测试工程 **`项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，**已保存**，含 MCP_STD 等全部改动）；pid 15100 = 维护者的 `AutomaticDipCoatingMachine`（绝不碰）；pid 15748 = 引擎 `Connect` 误启的空实例（无工程，请维护者手动关掉）。接手时先 `ListPortalProcessProjects`，再 `AttachToOpenProject {projectName:"项目1"}`，每次写操作前看 `GetState` 的 `boundProcessId` 是 4840 / `project` 是 `项目1`。规则仍是只开一个 TIA 实例。
+- **两个 TIA Portal V21 进程**：pid 4840 = 测试工程 **`项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，**已保存**，含 MCP_STD 等全部改动）；pid 15100 = 维护者的 `AutomaticDipCoatingMachine`（绝不碰）；2.7.55 误启的 15748 已关。接手时 `Connect {projectName:"项目1"}` 即可（2.7.56 起按名附加、不自启），每次写操作前看 `GetState` 的 `boundProcessId` 是 4840 / `project` 是 `项目1`。规则仍是只开一个 TIA 实例。
 - `项目1` 里引擎自建的东西：`MCP_PLC`（CPU 1515F-2 PN V2.9，X1 = 192.168.0.1 在子网 `MCP_PN`；块 MCP_G/MCP_FC/MCP_FB/MCP_FB_DB/MCP_DB，类型 MCP_T/MCP_UDT，变量表 MCP_Tags/MCP_Table，监控表在文件夹 **`MCP_W/MCP_WT`**（2 行：`"MCP_Start"` %I0.0 ModifyValue FALSE / Permanent，`%M0.0` TRUE / OnceOnlyAtStart——2.7.51 写入，**工程未保存**；桌面 `mcp50_wt.xml` 是 1 行时的导出），外部源 MCP_X，工艺对象文件夹 MCP_TO（当前为空），单元 MCP_Unit）、`MCP_TP700`（Comfort V17，800×480）、`MCP_UCP`（MTP700 Unified V21）、`MCP_S120`（V5.2 + 驱动轴_1）、项目库主副本、全局库 `MCP_GL`（桌面 `mcp46_gl`）。
 - ~~根级五张空监控表 `MCP_WT_1` … `MCP_WT_5`~~ 已用 2.7.50 的 `ManagePlcTableEntries deleteTable` 删掉并保存（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`）。
 - `MCP_PLC` 的 CPU 保护已改为 `FullAccessIncludingFailsafe` + 机密组态数据密码 `McpTest2753!`（一次性测试密码，只在 `项目1`）；硬件编译 0 错；但 F-CPU 不能经 Openness 下载。
@@ -33,11 +33,11 @@
 - 桌面上的产物：`mcp46_*` / `mcp47_*` / `mcp48_*` / `mcp49_*`（`mcp48_pid.xml` = PID_Compact 2.3 的 TO 导出，可再导入；`mcp47_projects\` 下有 SaveAs / Scaffold / Retrieve 出来的副本工程）。
 - 已知的 TIA 退出点 ①–⑩（handoff §5）一个都别再碰；尤其 `TO_PositioningAxis 6.0`、Unified 面板 `/20.0.0.0`、与面板尺寸不符的经典画面、Safety Validation 条件级 `checkValidity`、无图表 PLC 上 `skipChartPreflight=true`。
 
-## 3. 部署 2.7.56 后按顺序做（都用 `scripts/diagnostics/campaign`，见 §4）
+## 3. 部署后按顺序做（都用 `scripts/diagnostics/campaign`，见 §4）
 
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
-1. **2.7.56 部署后**：`ListPortalProcessProjects` 记进程数 → `Connect {projectName:"项目1"}` → `Meta.boundProcessId` = 持有 `项目1` 的进程、`startedNew false`、进程数不增；`GetState.project` = `项目1`。全部附不上时应得到逐进程说明的拒绝而不是新实例。
+1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。**下一次部署（2.7.57）后**：`CheckForUpdate` 回报最新版与本机版；`PreflightToolCall` 对一个写工具给缺参数 / 全参数各跑一次看回报；`Connect` 名字不存在时消息末尾不再双句号。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：
