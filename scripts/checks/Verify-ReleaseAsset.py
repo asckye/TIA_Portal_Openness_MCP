@@ -66,12 +66,20 @@ def main():
         inside = {n[len(package) + 1:]: n for n in names if not n.endswith('/')}
         content = {rel: z.read(full) for rel, full in inside.items()}
 
-    # 2. tracked files byte-identical
+    # 2. tracked files identical - text files up to line endings: the ZIP is built from the maintainer's working
+    #    tree while a CI checkout with core.autocrlf=true turns LF blobs into CRLF (12 files failed that way on the
+    #    first 2.8.1 verification); binaries (any NUL byte) must match byte for byte
+    def same(a, b):
+        if a == b:
+            return True
+        if b'\x00' in a or b'\x00' in b:
+            return False
+        return a.replace(b'\r\n', b'\n') == b.replace(b'\r\n', b'\n')
     for name in tracked:
         local = (root / name)
         if not check(name in content, f'tracked file missing from ZIP: {name}'):
             continue
-        check(content[name] == local.read_bytes(), f'ZIP differs from checkout: {name}')
+        check(same(content[name], local.read_bytes()), f'ZIP differs from checkout: {name}')
     tracked_set = set(tracked)
 
     # 3. binaries against the committed build records

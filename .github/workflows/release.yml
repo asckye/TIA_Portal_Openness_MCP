@@ -1,5 +1,5 @@
 name: Verify published release
-run-name: Verify ${{ github.event.release.tag_name }}
+run-name: Verify ${{ github.event.release.tag_name || inputs.tag }}
 
 # Since 2.8.1 the delivery ZIP is built and uploaded from the maintainer's machine by scripts/build/Release.ps1
 # (the engine cannot be compiled on hosted runners: Siemens PublicAPI is not redistributable, and the binaries are
@@ -10,20 +10,30 @@ run-name: Verify ${{ github.event.release.tag_name }}
 #     manifest/release-build.json and the configurator with manifest/configurator-build.json
 #     (scripts/checks/Verify-ReleaseAsset.py), and the unpacked package passes Validate-Bundle.ps1 -Strict.
 # A red run means the published asset does not match the reviewed source: fix and re-release (new patch version);
-# nothing here modifies the release.
+# nothing here modifies the release. Run workflow (workflow_dispatch) re-verifies an existing tag with the current
+# checks; then the tag only has to be an ancestor of master instead of master HEAD.
 
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to verify (vX.Y.Z)'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    if: startsWith(github.event.release.tag_name, 'v')
+    if: startsWith(github.event.release.tag_name || inputs.tag, 'v')
     runs-on: windows-latest
+    env:
+      tag: ${{ github.event.release.tag_name || inputs.tag }}
     steps:
+      # master supplies the checks (so a re-verification uses the current scripts); the tag's tree is compared
       - uses: actions/checkout@v7
         with:
           ref: master
@@ -31,17 +41,22 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
-      - name: Tag must match manifest/delivery.json and point at master HEAD
+      - name: Tag must match manifest/delivery.json and sit on master (HEAD for a fresh release, an ancestor on re-verification)
         shell: pwsh
         run: |
-          $tag = "${{ github.event.release.tag_name }}"
-          $delivery = Get-Content manifest/delivery.json -Raw | ConvertFrom-Json
-          if ($tag -ne "v$($delivery.release)") { throw "Release tag $tag does not match manifest/delivery.json release $($delivery.release)" }
-          $head = (git rev-parse HEAD).Trim()
-          $tagCommit = (git rev-list -n 1 $tag).Trim()
-          if ($tagCommit -ne $head) { throw "Tag $tag points at $tagCommit but master HEAD is $head" }
-          "tag=$tag" >> $env:GITHUB_ENV
-          "package=$($delivery.package)" >> $env:GITHUB_ENV
+          git fetch origin "refs/tags/$($env:tag):refs/tags/$($env:tag)" --quiet
+          $tagCommit = (git rev-list -n 1 $env:tag).Trim()
+          $master = (git rev-parse HEAD).Trim()
+          if ("${{ github.event_name }}" -eq 'release') {
+            if ($tagCommit -ne $master) { throw "Tag $env:tag points at $tagCommit but master HEAD is $master" }
+          } else {
+            git merge-base --is-ancestor $tagCommit $master
+            if ($LASTEXITCODE -ne 0) { throw "Tag $env:tag ($tagCommit) is not on master" }
+          }
+          git worktree add tagtree $tagCommit --quiet
+          $tagDelivery = Get-Content tagtree/manifest/delivery.json -Raw | ConvertFrom-Json
+          if ($env:tag -ne "v$($tagDelivery.release)") { throw "Tag $env:tag does not match its own manifest/delivery.json release $($tagDelivery.release)" }
+          "package=$($tagDelivery.package)" >> $env:GITHUB_ENV
       - name: Download the ZIP and its .sha256 from the release
         shell: pwsh
         env:
@@ -52,7 +67,7 @@ jobs:
           Get-ChildItem assets | ForEach-Object { "{0}  {1} bytes" -f $_.Name, $_.Length }
           if (-not (Test-Path "assets/$env:package.zip") -or -not (Test-Path "assets/$env:package.sha256")) { throw "release $env:tag lacks $env:package.zip or its .sha256" }
       - name: ZIP equals the reviewed tree plus the validated binaries
-        run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip"
+        run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip" --root tagtree
       - name: Unpacked package passes the strict bundle validation
         shell: pwsh
         run: |
@@ -63,4 +78,4 @@ jobs:
         shell: pwsh
         run: |
           $digest = (Get-FileHash "assets/$env:package.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
-          "## $env:tag verified`n`n$env:package.zip - SHA-256 $digest - matches master $((git rev-parse HEAD).Trim())" >> $env:GITHUB_STEP_SUMMARY
+          "## $env:tag verified`n`n$env:package.zip - SHA-256 $digest - matches the tree of $((git rev-list -n 1 $env:tag).Trim()) (checks from master $((git rev-parse HEAD).Trim()))" >> $env:GITHUB_STEP_SUMMARY

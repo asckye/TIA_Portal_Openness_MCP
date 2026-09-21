@@ -329,7 +329,8 @@ if (-not (Test-Path -LiteralPath $publishedPath)) { Fail 'Publish-Release.ps1 le
 $publishedRelease = Get-Content -LiteralPath $publishedPath -Raw | ConvertFrom-Json
 Say ('published: ' + $publishedRelease.html_url)
 if (-not $NoWait) {
+    # the workflow sets run-name "Verify vX.Y.Z", which is what the runs API reports as the name
     Say 'waiting for "Verify published release" (release event on the tag commit)'
-    WaitWorkflows @('Verify published release') $head
+    WaitWorkflows @('Verify ' + $tag) $head
 }
 Say ('DONE ' + $tag + '. Now record the publication in docs/development/handoff.md and handoff-checklist.md and commit that separately.')

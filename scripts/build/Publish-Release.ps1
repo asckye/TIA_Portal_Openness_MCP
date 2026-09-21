@@ -61,7 +61,8 @@ function Api([string]$method, [string]$url, $body = $null) {
     $json = $body | ConvertTo-Json -Depth 6 -Compress
     return Invoke-RestMethod -Method $method -Uri $url -Headers $headers -TimeoutSec 120 -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($json))
 }
-function ErrorText($err) { try { $s = $err.Exception.Response.GetResponseStream(); $r = New-Object IO.StreamReader($s); return $r.ReadToEnd() } catch { return $err.Exception.Message } }
+function ErrorText($err) { try { $s = $err.Exception.Response.GetResponseStream(); $s.Position = 0; $r = New-Object IO.StreamReader($s); $t = $r.ReadToEnd(); if ($t) { return $t } } catch { }; return $err.Exception.Message }
+function StatusCode($err) { try { return [int]$err.Exception.Response.StatusCode } catch { return 0 } }
 
 $tag = 'v' + $Version
 $who = Api GET 'https://api.github.com/user'
@@ -95,7 +96,7 @@ Say ('tag ' + $tag + ' = master HEAD = ' + $commit.Substring(0, 12))
 
 # ---------------------------------------------------------------- release (draft)
 $existing = $null
-try { $existing = Api GET ($api + '/releases/tags/' + $tag) } catch { if (-not ((ErrorText $_) -like '*Not Found*')) { Fail ('reading release ' + $tag + ': ' + (ErrorText $_)) } }
+try { $existing = Api GET ($api + '/releases/tags/' + $tag) } catch { if ((StatusCode $_) -ne 404) { Fail ('reading release ' + $tag + ': HTTP ' + (StatusCode $_) + ' ' + (ErrorText $_)) } }
 if (-not $existing) {
     # releases/tags/<tag> does not return drafts; look through the list
     $existing = @(Api GET ($api + '/releases?per_page=100')) | Where-Object { $_.tag_name -eq $tag } | Select-Object -First 1
