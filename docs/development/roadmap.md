@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.52 更新）
+# 路线图与待办（2026-09-17 审计，2.7.53 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.52 已完成
+## 5. 2.7.53 已完成
+
+- 2.7.52 真机：TLS 信任提示应答生效，`GoOnline` 到达 `Incompatible`，下载被 F-CPU V2.9 的安全设置挡住（访问级别 NoAccess 无密码、机密组态数据无密码）；新增 `ManagePlcProtection` 与 `CompileDevice`（450 个工具），反射桥支持枚举 / SecureString 参数。
+
+## 5.0 2.7.52 已完成
 
 - 2.7.51 真机：监控表行往返与 Softbus 网络模式通过；在线族被 FW 2.9 的 TLS 信任提示挡住——`OnlineLegitimation` 总是订阅，`trustDeviceCertificate` 应答 `TlsVerificationConfiguration`（`GoOnline` / `DownloadToPlc` / 上载 / 指纹），Meta 记录决定；`success` 字段补齐。
 

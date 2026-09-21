@@ -2100,6 +2100,10 @@ namespace TiaMcpServer.Siemens
                     if (pt == typeof(bool)) { converted[i] = Convert.ToBoolean(av); continue; }
                     if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(directory); continue; }
                     if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(file); continue; }
+                    // 2.7.53: enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
+                    // plain string (SetPassword / Protect / LoginToSafetyOfflineProgram) - the bridge could reach neither before.
+                    if (pt.IsEnum && av is string enumName) { converted[i] = Enum.Parse(pt, enumName, true); continue; }
+                    if (pt == typeof(SecureString) && av is string secret) { converted[i] = ProjectSecurityLogic.Secure(secret); continue; }
                     if (pt == typeof(object)
                         && methodName.Equals("SetAttribute", StringComparison.OrdinalIgnoreCase)
                         && i == 1

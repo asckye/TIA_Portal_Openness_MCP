@@ -28,6 +28,7 @@ ROOT = str(Path(__file__).resolve().parents[2] / 'tools/tiaportal-mcp/src/TiaMcp
 ALLOWED = {
     # Openness / .NET 的 API 名，描述里是在讲底层调用，不是让 Agent 去调工具
     'GetService': 'Openness IEngineeringObject.GetService<T>()',
+    'ReadAccess': 'Openness PlcProtectionAccessLevel.ReadAccess（ManagePlcProtection 的 accessLevel 枚举值，不是工具）',
     'GetAttribute': 'Openness IEngineeringObject.GetAttribute()',
     'GetAttributeInfos': 'Openness IEngineeringObject.GetAttributeInfos()',
     'GetNodeId': 'Openness HmiUnified OpcUaAlarm.GetNodeId(displayName)，由 ImportUnifiedOpcUaAlarms 暴露',

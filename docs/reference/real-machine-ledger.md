@@ -2,14 +2,14 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置（访问级别 / 机密组态数据密码）挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
 | ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 323 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
 | ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 25 |
-| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 3 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 5 |
 | ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 31 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 60 |
 | 🚫 不运行 | 刻意不跑 | 0 |
@@ -193,7 +193,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `UpdateUnifiedRuntimeSettings` | ⚠ 参数/前置条件 | fieldsJson 须 1..12 个根设置；update 需要预览 token |
 | `ValidateUnifiedObject` | ✅ 通过 |  |
 
-## Hardware（71）
+## Hardware（73）
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
@@ -203,8 +203,9 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `AddHardwareCatalogDeviceWithProbe` | ✅ 通过 | 2.7.47 重跑通过：MTP700 Unified 探针插入成功（41 s） |
 | `AttachDeviceNodeToSubnet` | ✅ 通过 |  |
 | `BuildDeviceAmlDocument` | ✅ 通过 |  |
+| `CompileDevice` | 🔁 已修待重跑 | 2.7.53 新增（2.7.52 真机 暴露的缺口：F-CPU V2.9 访问级别 NoAccess 无密码、机密组态数据无密码，硬件编译 3 错拒绝下载）；部署后先 read → setAccessLevel FullAccessIncludingFailsafe → protectMasterSecret → CompileDevice 0 错 |
 | `ConnectDeviceNodesToProfinetSubnet` | ✅ 通过 | 2.7.47 重跑通过：MCP_PLC ↔ MCP_TP700 接到 MCP_PN |
-| `DumpDeviceAttributes` | ✅ 通过 | 2.7.47 重跑通过：`Ip/Name/Cycle` 匹配 25 项 |
+| `DumpDeviceAttributes` | ✅ 通过 | 2.7.52 真机：nameFilter 'protect/access/password/secret/certificate' 只见 PlcCommunicationCertificate / Protection* / DisplayProtection——访问级别与主密钥不在属性表里 |
 | `EnsureSubnet` | ✅ 通过 |  |
 | `ExchangeSystemDiagnosticsSettings` | ✅ 通过 | 2.7.47 重跑通过：.dat 导出 407 字节 + import 预览 |
 | `ExportDeviceAml` | ✅ 通过 |  |
@@ -213,7 +214,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `GetDeviceItemInfo` | ✅ 通过 |  |
 | `GetDeviceItemIoAddresses` | ✅ 通过 |  |
 | `GetDeviceItemNetworkInfo` | ✅ 通过 |  |
-| `GetDeviceItemTree` | ✅ 通过 |  |
+| `GetDeviceItemTree` | ✅ 通过 | 2.7.52 真机：MCP_PLC 两层树；反射工具的 DeviceItem objectPath 用 'MCP_PLC'（不是 'MCP_PLC/导轨_0/MCP_PLC'） |
 | `GetDevicePlugLocations` | ✅ 通过 | CPU 项 / Device / 导轨 / S120 Device 四种宿主 |
 | `GetDevices` | ✅ 通过 |  |
 | `GetProjectTopology` | ✅ 通过 |  |
@@ -239,6 +240,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManageIoSystem` | ✅ 通过 |  |
 | `ManageNetworkDomain` | ✅ 通过 |  |
 | `ManageOnlineDriveFunctions` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
+| `ManagePlcProtection` | 🔁 已修待重跑 | 2.7.53 新增（2.7.52 真机 暴露的缺口：F-CPU V2.9 访问级别 NoAccess 无密码、机密组态数据无密码，硬件编译 3 错拒绝下载）；部署后先 read → setAccessLevel FullAccessIncludingFailsafe → protectMasterSecret → CompileDevice 0 错 |
 | `ManagePortInterconnection` | ✅ 通过 | 2.7.47 重跑通过：面板端口经 Items 回退解析，PLC 端口 1 ↔ TP700 端口 1 connect 成功；deleteItem / deleteDevice 通过 |
 | `ManageStartdriveParameter` | ✅ 通过 |  |
 | `ManageTechnologyExtensions` | ✅ 通过 |  |
@@ -255,7 +257,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ReadDeviceItemChannels` | ✅ 通过 | 2.7.47 重跑通过：子项路径 MCP_DI/MCP_DI，起始地址 0→20→30，通道读取 |
 | `ReadDriveObjects` | ✅ 通过 |  |
 | `ReadDriveParameters` | ⚠ 参数/前置条件 | valueJson 须为对象 / source 为 read/write；2.7.45 真机在 S120 上 read 通过（见 handoff §6） |
-| `ReadHardwareFeatures` | ✅ 通过 |  |
+| `ReadHardwareFeatures` | ✅ 通过 | 2.7.52 真机：CPU 项 [导轨_0, MCP_PLC] 上 PlcAccessLevelProvider present、PlcProtectionAccessLevel=NoAccess，PlcMasterSecretConfigurator present（值保留）；itemPathJson 必须是名字数组（[{property,name}] 形式被拒） |
 | `ReadIoSystems` | ✅ 通过 |  |
 | `ReadNetworkDomains` | ✅ 通过 |  |
 | `ReadOnlineDriveParameters` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
@@ -352,14 +354,14 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CheckDownloadReadiness` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
-| `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线（GoOnline 未成）；2.7.51 真机：仍等在线（TLS 信任）；2.7.52 后重跑 |
+| `CompareSoftwareToOnline` | 🔁 已修待重跑 | 2.7.48 真机：依赖在线；2.7.52 真机：仍等下载后的在线；2.7.53 后重跑 |
 | `DownloadPlcToFolder` | ⚠ 参数/前置条件 | targetForSoftware 须 CPU/PlcSimulationAdvanced |
-| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.49 真机：路由选择通过、失败在 PG 侧（虚拟网卡无 IP）；2.7.51 真机：Softbus 后路由 'PLCSIM [no IP] -> 1 X1 -> address 192.168.0.1 (subnet MCP_PN)'，TIA 报 '连接到模块 MCP_PLC 失败'——同 GoOnline，FW 2.9 的 TLS 信任提示无人应答；2.7.52 总是订阅 OnlineLegitimation 并按 trustDeviceCertificate 答 Trusted |
-| `GetOnlineState` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
+| `DownloadToPlc` | 🔁 已修待重跑 | 2.7.51 真机：'连接到模块 MCP_PLC 失败'（TLS）；2.7.52 真机：过了 TLS，TIA 报 '硬件配置编译完成，但出现错误'——F-CPU V2.9 访问级别 NoAccess 无完全访问密码、机密组态数据无密码、通信证书建不了；2.7.53 新增 ManagePlcProtection / CompileDevice 后重跑 |
+| `GetOnlineState` | ✅ 通过 | 2.7.48 真机：Offline；2.7.52 真机：TLS 应答后 Incompatible（'online but firmware/config mismatch. Download required.'）——连接已建立 |
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GoOfflineAll` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `GoOnline` | 🔁 已修待重跑 | 2.7.49 真机：路由套用后 'The connection partner is not responding'（PG 侧无 IP）；2.7.51 真机：经 'PLCSIM' 接口 TIA 报 'Connection to device cannot be established. The device is not trusted. Please check the certificate.'——TlsVerificationConfiguration 从没被应答（处理器只在有密码时订阅）；2.7.52 修 |
+| `GoOnline` | 🔁 已修待重跑 | 2.7.51 真机：'The device is not trusted'；2.7.52 真机：meta.tlsVerification {plcName MCP_PLC, verificationInfo 'certificate not matching', NonVerified -> Trusted}，提示已应答、TIA 记住；GoOnline 仍抛无正文异常但 GetOnlineState=Incompatible（实例未下载过，预期）；2.7.53 补 ManagePlcProtection 后随下载重跑 |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 | 2.7.48 真机：createSnapshot 原生返回 + exportSnapshot 2602 字节（离线；值不可独立核验） |
 | `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.48 真机：FingerprintDataProvider 在 1515F-2 PN V2.9（TIA V21）上 GetService 为 null（PlcSoftware 与 CPU 项都没有） |
 | `ReadTransferRoutes` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
@@ -523,8 +525,8 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `DescribeObjectProperty` | ✅ 通过 |  |
 | `DescribeService` | ✅ 通过 |  |
 | `GetObjectProperty` | ✅ 通过 |  |
-| `InvokeObject` | ✅ 通过 | 2.7.47 重跑通过：args 给 JSON 字符串也可 |
-| `InvokeService` | ✅ 通过 | 2.7.47 重跑通过：args 给 JSON 字符串也可 |
+| `InvokeObject` | ✅ 通过 | 2.7.52 真机：DeviceItem MCP_PLC GetAttribute('PlcProtectionAccessLevel') 被 TIA 拒 'not supported'（访问级别不是设备项属性，是 PlcAccessLevelProvider 的建模属性） |
+| `InvokeService` | ✅ 通过 | 2.7.52 真机：Device MCP_PLC 的 ICompilable.Compile() 经桥接跑通（CompilerResult 树回来，3 错 2 警）；PlcMasterSecretConfigurator.ToString 通过；枚举 / SecureString 参数传不了（2.7.53 补） |
 | `ListObjectChildren` | ✅ 通过 |  |
 
 ## Reports（6）

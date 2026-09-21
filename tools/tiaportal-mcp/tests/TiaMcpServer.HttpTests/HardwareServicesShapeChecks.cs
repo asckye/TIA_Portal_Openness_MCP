@@ -104,14 +104,41 @@ internal static class HardwareServicesShapeChecks
             Console.WriteLine("CAPABILITY HW.Features."+feature+" concreteService="+(!t.IsAbstract && !t.IsInterface && service.IsAssignableFrom(t)));
         }
 
+        // 7. 2.7.53 PLC protection: access level + master secret on the CPU device item (official pages "Access level setting" /
+        //    "Managing PLC Master Secret in PLCs"); the *AllPlcConfiguration trio is V21-only.
+        var secure=typeof(System.Security.SecureString);
+        var accessLevel=T(core,"Siemens.Engineering.HW.PlcProtectionAccessLevel");
+        check(new[]{"None","FullAccess","ReadAccess","HMIAccess","NoAccess","FullAccessIncludingFailsafe"}.All(n=>Enum.IsDefined(accessLevel,n)),"PlcProtectionAccessLevel values");
+        var accessProvider=T(core,"Siemens.Engineering.HW.Features.PlcAccessLevelProvider");
+        var levelProperty=accessProvider.GetProperty("PlcProtectionAccessLevel");
+        check(levelProperty!=null && levelProperty.CanWrite && levelProperty.PropertyType==accessLevel,"PlcAccessLevelProvider.PlcProtectionAccessLevel {get;set}");
+        Method(accessProvider,"SetPassword",new[]{accessLevel,secure}); Method(accessProvider,"ResetPassword",new[]{accessLevel});
+        var secretState=T(core,"Siemens.Engineering.HW.MasterSecretConfiguration");
+        check(new[]{"None","WithPassword","WithoutPassword"}.All(n=>Enum.IsDefined(secretState,n)),"MasterSecretConfiguration values");
+        if(!Enum.IsDefined(secretState,"WithPasswordAllDataProtection")) { if(v20) Capability("MasterSecretConfiguration.WithPasswordAllDataProtection"); else check(false,"MasterSecretConfiguration.WithPasswordAllDataProtection on V21"); }
+        else check(true,"MasterSecretConfiguration.WithPasswordAllDataProtection");
+        var secretProvider=T(core,"Siemens.Engineering.HW.Features.PlcMasterSecretConfigurator");
+        check(secretProvider.GetProperty("MasterSecretConfiguration")?.PropertyType==secretState,"PlcMasterSecretConfigurator.MasterSecretConfiguration");
+        Method(secretProvider,"Protect",new[]{secure}); Method(secretProvider,"Unprotect",new[]{secure}); Method(secretProvider,"Unprotect",Type.EmptyTypes);
+        Method(secretProvider,"ChangePassword",new[]{secure,secure}); Method(secretProvider,"Reset",Type.EmptyTypes);
+        foreach(var (name,signature) in new[]{("ProtectAllPlcConfiguration",Type.EmptyTypes),("ProtectAllPlcConfigurationWithPassword",new[]{secure}),("UnprotectAllPlcConfiguration",Type.EmptyTypes)}) {
+            if(secretProvider.GetMethod(name,signature)==null) { if(v20) Capability("PlcMasterSecretConfigurator."+name); else check(false,"PlcMasterSecretConfigurator."+name+" on V21"); }
+            else check(true,"PlcMasterSecretConfigurator."+name);
+        }
+        var accessControl=T(core,"Siemens.Engineering.HW.Features.PlcAccessControlConfigurationProvider");
+        Property(accessControl,"PlcAccessControlConfiguration");
+        var compilable=T(core,"Siemens.Engineering.Compiler.ICompilable");
+        check(compilable.GetMethod("Compile",Type.EmptyTypes)?.ReturnType==T(core,"Siemens.Engineering.Compiler.CompilerResult"),"ICompilable.Compile() -> CompilerResult (CompileDevice)");
+        check(Enum.IsDefined(T(core,"Siemens.Engineering.HW.DeviceItemClassifications"),"CPU"),"DeviceItemClassifications.CPU (CPU item lookup)");
+
         // Tool surface
         var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
-        foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ManageOpcUaAccessControl","ImportDeviceAml"}) {
+        foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ManageOpcUaAccessControl","ImportDeviceAml","ManagePlcProtection"}) {
             var method=tools.GetMethod(name)!;
             var preview=method.GetParameters().Last();
             check(preview.Name=="dryRun" && Equals(preview.DefaultValue,true),name+" ends with dryRun=true");
         }
-        foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ManageOpcUaAccessControl","confirmChange"),("ImportDeviceAml","confirmImport")})
+        foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ManageOpcUaAccessControl","confirmChange"),("ImportDeviceAml","confirmImport"),("ManagePlcProtection","confirmChange")})
             check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name==confirm).DefaultValue,false),name+" requires explicit "+confirm);
         foreach(var name in new[]{"ReadCommunicationConnections","ReadOpcUaAccessControl","ReadHardwareFeatures"}) {
             var method=tools.GetMethod(name)!;

@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.52 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 448 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.53 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.53 `ManagePlcProtection`（访问级别 / 机密组态数据密码）与 `CompileDevice`（硬件编译）
+
+2.7.52 真机：TLS 信任提示已经过 `OnlineLegitimation` 应答（`verificationInfo "certificate not matching"`，`NonVerified → Trusted`），`GoOnline` 之后 `GetOnlineState` 为 `Incompatible`（PLCSIM 实例未下载过），`DownloadToPlc` 被 TIA 的硬件编译挡住 "硬件配置编译完成，但出现错误"：F-CPU 1515F-2 PN V2.9 的访问级别是 `NoAccess` 而没有完全访问密码、机密 PLC 组态数据没有密码、通信证书因此建不了——两项设置以前没有任何工具能改。新增 `ManagePlcProtection`（`PlcAccessLevelProvider.PlcProtectionAccessLevel` / `SetPassword` / `ResetPassword`，`PlcMasterSecretConfigurator.Protect` / `Unprotect` / `ChangePassword` / `Reset` / `ProtectAllPlcConfiguration[WithPassword]` / `UnprotectAllPlcConfiguration`（V21）；`read` 回报 `accessLevel` / `masterSecret` / `accessControl`）与 `CompileDevice`（`ICompilable` 硬件编译 + 结构化诊断）；反射桥 `InvokeObject` / `InvokeService` 现在能按名传枚举、按字符串传 `SecureString`。工具 450。详见 `docs/releases/v2.7.53.md`。
 
 ## 2.7.52 应答 FW 2.9 CPU 的 TLS 证书信任提示（`trustDeviceCertificate`）
 

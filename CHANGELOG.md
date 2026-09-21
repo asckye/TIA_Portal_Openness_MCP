@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.7.53] - 2026-09-21
+
+引擎 2.7.53.0（V20/V21 均重建），**工具 450**（新增 `ManagePlcProtection`、`CompileDevice`），默认 lite 56 项不变。详见 [v2.7.53](docs/releases/v2.7.53.md)。2.7.52 部署后的真机结果：在线族过了 TLS，卡在 F-CPU V2.9 的安全设置——本版补工具。
+
+- **2.7.52 真机**：`GoOnline {ipAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}` 的 `meta.tlsVerification` 记录 `plcName MCP_PLC`、`verificationInfo "certificate not matching"`、`NonVerified → Trusted`——TLS 提示确实经 `OnlineLegitimation` 来、答完 TIA 记住（第二次不再问）；`GoOnline` 仍抛无正文的异常，但 `GetOnlineState` 报 `Incompatible`（"online but firmware/config mismatch"）：连接已建立，只是 PLCSIM 实例还没下载过。`DownloadToPlc` 同路由报 "硬件配置编译完成，但出现错误"——用反射 `Device.GetService<ICompilable>().Compile()` 看到 3 个错误：访问级别高于"完全访问"却没设完全访问密码（`PlcProtectionAccessLevel = NoAccess`）、"Password for confidential PLC configuration data is not configured"、"The PLC communication certificate cannot be configured without the password"。这两项设置此前没有任何工具能改，反射桥也传不了枚举 / `SecureString`。
+- **新增 `ManagePlcProtection`**（官方页 "Access level setting" / "Managing PLC Master Secret in PLCs"）：CPU 设备项上的 `PlcAccessLevelProvider`（`read` 回报 `PlcProtectionAccessLevel`；`setAccessLevel` FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe；`setAccessPassword` / `resetAccessPassword`，只对比所选级别宽松的级别）与 `PlcMasterSecretConfigurator`（`read` 回报 `MasterSecretConfiguration` None / WithoutPassword / WithPassword / WithPasswordAllDataProtection；`protectMasterSecret` / `changeMasterSecret` / `unprotectMasterSecret` / `resetMasterSecret`；V21 另有 `protectAllConfiguration` / `unprotectAllConfiguration`），`itemPathJson []` 自动找站的 CPU 项，密码走 `SecureString` 不回显，改后读回状态；默认预览，真跑要 `dryRun=false` + `confirmChange=true`。纯逻辑 `PlcProtectionLogic`（离线 +9 = 2208）。
+- **新增 `CompileDevice`**：设备（或设备项）的 `ICompilable.Compile()` 硬件编译，诊断按 `CollectCompilerMessages` 摊平（errors / warnings / nodes）——`DownloadToPlc` 之前 TIA 跑的就是它，此前只有软件编译工具。
+- **反射桥**：`InvokeObject` / `InvokeService` 的参数绑定支持枚举名（`Enum.Parse`，不分大小写）与 `SecureString`（从字符串），以后类似缺口可以先用桥接顶上。
+- 形状检查 V20 2805 / V21 3097（`MasterSecretConfiguration.WithPasswordAllDataProtection` 与三个 `*AllPlcConfiguration` 方法是 V21 独有）。
+
 ## [2.7.52] - 2026-09-21
 
 引擎 2.7.52.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.52](docs/releases/v2.7.52.md)。2.7.51 部署后的真机结果与在线族的 TLS 信任修复。
