@@ -8,8 +8,8 @@
 
 | 项 | 值 |
 |---|---|
-| 最新发布 | **v2.7.58**（`Release.ps1` 第二次真跑，全程无人工干预：三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.58_20260921.zip` + `.sha256` 已上传；见 `docs/releases/v2.7.58.md`）：全部工具的调用纪律——schema `enum` / `default` / `examples` / 词汇表 `description`、失败自动 `meta.preflight`、示例覆盖 453 个、`GetRecipe` 12 条、参数描述批次 1 + 回升门禁；工具 453、lite 59、离线 2453 |
-| 虚拟机 | 跑的是 **2.7.58**（2026-09-21 `Update-Engine.ps1` 在线更新；待真机 1–4 通过：schema enum / default / examples / description、故意错的调用与业务失败都带 `preflight`、`GetRecipe`）。TIA 只开着 `项目1`（pid 12060）。**TIA 现在只开着维护者的工程（pid 11104），`项目1` 未打开**——写类真机测试前要请维护者打开 `项目1`；`项目1` 已保存（2026-09-21 05:48 UTC，含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行） |
+| 最新发布 | **v2.7.59**（`Release.ps1` 全程自动：三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.59_20260921.zip` + `.sha256` 已上传；见 `docs/releases/v2.7.59.md`）：参数描述批次 2——498 个参数补 `[Description]`（155 枚举型精确取值从 Logic 校验数组追溯，343 人工），enum 提示 185 / 119 个工具，无自身描述的 894 个全由词汇表覆盖（0 个空描述）；工具 453、lite 59、离线 2453。2.7.58 的调用纪律机制（schema 提示、失败自动 `meta.preflight`、派生示例、`GetRecipe`）真机通过 |
+| 虚拟机 | 跑的是 **2.7.58**；2.7.59 待部署（停引擎 → `Update-Engine.ps1` 在线 → 重启）。2.7.58 待真机 1–4 通过。TIA 只开着 `项目1`（pid 12060）。**TIA 现在只开着维护者的工程（pid 11104），`项目1` 未打开**——写类真机测试前要请维护者打开 `项目1`；`项目1` 已保存（2026-09-21 05:48 UTC，含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行） |
 | 规模 | 工具 453、默认 lite 59；离线套件 2453；引擎 API 形状检查 V20 2805 / V21 3097（`Build-Release.ps1` 第 73 行硬编码这两个数） |
 | 真机 | 台账 `docs/reference/real-machine-ledger.md`：✅ 330 / 手工 5 / 早期 24 / ⛔ 31 / ⚠ 60 / 🔁 0。**在线族收口**（标准 CPU `MCP_STD` + PLCSIM Advanced Softbus：下载 / 上线 / 比较 / 标签读写 / default 与 singleStep 场景全部通过）；F-CPU 不能经 Openness 下载（TIA 规则）；站上载对 PLCSIM 实例是 TIA 侧不支持 |
 | API 对齐 | 阶段 1–6 全部收口，所有程序集功能类型缺口 0 / 0（2.7.42 审计）；DCC 与在线驱动工具真机待有对象 |
