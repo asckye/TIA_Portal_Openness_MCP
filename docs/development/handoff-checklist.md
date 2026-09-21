@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.55 本机构建、待推送发布与虚拟机部署；在线族收口）
+# 换机器交接单（2026-09-21，2.7.55 已发布、待虚拟机部署；在线族收口）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.55 发布说明](../releases/v2.7.55.md)
 
@@ -7,7 +7,7 @@
 ## 0. 一句话现状
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.7.51**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.51_20260921.zip` 已上传）。448 个工具，离线 2197 项，形状 V20 2789 / V21 3077。
-- 最后一次发布 **v2.7.54**；**2.7.55 已在本机 Build-Release 通过**（离线 2211，形状 V20 2805 / V21 3097，450 个工具），三段提交 + 推送 + tag 见 §5。虚拟机上跑的是 **2.7.54**；2.7.55 的 ZIP 待发布后部署。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.55**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.55_20260921.zip` 已上传）。450 个工具，离线 2211，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.54**；2.7.55 的 ZIP 还没部署。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；在线族全链通过，还剩 🔁 `RunPlcSimAdvancedTestScenario` singleStep（2.7.55 按同步点等待）；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
