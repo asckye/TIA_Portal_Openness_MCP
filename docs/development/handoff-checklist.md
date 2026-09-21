@@ -6,7 +6,7 @@
 
 ## 0. 一句话现状
 
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.62**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.62_20260921.zip` 已上传；`Release.ps1` 一条命令全程自动）。453 个工具（lite 59），离线 2456，形状 V20 2805 / V21 3097；参数 2204 个，1310 个有自己的描述、其余 894 个词汇表覆盖，enum 提示 185。虚拟机上跑的是 **2.7.59**（2026-09-21 `Update-Engine.ps1` 在线更新；安装目录 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.57_20260921`，虚拟机有外网）。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（只在线，2.7.62 起没有 `-ZipPath` 离线路径，机器要能访问 github.com），**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.62**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.62_20260921.zip` 已上传；`Release.ps1` 一条命令全程自动）。453 个工具（lite 59），离线 2456，形状 V20 2805 / V21 3097；参数 2204 个，1310 个有自己的描述、其余 894 个词汇表覆盖，enum 提示 185。虚拟机上跑的是 **2.7.62**（2026-09-21 `Update-Engine.ps1` 在线更新；安装目录现在是 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.62_20260921\TIA_MCP_Delivery_v2.7.62_20260921`——新 ZIP 解压出的嵌套目录，虚拟机有外网）。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（只在线，2.7.62 起没有 `-ZipPath` 离线路径，机器要能访问 github.com），**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷，**真机已通过**（按名附加到 4840、不自启、进程数不增）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
@@ -38,7 +38,7 @@
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
 1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
-2. ~~**2.7.57 / 2.7.58 / 2.7.59 部署后**~~ 都通过（2026-09-21）。**2.7.60 / 2.7.61 / 2.7.62 部署后**：虚拟机上 `FindTools {query:"dcc chart"}` 的派生示例应为 `{"devicePathJson":"[]","itemPathJson":"[]"}`、`chartPath` 为 `<Folder/Name>`；`CheckForUpdate` 的 `steps` 应为三步且不再提 `-ZipPath`；宿主机上换新的 `TiaMcpConfigurator.exe`，启动日志应列出 12 张英文名卡片的检测结果，Qwen Agent 卡片写 `~/.qwen-agent/mcp.json` 后完全退出该应用再打开。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线），更新完手动重启引擎。
+2. ~~**2.7.57 / 2.7.58 / 2.7.59 / 2.7.60 / 2.7.62 部署后**~~ 都通过（2026-09-21；2.7.62 上确认了 `FindTools dcc chart` 的派生示例与 `CheckForUpdate` 三步）。**宿主机（未看）**：换新的 `TiaMcpConfigurator.exe`，启动日志应列出 12 张英文名卡片的检测结果，Qwen Agent 卡片写 `~/.qwen-agent/mcp.json` 后完全退出该应用再打开。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线），更新完手动重启引擎。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：

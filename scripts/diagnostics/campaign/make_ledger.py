@@ -244,10 +244,11 @@ o("Connect ListPortalProcessProjects", PASS, D55 + "：两个 TIA 进程时 Conn
 
 # ---- 2.7.57 deployment (2026-09-21, via Update-Engine.ps1): examples in descriptions, preflight report, update check ----
 D57 = "2.7.57 真机"
+D62 = "2.7.62 真机"
 o("Connect ListPortalProcessProjects", PASS, D56 + "：两个进程时按名 70 ms 附加到持有 项目1 的 4840、不自启；" + D57 + "：只开着维护者工程（pid 11104，项目1 未打开）时 Connect {projectName:项目1} 绑到 11104 并带 warning（10.8 s 附加）、startedNew false、消息末尾单句号")
 o("Bootstrap", PASS, D57 + "：serverVersion 2.7.57.0，lite 58 / 452，规则含 PLAN, DO NOT PROBE；tools/list 里 45 个描述末尾带 Example")
 o("PreflightToolCall", PASS, D57 + "：{name:downloadtoplc, argumentsJson:{SoftwarePath:MCP_STD, targetIp:192.168.0.3}} → NOT READY，UNKNOWN targetIp (did you mean targetIpAddress?)、Case SoftwarePath -> softwarePath、Class L1 PLC-Online ONLINE-WRITE、前提 = 已绑工程、附示例，未执行")
-o("CheckForUpdate", PASS, D57 + "：虚拟机有外网，source api，latestVersion 2.7.57 = currentVersion，updateAvailable false，installRoot C:\\Users\\SIEMENS\\Desktop\\TIA_MCP_Delivery_v2.7.57_20260921，updaterScript 找到，ZIP 16035177 B + digest + .sha256")
+o("CheckForUpdate", PASS, D57 + "：虚拟机有外网，source api，latestVersion 2.7.57 = currentVersion，updateAvailable false，installRoot C:\\Users\\SIEMENS\\Desktop\\TIA_MCP_Delivery_v2.7.57_20260921，updaterScript 找到，ZIP 16035177 B + digest + .sha256；" + D62 + "：howToUpdate 三条、无 -ZipPath，installRoot C:\\Users\\SIEMENS\\Desktop\\TIA_MCP_Delivery_v2.7.62_20260921\\TIA_MCP_Delivery_v2.7.62_20260921，ZIP 16147645 B")
 
 # ---- 2.7.58 deployment (2026-09-21, Update-Engine.ps1 online): schema hints, automatic preflight on failures, recipes ----
 D58 = "2.7.58 真机"
@@ -260,7 +261,7 @@ o("Bootstrap", PASS, D57 + "：2.7.57.0；" + D58 + "：serverVersion 2.7.58.0�
 # ---- 2.7.59 deployment (2026-09-21): batch-2 enums live, derived-example placeholder defect found ----
 D59 = "2.7.59 真机"
 o("ManageDccChart", PASS, "2.7.45 真机：临时 S120 驱动轴上图表建删；" + D59 + "：action=bogus 被引擎拒绝并带 preflight.allowedValues.action（10 个取值）")
-o("FindTools", PASS, D50 + "：按能力词查工具；" + D59 + "：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修）")
+o("FindTools", PASS, D50 + "：按能力词查工具；" + D59 + "：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修）；" + D62 + "：派生示例 devicePathJson \"[]\"、chartPath <Folder/Name>，修正确认")
 
 def status_of(n):
     if n in O: return O[n]

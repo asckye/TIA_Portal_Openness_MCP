@@ -6,6 +6,7 @@
 
 ## 1. 逐版本记录（2.7.41–2.7.62，倒序；每条为当时写下的原文）
 
+- **2.7.62 部署后真机**（2026-09-21）：`Bootstrap` 2.7.62.0；`CheckForUpdate` source api、up to date、`howToUpdate` 三条无 `-ZipPath`，安装目录变为 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.62_20260921\TIA_MCP_Delivery_v2.7.62_20260921`（新 ZIP 解压出的嵌套目录）；`FindTools dcc chart` 派生示例 `{"devicePathJson":"[]","itemPathJson":"[]"}`、`chartPath` `<Folder/Name>`（2.7.60 修正确认）。宿主机配置器未看。
 - **2.7.62**（2026-09-21，更新器 + 配置器；`Release.ps1` 全程自动）：维护者“可以取消离线更新了，不需要了”“AI 客户端的名称都采用英文”——`Update-Engine.ps1` 去掉 `-ZipPath` / `-SkipHashCheck`，只从 GitHub Release 在线取 ZIP + `.sha256`（必须有），github.com 不通直接失败；`UpdateLogic.HowToUpdate` / `CheckForUpdate` 改三步、不再提离线包，离线测试断言无 `-ZipPath`；配置器卡片改名 Qwen / Yuanbao / Zhipu GLM / Qwen Agent，种类 `Desktop`，测试断言名称与种类都是 ASCII（96 项）；README、配置指南、脚本目录、交接单同步。ZIP `TIA_MCP_Delivery_v2.7.62_20260921.zip`。
 - **2.7.61**（2026-09-21，配置器；`Release.ps1` 全程自动）：维护者转来千问工作助理那边的配置记录（`~/.qwen-agent/mcp.json`，静态 Bearer 写进 headers，改完要完全退出进程）并要求“配置文件的写入能给不同电脑用、能检测 AI 客户端装在哪再写入，其他客户端也一样”——`ClientProfiles.Detect` 对 12 张卡片按配置目录 / PATH 可执行文件（含 npm `.cmd`）/ 已知安装目录 / 卸载项检测，副标题与悬停显示结果，日志列全，默认选第一张检测到的；写入位置按当前用户与 `CODEX_HOME` / `KIMI_CODE_HOME` 解析，VS Code 只有 Insiders 时写 Insiders；新卡片千问工作助理（`url` + `headers`，无 `type`）。配置器测试 95 项。
 - **2.7.60**（2026-09-21，`Release.ps1` 全程自动）：派生示例占位符规则重排（`*Json` 先按名字 `[]` / `{}`，`*Path` 区分主机路径与 `<Folder/Name>`，`e.g.` 只取纯值，`<>` 不再转义）；2.7.59 真机结果记录。离线 2456。

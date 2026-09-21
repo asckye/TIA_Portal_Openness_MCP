@@ -27,7 +27,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 
 | 工具 | 状态 | 说明 |
 |---|---|---|
-| `CheckForUpdate` | ✅ 通过 | 2.7.57 真机：虚拟机有外网，source api，latestVersion 2.7.57 = currentVersion，updateAvailable false，installRoot C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.57_20260921，updaterScript 找到，ZIP 16035177 B + digest + .sha256 |
+| `CheckForUpdate` | ✅ 通过 | 2.7.57 真机：虚拟机有外网，source api，latestVersion 2.7.57 = currentVersion，updateAvailable false，installRoot C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.57_20260921，updaterScript 找到，ZIP 16035177 B + digest + .sha256；2.7.62 真机：howToUpdate 三条、无 -ZipPath，installRoot C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.62_20260921\TIA_MCP_Delivery_v2.7.62_20260921，ZIP 16147645 B |
 | `Doctor` | ✅ 通过 |  |
 | `RunCapabilitySelfTest` | ✅ 通过 |  |
 | `RunHmiActionScriptRecipeSafetySelfTest` | ✅ 通过 |  |
@@ -296,7 +296,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CallTool` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `FindTools` | ✅ 通过 | 2.7.50 真机：按能力词查工具；2.7.59 真机：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修） |
+| `FindTools` | ✅ 通过 | 2.7.50 真机：按能力词查工具；2.7.59 真机：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修）；2.7.62 真机：派生示例 devicePathJson "[]"、chartPath <Folder/Name>，修正确认 |
 | `ListToolCategories` | ✅ 通过 |  |
 | `PreflightToolCall` | ✅ 通过 | 2.7.57 真机：{name:downloadtoplc, argumentsJson:{SoftwarePath:MCP_STD, targetIp:192.168.0.3}} → NOT READY，UNKNOWN targetIp (did you mean targetIpAddress?)、Case SoftwarePath -> softwarePath、Class L1 PLC-Online ONLINE-WRITE、前提 = 已绑工程、附示例，未执行 |
 
