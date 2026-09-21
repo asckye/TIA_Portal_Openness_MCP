@@ -16,6 +16,18 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Prepare-Delive
 
 随后按照下面的提交、打包和发布步骤操作。
 
+## 一键发布（2.7.56 之后的常规路径）
+
+先手写两样：`CHANGELOG.md` 顶部 `## [X.Y.Z] - 日期` 条目、`docs/releases/vX.Y.Z.md`（连同 `docs/reference/capabilities.md` 新段、`docs/development/roadmap.md` §5 条目等文案）。然后在 PowerShell 里：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Release.ps1 -Version X.Y.Z -Summary "(1/3) 提交的一句话说明"
+```
+
+脚本按顺序做：前置检查（在 master 且不落后 `origin/master`、PublicAPI 目录、Python、没有残留的 `TiaMcpServer.exe` 进程、CHANGELOG 最新条目 = 该版本、发布说明存在）→ 版本号 8 处（两个 `.csproj`、`Configurator.cs`、`plugin.json`、`docs/README.md` 当前发布链接、`capabilities.md` 首段、`roadmap.md` 标题）→ `Build-Release.ps1` → `Check-Repository.py` + `Check-DeadToolReferences.py` + `Validate-Bundle.ps1 -Strict` → 三段提交 → `Package-Release.py` 干跑 → 逐 sha 推送 → 等 `validate-bundle` / `offline-checks` → annotated tag `vX.Y.Z` → 等 `Publish complete release` 并核对发布页的 ZIP。任一步失败即停，日志在仓库根 `release.log`（Build-Release 自己的在 `build.log`）。选项：`-DryRun`（只到本地闸门，不提交）、`-SkipBuild`（复用上次构建）、`-NoPush` / `-NoTag` / `-NoWait`、`-KillStrayEngine`、`-ReleaseDate yyyyMMdd`、`-V20ReferenceRoot` / `-V21ReferenceRoot` / `-Python`。提交与 tag 说明不带任何 AI 署名行。发布成功后把结果记进 `docs/development/handoff.md` §1 与 `handoff-history.md`，单独提交。
+
+引擎在托管 runner 上编不了（Openness NuGet 只有 targets，PublicAPI 不可分发），所以构建与提交在本机，Actions 只负责验证与由 tag 触发的发布。下面各节是脚本逐步做的事，也是它失败时的手工路径。
+
 ## 引擎构建与本地验证
 
 需要 Windows、.NET SDK（包含测试项目所需运行时）、.NET Framework 4.8 开发环境、Python 3.10+、Git，以及本地 V20/V21 PublicAPI。两个参考路径均应直接包含对应的 Siemens DLL；V21 使用 `net48` 目录。HTTP 测试仅绑定本机测试端口，可能需要管理员终端。

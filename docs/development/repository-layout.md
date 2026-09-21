@@ -22,7 +22,7 @@
 
 脚本分别移入 `build/`、`checks/`、`generate/`、`diagnostics/`、`operations/`，完整入口见 [脚本索引](../../scripts/README.md)。Actions、脚本间调用、清单、蓝图和文档同步更新。
 
-旧 Build-DefectFix、Build-MultilingualFix、Package-DefectFix、Package-ReadOnlyV21 和 Python 预热桥接已删除。发布统一见 [发布流程](release-workflow.md)，预热使用原生 CLI；取证、预热和拖放生成仍有用途，保留在相应分类。
+旧 Build-DefectFix、Build-MultilingualFix、Package-DefectFix、Package-ReadOnlyV21 和 Python 预热桥接已删除。发布统一见 [发布流程](release-workflow.md)（一键入口 `scripts/build/Release.ps1`），预热使用原生 CLI；取证、预热和拖放生成仍有用途，保留在相应分类。
 
 交付和 checkout 均使用 `runtime/v20`、`runtime/v21`，不再创建旧 `tools/.../bin[-v20]/Release/net48` 副本。
 
