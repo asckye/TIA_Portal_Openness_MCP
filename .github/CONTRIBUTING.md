@@ -44,8 +44,10 @@ All changes target this repository's `master`, which supports TIA Portal V20 / V
 The two versions share source and are built with their matching PublicAPI assemblies.
 Check both runtimes when a shared change can affect either version.
 
-This repository does not maintain older-version branches or synchronize changes
-with the original repository. Preserve LICENSE, NOTICE.md and dependency notices.
+`master` is the only branch of this repository: no release, older-version or bot
+branches (the maintainer bumps the workflow action versions by hand, so there is no
+Dependabot configuration), and no synchronization with the original repository.
+Preserve LICENSE, NOTICE.md and dependency notices.
 
 ---
 

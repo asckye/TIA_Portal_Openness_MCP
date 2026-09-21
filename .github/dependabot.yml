@@ -1,9 +1,0 @@
-version: 2
-updates:
-  # Only the workflow actions: the engine cannot be compiled on hosted runners (Siemens PublicAPI is not redistributable),
-  # so NuGet bumps for it are made by the maintainer with a local Build-Release run.
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: monthly
-    labels: [ci]
