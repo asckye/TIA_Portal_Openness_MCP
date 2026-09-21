@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.8.0 更新）
+# 路线图与待办（2026-09-17 审计，2.8.1 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
