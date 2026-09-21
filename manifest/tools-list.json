@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.51_20260921",
-    "generatedAt":  "2026-09-21T00:39:52.1031156+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.52_20260921",
+    "generatedAt":  "2026-09-21T03:32:44.1594111+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.51.0",
-    "exeSha256":  "9888bc994b6bdd1cb067c97f6a86a804bc7f9648c02e816b8893cdbc9f4df91c",
+    "fileVersion":  "2.7.52.0",
+    "exeSha256":  "4905bb8dfc6068d2c386bd921a431ebb4b748ac9f2fb98c0b2362232311f7725",
     "toolCount":  448,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -1257,9 +1257,10 @@
                                          "userName",
                                          "userType",
                                          "rhTarget",
-                                         "pgPcInterface"
+                                         "pgPcInterface",
+                                         "trustDeviceCertificate"
                                      ],
-                      "description":  "[L1][Category:PLC-Online][ONLINE][PreCondition:Connect+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadToPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project\u0027s hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface \u0027PLCSIM Virtual Ethernet Adapter\u0027 / \u0027PLCSIM\u0027). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch)."
+                      "description":  "[L1][Category:PLC-Online][ONLINE][PreCondition:Connect+OpenProject] Establish an online connection from TIA Portal to the physical PLC. Required before DownloadToPlc to confirm reachability, or for future online monitoring tools. Returns State=Online on success. If ipAddress is omitted, uses the IP address configured in the project\u0027s hardware configuration. If ipAddress is provided, the matching ConfigurationAddress of the route tree (target interface, subnet or gateway; created on the target interface when TIA has not seen it yet) is applied and GoOnline(ConfigurationAddress) is used - this is also how a PLCSIM Advanced instance is reached (pgPcInterface \u0027PLCSIM Virtual Ethernet Adapter\u0027 / \u0027PLCSIM\u0027). Common failures: NotReachable (wrong IP / no cable), Protected (CPU requires authentication — supply password), Incompatible (firmware mismatch). S7-1500 FW \u003e= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact (TlsVerificationConfiguration); trustDeviceCertificate=true (default) answers Trusted - the same prompt TIA shows in the UI - and Meta.tlsVerification records PlcName / VerificationInfo / the selection; with false the connection is refused by TIA (\u0027The device is not trusted\u0027)."
                   },
                   {
                       "name":  "GoOffline",
@@ -6148,9 +6149,10 @@
                                          "moduleAccessPassword",
                                          "blockBindingPassword",
                                          "masterSecretPassword",
-                                         "rhTarget"
+                                         "rhTarget",
+                                         "trustDeviceCertificate"
                                      ],
-                      "description":  "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+CompileSoftware+CheckDownloadReadiness] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: Connect → OpenProject → CompileSoftware → CheckDownloadReadiness → DownloadToPlc → GetOnlineState. On success State=Success or Warning. On Error check Errors[] for details. Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios. Set keepActualValues=false only when DB initial values must be reset — this is irreversible. On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong."
+                      "description":  "[L1][Category:PLC-Online][ONLINE-WRITE][PreCondition:Connect+OpenProject+CompileSoftware+CheckDownloadReadiness] Download the compiled PLC program to the physical CPU over the network. The CPU will stop briefly during download and restart automatically (controlled by startAfterDownload). SAFETY: Verify no personnel are near the machine before downloading. This changes live PLC behavior. Workflow: Connect → OpenProject → CompileSoftware → CheckDownloadReadiness → DownloadToPlc → GetOnlineState. On success State=Success or Warning. On Error check Errors[] for details. Default options (keepActualValues=true, consistentBlocksOnly=true) are safe for most scenarios. Set keepActualValues=false only when DB initial values must be reset — this is irreversible. On a multi-NIC PC the PG/PC interface is picked automatically (the adapter sharing a subnet with the CPU); Meta.pgPcRoute reports which one was used. Override with pgPcInterface / targetIpAddress when the pick is wrong. S7-1500 FW \u003e= 2.9 CPUs (incl. PLCSIM Advanced) ask for certificate trust on the first contact; trustDeviceCertificate=true (default) answers Trusted and Meta.tlsVerification records it, false makes TIA refuse the connection."
                   },
                   {
                       "name":  "GetSoftwareTree",
