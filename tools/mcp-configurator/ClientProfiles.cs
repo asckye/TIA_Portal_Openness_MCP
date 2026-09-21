@@ -13,10 +13,10 @@ namespace TiaMcpConfigurator
         public string Name { get; set; }
         public string Path { get; set; }
         public string Hint { get; set; }
-        // Schema family that decides file layout and entry shape. Brand cards (通义千问 → Qwen Code, DeepSeek / 智谱 / Grok → OpenCode …)
+        // Schema family that decides file layout and entry shape. Brand cards (Qwen → Qwen Code, DeepSeek / Zhipu GLM / Grok → OpenCode …)
         // write another product's file, so several profiles may map onto one Client.
         public string Client { get; set; }
-        public string Kind { get; set; }      // CLI / 桌面 / IDE
+        public string Kind { get; set; }      // CLI / Desktop / IDE
         // 2.7.61: whether this machine shows traces of the client (config folder, executable on PATH, install folder,
         // uninstall registry entry) and what was found - so a user on any computer sees which cards apply here.
         public bool Detected { get; set; }
@@ -44,7 +44,6 @@ namespace TiaMcpConfigurator
                 case "qwen": return "Qwen Code";
                 case "kimi": return "Kimi Code";
                 case "codebuddy": return "CodeBuddy";
-                case "qwen-agent": return "qwen-agent";
                 default: return null;   // native client: the card already carries its name
             }
         }
@@ -68,14 +67,14 @@ namespace TiaMcpConfigurator
                 new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), "保存后重启 Codex 桌面应用 / CLI，重新打开任务以加载 MCP。"),
                 new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), "重启 Gemini CLI，使用 /mcp 检查服务器状态。"),
                 // 国产模型与 Grok 没有自带 MCP 客户端，卡片按模型命名，实际写入各家官方 CLI 或 OpenCode。
-                new ClientProfile("qwen", "通义千问", System.IO.Path.Combine(home, ".qwen", "settings.json"), "写入阿里 Qwen Code 的 settings.json（格式同 Gemini CLI）。重启 Qwen Code，用 /mcp 检查服务器。"),
+                new ClientProfile("qwen", "Qwen", System.IO.Path.Combine(home, ".qwen", "settings.json"), "写入阿里 Qwen Code 的 settings.json（格式同 Gemini CLI）。重启 Qwen Code，用 /mcp 检查服务器。"),
                 new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), "写入月之暗面 Kimi Code CLI 的 mcp.json，尊重 KIMI_CODE_HOME。重启后状态栏显示 MCP 就绪即可新建会话。"),
-                new ClientProfile("codebuddy", "腾讯元宝", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
+                new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
                 new ClientProfile("deepseek", "DeepSeek", opencode, String.Format(opencodeHint, "DeepSeek"), "opencode"),
-                new ClientProfile("zhipu", "智谱清言", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
+                new ClientProfile("zhipu", "Zhipu GLM", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
                 new ClientProfile("grok", "Grok", opencode, String.Format(opencodeHint, "xAI Grok"), "opencode"),
                 // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
-                new ClientProfile("qwen-agent", "千问工作助理", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), "写入千问工作助理的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。", "qwen-agent", "桌面"),
+                new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), "写入千问工作助理（Qwen Agent）的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。", "qwen-agent", "Desktop"),
                 new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。", null, "IDE"),
                 new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), "适用于 VS Code 默认用户配置（本机只有 Insiders 时写 Insiders）。重载窗口，在 MCP 服务器列表中启动并信任该服务。", null, "IDE")
             };

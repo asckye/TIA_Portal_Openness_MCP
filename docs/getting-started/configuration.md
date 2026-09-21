@@ -44,22 +44,22 @@
 
 **Codex 桌面客户端 / CLI**：选择“Codex”，保存后重启并重新打开任务；写入用户级 `config.toml`，尊重 `CODEX_HOME`。
 
-**通义千问、Kimi、腾讯元宝、DeepSeek、智谱清言、Grok**：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
+**Qwen、Kimi、Yuanbao、DeepSeek、Zhipu GLM、Grok**（卡片一律用英文名，2.7.62 起）：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
 
 | 卡片 | 实际写入 | 默认配置位置 | 远程条目 |
 |---|---|---|---|
 | Claude Code | Claude Code | `%USERPROFILE%\.claude.json` | `type: http` |
 | Codex | Codex | `%CODEX_HOME%\config.toml`，未设置时用 `%USERPROFILE%\.codex\config.toml` | TOML `url` / `http_headers` |
 | Gemini CLI | Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `httpUrl` |
-| 通义千问 | 阿里 Qwen Code | `%USERPROFILE%\.qwen\settings.json` | `httpUrl`（同 Gemini CLI） |
+| Qwen | 阿里 Qwen Code（通义千问） | `%USERPROFILE%\.qwen\settings.json` | `httpUrl`（同 Gemini CLI） |
 | Kimi | 月之暗面 Kimi Code CLI | `%KIMI_CODE_HOME%\mcp.json`，未设置时用 `%USERPROFILE%\.kimi-code\mcp.json` | `url` |
-| 腾讯元宝 | 腾讯 CodeBuddy Code CLI | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
-| DeepSeek / 智谱清言 / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
-| 千问工作助理 | 千问工作助理（桌面应用，qwen-agent） | `%USERPROFILE%\.qwen-agent\mcp.json`（只对一个项目生效时把同名文件放到 `<项目>\.qwen-agent\mcp.json`） | `url` + `headers.Authorization`（静态 Bearer，不走 OAuth） |
+| Yuanbao | 腾讯 CodeBuddy Code CLI（腾讯元宝） | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
+| DeepSeek / Zhipu GLM / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
+| Qwen Agent | 千问工作助理（桌面应用，qwen-agent） | `%USERPROFILE%\.qwen-agent\mcp.json`（只对一个项目生效时把同名文件放到 `<项目>\.qwen-agent\mcp.json`） | `url` + `headers.Authorization`（静态 Bearer，不走 OAuth） |
 | Cursor | Cursor | `%USERPROFILE%\.cursor\mcp.json` | `url` |
 | VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json`（本机只有 Insiders 时 `Code - Insiders`） | `servers` / `type: http` |
 
-千问工作助理改完配置后必须**完全退出进程**（不是关窗口）再打开才会重新读取 `mcp.json`；它在内存里留着的旧条目（例如误用图形化“添加服务”走了 OAuth）会让重载时报“已注册，跳过”。
+Qwen Agent（千问工作助理）改完配置后必须**完全退出进程**（不是关窗口）再打开才会重新读取 `mcp.json`；它在内存里留着的旧条目（例如误用图形化“添加服务”走了 OAuth）会让重载时报“已注册，跳过”。
 三张 OpenCode 卡片写同一个文件，多选时只写一次。本机 stdio 模式下 OpenCode 条目为 `type: local` 且 `command` 是含可执行文件的单个数组，其它客户端为 `command` + `args`。VS Code 默认路径针对标准 VS Code 默认用户配置，不涵盖 Insiders、portable 或自定义 profile。Qwen Code / Kimi Code CLI / CodeBuddy / OpenCode 的路径与字段按各自当前官方文档写入，尚未在真实客户端上联调。
 
 豆包没有对应卡片：其 IDE（Trae）的全局 MCP 文件位置未公开、远程只支持 SSE，而本引擎只提供 Streamable HTTP；如需在 Trae 里用，可在其 MCP 面板“手动添加”里粘贴本机 stdio 条目。

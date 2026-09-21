@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.61 更新）
+# 路线图与待办（2026-09-17 审计，2.7.62 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.61 已完成
+## 5. 2.7.62 已完成
+
+- 更新器只保留在线路径：`Update-Engine.ps1` 去掉 `-ZipPath` / `-SkipHashCheck`，`.sha256` 必须存在，github.com 不通时直接失败并说明；`CheckForUpdate` 与 `UpdateLogic.HowToUpdate` 改为三步（停引擎 → 在线更新 → 重启）。配置器 12 张卡片一律英文名（Qwen / Yuanbao / Zhipu GLM / Qwen Agent，Kind `Desktop`），96 项测试。
+
+## 5.0 2.7.61 已完成
 
 - 配置器：12 张卡片的本机检测（配置目录 / PATH / 安装目录 / 卸载项）、按当前用户解析写入位置、千问工作助理卡片（`~/.qwen-agent/mcp.json`，静态 Bearer）。
 
@@ -129,7 +133,7 @@
 
 ## 5.0 2.7.57 已完成
 
-- 更新器 `Update-Engine.ps1`（引擎在运行就拒绝，先关再更；`-Check` / `-ZipPath` / `-Rollback`）、只读 `CheckForUpdate`、`PreflightToolCall` 预检、80 条工具示例附进描述并在构建时校验；2.7.56 真机通过（`Connect` 多进程按名附加）。
+- 更新器 `Update-Engine.ps1`（引擎在运行就拒绝，先关再更；`-Check` / `-ZipPath` / `-Rollback`，2.7.62 去掉离线 `-ZipPath`）、只读 `CheckForUpdate`、`PreflightToolCall` 预检、80 条工具示例附进描述并在构建时校验；2.7.56 真机通过（`Connect` 多进程按名附加）。
 
 ## 5.0 2.7.56 已完成
 

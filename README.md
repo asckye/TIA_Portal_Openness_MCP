@@ -12,7 +12,7 @@ The complete release ZIP includes both runtimes and dependencies. Install Siemen
 
 ## Start here
 
-Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place: stop the engine, then run `scripts\operations\Update-Engine.ps1` inside the extracted folder (fetches the latest release; `-ZipPath` for an offline ZIP, `-Rollback` to go back); the engine's `CheckForUpdate` tool only reports versions.
+Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place: stop the engine, then run `scripts\operations\Update-Engine.ps1` inside the extracted folder (fetches the latest release, so the TIA machine needs access to github.com; `-Rollback` to go back); the engine's `CheckForUpdate` tool only reports versions.
 
 | Scenario | Configuration |
 |---|---|
@@ -22,7 +22,7 @@ Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github
 
 The configurator UI is Chinese-only; the labels above are its exact button names.
 
-Cards, CLIs first: Claude Code, Codex, Gemini CLI, 通义千问 (Qwen Code), Kimi (Kimi Code CLI), 腾讯元宝 (CodeBuddy Code), DeepSeek / 智谱清言 / Grok (OpenCode, pick the provider there), then Cursor and VS Code / Copilot. The Chinese model brands and Grok have no MCP client of their own, so their cards write the vendor CLI or OpenCode. For official Claude's **Code** page select **Claude Code**. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
+Cards, CLIs first: Claude Code, Codex, Gemini CLI, Qwen (writes Qwen Code), Kimi (Kimi Code CLI), Yuanbao (CodeBuddy Code), DeepSeek / Zhipu GLM / Grok (OpenCode, pick the provider there), then the Qwen Agent desktop app, then Cursor and VS Code / Copilot. Card names are English throughout. The model brands and Grok have no MCP client of their own, so their cards write the vendor CLI or OpenCode. For official Claude's **Code** page select **Claude Code**. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
 
 Keep the configurator open while it runs the VM service. Restart configured clients and open a new session.
 

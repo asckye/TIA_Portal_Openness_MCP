@@ -153,7 +153,7 @@ namespace TiaMcpServer.Tests
             check(page.Version == "2.7.56" && page.Assets.Count == 2 && page.Zip!.Size == 15938355 && page.Zip.Url == "https://github.com/o/r/releases/download/v2.7.56/TIA_MCP_Delivery_v2.7.56_20260921.zip" && page.Sha256!.Size == 105, "update: release page fragment parsed (links de-duplicated, sizes from the text)");
             check(UpdateLogic.ParseReleasePage("o/r", "v1.0.0", "").Assets.Count == 0 && UpdateLogic.ParseReleasePage("o/r", "v1.0.0", "").Zip == null, "update: empty fragment -> no assets");
             var steps = UpdateLogic.HowToUpdate(null, false);
-            check(steps.Count == 4 && steps[0].Contains("Stop every TiaMcpServer.exe") && steps[1].Contains(UpdateLogic.UpdaterRelativePath) && steps[2].Contains("-ZipPath") && steps[3].Contains("-Rollback"), "update: steps name stop / script / offline / rollback");
+            check(steps.Count == 3 && steps[0].Contains("Stop every TiaMcpServer.exe") && steps[1].Contains(UpdateLogic.UpdaterRelativePath) && steps[2].Contains("-Rollback") && !string.Join(" ", steps).Contains("-ZipPath"), "update: steps name stop / script / rollback - no offline path (dropped 2.7.62)");
         }
     }
 }

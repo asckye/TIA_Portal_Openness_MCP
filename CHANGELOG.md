@@ -6,6 +6,13 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.7.62] - 2026-09-21
+
+更新器只保留在线路径，配置器卡片一律英文名（引擎同版本重建，工具 453、lite 59 不变）。详见 [v2.7.62](docs/releases/v2.7.62.md)。维护者：离线更新可以取消、不需要了；AI 客户端的名称都用英文。
+
+- **去掉离线更新**：`scripts/operations/Update-Engine.ps1` 不再有 `-ZipPath` / `-SkipHashCheck`；只从 GitHub Release 在线下载 ZIP + `.sha256`（没有 `.sha256` 资产就拒绝），github.com 不通时直接失败并说明原因。`CheckForUpdate` 的 `steps` 由四步改为三步（停引擎 → 在线更新 → 重启验证），描述与网络失败提示不再提离线包；`UpdateLogic.HowToUpdate` 同步，离线测试改为断言无 `-ZipPath`。README、`scripts/README.md`、交接单同步。
+- **客户端卡片英文名**：通义千问 → **Qwen**（写 Qwen Code）、腾讯元宝 → **Yuanbao**（写 CodeBuddy Code）、智谱清言 → **Zhipu GLM**（写 OpenCode）、千问工作助理 → **Qwen Agent**（种类 `桌面` → `Desktop`，副标题不再重复品牌）；`ClientProfiles` 新增测试断言每张卡片的名称与种类都是 ASCII。配置器隔离测试 96 项通过。
+
 ## [2.7.61] - 2026-09-21
 
 配置器 2.7.61（引擎同版本重建，工具 453 不变）。详见 [v2.7.61](docs/releases/v2.7.61.md)。维护者：配置文件的写入要能在不同电脑上用，要能检测 AI 客户端装在哪、再写进去——**所有客户端都一样**。
@@ -505,7 +512,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...HEAD
+[2.7.62]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...v2.7.62
 [2.7.61]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...v2.7.61
 [2.7.60]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...v2.7.60
 [2.7.59]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...v2.7.59

@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-  Update this TIA MCP delivery in place from the latest GitHub release (or a local ZIP), with the engine stopped.
+  Update this TIA MCP delivery in place from the latest GitHub release, with the engine stopped.
 
 .DESCRIPTION
   Runs from inside an unpacked delivery (the folder holding manifest\delivery.json, runtime\, TiaMcpConfigurator.exe ...).
@@ -10,7 +10,7 @@
     1. Reads the installed version from manifest\delivery.json.
     2. REFUSES while any TiaMcpServer.exe or TiaMcpConfigurator.exe is running (lists the PIDs; never kills them).
     3. Finds the release: GitHub API releases/latest (or -Version vX.Y.Z), falling back to the release page when the
-       API is rate-limited; or takes -ZipPath for an offline update (the .sha256 sidecar next to it is used when present).
+       API is rate-limited. The TIA machine needs internet access to github.com.
     4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts, checks the package layout.
     5. Backs up the current install to <root>\.previous\<package>\ (last two kept), replaces runtime\ and manifest\
        wholesale and overlays everything else from the package.
@@ -24,18 +24,14 @@
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\operations\Update-Engine.ps1
 .EXAMPLE
-  powershell -NoProfile -ExecutionPolicy Bypass -File scripts\operations\Update-Engine.ps1 -ZipPath D:\Downloads\TIA_MCP_Delivery_v2.7.57_20260922.zip
-.EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\operations\Update-Engine.ps1 -Rollback
 #>
 [CmdletBinding()]
 param(
     [switch]$Check,
-    [string]$ZipPath = '',
     [string]$Version = '',
     [switch]$Rollback,
     [switch]$Force,
-    [switch]$SkipHashCheck,
     [string]$Repository = 'asckye/TIA_Portal_Openness_MCP',
     [string]$InstallRoot = '',
     [int]$TimeoutSeconds = 60
@@ -95,60 +91,53 @@ if ($Rollback) {
     exit 0
 }
 
-# ---------------------------------------------------------------- locate the release
+# ---------------------------------------------------------------- locate the release (GitHub API, release page as fallback)
 $headers = @{ 'User-Agent' = 'TiaMcp-Update-Engine/1'; 'Accept' = 'application/vnd.github+json' }
-$zipUrl = ''; $shaUrl = ''; $tag = ''; $latest = ''
-if ($ZipPath) {
-    if (-not (Test-Path -LiteralPath $ZipPath)) { Fail ('ZIP not found: ' + $ZipPath) }
-    $ZipPath = (Resolve-Path -LiteralPath $ZipPath).Path
-    $zipName = Split-Path $ZipPath -Leaf
-    if ($zipName -notmatch '^TIA_MCP_Delivery_v(\d+\.\d+\.\d+)_\d{8}\.zip$') { Fail ('not a delivery ZIP name: ' + $zipName + ' (expected TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD.zip)') }
-    $latest = $Matches[1]; $tag = 'v' + $latest
-    Say ("offline update from " + $ZipPath + " (" + $latest + ")")
-}
-else {
-    if ($Version -and $Version -notmatch '^v?\d+\.\d+\.\d+$') { Fail '-Version must be vX.Y.Z' }
-    $wantedTag = $(if ($Version) { 'v' + $Version.TrimStart('v') } else { '' })
-    $apiUrl = $(if ($wantedTag) { "https://api.github.com/repos/$Repository/releases/tags/$wantedTag" } else { "https://api.github.com/repos/$Repository/releases/latest" })
-    $release = $null
-    try {
-        $release = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec $TimeoutSeconds
-        $tag = [string]$release.tag_name
-        foreach ($a in @($release.assets)) {
-            if ($a.name -match '^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$') { $zipUrl = [string]$a.browser_download_url; $zipName = [string]$a.name }
-            if ($a.name -match '^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.sha256$') { $shaUrl = [string]$a.browser_download_url }
-        }
-        Say ("GitHub API: " + $tag + " (" + $release.published_at + ")")
+$zipUrl = ''; $shaUrl = ''; $tag = ''; $zipName = ''
+if ($Version -and $Version -notmatch '^v?\d+\.\d+\.\d+$') { Fail '-Version must be vX.Y.Z' }
+$wantedTag = $(if ($Version) { 'v' + $Version.TrimStart('v') } else { '' })
+$apiUrl = $(if ($wantedTag) { "https://api.github.com/repos/$Repository/releases/tags/$wantedTag" } else { "https://api.github.com/repos/$Repository/releases/latest" })
+try {
+    $release = Invoke-RestMethod -Uri $apiUrl -Headers $headers -TimeoutSec $TimeoutSeconds
+    $tag = [string]$release.tag_name
+    foreach ($a in @($release.assets)) {
+        if ($a.name -match '^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip$') { $zipUrl = [string]$a.browser_download_url; $zipName = [string]$a.name }
+        if ($a.name -match '^TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.sha256$') { $shaUrl = [string]$a.browser_download_url }
     }
-    catch {
-        Say ("GitHub API not usable (" + $_.Exception.Message + "); reading the release page instead")
-        # The redirect target of /releases/latest carries the tag; the expanded-assets fragment lists the download links.
-        if ($wantedTag) { $tag = $wantedTag }
-        else {
+    Say ("GitHub API: " + $tag + " (" + $release.published_at + ")")
+}
+catch {
+    Say ("GitHub API not usable (" + $_.Exception.Message + "); reading the release page instead")
+    # The redirect target of /releases/latest carries the tag; the expanded-assets fragment lists the download links.
+    if ($wantedTag) { $tag = $wantedTag }
+    else {
+        try {
             $req = [Net.HttpWebRequest]::Create("https://github.com/$Repository/releases/latest"); $req.AllowAutoRedirect = $false; $req.UserAgent = 'TiaMcp-Update-Engine/1'; $req.Timeout = $TimeoutSeconds * 1000
             $resp = $req.GetResponse(); $location = [string]$resp.Headers['Location']; $resp.Close()
-            if ($location -match '/releases/tag/([^/?#]+)$') { $tag = $Matches[1] } else { Fail ('could not determine the latest release tag from ' + $location) }
         }
-        $html = (Invoke-WebRequest -Uri "https://github.com/$Repository/releases/expanded_assets/$tag" -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec $TimeoutSeconds).Content
-        $m = [regex]::Match($html, '/releases/download/' + [regex]::Escape($tag) + '/(TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip)')
-        if ($m.Success) { $zipName = $m.Groups[1].Value; $zipUrl = 'https://github.com/' + $Repository + $m.Value }
-        $m2 = [regex]::Match($html, '/releases/download/' + [regex]::Escape($tag) + '/(TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.sha256)')
-        if ($m2.Success) { $shaUrl = 'https://github.com/' + $Repository + $m2.Value }
-        Say ("release page: " + $tag)
+        catch { Fail ('github.com is not reachable from this machine (' + $_.Exception.Message + '). The updater needs internet access; check the connection or proxy and run it again.') }
+        if ($location -match '/releases/tag/([^/?#]+)$') { $tag = $Matches[1] } else { Fail ('could not determine the latest release tag from ' + $location) }
     }
-    if (-not $zipUrl) { Fail ('release ' + $tag + ' carries no TIA_MCP_Delivery ZIP asset; see https://github.com/' + $Repository + '/releases') }
-    $v = ReadVersion $tag
-    if (-not $v) { Fail ('release tag is not a version: ' + $tag) }
-    $latest = $v.ToString()
+    $html = (Invoke-WebRequest -Uri "https://github.com/$Repository/releases/expanded_assets/$tag" -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec $TimeoutSeconds).Content
+    $m = [regex]::Match($html, '/releases/download/' + [regex]::Escape($tag) + '/(TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.zip)')
+    if ($m.Success) { $zipName = $m.Groups[1].Value; $zipUrl = 'https://github.com/' + $Repository + $m.Value }
+    $m2 = [regex]::Match($html, '/releases/download/' + [regex]::Escape($tag) + '/(TIA_MCP_Delivery_v\d+\.\d+\.\d+_\d{8}\.sha256)')
+    if ($m2.Success) { $shaUrl = 'https://github.com/' + $Repository + $m2.Value }
+    Say ("release page: " + $tag)
 }
+if (-not $zipUrl) { Fail ('release ' + $tag + ' carries no TIA_MCP_Delivery ZIP asset; see https://github.com/' + $Repository + '/releases') }
+if (-not $shaUrl) { Fail ('release ' + $tag + ' carries no .sha256 asset; the download cannot be verified, nothing was changed') }
+$v = ReadVersion $tag
+if (-not $v) { Fail ('release tag is not a version: ' + $tag) }
+$latest = $v.ToString()
 
 $cmp = $null
-$vi = ReadVersion $installed; $vl = ReadVersion $latest
-if ($vi -and $vl) { $cmp = $vl.CompareTo($vi) }
+$vi = ReadVersion $installed
+if ($vi) { $cmp = $v.CompareTo($vi) }
 if ($cmp -gt 0) { Say ("UPDATE AVAILABLE: " + $installed + " -> " + $latest) }
 elseif ($cmp -eq 0) { Say ("UP TO DATE: " + $installed + " is the latest release") }
 elseif ($cmp -lt 0) { Say ("installed " + $installed + " is newer than " + $latest) }
-if ($Check) { if ($zipUrl) { Say ("asset: " + $zipUrl) }; exit 0 }
+if ($Check) { Say ("asset: " + $zipUrl); exit 0 }
 if ($cmp -le 0 -and -not $Force) { Say 'nothing to do (pass -Force to reinstall anyway)'; exit 0 }
 
 # ---------------------------------------------------------------- engine must be stopped from here on
@@ -158,30 +147,16 @@ RequireStopped
 $work = Join-Path $root '.update'
 if (Test-Path -LiteralPath $work) { Remove-Item -LiteralPath $work -Recurse -Force }
 New-Item -ItemType Directory -Path $work | Out-Null
-if ($ZipPath) {
-    $zipFile = $ZipPath
-    $shaFile = [IO.Path]::ChangeExtension($ZipPath, '.sha256')
-    if (-not (Test-Path -LiteralPath $shaFile)) { $shaFile = '' }
-}
-else {
-    $zipFile = Join-Path $work $zipName
-    Say ("downloading " + $zipUrl)
-    Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec ($TimeoutSeconds * 10)
-    $shaFile = ''
-    if ($shaUrl) {
-        $shaFile = Join-Path $work ([IO.Path]::GetFileNameWithoutExtension($zipName) + '.sha256')
-        Invoke-WebRequest -Uri $shaUrl -OutFile $shaFile -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec $TimeoutSeconds
-    }
-}
+$zipFile = Join-Path $work $zipName
+Say ("downloading " + $zipUrl)
+Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec ($TimeoutSeconds * 10)
+$shaFile = Join-Path $work ([IO.Path]::GetFileNameWithoutExtension($zipName) + '.sha256')
+Invoke-WebRequest -Uri $shaUrl -OutFile $shaFile -Headers @{ 'User-Agent' = 'TiaMcp-Update-Engine/1' } -UseBasicParsing -TimeoutSec $TimeoutSeconds
 Say ("ZIP " + $zipFile + " (" + [math]::Round((Get-Item -LiteralPath $zipFile).Length / 1MB, 1) + " MB)")
-if ($shaFile) {
-    $expected = ((Get-Content -LiteralPath $shaFile -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
-    $actual = (Get-FileHash -LiteralPath $zipFile -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($expected -ne $actual) { Fail ("SHA-256 mismatch: sidecar " + $expected + " vs file " + $actual + " - the download is corrupt or tampered; nothing was changed") }
-    Say ("SHA-256 verified " + $actual)
-}
-elseif (-not $SkipHashCheck) { Fail 'no .sha256 sidecar found (download it next to the ZIP, or pass -SkipHashCheck to proceed unverified)' }
-else { Say 'WARNING: hash check skipped' }
+$expected = ((Get-Content -LiteralPath $shaFile -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
+$actual = (Get-FileHash -LiteralPath $zipFile -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($expected -ne $actual) { Fail ("SHA-256 mismatch: sidecar " + $expected + " vs file " + $actual + " - the download is corrupt or tampered; nothing was changed") }
+Say ("SHA-256 verified " + $actual)
 
 # ---------------------------------------------------------------- extract + check layout
 $extract = Join-Path $work 'extract'

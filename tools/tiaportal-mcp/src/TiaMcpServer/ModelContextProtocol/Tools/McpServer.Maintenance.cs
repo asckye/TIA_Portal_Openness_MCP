@@ -59,8 +59,8 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "CheckForUpdate"), Description(
             "[L0][Diagnostics][SESSION] Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP " +
             "(name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, " +
-            "run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -ZipPath updates offline, -Rollback restores the previous install). " +
-            "Needs internet on the TIA machine; without it the tool reports the release page URL and the offline procedure. Nothing touches TIA Portal.")]
+            "run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). " +
+            "The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal.")]
         public static async Task<ResponseStringList> CheckForUpdate(
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
             [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)
@@ -114,7 +114,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseStringList
                 {
                     Message = "Engine " + current + "; GitHub could not be reached from this machine (" + (ex.InnerException?.Message ?? ex.Message) + "). " +
-                              "Without internet: download the ZIP and .sha256 from " + UpdateLogic.ReleasePageUrl(repository) + " on another machine and run Update-Engine.ps1 -ZipPath <zip> here (engine stopped).",
+                              "The updater needs access to github.com from the TIA machine; check the connection / proxy, or open " + UpdateLogic.ReleasePageUrl(repository) + " to see the latest release.",
                     Items = lines, Meta = meta,
                 };
             }
