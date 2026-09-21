@@ -311,7 +311,7 @@ if ($NoTag) { Say 'stopped before tag (-NoTag)'; exit 0 }
 
 # ---------------------------------------------------------------- 7. tag + upload + verify
 $tag = 'v' + $Version
-if ((& $Git tag -l $tag).Trim() -eq $tag) {
+if (@(& $Git tag -l $tag) -contains $tag) {
     $tagged = (& $Git rev-list -n 1 $tag).Trim()
     if ($tagged -ne $head) { Fail ('local tag ' + $tag + ' points at ' + $tagged + ', not HEAD ' + $head) }
     Say ('tag ' + $tag + ' already exists on HEAD')
