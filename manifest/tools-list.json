@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.55_20260921",
-    "generatedAt":  "2026-09-21T05:34:49.7757771+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.56_20260921",
+    "generatedAt":  "2026-09-21T05:57:28.1444715+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.55.0",
-    "exeSha256":  "92e8a9c393fbebab0c959345df7e6af13e2b8ea50a7917db3c7cb34a76a4f01d",
+    "fileVersion":  "2.7.56.0",
+    "exeSha256":  "b2655c143129915705fb392028520f6724c8191dd571091d4e4f3f7682cef056",
     "toolCount":  450,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -3793,9 +3793,10 @@
                       "method":  "Connect",
                       "returnType":  "ResponseConnect",
                       "parameters":  [
-
+                                         "projectName",
+                                         "allowStart"
                                      ],
-                      "description":  "[L1][Portal] Connect to a running TIA Portal instance or start a new one. MUST be the first tool called in every session. On success, state becomes Connected=true. If TIA Portal is not installed or the user is not in the \u0027Siemens TIA Openness\u0027 Windows group, this will fail — run EnsureOpennessUserGroup first."
+                      "description":  "[L1][Portal] Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - to the process holding projectName when given, else the first one with an open project / session, else the first attachable - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the \u0027Siemens TIA Openness\u0027 Windows group, this will fail — run EnsureOpennessUserGroup first."
                   },
                   {
                       "name":  "ConnectIsolated",

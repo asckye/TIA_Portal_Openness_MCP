@@ -4,8 +4,8 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-20 22:34:50
-- 引擎文件版本：2.7.55.0
+- 生成时间：2026-09-20 22:57:28
+- 引擎文件版本：2.7.56.0
 - 工具数量：450
 
 ## 读法
@@ -66,7 +66,7 @@
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `GetState` | L0 | SESSION* | Get current connection state: IsConnected, open Project name, and open Session name. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject. |
-| `Connect` | L1 | SESSION* | Connect to a running TIA Portal instance or start a new one. MUST be the first tool called in every session. On success, state becomes Connected=true. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first. |
+| `Connect` | L1 | SESSION* | Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - to the process holding projectName when given, else the first one with an open project / session, else the first attachable - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first. |
 | `ConnectIsolated` | L1 | SESSION* | Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain Connect attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and Disconnect. |
 | `Disconnect` | L1 | SESSION* | Disconnect from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed. |
 | `EnsureOpennessUserGroup` | L1 | SESSION* | Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK. |
