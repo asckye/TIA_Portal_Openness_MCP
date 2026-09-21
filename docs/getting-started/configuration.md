@@ -44,7 +44,7 @@
 
 **Codex 桌面客户端 / CLI**：选择“Codex”，保存后重启并重新打开任务；写入用户级 `config.toml`，尊重 `CODEX_HOME`。
 
-**Qwen、Kimi、Yuanbao、DeepSeek、Zhipu GLM、Grok**（卡片一律用英文名，2.7.62 起）：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
+**Qwen、Kimi、Yuanbao、DeepSeek、GLM、Grok**（卡片一律用英文名，2.7.62 起）：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
 
 | 卡片 | 实际写入 | 默认配置位置 | 远程条目 |
 |---|---|---|---|
@@ -54,7 +54,7 @@
 | Qwen | 阿里 Qwen Code（通义千问） | `%USERPROFILE%\.qwen\settings.json` | `httpUrl`（同 Gemini CLI） |
 | Kimi | 月之暗面 Kimi Code CLI | `%KIMI_CODE_HOME%\mcp.json`，未设置时用 `%USERPROFILE%\.kimi-code\mcp.json` | `url` |
 | Yuanbao | 腾讯 CodeBuddy Code CLI（腾讯元宝） | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
-| DeepSeek / Zhipu GLM / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
+| DeepSeek / GLM / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
 | Qwen Agent | 千问工作助理（桌面应用，qwen-agent） | `%USERPROFILE%\.qwen-agent\mcp.json`（只对一个项目生效时把同名文件放到 `<项目>\.qwen-agent\mcp.json`） | `url` + `headers.Authorization`（静态 Bearer，不走 OAuth） |
 | Cursor | Cursor | `%USERPROFILE%\.cursor\mcp.json` | `url` |
 | VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json`（本机只有 Insiders 时 `Code - Insiders`） | `servers` / `type: http` |
@@ -71,6 +71,10 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 远程统一使用 `tia-portal-vm`，本机 stdio 使用 `tia-portal`，与插件一致。项目或客户端若已有同名定义，请消除重复配置。
 
 原根目录配置 BAT 和 tia CMD 已删除，日常配置与启动统一使用 GUI；CLI 直接调用 runtime 下的 EXE。
+
+## 菜单栏：更新与帮助（2.8.0）
+
+窗口顶部的菜单栏不占页面：**更新**菜单第一行是引擎版本与包名（读配置器旁边的 `manifest\delivery.json`），第二行是检查结果——启动时后台联网比对一次 GitHub 最新版（API 限流时读发布页），有新版本时菜单标题变成“更新 · 有新版本 X”。“检查更新”随时重查；“更新引擎…”在确认后关闭配置器、在新的 PowerShell 窗口里运行 `scripts\operations\Update-Engine.ps1`（下载 ZIP 与 `.sha256`、校验、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件），完成或失败后自动重新打开配置器；更新器窗口保留日志。它会拒绝的情况：本窗口启动的 MCP 还在跑（先点“停止”）、机器上有别的 `TiaMcpServer.exe`（列出 pid，可能是某个 AI 客户端启动的，关掉那个会话）、目录里有 `.git`（源码仓库不在这里更新）。“打开 GitHub Releases”看发布说明。**帮助**菜单：所选客户端的使用说明、项目主页、关于。虚拟机上更新后记得再点“启动服务”。
 
 ## 故障处理与验证边界
 

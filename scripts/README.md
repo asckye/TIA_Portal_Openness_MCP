@@ -23,6 +23,6 @@
 | 诊断 | [campaign/](diagnostics/campaign/) | 真机批跑：`camp.py`（单调 / 按 plan 批跑并记 ledger）、`rawmsg.py`（UTF-8 看原文）、`plans/plan_*.py`（各族测试计划）、`make_ledger.py`（生成[真机台账](../docs/reference/real-machine-ledger.md)）、`export_full.py`；用法见[换机器交接单 §4](../docs/development/handoff-checklist.md) |
 | 诊断 | [openness-dynamic-coverage.json](diagnostics/openness-dynamic-coverage.json) | 经反射 / 泛型到达、类型名不出现在源码里的 Openness 类型登记表（`pattern` / `tool` / `mechanism` / `verified`），覆盖审计据此计入"动态覆盖" |
 | 操作 | [预热.bat](operations/预热.bat)、[生成工程.bat](operations/生成工程.bat) | 可选 CLI 快捷操作，默认选择包内 V21；V20 请直接调用对应 EXE |
-| 操作 | [Update-Engine.ps1](operations/Update-Engine.ps1) | 在已解压的交付包里就地更新到最新 GitHub Release（只在线，机器要能访问 github.com；2.7.62 去掉了离线包路径）：引擎在运行就拒绝并列出 pid，下载 ZIP + `.sha256` 校验、备份到 `.previous\`、替换 `runtime\` / `manifest\` 并覆盖其余文件；`-Check` 只比版本，`-Rollback` 换回上一版；不碰 TIA 与客户端配置 |
+| 操作 | [Update-Engine.ps1](operations/Update-Engine.ps1) | 在已解压的交付包里就地更新到最新 GitHub Release（只在线，机器要能访问 github.com；2.7.62 去掉了离线包路径）：引擎在运行就拒绝并列出 pid，下载 ZIP + `.sha256` 校验、解压到 `%TEMP%`、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件（2.8.0 起不受 260 字符路径限制）；`-Check` 只比版本，`-Rollback` 换回上一版；`-WaitForPid` / `-RelaunchConfigurator` 供配置器菜单“更新引擎…”调用；不碰 TIA 与客户端配置 |
 
 详见 [验证说明](../docs/development/validation.md) 和 [发布流程](../docs/development/release-workflow.md)。按旧版本构建/打包脚本和 Python 预热桥接已由统一流程替代并删除。

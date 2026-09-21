@@ -127,8 +127,9 @@ namespace TiaMcpConfigurator
                 }
                 Probe(false); Probe(true);
                 var profiles = ClientProfiles.All();
-                Assert(profiles.Count == 12, "twelve cards: Claude Code, Codex, Gemini CLI, Qwen, Kimi, Yuanbao, DeepSeek, Zhipu GLM, Grok, Qwen Agent, Cursor, VS Code");
+                Assert(profiles.Count == 12, "twelve cards: Claude Code, Codex, Gemini CLI, Qwen, Kimi, Yuanbao, DeepSeek, GLM, Grok, Qwen Agent, Cursor, VS Code");
                 Assert(profiles.All(x => x.Name.All(c => c < 128) && x.Kind.All(c => c < 128)), "2.7.62: every client name and kind is English (maintainer)");
+                Assert(profiles.First(x => x.Id == "zhipu").Name == "GLM", "2.8.0: the Zhipu card is named GLM (maintainer)");
                 Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
                 Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles[9].Kind == "Desktop" && profiles.Skip(10).All(x => x.Kind == "IDE"), "CLI cards, then the desktop assistant, then IDE cards");
                 // 2.7.61: detection never throws, every card carries evidence text, and the qwen-agent file is url + headers without a type
@@ -185,9 +186,34 @@ namespace TiaMcpConfigurator
                 string jsonc = "{\"url\":\"http://example/a/*b*/\",/*comment*/\"list\":[1,],}";
                 var parsedJsonc = ConfigCore.Json().Deserialize<Dictionary<string, object>>(ClientProfiles.StripJsonComments(jsonc));
                 Assert((string)parsedJsonc["url"] == "http://example/a/*b*/", "JSONC URLs preserved while removing comments and trailing commas");
+                // 2.8.0 update band: pure logic without network, then the band itself in the rendered window.
+                Assert(UpdateCheck.Compare("2.8.0", "2.7.62") > 0 && UpdateCheck.Compare("v2.7.62", "2.7.62") == 0 && UpdateCheck.Compare("2.7.9", "2.7.62") < 0 && UpdateCheck.Compare(null, "1.0.0") < 0, "update: numeric version comparison ignores a leading v and sorts empty lowest");
+                Assert(UpdateCheck.TagFromLocation("https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v2.7.62") == "v2.7.62" && UpdateCheck.TagFromLocation("https://github.com/x/y/releases") == null, "update: release page redirect yields the tag");
+                string releaseJson = "{\"tag_name\":\"v2.8.0\",\"html_url\":\"https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v2.8.0\",\"assets\":[{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.zip\",\"size\":16147645},{\"name\":\"TIA_MCP_Delivery_v2.8.0_20260921.sha256\",\"size\":64}]}";
+                var release = UpdateCheck.ParseRelease(releaseJson, "2.7.62", UpdateCheck.Repository);
+                Assert(release.UpdateAvailable && release.Latest == "2.8.0" && release.ZipName == "TIA_MCP_Delivery_v2.8.0_20260921.zip" && release.ZipSize == 16147645 && release.HasSha256 && release.ZipSizeText == "15.4 MB" && release.Source == "api", "update: GitHub release JSON gives version, ZIP asset, size and the .sha256 sidecar");
+                Assert(!UpdateCheck.ParseRelease(releaseJson, "2.8.0", UpdateCheck.Repository).UpdateAvailable && !UpdateCheck.ParseRelease(releaseJson, "2.9.0", UpdateCheck.Repository).UpdateAvailable, "update: same or newer installed version means nothing to do");
+                Reject(() => UpdateCheck.ParseRelease("{\"tag_name\":\"latest\"}", "2.7.62", UpdateCheck.Repository), "update: a tag that is not a version is rejected");
+                string delivery = Path.Combine(temp, "delivery"); Directory.CreateDirectory(Path.Combine(delivery, "manifest"));
+                File.WriteAllText(Path.Combine(delivery, "manifest", "delivery.json"), "{\"release\":\"2.7.62\",\"package\":\"TIA_MCP_Delivery_v2.7.62_20260921\"}");
+                Assert(UpdateCheck.Installed(delivery) == "2.7.62" && UpdateCheck.InstalledPackage(delivery) == "TIA_MCP_Delivery_v2.7.62_20260921" && UpdateCheck.Installed(temp) == null && !UpdateCheck.IsSourceRepository(delivery), "update: installed version comes from manifest\\delivery.json, absent elsewhere");
+                Directory.CreateDirectory(Path.Combine(delivery, ".git"));
+                Assert(UpdateCheck.IsSourceRepository(delivery), "update: a .git folder marks the source repository (no in-place update there)");
+                string launch = UpdateCheck.LaunchArguments(@"C:\TIA MCP\scripts\operations\Update-Engine.ps1", @"C:\TIA MCP\", 4242);
+                Assert(launch.StartsWith("-NoProfile -ExecutionPolicy Bypass -NoExit -File \"C:\\TIA MCP\\scripts\\operations\\Update-Engine.ps1\" -InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator"), "update: the updater is launched visibly with the install root (no trailing backslash), the caller pid and the relaunch switch");
+                Assert(UpdateCheck.Launch(delivery, 1).FileName.EndsWith("powershell.exe") && UpdateCheck.Launch(delivery, 1).UseShellExecute && UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: Windows PowerShell runs scripts\\operations\\Update-Engine.ps1 from the install root");
+                Assert(UpdateCheck.RunningEngines().All(x => x.StartsWith("TiaMcpServer.exe PID ")), "update: running engines are listed by pid (the updater refuses while any runs)");
                 using (var form = new ConfigWindow(false))
                 {
                     var window = form.Window;
+                    // 2.8.0: the update lives in the menu bar (maintainer: "做成到菜单栏里"); nothing on the page, and the run item
+                    // stays disabled until a check found a newer release.
+                    var menuBar = (System.Windows.Controls.Menu)window.FindName("MenuBar");
+                    var runUpdate = (System.Windows.Controls.MenuItem)window.FindName("RunUpdate");
+                    var installedItem = (System.Windows.Controls.MenuItem)window.FindName("UpdateInstalledItem");
+                    Assert(menuBar != null && window.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)window.FindName("CheckUpdate")).Header.ToString().StartsWith("检查更新"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
+                    Assert(installedItem.Header.ToString().StartsWith("引擎 ") || installedItem.Header.ToString().StartsWith("引擎版本未知"), "update menu names the installed engine version from manifest\\delivery.json");
+                    Assert(window.FindName("ShowClientHelp") != null && window.FindName("OpenProjectPage") != null && window.FindName("AboutItem") != null && window.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
                     var generate = (System.Windows.Controls.Button)window.FindName("GenerateKey");
                     generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
                     var password = (System.Windows.Controls.PasswordBox)window.FindName("Key");
@@ -229,6 +255,7 @@ namespace TiaMcpConfigurator
                     var pill = (System.Windows.Controls.TextBlock)window.FindName("Status");
                     double pillRight = pill.TransformToAncestor(shell).Transform(new System.Windows.Point(pill.ActualWidth, 0)).X;
                     Assert(pillRight < shell.ActualWidth, "status pill stays inside the panel");
+                    Assert(menuBar.ActualHeight > 10 && menuBar.ActualHeight < 60 && menuBar.TransformToAncestor(shell).Transform(new System.Windows.Point(0, 0)).Y < 40, "menu bar lays out as a slim strip at the top of the window");
                     using (var png = File.OpenRead(Path.Combine(output, "remote.png")))
                         Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                             >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");

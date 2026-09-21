@@ -69,9 +69,25 @@
 
  <Border Background="White" CornerRadius="20" BorderBrush="#DFDDD5" BorderThickness="1" Margin="18">
   <Grid>
-   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+   <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+   <Menu x:Name="MenuBar" Background="Transparent" Padding="22,7,22,0" FontSize="12.5" BorderBrush="#EDEBE4" BorderThickness="0,0,0,1">
+    <MenuItem x:Name="UpdateMenu" Header="更新(_U)" Padding="10,4">
+     <MenuItem x:Name="UpdateInstalledItem" Header="引擎版本未知" IsEnabled="False"/>
+     <MenuItem x:Name="UpdateStateItem" Header="尚未检查" IsEnabled="False"/>
+     <Separator/>
+     <MenuItem x:Name="CheckUpdate" Header="检查更新(_C)"/>
+     <MenuItem x:Name="RunUpdate" Header="更新引擎…(_R)" IsEnabled="False"/>
+     <MenuItem x:Name="OpenReleases" Header="打开 GitHub Releases(_G)"/>
+    </MenuItem>
+    <MenuItem Header="帮助(_H)" Padding="10,4">
+     <MenuItem x:Name="ShowClientHelp" Header="所选客户端的使用说明(_I)"/>
+     <MenuItem x:Name="OpenProjectPage" Header="打开项目主页(_P)"/>
+     <Separator/>
+     <MenuItem x:Name="AboutItem" Header="关于(_A)"/>
+    </MenuItem>
+   </Menu>
 
-   <Border BorderBrush="#EDEBE4" BorderThickness="0,0,0,1" Padding="30,20"><Grid>
+   <Border Grid.Row="1" BorderBrush="#EDEBE4" BorderThickness="0,0,0,1" Padding="30,20"><Grid>
     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
     <Border Width="34" Height="34" CornerRadius="11" Background="#2F5B4C" VerticalAlignment="Center"><TextBlock Text="T" Foreground="White" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
     <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
@@ -90,7 +106,7 @@
     </StackPanel>
    </Grid></Border>
 
-   <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,26,30,26">
+   <ScrollViewer x:Name="ContentScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="30,26,30,26">
     <StackPanel>
      <StackPanel Margin="0,0,0,18" MaxWidth="820" HorizontalAlignment="Left">
       <TextBlock x:Name="PageStep" Text="TWO SIDES · ONE PASS" Style="{StaticResource Mono}"/>

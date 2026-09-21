@@ -11,13 +11,20 @@
     2. REFUSES while any TiaMcpServer.exe or TiaMcpConfigurator.exe is running (lists the PIDs; never kills them).
     3. Finds the release: GitHub API releases/latest (or -Version vX.Y.Z), falling back to the release page when the
        API is rate-limited. The TIA machine needs internet access to github.com.
-    4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts, checks the package layout.
+    4. Downloads the ZIP + .sha256 to <root>\.update\, verifies the SHA-256, extracts into a short folder under
+       %TEMP% and checks the package layout. Windows PowerShell's Expand-Archive, Copy-Item and Remove-Item stop at
+       260-character paths and the package holds paths of ~110 characters below its root, so every tree copy and
+       delete goes through robocopy (long-path safe) and only the extraction folder is length-checked.
     5. Backs up the current install to <root>\.previous\<package>\ (last two kept), replaces runtime\ and manifest\
        wholesale and overlays everything else from the package.
     6. Prints the new version. Start the engine again and call Bootstrap to confirm serverVersion.
 
   -Check only reports the installed and latest versions. -Rollback restores the newest backup (engine stopped as well).
   Nothing here touches TIA Portal, projects or client configurations.
+
+  The configurator's "Update engine" menu item (2.8.0) runs this same script in its own window after closing itself:
+  -WaitForPid <pid> waits for that configurator process to exit before the running-process check, and
+  -RelaunchConfigurator starts TiaMcpConfigurator.exe from the install root again when the script ends.
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts\operations\Update-Engine.ps1 -Check
@@ -34,13 +41,22 @@ param(
     [switch]$Force,
     [string]$Repository = 'asckye/TIA_Portal_Openness_MCP',
     [string]$InstallRoot = '',
-    [int]$TimeoutSeconds = 60
+    [int]$TimeoutSeconds = 60,
+    [int]$WaitForPid = 0,
+    [switch]$RelaunchConfigurator
 )
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
 function Say([string]$text) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $text) }
-function Fail([string]$text) { Write-Host ("FAIL: " + $text) -ForegroundColor Red; exit 1 }
+function Relaunch() {
+    if (-not $RelaunchConfigurator -or -not $root) { return }
+    $exe = Join-Path $root 'TiaMcpConfigurator.exe'
+    if (Test-Path -LiteralPath $exe) { Say ('reopening ' + $exe); Start-Process -FilePath $exe -WorkingDirectory $root }
+}
+function Fail([string]$text) { Write-Host ("FAIL: " + $text) -ForegroundColor Red; Relaunch; exit 1 }
+# Any unexpected terminating error (network, archive, file system) still ends with a FAIL line and the relaunch.
+trap { Write-Host ("FAIL: " + $_.Exception.Message) -ForegroundColor Red; Relaunch; exit 1 }
 
 # ---------------------------------------------------------------- install root + installed version
 if (-not $InstallRoot) { $InstallRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent }
@@ -51,6 +67,11 @@ $delivery = Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json
 $installed = [string]$delivery.release
 $installedPackage = [string]$delivery.package
 Say ("install root " + $root + " - installed " + $installed + " (" + $installedPackage + ")")
+if ($WaitForPid -gt 0) {
+    $deadline = (Get-Date).AddSeconds(30)
+    while ((Get-Process -Id $WaitForPid -ErrorAction SilentlyContinue) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 250 }
+    if (Get-Process -Id $WaitForPid -ErrorAction SilentlyContinue) { Fail ('process ' + $WaitForPid + ' (the configurator that launched this update) is still running after 30 s') }
+}
 
 function Running() {
     $list = @()
@@ -68,6 +89,24 @@ function RequireStopped() {
         Fail ("the engine is running - close it first, then run this script again. Running: " + ($running -join '; ') + ". (An MCP client such as Claude Code or VS Code may have started it: stop that client's server / close the session.)")
     }
 }
+# robocopy copies and deletes trees regardless of the 260-character limit that stops Copy-Item / Remove-Item
+# (the install root + .previous\<package>\ + the deepest package file easily exceed it). Exit codes below 8 are success.
+function CopyTree([string]$from, [string]$to, [string[]]$excludeDirs = @(), [string[]]$excludeFiles = @()) {
+    $rc = @($from, $to, '/E', '/COPY:DAT', '/DCOPY:T', '/R:2', '/W:1', '/NFL', '/NDL', '/NJH', '/NJS', '/NP')
+    if ($excludeDirs.Count -gt 0) { $rc += '/XD'; $rc += $excludeDirs }
+    if ($excludeFiles.Count -gt 0) { $rc += '/XF'; $rc += $excludeFiles }
+    & robocopy.exe @rc | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw ('robocopy failed (exit ' + $LASTEXITCODE + ') copying ' + $from + ' -> ' + $to) }
+}
+function RemoveTree([string]$path) {
+    if (-not (Test-Path -LiteralPath $path)) { return }
+    $empty = Join-Path ([IO.Path]::GetTempPath()) ('tia-mcp-empty-' + $PID)
+    New-Item -ItemType Directory -Force -Path $empty | Out-Null
+    & robocopy.exe $empty $path /MIR /R:1 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+    if ($LASTEXITCODE -ge 8) { throw ('robocopy failed (exit ' + $LASTEXITCODE + ') clearing ' + $path) }
+    Remove-Item -LiteralPath $path -Recurse -Force
+    Remove-Item -LiteralPath $empty -Recurse -Force
+}
 function ReadVersion([string]$text) { if ($text -match '^v?(\d+)\.(\d+)\.(\d+)') { return [version]::new([int]$Matches[1], [int]$Matches[2], [int]$Matches[3]) } return $null }
 
 # ---------------------------------------------------------------- rollback
@@ -81,13 +120,11 @@ if ($Rollback) {
     $backupVersion = [string]((Get-Content -LiteralPath $backupDelivery -Raw | ConvertFrom-Json).release)
     RequireStopped
     Say ("rolling back " + $installed + " -> " + $backupVersion + " from " + $backup.FullName)
-    foreach ($dir in 'runtime', 'manifest') {
-        $target = Join-Path $root $dir
-        if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
-    }
-    Copy-Item -Path (Join-Path $backup.FullName '*') -Destination $root -Recurse -Force
+    foreach ($dir in 'runtime', 'manifest') { RemoveTree (Join-Path $root $dir) }
+    CopyTree $backup.FullName $root
     $now = [string]((Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json).release)
     Say ("DONE: installed version is now " + $now + ". Start the engine and call Bootstrap to confirm serverVersion.")
+    Relaunch
     exit 0
 }
 
@@ -138,7 +175,7 @@ if ($cmp -gt 0) { Say ("UPDATE AVAILABLE: " + $installed + " -> " + $latest) }
 elseif ($cmp -eq 0) { Say ("UP TO DATE: " + $installed + " is the latest release") }
 elseif ($cmp -lt 0) { Say ("installed " + $installed + " is newer than " + $latest) }
 if ($Check) { Say ("asset: " + $zipUrl); exit 0 }
-if ($cmp -le 0 -and -not $Force) { Say 'nothing to do (pass -Force to reinstall anyway)'; exit 0 }
+if ($cmp -le 0 -and -not $Force) { Say 'nothing to do (pass -Force to reinstall anyway)'; Relaunch; exit 0 }
 
 # ---------------------------------------------------------------- engine must be stopped from here on
 RequireStopped
@@ -159,7 +196,26 @@ if ($expected -ne $actual) { Fail ("SHA-256 mismatch: sidecar " + $expected + " 
 Say ("SHA-256 verified " + $actual)
 
 # ---------------------------------------------------------------- extract + check layout
-$extract = Join-Path $work 'extract'
+# Extract under %TEMP% (short) rather than under the install root: the package's longest relative path is ~145
+# characters and Windows PowerShell cannot extract or copy beyond 260. Check both destinations before touching anything.
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$longest = 0; $longestName = ''
+$archive = [IO.Compression.ZipFile]::OpenRead($zipFile)
+try {
+    foreach ($entry in $archive.Entries) {
+        $rel = $entry.FullName
+        $cut = $rel.IndexOf('/')
+        if ($cut -ge 0) { $rel = $rel.Substring($cut + 1) }   # strip the top-level package folder
+        if ($rel.Length -gt $longest) { $longest = $rel.Length; $longestName = $rel }
+    }
+} finally { $archive.Dispose() }
+$extract = Join-Path ([IO.Path]::GetTempPath()) ('tia-mcp-update-' + $PID)
+if (Test-Path -LiteralPath $extract) { Remove-Item -LiteralPath $extract -Recurse -Force }
+$limit = 250
+$extractLongest = $extract.Length + 1 + $zipName.Length - 4 + 1 + $longest
+if ($extractLongest -gt $limit) { Fail ('the temp folder is too deep for extraction: ' + $extract + ' -> ' + $extractLongest + ' > ' + $limit + ' characters; set TEMP to a shorter folder and run again') }
+if ($root.Length + 1 + $longest -gt $limit) { Say ('note: the install root is deep (' + $root.Length + ' characters); the update copies with robocopy, but Explorer and other tools may not open the deepest source files (' + $longestName + ')') }
+Say ("extracting to " + $extract + " (longest package path " + $longest + " characters)")
 Expand-Archive -LiteralPath $zipFile -DestinationPath $extract -Force
 $top = @(Get-ChildItem -LiteralPath $extract -Directory)
 $package = $(if ($top.Count -eq 1 -and (Test-Path -LiteralPath (Join-Path $top[0].FullName 'manifest\delivery.json'))) { $top[0].FullName } elseif (Test-Path -LiteralPath (Join-Path $extract 'manifest\delivery.json')) { $extract } else { '' })
@@ -173,25 +229,20 @@ Say ("package " + $newDelivery.package + " = engine " + $newDelivery.engineRelea
 # ---------------------------------------------------------------- backup, then replace
 if (-not (Test-Path -LiteralPath $previousRoot)) { New-Item -ItemType Directory -Path $previousRoot | Out-Null }
 $backupDir = Join-Path $previousRoot $installedPackage
-if (Test-Path -LiteralPath $backupDir) { Remove-Item -LiteralPath $backupDir -Recurse -Force }
+RemoveTree $backupDir
 New-Item -ItemType Directory -Path $backupDir | Out-Null
 Say ("backing up the current install to " + $backupDir)
-foreach ($item in Get-ChildItem -LiteralPath $root -Force) {
-    if ($item.Name -in '.previous', '.update', 'TiaMcp_Output', 'bin-build') { continue }
-    if ($item.Extension -eq '.log') { continue }
-    Copy-Item -LiteralPath $item.FullName -Destination (Join-Path $backupDir $item.Name) -Recurse -Force
-}
+CopyTree $root $backupDir @((Join-Path $root '.previous'), (Join-Path $root '.update'), (Join-Path $root 'TiaMcp_Output'), (Join-Path $root 'bin-build')) @('*.log')
 foreach ($old in (Get-ChildItem -LiteralPath $previousRoot -Directory | Sort-Object LastWriteTime -Descending | Select-Object -Skip 2)) {
-    Remove-Item -LiteralPath $old.FullName -Recurse -Force; Say ("dropped old backup " + $old.Name)
+    RemoveTree $old.FullName; Say ("dropped old backup " + $old.Name)
 }
 Say 'replacing runtime\ and manifest\, overlaying the rest'
-foreach ($dir in 'runtime', 'manifest') {
-    $target = Join-Path $root $dir
-    if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
-}
-Copy-Item -Path (Join-Path $package '*') -Destination $root -Recurse -Force
+foreach ($dir in 'runtime', 'manifest') { RemoveTree (Join-Path $root $dir) }
+CopyTree $package $root
 Remove-Item -LiteralPath $work -Recurse -Force
+RemoveTree $extract
 
 $now = Get-Content -LiteralPath $deliveryJson -Raw | ConvertFrom-Json
 $exeVersion = (Get-Item -LiteralPath (Join-Path $root 'runtime\v21\TiaMcpServer.exe')).VersionInfo.FileVersion
 Say ("DONE: " + $installed + " -> " + $now.release + " (runtime\v21\TiaMcpServer.exe " + $exeVersion + "). Start the engine and call Bootstrap to confirm serverVersion; -Rollback restores " + $installedPackage + ".")
+Relaunch

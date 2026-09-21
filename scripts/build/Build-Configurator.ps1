@@ -3,7 +3,7 @@ param([switch]$Test)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$sources = @('Configurator.cs', 'ConfigCore.cs', 'ClientProfiles.cs') | ForEach-Object { Join-Path $root "tools\mcp-configurator\$_" }
+$sources = @('Configurator.cs', 'ConfigCore.cs', 'ClientProfiles.cs', 'UpdateCheck.cs') | ForEach-Object { Join-Path $root "tools\mcp-configurator\$_" }
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
 $resource = "/resource:$root\tools\mcp-configurator\MainWindow.xaml,MainWindow.xaml"

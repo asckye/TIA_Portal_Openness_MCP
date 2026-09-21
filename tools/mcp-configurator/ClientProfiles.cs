@@ -13,7 +13,7 @@ namespace TiaMcpConfigurator
         public string Name { get; set; }
         public string Path { get; set; }
         public string Hint { get; set; }
-        // Schema family that decides file layout and entry shape. Brand cards (Qwen → Qwen Code, DeepSeek / Zhipu GLM / Grok → OpenCode …)
+        // Schema family that decides file layout and entry shape. Brand cards (Qwen → Qwen Code, DeepSeek / GLM / Grok → OpenCode …)
         // write another product's file, so several profiles may map onto one Client.
         public string Client { get; set; }
         public string Kind { get; set; }      // CLI / Desktop / IDE
@@ -71,7 +71,7 @@ namespace TiaMcpConfigurator
                 new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), "写入月之暗面 Kimi Code CLI 的 mcp.json，尊重 KIMI_CODE_HOME。重启后状态栏显示 MCP 就绪即可新建会话。"),
                 new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
                 new ClientProfile("deepseek", "DeepSeek", opencode, String.Format(opencodeHint, "DeepSeek"), "opencode"),
-                new ClientProfile("zhipu", "Zhipu GLM", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
+                new ClientProfile("zhipu", "GLM", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
                 new ClientProfile("grok", "Grok", opencode, String.Format(opencodeHint, "xAI Grok"), "opencode"),
                 // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
                 new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), "写入千问工作助理（Qwen Agent）的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。", "qwen-agent", "Desktop"),

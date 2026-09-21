@@ -19,8 +19,8 @@ using System.Windows.Threading;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
-[assembly: AssemblyVersion("2.7.62.0")]
-[assembly: AssemblyFileVersion("2.7.62.0")]
+[assembly: AssemblyVersion("2.8.0.0")]
+[assembly: AssemblyFileVersion("2.8.0.0")]
 
 namespace TiaMcpConfigurator
 {
@@ -29,6 +29,7 @@ namespace TiaMcpConfigurator
         public Window Window { get; private set; }
         private readonly string root = AppDomain.CurrentDomain.BaseDirectory;
         private Process server;
+        private UpdateInfo latest;   // 2.8.0: last successful update check
         private string runningKey;
         private int logEntries;
         private bool busy, closing;
@@ -78,6 +79,13 @@ namespace TiaMcpConfigurator
             Click("Network", async delegate { await Network(); });
             Click("TestClient", async delegate { await TestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
+            MenuClick("CheckUpdate", async delegate { await CheckUpdate(true); });
+            MenuClick("RunUpdate", RunUpdate);
+            MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
+            MenuClick("ShowClientHelp", delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, "客户端使用说明", MessageBoxButton.OK, MessageBoxImage.Information); });
+            MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
+            MenuClick("AboutItem", delegate { MessageBox.Show(Window, "TIA Portal · MCP Bridge 配置器 " + Assembly.GetExecutingAssembly().GetName().Version + "\n引擎：" + (UpdateCheck.Installed(root) ?? "未知（不在交付包里）") + "\n目录：" + root + "\n\n更新走菜单“更新 → 更新引擎…”，由 scripts\\operations\\Update-Engine.ps1 在引擎停止后完成。", "关于", MessageBoxButton.OK, MessageBoxImage.Information); });
+            ShowInstalledVersion();
             Find<ComboBox>("Version").SelectionChanged += delegate { Guard(LoadServer); UpdateLink(); };
             if (loadExisting)
             {
@@ -85,6 +93,7 @@ namespace TiaMcpConfigurator
                 Window.Height = Math.Max(Window.MinHeight, Math.Min(Window.Height, SystemParameters.WorkArea.Height - 32));
                 Guard(LoadServer);
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
+                var ignored = CheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
             else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
             UpdateInstructions(); Mode(true);
@@ -93,6 +102,7 @@ namespace TiaMcpConfigurator
         }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
+        private void MenuClick(string name, Action action) { Find<MenuItem>(name).Click += delegate { Guard(action); }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
         private void Status(string status) { Find<TextBlock>("Status").Text = status; }
         private void ServiceStatus(bool active)
@@ -240,6 +250,63 @@ namespace TiaMcpConfigurator
             if (errors.Count > 0) throw new InvalidOperationException("部分客户端未保存，其它成功项已保留：\n" + String.Join("\n", errors));
         }
         private void SetBusy(bool value) { busy = value; Find<Grid>("Panes").IsEnabled = !value; }
+
+        // ---- 2.8.0 menu "更新": check against GitHub, then hand over to Update-Engine.ps1 with this window closed.
+        private void ShowInstalledVersion()
+        {
+            string installed = UpdateCheck.Installed(root);
+            var item = Find<MenuItem>("UpdateInstalledItem");
+            if (installed == null) { item.Header = "引擎版本未知：这里不是解压后的交付包（没有 manifest\\delivery.json）"; Find<MenuItem>("CheckUpdate").IsEnabled = false; return; }
+            item.Header = "引擎 " + installed + "（" + UpdateCheck.InstalledPackage(root) + "）";
+            if (UpdateCheck.IsSourceRepository(root)) Find<MenuItem>("UpdateStateItem").Header = "源码仓库（有 .git）：不在这里更新，发布走 scripts\\build\\Release.ps1";
+        }
+        private async Task CheckUpdate(bool explicitRequest)
+        {
+            string installed = UpdateCheck.Installed(root);
+            if (installed == null) return;
+            var state = Find<MenuItem>("UpdateStateItem"); var check = Find<MenuItem>("CheckUpdate"); var menu = Find<MenuItem>("UpdateMenu");
+            check.IsEnabled = false; state.Header = "正在检查 GitHub 最新版本…";
+            try
+            {
+                var info = await Task.Run(() => UpdateCheck.Latest(installed, UpdateCheck.Repository));
+                latest = info;
+                if (info.UpdateAvailable)
+                {
+                    string size = info.ZipSizeText.Length > 0 ? "（" + info.ZipSizeText + "）" : "";
+                    state.Header = "可更新到 " + info.Latest + size + " · 先停引擎，再点下面的“更新引擎…”";
+                    menu.Header = "更新 · 有新版本 " + info.Latest + "(_U)";
+                    Find<MenuItem>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
+                    Append("检查更新：" + installed + " → " + info.Latest + size + "，菜单“更新 → 更新引擎…”执行（" + info.ReleaseUrl + "）");
+                }
+                else
+                {
+                    state.Header = "已是最新（" + info.Tag + "）"; menu.Header = "更新(_U)";
+                    Find<MenuItem>("RunUpdate").IsEnabled = false;
+                    Append("检查更新：" + installed + " 已是最新（" + info.Source + "）");
+                }
+            }
+            catch (Exception ex)
+            {
+                state.Header = "无法检查：" + ex.GetBaseException().Message;
+                if (explicitRequest) Append("检查更新失败：" + ex.GetBaseException().Message);
+            }
+            finally { check.IsEnabled = true; }
+        }
+        private void RunUpdate()
+        {
+            if (busy) return;
+            if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException("这是源码仓库，不在这里更新。");
+            if (server != null && !server.HasExited) throw new InvalidOperationException("先点“停止”结束本窗口启动的 MCP，再更新。");
+            var running = UpdateCheck.RunningEngines();
+            if (running.Count > 0) throw new InvalidOperationException("引擎仍在运行，更新器会拒绝：" + String.Join("；", running) + "。请先停止它（可能是某个 AI 客户端启动的：关闭那个会话），再更新。");
+            string updater = UpdateCheck.UpdaterPath(root);
+            if (!File.Exists(updater)) throw new InvalidOperationException("找不到更新器 " + updater + "。请从 GitHub Releases 重新下载完整交付包。");
+            string target = latest != null && latest.UpdateAvailable ? latest.Latest : "最新版";
+            if (MessageBox.Show(Window, "将关闭本程序，在新的 PowerShell 窗口里把\n" + root + "\n更新到 " + target + "：下载 ZIP 与 .sha256、校验 SHA-256、备份到 .previous、替换 runtime 与 manifest。完成后自动重新打开本程序；失败时该窗口保留错误信息，-Rollback 可换回上一版。\n\n继续？", "更新引擎", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
+            Process.Start(UpdateCheck.Launch(root, Process.GetCurrentProcess().Id));
+            Append("更新器已在新窗口启动，本程序即将关闭。");
+            Window.Close();
+        }
         private async Task TestClient()
         {
             if (busy) return;

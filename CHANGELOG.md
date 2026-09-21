@@ -1,10 +1,20 @@
 # Change Log
 
-格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号目前按 `2.7.x` 递增（每版都可能新增工具），2.8.0 起改为语义化版本。
+格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
 ## [Unreleased]
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
+
+## [2.8.0] - 2026-09-21
+
+引擎按族拆分、配置器菜单栏更新、更新器改用 robocopy（工具 453、lite 59 不变；从本版起按语义化版本）。详见 [v2.8.0](docs/releases/v2.8.0.md)。维护者：“开始做 2.8.0”“Update-Engine.ps1 不能做成 UI 吗”“更新做成到菜单栏里”“Zhipu GLM 直接改为 GLM”。
+
+- **引擎拆分**（行为不变，离线 2456 / 形状 V20 2805 / V21 3097 不变）：`Siemens/Portal/Portal.Software.cs`（7,423 行）拆成 `Portal.Software.cs`（查找 + 编译）与 10 个族文件 `Portal.Software.<Family>.cs`（PlcTables / LibrarySeed / TechnologyObjects / HmiDescribe / UnifiedHmi / UnifiedHmiHelpers / HmiExchange / Reflection / CrossReferences / ExternalSources）；`ModelContextProtocol/Tools/McpServer.PlcSoftware.cs`（4,021 行）拆成 `McpServer.PlcSoftware.cs`（GetSoftwareInfo / DescribeObjectProperty / CompileSoftware / GetSoftwareTree）与 11 个族文件 `McpServer.PlcSoftware.<Family>.cs`；`Program.ReportBuilders.cs` / `Program.CliProbes.cs` 移到 `Cli/`。逐行搬迁、每行只落一个文件（拆分脚本校验覆盖），`UnifiedScriptSyntaxCheckTests` 改读新文件。
+- **配置器菜单栏**：新增“更新”菜单（引擎版本与包名、检查结果、检查更新、更新引擎…、打开 GitHub Releases）和“帮助”菜单（所选客户端的使用说明、项目主页、关于）。启动时后台联网比对 GitHub 最新版（API 限流时读发布页跳转），有新版本时菜单标题变为“更新 · 有新版本 X”。“更新引擎…”先确认本窗口没启动 MCP、机器上没有 TiaMcpServer.exe 在跑（列出 pid，绝不代杀）、更新器存在、不是源码仓库（有 `.git` 就禁用），然后关闭本程序、在新 PowerShell 窗口里运行 `Update-Engine.ps1 -InstallRoot <目录> -WaitForPid <本程序 pid> -RelaunchConfigurator`，完成或失败后自动重新打开配置器；页面本身不变。新文件 `UpdateCheck.cs`（版本比较、release JSON 解析、发布页 tag、启动参数），配置器测试 111 项。
+- **更新器**：`-WaitForPid` / `-RelaunchConfigurator` 两个新参数；所有目录复制 / 删除改走 robocopy，**修了长路径缺陷**——Windows PowerShell 的 `Expand-Archive` / `Copy-Item` / `Remove-Item` 在 260 字符处失败，交付包最深文件在根下 109 字符，加上 `.previous\<包名>\` 后虚拟机现在的安装目录已到 250、宿主机临时目录直接失败（真机复现）；现在解压到 `%TEMP%\tia-mcp-update-<pid>`（只对这一步检查长度），备份 / 覆盖 / 回滚 / 清理都用 robocopy；脚本级 `trap` 保证任何意外错误也打印 FAIL 并重开配置器。宿主机上对交付包副本完整跑过更新（2.7.61 → 2.7.62，备份里 267 字符的文件存在）与回滚。
+- **客户端卡片**：Zhipu GLM → **GLM**。
+- **决定**：继续把两个引擎 exe 与配置器 exe 提交进仓库、发布走本机 `Release.ps1` + tag 触发的发布工作流；**不用自托管 runner**（仓库公开，托管 runner 编不了引擎——Openness NuGet 只有 targets、PublicAPI 不可分发；自托管 runner 要把维护者机器暴露给公开仓库的工作流）。
 
 ## [2.7.62] - 2026-09-21
 
@@ -512,7 +522,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.8.0...HEAD
+[2.8.0]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.62...v2.8.0
 [2.7.62]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...v2.7.62
 [2.7.61]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...v2.7.61
 [2.7.60]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...v2.7.60

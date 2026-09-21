@@ -12,7 +12,7 @@
 
 ## 从这里开始
 
-从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。以后升级不必重新解压：先停掉引擎，在解压目录里运行 `scripts\operations\Update-Engine.ps1`（在线取最新版，TIA 机器要能访问 github.com；`-Rollback` 换回上一版），引擎内的 `CheckForUpdate` 工具只报版本、不改文件。
+从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。以后升级不必重新解压：先停掉引擎，用配置器菜单 **更新 → 更新引擎…**（配置器自己关闭，`scripts\operations\Update-Engine.ps1` 在新窗口里在线取最新版、校验、备份到 `.previous\`、用 robocopy 替换文件，然后自动重开配置器；TIA 机器要能访问 github.com；`-Rollback` 换回上一版）；脚本也可以手动运行，引擎内的 `CheckForUpdate` 工具只报版本、不改文件。
 
 | 使用方式 | 配置步骤 |
 |---|---|
@@ -20,7 +20,7 @@
 | AI 在宿主机 | 把配置器 EXE 复制到宿主机，填同一地址、端口和密钥，在 B 栏选客户端，“测试连接 → 写入客户端配置”。宿主机无需安装 TIA。 |
 | TIA 与 AI 同机 | 右上角切到“同一台电脑”。A 栏只需版本和目录，客户端经 stdio 自动启动引擎，不用地址、端口和密钥。 |
 
-卡片一律用英文名，按 CLI 在前排列：**Claude Code、Codex、Gemini CLI、Qwen（写 Qwen Code）、Kimi（写 Kimi Code CLI）、Yuanbao（写 CodeBuddy Code）、DeepSeek / Zhipu GLM / Grok（写 OpenCode，在其 provider 里选模型）**，其后是桌面应用 **Qwen Agent**（千问工作助理），最后是 **Cursor、VS Code / Copilot**。模型品牌和 Grok 没有自带的 MCP 客户端，卡片按模型命名、实际写入各家官方 CLI 或 OpenCode。官方 Claude 客户端的 **Code** 页面选“Claude Code”。
+卡片一律用英文名，按 CLI 在前排列：**Claude Code、Codex、Gemini CLI、Qwen（写 Qwen Code）、Kimi（写 Kimi Code CLI）、Yuanbao（写 CodeBuddy Code）、DeepSeek / GLM / Grok（写 OpenCode，在其 provider 里选模型）**，其后是桌面应用 **Qwen Agent**（千问工作助理），最后是 **Cursor、VS Code / Copilot**。模型品牌和 Grok 没有自带的 MCP 客户端，卡片按模型命名、实际写入各家官方 CLI 或 OpenCode。官方 Claude 客户端的 **Code** 页面选“Claude Code”。
 
 服务运行时保持配置器窗口打开。保存配置后重启客户端并新建会话。配置位置、权限、备份和客户端差异统一见 [图形配置指南](docs/getting-started/configuration.md)。
 

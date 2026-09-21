@@ -38,7 +38,7 @@
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
 1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
-2. ~~**2.7.57 / 2.7.58 / 2.7.59 / 2.7.60 / 2.7.62 部署后**~~ 都通过（2026-09-21；2.7.62 上确认了 `FindTools dcc chart` 的派生示例与 `CheckForUpdate` 三步）。**宿主机（未看）**：换新的 `TiaMcpConfigurator.exe`，启动日志应列出 12 张英文名卡片的检测结果，Qwen Agent 卡片写 `~/.qwen-agent/mcp.json` 后完全退出该应用再打开。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线），更新完手动重启引擎。
+2. ~~**2.7.57 / 2.7.58 / 2.7.59 / 2.7.60 / 2.7.62 部署后**~~ 都通过（2026-09-21；2.7.62 上确认了 `FindTools dcc chart` 的派生示例与 `CheckForUpdate` 三步）。~~**宿主机**~~ 检测日志正常（2026-09-21）。**2.8.0 部署后**：虚拟机上用配置器菜单“更新 → 更新引擎…”（先“停止”本窗口的 MCP）更新，看更新器窗口的 `extracting to %TEMP%\tia-mcp-update-<pid>` / `DONE` / `reopening`，配置器自动重开后再“启动服务”，`Bootstrap` 2.8.0.0，跑 `docs/releases/v2.8.0.md` 待真机；宿主机上原来的检查：换新的 `TiaMcpConfigurator.exe`，启动日志应列出 12 张英文名卡片的检测结果，Qwen Agent 卡片写 `~/.qwen-agent/mcp.json` 后完全退出该应用再打开。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线），更新完手动重启引擎。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：
