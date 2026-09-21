@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-21 00:03:40
-- 引擎文件版本：2.7.57.0
-- 工具数量：452
+- 生成时间：2026-09-21 00:51:11
+- 引擎文件版本：2.7.58.0
+- 工具数量：453
 
 ## 读法
 
@@ -14,7 +14,7 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
-| `SESSION` | 会话与发现，不改工程 | 16 |
+| `SESSION` | 会话与发现，不改工程 | 17 |
 | `READ` | 读取已打开工程，不改动 | 132 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 183 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
@@ -29,7 +29,7 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 37 | `Bootstrap` (1)、`Guide` (1)、`Meta` (4)、`Portal` (7)、`Diagnostics` (6)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `session` | 会话与基础设施 / Session & infrastructure | 38 | `Bootstrap` (1)、`Guide` (2)、`Meta` (4)、`Portal` (7)、`Diagnostics` (6)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 61 | `Project` (25)、`Library` (13)、`VersionControl` (8)、`Security` (7)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 116 | `PLC-Software` (75)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (7)、`Safety` (9) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
@@ -37,7 +37,7 @@
 | `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
-## session — 会话与基础设施 / Session & infrastructure（37）
+## session — 会话与基础设施 / Session & infrastructure（38）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -47,11 +47,12 @@
 |---|---|---|---|
 | `Bootstrap` | L0 | SESSION* | FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call Connect afterwards based on RecommendedNextTool. |
 
-### [Guide]（1）
+### [Guide]（2）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `GetAuthoringGuide` | L0 | SESSION* | Verified syntax + workflow cheat sheet for authoring TIA content through this server. CALL THIS BEFORE writing any SCL/LAD/DB/HMI content — it prevents the common encoding, syntax and tool-routing mistakes. Topics: workflow, scl, lad, db, hmi, errors. Read-only, does not touch TIA Portal. |
+| `GetRecipe` | L0 | SESSION | Verified multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, paging large responses. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; the sequences were run on the real machine. Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed. |
 
 ### [Meta]（4）
 
