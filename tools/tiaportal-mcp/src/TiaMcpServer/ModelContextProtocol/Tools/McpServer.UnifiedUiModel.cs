@@ -8,16 +8,50 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ReadUnifiedObjectEvents(string softwarePath,string objectPathJson,int offset=0,int limit=100)
             => Portal.ReadUnifiedObjectEvents(softwarePath,objectPathJson,offset,limit);
         [McpServerTool(Name="ManageUnifiedObjectParts"), Description("[L2][HMI-Unified][WRITE] UI.Parts sub-objects (trend areas, trends, axes, thresholds, columns, selection items, help lines, scaling entries, pressed-state tags...) of one exact object path. read without collectionProperty lists collections; read with exact collectionProperty lists parts with partIndex. create uses the native Create(string)/Create() of that composition (partName only for named parts; columns/thresholds have no Create). update writes public scalar/Color (#AARRGGBB) properties via propertiesJson; delete needs exact partName or partIndex plus confirmDelete=true. Default preview; readback verified; no save/compile/download.")]
-        public static ResponseMessage ManageUnifiedObjectParts(string softwarePath,string objectPathJson,string action="read",string collectionProperty="",string partName="",int partIndex=-1,string partKind="",string propertiesJson="{}",bool confirmDelete=false,bool dryRun=true)
+        public static ResponseMessage ManageUnifiedObjectParts(
+            string softwarePath,
+            string objectPathJson,
+            [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
+            [Description("collectionProperty: name of the collection property that holds the parts.")] string collectionProperty="",
+            [Description("partName: exact name of the part.")] string partName="",
+            [Description("partIndex: 0-based index of the part (-1 = by name).")] int partIndex=-1,
+            [Description("partKind: kind of part (see the tool description).")] string partKind="",
+            string propertiesJson="{}",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageUnifiedObjectParts(softwarePath,objectPathJson,action,collectionProperty,partName,partIndex,partKind,propertiesJson,confirmDelete,dryRun);
         [McpServerTool(Name="ManageUnifiedDynamization"), Description("[L2][HMI-Unified][WRITE] Read/create/update/delete the dynamization of one exact property (propertyName) on an exact Unified screen/item object path. dynamizationKind Tag/Script/ResourceList/Flashing/Expression/TagParameter maps to native Create<T>(propertyName). propertiesJson may nest ValueConverter{Formula,IsFormulaSelected,MappingTable{ConditionType}}, Trigger{Type,CustomDuration}, Flashing colors as #AARRGGBB. mappingEntriesJson appends [{kind:Simple|Range|Bitmask,...}] entries. delete needs confirmDelete=true. Default preview; readback verified; tag/formula semantics not validated; no save/compile/download.")]
-        public static ResponseMessage ManageUnifiedDynamization(string softwarePath,string objectPathJson,string propertyName,string action="read",string dynamizationKind="",string propertiesJson="{}",string mappingEntriesJson="[]",bool confirmDelete=false,bool dryRun=true)
+        public static ResponseMessage ManageUnifiedDynamization(
+            string softwarePath,
+            string objectPathJson,
+            string propertyName,
+            [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
+            [Description("dynamizationKind: dynamization kind (see the tool description).")] string dynamizationKind="",
+            string propertiesJson="{}",
+            [Description("mappingEntriesJson: JSON array of mapping entries.")] string mappingEntriesJson="[]",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageUnifiedDynamization(softwarePath,objectPathJson,propertyName,action,dynamizationKind,propertiesJson,mappingEntriesJson,confirmDelete,dryRun);
         [McpServerTool(Name="ManageUnifiedScreenLayout"), Description("[L2][HMI-Unified][WRITE] Exact Unified screen: read scalars incl. background colors and size, update public scalar/Color properties, resize (native ResizeScreen to device display), rename, create (path to a Screens composition plus name) or delete (confirmDelete=true; removes all items). No screen copy/duplicate exists in the public V21/V20 API; layout-field export/import is the SiVArc option's LayoutData screen service (ManageSivarcScreenLayout, V21). Default preview; readback verified; no save/compile/download.")]
-        public static ResponseMessage ManageUnifiedScreenLayout(string softwarePath,string objectPathJson,string action="read",string name="",string propertiesJson="{}",bool confirmDelete=false,bool dryRun=true)
+        public static ResponseMessage ManageUnifiedScreenLayout(
+            string softwarePath,
+            string objectPathJson,
+            [Description("action: the operation to perform - read | create | rename | update | resize | delete.")] string action="read",
+            string name="",
+            string propertiesJson="{}",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageUnifiedScreenLayout(softwarePath,objectPathJson,action,name,propertiesJson,confirmDelete,dryRun);
         [McpServerTool(Name="ManageUnifiedListEntries"), Description("[L2][HMI-Unified][WRITE] Locate one exact textLists/graphicLists/systemTextLists list and report its public shape and official self-description. The public V21/V20 HmiUnified.TextGraphicList API exposes no entry composition, so create/update/delete of entries return NotSupported without changing anything; use ExportUnifiedEngineeringList/ImportUnifiedEngineeringList for entry content. Default preview.")]
-        public static ResponseMessage ManageUnifiedListEntries(string softwarePath,string category,string listName,string action="read",string entryKey="",string entryJson="{}",bool confirmDelete=false,bool dryRun=true)
+        public static ResponseMessage ManageUnifiedListEntries(
+            string softwarePath,
+            string category,
+            [Description("listName: exact list name.")] string listName,
+            [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
+            [Description("entryKey: key of the list entry.")] string entryKey="",
+            [Description("entryJson: JSON object of the entry's properties.")] string entryJson="{}",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageUnifiedListEntries(softwarePath,category,listName,action,entryKey,entryJson,confirmDelete,dryRun);
         [McpServerTool(Name="ReadUnifiedAlarmCommon"), Description("[L2][HMI-Unified][READ] Read-only HmiAlarmCommon dump: alarmClasses with the four AlarmStatusVisuals states (colors as #AARRGGBB, flashing), or discreteAlarms/analogAlarms with AlarmBase scalars and every EventText/InfoText language. Exact optional name; live offset/limit pagination; AlarmParameterTags excluded.")]
         public static ResponseMessage ReadUnifiedAlarmCommon(string softwarePath,string category,string name="",int offset=0,int limit=100)

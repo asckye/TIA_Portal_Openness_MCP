@@ -6,6 +6,15 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.7.59] - 2026-09-21
+
+引擎 2.7.59.0（V20/V21 均重建），工具 453 不变，默认 lite 59。详见 [v2.7.59](docs/releases/v2.7.59.md)。参数描述批次 2：**每个参数都有描述了**。
+
+- **498 个参数补上 `[Description]`**（36 个工具文件）：155 个枚举型参数写明精确取值（`action` / `kind` / `category` / `unitKind` / `copyMode` / `importOption` / `telegramType` / `resetMode`……，取值从各 Logic 类的校验数组 / 字面量 / 拒绝文案里追溯，按 Portal 方法 → Logic 类逐层解析并按到达的类消歧，追不到就不写、不猜），343 个按名称人工写就（`typeIdentifier`、`chartName`、`pinName`、`sequenceIndex`、`archivePath`、`leftPath` / `rightPath`、`numbersJson`、`hostUrl`……）。schema `enum` 提示 67 → **185**（51 → 119 个工具）。
+- 无自身描述的参数 1392 → 894，且 894 个**全部**由词汇表覆盖——`tools/list` 与 `FindTools` 里没有一个参数再是空描述；`callDiscipline` 门禁继续只降不升。
+- 修 `ExtractPlcBlockMetrics.path` 的文案（文件 / 目录路径，不是对象路径）；`Check-DeadToolReferences` 允许名单加三个 Openness 枚举值（`ReadOnly`、`DeleteUnusedTypes`、`SetOnlyHigherUpdatedVersionAsDefault`）。
+- 离线 2453 不变（描述不改逻辑）；形状检查不变。
+
 ## [2.7.58] - 2026-09-21
 
 引擎 2.7.58.0（V20/V21 均重建），工具 **453**（+`GetRecipe`），默认 lite 59。详见 [v2.7.58](docs/releases/v2.7.58.md)。维护者 2026-09-21 明确：目标是**规范 AI 对所有工具的调用、不再试错**（不是教它写程序）——本版全部机制由引擎自动执行、对 453 个工具都生效。
@@ -480,7 +489,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...HEAD
+[2.7.59]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...v2.7.59
 [2.7.58]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.57...v2.7.58
 [2.7.57]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.56...v2.7.57
 [2.7.56]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.55...v2.7.56

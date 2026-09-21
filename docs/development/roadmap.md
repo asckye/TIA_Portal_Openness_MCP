@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.58 更新）
+# 路线图与待办（2026-09-17 审计，2.7.59 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.58 已完成
+## 5. 2.7.59 已完成
+
+- 参数描述批次 2：498 个参数补描述（155 枚举型精确取值 + 343 人工），enum 提示 185 / 119 个工具，无自身描述的 894 个全由词汇表覆盖。
+
+## 5.0 2.7.58 已完成
 
 - 全部工具的调用纪律：schema `enum` / `default` / `examples` / `description`（词汇表）、失败自动 `meta.preflight`、示例覆盖 453 个、`GetRecipe` 12 条真机序列、参数描述批次 1 + 回升门禁；2.7.57 真机通过。
 

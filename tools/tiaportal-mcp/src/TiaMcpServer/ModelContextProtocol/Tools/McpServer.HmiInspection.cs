@@ -6,14 +6,27 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name="ArchiveSavedProject"),Description("[L2][Project][FILE]Create a native compressed .zap20/.zap21 archive of an already saved project. Default dryRun=true. Rejects unsaved state, unsupported sessions and existing target files. Does not save, change project path, close the project, or test retrieval.")]
-        public static ResponseMessage ArchiveSavedProject(string archivePath,bool dryRun=true)
+        public static ResponseMessage ArchiveSavedProject(
+            [Description("archivePath: full path of the project archive (.zap2x) on the TIA machine.")] string archivePath,
+            bool dryRun=true)
             =>Portal.ArchiveSavedProject(archivePath,dryRun);
         [McpServerTool(Name="ReadUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified]Read an EXISTING button event's script, global definitions, Async and content token. Never creates events. screenPath is a unique name or /Group/Screen from ListHmiScreenPaths.")]
-        public static ResponseMessage ReadUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType)
+        public static ResponseMessage ReadUnifiedHmiButtonEvent(
+            string softwarePath,
+            string screenPath,
+            [Description("buttonName: exact button item name.")] string buttonName,
+            string eventType)
             =>Portal.ReadUnifiedHmiButtonEvent(softwarePath,screenPath,buttonName,eventType);
 
         [McpServerTool(Name="DeleteUnifiedHmiButtonEvent"),Description("[L2][HMI-Unified][WRITE]Delete exactly one button event. Default dryRun=true; real deletion requires a matching expectedToken from read/preview. onlyIfEmpty defaults true. No save, no other event is targeted.")]
-        public static ResponseMessage DeleteUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType,bool dryRun=true,string expectedToken="",bool onlyIfEmpty=true)
+        public static ResponseMessage DeleteUnifiedHmiButtonEvent(
+            string softwarePath,
+            string screenPath,
+            [Description("buttonName: exact button item name.")] string buttonName,
+            string eventType,
+            bool dryRun=true,
+            string expectedToken="",
+            [Description("onlyIfEmpty: true deletes the event only when it has no script.")] bool onlyIfEmpty=true)
             =>Portal.DeleteUnifiedHmiButtonEvent(softwarePath,screenPath,buttonName,eventType,dryRun,expectedToken,onlyIfEmpty);
 
         [McpServerTool(Name="ReadUnifiedHmiDynamization"),Description("[L2][HMI-Unified]Read exactly one screen item dynamization by PropertyName. Returns a bounded snapshot with coverage and a token; never creates objects.")]
@@ -29,7 +42,11 @@ namespace TiaMcpServer.ModelContextProtocol
             =>Portal.DeleteEmptyUnifiedHmiScreenGroup(softwarePath,groupPath,dryRun);
 
         [McpServerTool(Name="ReadHmiScreenSnapshot"),Description("[L2][HMI]Read a bounded screen object graph. Prefer absolute /Group/Screen paths to avoid a project-wide name search. apiCallSuccess and dataComplete are separate; inspect failures, quarantined getters and limits. Connection faults stop traversal and block further HMI step operations until an explicit successful AttachToOpenProject; inspect logs first, do not automatically rebind/retry. Not a restorable backup. maxDepth 1..12; maxNodes 1..10000. Large responses use GetExport.")]
-        public static ResponseMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
+        public static ResponseMessage ReadHmiScreenSnapshot(
+            string softwarePath,
+            string screenPath,
+            int maxDepth=6,
+            [Description("maxNodes: cap on nodes returned.")] int maxNodes=2000)
             =>Portal.ReadHmiScreenSnapshot(softwarePath,screenPath,maxDepth,maxNodes);
 
         [McpServerTool(Name="ListHmiScreenPaths"),Description("[L2][HMI]List full screen group paths, including nested folders. Paths start with / and URI-escape each name segment. offset/limit paginate the list; exact paths disambiguate same-named screens.")]

@@ -14,7 +14,15 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage ComparePlcBlockDocuments(string leftFilePath = "", string rightFilePath = "", string softwarePath = "", string leftBlockPath = "", string rightBlockPath = "", int offset = 0, int limit = 100, int contextLines = 2)
+        public static ResponseMessage ComparePlcBlockDocuments(
+            [Description("leftFilePath: full path of the left document on the TIA machine.")] string leftFilePath = "",
+            [Description("rightFilePath: full path of the right document on the TIA machine.")] string rightFilePath = "",
+            string softwarePath = "",
+            [Description("leftBlockPath: block path inside the left document ('' = the whole file).")] string leftBlockPath = "",
+            [Description("rightBlockPath: block path inside the right document ('' = the whole file).")] string rightBlockPath = "",
+            int offset = 0,
+            int limit = 100,
+            [Description("contextLines: lines of context around each difference.")] int contextLines = 2)
             => RunOfflineAnalysisTool("ComparePlcBlockDocuments", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
@@ -41,7 +49,14 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ScanPlcSourceAnnotations"), Description("[L2][Validation][FILE] Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [\".xml\",\".s7dcl\",\".scl\"]) for annotation markers in comments, block/network titles and network comments. markersJson default [\"TODO\",\"FIXME\",\"HACK\",\"XXX\",\"NOTE\",\"BUG\"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage ScanPlcSourceAnnotations(string directory, bool recursive = true, string extensionsJson = "", string markersJson = "", int offset = 0, int limit = 200, string csvPath = "")
+        public static ResponseMessage ScanPlcSourceAnnotations(
+            string directory,
+            [Description("recursive: true also scans subfolders.")] bool recursive = true,
+            [Description("extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl'].")] string extensionsJson = "",
+            [Description("markersJson: JSON array of annotation markers to look for, e.g. ['TODO','FIXME'].")] string markersJson = "",
+            int offset = 0,
+            int limit = 200,
+            [Description("csvPath: full path of the CSV file to write ('' = no CSV).")] string csvPath = "")
             => RunOfflineAnalysisTool("ScanPlcSourceAnnotations", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);
@@ -80,7 +95,12 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ExtractPlcBlockMetrics"), Description("[L2][Validation][READ] Derive per-block metrics from exported PLC documents (path = absolute file or directory; recursive; extensionsJson default [\".xml\",\".s7dcl\",\".scl\"]): network count and titles/comments, interface members per section, block calls (CallInfo / quoted calls / #instance calls), instructions (LAD/FBD Parts, SCL functions), SCL source lines, comment lines and ratio, and max IF/CASE/FOR/WHILE/REPEAT nesting where SCL text is available (null otherwise). Graphical networks contribute no source lines. The numbers describe the export only; they are NOT a Siemens quality verdict and do not replace TIA compile diagnostics or the programming guidelines. Paginated rows. No TIA Portal connection, nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage ExtractPlcBlockMetrics(string path, bool recursive = true, string extensionsJson = "", int offset = 0, int limit = 100)
+        public static ResponseMessage ExtractPlcBlockMetrics(
+            [Description("path: absolute path of an exported document file or of a directory of exports on the TIA machine.")] string path,
+            [Description("recursive: true also scans subfolders.")] bool recursive = true,
+            [Description("extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl'].")] string extensionsJson = "",
+            int offset = 0,
+            int limit = 100)
             => RunOfflineAnalysisTool("ExtractPlcBlockMetrics", meta =>
             {
                 OfflineAnalysisLogic.ValidatePage(offset, limit);

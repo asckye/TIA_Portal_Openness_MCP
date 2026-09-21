@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.58 已部署并真机通过；TIA 只开着 `项目1`）
+# 换机器交接单（2026-09-21，2.7.59 发布中（参数描述批次 2）；虚拟机 2.7.58；TIA 只开着 `项目1`）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -38,7 +38,7 @@
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
 1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
-2. ~~**2.7.57 / 2.7.58 部署后**~~ 都通过（2026-09-21；见各自发布说明的"真机结果"）。**下一次源码改动后**：参数描述批次 2（`manifest/tools-list.json` 的 `callDiscipline.undocumentedTools`，199 个工具），部署后抽查新 enum；虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线）即可更新，更新完手动重启引擎。
+2. ~~**2.7.57 / 2.7.58 部署后**~~ 都通过（2026-09-21）。**2.7.59 部署后**（`docs/releases/v2.7.59.md` "待真机"）：`CallTool ManageDccChart {..., action:"bogus"}` 的拒绝带 `preflight.allowedValues.action`（10 个取值）；`GetAuthoringGuide {topic:"scl "}` 被 enum 挡住。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线），更新完手动重启引擎。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：

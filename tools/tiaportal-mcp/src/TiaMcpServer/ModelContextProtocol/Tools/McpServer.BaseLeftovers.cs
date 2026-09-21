@@ -21,23 +21,55 @@ namespace TiaMcpServer.ModelContextProtocol
             => Portal.ReadTransferRoutes(softwarePath,maxItems);
 
         [McpServerTool(Name="ManageHardwareUtilities"), Description("[L2][Hardware][FILE] Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed.")]
-        public static ResponseMessage ManageHardwareUtilities(string action="list", string typeIdentifier="", string devicePathJson="[]", string itemPathJson="[]", string filePath="", string password="", bool dryRun=true)
+        public static ResponseMessage ManageHardwareUtilities(
+            [Description("action: the operation to perform - list | findModuleTypes | findContainerTypes | normalizeTypeIdentifier | exportOpcUa | exportCardReaderPsc.")] string action="list",
+            [Description("typeIdentifier: catalog type identifier of the form 'OrderNumber:6ES7 ...' or 'OrderNumber:.../V2.9' (SearchHardwareCatalog / ManageHardwareUtilities normalizeTypeIdentifier).")] string typeIdentifier="",
+            string devicePathJson="[]",
+            string itemPathJson="[]",
+            string filePath="",
+            string password="",
+            bool dryRun=true)
             => Portal.ManageHardwareUtilities(action,typeIdentifier,devicePathJson,itemPathJson,filePath,password,dryRun);
 
         [McpServerTool(Name="ManageDeviceServiceObjects"), Description("[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + propertiesJson, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update propertiesJson; setServiceGroupName name=<Id or Guid> propertiesJson {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download.")]
-        public static ResponseMessage ManageDeviceServiceObjects(string devicePathJson, string itemPathJson, string family, string action="read", string name="", string propertiesJson="{}", string filePath="", bool confirmChange=false, bool dryRun=true)
+        public static ResponseMessage ManageDeviceServiceObjects(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("family: webApplications | telecontrolDataPoints | certificateServices.")] string family,
+            string action="read",
+            string name="",
+            string propertiesJson="{}",
+            string filePath="",
+            bool confirmChange=false,
+            bool dryRun=true)
             => Portal.ManageDeviceServiceObjects(devicePathJson,itemPathJson,family,action,name,propertiesJson,filePath,confirmChange,dryRun);
 
         [McpServerTool(Name="ReadObjectIdentifier"), Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePathJson/itemPathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
-        public static ResponseMessage ReadObjectIdentifier(string kind="device", string devicePathJson="[]", string itemPathJson="[]", string softwarePath="", string objectPath="", string identifier="")
+        public static ResponseMessage ReadObjectIdentifier(
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            string devicePathJson="[]",
+            string itemPathJson="[]",
+            string softwarePath="",
+            string objectPath="",
+            [Description("identifier: exact identifier of the object as the read action lists it.")] string identifier="")
             => Portal.ReadObjectIdentifier(kind,devicePathJson,itemPathJson,softwarePath,objectPath,identifier);
 
         [McpServerTool(Name="ShowObjectInEditor"), Description("[L2][Project][WRITE] IShowable.ShowInEditor on the exact object (kind=device via devicePathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath): opens it in the TIA Portal editor for the engineer. UI only - no project data changes; needs a Portal started with user interface. Default dryRun=true.")]
-        public static ResponseMessage ShowObjectInEditor(string kind="device", string devicePathJson="[]", string itemPathJson="[]", string softwarePath="", string objectPath="", bool dryRun=true)
+        public static ResponseMessage ShowObjectInEditor(
+            [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",
+            string devicePathJson="[]",
+            string itemPathJson="[]",
+            string softwarePath="",
+            string objectPath="",
+            bool dryRun=true)
             => Portal.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
 
         [McpServerTool(Name="RunToolsInTransaction"), Description("[L2][Project][WRITE] Run 1..20 tool calls (callsJson [{\"name\":\"<tool>\",\"arguments\":{...}}]) inside one ExclusiveAccess + Transaction(project, text): TIA groups them into a single undo unit and the transaction is committed (Transaction.CommitOnDispose) only when every call reports success; any failure rolls all of them back on dispose. Inner dryRun arguments are forced to false; CallTool / nested transactions are refused. Reports CanCommit / CommitRequested and each call's result. dryRun=true only validates the call list; real execution needs confirmChange. No save.")]
-        public static ResponseMessage RunToolsInTransaction(string callsJson, string text, bool confirmChange=false, bool dryRun=true)
+        public static ResponseMessage RunToolsInTransaction(
+            [Description("callsJson: JSON array of {name, argumentsJson} tool calls to run inside one transaction (CallTool itself is refused).")] string callsJson,
+            [Description("text: transaction text shown in TIA's undo history.")] string text,
+            bool confirmChange=false,
+            bool dryRun=true)
         {
             var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["tool"] = "RunToolsInTransaction", ["success"] = false, ["dryRun"] = dryRun, ["mayHaveChanged"] = false };
             try

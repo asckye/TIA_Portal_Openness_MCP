@@ -15,7 +15,13 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name = "RenderPlcBlockDocument"), Description("[L2][Validation][OFFLINE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards). mermaidDirection LR (default) or TD. Returns the Markdown in Meta.markdown (truncated to maxChars, default 60000, full length in Meta.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage RenderPlcBlockDocument(string filePath = "", string softwarePath = "", string blockPath = "", string mermaidDirection = "LR", string outputPath = "", int maxChars = 60000)
+        public static ResponseMessage RenderPlcBlockDocument(
+            string filePath = "",
+            string softwarePath = "",
+            string blockPath = "",
+            [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR",
+            string outputPath = "",
+            [Description("maxChars: cap on characters rendered.")] int maxChars = 60000)
             => RunOfflineAnalysisTool("RenderPlcBlockDocument", meta =>
             {
                 if (maxChars < 1000 || maxChars > 2000000) throw new ArgumentException("maxChars must be between 1000 and 2000000.");
@@ -61,7 +67,13 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "GeneratePlcDocumentation"), Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensionsJson default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportBlocksAsDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage GeneratePlcDocumentation(string directory, string outputPath, string title = "", bool recursive = true, string extensionsJson = "", string mermaidDirection = "LR")
+        public static ResponseMessage GeneratePlcDocumentation(
+            string directory,
+            string outputPath,
+            [Description("title: document title.")] string title = "",
+            [Description("recursive: true also scans subfolders.")] bool recursive = true,
+            [Description("extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl'].")] string extensionsJson = "",
+            [Description("mermaidDirection: direction of the generated Mermaid diagram - TB or LR.")] string mermaidDirection = "LR")
             => RunOfflineAnalysisTool("GeneratePlcDocumentation", meta =>
             {
                 var output = NativeFileOutput.Plan(outputPath);
@@ -83,7 +95,11 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "LintPlcSclSource"), Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {\"disable\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompileSoftware) remains the verdict. Nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage LintPlcSclSource(string sourceText = "", string filePath = "", string rulesJson = "", int limit = 500)
+        public static ResponseMessage LintPlcSclSource(
+            [Description("sourceText: the SCL source text to lint.")] string sourceText = "",
+            string filePath = "",
+            [Description("rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults).")] string rulesJson = "",
+            int limit = 500)
             => RunOfflineAnalysisTool("LintPlcSclSource", meta =>
             {
                 if (limit < 1 || limit > 5000) throw new ArgumentException("limit must be between 1 and 5000.");

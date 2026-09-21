@@ -8,25 +8,102 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name="ReadDccCharts"), Description("[L2][Hardware][READ] Typed DCC chart container of one drive object (DriveControlChartContainer; real project: provided by a drive axis of an S120 CU320-2 PN V5.2 whose technology extensions include DCC, not by the CU drive object nor by a V5.1 axis): without chartPath every root chart with subcharts to maxDepth, partitions, chart interfaces, blocks (includeBlocks) and pins (includePins), the DCB libraries with block types (includeLibraries) and the execution order (GetChartSequence); with chartPath one chart plus its run sequence (GetRunSequence). NotSupported when the drive object provides no DCC. Read-only.")]
-        public static ResponseMessage ReadDccCharts(string devicePathJson, string itemPathJson, ushort driveObjectNumber=0, int driveObjectIndex=-1, string chartPath="", int maxDepth=3, bool includeBlocks=true, bool includePins=false, bool includeLibraries=true)
+        public static ResponseMessage ReadDccCharts(
+            string devicePathJson,
+            string itemPathJson,
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            string chartPath="",
+            int maxDepth=3,
+            [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
+            [Description("includePins: true also returns block pins.")] bool includePins=false,
+            [Description("includeLibraries: true also returns the DCB libraries.")] bool includeLibraries=true)
             => Portal.ReadDccCharts(devicePathJson,itemPathJson,driveObjectNumber,driveObjectIndex,chartPath,maxDepth,includeBlocks,includePins,includeLibraries);
         [McpServerTool(Name="ManageDccChart"), Description("[L2][Hardware][WRITE] One DCC chart or subchart (chartName is the chart path Root/Sub; empty on create = DriveControlChartComposition.Create() auto name): read, readSequence (GetChartSequence of the container or GetRunSequence of the chart), create (Create(name) with propertiesJson Comment / HorizontalSheets / VerticalSheets / PositionX / PositionY / Partition), update (typed scalars, Name renames, Partition names a partition of the parent chart, sequenceIndex = Statement.MoveInRuntimeSequence), delete (Delete() with all subcharts and blocks; confirmDelete when real), export (DriveControlChart.Export to a new .dcc file, verified by size and SHA-256), exportAll (DriveControlChartComposition.Export), import (Import(file, importOptions None|RenameOnConflict), returns the remapped parameter numbers), optimizeSequence (OptimizeRunSequence), showEditor (ShowDccEditor, interactive TIA only). DCC exceptions are reported typed (dccException type / family / licenceMissing). Default preview; no save, download or online drive command.")]
-        public static ResponseMessage ManageDccChart(string devicePathJson, string itemPathJson, string chartName="", string action="read", string filePath="", string importOptions="", string propertiesJson="{}", bool dryRun=true, int driveObjectIndex=-1, bool confirmDelete=false, int sequenceIndex=-1, ushort driveObjectNumber=0)
+        public static ResponseMessage ManageDccChart(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("chartName: chart path 'Root/Sub' (exact names).")] string chartName="",
+            [Description("action: the operation to perform - read | readSequence | create | update | delete | export | exportAll | import | optimizeSequence | showEditor.")] string action="read",
+            string filePath="",
+            string importOptions="",
+            string propertiesJson="{}",
+            bool dryRun=true,
+            int driveObjectIndex=-1,
+            bool confirmDelete=false,
+            [Description("sequenceIndex: 0-based position in the run sequence (-1 = unchanged).")] int sequenceIndex=-1,
+            ushort driveObjectNumber=0)
             => Portal.ManageDccChart(devicePathJson,itemPathJson,driveObjectNumber,chartName,action,filePath,importOptions,propertiesJson,dryRun,driveObjectIndex,confirmDelete,sequenceIndex);
         [McpServerTool(Name="ManageDccBlock"), Description("[L2][Hardware][WRITE] DCC blocks of one chart: read (all blocks, or one block with pins / published parameters / connections when blockName is given), create (DccBlockComposition.Create(blockType) auto name, Create(name, blockType) or Create(name, blockType, libraryName); propertiesJson Comment / PositionX / PositionY / GenericInputsNumber / Partition), update (typed scalars, Name renames, Partition by name, sequenceIndex = MoveInRuntimeSequence), delete (confirmDelete when real), setAsPredecessor (next created statement runs after this block). Default preview; readback after every write; no save or download.")]
-        public static ResponseMessage ManageDccBlock(string devicePathJson, string itemPathJson, string chartPath, string blockName="", string action="read", string blockType="", string libraryName="", string propertiesJson="{}", ushort driveObjectNumber=0, int driveObjectIndex=-1, bool confirmDelete=false, int sequenceIndex=-1, bool dryRun=true)
+        public static ResponseMessage ManageDccBlock(
+            string devicePathJson,
+            string itemPathJson,
+            string chartPath,
+            [Description("blockName: exact block name inside the chart.")] string blockName="",
+            [Description("action: the operation to perform - read | create | update | delete | setAsPredecessor.")] string action="read",
+            [Description("blockType: DCB block type identifier ('Library/Type') to create.")] string blockType="",
+            string libraryName="",
+            string propertiesJson="{}",
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            bool confirmDelete=false,
+            [Description("sequenceIndex: 0-based position in the run sequence (-1 = unchanged).")] int sequenceIndex=-1,
+            bool dryRun=true)
             => Portal.ManageDccBlock(devicePathJson,itemPathJson,chartPath,blockName,action,blockType,libraryName,propertiesJson,driveObjectNumber,driveObjectIndex,confirmDelete,sequenceIndex,dryRun);
         [McpServerTool(Name="ManageDccPin"), Description("[L2][Hardware][WRITE] One pin of a DCC block: read (value / unit / comment / invisible / forTest / isInput / isPublished, the published DccParameter, connections with typed sink and source), update (propertiesJson Comment / Value / Unit / Invisible / ForTest; Value is converted to the pin's own data type - real project: an ADD input is System.Single and TIA refuses Int32 / Double), connect (partnerJson {block, pin} = DccPin.Connect(DccPin) or {chartInterface} = Connect(DccChartInterface)), disconnect (deletes the DccConnection to that partner), publish (Publish(setAsSignal) automatic number, Publish(setAsSignal, parameterNumber) or Publish(parameterNumber, arrayIndex, setAsSignal) for indexed signal parameters, SINAMICS FW V6.1+), unpublish (Unpublish, removes its connections), updateParameter (published DccParameter Number / ArrayIndex / ParameterText / IsSignal). Default preview; readback verifies publish / unpublish; no save or download.")]
-        public static ResponseMessage ManageDccPin(string devicePathJson, string itemPathJson, string chartPath, string blockName, string pinName, string action="read", string propertiesJson="{}", string partnerJson="{}", bool setAsSignal=false, int parameterNumber=-1, int arrayIndex=-1, ushort driveObjectNumber=0, int driveObjectIndex=-1, bool dryRun=true)
+        public static ResponseMessage ManageDccPin(
+            string devicePathJson,
+            string itemPathJson,
+            string chartPath,
+            [Description("blockName: exact block name inside the chart.")] string blockName,
+            [Description("pinName: exact pin name on the block.")] string pinName,
+            [Description("action: the operation to perform - read | update | connect | disconnect | publish | unpublish | updateParameter.")] string action="read",
+            string propertiesJson="{}",
+            [Description("partnerJson: JSON object naming the partner pin {block, pin} (or the parameter for updateParameter).")] string partnerJson="{}",
+            [Description("setAsSignal: true publishes the pin as a signal.")] bool setAsSignal=false,
+            [Description("parameterNumber: drive parameter number (p / r number without the letter).")] int parameterNumber=-1,
+            [Description("arrayIndex: array index of the parameter (-1 = scalar).")] int arrayIndex=-1,
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            bool dryRun=true)
             => Portal.ManageDccPin(devicePathJson,itemPathJson,chartPath,blockName,pinName,action,propertiesJson,partnerJson,setAsSignal,parameterNumber,arrayIndex,driveObjectNumber,driveObjectIndex,dryRun);
         [McpServerTool(Name="ManageDccChartInterface"), Description("[L2][Hardware][WRITE] Chart interfaces of one DCC chart (DccChartInterfaceComposition): read (all, or one by interfaceName), create (Create(DccPin) from sourceBlock + sourcePin; the interface is named after the pin), update (propertiesJson Comment / Value / Unit / Invisible / ForTest), delete (confirmDelete when real). Real project (S120 V5.2 drive axis, DCC/5201000): DccChartInterfaceComposition.Create(DccPin) answered 'This operation is not supported' on the root chart and on a subchart alike - chart interfaces are not creatable through Openness on that firmware. Default preview; no save or download.")]
-        public static ResponseMessage ManageDccChartInterface(string devicePathJson, string itemPathJson, string chartPath, string interfaceName="", string action="read", string sourceBlock="", string sourcePin="", string propertiesJson="{}", ushort driveObjectNumber=0, int driveObjectIndex=-1, bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageDccChartInterface(
+            string devicePathJson,
+            string itemPathJson,
+            string chartPath,
+            [Description("interfaceName: exact chart interface name.")] string interfaceName="",
+            [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
+            [Description("sourceBlock: exact name of the block whose pin feeds the interface.")] string sourceBlock="",
+            [Description("sourcePin: exact pin name on sourceBlock.")] string sourcePin="",
+            string propertiesJson="{}",
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageDccChartInterface(devicePathJson,itemPathJson,chartPath,interfaceName,action,sourceBlock,sourcePin,propertiesJson,driveObjectNumber,driveObjectIndex,confirmDelete,dryRun);
         [McpServerTool(Name="ManageDccChartPartition"), Description("[L2][Hardware][WRITE] Partitions of one DCC chart (DccChartPartitionComposition): read, create (Create(name)), update (propertiesJson Name / Comment), delete (confirmDelete when real). Blocks and subcharts are moved between partitions with ManageDccBlock / ManageDccChart propertiesJson.Partition. Default preview; no save or download.")]
-        public static ResponseMessage ManageDccChartPartition(string devicePathJson, string itemPathJson, string chartPath, string partitionName="", string action="read", string propertiesJson="{}", ushort driveObjectNumber=0, int driveObjectIndex=-1, bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageDccChartPartition(
+            string devicePathJson,
+            string itemPathJson,
+            string chartPath,
+            [Description("partitionName: exact partition name.")] string partitionName="",
+            [Description("action: the operation to perform - read | create | update | delete.")] string action="read",
+            string propertiesJson="{}",
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageDccChartPartition(devicePathJson,itemPathJson,chartPath,partitionName,action,propertiesJson,driveObjectNumber,driveObjectIndex,confirmDelete,dryRun);
         [McpServerTool(Name="ManageDcbLibraries"), Description("[L2][Hardware][WRITE] DCB libraries: read lists the DcbLibrary entries used by the drive object's charts (library name, version, DcbBlockType name / description); import calls the V21 DcbLibraryImporter.ImportDcbLibrary(filePath .zip) on the project library (DCB extension library; NotSupported on V20). Default preview; no save.")]
-        public static ResponseMessage ManageDcbLibraries(string action="read", string devicePathJson="[]", string itemPathJson="[]", ushort driveObjectNumber=0, int driveObjectIndex=-1, string filePath="", bool dryRun=true)
+        public static ResponseMessage ManageDcbLibraries(
+            [Description("action: the operation to perform - read | import.")] string action="read",
+            string devicePathJson="[]",
+            string itemPathJson="[]",
+            ushort driveObjectNumber=0,
+            int driveObjectIndex=-1,
+            string filePath="",
+            bool dryRun=true)
             => Portal.ManageDcbLibraries(action,devicePathJson,itemPathJson,driveObjectNumber,driveObjectIndex,filePath,dryRun);
         [McpServerTool(Name="ReadDccObject"), Description("[L2][Hardware][READ] Exact offline DCC chart/block/pin/library property path (objectPathJson [{property,name}] from the DriveControlChartContainer) with bounded scalar pagination; the typed views are ReadDccCharts / ManageDccBlock / ManageDccPin. Complex properties excluded explicitly; no complete internal binding guarantee.")]
         public static ResponseMessage ReadDccObject(string devicePathJson, string itemPathJson, string objectPathJson="[]", int offset=0, int limit=100, int driveObjectIndex=-1, ushort driveObjectNumber=0)

@@ -9,13 +9,27 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ListUnifiedGlobalScripts(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => Portal.ListUnifiedGlobalScripts(softwarePath, expectedProject, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "ReadUnifiedGlobalScript"), Description("[L2][HMI-Unified][READ]Native-export ONE exact global module to temporary files, return original JS/YAML, functions, parameters, bodies, global definitions, imports and unresolved tag expressions. Never imports, saves or executes scripts. Follow nextCursor; inspect dataComplete and failures.")]
-        public static ResponseMessage ReadUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName, string cursor = "", int pageSize = 50, int budgetMs = 5000)
+        public static ResponseMessage ReadUnifiedGlobalScript(
+            string softwarePath,
+            string expectedProject,
+            [Description("moduleName: exact name of the global script module.")] string moduleName,
+            string cursor = "",
+            int pageSize = 50,
+            int budgetMs = 5000)
             => Portal.ReadUnifiedGlobalScript(softwarePath, expectedProject, moduleName, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "ReadUnifiedTagDefinitions"), Description("[L2][HMI-Unified][READ]Resume recursive root/table/group/UDT/array member definitions. Returns path-addressed records, own API fields and separately labelled root source inference. Unknown bounds remain gaps. pageSize counts evidence records, not tags. Follow nextCursor until null; inspect cumulative failures.")]
         public static ResponseMessage ReadUnifiedTagDefinitions(string softwarePath, string expectedProject, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => Portal.ReadUnifiedTagDefinitions(softwarePath, expectedProject, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "ReadUnifiedScreenBranch"), Description("[L2][HMI-Unified][READ]Read an exact screen/item branch with continuation. screenPath is /Group/Screen with URI-escaped names. branchJson is [{property:'Interface'},{name:'Speed',key:'PropertyName'},{property:'Dynamizations'}] encoded as valid JSON; property, attribute, index and exact name selectors only. [] reads the selected subtree, never Parent. No writes or arbitrary method invocation.")]
-        public static ResponseMessage ReadUnifiedScreenBranch(string softwarePath, string expectedProject, string screenPath, string itemName = "", string branchJson = "[]", string cursor = "", int pageSize = 100, int budgetMs = 5000)
+        public static ResponseMessage ReadUnifiedScreenBranch(
+            string softwarePath,
+            string expectedProject,
+            string screenPath,
+            string itemName = "",
+            [Description("branchJson: JSON array path of the screen branch to read.")] string branchJson = "[]",
+            string cursor = "",
+            int pageSize = 100,
+            int budgetMs = 5000)
             => Portal.ReadUnifiedScreenBranch(softwarePath, expectedProject, screenPath, itemName, branchJson, cursor, pageSize, budgetMs);
         [McpServerTool(Name = "ReadUnifiedLibraryType"), Description("[L2][HMI-Unified][READ]Read/native-export ONE exact project-library type AND version. typePath=/Folder/Type, version exact (never default). Uses advertised document format; non-script types with no document formats use the separate official Export(FileInfo, WithReadOnly) XML action once. XML file acquisition is separate from unverified internal-content coverage. No guessed formats, edit mode, instantiation, whole-library traversal or automatic retry after failure. Direct dependency identifiers, original files, hashes and explicit gaps are returned.")]
         public static ResponseMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)

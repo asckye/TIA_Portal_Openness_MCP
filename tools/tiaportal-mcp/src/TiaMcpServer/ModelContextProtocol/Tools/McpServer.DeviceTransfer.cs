@@ -21,10 +21,27 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("dryRun: true (default) previews the route and the target; false uploads.")] bool dryRun=true)
             => Portal.UploadStationFromPlc(targetIpAddress,pgPcInterface,password,promptAnswersJson,confirmUpload,dryRun);
         [McpServerTool(Name="UploadDeviceParameters"), Description("[L2][PLC-Online][ONLINE-WRITE] Upload hardware parameters from a live device into the exact offline device/item (ParameterUploadProvider.ParameterUpload). Route is selected by exact pgPcInterface/targetIpAddress. Default preview; execution needs confirmUpload=true and exclusive access; returns before/after scalar properties. No save/compile/download.")]
-        public static ResponseMessage UploadDeviceParameters(string devicePathJson, string itemPathJson, string targetIpAddress, string pgPcInterface="", string password="", string promptAnswersJson="{}", bool confirmUpload=false, bool dryRun=true)
+        public static ResponseMessage UploadDeviceParameters(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("targetIpAddress: IP address of the PLC as ScanAccessibleDevices lists it.")] string targetIpAddress,
+            string pgPcInterface="",
+            string password="",
+            string promptAnswersJson="{}",
+            bool confirmUpload=false,
+            bool dryRun=true)
             => Portal.UploadDeviceParameters(devicePathJson,itemPathJson,targetIpAddress,pgPcInterface,password,promptAnswersJson,confirmUpload,dryRun);
         [McpServerTool(Name="DownloadPlcToFolder"), Description("[L2][PLC-Online][FILE] Write the PLC download as a memory-card image into a new or empty absolute directory (DownloadProvider.Download(DirectoryInfo)); targetForSoftware CPU or PlcSimulationAdvanced. No PLC is contacted. Prompts follow DownloadToPlc rules (keepActualValues, userManagementMode, promptAnswersJson); overwriteOnMemoryCard=false answers NoAction. Default preview; execution needs confirmDownload=true. Reports files/bytes written and unanswered prompts.")]
-        public static ResponseMessage DownloadPlcToFolder(string softwarePath, string destinationDirectory, string targetForSoftware="CPU", bool overwriteOnMemoryCard=false, bool keepActualValues=true, string userManagementMode="keep", string promptAnswersJson="{}", bool confirmDownload=false, bool dryRun=true)
+        public static ResponseMessage DownloadPlcToFolder(
+            string softwarePath,
+            string destinationDirectory,
+            [Description("targetForSoftware: folder on the TIA machine that receives the download files.")] string targetForSoftware="CPU",
+            [Description("overwriteOnMemoryCard: true answers the OverwriteOnMemoryCard prompt with overwrite.")] bool overwriteOnMemoryCard=false,
+            [Description("keepActualValues: true keeps the current data block values (safe default), false resets them to start values.")] bool keepActualValues=true,
+            [Description("userManagementMode: how the UserManagementDownload prompt is answered (keep, updateKeepPassword, update).")] string userManagementMode="keep",
+            string promptAnswersJson="{}",
+            [Description("confirmDownload: must be true together with dryRun=false to write the download files.")] bool confirmDownload=false,
+            bool dryRun=true)
             => Portal.DownloadPlcToFolder(softwarePath,destinationDirectory,targetForSoftware,overwriteOnMemoryCard,keepActualValues,userManagementMode,promptAnswersJson,confirmDownload,dryRun);
     }
 }

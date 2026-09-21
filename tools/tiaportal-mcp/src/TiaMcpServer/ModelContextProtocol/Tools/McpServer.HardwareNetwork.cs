@@ -8,40 +8,131 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ReadIoSystems(string subnetName="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100)
             => Portal.ReadIoSystems(subnetName,devicePathJson,itemPathJson,offset,limit);
         [McpServerTool(Name="ManageIoSystem"), Description("[L2][Hardware][WRITE] Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default), delete (IoSystem.Delete, needs confirmDelete), update (propertiesJson Name/Number + attributesJson dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManageIoSystem(string devicePathJson, string itemPathJson, string action, string name="", string subnetName="", string ioSystemName="", string propertiesJson="{}", string attributesJson="{}", bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageIoSystem(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("action: the operation to perform - create | delete | update | connect | disconnect.")] string action,
+            string name="",
+            string subnetName="",
+            [Description("ioSystemName: exact IO system name.")] string ioSystemName="",
+            string propertiesJson="{}",
+            string attributesJson="{}",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageIoSystem(devicePathJson,itemPathJson,action,name,subnetName,ioSystemName,propertiesJson,attributesJson,confirmDelete,dryRun);
         [McpServerTool(Name="ReadNetworkDomains"), Description("[L2][Hardware][READ] Domain management of one exact subnet: SyncDomainOwner.SyncDomains (Name, ConvertedName, IsDefault, participants, dynamic HighPerformanceActive/FastForwardingActive), MrpDomainOwner.MrpDomains (Name, participants, dynamic IsDefault/ManagerOutsideOfProjectActive) and the MrpInstances (ConnectedMrpDomain, RingPort1/2) of the subnet's interface items. Owner availability is reported; no modification.")]
         public static ResponseMessage ReadNetworkDomains(string subnetName, int offset=0, int limit=100)
             => Portal.ReadNetworkDomains(subnetName,offset,limit);
         [McpServerTool(Name="ManageNetworkDomain"), Description("[L2][Hardware][WRITE] kind=sync/mrp on one exact subnet: create (SyncDomainComposition/MrpDomainComposition.Create(name)), delete (needs confirmDelete), update (propertiesJson Name/IsDefault + attributesJson dynamic attributes, read back) and addParticipant (DomainParticipants.Add of the NetworkInterface at participantDevicePathJson/participantItemPathJson; the API exposes no removal). Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManageNetworkDomain(string subnetName, string kind, string action, string name, string propertiesJson="{}", string attributesJson="{}", string participantDevicePathJson="[]", string participantItemPathJson="[]", bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageNetworkDomain(
+            string subnetName,
+            [Description("kind: sync | mrp.")] string kind,
+            [Description("action: the operation to perform - create | delete | update | addParticipant.")] string action,
+            string name,
+            string propertiesJson="{}",
+            string attributesJson="{}",
+            [Description("participantDevicePathJson: JSON array naming the station to add to the domain.")] string participantDevicePathJson="[]",
+            [Description("participantItemPathJson: JSON array of device-item names of the participant's interface.")] string participantItemPathJson="[]",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageNetworkDomain(subnetName,kind,action,name,propertiesJson,attributesJson,participantDevicePathJson,participantItemPathJson,confirmDelete,dryRun);
         [McpServerTool(Name="ReadTransferAreas"), Description("[L2][Hardware][READ] NetworkInterface.TransferAreas (I-device / DP slave / CP 16xx / PN/PN coupler: Name, Type, Direction, PositionNumber, ExtendedPositionNumber, LocalToPartnerLength, PartnerToLocalLength, LocalAddresses/PartnerAddresses rows, TransferAreaMappingRules, dynamic Comment/TransferUpdateTime/SharedDeviceAccessConfigured/UpdateAlarm/RecordIndex) and MulticastableTransferAreas (CCDX: DataLength, Comment, PartnerTransferAreas) of the exact interface device item; positionNumber[/extendedPositionNumber] uses native Find. Paginated, no modification.")]
-        public static ResponseMessage ReadTransferAreas(string devicePathJson, string itemPathJson, int positionNumber=-1, int extendedPositionNumber=-1, int offset=0, int limit=100)
+        public static ResponseMessage ReadTransferAreas(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("positionNumber: slot / position number of the module or item (-1 = not given).")] int positionNumber=-1,
+            [Description("extendedPositionNumber: extended position number within the slot (-1 = not given).")] int extendedPositionNumber=-1,
+            int offset=0,
+            int limit=100)
             => Portal.ReadTransferAreas(devicePathJson,itemPathJson,positionNumber,extendedPositionNumber,offset,limit);
         [McpServerTool(Name="ManageTransferArea"), Description("[L2][Hardware][WRITE] Transfer areas of the exact interface device item. kind=standard: create (TransferAreaComposition.Create(name, type[, positionNumber]); type is an official TransferAreaType such as IN/OUT/MS/CD/TM/F_PS and cannot be changed later), delete, update (propertiesJson Name/Direction/LocalToPartnerLength/PartnerToLocalLength + attributesJson), createMappingRule/updateMappingRule/deleteMappingRule (TransferAreaMappingRules: Begin/End/IoType/Offset via propertiesJson, Target via targetDevicePathJson/targetItemPathJson, ruleIndex for update/delete). kind=multicast (CCDX, DDX): create on the sender interface toward partnerDevicePathJson/partnerItemPathJson (optional name, length), createReceiver for senderName, delete (sender deletes all receivers), update (Name/Comment/DataLength). Target by exact name or positionNumber. Deletes need confirmDelete. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManageTransferArea(string devicePathJson, string itemPathJson, string action, string kind="standard", string name="", string type="", int positionNumber=-1, int extendedPositionNumber=-1, string partnerDevicePathJson="[]", string partnerItemPathJson="[]", string senderName="", int length=-1, string propertiesJson="{}", string attributesJson="{}", int ruleIndex=-1, string targetDevicePathJson="[]", string targetItemPathJson="[]", bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageTransferArea(
+            string devicePathJson,
+            string itemPathJson,
+            string action,
+            [Description("kind: standard | multicast.")] string kind="standard",
+            string name="",
+            [Description("type: None | MS | CD | F_PS | TM | IN | OUT | MSI | MSO | MSO_LOCAL | RECORD_WRITE_STO | RECORD_WRITE_PUB | RECORD_READ_STO | RECORD_READ_PUB | MSI_MSO | IN_OUT | LOCAL_RECORD_STO | LOCAL_RECORD_PUB | SUB_MSI | SUB_MSO | SUB_LOCAL_RECORD_STO_READ | SUB_LOCAL_RECORD_PUB_READ | PROFISAFE_IN12_OUT6 | PROFISAFE_IN6_OUT12 | F_Proxy_CD | DDX | ISOC_STATUS_CONTROL | ISOCHRON_IN | ISOCHRON_OUT | F_CD.")] string type="",
+            [Description("positionNumber: slot / position number of the module or item (-1 = not given).")] int positionNumber=-1,
+            [Description("extendedPositionNumber: extended position number within the slot (-1 = not given).")] int extendedPositionNumber=-1,
+            string partnerDevicePathJson="[]",
+            string partnerItemPathJson="[]",
+            [Description("senderName: exact name of the sending transfer area.")] string senderName="",
+            [Description("length: length in bytes.")] int length=-1,
+            string propertiesJson="{}",
+            string attributesJson="{}",
+            [Description("ruleIndex: 0-based index of the mapping rule.")] int ruleIndex=-1,
+            [Description("targetDevicePathJson: JSON array naming the target station.")] string targetDevicePathJson="[]",
+            [Description("targetItemPathJson: JSON array of device-item names on the target.")] string targetItemPathJson="[]",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageTransferArea(devicePathJson,itemPathJson,action,kind,name,type,positionNumber,extendedPositionNumber,partnerDevicePathJson,partnerItemPathJson,senderName,length,propertiesJson,attributesJson,ruleIndex,targetDevicePathJson,targetItemPathJson,confirmDelete,dryRun);
         [McpServerTool(Name="ReadDeviceItemChannels"), Description("[L2][Hardware][READ] DeviceItem.Channels of the exact module: Number, Type (Analog/Digital/Technology), IoType (Input/Output/Complex), the attribute names from GetAttributeInfos and the values of ChannelAddress/ChannelWidth plus any attributeNamesJson (failures listed per name). channelType+channelIoType+channelNumber together select one channel through native ChannelComposition.Find. Paginated, no modification. includeLinkedTags=true adds linkedTags per channel (PlcTagProvider.GetLinkedTags, V21: tag name, data type, logical address, tag table; V20 answers null with a note).")]
-        public static ResponseMessage ReadDeviceItemChannels(string devicePathJson, string itemPathJson, string channelType="", string channelIoType="", int channelNumber=-1, string attributeNamesJson="[]", int offset=0, int limit=100, bool includeLinkedTags=false)
+        public static ResponseMessage ReadDeviceItemChannels(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("channelType: None | Analog | Digital | Technology.")] string channelType="",
+            [Description("channelIoType: None | Input | Output | Complex.")] string channelIoType="",
+            [Description("channelNumber: 0-based channel number.")] int channelNumber=-1,
+            [Description("attributeNamesJson: JSON array of attribute names to read ('[]' = the documented set).")] string attributeNamesJson="[]",
+            int offset=0,
+            int limit=100,
+            [Description("includeLinkedTags: true also returns the PLC tags linked to each channel.")] bool includeLinkedTags=false)
             => Portal.ReadDeviceItemChannels(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributeNamesJson,offset,limit,includeLinkedTags);
         [McpServerTool(Name="UpdateDeviceItemChannel"), Description("[L2][Hardware][WRITE] SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage UpdateDeviceItemChannel(string devicePathJson, string itemPathJson, string channelType, string channelIoType, int channelNumber, string attributesJson, bool dryRun=true)
+        public static ResponseMessage UpdateDeviceItemChannel(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("channelType: None | Analog | Digital | Technology.")] string channelType,
+            [Description("channelIoType: None | Input | Output | Complex.")] string channelIoType,
+            [Description("channelNumber: 0-based channel number.")] int channelNumber,
+            string attributesJson,
+            bool dryRun=true)
             => Portal.UpdateDeviceItemChannel(devicePathJson,itemPathJson,channelType,channelIoType,channelNumber,attributesJson,dryRun);
         [McpServerTool(Name="ReadDeviceAddressing"), Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification.")]
         public static ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson="[]", int offset=0, int limit=100)
             => Portal.ReadDeviceAddressing(devicePathJson,itemPathJson,offset,limit);
         [McpServerTool(Name="UpdateDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson="{}", string attributesJson="{}", string softwarePath="", string processImageObName="", bool dryRun=true)
+        public static ResponseMessage UpdateDeviceAddress(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("ioType: None | Input | Output | Substitute | Diagnosis.")] string ioType,
+            [Description("startAddress: new start address (byte).")] int startAddress,
+            string propertiesJson="{}",
+            string attributesJson="{}",
+            string softwarePath="",
+            [Description("processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).")] string processImageObName="",
+            bool dryRun=true)
             => Portal.UpdateDeviceAddress(devicePathJson,itemPathJson,ioType,startAddress,propertiesJson,attributesJson,softwarePath,processImageObName,dryRun);
         [McpServerTool(Name="ManageDeviceUserGroup"), Description("[L2][Hardware][WRITE] Project device user groups (Project.DeviceGroups, DeviceUserGroup.Groups/Devices, UngroupedDevicesGroup): read (empty groupPath lists root devices, top-level groups and the ungrouped system group; a path lists that group), create (DeviceUserGroupComposition.Create, missing parents created), rename (one segment) and deleteEmpty. groupPath is an exact relative nested path. CreateFrom(MasterCopy) is not exposed. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManageDeviceUserGroup(string groupPath="", string action="read", string newName="", bool dryRun=true)
+        public static ResponseMessage ManageDeviceUserGroup(
+            string groupPath="",
+            [Description("action: the operation to perform - read | create | rename | deleteEmpty.")] string action="read",
+            string newName="",
+            bool dryRun=true)
             => Portal.ManageDeviceUserGroup(groupPath,action,newName,dryRun);
         [McpServerTool(Name="ManageDeviceUsers"), Description("[L2][Hardware][WRITE] Users of the exact hardware object's official services: family=webserver (CPU WebserverUserManagement.WebserverUsers: read, create with permissionsJson flag names such as [\"ReadTag\",\"DoDiagnosis\"] and password, delete, setPermissions, setPassword), family=simpleWebserver (SIWAREX SimpleWebserverUserManagement: fixed user slots; setActive, rename via newName, setPermissions None/ReadOnly/ReadWrite, setPassword) and family=opcUa (OpcUaUserManagement.OpcUaUsers: read, create with password, delete, setPassword). Passwords are converted to SecureString and never echoed; TIA refuses writes while the web server / OPC UA authentication is disabled. Deletes need confirmDelete. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManageDeviceUsers(string devicePathJson, string itemPathJson, string family, string action="read", string userName="", string password="", string permissionsJson="[]", bool active=true, string newName="", bool confirmDelete=false, bool dryRun=true)
+        public static ResponseMessage ManageDeviceUsers(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("family: webserver | simpleWebserver | opcUa.")] string family,
+            [Description("action: the operation to perform - read | create | delete | setPassword | setPermissions | setActive | rename.")] string action="read",
+            [Description("userName: user name.")] string userName="",
+            string password="",
+            [Description("permissionsJson: JSON array of permission names (see the tool description).")] string permissionsJson="[]",
+            [Description("active: true activates, false deactivates.")] bool active=true,
+            string newName="",
+            bool confirmDelete=false,
+            bool dryRun=true)
             => Portal.ManageDeviceUsers(devicePathJson,itemPathJson,family,action,userName,password,permissionsJson,active,newName,confirmDelete,dryRun);
         [McpServerTool(Name="ManagePortInterconnection"), Description("[L2][Hardware][WRITE] Topology of one exact port device item (NetworkPort service): read lists ConnectedPorts with owner paths; connect/disconnect call NetworkPort.ConnectToPort/DisconnectFromPort with the partner port at partnerDevicePathJson/partnerItemPathJson and verify the ConnectedPorts count. TIA refuses ports of the same interface and second partners on ports without alternative partners. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManagePortInterconnection(string devicePathJson, string itemPathJson, string action="read", string partnerDevicePathJson="[]", string partnerItemPathJson="[]", bool dryRun=true)
+        public static ResponseMessage ManagePortInterconnection(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("action: the operation to perform - read | connect | disconnect.")] string action="read",
+            string partnerDevicePathJson="[]",
+            string partnerItemPathJson="[]",
+            bool dryRun=true)
             => Portal.ManagePortInterconnection(devicePathJson,itemPathJson,action,partnerDevicePathJson,partnerItemPathJson,dryRun);
     }
 }

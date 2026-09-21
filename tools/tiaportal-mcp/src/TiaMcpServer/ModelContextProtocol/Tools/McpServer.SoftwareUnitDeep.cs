@@ -6,19 +6,55 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name="ReadPlcSoftwareUnits"), Description("[L2][PLC-Software][READ] Typed read of the native software units of one exact PLC (PlcUnitProvider.UnitGroup): the PlcUnitSystemGroup (Name on V21, unit / safety-unit counts) and every PlcUnit / PlcSafetyUnit with Name, Author, NamespacePreset, Comment per culture, relations (RelatedObject / RelationType) and, with includeContents, the names in its BlockGroup (blocks, groups, system block groups), TypeGroup (types, groups, named value type documents), TagTableGroup, ExternalSourceGroup and PlcAlarmTextlistGroup (first 200 each). unitKind all/unit/safety, optional exact unitName. Paginated; PLCs without unit support answer NotSupported. No modification.")]
-        public static ResponseMessage ReadPlcSoftwareUnits(string softwarePath, string unitName="", string unitKind="all", bool includeContents=true, int offset=0, int limit=50)
+        public static ResponseMessage ReadPlcSoftwareUnits(
+            string softwarePath,
+            string unitName="",
+            [Description("unitKind: which unit collection unitName refers to - all | unit | safety.")] string unitKind="all",
+            [Description("includeContents: true also returns the contents of each unit.")] bool includeContents=true,
+            int offset=0,
+            int limit=50)
             => Portal.ReadPlcSoftwareUnits(softwarePath,unitName,unitKind,includeContents,offset,limit);
         [McpServerTool(Name="ManagePlcDocuments"), Description("[L2][PLC-Software][WRITE] Named value type documents (objectKind=document: PlcTypeGroup.Documents / PlcDocument) and UDT documents (objectKind=type: PlcTypeComposition / PlcType) of the exact PLC type group (root, groupPath under it, or a unit's TypeGroup via unitName + unitKind). list / read; export = ExportAsDocuments(directoryPath, name) with the DocumentExportResult (State, ExportedDocuments hashed, native messages) and the new files, refusing to overwrite name.*; import = ImportFromDocuments(directoryPath, name, importOption None/Override/SkipInactiveCultures/ActivateInactiveCultures) returning DocumentImportResultForSplDocument.ImportedDocuments or DocumentImportResultForTypes.ImportedPlcTypes plus DocumentResultMessage lines, verified by Find; createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace) and createFromLibraryType (typePath + version of a PlcDocumentLibraryTypeVersion / PlcTypeLibraryTypeVersion, updatePathsMode) instantiate into the group (document CreateFrom is V21+). Default dryRun=true; real writes need an Offline PLC; no save/compile/download.")]
-        public static ResponseMessage ManagePlcDocuments(string softwarePath, string action, string objectKind="document", string name="", string unitName="", string unitKind="unit", string groupPath="", string directoryPath="", string importOption="Override", string libraryName="", string masterCopyPath="", string copyMode="", string typePath="", string version="", string updatePathsMode="", bool dryRun=true)
+        public static ResponseMessage ManagePlcDocuments(
+            string softwarePath,
+            [Description("action: the operation to perform - list | read | export | import | createFromMasterCopy | createFromLibraryType.")] string action,
+            [Description("objectKind: document | type.")] string objectKind="document",
+            string name="",
+            string unitName="",
+            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
+            string groupPath="",
+            [Description("directoryPath: folder on the TIA machine that receives the files.")] string directoryPath="",
+            [Description("importOption: import option - None | Override | SkipInactiveCultures | ActivateInactiveCultures.")] string importOption="Override",
+            string libraryName="",
+            string masterCopyPath="",
+            [Description("copyMode: what to do when the name exists - ThrowIfExists | Rename | Replace.")] string copyMode="",
+            string typePath="",
+            string version="",
+            [Description("updatePathsMode: UpdatePathsInTarget | KeepExistingPathsInTarget | ThrowIfPathsConflict.")] string updatePathsMode="",
+            bool dryRun=true)
             => Portal.ManagePlcDocuments(softwarePath,action,objectKind,name,unitName,unitKind,groupPath,directoryPath,importOption,libraryName,masterCopyPath,copyMode,typePath,version,updatePathsMode,dryRun);
         [McpServerTool(Name="ReadPlcChecksums"), Description("[L2][PLC-Software][READ] Native PlcChecksumProvider of the exact PLC software: Software (program checksum) and TextLists checksum strings, both read-only and null until the program is compiled; PLCs without checksum support (GetService returns null) answer supported=false. No modification.")]
         public static ResponseMessage ReadPlcChecksums(string softwarePath)
             => Portal.ReadPlcChecksums(softwarePath);
         [McpServerTool(Name="ReadPlcObjectFingerprints"), Description("[L2][PLC-Software][READ] Offline fingerprints of one exact block (objectKind=block, path under BlockGroup) or UDT (objectKind=type, path under TypeGroup), optionally inside a unit (unitName + unitKind), via native FingerprintProvider.GetFingerprints: every Fingerprint Id (Code/Interface/Properties/Comments/LibraryType/Texts/Alarms/Supervisions/TechnologyObject/Events/TextualInterface/ProgramCode) with its value; fingerprints consider user input only. An inconsistent object is refused natively (compile first). Online CPU fingerprints are ReadPlcBlockFingerprints. No modification.")]
-        public static ResponseMessage ReadPlcObjectFingerprints(string softwarePath, string objectKind, string objectPath, string unitName="", string unitKind="unit")
+        public static ResponseMessage ReadPlcObjectFingerprints(
+            string softwarePath,
+            [Description("objectKind: block | type.")] string objectKind,
+            string objectPath,
+            string unitName="",
+            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit")
             => Portal.ReadPlcObjectFingerprints(softwarePath,objectKind,objectPath,unitName,unitKind);
         [McpServerTool(Name="ManagePlcBlockWriteProtection"), Description("[L2][PLC-Software][WRITE] Block write protection (V21 PlcBlockWriteProtectionProvider, distinct from know-how protection): read IsDefined / IsProtected; define sets the password, protect / unprotect toggle protection with it, change rotates it to newPassword, remove calls Change(password, null) dropping password and protection. The official state machine is enforced before any call (define refused when defined, protect needs a defined password, ...), passwords go in as SecureString and are never echoed, native invalid-password characters are checked, every change is verified by readback. blockPath under BlockGroup or a unit's BlockGroup (unitName + unitKind). Real change requires dryRun=false AND confirmProtectionChange=true and an Offline PLC; V20 answers NotSupported. No save/compile/download.")]
-        public static ResponseMessage ManagePlcBlockWriteProtection(string softwarePath, string blockPath, string action, string password="", string newPassword="", bool confirmProtectionChange=false, bool dryRun=true, string unitName="", string unitKind="unit")
+        public static ResponseMessage ManagePlcBlockWriteProtection(
+            string softwarePath,
+            string blockPath,
+            [Description("action: the operation to perform - read | define | protect | unprotect | change | remove.")] string action,
+            string password="",
+            [Description("newPassword: the new password; never logged.")] string newPassword="",
+            [Description("confirmProtectionChange: must be true together with dryRun=false to change the protection.")] bool confirmProtectionChange=false,
+            bool dryRun=true,
+            string unitName="",
+            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit")
             => Portal.ManagePlcBlockWriteProtection(softwarePath,blockPath,action,password,newPassword,confirmProtectionChange,dryRun,unitName,unitKind);
         [McpServerTool(Name="ManageProjectCompilationSettings"), Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update propertiesJson {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save.")]
         public static ResponseMessage ManageProjectCompilationSettings(string action="read", string propertiesJson="{}", bool dryRun=true)

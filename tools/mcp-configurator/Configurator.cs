@@ -19,8 +19,8 @@ using System.Windows.Threading;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
-[assembly: AssemblyVersion("2.7.58.0")]
-[assembly: AssemblyFileVersion("2.7.58.0")]
+[assembly: AssemblyVersion("2.7.59.0")]
+[assembly: AssemblyFileVersion("2.7.59.0")]
 
 namespace TiaMcpConfigurator
 {

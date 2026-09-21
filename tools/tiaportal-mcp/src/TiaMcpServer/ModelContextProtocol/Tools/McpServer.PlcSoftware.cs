@@ -412,7 +412,11 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ReadUnifiedHmiTexts"), Description("[L0][HMI-Unified] Read language codes and raw text without serializing native language objects. Requires Connect + OpenProject. Supports Text, AlternateText and ToolTipText when present on the control. Check Meta.success.")]
-        public static ResponseMessage ReadUnifiedHmiTexts(string hmiSoftwarePath, string screenName, string itemName, string textProperty = "Text")
+        public static ResponseMessage ReadUnifiedHmiTexts(
+            string hmiSoftwarePath,
+            [Description("screenName: exact screen name.")] string screenName,
+            string itemName,
+            [Description("textProperty: name of the multilingual text property to read ('' = all).")] string textProperty = "Text")
             => Portal.ReadUnifiedHmiTexts(hmiSoftwarePath, screenName, itemName, textProperty);
 
         [McpServerTool(Name = "ApplyUnifiedHmiScreenDesignJson"), Description("[L2][HMI-Unified] Apply layout JSON. For language text use items[].text, culture (default zh-CN), textProperty (default Text; also AlternateText/ToolTipText). Omit text to preserve, empty string clears, null is invalid. Exact language match required; Meta.textReadback contains verified raw text by language. Meta.success=false on any failed write, including strict=false partial results. Changes are not transactional. Requires Connect + OpenProject. Use type Text for labels; Rectangle has no text.")]
