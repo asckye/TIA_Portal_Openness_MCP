@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.51 本机构建、待推送发布与虚拟机部署）
+# 换机器交接单（2026-09-21，2.7.51 已发布、待虚拟机部署）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.51 发布说明](../releases/v2.7.51.md)
 
@@ -6,8 +6,8 @@
 
 ## 0. 一句话现状
 
-- 最后一次发布 **v2.7.50**；**2.7.51 已在本机 Build-Release 通过**（离线 2197，形状 V20 2789 / V21 3077，448 个工具），三段提交 + 推送 + tag 见 §5。
-- 虚拟机上跑的是 **2.7.50**（2026-09-21 部署）；2.7.51 的 ZIP 待发布后部署。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.51**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.51_20260921.zip` 已上传）。448 个工具，离线 2197 项，形状 V20 2789 / V21 3077。
+- 虚拟机上跑的是 **2.7.50**（2026-09-21 部署）；2.7.51 的 ZIP 还没部署。
 - 真机台账：✅321 / 手工 6 / 早期 25 / 🔁5（等 2.7.51：`SetWatchTableModifyValue`、`ManagePlcSimAdvancedInstance`、`DownloadToPlc` / `GoOnline` / `CompareSoftwareToOnline`）/ ⛔31 / ⚠60 / 🚫0 / ❌0。
 - 在线族（下载 / 上线）引擎侧已通过，卡在 PG 侧一个环境项：虚拟机里 "Siemens PLCSIM Virtual Ethernet Adapter" 没有 IP；2.7.51 起可改让 PLCSIM Advanced 走 Softbus（全局 `NetworkMode`）绕过它。
 
