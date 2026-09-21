@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-20 20:32:44
-- 引擎文件版本：2.7.52.0
-- 工具数量：448
+- 生成时间：2026-09-20 21:33:45
+- 引擎文件版本：2.7.53.0
+- 工具数量：450
 
 ## 读法
 
@@ -16,12 +16,12 @@
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 14 |
 | `READ` | 读取已打开工程，不改动 | 132 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 182 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 183 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 29 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 23 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
-| `EXECUTE` | 执行编译/测试/自检 | 12 |
+| `EXECUTE` | 执行编译/测试/自检 | 13 |
 
 描述里未显式标注操作类型的工具（204 个）由 `ToolTaxonomy.OperationOf` 按工具名推断，表中以 `*` 标记；显式标注优先。
 
@@ -33,7 +33,7 @@
 | `project` | 工程与协作 / Project & collaboration | 61 | `Project` (25)、`Library` (13)、`VersionControl` (8)、`Security` (7)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 116 | `PLC-Software` (75)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (7)、`Safety` (9) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
-| `hardware` | 硬件与网络 / Hardware & network | 71 | `Hardware` (71) |
+| `hardware` | 硬件与网络 / Hardware & network | 73 | `Hardware` (73) |
 | `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
@@ -381,11 +381,11 @@
 | `UploadDeviceParameters` | L2 | ONLINE-WRITE | Upload hardware parameters from a live device into the exact offline device/item (ParameterUploadProvider.ParameterUpload). Route is selected by exact pgPcInterface/targetIpAddress. Default preview; execution needs confirmUpload=true and exclusive access; returns before/after scalar properties. No save/compile/download. |
 | `UploadStationFromPlc` | L2 | ONLINE-WRITE | Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address seen by ScanAccessibleDevices on the same PG/PC interface (ConfigurationAddressComposition.Create accepts IP addresses only - a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from). Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download. |
 
-## hardware — 硬件与网络 / Hardware & network（71）
+## hardware — 硬件与网络 / Hardware & network（73）
 
 设备/模块增删移动、硬件目录、子网与 IO 系统、通信连接、系统诊断设置、AML 交换、驱动与 DCC 图表。
 
-### [Hardware]（71）
+### [Hardware]（73）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -400,6 +400,7 @@
 | `AddHardwareCatalogDeviceWithProbe` | L2 | WRITE* | Add a hardware device by searching the installed TIA hardware catalog, ranking insertable TypeIdentifier candidates, and inserting the best match. Use for Siemens devices/HMI panels when exact TypeIdentifier is unknown, e.g. KTP700 Basic PN. |
 | `AttachDeviceNodeToSubnet` | L2 | WRITE* | Attach one real device network node to an existing PROFINET subnet and return readback evidence. deviceItemPath must come from GetProjectTree/GetDeviceItemTree, interfaceIndex selects a discovered Industrial Ethernet/PROFINET node, and online/force operations are never used. |
 | `BuildDeviceAmlDocument` | L2 | OFFLINE | Build an AutomationML (CAEX 2.15, *.aml) hardware description for ImportDeviceAml from a JSON spec — the generation half of a TIA Selection Tool / Aml.Engine workflow without extra dependencies. specJson: {"projectName":"P","devices":[{"name":"PLC_1","typeIdentifier":"System:Device.S71500","deviceItems":[{"name":"Rack_0","role":"Rack","typeIdentifier":"OrderNumber:6ES7 590-1AE80-0AA0","positionNumber":0,"deviceItems":[{"name":"PLC_1","typeIdentifier":"OrderNumber:6ES7 516-3AN02-0AB0/V2.9","positionNumber":1,"deviceItems":[{"name":"PROFINET interface_1","role":"CommunicationInterface","builtIn":true,"nodes":[{"name":"E1","networkAddress":"192.168.0.1","subnetMask":"255.255.255.0","subnetName":"PN/IE_1"}]}]},{"name":"DI 32x24VDC HF_1","typeIdentifier":"OrderNumber:6ES7 521-1BL00-0AB0/V2.0","positionNumber":2}]}]}],"subnets":[{"name":"PN/IE_1","type":"Ethernet"}]}. Roles: Rack \| DeviceItem \| CommunicationInterface \| CommunicationPort; TypeIdentifier uses the TIA catalog form OrderNumber:<MLFB>[/Vx.y] or System:Device.<family>. outputPath must be a NEW absolute .aml file. STRONGLY RECOMMENDED: referenceAmlPath = a file that ExportDeviceAml wrote on the same TIA version — its header, role/interface class libraries are copied verbatim and only the instance hierarchy is generated; without it a built-in skeleton is used and Meta.importVerified=false is returned. Verify with ImportDeviceAml (dry run first). Nothing is saved, compiled or downloaded. |
+| `CompileDevice` | L2 | EXECUTE | Hardware compile of one device (or device item) through ICompilable - what the TIA UI's 'Compile > Hardware (rebuild all)' does and what DownloadToPlc runs first; CompileSoftware / CompileAndDiagnosePlc only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW >= 2.9 CPU that ManagePlcProtection fixes. No save / download. |
 | `DumpDeviceAttributes` | L2 | READ* | [PreCondition:Connect+OpenProject] Read-only inventory of EVERY Openness attribute exposed on a device's items (CPU, modules, interfaces, ports): name, access mode (read-only vs read/write), current value, value type. Run this ONCE per CPU/firmware to learn what is actually exposed, then drive hardware reads/writes from that ground truth instead of guessing attribute names. Optional nameFilter narrows to attributes whose name contains a substring; several alternatives can be given separated by '\|' or ',' (e.g. 'protection', 'putget\|webserver', 'ip'). NOTE: GetAttributeInfos() does not enumerate every gettable attribute on all CPUs, so absence here means 'not enumerated', not a guaranteed 'no interface'. |
 | `EnsureSubnet` | L2 | WRITE* | Ensure an Industrial Ethernet/PROFINET subnet by anchoring on a real deviceItemPath from GetProjectTree/GetDeviceItemTree. Applies only through TIA Openness, then returns readback evidence (node path, subnet name, interface path). Does not guess paths. |
 | `ExchangeSystemDiagnosticsSettings` | L2 | FILE | Export/import system diagnostics settings via SystemdiagnosticsSettingsDataProvider (project-level by default; optional exact devicePathJson/itemPathJson owner). export writes a NEW absolute file and returns its sha256; import needs an existing absolute file and confirmImport=true. Native result state attached; Error state fails the tool. Default preview; no save/compile/download. |
@@ -432,6 +433,7 @@
 | `ManageIoSystem` | L2 | WRITE | Official IO system actions on the exact interface device item: create (IoController.CreateIoSystem(name), interface must be on a subnet and own no IO system; empty name = TIA default), delete (IoSystem.Delete, needs confirmDelete), update (propertiesJson Name/Number + attributesJson dynamic attributes, each read back), connect (IoConnector.ConnectToIoSystem of the IO system named ioSystemName on subnetName; also DP master systems) and disconnect (IoConnector.DisconnectFromIoSystem). Default dryRun=true; no save/compile/download. |
 | `ManageNetworkDomain` | L2 | WRITE | kind=sync/mrp on one exact subnet: create (SyncDomainComposition/MrpDomainComposition.Create(name)), delete (needs confirmDelete), update (propertiesJson Name/IsDefault + attributesJson dynamic attributes, read back) and addParticipant (DomainParticipants.Add of the NetworkInterface at participantDevicePathJson/participantItemPathJson; the API exposes no removal). Default dryRun=true; no save/compile/download. |
 | `ManageOnlineDriveFunctions` | L2 | ONLINE-WRITE | OnlineDriveFunctionInterface of the connected drive: read reports DriveDomainFunctions / HardwareProjection / FunctionInUse availability and the activation state; performFactoryReset {resetMode ParameterReset\|SafetyParameterReset} and performRamToRomCopy (DriveDomainFunctions.PerformFactoryReset / PerformRAMtoROMCopyAllDriveObject) and changeActivationState {activationState} act on the real drive and need confirmOnline=true. No dryRun: the read action is the preview. |
+| `ManagePlcProtection` | L2 | WRITE | Access level and confidential-configuration-data password of ONE CPU (PlcAccessLevelProvider / PlcMasterSecretConfigurator on the CPU device item; itemPathJson [] resolves the station's CPU). read reports accessLevel (FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe), masterSecret (None = 'Protect confidential PLC configuration data' unchecked, WithoutPassword = checked without password, WithPassword, WithPasswordAllDataProtection) and the access-control mode. setAccessLevel accessLevel; setAccessPassword / resetAccessPassword accessLevel [+ password] (TIA only accepts passwords for levels less strict than the selected one); protectMasterSecret password; changeMasterSecret password newPassword; unprotectMasterSecret [password]; resetMasterSecret (certificates encrypted with it are lost); protectAllConfiguration [password]; unprotectAllConfiguration. Why: TIA V21 refuses the hardware download of an S7-1500 FW >= 2.9 CPU whose level is above FullAccess without a FullAccess password or whose confidential data has no password ('硬件配置编译完成，但出现错误' - see CompileDevice). Passwords go in as SecureString and are never echoed; state read back (meta.before / after). Default preview; real change needs dryRun=false AND confirmChange=true; no compile / save / download. |
 | `ManagePortInterconnection` | L2 | WRITE | Topology of one exact port device item (NetworkPort service): read lists ConnectedPorts with owner paths; connect/disconnect call NetworkPort.ConnectToPort/DisconnectFromPort with the partner port at partnerDevicePathJson/partnerItemPathJson and verify the ConnectedPorts count. TIA refuses ports of the same interface and second partners on ports without alternative partners. Default dryRun=true; no save/compile/download. |
 | `ManageStartdriveParameter` | L2 | WRITE | Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read returns the ReadDriveParameter row with bits, enum values and BICO source; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {"bicoSource":"r2050[1]"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent's Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -> 11 -> 10 and p1070[0] <- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive. |
 | `ManageTechnologyExtensions` | L2 | WRITE | Startdrive technology extensions. Drive scope (devicePathJson + itemPathJson + drive object): read lists TechnologyExtensionContainer.TechnologyExtensions (identifier / name / display name / isActivated, parameters with includeParameters), activate / deactivate by identifier or name (TechnologyExtension.Activate / Deactivate, readback verifies IsActivated). Portal scope (TiaPortal.GetService<TechnologyExtensionInstallationProvider>): readPackages, install / installAndGetIdentifier (filePath .tec), uninstall (identifier, confirmUninstallInUse) - these change the TIA Portal installation, not the project. Default preview. |
