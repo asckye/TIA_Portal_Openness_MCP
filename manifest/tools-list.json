@@ -1,9 +1,9 @@
 {
-    "package":  "TIA_MCP_Delivery_v2.7.50_20260921",
-    "generatedAt":  "2026-09-20T17:49:03.6079473+00:00",
+    "package":  "TIA_MCP_Delivery_v2.7.51_20260921",
+    "generatedAt":  "2026-09-21T00:39:52.1031156+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
-    "fileVersion":  "2.7.50.0",
-    "exeSha256":  "b3c4a68bc5a684d00c68ce738afa6dfbb7aa39713917a8d3c945951567ca36ca",
+    "fileVersion":  "2.7.51.0",
+    "exeSha256":  "9888bc994b6bdd1cb067c97f6a86a804bc7f9648c02e816b8893cdbc9f4df91c",
     "toolCount":  448,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "categories":  [
@@ -2734,7 +2734,7 @@
                                          "confirmUpload",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an address seen by ScanAccessibleDevices on the same PG/PC interface. Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download."
+                      "description":  "[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address seen by ScanAccessibleDevices on the same PG/PC interface (ConfigurationAddressComposition.Create accepts IP addresses only - a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from). Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download."
                   },
                   {
                       "name":  "UploadDeviceParameters",
@@ -3207,7 +3207,7 @@
                                          "apiPath",
                                          "communicationInterface"
                                      ],
-                      "description":  "[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the \u0027Siemens PLCSIM Virtual Ethernet Adapter\u0027 (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched."
+                      "description":  "[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the \u0027Siemens PLCSIM Virtual Ethernet Adapter\u0027 (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched."
                   },
                   {
                       "name":  "ReadPlcSimAdvancedTags",
@@ -3544,7 +3544,7 @@
                                          "apiPath",
                                          "memberFilter"
                                      ],
-                      "description":  "[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath \u003e env PLCSIMADV_API_PATH \u003e newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server."
+                      "description":  "[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath \u003e env PLCSIMADV_API_PATH \u003e newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version, the global network mode (SimulationRuntimeManager.NetworkMode on PLCSIM Advanced 6+: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server."
                   },
                   {
                       "name":  "RenderPlcBlockDocument",
