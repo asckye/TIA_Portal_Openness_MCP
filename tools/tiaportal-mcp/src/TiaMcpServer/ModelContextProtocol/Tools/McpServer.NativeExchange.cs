@@ -5,7 +5,10 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name="ManageProjectLanguage"), Description("[L2][Project][WRITE] Read/activate/deactivate/setEditing/setReference project language by exact culture. Default preview. Editing/reference must be active, cannot deactivate either; readback verified; no save/compile/download.")]
-        public static ResponseMessage ManageProjectLanguage(string action="read", string culture="", bool dryRun=true)
+        public static ResponseMessage ManageProjectLanguage(
+            [Description("action: read | activate | deactivate | setEditing | setReference.")] string action="read",
+            [Description("culture: exact language tag, e.g. 'en-US', 'zh-CN' (required for every action except read).")] string culture="",
+            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
             => Portal.ManageProjectLanguage(action,culture,dryRun);
         [McpServerTool(Name="CreatePlcInstanceDb"), Description("[L2][PLC-Software][WRITE] Create a native instance DB from an exact FB and destination block group. Default preview; requires offline PLC when executing. No save/compile/download.")]
         public static ResponseMessage CreatePlcInstanceDb(string softwarePath, string fbPath, string name, string groupPath="", bool autoNumber=true, int number=0, bool dryRun=true)
@@ -32,7 +35,16 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageLibraryFolder(string folderKind, string folderPath, string action, string libraryName="", string newName="", bool dryRun=true)
             => Portal.ManageLibraryFolder(folderKind,folderPath,action,libraryName,newName,dryRun);
         [McpServerTool(Name="ManagePlcTagDefinition"), Description("[L2][PLC-Software][WRITE] Native tag/constant read/create/update/delete in exact table path. Creation requires dataType and logical address or constant value. Public scalar edits (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value); Comment is a MultilingualText and is written per culture - propertiesJson {\"Comment\":\"text\"} goes to the project editing language, {\"Comment\":{\"zh-CN\":\"文本\",\"en-US\":\"text\"}} per active culture (inactive culture = NotFound, activate with ManageProjectLanguage); commentBefore / commentAfter report every culture. Default preview, execution requires Offline. No runtime value write, save/compile/download.")]
-        public static ResponseMessage ManagePlcTagDefinition(string softwarePath, string tablePath, string name, string kind, string action, string dataType="", string addressOrValue="", string propertiesJson="{}", bool dryRun=true)
+        public static ResponseMessage ManagePlcTagDefinition(
+            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
+            [Description("tablePath: 'Group/Table' path of the tag table, e.g. 'Default tag table'.")] string tablePath,
+            [Description("name: exact tag or constant name.")] string name,
+            [Description("kind: tag | constant.")] string kind,
+            [Description("action: read | create | update | delete.")] string action,
+            [Description("dataType: for create / update - PLC data type, e.g. Bool, Int, Real.")] string dataType="",
+            [Description("addressOrValue: for create / update - logical address of a tag (e.g. %M0.0, %I0.0) or the value of a constant.")] string addressOrValue="",
+            [Description("propertiesJson: JSON object of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; Comment as text or per culture).")] string propertiesJson="{}",
+            [Description("dryRun: true (default) previews; false executes (project must be offline).")] bool dryRun=true)
             => Portal.ManagePlcTagDefinition(softwarePath,tablePath,name,kind,action,dataType,addressOrValue,propertiesJson,dryRun);
     }
 }

@@ -103,6 +103,10 @@
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\PreflightLogic.cs" Link="PreflightLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolExamples.cs" Link="ToolExamples.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\UpdateLogic.cs" Link="UpdateLogic.cs" />
+    <!-- 2.7.58：schema 提示与配方表，零依赖。 -->
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\SchemaHintsLogic.cs" Link="SchemaHintsLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolRecipes.cs" Link="ToolRecipes.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ParameterVocabulary.cs" Link="ParameterVocabulary.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareUnitDeepLogic.cs" Link="SoftwareUnitDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Step7LeftoversLogic.cs" Link="Step7LeftoversLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ClassicHmiFoldersLogic.cs" Link="ClassicHmiFoldersLogic.cs" />

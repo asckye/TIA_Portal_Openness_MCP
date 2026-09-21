@@ -29,6 +29,19 @@ try {
     $exampleProblems=@($type.GetMethod('ValidateToolExamples').Invoke($null,@()))
     if($exampleProblems.Count){throw "Tool examples do not fit their tools (fix ToolExamples.cs): $($exampleProblems -join '; ')"}
     $findExample=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolExamples',$true).GetMethod('Find')
+    # 2.7.58: recipes (GetRecipe) are validated the same way; the schema-hint / documentation statistics go into the manifest so a
+    # release cannot silently lose parameter descriptions (the enum hints and the preflight both read them).
+    $recipeProblems=@($type.GetMethod('ValidateToolRecipes').Invoke($null,@()))
+    if($recipeProblems.Count){throw "Recipe steps do not fit their tools (fix ToolRecipes.cs): $($recipeProblems -join '; ')"}
+    $discipline=$type.GetMethod('SchemaHintStatistics').Invoke($null,@())
+    $disciplineJson=$discipline.ToJsonString() | ConvertFrom-Json
+    # Regression gate: the number of parameters without their own [Description] may only go down (compared with the committed manifest).
+    if(Test-Path -LiteralPath $OutputPath){
+        try { $previous=(Get-Content -LiteralPath $OutputPath -Raw -Encoding UTF8 | ConvertFrom-Json).callDiscipline } catch { $previous=$null }
+        if($previous -and $null -ne $previous.parametersUndocumented -and [int]$disciplineJson.parametersUndocumented -gt [int]$previous.parametersUndocumented){
+            throw "Parameters without a [Description] went up from $($previous.parametersUndocumented) to $($disciplineJson.parametersUndocumented) - document the new parameters (the schema hints, preflight and examples read them)"
+        }
+    }
     $rows=@(foreach($method in $type.GetMethods([Reflection.BindingFlags]'Public,Static')){
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
         $tool=$attributes | Where-Object { $_.AttributeType.Name -eq 'McpServerToolAttribute' } | Select-Object -First 1
@@ -53,10 +66,11 @@ try {
         fileVersion=(Get-Item -LiteralPath $exePath).VersionInfo.FileVersion;
         exeSha256=(Get-FileHash -LiteralPath $exePath -Algorithm SHA256).Hash.ToLowerInvariant();
         toolCount=$rows.Count;note='Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.';
+        callDiscipline=[ordered]@{parameters=$disciplineJson.parameters;parametersUndocumented=$disciplineJson.parametersUndocumented;parametersFromVocabulary=$disciplineJson.parametersFromVocabulary;toolsWithUndocumentedParameters=$disciplineJson.toolsWithUndocumentedParameters;toolsWithEnumHints=$disciplineJson.toolsWithEnumHints;enumHints=$disciplineJson.enumHints;defaultHints=$disciplineJson.defaultHints;examplesCurated=@($rows | Where-Object { $_.example }).Count;recipes=@($assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolRecipes',$true).GetProperty('All').GetValue($null)).Count};
         categories=$categories;
         tools=@($rows | Sort-Object name)
     }
     [IO.File]::WriteAllText($OutputPath,($data|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
-    Write-Output "Compiled EXE tool metadata: $($rows.Count) tools; $(@($rows | Where-Object { $_.example }).Count) with a validated example"
+    Write-Output "Compiled EXE tool metadata: $($rows.Count) tools; $(@($rows | Where-Object { $_.example }).Count) with a validated example; $($disciplineJson.enumHints) enum hints on $($disciplineJson.toolsWithEnumHints) tools; $($disciplineJson.parametersUndocumented) of $($disciplineJson.parameters) parameters without their own description ($($disciplineJson.parametersFromVocabulary) covered by the vocabulary; $($disciplineJson.toolsWithUndocumentedParameters) tools); recipes validated"
 }
 finally{[AppDomain]::CurrentDomain.remove_AssemblyResolve($resolver)}

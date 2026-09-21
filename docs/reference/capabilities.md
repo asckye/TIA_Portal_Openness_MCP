@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.57 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 452 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 58 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.58 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 453 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.58 全部工具的调用纪律（引擎自动执行）
+
+维护者 2026-09-21：规范 AI 对**所有**工具的调用、不再试错。本版四件事都由引擎自动做、对 453 个工具生效：① 参数描述里的备选值 / C# 默认值 / 示例值写进每个工具的 `inputSchema`（`enum` / `default` / `examples`；67 个 enum 落在 51 个工具上，解析只认参数自己那句话里独立成段的列表，真机核对过误判）；② 任何失败调用自动附 `meta.preflight`（缺参 / 参数名 / 类型 / `allowedValues` / 前提 / 示例 / 下一步），成功响应不动；③ `ParameterVocabulary` 79 条通用参数描述填进没有 `[Description]` 的参数（1488 → 1392 无自身描述，1002 由词汇表覆盖），手写批次 1 覆盖 14 个常用工具，`tools-list.json` 的 `callDiscipline` 统计 + 构建门禁止回升；④ 示例覆盖 453 个（80 条人工 + 按签名派生）。新增 `GetRecipe(topic)`：12 条真机跑通的多步序列，每步精确调用，构建时校验。工具 453，lite 59。详见 `docs/releases/v2.7.58.md`。
 
 ## 2.7.57 更新器、`CheckForUpdate`、`PreflightToolCall` 与工具示例表
 

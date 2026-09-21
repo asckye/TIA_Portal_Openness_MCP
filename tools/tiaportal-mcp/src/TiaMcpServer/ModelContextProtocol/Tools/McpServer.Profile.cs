@@ -26,6 +26,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // 2.7.57: the preflight belongs next to the bridge - the point is to check a call before it is
             // made, in every profile; the update check is what a maintainer asks first when something is off.
             "PreflightToolCall", "CheckForUpdate",
+            // 2.7.58: the verified sequences belong next to the guide.
+            "GetRecipe",
             // L0 — orientation / diagnostics
             "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
             "GenerateAcceptanceReport", "GenerateErrorReport",
@@ -105,8 +107,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
             var decorated = ToolExamples.Decorate(name, description);
-            if (ReferenceEquals(decorated, description) || decorated == description) return McpServerTool.Create(method);
-            return McpServerTool.Create(method, options: new McpServerToolCreateOptions { Name = name, Description = decorated });
+            var tool = ReferenceEquals(decorated, description) || decorated == description
+                ? McpServerTool.Create(method)
+                : McpServerTool.Create(method, options: new McpServerToolCreateOptions { Name = name, Description = decorated });
+            // 2.7.58: enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
+            return WithSchemaHints(tool, name, method);
         }
 
         // ---- Profile resolution -----------------------------------------------------------------

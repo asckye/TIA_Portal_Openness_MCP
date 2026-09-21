@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.57 已用更新器部署并真机通过；`项目1` 目前未打开；下一版 2.7.58 全部工具的调用纪律）
+# 换机器交接单（2026-09-21，2.7.58 发布中：全部工具的调用纪律；`项目1` 目前未打开）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -38,7 +38,7 @@
 先 `ListPortalProcessProjects`，再 `Connect {projectName:"项目1"}`（或 `AttachToOpenProject`），`GetState` 看 pid / project。（已做：监控表往返 ✅；PLCSIM Softbus ✅；TLS 信任 ✅；CPU 保护 ✅；在线族在 `MCP_STD` 上 ✅（2.7.53）；站上载 ⛔ TIA 不支持；F-CPU GoOnline 文案 ✅；singleStep 场景 ✅（2.7.55，`SingleStep_C`，Cycles 304→309）。）
 
 1. ~~**2.7.56 部署后** `Connect` 多进程验证~~ 已通过（2026-09-21：按名 70 ms 附加到 4840、`startedNew false`、进程数 2→2；名字不存在时绑 4840 + `warning`）。
-2. ~~**2.7.57 部署后**~~ 通过（2026-09-21：版本 2.7.57.0、45 个描述带示例、`PreflightToolCall` 报告如预期、`CheckForUpdate` 经 API 取到 v2.7.57；见 `docs/releases/v2.7.57.md` "真机结果"）。**2.7.58 部署后**：`GetRecipe` 列表与一条序列；任意一个失败调用（例如 `CallTool GetBlocks {}`）的响应里应带自动预检；`tools/list` 里 `ManagePlcProtection.action` 等参数应有 `enum`；虚拟机有外网可直接 `Update-Engine.ps1`（在线）。
+2. ~~**2.7.57 部署后**~~ 通过（2026-09-21）。**2.7.58 部署后**（`docs/releases/v2.7.58.md` "待真机" 1–4）：`tools/list` 的 `ManagePlcTableEntries.tableKind` 有 `enum`；故意错的 `GetBlocks {SoftwarePath, regex}` 与 `CallTool ExportPlcWatchTable {softwarePath}` 的响应带 `preflight`；`GetRecipe` 列表 + `watch-table`；一次真实业务失败的 `preflight.next`。虚拟机有外网：先停引擎，`Update-Engine.ps1`（在线）即可更新。
 2. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 改现状表、`handoff-history.md` §1 顶部加本版条目、handoff §6 加"学到的事实"；有源码改动就走 §5 的一键发布出下一版，没有就只提交文档。
 
 备查——已跑通的序列（新对象上可照抄，参数都是当时的实际值）：

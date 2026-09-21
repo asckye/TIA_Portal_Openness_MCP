@@ -8,11 +8,16 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         [McpServerTool(Name="ReadPortalInfo"), Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]
-        public static ResponseMessage ReadPortalInfo(bool includeProcesses=true, bool includeSessions=true, bool includeProducts=true)
+        public static ResponseMessage ReadPortalInfo(
+            [Description("includeProcesses: list the TIA Portal processes on the machine.")] bool includeProcesses=true,
+            [Description("includeSessions: list the sessions of the bound portal.")] bool includeSessions=true,
+            [Description("includeProducts: list the installed TIA products / option packages (TiaPortalProduct).")] bool includeProducts=true)
             => Portal.ReadPortalInfo(includeProcesses,includeSessions,includeProducts);
 
         [McpServerTool(Name="ReadTransferRoutes"), Description("[L2][PLC-Online][READ] The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) -> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadToPlc / GoOnline.")]
-        public static ResponseMessage ReadTransferRoutes(string softwarePath, int maxItems=500)
+        public static ResponseMessage ReadTransferRoutes(
+            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
+            [Description("maxItems: cap on route-tree rows returned.")] int maxItems=500)
             => Portal.ReadTransferRoutes(softwarePath,maxItems);
 
         [McpServerTool(Name="ManageHardwareUtilities"), Description("[L2][Hardware][FILE] Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed.")]

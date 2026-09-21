@@ -130,6 +130,61 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string Render(Example e)
             => "Example: " + e.ArgumentsJson + (e.Note.Length > 0 ? " (" + e.Note + ")" : "") + ".";
 
+        public const string DerivedNote = "derived from the signature - placeholder values, read the parameter descriptions";
+
+        /// <summary>The curated example, or one derived from the signature so that every tool has a worked call.</summary>
+        public static Example FindOrDerive(string tool, IReadOnlyList<PreflightLogic.ParameterSpec> specs)
+            => Find(tool) ?? Derive(tool, specs);
+
+        /// <summary>
+        /// 2.7.58: a placeholder example for the tools without a curated one - the required parameters with values taken
+        /// from the description ("e.g. 'PLC_1'"), the documented alternatives (first one) or the parameter's name.
+        /// Never wrong on the shape (keys come from the signature), possibly wrong on the value - the note says so.
+        /// </summary>
+        public static Example Derive(string tool, IReadOnlyList<PreflightLogic.ParameterSpec> specs)
+        {
+            var args = new JsonObject();
+            foreach (var spec in specs)
+            {
+                if (!spec.Required) continue;
+                args[spec.Name] = PlaceholderValue(tool, spec);
+            }
+            return new Example(tool, args.ToJsonString(), DerivedNote);
+        }
+
+        private static readonly System.Text.RegularExpressions.Regex ForExample = new System.Text.RegularExpressions.Regex(@"\be\.g\.\s*['""]?(?<v>[^'"",;)\s][^'"",;)]*)['""]?", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        internal static JsonNode PlaceholderValue(string tool, PreflightLogic.ParameterSpec spec)
+        {
+            var name = spec.Name;
+            switch (spec.Kind)
+            {
+                case "boolean": return JsonValue.Create(spec.DefaultText == null ? true : string.Equals(spec.DefaultText, "true", StringComparison.OrdinalIgnoreCase));
+                case "integer": return JsonValue.Create(long.TryParse(spec.DefaultText ?? "", out var l) ? l : 1);
+                case "number": return JsonValue.Create(double.TryParse(spec.DefaultText ?? "", System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 1.0);
+            }
+            if (spec.Kind != "string") return JsonValue.Create("<" + name + ">");
+            var alternatives = PreflightLogic.Alternatives(spec.Description);
+            if (alternatives.Count > 0) return JsonValue.Create(alternatives[0]);
+            var m = ForExample.Match(spec.Description);
+            if (m.Success) return JsonValue.Create(m.Groups["v"].Value.Trim().Replace("\\\\", "\\"));   // descriptions escape backslashes for C#
+            if (name.Equals("softwarePath", StringComparison.OrdinalIgnoreCase) || name.EndsWith("PlcSoftwarePath", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("PLC_1");
+            if (name.IndexOf("hmi", StringComparison.OrdinalIgnoreCase) >= 0 && name.EndsWith("Path", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("HMI_RT_1");
+            if (name.EndsWith("Json", StringComparison.Ordinal))
+                return JsonValue.Create(System.Text.RegularExpressions.Regex.IsMatch(name, "(Path|Names|Ids|Items|Entries|List|Steps|Rows|Tags|Blocks|Pages)Json$") ? "[]" : "{}");
+            if (name.Equals("blockPath", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("Main");
+            if (name.Equals("deviceName", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("PLC_2");
+            if (name.Equals("expectedProject", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("<project name from GetProject>");
+            bool directory = name.IndexOf("Directory", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Folder", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Dir", StringComparison.Ordinal) >= 0;
+            if (name.EndsWith("Path", StringComparison.OrdinalIgnoreCase) || name.EndsWith("File", StringComparison.OrdinalIgnoreCase) || directory)
+            {
+                if (directory) return JsonValue.Create("C:\\Temp\\" + tool);
+                var ext = new[] { ".xml", ".zip", ".csv", ".xlsx", ".json", ".scl", ".s7dcl", ".yml", ".txt", ".pdf", ".aml", ".dat" }.FirstOrDefault(e => spec.Description.IndexOf(e, StringComparison.OrdinalIgnoreCase) >= 0);
+                return JsonValue.Create("C:\\Temp\\" + tool + (ext ?? ""));
+            }
+            return JsonValue.Create("<" + name + ">");
+        }
+
         /// <summary>Description plus the example sentence when one exists; unchanged otherwise.</summary>
         public static string Decorate(string tool, string description)
         {

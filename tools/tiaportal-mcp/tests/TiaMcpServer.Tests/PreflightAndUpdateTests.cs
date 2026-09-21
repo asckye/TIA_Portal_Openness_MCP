@@ -78,6 +78,11 @@ namespace TiaMcpServer.Tests
             check(PreflightLogic.Alternatives("pgPcInterface: e.g. 'PLCSIM' or 'Realtek'").Count == 0, "preflight: quoted examples are not alternatives");
             check(PreflightLogic.Alternatives("pgPcInterface: optional PG/PC interface name (substring, case-insensitive), e.g. 'PLCSIM' or 'Realtek'").Count == 0, "preflight: hyphenated prose in parentheses is not a list (real-machine false positive)");
             check(PreflightLogic.Alternatives("action: read (default) or delete").Count == 0, "preflight: '(default)' is not a list");
+            check(PreflightLogic.Alternatives("password: the password to set (setAccessPassword, protectMasterSecret) or the current one (changeMasterSecret); never logged.").Count == 0, "preflight: a two-item parenthesised reference is not a value list (real-machine false enum on password)");
+            check(PreflightLogic.Alternatives("importOption: value (None, Override)").SequenceEqual(new[] { "None", "Override" }), "preflight: a two-item list announced as 'value (...)' is a list");
+            check(PreflightLogic.Alternatives("promptAnswersJson: answers by type name, e.g. {\"ResetModule\":\"DeleteAll\"}. Destructive prompts (InitializeMemory, OverwriteOnMemoryCard, ResetModule) default to NoAction.").Count == 0, "preflight: a list in a later sentence is not the parameter's value set (DownloadToPlc false enum)");
+            check(PreflightLogic.Alternatives("folderPath: group/folder path inside the software").Count == 0 && PreflightLogic.Alternatives("pgPcInterface: PG/PC interface name").Count == 0 && PreflightLogic.Alternatives("blockGroupPath: PLC block group path for kind=globaldb|fc.").Count == 0 && PreflightLogic.Alternatives("blockScope: optional regex (e.g. 'FC|Main')").Count == 0, "preflight: prose slashes, kind=a|b and quoted regexes are not lists (real-machine false enums)");
+            check(PreflightLogic.Alternatives("subnetType: IndustrialEthernet/PROFINET/PN/IE.").Count == 4 && PreflightLogic.Alternatives("kind: udt|tagtable|globaldb|fc|fb").Count == 5, "preflight: free-standing lists still parse");
 
             // ---- nearest name ----
             check(PreflightLogic.Nearest("softwarepath", new[] { "softwarePath", "blockPath" }) == "softwarePath", "preflight: nearest by containment");

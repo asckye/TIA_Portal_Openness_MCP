@@ -1,5 +1,16 @@
 # Change Log
 
+## [2.7.58] - 2026-09-21
+
+引擎 2.7.58.0（V20/V21 均重建），工具 **453**（+`GetRecipe`），默认 lite 59。详见 [v2.7.58](docs/releases/v2.7.58.md)。维护者 2026-09-21 明确：目标是**规范 AI 对所有工具的调用、不再试错**（不是教它写程序）——本版全部机制由引擎自动执行、对 453 个工具都生效。
+
+- **参数合法值进 `inputSchema`（全部工具）**：注册时把每个参数描述里的文档备选值（`read | create | delete`、`a/b/c`、`value (None, Override)`）写成 `enum`，C# 默认值写成 `default`，人工示例里的值写成 `examples`；会校验 schema 的客户端在发出前就拒绝无效值，任何客户端都把精确选项给模型看。解析规则只认参数自己那句话里独立成段的列表（`kind=globaldb|fc`、`group/folder path`、引号里的正则、后一句的括号列表都不算——真机上曾误判 `password`、`promptAnswersJson`、`folderPath`），本版 67 个 enum 提示落在 51 个工具上，逐条核对过。
+- **失败自动预检（全部工具）**：任何调用失败（`isError` 或 `meta.success=false`，经 `CallTool` 时看内层结果）时，引擎把 `meta.preflight` 附进响应——缺参 / 未知与大小写错的参数名（给最接近的名字）/ 类型 / 不在文档备选值里（`allowedValues`）/ 未满足的前提 / 一条示例 / 下一步。AI 拿到失败的同时拿到改法，不必再调 `PreflightToolCall`，成功响应一字不改。
+- **参数词汇表 `ParameterVocabulary`**：2204 个参数里 1488 个没有自己的 `[Description]`（213 个工具）；同名参数在全表意思相同（`dryRun`、`softwarePath`、`devicePathJson`、`offset`、`limit`、`confirm*`……），词汇表给出 79 个通用描述，注入没有描述的 schema 属性、预检与派生示例；本版另手写 14 个常用工具的 96 个参数描述（`ManagePlcProtection` / `ManagePlcTableEntries` / `ManageHardwareObject` / `ManagePlcTagDefinition` / `ManagePlcExternalSources` / `UploadStationFromPlc` / `ScanAccessibleDevices` / `ReadTransferRoutes` / `CompileDevice` / `ReadPortalInfo` / `ManageCommunicationConnection` / `ReadCommunicationConnections` / `ManagePlcAlarmTextList` / `ManageProjectLanguage`）。无自身描述的参数 1488 → 1392，其中 1002 个由词汇表覆盖；`manifest/tools-list.json` 新增 `callDiscipline` 统计，构建门禁止该数字回升。
+- **示例覆盖 453 个工具**：80 条人工示例之外，其余按签名派生骨架（必填参数 + 描述里的 `e.g.` 值 / 首个备选值 / 按名推断的占位符，标注 derived），用于 `FindTools`、`CallTool` 缺参拒绝、`PreflightToolCall` 与自动预检；列出工具的描述仍只附人工示例（不增 `tools/list` 体积）。
+- **`GetRecipe(topic)`**：12 条真机跑通的多步序列（connect-project、plc-scl-block、plc-s7dcl-import、plc-builder、watch-table、cpu-protection、download-plcsim、plcsim-test、hardware-device、hmi-unified-screen、export-import-block、large-response），每步是精确的工具名 + 参数 + 预期结果；构建时按签名校验每一步。服务器指令 / `Bootstrap` 规则 / `SKILL.md` 指向它。
+- 离线 2453（+97：`CallDisciplineTests`）。
+
 ## [2.7.57] - 2026-09-21
 
 引擎 2.7.57.0（V20/V21 均重建），工具 **452**（+`PreflightToolCall`、`CheckForUpdate`），默认 lite 58 项（两个新工具都在 L0）。详见 [v2.7.57](docs/releases/v2.7.57.md)。维护者 2026-09-21 定下的第二件事：更新器 + 规范 AI 调用；2.7.56 真机通过（`Connect` 多进程按名附加、不自启）。

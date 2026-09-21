@@ -155,6 +155,9 @@ namespace TiaMcpServer.Tests
             Console.WriteLine("== 2.7.57 预检与更新纯逻辑：PreflightToolCall 参数分析 / 备选值解析 / 桥接、示例表校验、版本比较与 GitHub Release JSON ==");
             PreflightAndUpdateTests.Run(Check);
 
+            Console.WriteLine("== 2.7.58 调用纪律纯逻辑：schema enum / default / examples、按签名派生示例、失败附带的预检摘要、配方表与 GetRecipe ==");
+            CallDisciplineTests.Run(Check);
+
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."
                 : $"{_pass} passed, {_fail} failed, {_skip} skipped.  <<< 有失败");

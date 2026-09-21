@@ -213,8 +213,7 @@ namespace TiaMcpServer.ModelContextProtocol
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
                     // 2.7.57: a worked call next to the signature is what stops the guess-and-retry loop.
-                    var example = ToolExamples.Find(h.Value);
-                    if (example != null) lines.Add("    " + ToolExamples.Render(example));
+                    lines.Add("    " + ToolExamples.Render(ToolExamples.FindOrDerive(h.Value, SpecsOf(m))));
                 }
 
                 return new ResponseStringList
@@ -375,12 +374,12 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 if (missing.Count > 0)
                 {
-                    var example = ToolExamples.Find(target);
+                    var example = ToolExamples.FindOrDerive(target, SpecsOf(method!));
                     return new ResponseMessage
                     {
                         Message = target + " is missing required argument(s): " + string.Join(", ", missing) +
                                   ". Expected signature: " + RenderSignature(target, method!) +
-                                  (example != null ? " " + ToolExamples.Render(example) : "") +
+                                  " " + ToolExamples.Render(example) +
                                   " PreflightToolCall(name, argumentsJson) checks a corrected call without executing it.",
                         Meta = BridgeMeta(false),
                     };
@@ -495,16 +494,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 args = obj;
             }
 
-            var specs = new List<PreflightLogic.ParameterSpec>();
-            foreach (var p in method.GetParameters())
-            {
-                if (IsInfrastructureParameter(p.ParameterType)) continue;
-                string? def = null;
-                if (p.HasDefaultValue)
-                    def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\"" : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
-                var d = p.GetCustomAttribute<DescriptionAttribute>();
-                specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, d?.Description ?? ""));
-            }
+            var specs = SpecsOf(method);
             var report = PreflightLogic.Analyze(specs, args);
 
             string description = ToolDescription(method);
@@ -537,8 +527,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 lines.Add("dryRun: " + (report.DryRunGiven == null ? "not given -> default " + (report.DryRunDefault ? "true (preview only)" : "false (executes)") : report.DryRunGiven == true ? "true (preview only)" : "false (EXECUTES" + (report.ConfirmFlags.Count > 0 ? "; confirm flags set: " + (report.ConfirmFlagsSet.Count > 0 ? string.Join(", ", report.ConfirmFlagsSet) : "none") : "") + ")"));
             foreach (var p in precautions) lines.Add("Precaution: " + p);
             foreach (var p in prerequisites) lines.Add("Prerequisite: " + p);
-            var example = ToolExamples.Find(canonical);
-            if (example != null) lines.Add(ToolExamples.Render(example));
+            var example = ToolExamples.FindOrDerive(canonical, specs);
+            lines.Add(ToolExamples.Render(example));
             lines.Add("Description: " + description);
 
             bool ready = report.Ok && prerequisitesOk != false;
@@ -554,12 +544,128 @@ namespace TiaMcpServer.ModelContextProtocol
             meta["dryRun"] = new JsonObject { ["supported"] = report.DryRunSupported, ["given"] = report.DryRunGiven, ["effective"] = report.Effective, ["confirmFlags"] = new JsonArray(report.ConfirmFlags.Select(x => (JsonNode)x).ToArray()), ["confirmFlagsSet"] = new JsonArray(report.ConfirmFlagsSet.Select(x => (JsonNode)x).ToArray()) };
             meta["precautions"] = new JsonArray(precautions.Select(x => (JsonNode)x).ToArray());
             meta["prerequisites"] = new JsonObject { ["needsProject"] = needsProject, ["connected"] = connected, ["project"] = project, ["satisfied"] = prerequisitesOk };
-            if (example != null) meta["example"] = JsonNode.Parse(example.ArgumentsJson);
+            meta["example"] = JsonNode.Parse(example.ArgumentsJson);
+            meta["exampleDerived"] = example.Note == ToolExamples.DerivedNote;
             string verdict = !report.Ok
                 ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count) + " problem(s) listed in Items, then preflight again."
                 : prerequisitesOk == false ? "Arguments fit; the session prerequisite is not met (see Items)."
                 : "READY: " + canonical + " would bind" + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count) + " automatic correction(s) (CallTool only)" : "") + (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : "") + ".";
             return new ResponseStringList { Message = verdict, Items = lines, Meta = meta };
+        }
+
+        /// <summary>The parameter specs of a tool method (infrastructure parameters skipped), the vocabulary PreflightLogic / SchemaHintsLogic / ToolExamples share.</summary>
+        internal static List<PreflightLogic.ParameterSpec> SpecsOf(MethodInfo method)
+        {
+            var specs = new List<PreflightLogic.ParameterSpec>();
+            foreach (var p in method.GetParameters())
+            {
+                if (IsInfrastructureParameter(p.ParameterType)) continue;
+                string? def = null;
+                if (p.HasDefaultValue)
+                    def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\"" : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
+                var d = p.GetCustomAttribute<DescriptionAttribute>();
+                // 2.7.58: a parameter without its own [Description] gets the roster-wide vocabulary text (flagged Synthesized).
+                string? text = d?.Description;
+                bool synthesized = false;
+                if (string.IsNullOrEmpty(text)) { text = ParameterVocabulary.Describe(p.Name!); synthesized = text != null; }
+                specs.Add(new PreflightLogic.ParameterSpec(p.Name!, FriendlyTypeName(p.ParameterType), !p.HasDefaultValue, def, text ?? "", synthesized));
+            }
+            return specs;
+        }
+
+        // 2.7.58: the compact preflight the engine attaches to EVERY failed call (McpServer.ArgDiagnostics.cs), so the
+        // caller gets the corrected plan in the same response instead of guessing a second time. Only what is wrong,
+        // the example and one next step - a failure is where guidance pays, but it must stay small.
+        internal static JsonObject PreflightSummary(string tool, JsonObject args)
+        {
+            var all = AllToolMethods();
+            var summary = new JsonObject();
+            if (!all.TryGetValue(tool ?? "", out var method))
+            {
+                summary["next"] = "No tool named '" + tool + "' - FindTools finds the exact name.";
+                return summary;
+            }
+            string canonical = all.Keys.First(k => string.Equals(k, tool, StringComparison.OrdinalIgnoreCase));
+            var specs = SpecsOf(method);
+            var report = PreflightLogic.Analyze(specs, args);
+            if (report.Missing.Count > 0) summary["missing"] = new JsonArray(report.Missing.Select(x => (JsonNode)x).ToArray());
+            if (report.Unknown.Count > 0) summary["unknown"] = new JsonArray(report.Unknown.Select(x => (JsonNode)x).ToArray());
+            if (report.CaseFixes.Count > 0) summary["caseFixes"] = new JsonArray(report.CaseFixes.Select(x => (JsonNode)x).ToArray());
+            if (report.TypeProblems.Count > 0) summary["typeProblems"] = new JsonArray(report.TypeProblems.Select(x => (JsonNode)x).ToArray());
+            if (report.Warnings.Count > 0) summary["warnings"] = new JsonArray(report.Warnings.Select(x => (JsonNode)x).ToArray());
+            var enumHints = new JsonObject();
+            foreach (var spec in specs)
+            {
+                var alternatives = PreflightLogic.Alternatives(spec.Description);
+                if (alternatives.Count > 0 && args[spec.Name] is JsonValue given && given.TryGetValue<string>(out var text) && !alternatives.Contains(text, StringComparer.Ordinal))
+                    enumHints[spec.Name] = string.Join(" | ", alternatives);
+            }
+            if (enumHints.Count > 0) summary["allowedValues"] = enumHints;
+            bool? connected = null; string? project = null;
+            ReadSessionState(ref connected, ref project);
+            var op = ToolTaxonomy.OperationOf(canonical, ToolDescription(method)).Operation;
+            bool needsProject = PreflightLogic.NeedsProject(op, canonical);
+            bool projectBound = !string.IsNullOrWhiteSpace(project) && project != "-";
+            string? prerequisite = null;
+            if (needsProject && connected == false) prerequisite = "Not connected - Connect (or AttachToOpenProject with the project name) first.";
+            else if (needsProject && connected == true && !projectBound) prerequisite = "No project bound - AttachToOpenProject / OpenProject first.";
+            if (prerequisite != null) summary["prerequisite"] = prerequisite;
+            var example = ToolExamples.FindOrDerive(canonical, specs);
+            summary["example"] = JsonNode.Parse(example.ArgumentsJson);
+            if (example.Note == ToolExamples.DerivedNote) summary["exampleDerived"] = true;
+            summary["next"] = !report.Ok
+                ? "Correct the argument problems listed here and call once more; PreflightToolCall(name, argumentsJson) checks a corrected call without executing."
+                : prerequisite != null ? prerequisite
+                : "The message names the cause; fix that one thing (real names from GetProjectTree / GetSoftwareTree, documented values, preconditions) and call once more - do not try variants.";
+            return summary;
+        }
+
+        /// <summary>Build gate: every recipe step must name a real tool and fit its signature.</summary>
+        public static IReadOnlyList<string> ValidateToolRecipes()
+        {
+            var all = AllToolMethods();
+            return ToolRecipes.ValidateAgainst(tool =>
+            {
+                if (!all.Keys.Any(k => string.Equals(k, tool, StringComparison.Ordinal))) return null;
+                return all[tool].GetParameters().Where(p => !IsInfrastructureParameter(p.ParameterType))
+                    .Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
+            });
+        }
+
+        [McpServerTool(Name = "GetRecipe"), Description(
+            "[L0][Guide][SESSION] Verified multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, " +
+            "watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, " +
+            "paging large responses. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; the sequences were run on the real machine. " +
+            "Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed.")]
+        public static ResponseStringList GetRecipe(
+            [Description("topic: recipe key from the list, e.g. 'download-plcsim'; empty lists all recipes with their one-line purpose.")] string topic = "")
+        {
+            var meta = BridgeMeta(true);
+            if (string.IsNullOrWhiteSpace(topic))
+            {
+                var lines = ToolRecipes.All.Select(r => r.Topic + " - " + r.Purpose + " (" + r.Steps.Count + " steps)").ToList();
+                meta["topics"] = new JsonArray(ToolRecipes.All.Select(r => (JsonNode)r.Topic).ToArray());
+                return new ResponseStringList { Message = ToolRecipes.All.Count + " recipes. GetRecipe(topic) returns the exact calls of one.", Items = lines, Meta = meta };
+            }
+            var recipe = ToolRecipes.Find(topic);
+            if (recipe == null)
+            {
+                meta["success"] = false;
+                return new ResponseStringList { Message = "No recipe '" + topic + "'. Topics: " + string.Join(", ", ToolRecipes.All.Select(r => r.Topic)) + ".", Meta = meta };
+            }
+            var items = new List<string> { "Purpose: " + recipe.Purpose };
+            if (recipe.Preconditions.Length > 0) items.Add("Preconditions: " + recipe.Preconditions);
+            int n = 0;
+            var steps = new JsonArray();
+            foreach (var step in recipe.Steps)
+            {
+                n++;
+                items.Add(n + ". " + step.Tool + " " + step.ArgumentsJson + (step.Expect.Length > 0 ? "  -> " + step.Expect : ""));
+                steps.Add(new JsonObject { ["step"] = n, ["tool"] = step.Tool, ["argumentsJson"] = JsonNode.Parse(step.ArgumentsJson), ["expect"] = step.Expect });
+            }
+            if (recipe.Notes.Length > 0) items.Add("Notes: " + recipe.Notes);
+            meta["topic"] = recipe.Topic; meta["steps"] = steps;
+            return new ResponseStringList { Message = "Recipe '" + recipe.Topic + "': " + recipe.Steps.Count + " steps. Placeholders in angle brackets must be replaced with real names (GetProjectTree / GetSoftwareTree).", Items = items, Meta = meta };
         }
 
         // Implemented in McpServer.Maintenance.cs (engine build); absent in the offline suite, where no portal exists.

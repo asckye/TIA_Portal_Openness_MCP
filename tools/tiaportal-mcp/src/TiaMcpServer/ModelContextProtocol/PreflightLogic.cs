@@ -20,8 +20,10 @@ namespace TiaMcpServer.ModelContextProtocol
             public bool Required { get; }
             public string? DefaultText { get; }
             public string Description { get; }
-            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description)
-            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; }
+            /// <summary>True when the description came from ParameterVocabulary because the parameter has no [Description] of its own.</summary>
+            public bool Synthesized { get; }
+            public ParameterSpec(string name, string kind, bool required, string? defaultText, string description, bool synthesized = false)
+            { Name = name; Kind = kind; Required = required; DefaultText = defaultText; Description = description ?? ""; Synthesized = synthesized; }
         }
 
         public sealed class Report
@@ -130,12 +132,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private const string Word = @"[A-Za-z][A-Za-z0-9_+-]*";
-        // "a | b | c" anywhere (pipes are not prose); "a/b/c" only right after "one of" or the parameter's colon (slashes are);
-        // "(a, b, c)" as a bare parenthesised list without "e.g.".
-        private static readonly Regex PipeList = new Regex(@"(?<list>" + Word + @"(?:\s*\|\s*" + Word + @")+)", RegexOptions.Compiled);
-        private static readonly Regex SlashList = new Regex(@"(?:one of:?|:)\s*\(?\s*(?<list>" + Word + @"(?:\s*/\s*" + Word + @")+)", RegexOptions.Compiled);
-        // Comma lists only with plain identifiers: "(substring, case-insensitive)" is prose, "(None, Override, SkipInactiveCultures)" is a list.
         private const string Identifier = @"[A-Za-z][A-Za-z0-9_]*";
+        // A list is an enumeration only when it stands on its own: not glued to "=" / a quote / a word before it ("kind=globaldb|fc",
+        // the regex example 'FC|Main'), and followed by punctuation or the end rather than a noun ("group/folder path", "PG/PC interface").
+        private const string ListEnd = @"(?=\s*(?:[.;,)(]|$))";
+        private static readonly Regex PipeList = new Regex(@"(?<![=\w'""])(?<list>" + Word + @"(?:\s*\|\s*" + Word + @")+)" + ListEnd, RegexOptions.Compiled);
+        private static readonly Regex SlashList = new Regex(@"(?:one of:?|:)\s*\(?\s*(?<list>" + Word + @"(?:\s*/\s*" + Word + @")+)" + ListEnd, RegexOptions.Compiled);
+        // "(a, b, c)" as a bare parenthesised list of plain identifiers: "(substring, case-insensitive)" is prose, "(None, Override, SkipInactiveCultures)" is a list.
         private static readonly Regex CommaList = new Regex(@"\(\s*(?<list>" + Identifier + @"(?:\s*,\s*" + Identifier + @")+)\s*\)", RegexOptions.Compiled);
 
         /// <summary>The documented alternatives of an enum-like parameter ("action: read | create | delete", "kind: udt|tagtable|fc", "(None, Override)"), or empty.</summary>
@@ -146,8 +149,15 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var m = pair.Item1.Match(description!);
                 if (!m.Success) continue;
+                var before = description!.Substring(0, m.Index);
+                // The list belongs to the parameter's own (first) sentence: a period before it means another sentence, e.g. the prompt names DownloadToPlc mentions later on.
+                if (before.IndexOf('.') >= 0) continue;   // also skips "e.g." lists, which are examples, not the full set
                 var list = m.Groups["list"].Value.Split(pair.Item2).Select(x => x.Trim()).Where(x => x.Length > 0).Distinct(StringComparer.Ordinal).ToList();
-                if (list.Count >= 2 && list.All(x => x.Length <= 40)) return list;
+                if (list.Count < 2 || list.Any(x => x.Length > 40)) continue;
+                // A two-item comma list in parentheses is usually a reference ("the password to set (setAccessPassword, protectMasterSecret)"),
+                // not a value list; it counts only when the words before it say so ("value (None, Override)").
+                if (pair.Item2 == ',' && list.Count < 3 && !Regex.IsMatch(before.TrimEnd(), @"(?i)(one of|values?|options?|names?|kinds?|modes?)\s*$")) continue;
+                return list;
             }
             return Array.Empty<string>();
         }

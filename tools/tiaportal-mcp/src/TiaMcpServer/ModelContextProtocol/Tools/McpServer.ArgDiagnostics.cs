@@ -89,20 +89,21 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (known.Count == 0)
                 {
                     if (supplied.Count > 0)
-                        return TextError((tool?.Name ?? "(tool)")
+                        return McpServer.AttachPreflightOnFailure(tool?.Name ?? "", args, TextError((tool?.Name ?? "(tool)")
                             + " takes no arguments, but got: " + string.Join(", ", supplied)
-                            + ". They would have been SILENTLY IGNORED (nothing was executed).");
+                            + ". They would have been SILENTLY IGNORED (nothing was executed)."));
                 }
                 else
                 {
                     string problem = ArgDiagnostics.Check(tool?.Name ?? "(tool)", known, required, supplied, types);
                     if (problem.Length > 0)
-                        return TextError(problem);
+                        return McpServer.AttachPreflightOnFailure(tool?.Name ?? "", args, TextError(problem));
                 }
             }
 
-            // 参数没问题 → 原样转交，返回内部工具的结果本身（不改写、不重新包装）。
-            return await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            // 参数没问题 → 原样转交；2.7.58 起失败的结果带上自动预检（McpServer.CallDiscipline.cs），成功的一字不改。
+            var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
+            return McpServer.AttachPreflightOnFailure(tool?.Name ?? "", request.Params?.Arguments, result);
         }
 
         /// <summary>协议自己可能塞进来的字段，不算工具参数。</summary>
