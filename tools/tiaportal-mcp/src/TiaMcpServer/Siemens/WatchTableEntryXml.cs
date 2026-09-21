@@ -84,12 +84,30 @@ namespace TiaMcpServer.Siemens
             else action = "updated";
             var list = entry.Element("AttributeList")!;
             if (action == "appended") Set(list, attribute, value);   // an existing row keeps TIA's own spelling of the address / symbol
-            Set(list, "ModifyIntention", "false");
             Set(list, "ModifyTrigger", trigger);
             Set(list, "ModifyValue", modifyValue);
             if (list.Element("MonitorTrigger") == null) Set(list, "MonitorTrigger", "Permanent");
+            StripReadOnlyAttributes(doc);
             Reorder(list);
             return action;
+        }
+
+        // 2.7.51 (real machine): TIA V21 refuses an imported row that carries ModifyIntention ("'set_ModifyIntention' is not
+        // supported by type PlcWatchTableEntry ... The property 'ModifyIntention' is read-only"; the row's ModifyValue makes TIA derive
+        // the intention itself). An export may carry it, so it is dropped from every row before the import, not only from the edited one.
+        internal static readonly string[] ReadOnlyEntryAttributes = { "ModifyIntention" };
+
+        internal static int StripReadOnlyAttributes(XDocument doc)
+        {
+            var removed = 0;
+            foreach (var entry in Entries(doc))
+            {
+                var list = entry.Element("AttributeList");
+                if (list == null) continue;
+                foreach (var name in ReadOnlyEntryAttributes)
+                    foreach (var e in list.Elements(name).ToList()) { e.Remove(); removed++; }
+            }
+            return removed;
         }
 
         // SimaticML IDs are hexadecimal; the next free one keeps every existing ID (comment rows carry MultilingualText children with IDs too).

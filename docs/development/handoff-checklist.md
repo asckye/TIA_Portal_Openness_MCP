@@ -1,45 +1,44 @@
-# 换机器交接单（2026-09-21，2.7.50 已发布、待虚拟机部署）
+# 换机器交接单（2026-09-21，2.7.51 本机构建、待推送发布与虚拟机部署）
 
-[交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.50 发布说明](../releases/v2.7.50.md)
+[交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.51 发布说明](../releases/v2.7.51.md)
 
 这一页只回答"在另一台电脑上接着做，第一天要知道什么"。长期事实（每阶段固定动作、发布闸门、TIA 退出点、只在真机上学到的 API 事实）都在 [handoff.md](handoff.md)，不重复。
 
 ## 0. 一句话现状
 
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.50**（tag、`validate-bundle` / `offline-checks` / `Publish complete release` 全绿，ZIP `TIA_MCP_Delivery_v2.7.50_20260921.zip` 已上传）。448 个工具，离线 2191 项，形状 V20 2789 / V21 3077。
-- 虚拟机上跑的还是 **2.7.49**；2.7.50 的 ZIP 还没部署。
-- 真机台账：✅320 / 手工 6 / 早期 25 / 🔁7（等 2.7.50）/ ⛔30 / ⚠60 / 🚫0 / ❌0。
-- 在线族（下载 / 上线）引擎侧已通过，卡在 PG 侧一个环境项：虚拟机里 "Siemens PLCSIM Virtual Ethernet Adapter" 没有 IP。
+- 最后一次发布 **v2.7.50**；**2.7.51 已在本机 Build-Release 通过**（离线 2197，形状 V20 2789 / V21 3077，448 个工具），三段提交 + 推送 + tag 见 §5。
+- 虚拟机上跑的是 **2.7.50**（2026-09-21 部署）；2.7.51 的 ZIP 待发布后部署。
+- 真机台账：✅321 / 手工 6 / 早期 25 / 🔁5（等 2.7.51：`SetWatchTableModifyValue`、`ManagePlcSimAdvancedInstance`、`DownloadToPlc` / `GoOnline` / `CompareSoftwareToOnline`）/ ⛔31 / ⚠60 / 🚫0 / ❌0。
+- 在线族（下载 / 上线）引擎侧已通过，卡在 PG 侧一个环境项：虚拟机里 "Siemens PLCSIM Virtual Ethernet Adapter" 没有 IP；2.7.51 起可改让 PLCSIM Advanced 走 Softbus（全局 `NetworkMode`）绕过它。
 
 ## 1. 新机器要准备的
 
 | 项 | 怎么做 |
 |---|---|
-| 仓库 | `git clone` 后在仓库根放两份 PublicAPI 副本（`.gitignore` 已忽略）：`TIA_V20_PublicAPI\V20`（含 `Siemens.Engineering.dll`）与 `TIA_V21_PublicAPI\V21\net48`（含 `Siemens.Engineering.Base.dll` 等，**没有**单体 `Siemens.Engineering.dll`，handoff 里提到的 `V21\net48\Siemens.Engineering.xml` 就是 `Siemens.Engineering.Base.xml`）。没有这两份就不能编译、不能跑 Build-Release |
+| 仓库 | `git clone` 后放两份 PublicAPI 副本（仓库根，`.gitignore` 已忽略；放别处也行——Build-Release 收绝对路径，desktop-ivrlcht 上是 `D:\Project\TIA\TIA_V20_PublicAPI` / `TIA_V21_PublicAPI`，与仓库同级）：`TIA_V20_PublicAPI\V20`（含 `Siemens.Engineering.dll`）与 `TIA_V21_PublicAPI\V21\net48`（含 `Siemens.Engineering.Base.dll` 等，**没有**单体 `Siemens.Engineering.dll`，handoff 里提到的 `V21\net48\Siemens.Engineering.xml` 就是 `Siemens.Engineering.Base.xml`）。没有这两份就不能编译、不能跑 Build-Release |
 | 工具链 | .NET SDK 8 或 10、Python 3.10+（`json` / `gzip` 标准库即可）、Git（`Package-Release.py --git "<git.exe 完整路径>"`）。没有 `gh` 也行：CI 用 GitHub REST API 轮询，发布靠推注解 tag |
 | 连虚拟机 | 把旧机器 `~/.claude.json` 里的 `tia-portal-vm` 条目（`url` + `headers.Authorization`）原样复制到新机器的 `~/.claude.json`。**地址随宿主机网络变**（handoff §5），以能通的为准；端口 8765，Bearer 鉴权。自检：`python scripts/diagnostics/Probe-McpServer.py tools` |
 | 代理 | 宿主机若设了 `HTTP_PROXY`，Claude Code 的 MCP 客户端会把局域网请求送进代理，会话一开始就报 "tia-portal-vm CONNECT_TIMEOUT"——**这不是服务器坏了**，探针脚本与 `camp.py` 都绕过代理直连；把虚拟机地址加进 `NO_PROXY` 即可让 MCP 客户端也通 |
 | Claude 记忆 | 记忆文件不随仓库走。旧机器记忆里、仓库里没有的几条已并入本页 §5；其余都在 handoff.md |
 
-## 2. 虚拟机现在的样子（2026-09-21 深夜）
+## 2. 虚拟机现在的样子（2026-09-21，2.7.50 会话结束时）
 
 - TIA Portal V21 一个实例，打开着测试工程 **`项目1`**（`C:\Users\SIEMENS\Documents\Automation\项目1\项目1.ap21`，已按维护者同意保存）。**只开一个 TIA 实例**；每次写操作前看 `GetState.project`。绝不碰维护者的 `AutomaticDipCoatingMachine`。
-- `项目1` 里引擎自建的东西：`MCP_PLC`（CPU 1515F-2 PN V2.9，X1 = 192.168.0.1 在子网 `MCP_PN`；块 MCP_G/MCP_FC/MCP_FB/MCP_FB_DB/MCP_DB，类型 MCP_T/MCP_UDT，变量表 MCP_Tags/MCP_Table，监控表在文件夹 **`MCP_W/MCP_WT`**，外部源 MCP_X，工艺对象文件夹 MCP_TO（当前为空），单元 MCP_Unit）、`MCP_TP700`（Comfort V17，800×480）、`MCP_UCP`（MTP700 Unified V21）、`MCP_S120`（V5.2 + 驱动轴_1）、项目库主副本、全局库 `MCP_GL`（桌面 `mcp46_gl`）。
-- **要清理的垃圾**：根级五张空监控表 `MCP_WT_1` … `MCP_WT_5`——2.7.48/2.7.49 的 `SetWatchTableModifyValue` 在根级找不到 `MCP_W/MCP_WT` 就每次新建了一张。2.7.50 起 `ManagePlcTableEntries action=deleteTable` 能删。
-- PLCSIM Advanced 8.0：实例 **`MCP_SIM`**（CPU1500_Unspecified）已注册、已通电（Stop），`communicationInterface TCPIP`、`controllerIP 0.0.0.0`（没下载过）。虚拟网卡无 IP（`ReadTransferRoutes` 里两块网卡都 `addresses: []`，路由描述 `[no IP]`）。`ScanAccessibleDevices` 在该网卡上能按 MAC `02-C0-A8-00-F1-00` 看到 "S7-1500 (PLCSIM)"。
-- 会话结束时（2026-09-21 深夜）虚拟机的引擎端口已经不响应（`Remote end closed connection without response`）——大概率是维护者在换 2.7.50 / 重启服务；新机器接手先 `python scripts/diagnostics/Probe-McpServer.py tools` 确认能通、`GetState` 看 `server` 行的版本是 2.7.50。
+- `项目1` 里引擎自建的东西：`MCP_PLC`（CPU 1515F-2 PN V2.9，X1 = 192.168.0.1 在子网 `MCP_PN`；块 MCP_G/MCP_FC/MCP_FB/MCP_FB_DB/MCP_DB，类型 MCP_T/MCP_UDT，变量表 MCP_Tags/MCP_Table，监控表在文件夹 **`MCP_W/MCP_WT`**（1 行 `"MCP_Start"` %I0.0，2.7.50 的 `SetWatchTableModifyValue` 失败没有改动它；桌面 `mcp50_wt.xml` 是它的导出），外部源 MCP_X，工艺对象文件夹 MCP_TO（当前为空），单元 MCP_Unit）、`MCP_TP700`（Comfort V17，800×480）、`MCP_UCP`（MTP700 Unified V21）、`MCP_S120`（V5.2 + 驱动轴_1）、项目库主副本、全局库 `MCP_GL`（桌面 `mcp46_gl`）。
+- ~~根级五张空监控表 `MCP_WT_1` … `MCP_WT_5`~~ 已用 2.7.50 的 `ManagePlcTableEntries deleteTable` 删掉并保存（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`）。
+- PLCSIM Advanced 8.0：虚拟机重启后原实例消失，2.7.50 会话里重新 `register` 了 **`MCP_SIM`**（CPU1500_Unspecified）并 `powerOn`（Stop），`communicationInterface TCPIP`（全局网络模式，8.0 API 在实例上改不了）、`controllerIP 0.0.0.0`（没下载过）；虚拟机再重启就要再注册。虚拟网卡无 IP（`ReadTransferRoutes` 里两块网卡都 `addresses: []`，路由描述 `[no IP]`）。`ScanAccessibleDevices` 在该网卡上能按 MAC 看到（每次注册 MAC 会变：2.7.49 是 `02-C0-A8-00-F1-00`，2.7.50 重注册后 `02-C0-A8-00-C8-00`） "S7-1500 (PLCSIM)"。
+- 接手先 `python scripts/diagnostics/Probe-McpServer.py tools` 确认能通、`Bootstrap` 看 `serverVersion`（部署 2.7.51 后应为 2.7.51.0）；引擎重启后要先 `Connect` 再 `AttachToOpenProject {projectName:"项目1"}`。
 - 桌面上的产物：`mcp46_*` / `mcp47_*` / `mcp48_*` / `mcp49_*`（`mcp48_pid.xml` = PID_Compact 2.3 的 TO 导出，可再导入；`mcp47_projects\` 下有 SaveAs / Scaffold / Retrieve 出来的副本工程）。
 - 已知的 TIA 退出点 ①–⑩（handoff §5）一个都别再碰；尤其 `TO_PositioningAxis 6.0`、Unified 面板 `/20.0.0.0`、与面板尺寸不符的经典画面、Safety Validation 条件级 `checkValidity`、无图表 PLC 上 `skipChartPreflight=true`。
 
-## 3. 部署 2.7.50 后按顺序做（都用 `scripts/diagnostics/campaign`，见 §4）
+## 3. 部署 2.7.51 后按顺序做（都用 `scripts/diagnostics/campaign`，见 §4）
 
-先 `AttachToOpenProject {projectName:"项目1"}`，`GetState` 看 pid / project。
+先 `Connect`、`AttachToOpenProject {projectName:"项目1"}`，`GetState` 看 pid / project。（2.7.50 会话已做：清垃圾表 ✅；监控表往返 ❌ `ModifyIntention` 只读 → 2.7.51 修；PLCSIM setter ❌ 8.0 无 setter → 2.7.51 改全局 `NetworkMode`；站上载 MAC ⛔。）
 
-1. **清垃圾表**：`ManagePlcTableEntries {softwarePath:"MCP_PLC", tableKind:"watch", tablePath:"MCP_WT_1", action:"deleteTable", confirmDelete:true, dryRun:false}`，`MCP_WT_1` … `MCP_WT_5` 各一次（先 dryRun 一次看 `before` 行数为 0）。然后 `SaveProject`。
-2. **监控表往返**：`SetWatchTableModifyValue {softwarePath:"MCP_PLC", tableName:"MCP_W/MCP_WT", address:"%M0.0", modifyValue:"TRUE", trigger:"OnceOnlyAtStart"}` 与 `address:"MCP_Start"`，看 `meta.readbackVerified` / `meta.after`；`ManagePlcTableEntries read` 核对行；若导入被 TIA 拒，`meta.error` 里有原文——XML 格式在 `Siemens/WatchTableEntryXml.cs`，先对照 `ExportPlcWatchTable` 导出的真实文件改。
-3. **PLCSIM setter**：`ReadPlcSimAdvancedInstances {includeState:true, memberFilter:"CommunicationInterface"}` → 每个实例行的 `members` 列出真实成员；再 `ManagePlcSimAdvancedInstance {instanceName:"MCP_SIM", action:"powerOff"…}` → `unregister` → `register … communicationInterface:"Softbus"`。成功后 `ReadTransferRoutes {softwarePath:"MCP_PLC"}` 看有没有 "PLCSIM" PC 接口。不成功就按 `members` 改 `Runtime/PlcSimAdvancedChannel.cs` 的 `SetThroughPropertyOrMethod`。
-4. **在线族**（二选一解决 PG 侧）：请维护者在虚拟机给 "Siemens PLCSIM Virtual Ethernet Adapter" 配静态 IP `192.168.0.100/24`（或第 3 步的 Softbus 出现了 "PLCSIM" 接口）。然后 `python camp.py run plans/plan_online2.json`（先 `python plans/plan_online2.py` 生成 json；把里面 `ADP` 改成实际接口名）：`DownloadToPlc` → `GoOnline {ipAddress:"192.168.0.1", pgPcInterface:…}` → `GetOnlineState` → `CompareSoftwareToOnline` → `ReadPlcSimAdvancedTags` / `WritePlcSimAdvancedTags` / `RunPlcSimAdvancedTestScenario`（有程序后才有标签）→ `UploadStationFromPlc {targetIpAddress:"<扫描到的 MAC 或 IP>", dryRun:true}` → `GoOffline`。`ReadPlcBlockFingerprints` / `UploadDeviceParameters` 在 1515F-2 PN V2.9 上服务为 null，是 TIA 侧，不用再试。
-5. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 加一条本版条目、§6 加"学到的事实"；有源码改动就走 §5 的发布流程出 2.7.51，没有就只提交文档。
+1. **监控表往返**：`SetWatchTableModifyValue {softwarePath:"MCP_PLC", tableName:"MCP_W/MCP_WT", address:"%M0.0", modifyValue:"TRUE", trigger:"OnceOnlyAtStart"}` 与 `address:"MCP_Start"`，看 `meta.readbackVerified` / `meta.after`（`ModifyIntention` 应由 TIA 置 true）；`ManagePlcTableEntries read` 核对行；再被拒就看 `meta.error` 原文——XML 在 `Siemens/WatchTableEntryXml.cs`（`ReadOnlyEntryAttributes` 列表可再加名字）。
+2. **PLCSIM 网络模式**：`ReadPlcSimAdvancedInstances {includeState:true, memberFilter:"NetworkMode"}` 看 `api.networkMode` 与 `managerMembers`；`ManagePlcSimAdvancedInstance {instanceName:"MCP_SIM", action:"powerOff", dryRun:false, confirmInstanceChange:true}` → `unregister` → `register … cpuType:"CPU1500_Unspecified", communicationInterface:"Softbus"` → 看 `data.communicationInterfaceRoute`（`route` / `networkModeBefore` / `networkModeAfter`）与 `stateAfter.communicationInterface`；`powerOn`；`ReadTransferRoutes {softwarePath:"MCP_PLC"}` 看有没有 "PLCSIM" PC 接口。API 拒绝 `InstanceAlreadyRunning` 就先把所有实例 powerOff；`PCAPDriverNotRunning` 要维护者在虚拟机管理员命令行 `net start npcap`。
+3. **在线族**（二选一解决 PG 侧）：请维护者在虚拟机给 "Siemens PLCSIM Virtual Ethernet Adapter" 配静态 IP `192.168.0.100/24`（或第 2 步的 Softbus 出现了 "PLCSIM" 接口）。然后 `python camp.py run plans/plan_online2.json`（先 `python plans/plan_online2.py` 生成 json；把里面 `ADP` 改成实际接口名）：`DownloadToPlc` → `GoOnline {ipAddress:"192.168.0.1", pgPcInterface:…}` → `GetOnlineState` → `CompareSoftwareToOnline` → `ReadPlcSimAdvancedTags` / `WritePlcSimAdvancedTags` / `RunPlcSimAdvancedTestScenario`（有程序后才有标签）→ `UploadStationFromPlc {targetIpAddress:"192.168.0.1", dryRun:true}`（只收 IP，MAC 被 TIA 拒） → `GoOffline`。`ReadPlcBlockFingerprints` / `UploadDeviceParameters` 在 1515F-2 PN V2.9 上服务为 null，是 TIA 侧，不用再试。
+4. 结果进台账：把每步的结论写进 `scripts/diagnostics/campaign/make_ledger.py` 末尾的 `o(...)` 覆盖行（工具名 状态 说明），`python make_ledger.py` 重生成 `docs/reference/real-machine-ledger.md`；handoff §1 加一条本版条目、§6 加"学到的事实"；有源码改动就走 §5 的发布流程出 2.7.52，没有就只提交文档。
 
 ## 4. 真机批跑工具（已入库：`scripts/diagnostics/campaign/`）
 

@@ -101,7 +101,10 @@ namespace TiaMcpServer.Tests
             check(first.Element("ModifyValue")!.Value == "FALSE" && first.Element("ModifyTrigger")!.Value == "Permanent" && first.Element("Address")!.Value == "%M0.0" && first.Element("Name") == null, "watch xml: absolute row carries Address, the new value and trigger, no Name");
             var second = WatchTableEntryXml.FindEntry(doc, "\"MCP_Start\"")!.Element("AttributeList")!;
             check(second.Element("Name")!.Value == "\"MCP_Start\"" && second.Element("Address") == null && second.Element("MonitorTrigger")!.Value == "Permanent", "watch xml: symbol row carries the quoted Name and a monitor trigger");
-            check(string.Join(",", first.Elements().Select(e => e.Name.LocalName)) == "Address,ModifyIntention,ModifyTrigger,ModifyValue,MonitorTrigger", "watch xml: attributes in TIA's alphabetical order");
+            check(string.Join(",", first.Elements().Select(e => e.Name.LocalName)) == "Address,ModifyTrigger,ModifyValue,MonitorTrigger", "watch xml: attributes in TIA's alphabetical order, no ModifyIntention (read-only on import)");
+            // 2.7.51: an exported row carries ModifyIntention; TIA refuses it on import, so the upsert strips it from every row.
+            second.Add(new XElement("ModifyIntention", "false"));
+            check(WatchTableEntryXml.Upsert(doc, "%M0.0", "TRUE", "OnceOnlyAtStart") == "updated" && second.Element("ModifyIntention") == null && first.Element("ModifyIntention") == null, "watch xml: ModifyIntention stripped from exported rows before the import");
             var ids = WatchTableEntryXml.Entries(doc).Select(e => (string)e.Attribute("ID")!).ToArray();
             check(ids.Distinct().Count() == 2 && ids.All(i => i != "0") && WatchTableEntryXml.NextId(doc) == "3", "watch xml: entry IDs unique, hex, after the table's 0");
             check(WatchTableEntryXml.Entries(doc).All(e => (string?)e.Attribute("CompositionName") == "Entries"), "watch xml: rows belong to the Entries composition");

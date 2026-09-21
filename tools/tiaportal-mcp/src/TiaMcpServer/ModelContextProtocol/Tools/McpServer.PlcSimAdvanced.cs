@@ -51,11 +51,11 @@ namespace TiaMcpServer.ModelContextProtocol
             finally { meta["elapsedMs"] = sw.ElapsedMilliseconds; }
         }
 
-        [McpServerTool(Name = "ReadPlcSimAdvancedInstances"), Description("[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server.")]
+        [McpServerTool(Name = "ReadPlcSimAdvancedInstances"), Description("[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version, the global network mode (SimulationRuntimeManager.NetworkMode on PLCSIM Advanced 6+: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server.")]
         public static ResponseJsonReport ReadPlcSimAdvancedInstances(
             [Description("includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.")] bool includeState = true,
             [Description("apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.")] string apiPath = "",
-            [Description("memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface') - a diagnostic for API differences between PLCSIM Advanced versions.")] string memberFilter = "")
+            [Description("memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface'), and managerMembers lists the matching static members of SimulationRuntimeManager - a diagnostic for API differences between PLCSIM Advanced versions.")] string memberFilter = "")
             => RunPlcSimTool("ReadPlcSimAdvancedInstances", null, (data, meta) =>
             {
                 var api = PlcSimAdvancedChannel.Load(apiPath);
@@ -77,12 +77,13 @@ namespace TiaMcpServer.ModelContextProtocol
                     items.Add(o);
                 }
                 data["instances"] = items;
+                if (!string.IsNullOrWhiteSpace(memberFilter)) data["managerMembers"] = PlcSimAdvancedChannel.DescribeManagerMembers(api, memberFilter.Trim());
                 data["safety"] = PlcSimSafety(false, false);
                 meta["dataComplete"] = items.All(i => i?["stateError"] == null);
                 return items.Count + " PLCSIM Advanced instance(s) registered (API " + api.Version + ").";
             });
 
-        [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.")]
+        [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.")]
         public static ResponseJsonReport ManagePlcSimAdvancedInstance(
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
             [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
@@ -91,7 +92,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirmInstanceChange: must be true together with dryRun=false to execute the action.")] bool confirmInstanceChange = false,
             [Description("dryRun: true (default) previews; false executes.")] bool dryRun = true,
             [Description("apiPath: optional path of the PLCSIM Advanced API DLL or folder; empty = auto-detect.")] string apiPath = "",
-            [Description("communicationInterface: for register / powerOn only - ECommunicationInterface name TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadToPlc / GoOnline need) or Softbus; empty = leave the API default.")] string communicationInterface = "")
+            [Description("communicationInterface: for register / powerOn only - TCPIP (reachable through the 'Siemens PLCSIM Virtual Ethernet Adapter' PG/PC interface at the instance IP, API default 192.168.0.1 - what DownloadToPlc / GoOnline need), Softbus, or an ENetworkMode name (TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) for PLCSIM Advanced 6+ where the choice is the global network mode; empty = leave the current setting.")] string communicationInterface = "")
             => RunPlcSimTool("ManagePlcSimAdvancedInstance", dryRun, (data, meta) =>
             {
                 var name = PlcSimAdvancedLogic.RequireInstanceName(instanceName);
@@ -128,13 +129,18 @@ namespace TiaMcpServer.ModelContextProtocol
                         if (!string.IsNullOrWhiteSpace(communicationInterface))
                         {
                             // 2.7.49: the instance exists from here on - a setter failure must say so instead of looking like a failed registration.
-                            try { data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface); }
+                            var detail = new JsonObject(); data["communicationInterfaceRoute"] = detail;
+                            try { data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface, detail); }
                             catch (Exception ex) { throw new InvalidOperationException("Instance '" + name + "' was registered, but communicationInterface '" + communicationInterface + "' could not be applied: " + ex.Message + " (powerOff + unregister it, or keep its current setting).", ex); }
                         }
                     }
                     else
                     {
-                        if (act == "powerOn" && !string.IsNullOrWhiteSpace(communicationInterface)) data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance!, communicationInterface);
+                        if (act == "powerOn" && !string.IsNullOrWhiteSpace(communicationInterface))
+                        {
+                            var detail = new JsonObject(); data["communicationInterfaceRoute"] = detail;
+                            data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance!, communicationInterface, detail);
+                        }
                         PlcSimAdvancedChannel.Lifecycle(instance!, act, timeoutMs);
                         if (act == "unregister") { PlcSimAdvancedChannel.Forget(name); instance = null; }
                         else if (act == "powerOff" || act == "memoryReset") PlcSimAdvancedChannel.Forget(name);   // the tag list is stale after these; the next call reopens

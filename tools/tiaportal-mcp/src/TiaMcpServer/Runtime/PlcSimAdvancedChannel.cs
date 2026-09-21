@@ -173,10 +173,50 @@ namespace TiaMcpServer.Runtime
             }
         }
 
-        public static JsonObject Describe(PlcSimApi api) => new JsonObject
+        public static JsonObject Describe(PlcSimApi api)
         {
-            ["apiPath"] = api.Path, ["apiSource"] = api.Source, ["apiVersion"] = api.Version, ["assemblyVersion"] = api.Assembly.GetName().Version?.ToString()
-        };
+            var o = new JsonObject
+            {
+                ["apiPath"] = api.Path, ["apiSource"] = api.Source, ["apiVersion"] = api.Version, ["assemblyVersion"] = api.Assembly.GetName().Version?.ToString()
+            };
+            try { var mode = NetworkMode(api); if (mode != null) o["networkMode"] = mode; }
+            catch (Exception ex) { o["networkModeError"] = ex.Message; }
+            return o;
+        }
+
+        // 2.7.51: SimulationRuntimeManager.NetworkMode (ENetworkMode) is the global interface choice of PLCSIM Advanced 6+; null when the
+        // installed API predates it. The setter is refused by the API while an instance is running (InstanceAlreadyRunning).
+        public static string? NetworkMode(PlcSimApi api)
+        {
+            var prop = api.Manager.GetProperty("NetworkMode", Any);
+            if (prop == null || !prop.CanRead) return null;
+            try { lock (Gate) return Convert.ToString(prop.GetValue(null)); }
+            catch (TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
+        }
+
+        public static string SetNetworkMode(PlcSimApi api, string networkMode)
+        {
+            var prop = api.Manager.GetProperty("NetworkMode", Any);
+            if (prop == null || !prop.CanWrite || prop.SetMethod == null) throw NotSupported("SimulationRuntimeManager.NetworkMode setter");
+            var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ENetworkMode", false) ?? throw NotSupported("ENetworkMode");
+            object value;
+            try { value = Enum.Parse(enumType, networkMode.Trim(), true); }
+            catch (ArgumentException) { throw new ArgumentException("networkMode '" + networkMode + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
+            try { lock (Gate) prop.SetValue(null, value); }
+            catch (TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
+            return NetworkMode(api) ?? "";
+        }
+
+        // Static members of SimulationRuntimeManager whose name contains the filter (the manager-side counterpart of DescribeMembers).
+        public static string DescribeManagerMembers(PlcSimApi api, string contains)
+        {
+            var seen = new List<string>();
+            foreach (var p in api.Manager.GetProperties(Any))
+                if (p.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0) seen.Add(api.Manager.Name + "." + p.Name + " {get" + (p.CanWrite ? ";set" : "") + "}");
+            foreach (var m in api.Manager.GetMethods(Any))
+                if (m.Name.IndexOf(contains, StringComparison.OrdinalIgnoreCase) >= 0 && !m.IsSpecialName) seen.Add(api.Manager.Name + "." + m.Name + "(" + string.Join(",", m.GetParameters().Select(x => x.ParameterType.Name)) + ")");
+            return seen.Count == 0 ? "none" : string.Join("; ", seen.Distinct().Take(40));
+        }
 
         // ------------------------------------------------------------------ instances
 
@@ -254,13 +294,29 @@ namespace TiaMcpServer.Runtime
         // 2.7.48: ECommunicationInterface (None / Softbus / TCPIP). TCPIP makes the instance reachable through the "Siemens PLCSIM
         // Virtual Ethernet Adapter" PG/PC interface at its IP suite (API default 192.168.0.1/24 on X1), which is what a TIA download
         // needs; must be set before PowerOn.
-        public static string SetCommunicationInterface(PlcSimApi api, object instance, string communicationInterface)
+        // 2.7.51 (real machine, PLCSIM Advanced 8.0): the per-instance property is read-only on the class AND on IInstance, and no
+        // Set...() method exists (members seen: CommunicationInterface {get} only); the manual says "To set the network mode, refer to
+        // the NetworkMode section" - the choice is the global SimulationRuntimeManager.NetworkMode. So: instance setter when the API
+        // still has one (PLCSIM Advanced <= 5), otherwise the manager network mode (mapped by PlcSimAdvancedLogic.NetworkModeFor).
+        public static string SetCommunicationInterface(PlcSimApi api, object instance, string communicationInterface, JsonObject? detail = null)
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECommunicationInterface", false) ?? throw NotSupported("ECommunicationInterface");
-            object value;
+            object? value = null;
             try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
-            catch (ArgumentException) { throw new ArgumentException("communicationInterface '" + communicationInterface + "' unknown; valid: " + string.Join(", ", Enum.GetNames(enumType))); }
-            SetThroughPropertyOrMethod(instance, "CommunicationInterface", value, enumType);
+            catch (ArgumentException) { /* not an ECommunicationInterface name - may still be an ENetworkMode name below */ }
+            if (value != null && (WritableProperty(instance, "CommunicationInterface") != null || FindSetter(instance, "CommunicationInterface", enumType) != null))
+            {
+                SetThroughPropertyOrMethod(instance, "CommunicationInterface", value, enumType);
+                if (detail != null) detail["route"] = "IInstance.CommunicationInterface";
+                return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
+            }
+            var before = NetworkMode(api);
+            if (before == null)
+                throw NotSupported("IInstance.CommunicationInterface setter and SimulationRuntimeManager.NetworkMode (members seen: " + DescribeMembers(instance, "CommunicationInterface") + "; manager: " + DescribeManagerMembers(api, "NetworkMode") + ")");
+            var wanted = PlcSimAdvancedLogic.NetworkModeFor(communicationInterface, before);
+            if (detail != null) { detail["route"] = "SimulationRuntimeManager.NetworkMode"; detail["networkModeBefore"] = before; detail["networkModeRequested"] = wanted; }
+            var after = wanted.Equals(before, StringComparison.OrdinalIgnoreCase) ? before : SetNetworkMode(api, wanted);
+            if (detail != null) detail["networkModeAfter"] = after;
             return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
         }
 
@@ -272,9 +328,9 @@ namespace TiaMcpServer.Runtime
         }
 
         // 2.7.50 (real machine, PLCSIM Advanced 8.0): neither the instance class nor any interface it implements carries a writable
-        // CommunicationInterface / OperatingMode property, so the setter must be a method (the manual lists SetCommunicationInterface()
-        // beside the property). Try the property, then Set<Name>(value) / set_<Name>(value) on the class and its interfaces; when nothing
-        // fits, the refusal lists every member whose name contains <Name> so the next release can be built on facts.
+        // CommunicationInterface / OperatingMode property. Try the property, then Set<Name>(value) / set_<Name>(value) on the class and
+        // its interfaces; when nothing fits, the refusal lists every member whose name contains <Name>. (2.7.51: for CommunicationInterface
+        // the answer turned out to be the manager-level NetworkMode, see SetCommunicationInterface; OperatingMode still goes through here.)
         private static void SetThroughPropertyOrMethod(object instance, string name, object value, Type valueType)
         {
             var prop = WritableProperty(instance, name);

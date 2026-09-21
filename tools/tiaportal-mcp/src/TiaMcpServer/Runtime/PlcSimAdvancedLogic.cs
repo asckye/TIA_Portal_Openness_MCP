@@ -63,6 +63,27 @@ namespace TiaMcpServer.Runtime
             return hit;
         }
 
+        // 2.7.51 (real machine, PLCSIM Advanced 8.0 + manual "Interfaces for IInstances" / "IBaseRuntimeManager"): IInstance.CommunicationInterface
+        // is read-only ("To set the network mode, refer to the NetworkMode section"); the choice is the global SimulationRuntimeManager.NetworkMode
+        // (ENetworkMode TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus, changeable only while no instance runs). A requested
+        // communicationInterface maps onto that mode: Softbus -> Softbus, TCPIP keeps the current TCPIP variant or falls back to
+        // TCPIPMultipleAdapter, an ENetworkMode name is taken literally, None is refused.
+        public static readonly string[] NetworkModes = { "TCPIPMultipleAdapter", "TCPIPSingleAdapter", "Softbus" };
+
+        public static string NetworkModeFor(string? communicationInterface, string? currentNetworkMode)
+        {
+            var wanted = (communicationInterface ?? "").Trim();
+            var literal = NetworkModes.FirstOrDefault(m => m.Equals(wanted, StringComparison.OrdinalIgnoreCase));
+            if (literal != null) return literal;
+            if (wanted.Equals("TCPIP", StringComparison.OrdinalIgnoreCase))
+            {
+                var current = (currentNetworkMode ?? "").Trim();
+                var keep = NetworkModes.FirstOrDefault(m => m.Equals(current, StringComparison.OrdinalIgnoreCase) && m.StartsWith("TCPIP", StringComparison.Ordinal));
+                return keep ?? "TCPIPMultipleAdapter";
+            }
+            throw new ArgumentException("communicationInterface '" + communicationInterface + "' cannot be mapped to a network mode; valid: TCPIP, " + string.Join(", ", NetworkModes) + ".");
+        }
+
         public static string RequireInstanceName(string? name)
         {
             var n = (name ?? "").Trim();

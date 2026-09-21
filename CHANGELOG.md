@@ -1,5 +1,15 @@
 # Change Log
 
+## [2.7.51] - 2026-09-21
+
+引擎 2.7.51.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.51](docs/releases/v2.7.51.md)。2.7.50 部署后的真机结果与三处再修。
+
+- **2.7.50 真机通过**：`ManagePlcTableEntries deleteTable` 把根级的 `MCP_WT_1` … `MCP_WT_5` 逐张删掉并读回缺席（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`），工程已保存；`ManagePlcSimAdvancedInstance register / powerOn` 与 `ScanAccessibleDevices`（虚拟网卡上按 MAC 看到 `MCP_SIM`）通过；`ReadPlcSimAdvancedInstances memberFilter` 列出了实例对象的真实成员。
+- **监控表行（真机）**：SimaticML 往返的 `Import(Override)` 被 TIA 拒 "Cannot update the 'PlcWatchTableEntry' object … 'set_ModifyIntention' is not supported … The property 'ModifyIntention' is read-only"——`ModifyIntention` 由 TIA 自己按 `ModifyValue` 推导，不能写。`WatchTableEntryXml.Upsert` 不再写它，并在导入前把导出带出来的 `ModifyIntention` 从每一行剥掉（`StripReadOnlyAttributes`）。离线新增 1 项。
+- **PLCSIM Advanced 6+（真机 + 手册）**：8.0 API 的 `CommunicationInterface` 在实例类与 `IInstance` 上都只有 getter，也没有任何 `Set…` 方法（`memberFilter` 证实）；手册 "Interfaces for IInstances" 明说 "This property is now read-only. To set the network mode, refer to the NetworkMode section"——接口选择是全局的 `SimulationRuntimeManager.NetworkMode`（`ENetworkMode` `TCPIPMultipleAdapter` / `TCPIPSingleAdapter` / `Softbus`，有实例在跑时 API 以 `InstanceAlreadyRunning` 拒绝）。`communicationInterface` 现在先试实例 setter（PLCSIM Advanced ≤ 5），没有就映射到管理器网络模式（`Softbus` → `Softbus`，`TCPIP` 保留当前 TCPIP 变体、否则 `TCPIPMultipleAdapter`，`ENetworkMode` 名照收），`data.communicationInterfaceRoute` 回报路线与前后模式；`ReadPlcSimAdvancedInstances` 回报 `api.networkMode`，`memberFilter` 同时列出 `managerMembers`。离线新增 5 项（2197）。
+- **站上载（真机 + 官方页）**：`UploadStationFromPlc {targetIpAddress:"02-C0-A8-00-C8-00"}` 在虚拟网卡上 `ConfigurationAddressComposition.Create` 报 "does not specify a valid address"——官方页只用 IP 建地址，MAC 不是合法目标；未下载过的 PLCSIM 实例 IP 为 0.0.0.0，先下载才有 IP。拒绝信息与描述现在明说只收 IP。
+- **仍待环境**：`DownloadToPlc` / `GoOnline` / `CompareSoftwareToOnline` 等在线族需要 PG 侧——虚拟网卡配 192.168.0.x/24，或部署本版后 `register … communicationInterface:"Softbus"` 让 TIA 走 "PLCSIM" 接口。
+
 ## [2.7.50] - 2026-09-21
 
 引擎 2.7.50.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.50](docs/releases/v2.7.50.md)。2.7.49 部署后的真机结果与两处再修。

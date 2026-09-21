@@ -36,6 +36,13 @@ namespace TiaMcpServer.Tests
             check(Fails(() => PlcSimAdvancedLogic.NormalizeAction("reboot")), "[sentinel] unknown action refused");
             check(Fails(() => PlcSimAdvancedLogic.RequireInstanceName("a\\b")) && Fails(() => PlcSimAdvancedLogic.RequireInstanceName("a/b")) && PlcSimAdvancedLogic.RequireInstanceName(" PLC_1 ") == "PLC_1", "instance name validation");
 
+            // ---- 2.7.51 network mode mapping (PLCSIM Advanced 6+: IInstance.CommunicationInterface is read-only, the choice is SimulationRuntimeManager.NetworkMode)
+            check(PlcSimAdvancedLogic.NetworkModeFor("Softbus", "TCPIPMultipleAdapter") == "Softbus" && PlcSimAdvancedLogic.NetworkModeFor("softbus", null) == "Softbus", "network mode: Softbus maps to Softbus");
+            check(PlcSimAdvancedLogic.NetworkModeFor("TCPIP", "TCPIPSingleAdapter") == "TCPIPSingleAdapter", "network mode: TCPIP keeps the current TCPIP variant");
+            check(PlcSimAdvancedLogic.NetworkModeFor("TCPIP", "Softbus") == "TCPIPMultipleAdapter" && PlcSimAdvancedLogic.NetworkModeFor("tcpip", "") == "TCPIPMultipleAdapter", "network mode: TCPIP from Softbus / unknown falls back to the multi-adapter mode");
+            check(PlcSimAdvancedLogic.NetworkModeFor("tcpipsingleadapter", "Softbus") == "TCPIPSingleAdapter", "network mode: an ENetworkMode name is taken literally, case-insensitive");
+            check(Fails(() => PlcSimAdvancedLogic.NetworkModeFor("None", "Softbus")) && Fails(() => PlcSimAdvancedLogic.NetworkModeFor("", "Softbus")), "[sentinel] None / empty cannot be mapped to a network mode");
+
             // ---- value map / name list
             var map = PlcSimAdvancedLogic.ParseValueMap("{\"\\\"Start\\\"\": true, \"\\\"DB\\\".Speed\": 50}", "valuesJson");
             check(map.Count == 2 && map[0].Key == "\"Start\"" && map[1].Key == "\"DB\".Speed", "object form keeps quoted names");

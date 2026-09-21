@@ -154,7 +154,14 @@ namespace TiaMcpServer.Siemens
                 meta["knownTargetAddresses"] = string.Join(", ", seen.Distinct());
                 string addressSource = "route tree";
                 if (address == null) { address = CreateScannedAddress(pick, targetIpAddress, out addressSource); meta["addressCreation"] = addressSource; }
-                if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). Run ScanAccessibleDevices on the same interface first; only exact addresses (IP or MAC as listed there) are accepted.");
+                // 2.7.51 (real machine, PLCSIM Advanced MCP_SIM seen only by MAC): ConfigurationAddressComposition.Create takes IP addresses
+                // only ("'02-C0-A8-00-C8-00' does not specify a valid address"); the official page creates "192.68.0.1". A MAC from the scan is
+                // therefore never a valid target, and a virtual PLC that has not been downloaded to (IP 0.0.0.0) cannot be uploaded from.
+                if (address == null)
+                    throw new PortalException(PortalErrorCode.NotFound, "Target address not present on the selected PG/PC interface and not creatable from the network scan (" + addressSource + "). "
+                        + (LooksLikeMacAddress(targetIpAddress)
+                            ? "'" + targetIpAddress + "' is a MAC address: ConfigurationAddressComposition.Create accepts IP addresses only, so pass the device's IP as listed by ScanAccessibleDevices (a PLC that shows only a MAC, e.g. a PLCSIM Advanced instance before its first download, has no IP yet - assign one by downloading first)."
+                            : "Run ScanAccessibleDevices on the same interface first; only the exact IP address listed there is accepted."));
                 meta["targetAddressSource"] = addressSource;
                 meta["targetAddress"] = address.Address; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["devicesBefore"] = _project.Devices.Count;
@@ -177,6 +184,9 @@ namespace TiaMcpServer.Siemens
                 if (!ok) throw new InvalidOperationException("Station upload did not yield a verified device: " + (result?.State.ToString() ?? "no result") + policy.UnansweredSummary());
                 return $"Station uploaded as device '{station!.Name}' and verified in the project; not saved, compiled or downloaded." + policy.UnansweredSummary();
             });
+
+        private static bool LooksLikeMacAddress(string value)
+            => System.Text.RegularExpressions.Regex.IsMatch((value ?? "").Trim(), "^([0-9A-Fa-f]{2}[-:]){5}[0-9A-Fa-f]{2}$");
 
         public ResponseMessage UploadDeviceParameters(string devicePathJson, string itemPathJson, string targetIpAddress, string pgPcInterface = "", string password = "", string promptAnswersJson = "{}", bool confirmUpload = false, bool dryRun = true)
             => RunHmiStepTool("UploadDeviceParameters", meta => {
