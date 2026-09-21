@@ -2,15 +2,15 @@
 
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)
 
-2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
+2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：
 
 | 状态 | 含义 | 数量 |
 |---|---|---:|
 | ✅ 通过 | 该工具至少一次真实调用成功（读回验证） | 328 |
 | ✅ 手工单跑 | 会话级工具，单独手工跑通 | 6 |
 | ✅ 早期真机 | 今天没跑，但 2.7.39–2.7.45 的真机会话跑过 | 24 |
-| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 2 |
-| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 30 |
+| 🔁 已修待重跑 | 真机暴露了缺陷，源码已修，部署后要重跑 | 1 |
+| ⛔ TIA/环境拒绝 | 调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷） | 31 |
 | ⚠ 参数/前置条件 | 只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入） | 60 |
 | 🚫 不运行 | 刻意不跑 | 0 |
 | ❌ 未跑 | 未跑 | 0 |
@@ -361,14 +361,14 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `GetPlcForceTables` | ✅ 通过 |  |
 | `GoOffline` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
 | `GoOfflineAll` | ✅ 通过 | 2.7.48 真机：实例表 / Offline / 下线 / allOffline / ready；扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 02-C0-A8-00-F1-00 找到 S7-1500 (PLCSIM) |
-| `GoOnline` | ✅ 通过 | 2.7.53 真机：MCP_STD {ipAddress 192.168.0.3, pgPcInterface PLCSIM} Online（路由 PLCSIM -> 1 X1 -> 192.168.0.3 subnet MCP_PN），两次；2.7.52 真机 的无正文异常 2.7.54 摊平内层链 |
+| `GoOnline` | ✅ 通过 | 2.7.53 真机：MCP_STD Online ×2；2.7.54 真机：MCP_PLC 到 192.168.0.1（实例已是 MCP_STD/.3）报 TIA 原文 'The connection to the target module cannot be established' + onlineStateAfter Offline（预期） |
 | `ManagePlcDataBlockSnapshot` | ✅ 通过 | 2.7.48 真机：createSnapshot 原生返回 + exportSnapshot 2602 字节（离线；值不可独立核验） |
 | `ReadPlcBlockFingerprints` | ⛔ TIA/环境拒绝 | 2.7.49 真机：1515F-2 PN V2.9 服务为 null；2.7.53 真机：1515-2 PN V2.9 同样 FingerprintDataProvider unavailable（TIA 侧） |
 | `ReadTransferRoutes` | ✅ 通过 | 2.7.51 真机：Softbus 后路由树只剩 PC 接口 'PLCSIM'（子网 MCP_PN 192.168.0.1，两块物理网卡消失），CheckDownloadReadiness Ready=true、两条 PLCSIM 路由 |
-| `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：扫描在 'Siemens PLCSIM Virtual Ethernet Adapter' 上按 MAC 找到实例；2.7.50 真机：重注册后 MAC 02-C0-A8-00-C8-00 'S7-1500 (PLCSIM)'；2.7.51 真机：Softbus 下在 'PLCSIM' 接口上看到 'S7-1500 CPU:192.168.0.1'（MAC FF-FF-C0-A8-00-01） |
+| `ScanAccessibleDevices` | ✅ 通过 | 2.7.48 真机：虚拟网卡上按 MAC 找到实例；2.7.51 真机：PLCSIM 接口上 'S7-1500 CPU:192.168.0.1'；2.7.54 真机：无 softwarePath 走工程级 StationUploadProvider（模式 MPI / PROFIBUS / PN/IE），Softbus 实例仍列为 192.168.0.1（虽已配置 192.168.0.3） |
 | `SetWatchTableModifyValue` | ✅ 通过 | 2.7.51 真机：%M0.0 行 appended（DisplayFormat 由 TIA 定为 Bool）、"MCP_Start" 行 updated（保留 %I0.0），readbackVerified 都 true，ManagePlcTableEntries read 核对 2 行；ModifyIntention 读回仍 false（TIA 不按 ModifyValue 推导，Openness 也写不了） |
 | `UploadDeviceParameters` | ⛔ TIA/环境拒绝 | 2.7.48 真机：ParameterUploadProvider 在 1515F 的 Device / 导轨 / CPU 项上都不可用（GetService 为 null） |
-| `UploadStationFromPlc` | 🔁 已修待重跑 | 2.7.53 真机：{targetIpAddress 192.168.0.3, pgPcInterface PLCSIM} 被引擎拒 'pgPcInterface is ambiguous … PLCSIM (#1) ×3'（工程级提供者按模式重复列出同一网卡）；2.7.54 同名同号视为一块网卡 |
+| `UploadStationFromPlc` | ⛔ TIA/环境拒绝 | 2.7.54 真机：接口去重生效（PN/IE PLCSIM #1）；工程级扫描把 Softbus 实例列为 192.168.0.1，预览通过（地址在 PLCSIM 接口上创建）；真跑被 TIA 拒 'The selected object cannot be uploaded from the device.'——PLCSIM Advanced 实例不支持上载为新站，设备数仍 5 |
 
 ## PLC-OpcUA（7）
 
@@ -573,7 +573,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManagePlcSimAdvancedInstance` | ✅ 通过 | 2.7.51 真机：powerOff → unregister → register CPU1500_Unspecified communicationInterface=Softbus：route=SimulationRuntimeManager.NetworkMode，TCPIPSingleAdapter → Softbus，实例读回 Softbus；powerOn 后 Stop、controllerIP 192.168.0.1（Softbus 下自带默认 IP，TCPIP 下曾是 0.0.0.0） |
 | `ReadPlcSimAdvancedInstances` | ✅ 通过 | 2.7.50 真机：memberFilter 列出实例成员；2.7.51 真机：api.networkMode=TCPIPSingleAdapter、managerMembers='SimulationRuntimeManager.NetworkMode {get;set}' |
 | `ReadPlcSimAdvancedTags` | ✅ 通过 | 2.7.48 真机：无程序时 0 标签；2.7.53 真机：下载后列出 MCP_SimDB + 4 成员，按名读 4/4 |
-| `RunPlcSimAdvancedTestScenario` | 🔁 已修待重跑 | 2.7.53 真机：default 模式 PASSED（6/6 步、2/2 断言，Running 跟随 Start）；singleStep 模式 '未找到请求的值 SingleStep'——8.0 API 只有 SingleStep_C/_CT/_P/_CP/…；2.7.54 先试 SingleStep_CP |
+| `RunPlcSimAdvancedTestScenario` | 🔁 已修待重跑 | 2.7.53 真机：default 模式 PASSED；2.7.54 真机：singleStep 模式切换生效（operatingModeApplied SingleStep_CP，步间 Freeze），Running 断言过，但 {cycles:5} 只推进 1 周期（303→304）——RunToNextSyncPoint 异步、连发被吞；2.7.55 每周期等 Freeze 并优先 SingleStep_C |
 | `WritePlcSimAdvancedTags` | ✅ 通过 | 2.7.53 真机：MCP_SimDB.Speed 12.5 写入 1/1、readBack 12.5 |
 
 ## Validation（8）

@@ -317,7 +317,13 @@ namespace TiaMcpServer.ModelContextProtocol
                                     r["written"] = written;
                                     break;
                                 case "cycles":
-                                    if (scenario.Mode == "singleStep") for (var i = 0; i < step.Count; i++) PlcSimAdvancedChannel.RunToNextSyncPoint(instance);
+                                    if (scenario.Mode == "singleStep")
+                                    {
+                                        // 2.7.55: step-and-wait - each RunToNextSyncPoint is followed by a wait for Freeze (see StepCycles).
+                                        var (done, waitedMs, finalState, failure) = PlcSimAdvancedChannel.StepCycles(instance, step.Count, PlcSimAdvancedLogic.SyncPointWaitMs, PlcSimAdvancedLogic.SyncPointPollMs);
+                                        r["cyclesStepped"] = done; r["waitedMs"] = waitedMs; r["stateAfterSteps"] = finalState;
+                                        if (failure != null) { r["error"] = failure; stepOk = false; }
+                                    }
                                     else Thread.Sleep(Math.Min(60000, step.Count * 10));
                                     r["cycles"] = step.Count;
                                     break;

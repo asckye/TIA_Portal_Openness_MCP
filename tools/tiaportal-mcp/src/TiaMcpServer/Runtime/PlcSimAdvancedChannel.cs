@@ -393,6 +393,38 @@ namespace TiaMcpServer.Runtime
             Invoke(m, instance);
         }
 
+        // 2.7.55 (real machine + manual "SingleStep operating modes"): RunToNextSyncPoint() only cancels the freeze state and returns; the
+        // instance then runs until the next synchronization point and reports OperatingState Freeze again. Five back-to-back calls advanced
+        // ONE cycle (303 -> 304) because the later calls hit an instance that was still running. Each stepped cycle therefore waits for
+        // Freeze before the trigger and again after it; the wait times are returned so a scenario can show them.
+        public static (int steps, long waitedMs, string finalState, string? failure) StepCycles(object instance, int count, int waitMs, int pollMs)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            var state = OperatingState(instance);
+            if (state != "Freeze" && !WaitForState(instance, "Freeze", waitMs, pollMs, out state))
+                return (0, watch.ElapsedMilliseconds, state, "instance did not reach the first sync point (Freeze) within " + waitMs + " ms; state " + state);
+            for (var i = 0; i < count; i++)
+            {
+                RunToNextSyncPoint(instance);
+                if (!WaitForState(instance, "Freeze", waitMs, pollMs, out state))
+                    return (i, watch.ElapsedMilliseconds, state, "sync point " + (i + 1) + " of " + count + " not reached within " + waitMs + " ms; state " + state);
+            }
+            return (count, watch.ElapsedMilliseconds, state, null);
+        }
+
+        private static bool WaitForState(object instance, string wanted, int waitMs, int pollMs, out string last)
+        {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            last = OperatingState(instance);
+            while (last != wanted)
+            {
+                if (watch.ElapsedMilliseconds > waitMs) return false;
+                System.Threading.Thread.Sleep(Math.Max(1, pollMs));
+                last = OperatingState(instance);
+            }
+            return true;
+        }
+
         public static void Dispose(object? instance)
         {
             if (instance == null) return;

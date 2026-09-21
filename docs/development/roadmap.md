@@ -1,4 +1,4 @@
-# 路线图与待办（2026-09-17 审计，2.7.54 更新）
+# 路线图与待办（2026-09-17 审计，2.7.55 更新）
 
 [文档目录](../README.md) · [能力与验收边界](../reference/capabilities.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
@@ -111,7 +111,11 @@
 `runtime/v20|v21` 随包分发的 6 个 `Siemens.Collaboration.Net.*` DLL 适用包内的"Siemens 免版税软件条款"，其目标码授权为**不可再许可、不可转让**，第 1.1 条限制分发；MIT 仅覆盖源码。详见 [第三方组件许可证清单](../licenses/THIRD-PARTY-NOTICES.md)。可选处理：保留并在 NOTICE 明示（已做）；从交付包剔除、改由安装步骤 NuGet 还原；或向 Siemens 确认。
 
 
-## 5. 2.7.54 已完成
+## 5. 2.7.55 已完成
+
+- 2.7.54 真机：singleStep 模式切换生效但只推进 1 周期——按手册改为每周期等待 `Freeze`（`StepCycles`），优先 `SingleStep_C`；站上载在 PLCSIM 实例上被 TIA 拒（不支持）；F-CPU GoOnline 文案通过。在线族收口。
+
+## 5.0 2.7.54 已完成
 
 - 2.7.53 真机：在线族在标准 CPU `MCP_STD` + PLCSIM Advanced 上全链走通（下载 / 上线 / 比较 / 标签读写 / 场景）；F-CPU 下载是 Openness 规则拒绝；修 singleStep 枚举名、PLCSIM 接口重复歧义、`GoOnline` 内层异常。
 

@@ -44,7 +44,8 @@ namespace TiaMcpServer.Tests
             check(Fails(() => PlcSimAdvancedLogic.NetworkModeFor("None", "Softbus")) && Fails(() => PlcSimAdvancedLogic.NetworkModeFor("", "Softbus")), "[sentinel] None / empty cannot be mapped to a network mode");
 
             // ---- 2.7.54 operating mode names (PLCSIM Advanced 4+: SingleStep_C / _CT / _P / _CP / ...; "SingleStep" alone no longer exists)
-            check(PlcSimAdvancedLogic.OperatingModeCandidates("singleStep").SequenceEqual(new[] { "SingleStep_CP", "SingleStep_C", "SingleStep" }), "operating mode: singleStep tries the cyclic+process step first, then the legacy name");
+            check(PlcSimAdvancedLogic.OperatingModeCandidates("singleStep").SequenceEqual(new[] { "SingleStep_C", "SingleStep_CP", "SingleStep" }), "operating mode: singleStep prefers the one-sync-point-per-cycle mode (SingleStep_C), then _CP, then the legacy name");
+            check(PlcSimAdvancedLogic.SyncPointWaitMs >= 1000 && PlcSimAdvancedLogic.SyncPointPollMs >= 1, "operating mode: sync point wait budget is a real wait, not a spin");
             check(PlcSimAdvancedLogic.OperatingModeCandidates("default").SequenceEqual(new[] { "Default" }) && PlcSimAdvancedLogic.OperatingModeCandidates("TimespanSynchronized_CP").SequenceEqual(new[] { "TimespanSynchronized_CP" }), "operating mode: default and literal names pass through");
 
             // ---- value map / name list

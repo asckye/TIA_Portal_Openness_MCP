@@ -225,6 +225,13 @@ o("ReadPlcBlockFingerprints", TIA, D49 + "：1515F-2 PN V2.9 服务为 null；" 
 o("AddDeviceWithFallback ConnectDeviceNodesToProfinetSubnet GetDeviceIpAddress SearchHardwareCatalog", PASS, D53 + "：MCP_STD（6ES7 515-2AM02-0AB0 V2.9）加入并接到 MCP_PN，X1 192.168.0.3")
 o("WritePlcSclSourceFile ManagePlcExternalSources", PASS, D53 + "：SCL 写到桌面（Counter 是 SCL 保留字，改 Cycles）→ createFromFile → generateBlocks 生成 GlobalDB / FC / OB（SCL OB1 覆盖默认 Main）")
 
+# ---- 2.7.54 deployment (2026-09-21): single-step mode switches but steps do not wait for the sync point; station upload refused by TIA for a PLCSIM instance ----
+D54 = "2.7.54 真机"
+o("RunPlcSimAdvancedTestScenario", FIXED, D53 + "：default 模式 PASSED；" + D54 + "：singleStep 模式切换生效（operatingModeApplied SingleStep_CP，步间 Freeze），Running 断言过，但 {cycles:5} 只推进 1 周期（303→304）——RunToNextSyncPoint 异步、连发被吞；2.7.55 每周期等 Freeze 并优先 SingleStep_C")
+o("UploadStationFromPlc", TIA, D54 + "：接口去重生效（PN/IE PLCSIM #1）；工程级扫描把 Softbus 实例列为 192.168.0.1，预览通过（地址在 PLCSIM 接口上创建）；真跑被 TIA 拒 'The selected object cannot be uploaded from the device.'——PLCSIM Advanced 实例不支持上载为新站，设备数仍 5")
+o("ScanAccessibleDevices", PASS, D48 + "：虚拟网卡上按 MAC 找到实例；" + D51 + "：PLCSIM 接口上 'S7-1500 CPU:192.168.0.1'；" + D54 + "：无 softwarePath 走工程级 StationUploadProvider（模式 MPI / PROFIBUS / PN/IE），Softbus 实例仍列为 192.168.0.1（虽已配置 192.168.0.3）")
+o("GoOnline", PASS, D53 + "：MCP_STD Online ×2；" + D54 + "：MCP_PLC 到 192.168.0.1（实例已是 MCP_STD/.3）报 TIA 原文 'The connection to the target module cannot be established' + onlineStateAfter Offline（预期）")
+
 def status_of(n):
     if n in O: return O[n]
     rs = runs.get(n)
@@ -238,7 +245,7 @@ by = collections.defaultdict(list)
 for n, x in tools.items(): by[x["domain"]].append(n)
 counts = collections.Counter(status_of(n)[0].split("（")[0] for n in tools)
 lines = ["# 真机台账（逐工具）", "", "[文档目录](../README.md) · [能力与验收边界](capabilities.md) · [交接](../development/handoff.md)", "",
-    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
+    "2026-09-20 在维护者新建的空工程 `项目1`（TIA Portal V21，引擎 2.7.45）里用引擎自建的设备把全部工具各跑了一遍，2.7.46 / 2.7.47 部署后（2026-09-21）把 🔁 行与刻意绕开的项重跑；2.7.48 新增 `ManageOpcUaInterface`（448 个）；2.7.48 部署后（2026-09-21）跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族（下载 / 上线被路由与 PLCSIM 设置器缺陷挡住，2.7.49 修）；2.7.49 部署后（2026-09-21）路由选择已通过、下载 / 上线卡在 PG 侧（虚拟网卡无 IP），监控表条目与 PLCSIM 设置器再修（2.7.50）；2.7.50 部署后（2026-09-21）清掉垃圾表、监控表行被 `ModifyIntention` 只读挡住、PLCSIM 8.0 的接口选择原来是全局 `NetworkMode`、站上载不收 MAC（2.7.51 修）；2.7.51 部署后（2026-09-21）监控表行往返通过、Softbus 网络模式让 TIA 出现 'PLCSIM' 接口，但上线 / 下载被 FW 2.9 的 TLS 证书信任提示挡住（2.7.52 应答）；2.7.52 部署后（2026-09-21）TLS 过了、在线态 Incompatible，下载被 F-CPU 的安全设置挡住（2.7.53 新增 ManagePlcProtection / CompileDevice）；2.7.53 部署后（2026-09-21）F-CPU 下载是 Openness 规则拒绝，在标准 CPU `MCP_STD` 上在线族全链走通（下载 / 上线 / 比较 / PLCSIM 读写 / 场景），2.7.54 修 singleStep 枚举名、PLCSIM 接口重复、GoOnline 文案；2.7.54 部署后（2026-09-21）单步只推进 1 周期（2.7.55 按同步点等待）、站上载被 TIA 拒（PLCSIM 实例不支持）：`MCP_PLC`（CPU 1515F-2 PN V2.9）、`MCP_TP700`（TP700 Comfort V17）、`MCP_UCP`（MTP700 Unified Comfort V21）、`MCP_S120`（S120 CU320-2 PN V5.2 + 驱动轴_1：电机模块 / 电机 / 编码器）；批跑器每步之后检查 TIA 进程还在不在，结果按工具记录在此。状态：",
     "", "| 状态 | 含义 | 数量 |", "|---|---|---:|"]
 for k, m in ((PASS, "该工具至少一次真实调用成功（读回验证）"), (MANUAL, "会话级工具，单独手工跑通"), (EARLY, "今天没跑，但 2.7.39–2.7.45 的真机会话跑过"), (FIXED, "真机暴露了缺陷，源码已修，部署后要重跑"), (TIA, "调用到 TIA/环境，被其规则拒绝或对象不提供（不是引擎缺陷）"), (PARAM, "只跑到参数/前置条件拒绝（工具逻辑正常，需要更完整的对象或输入）"), (REALCPU, "刻意不跑"), (SKIP, "未跑")):
     lines.append(f"| {k} | {m} | {counts.get(k, 0)} |")

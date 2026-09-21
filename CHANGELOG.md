@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.7.55] - 2026-09-21
+
+引擎 2.7.55.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.55](docs/releases/v2.7.55.md)。2.7.54 部署后的在线族收尾。
+
+- **2.7.54 真机**：`RunPlcSimAdvancedTestScenario {mode:"singleStep"}` 的模式切换生效（`operatingModeApplied SingleStep_CP`，写 / 断言步之间实例 `Freeze`），Running 断言通过，但 `{cycles:5}` 后 `Cycles` 只从 303 到 304、整个场景 44 ms——手册 "SingleStep operating modes"：`RunToNextSyncPoint()` 只是解除冻结并立即返回，实例自己跑到下一个同步点才再次 `Freeze`，连发 5 次里 4 次落在还在跑的实例上。`UploadStationFromPlc {targetIpAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}`：接口去重生效（PN/IE `PLCSIM #1`；工程级提供者的三个模式是 MPI / PROFIBUS / PN/IE），项目级扫描把 Softbus 实例列为 `192.168.0.1`（虽已配置 192.168.0.3），预览通过（地址在 PLCSIM 接口上创建），真跑被 TIA 拒 "The selected object cannot be uploaded from the device."——从 PLCSIM Advanced 实例上载站是 TIA 侧不支持，设备数仍 5。`GoOnline MCP_PLC` 现在回报 "Connection to device cannot be established. Online: The connection to the target module cannot be established." 与 `onlineStateAfter Offline`（实例已改为 MCP_STD / 192.168.0.3，预期）。
+- **修单步场景**：`PlcSimAdvancedChannel.StepCycles` 每个周期先等 `OperatingState == Freeze`、`RunToNextSyncPoint()`、再等 `Freeze`（每周期 5 s 预算、2 ms 轮询；超时把步标失败并写明第几个同步点没到），`cyclesStepped` / `waitedMs` / `stateAfterSteps` 回报；`singleStep` 改为优先 `SingleStep_C`（只在周期控制点冻结——每周期一个同步点，`cycles:N` 恰好 N 个周期），其次 `SingleStep_CP`（读过程映像前多一个同步点）、`SingleStep`。离线 +1（2211）。
+
 ## [2.7.54] - 2026-09-21
 
 引擎 2.7.54.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.54](docs/releases/v2.7.54.md)。2.7.53 部署后**在线族在 PLCSIM Advanced 上全链走通**，三处小修。

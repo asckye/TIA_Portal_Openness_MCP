@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.54 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.55 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.55 单步场景按同步点等待（`RunToNextSyncPoint` 是异步的）
+
+2.7.54 真机：`RunPlcSimAdvancedTestScenario singleStep` 的模式切换生效（`operatingModeApplied SingleStep_CP`，步间 `Freeze`），但 `{cycles:5}` 只推进了 1 个周期——手册 "SingleStep operating modes"：`RunToNextSyncPoint()` 只解除冻结、立即返回，实例跑到下一个同步点才再次 `Freeze`；连发 5 次落在还在跑的实例上。现在每个周期先等 `Freeze`、触发、再等 `Freeze`（`StepCycles`，每周期 5 s 预算，`cyclesStepped` / `waitedMs` 回报），并且 `singleStep` 改为优先 `SingleStep_C`（每周期一个同步点 = 周期控制点；`_CP` 在读过程映像前还有一个）。`UploadStationFromPlc` 的接口去重生效（PN/IE `PLCSIM #1`，地址在 PLCSIM 接口上创建、预览通过），真跑被 TIA 拒 "The selected object cannot be uploaded from the device."——从 PLCSIM Advanced 实例上载站是 TIA 侧不支持；F-CPU `GoOnline` 现在回报 TIA 原文与 `onlineStateAfter`。详见 `docs/releases/v2.7.55.md`。
 
 ## 2.7.54 在线族真机走通（PLCSIM Advanced 下载 / 上线 / 比较 / 读写 / 场景）
 

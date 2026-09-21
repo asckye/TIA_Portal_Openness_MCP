@@ -85,16 +85,24 @@ namespace TiaMcpServer.Runtime
         }
 
         // 2.7.54 (real machine, PLCSIM Advanced 8.0 + manual "EOperatingMode"): the single-step mode is no longer one value - the API has
-        // SingleStep_C / _CT / _P / _CP / _CPT / _Bus (and TimespanSynchronized_*); Enum.Parse("SingleStep") threw. A scenario's
-        // "singleStep" is the classic cyclic-program + process-image step (SingleStep_CP), older APIs keep the plain name.
+        // SingleStep_C / _CT / _P / _CP / _CPT / _Bus (and TimespanSynchronized_*); Enum.Parse("SingleStep") threw.
+        // 2.7.55 (real machine + manual "SingleStep operating modes"): SingleStep_C freezes at the cycle control point only - one sync point
+        // per program cycle, so "cycles: N" is exactly N cycles; SingleStep_CP adds a second sync point before the process image is read
+        // (two per cycle). "singleStep" therefore prefers SingleStep_C; older APIs keep the plain name.
         public static string[] OperatingModeCandidates(string? mode)
         {
             var m = (mode ?? "").Trim();
             if (m.Equals("singleStep", StringComparison.OrdinalIgnoreCase) || m.Equals("SingleStep", StringComparison.Ordinal))
-                return new[] { "SingleStep_CP", "SingleStep_C", "SingleStep" };
+                return new[] { "SingleStep_C", "SingleStep_CP", "SingleStep" };
             if (m.Equals("default", StringComparison.OrdinalIgnoreCase)) return new[] { "Default" };
             return new[] { m };
         }
+
+        // Wait budget for one stepped cycle: the instance runs from RunToNextSyncPoint() until the next sync point and only then reports
+        // Freeze again; a default OB1 minimum cycle of 100 virtual ms passes in a few real ms, a heavy program or a scaled virtual time
+        // takes longer. 5 s per cycle is generous without hiding a stalled instance.
+        public const int SyncPointWaitMs = 5000;
+        public const int SyncPointPollMs = 2;
 
         public static string RequireInstanceName(string? name)
         {
