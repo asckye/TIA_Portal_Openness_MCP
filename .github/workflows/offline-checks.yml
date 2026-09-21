@@ -16,7 +16,7 @@ jobs:
     # 一个和「全部通过」长得一模一样的假绿灯。所以这里写死 `dotnet run`。
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
@@ -30,6 +30,6 @@ jobs:
     # 脚本自带必错哨兵：闸门本身坏了会报 FAIL，而不是假 PASS。
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Descriptions must not name unregistered tools
         run: python3 scripts/checks/Check-DeadToolReferences.py
