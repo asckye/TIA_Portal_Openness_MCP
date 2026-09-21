@@ -68,6 +68,21 @@ namespace TiaMcpServer.Tests
             check(d["exportPath"]!.GetValue<string>() == "C:\\temp\\screen.xml" && d["outputDirectory"]!.GetValue<string>() == "C:\\Temp\\SomeTool", "derive: file path from e.g., directory placeholder");
             check(d["count"]!.GetValue<long>() == 1 && d["enabled"]!.GetValue<bool>() == false && d["thing"]!.GetValue<string>() == "<thing>", "derive: numbers, booleans from default, unknown -> <name>");
             check(ToolExamples.FindOrDerive("GetBlocks", derivedSpecs).Note != ToolExamples.DerivedNote && ToolExamples.FindOrDerive("NoSuchTool", derivedSpecs).Note == ToolExamples.DerivedNote, "derive: curated example wins");
+            // 2.7.59 real machine: the vocabulary's e.g. [\"PLC_1\"] produced the fragment "[" and chartPath a host path
+            var vmSpecs = new List<PreflightLogic.ParameterSpec>
+            {
+                S("devicePathJson", "string", true, null, ParameterVocabulary.Describe("devicePathJson")!),
+                S("itemPathJson", "string", true, null, ParameterVocabulary.Describe("itemPathJson")!),
+                S("chartPath", "string", true, null, ParameterVocabulary.Describe("chartPath")!),
+                S("tablePath", "string", true, null, "tablePath: 'Group/Table' path"),
+                S("importPath", "string", true, null, ParameterVocabulary.Describe("importPath")!),
+                S("logFilePath", "string", true, null, "logFilePath: full path of the log file to write on the TIA machine ('' = no log)."),
+                S("culturesJson", "string", true, null, "culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all)."),
+            };
+            var vm = O(ToolExamples.Derive("ManageDccChartInterface", vmSpecs).ArgumentsJson);
+            check(vm["devicePathJson"]!.GetValue<string>() == "[]" && vm["itemPathJson"]!.GetValue<string>() == "[]" && vm["culturesJson"]!.GetValue<string>() == "[]", "derive: *Json placeholders never come from an e.g. fragment (real-machine '[')");
+            check(vm["chartPath"]!.GetValue<string>() == "<Folder/Name>" && vm["tablePath"]!.GetValue<string>() == "<Folder/Name>", "derive: object paths are not host paths");
+            check(vm["importPath"]!.GetValue<string>().StartsWith(@"C:\Temp\") && vm["logFilePath"]!.GetValue<string>().StartsWith(@"C:\Temp\"), "derive: host paths by name");
 
             // ---- PreflightSummary (what a failed call carries) ----
             var summary = McpServer.PreflightSummary("UpdateUnifiedRuntimeSettings", O("{\"SoftwarePath\":\"HMI\",\"changesJson\":\"{}\"}"));

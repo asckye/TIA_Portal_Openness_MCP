@@ -257,6 +257,11 @@ o("GetBlockInfo", PASS, D50 + "：读块信息；" + D58 + "：不存在的块 �
 o("ExportPlcWatchTable", PASS, D50 + "：导出监控表；" + D58 + "：经 CallTool 缺 watchTableName/exportPath → Meta.preflight.missing + 示例")
 o("Bootstrap", PASS, D57 + "：2.7.57.0；" + D58 + "：serverVersion 2.7.58.0，lite 59 / 453，tools/list 59 个工具 0 个属性缺 description，GetAuthoringGuide.topic / ImportFromDocuments.importOption / PlcBuildAndImport.kind 带 enum，default / examples 到位")
 
+# ---- 2.7.59 deployment (2026-09-21): batch-2 enums live, derived-example placeholder defect found ----
+D59 = "2.7.59 真机"
+o("ManageDccChart", PASS, "2.7.45 真机：临时 S120 驱动轴上图表建删；" + D59 + "：action=bogus 被引擎拒绝并带 preflight.allowedValues.action（10 个取值）")
+o("FindTools", PASS, D50 + "：按能力词查工具；" + D59 + "：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修）")
+
 def status_of(n):
     if n in O: return O[n]
     rs = runs.get(n)

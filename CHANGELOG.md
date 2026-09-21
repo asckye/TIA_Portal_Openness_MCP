@@ -6,6 +6,14 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.7.60] - 2026-09-21
+
+引擎 2.7.60.0（V20/V21 均重建），工具 453 不变。详见 [v2.7.60](docs/releases/v2.7.60.md)。2.7.59 真机发现的派生示例缺陷。
+
+- **派生示例的占位符规则重排**（`ToolExamples.PlaceholderValue`）：`*Json` 参数先按名字给 `[]` / `{}`（数组类名字不分大小写：`culturesJson`、`namesJson`……），不再从描述里的 `e.g. [\"PLC_1\"]` 截出 `"["`；`*Path` 参数区分主机路径（`filePath` / `importPath` / `exportPath` / `archivePath` / `*FilePath` / 目录……→ `C:\Temp\...`）与工程内对象路径（`chartPath` / `tablePath` / `typePath` / `rulePath`……→ `<Folder/Name>`）；`e.g.` 值只在是纯值时采用；占位符里的 `<>` 不再被转义成 `\u003C`。
+- 2.7.59 真机：`ManageDccChart action:"bogus"` 的拒绝带 `preflight.allowedValues.action`（10 个取值）通过；`GetAuthoringGuide.topic` 的 schema `enum` 到位，引擎对带空格的值 Trim 后照常回答。
+- 离线 2456（+3）。
+
 ## [2.7.59] - 2026-09-21
 
 引擎 2.7.59.0（V20/V21 均重建），工具 453 不变，默认 lite 59。详见 [v2.7.59](docs/releases/v2.7.59.md)。参数描述批次 2：**每个参数都有描述了**。
@@ -489,7 +497,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...HEAD
+[2.7.60]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...v2.7.60
 [2.7.59]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...v2.7.59
 [2.7.58]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.57...v2.7.58
 [2.7.57]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.56...v2.7.57

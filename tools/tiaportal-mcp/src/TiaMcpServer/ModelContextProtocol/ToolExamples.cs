@@ -130,6 +130,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string Render(Example e)
             => "Example: " + e.ArgumentsJson + (e.Note.Length > 0 ? " (" + e.Note + ")" : "") + ".";
 
+        // Placeholders such as <Folder/Name> must read as written, not as < escapes.
+        private static readonly JsonSerializerOptions PlainJson = new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
+
         public const string DerivedNote = "derived from the signature - placeholder values, read the parameter descriptions";
 
         /// <summary>The curated example, or one derived from the signature so that every tool has a worked call.</summary>
@@ -149,10 +152,16 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!spec.Required) continue;
                 args[spec.Name] = PlaceholderValue(tool, spec);
             }
-            return new Example(tool, args.ToJsonString(), DerivedNote);
+            return new Example(tool, args.ToJsonString(PlainJson), DerivedNote);
         }
 
         private static readonly System.Text.RegularExpressions.Regex ForExample = new System.Text.RegularExpressions.Regex(@"\be\.g\.\s*['""]?(?<v>[^'"",;)\s][^'"",;)]*)['""]?", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        // Host paths (files / folders on the TIA machine) versus object paths inside the project ('Folder/Name'): the
+        // name decides, the description's "e.g." is used only when it is a plain value (2.7.59 real machine: the vocabulary's
+        // e.g. ["PLC_1"] produced the fragment "[" as a placeholder).
+        private static readonly string[] HostPathNames = { "filePath", "importPath", "exportPath", "outputPath", "archivePath", "csvPath", "xmlPath", "logFilePath", "leftFilePath", "rightFilePath", "directoryPath", "referenceAmlPath", "targetForSoftware", "zipPath", "path" };
+        private static readonly System.Text.RegularExpressions.Regex ArrayJsonName = new System.Text.RegularExpressions.Regex("(Path|Paths|Names|Ids|Items|Entries|List|Steps|Rows|Tags|Blocks|Pages|Cultures|Numbers|Markers|Extensions|Charts|Fields)Json$", System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
         internal static JsonNode PlaceholderValue(string tool, PreflightLogic.ParameterSpec spec)
         {
@@ -164,24 +173,32 @@ namespace TiaMcpServer.ModelContextProtocol
                 case "number": return JsonValue.Create(double.TryParse(spec.DefaultText ?? "", System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var d) ? d : 1.0);
             }
             if (spec.Kind != "string") return JsonValue.Create("<" + name + ">");
-            var alternatives = PreflightLogic.Alternatives(spec.Description);
-            if (alternatives.Count > 0) return JsonValue.Create(alternatives[0]);
-            var m = ForExample.Match(spec.Description);
-            if (m.Success) return JsonValue.Create(m.Groups["v"].Value.Trim().Replace("\\\\", "\\"));   // descriptions escape backslashes for C#
+            // 1. names whose meaning is fixed across the roster
+            if (name.EndsWith("Json", StringComparison.Ordinal)) return JsonValue.Create(ArrayJsonName.IsMatch(name) ? "[]" : "{}");
             if (name.Equals("softwarePath", StringComparison.OrdinalIgnoreCase) || name.EndsWith("PlcSoftwarePath", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("PLC_1");
             if (name.IndexOf("hmi", StringComparison.OrdinalIgnoreCase) >= 0 && name.EndsWith("Path", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("HMI_RT_1");
-            if (name.EndsWith("Json", StringComparison.Ordinal))
-                return JsonValue.Create(System.Text.RegularExpressions.Regex.IsMatch(name, "(Path|Names|Ids|Items|Entries|List|Steps|Rows|Tags|Blocks|Pages)Json$") ? "[]" : "{}");
             if (name.Equals("blockPath", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("Main");
             if (name.Equals("deviceName", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("PLC_2");
             if (name.Equals("expectedProject", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("<project name from GetProject>");
-            bool directory = name.IndexOf("Directory", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Folder", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Dir", StringComparison.Ordinal) >= 0;
-            if (name.EndsWith("Path", StringComparison.OrdinalIgnoreCase) || name.EndsWith("File", StringComparison.OrdinalIgnoreCase) || directory)
+            // 2. documented alternatives, then a plain "e.g." value
+            var alternatives = PreflightLogic.Alternatives(spec.Description);
+            if (alternatives.Count > 0) return JsonValue.Create(alternatives[0]);
+            var m = ForExample.Match(spec.Description);
+            if (m.Success)
+            {
+                var value = m.Groups["v"].Value.Trim().Replace("\\\\", "\\");   // descriptions escape backslashes for C#
+                if (value.Length > 0 && value[0] != '[' && value[0] != '{') return JsonValue.Create(value);
+            }
+            // 3. paths: host paths by name, every other *Path is an object path inside the project
+            bool directory = name.IndexOf("Directory", StringComparison.OrdinalIgnoreCase) >= 0 || name.IndexOf("Dir", StringComparison.Ordinal) >= 0 || name.Equals("targetForSoftware", StringComparison.Ordinal);
+            bool hostPath = directory || HostPathNames.Contains(name) || name.EndsWith("FilePath", StringComparison.Ordinal) || name.EndsWith("File", StringComparison.OrdinalIgnoreCase);
+            if (hostPath)
             {
                 if (directory) return JsonValue.Create("C:\\Temp\\" + tool);
                 var ext = new[] { ".xml", ".zip", ".csv", ".xlsx", ".json", ".scl", ".s7dcl", ".yml", ".txt", ".pdf", ".aml", ".dat" }.FirstOrDefault(e => spec.Description.IndexOf(e, StringComparison.OrdinalIgnoreCase) >= 0);
                 return JsonValue.Create("C:\\Temp\\" + tool + (ext ?? ""));
             }
+            if (name.EndsWith("Path", StringComparison.OrdinalIgnoreCase)) return JsonValue.Create("<Folder/Name>");
             return JsonValue.Create("<" + name + ">");
         }
 

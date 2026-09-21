@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.59 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 453 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.60 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 453 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.60 派生示例占位符修正
+
+2.7.59 真机：`FindTools` 里无人工示例的工具的派生示例把 `devicePathJson` 显示成 `"["`、`chartPath` 当成主机路径。规则重排：`*Json` 先按名字给 `[]` / `{}`，`*Path` 按名字区分主机路径与工程内对象路径（`<Folder/Name>`），`e.g.` 值只取纯值。详见 `docs/releases/v2.7.60.md`。
 
 ## 2.7.59 参数描述批次 2：每个参数都有描述
 

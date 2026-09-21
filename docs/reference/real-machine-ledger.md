@@ -225,7 +225,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | `ManageCommunicationConnection` | ⛔ TIA/环境拒绝 | create HmiConnection：原生 Create 返回对象但连接数不增（IsValid=false）——TIA 语义待查 |
 | `ManageDcbLibraries` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccBlock` | ✅ 通过 |  |
-| `ManageDccChart` | ✅ 通过 | 2.7.47 重跑通过：不传 driveObjectNumber 也可 |
+| `ManageDccChart` | ✅ 通过 | 2.7.45 真机：临时 S120 驱动轴上图表建删；2.7.59 真机：action=bogus 被引擎拒绝并带 preflight.allowedValues.action（10 个取值） |
 | `ManageDccChartInterface` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccChartPartition` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
 | `ManageDccPin` | ✅ 通过 |  |
@@ -296,7 +296,7 @@ TIA 退出点（都已写进交接 §5）：⑧ `AddDevice` 建 WinCC Unified �
 | 工具 | 状态 | 说明 |
 |---|---|---|
 | `CallTool` | ✅ 早期真机 | 2.7.39–2.7.45 会话（DCC / Startdrive / SafetyValidation / Test Suite / Teamcenter / CFC / Unified 读取） |
-| `FindTools` | ✅ 通过 |  |
+| `FindTools` | ✅ 通过 | 2.7.50 真机：按能力词查工具；2.7.59 真机：dcc chart 查到 ManageDccChart 签名与 action 描述，派生示例把 devicePathJson 显示成 '['、chartPath 当主机路径（2.7.60 修） |
 | `ListToolCategories` | ✅ 通过 |  |
 | `PreflightToolCall` | ✅ 通过 | 2.7.57 真机：{name:downloadtoplc, argumentsJson:{SoftwarePath:MCP_STD, targetIp:192.168.0.3}} → NOT READY，UNKNOWN targetIp (did you mean targetIpAddress?)、Case SoftwarePath -> softwarePath、Class L1 PLC-Online ONLINE-WRITE、前提 = 已绑工程、附示例，未执行 |
 
