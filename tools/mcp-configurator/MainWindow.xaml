@@ -64,7 +64,7 @@
     <Trigger Property="IsSelected" Value="True"><Setter TargetName="Choice" Property="Background" Value="#E9F1EC"/><Setter TargetName="Choice" Property="BorderBrush" Value="#2F5B4C"/><Setter Property="Foreground" Value="#255043"/></Trigger>
    </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter>
   </Style>
-  <DataTemplate x:Key="ClientTile"><StackPanel><TextBlock Text="{Binding DisplayName}" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip="{Binding Hint}"/><TextBlock Text="{Binding Category}" FontFamily="Consolas" FontSize="10" Foreground="#9A9C93" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></DataTemplate>
+  <DataTemplate x:Key="ClientTile"><StackPanel><TextBlock Text="{Binding DisplayName}" FontSize="13" TextTrimming="CharacterEllipsis" ToolTip="{Binding Tooltip}"/><TextBlock Text="{Binding Category}" FontFamily="Consolas" FontSize="10" Foreground="#9A9C93" Margin="0,6,0,0" TextTrimming="CharacterEllipsis"/></StackPanel></DataTemplate>
  </Window.Resources>
 
  <Border Background="White" CornerRadius="20" BorderBrush="#DFDDD5" BorderThickness="1" Margin="18">

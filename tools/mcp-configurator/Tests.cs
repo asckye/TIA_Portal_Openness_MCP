@@ -127,9 +127,16 @@ namespace TiaMcpConfigurator
                 }
                 Probe(false); Probe(true);
                 var profiles = ClientProfiles.All();
-                Assert(profiles.Count == 11, "eleven cards: Claude Code, Codex, Gemini CLI, 通义千问, Kimi, 腾讯元宝, DeepSeek, 智谱清言, Grok, Cursor, VS Code");
+                Assert(profiles.Count == 12, "twelve cards: Claude Code, Codex, Gemini CLI, 通义千问, Kimi, 腾讯元宝, DeepSeek, 智谱清言, Grok, 千问工作助理, Cursor, VS Code");
                 Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
-                Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles.Skip(9).All(x => x.Kind == "IDE"), "CLI cards precede IDE cards");
+                Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles[9].Kind == "桌面" && profiles.Skip(10).All(x => x.Kind == "IDE"), "CLI cards, then the desktop assistant, then IDE cards");
+                // 2.7.61: detection never throws, every card carries evidence text, and the qwen-agent file is url + headers without a type
+                Assert(profiles.All(x => !String.IsNullOrEmpty(x.Evidence) && x.Category.EndsWith(x.Detected ? "已检测" : "未检测到") && x.Tooltip.Contains(x.Path)), "every card reports what was (not) found on this machine");
+                var agent = profiles.First(x => x.Id == "qwen-agent");
+                var agentEntry = ClientProfiles.Entry(agent, true, "192.0.2.10", 8765, secret, null, 21, null);
+                Assert(agent.Path.EndsWith(Path.Combine(".qwen-agent", "mcp.json")) && ClientProfiles.RootKey(agent) == "mcpServers" && agentEntry.ContainsKey("url") && !agentEntry.ContainsKey("type") && ((Dictionary<string, object>)agentEntry["headers"]).ContainsKey("Authorization"), "千问工作助理 writes ~/.qwen-agent/mcp.json with url + Bearer header and no type");
+                Assert(ClientProfiles.OnPath("cmd") != null && ClientProfiles.OnPath("no-such-executable-2761") == null, "PATH lookup finds cmd.exe and nothing for a bogus name");
+                Assert(profiles.First(x => x.Id == "vscode").Path.EndsWith(Path.Combine("User", "mcp.json")), "VS Code writes the user mcp.json of the edition present on this machine");
                 Assert(!profiles.Any(x => x.Id == "windsurf" || x.Id == "cline" || x.Id == "claude"), "Windsurf, Cline and Claude Desktop cards are gone");
                 Assert(profiles.Select(x => x.Id).Distinct().Count() == profiles.Count, "card ids are unique");
                 foreach (var profile in profiles)
@@ -160,7 +167,7 @@ namespace TiaMcpConfigurator
                 Assert((string)buddy["type"] == "http" && buddy.ContainsKey("url") && profiles.First(x => x.Id == "codebuddy").Path.EndsWith(".mcp.json"), "腾讯元宝 → CodeBuddy uses type=http in .codebuddy\\.mcp.json");
                 var brands = profiles.Where(x => x.Client == "opencode").ToList();
                 Assert(brands.Select(x => x.Id).SequenceEqual(new[] { "deepseek", "zhipu", "grok" }) && brands.Select(x => x.Path).Distinct().Count() == 1, "DeepSeek / 智谱 / Grok are brand cards over one OpenCode file");
-                Assert(brands.All(x => x.Category == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").Category == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").Category == "CLI", "brand cards show the client they write to; native cards show only the kind");
+                Assert(brands.All(x => x.CategoryBase == "CLI · OpenCode") && profiles.First(x => x.Id == "qwen").CategoryBase == "CLI · Qwen Code" && profiles.First(x => x.Id == "codex").CategoryBase == "CLI", "brand cards show the client they write to; native cards show only the kind");
                 var openRemote = ClientProfiles.Entry(brands[0], true, "192.0.2.10", 8765, secret, null, 21, null);
                 Assert((string)openRemote["type"] == "remote" && (bool)openRemote["enabled"] && (string)openRemote["url"] == "http://192.0.2.10:8765/mcp", "OpenCode remote entry carries type=remote and enabled");
                 var openLocal = ClientProfiles.Entry(brands[0], false, null, 0, null, @"C:\r\TiaMcpServer.exe", 21, @"C:\Siemens\Portal V21");

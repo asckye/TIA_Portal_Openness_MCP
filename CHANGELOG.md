@@ -6,6 +6,14 @@
 
 - （未发布的改动写在这里，发版时移到版本标题下。）
 
+## [2.7.61] - 2026-09-21
+
+配置器 2.7.61（引擎同版本重建，工具 453 不变）。详见 [v2.7.61](docs/releases/v2.7.61.md)。维护者：配置文件的写入要能在不同电脑上用，要能检测 AI 客户端装在哪、再写进去——**所有客户端都一样**。
+
+- **本机客户端检测**：`TiaMcpConfigurator.exe` 启动时逐张卡片检测客户端痕迹（要写的配置文件 / 目录、PATH 上的可执行文件含 npm 的 `.cmd`、`%LOCALAPPDATA%\Programs` 等已知安装目录、控制面板卸载项 HKCU / HKLM / WOW6432Node），卡片副标题显示“已检测 / 未检测到”，悬停显示证据与写入路径，日志列全部结果，默认选中第一张检测到的卡片；未检测到的仍可写入。
+- **写入位置按当前用户解析**（原本已如此，本版补齐并写进文档）：`%USERPROFILE%` / `%APPDATA%` / `CODEX_HOME` / `KIMI_CODE_HOME`；VS Code 本机只有 Insiders 时写 `Code - Insiders\User\mcp.json`。同一个 EXE 拷到任何电脑都写到那台电脑的正确位置。
+- **新卡片“千问工作助理”**（qwen-agent 桌面应用）：写 `%USERPROFILE%\.qwen-agent\mcp.json`，条目 `url` + `headers.Authorization: Bearer <密钥>`（静态令牌，不走 OAuth，无 `type` 字段）；提示必须完全退出进程再打开、项目级文件位置。12 张卡片、10 种格式；配置器隔离测试 95 项通过。
+
 ## [2.7.60] - 2026-09-21
 
 引擎 2.7.60.0（V20/V21 均重建），工具 453 不变。详见 [v2.7.60](docs/releases/v2.7.60.md)。2.7.59 真机发现的派生示例缺陷。
@@ -497,7 +505,8 @@
 - [v2.7.3](docs/archive/release-notes.md#v273)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
-[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...HEAD
+[Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.61...HEAD
+[2.7.61]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.60...v2.7.61
 [2.7.60]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.59...v2.7.60
 [2.7.59]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.58...v2.7.59
 [2.7.58]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.7.57...v2.7.58

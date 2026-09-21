@@ -36,7 +36,9 @@
 
 ## 客户端卡片
 
-客户端卡片支持多选，B 栏右上角实时显示选择结果；点击该文字可查看所选客户端的使用说明，连线条左侧同步显示当前选择。卡片区在卡内上下滚动，B 栏因此与 A 栏等高、两栏按钮底部对齐；窗口缩小时卡片自动由三列换成两列。卡片顺序：CLI 在前（Claude Code、Codex 居首），IDE 在后。
+客户端卡片支持多选，B 栏右上角实时显示选择结果；点击该文字可查看所选客户端的使用说明，连线条左侧同步显示当前选择。卡片区在卡内上下滚动，B 栏因此与 A 栏等高、两栏按钮底部对齐；窗口缩小时卡片自动由三列换成两列。卡片顺序：CLI 在前（Claude Code、Codex 居首），桌面助理其次，IDE 在后。
+
+**本机检测（2.7.61）**：配置器启动时逐张卡片检测客户端在**这台电脑**上的痕迹——它要写的配置文件 / 目录是否存在、可执行文件是否在 PATH 上（npm 装的 CLI 是 `.cmd`）、已知安装目录（`%LOCALAPPDATA%\Programs\...`、`Program Files`）、控制面板卸载项——卡片副标题显示“已检测 / 未检测到”，鼠标悬停显示找到了什么和将写入的文件，日志里列出全部结果，默认选中第一张检测到的卡片。未检测到的卡片仍可写入（先写配置、后装客户端也行）。写入位置全部按当前用户解析（`%USERPROFILE%`、`%APPDATA%`、`CODEX_HOME` / `KIMI_CODE_HOME` 环境变量；VS Code 只有 Insiders 时写 Insiders 的用户目录），所以同一个 EXE 拷到任何电脑都写到那台电脑的正确位置。
 
 **官方 Claude 桌面客户端的 Code 页**：选择“Claude Code”，保存后重启，进入 **Code → Local → 新建会话**。Claude Desktop 的 Chat 页不再提供卡片。
 
@@ -53,9 +55,11 @@
 | Kimi | 月之暗面 Kimi Code CLI | `%KIMI_CODE_HOME%\mcp.json`，未设置时用 `%USERPROFILE%\.kimi-code\mcp.json` | `url` |
 | 腾讯元宝 | 腾讯 CodeBuddy Code CLI | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
 | DeepSeek / 智谱清言 / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
+| 千问工作助理 | 千问工作助理（桌面应用，qwen-agent） | `%USERPROFILE%\.qwen-agent\mcp.json`（只对一个项目生效时把同名文件放到 `<项目>\.qwen-agent\mcp.json`） | `url` + `headers.Authorization`（静态 Bearer，不走 OAuth） |
 | Cursor | Cursor | `%USERPROFILE%\.cursor\mcp.json` | `url` |
-| VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json` | `servers` / `type: http` |
+| VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json`（本机只有 Insiders 时 `Code - Insiders`） | `servers` / `type: http` |
 
+千问工作助理改完配置后必须**完全退出进程**（不是关窗口）再打开才会重新读取 `mcp.json`；它在内存里留着的旧条目（例如误用图形化“添加服务”走了 OAuth）会让重载时报“已注册，跳过”。
 三张 OpenCode 卡片写同一个文件，多选时只写一次。本机 stdio 模式下 OpenCode 条目为 `type: local` 且 `command` 是含可执行文件的单个数组，其它客户端为 `command` + `args`。VS Code 默认路径针对标准 VS Code 默认用户配置，不涵盖 Insiders、portable 或自定义 profile。Qwen Code / Kimi Code CLI / CodeBuddy / OpenCode 的路径与字段按各自当前官方文档写入，尚未在真实客户端上联调。
 
 豆包没有对应卡片：其 IDE（Trae）的全局 MCP 文件位置未公开、远程只支持 SSE，而本引擎只提供 Streamable HTTP；如需在 Trae 里用，可在其 MCP 面板“手动添加”里粘贴本机 stdio 条目。
@@ -78,7 +82,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 图形入口启动前独立检查 HTTP 监听，直接展示权限/端口错误，避免旧引擎可能把原始错误掩盖为取消异常。原 TIA 引擎二进制没有修改。HTTP 测试成功不等于 TIA 工程已连接。
 
-已用隔离配置和模拟 HTTP 验证 11 张卡片（9 种客户端文件格式）的配置生成、合并、备份、密钥保护，以及两种模式的 WPF 渲染与可见性切换。真实虚拟机网络/UAC、各实际 AI 客户端以及真实 TIA 工程需分别联调；不将配置生成视为实际连接验收。
+已用隔离配置和模拟 HTTP 验证 12 张卡片（10 种客户端文件格式）的配置生成、合并、备份、密钥保护，以及两种模式的 WPF 渲染与可见性切换。真实虚拟机网络/UAC、各实际 AI 客户端以及真实 TIA 工程需分别联调；不将配置生成视为实际连接验收。
 
 ## 工具显示与手动 HTTP 启动
 
@@ -110,7 +114,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 ## 开发
 
-源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 11 张卡片（9 种客户端格式）适配。
+源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 12 张卡片（10 种客户端格式）适配与本机检测。
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test

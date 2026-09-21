@@ -16,14 +16,21 @@ namespace TiaMcpConfigurator
         // Schema family that decides file layout and entry shape. Brand cards (通义千问 → Qwen Code, DeepSeek / 智谱 / Grok → OpenCode …)
         // write another product's file, so several profiles may map onto one Client.
         public string Client { get; set; }
-        public string Kind { get; set; }      // CLI / IDE
+        public string Kind { get; set; }      // CLI / 桌面 / IDE
+        // 2.7.61: whether this machine shows traces of the client (config folder, executable on PATH, install folder,
+        // uninstall registry entry) and what was found - so a user on any computer sees which cards apply here.
+        public bool Detected { get; set; }
+        public string Evidence { get; set; }
         public string DisplayName { get { return Id == "vscode" ? "VS Code · Copilot" : Name; } }
-        // Tile subtitle: the transport family plus, when the card is a model brand, the client that actually gets written.
-        public string Category { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
+        // Tile subtitle without the detection state: the transport family plus, when the card is a model brand, the client that gets written.
+        public string CategoryBase { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
+        public string Category { get { return CategoryBase + " · " + (Detected ? "已检测" : "未检测到"); } }
+        // Tooltip: the after-save instructions plus where the client was (not) found and the file that will be written.
+        public string Tooltip { get { return Hint + "\n" + (Detected ? "已检测到：" : "未检测到：") + Evidence + "\n写入：" + Path; } }
         public override string ToString() { return Name; }
         public ClientProfile(string id, string name, string path, string hint, string client = null, string kind = "CLI")
         {
-            Id = id; Name = name; Path = path; Hint = hint; Client = client ?? id; Kind = kind;
+            Id = id; Name = name; Path = path; Hint = hint; Client = client ?? id; Kind = kind; Evidence = "";
         }
     }
 
@@ -37,6 +44,7 @@ namespace TiaMcpConfigurator
                 case "qwen": return "Qwen Code";
                 case "kimi": return "Kimi Code";
                 case "codebuddy": return "CodeBuddy";
+                case "qwen-agent": return "qwen-agent";
                 default: return null;   // native client: the card already carries its name
             }
         }
@@ -52,7 +60,10 @@ namespace TiaMcpConfigurator
             if (String.IsNullOrWhiteSpace(kimi)) kimi = System.IO.Path.Combine(home, ".kimi-code");
             string opencode = System.IO.Path.Combine(home, ".config", "opencode", "opencode.json");
             const string opencodeHint = "写入 OpenCode 的 opencode.json；模型在 OpenCode 的 provider 里选 {0}，MCP 配置与模型无关。重启 OpenCode 后新建会话。";
-            return new List<ClientProfile> {
+            // VS Code: the stable user folder, or Insiders when only that one exists on this machine.
+            string vscodeUser = System.IO.Path.Combine(app, "Code", "User");
+            if (!Directory.Exists(vscodeUser) && Directory.Exists(System.IO.Path.Combine(app, "Code - Insiders", "User"))) vscodeUser = System.IO.Path.Combine(app, "Code - Insiders", "User");
+            var profiles = new List<ClientProfile> {
                 new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), "官方桌面客户端：重启后选择 Code → Local，新建会话。CLI 也使用此配置。"),
                 new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), "保存后重启 Codex 桌面应用 / CLI，重新打开任务以加载 MCP。"),
                 new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), "重启 Gemini CLI，使用 /mcp 检查服务器状态。"),
@@ -63,9 +74,133 @@ namespace TiaMcpConfigurator
                 new ClientProfile("deepseek", "DeepSeek", opencode, String.Format(opencodeHint, "DeepSeek"), "opencode"),
                 new ClientProfile("zhipu", "智谱清言", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
                 new ClientProfile("grok", "Grok", opencode, String.Format(opencodeHint, "xAI Grok"), "opencode"),
+                // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
+                new ClientProfile("qwen-agent", "千问工作助理", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), "写入千问工作助理的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。", "qwen-agent", "桌面"),
                 new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。", null, "IDE"),
-                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(app, "Code", "User", "mcp.json"), "适用于 VS Code 默认用户配置。重载窗口，在 MCP 服务器列表中启动并信任该服务。", null, "IDE")
+                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), "适用于 VS Code 默认用户配置（本机只有 Insiders 时写 Insiders）。重载窗口，在 MCP 服务器列表中启动并信任该服务。", null, "IDE")
             };
+            foreach (var profile in profiles) Detect(profile);
+            return profiles;
+        }
+
+        // ---- 2.7.61: where is the client on THIS machine? ------------------------------------------------------------
+        // Evidence, in order: the config folder / file the card writes, the executable on PATH (npm shims are .cmd), a known install
+        // folder, an uninstall entry in the registry. Nothing here needs the client to be running; nothing is written.
+        public static void Detect(ClientProfile profile)
+        {
+            var found = new List<string>();
+            try
+            {
+                string dir = System.IO.Path.GetDirectoryName(profile.Path);
+                if (File.Exists(profile.Path)) found.Add("配置文件 " + profile.Path);
+                else if (dir != null && Directory.Exists(dir)) found.Add("配置目录 " + dir);
+                foreach (var exe in ExecutableNames(profile.Client))
+                {
+                    string hit = OnPath(exe);
+                    if (hit != null) { found.Add("PATH 上的 " + System.IO.Path.GetFileName(hit)); break; }
+                }
+                foreach (var folder in InstallFolders(profile.Client))
+                    if (Directory.Exists(folder)) { found.Add("安装目录 " + folder); break; }
+                string registry = UninstallEntry(RegistryKeywords(profile.Client));
+                if (registry != null) found.Add("已安装程序 " + registry);
+            }
+            catch (Exception) { }
+            profile.Detected = found.Count > 0;
+            profile.Evidence = found.Count > 0 ? String.Join("；", found) : "本机没有它的配置目录、可执行文件、安装目录或卸载项（仍可写入，安装后即生效）";
+        }
+
+        private static string[] ExecutableNames(string client)
+        {
+            switch (client)
+            {
+                case "claude-code": return new[] { "claude" };
+                case "codex": return new[] { "codex" };
+                case "gemini": return new[] { "gemini" };
+                case "qwen": return new[] { "qwen" };
+                case "kimi": return new[] { "kimi" };
+                case "codebuddy": return new[] { "codebuddy" };
+                case "opencode": return new[] { "opencode" };
+                case "cursor": return new[] { "cursor" };
+                case "vscode": return new[] { "code", "code-insiders" };
+                default: return new string[0];
+            }
+        }
+
+        private static string[] InstallFolders(string client)
+        {
+            string local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string programs = System.IO.Path.Combine(local, "Programs");
+            string pf = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            switch (client)
+            {
+                case "claude-code": return new[] { System.IO.Path.Combine(programs, "claude"), System.IO.Path.Combine(local, "AnthropicClaude"), System.IO.Path.Combine(programs, "Claude") };
+                case "cursor": return new[] { System.IO.Path.Combine(programs, "cursor"), System.IO.Path.Combine(programs, "Cursor") };
+                case "vscode": return new[] { System.IO.Path.Combine(programs, "Microsoft VS Code"), System.IO.Path.Combine(pf, "Microsoft VS Code"), System.IO.Path.Combine(programs, "Microsoft VS Code Insiders") };
+                case "qwen-agent": return new[] { System.IO.Path.Combine(programs, "qwen-agent"), System.IO.Path.Combine(programs, "QwenAgent"), System.IO.Path.Combine(local, "qwen-agent") };
+                case "codex": return new[] { System.IO.Path.Combine(programs, "Codex"), System.IO.Path.Combine(programs, "codex") };
+                default: return new string[0];
+            }
+        }
+
+        private static string[] RegistryKeywords(string client)
+        {
+            switch (client)
+            {
+                case "claude-code": return new[] { "Claude" };
+                case "cursor": return new[] { "Cursor" };
+                case "vscode": return new[] { "Visual Studio Code" };
+                case "qwen-agent": return new[] { "千问工作助理", "Qwen Agent", "qwen-agent", "通义千问" };
+                case "codex": return new[] { "Codex" };
+                default: return new string[0];
+            }
+        }
+
+        // First file on PATH named <name> with a runnable extension (.exe / .cmd / .bat / .com), or null.
+        public static string OnPath(string name)
+        {
+            string path = Environment.GetEnvironmentVariable("PATH") ?? "";
+            var extensions = new[] { ".exe", ".cmd", ".bat", ".com" };
+            foreach (string dir in path.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string trimmed = dir.Trim().Trim('"');
+                if (trimmed.Length == 0) continue;
+                foreach (string ext in extensions)
+                {
+                    try { string candidate = System.IO.Path.Combine(trimmed, name + ext); if (File.Exists(candidate)) return candidate; }
+                    catch (Exception) { }
+                }
+            }
+            return null;
+        }
+
+        // DisplayName of the first uninstall entry (HKCU / HKLM, 64- and 32-bit views) containing one of the keywords, or null.
+        private static string UninstallEntry(string[] keywords)
+        {
+            if (keywords.Length == 0) return null;
+            var roots = new[] {
+                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.CurrentUser, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.LocalMachine, @"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+                new KeyValuePair<Microsoft.Win32.RegistryKey, string>(Microsoft.Win32.Registry.LocalMachine, @"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall") };
+            foreach (var root in roots)
+            {
+                try
+                {
+                    using (var key = root.Key.OpenSubKey(root.Value))
+                    {
+                        if (key == null) continue;
+                        foreach (string sub in key.GetSubKeyNames())
+                        {
+                            using (var entry = key.OpenSubKey(sub))
+                            {
+                                string display = entry == null ? null : entry.GetValue("DisplayName") as string;
+                                if (display != null && keywords.Any(k => display.IndexOf(k, StringComparison.OrdinalIgnoreCase) >= 0)) return display;
+                            }
+                        }
+                    }
+                }
+                catch (Exception) { }
+            }
+            return null;
         }
 
         // OpenCode keeps servers under "mcp", VS Code under "servers"; everyone else uses "mcpServers".
@@ -99,6 +234,7 @@ namespace TiaMcpConfigurator
                 { UrlKey(profile), url },
                 { "headers", new Dictionary<string, object> { { "Authorization", "Bearer " + key } } } };
             if (client == "claude-code" || client == "vscode" || client == "codebuddy") entry["type"] = "http";
+            // qwen-agent / Kimi / Gemini / Qwen Code / Cursor: url (or httpUrl) + headers is the whole entry - a "type" field is not read.
             if (client == "opencode") { entry["type"] = "remote"; entry["enabled"] = true; }
             return entry;
         }

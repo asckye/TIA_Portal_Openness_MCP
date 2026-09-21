@@ -17,7 +17,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 - 仓库检查：本地文档链接、入口和蓝图路径、旧启动器残留、工具统计。
 - 交付检查：JSON、模板、双版本文件、构建哈希及必需入口。
 - 离线回归：需 .NET 8 SDK / 运行时。这是控制台程序，必须使用 `dotnet run`；`dotnet test` 不会执行这些用例。
-- WPF：需 Windows / .NET Framework 4.8；使用隔离配置和模拟 HTTP，验证 11 张客户端卡片、合并/备份、密钥保护及 XAML 渲染，不写真实配置或网络规则。`-Test` 会重编配置器并更新记录；发布前执行 Prepare-Delivery 绑定新记录。
+- WPF：需 Windows / .NET Framework 4.8；使用隔离配置和模拟 HTTP，验证 12 张客户端卡片、合并/备份、密钥保护及 XAML 渲染，不写真实配置或网络规则。`-Test` 会重编配置器并更新记录；发布前执行 Prepare-Delivery 绑定新记录。
 
 GitHub `offline-checks` 和 `validate-bundle` 运行对应检查。完整引擎编译需要 Siemens PublicAPI，托管 runner 不具备该环境。
 

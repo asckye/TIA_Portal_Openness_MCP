@@ -19,8 +19,8 @@ using System.Windows.Threading;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
-[assembly: AssemblyVersion("2.7.60.0")]
-[assembly: AssemblyFileVersion("2.7.60.0")]
+[assembly: AssemblyVersion("2.7.61.0")]
+[assembly: AssemblyFileVersion("2.7.61.0")]
 
 namespace TiaMcpConfigurator
 {
@@ -47,7 +47,9 @@ namespace TiaMcpConfigurator
             Window.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 3;
             Window.SizeChanged += delegate { Window.Resources["ClientColumns"] = Window.ActualWidth < 1180 ? 2 : 3; };
             var choices = Find<ListBox>("ClientChoices");
-            choices.ItemsSource = ClientProfiles.All(); choices.SelectedIndex = 0;
+            var cards = ClientProfiles.All(); choices.ItemsSource = cards;
+            int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
+            Append("客户端检测：" + String.Join("，", cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –"))) + "（✓ = 本机检测到；未检测到的仍可写入）");
             choices.SelectionChanged += delegate { UpdateInstructions(); };
             Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, "客户端使用说明", MessageBoxButton.OK, MessageBoxImage.Information); };
             Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
@@ -138,7 +140,7 @@ namespace TiaMcpConfigurator
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("ClientSelection").Text = selected.Count == 0 ? "可多选" : "已选 " + (selected.Count == 1 ? selected[0].DisplayName : selected.Count + " 个客户端");
             Find<TextBlock>("ClientInstructions").Text = selected.Count == 0 ? "选择一个或多个客户端，保存后将自动写入对应配置。" :
-                String.Join("\n", selected.Select(x => x.Name + "：" + x.Hint));
+                String.Join("\n", selected.Select(x => x.Name + "：" + x.Hint + "（" + (x.Detected ? "已检测到：" : "未检测到：") + x.Evidence + "）"));
             Find<TextBlock>("ClientSelection").ToolTip = Find<TextBlock>("ClientInstructions").Text;
             UpdateLink();
         }

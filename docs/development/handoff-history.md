@@ -4,8 +4,10 @@
 
 这一页只存历史：从 `handoff.md` §1 移出来的逐版本条目（每版做了什么、部署后真机结果）、2.7.42 覆盖审计与阶段 1–6 的收口清单（含当时用过的官方页面 id）、阶段 6 的旧类型清单。当前状态与下一步在 [handoff.md](handoff.md)；各版详情在 `../releases/`，变更摘要在 `../../CHANGELOG.md`。新发布后在本页 §1 顶部加一条，`handoff.md` §1 只改现状表。
 
-## 1. 逐版本记录（2.7.41–2.7.60，倒序；每条为当时写下的原文）
+## 1. 逐版本记录（2.7.41–2.7.61，倒序；每条为当时写下的原文）
 
+- **2.7.61**（2026-09-21，配置器；`Release.ps1` 全程自动）：维护者转来千问工作助理那边的配置记录（`~/.qwen-agent/mcp.json`，静态 Bearer 写进 headers，改完要完全退出进程）并要求“配置文件的写入能给不同电脑用、能检测 AI 客户端装在哪再写入，其他客户端也一样”——`ClientProfiles.Detect` 对 12 张卡片按配置目录 / PATH 可执行文件（含 npm `.cmd`）/ 已知安装目录 / 卸载项检测，副标题与悬停显示结果，日志列全，默认选第一张检测到的；写入位置按当前用户与 `CODEX_HOME` / `KIMI_CODE_HOME` 解析，VS Code 只有 Insiders 时写 Insiders；新卡片千问工作助理（`url` + `headers`，无 `type`）。配置器测试 95 项。
+- **2.7.60**（2026-09-21，`Release.ps1` 全程自动）：派生示例占位符规则重排（`*Json` 先按名字 `[]` / `{}`，`*Path` 区分主机路径与 `<Folder/Name>`，`e.g.` 只取纯值，`<>` 不再转义）；2.7.59 真机结果记录。离线 2456。
 - **2.7.59 部署后真机**（2026-09-21）：`Bootstrap` 2.7.59.0；`CallTool ManageDccChart {action:"bogus"}` → 拒绝 + `preflight.allowedValues.action` 10 个取值；`GetAuthoringGuide.topic` schema `enum` 到位，引擎对 `"scl "` Trim 后照答；`FindTools dcc chart` 暴露派生示例缺陷（`devicePathJson` → `"["`，`chartPath` → 主机路径）→ 2.7.60。
 - **2.7.59**（2026-09-21，`Release.ps1` 全程自动发布，三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.59_20260921.zip` + `.sha256` 已上传；见 `docs/releases/v2.7.59.md`）：参数描述批次 2——脚本化追溯（工具 → `Portal.X` → `XxxLogic.Validate…` → `RequireOneOf(param, 数组)`，别名按文件解析，同名数组按到达的类消歧，`*Path` 不当枚举）得到 155 个枚举型参数的精确取值，343 个按名称人工写就；498 个参数补 `[Description]`（36 个文件），enum 提示 67 → 185（51 → 119 个工具），无自身描述 1392 → 894（全部词汇表覆盖）；`ExtractPlcBlockMetrics.path` 文案修正；`Check-DeadToolReferences` 允许 `ReadOnly` / `DeleteUnusedTypes` / `SetOnlyHigherUpdatedVersionAsDefault`。工具 453、lite 59、离线 2453 不变。
 - **2.7.58 部署后真机**（2026-09-21，`Update-Engine.ps1` 在线更新，TIA 只开着 `项目1` pid 12060）：`tools/list` 59 个工具 0 个属性缺 `description`、4 个 enum（`topic` / `importOption` ×2 / `kind`）、`default` / `examples` 到位；故意错的 `GetBlocks {SoftwarePath, regex}` 被拒绝并带 `preflight`（unknown → regexName、case fix、示例、next）；`CallTool ExportPlcWatchTable` 缺参 → `Meta.preflight.missing`；`GetRecipe` 12 条 / `watch-table` 3 步；业务失败（`GetBlockInfo` 不存在的块、`GetPlcWatchTables` 不存在的 PLC）带示例 + "消息已点明原因"；正常调用无 `preflight`。
