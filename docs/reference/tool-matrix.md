@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-20 22:57:28
-- 引擎文件版本：2.7.56.0
-- 工具数量：450
+- 生成时间：2026-09-21 00:03:40
+- 引擎文件版本：2.7.57.0
+- 工具数量：452
 
 ## 读法
 
@@ -14,7 +14,7 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
-| `SESSION` | 会话与发现，不改工程 | 14 |
+| `SESSION` | 会话与发现，不改工程 | 16 |
 | `READ` | 读取已打开工程，不改动 | 132 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 183 |
 | `FILE` | 导出/导入文件或生成离线产物 | 45 |
@@ -29,7 +29,7 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 35 | `Bootstrap` (1)、`Guide` (1)、`Meta` (3)、`Portal` (7)、`Diagnostics` (5)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `session` | 会话与基础设施 / Session & infrastructure | 37 | `Bootstrap` (1)、`Guide` (1)、`Meta` (4)、`Portal` (7)、`Diagnostics` (6)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 61 | `Project` (25)、`Library` (13)、`VersionControl` (8)、`Security` (7)、`Validation` (8) |
 | `plc` | PLC 软件 / PLC software | 116 | `PLC-Software` (75)、`PLC-Builders` (9)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (7)、`Safety` (9) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
@@ -37,7 +37,7 @@
 | `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 25 | `Online-Monitoring` (20)、`Simulation` (5) |
 
-## session — 会话与基础设施 / Session & infrastructure（35）
+## session — 会话与基础设施 / Session & infrastructure（37）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -53,13 +53,14 @@
 |---|---|---|---|
 | `GetAuthoringGuide` | L0 | SESSION* | Verified syntax + workflow cheat sheet for authoring TIA content through this server. CALL THIS BEFORE writing any SCL/LAD/DB/HMI content — it prevents the common encoding, syntax and tool-routing mistakes. Topics: workflow, scl, lad, db, hmi, errors. Read-only, does not touch TIA Portal. |
 
-### [Meta]（3）
+### [Meta]（4）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `CallTool` | L0 | SESSION* | Invoke ANY tool in the full roster by name, including ones not listed in this session. Use FindTools first to get the exact name and parameter signature. Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. Example: name='ExportPlcWatchTable', argumentsJson='{"softwarePath":"PLC_1","watchTableName":"WT1"}'. |
 | `FindTools` | L0 | READ | Search the FULL tool roster, including tools not listed in this session. The server ships a small 'lite' roster by default so every host can load it; everything else is reached through this tool plus CallTool. USE THIS whenever the visible tools do not cover what you need, before concluding the server cannot do something. Search by capability words, not exact names: 'watch table', 'HMI screen', 'download', 'cross reference', 'GSD'. Optionally restrict to one category (session/project/plc/plc-online/hardware/hmi/runtime) or one domain tag (e.g. HMI-Unified, PLC-Online) — see ListToolCategories. Returns each match's exact name, parameter signature with defaults, and full description; then invoke it with CallTool. |
 | `ListToolCategories` | L0 | READ | The tool taxonomy: 7 categories (session, project, plc, plc-online, hardware, hmi, runtime), their domains (the [L?][Domain] tag every tool description starts with), the meaning of layers L0/L1/L2, and live tool counts per category/domain/operation. Call this first to orient, then FindTools(category=… or domain=…) to browse one area. |
+| `PreflightToolCall` | L0 | SESSION | Check a planned tool call WITHOUT executing it. Resolves the tool name (suggests the right one on a typo), validates argumentsJson against the real signature (missing required parameters, unknown or mis-cased names, type mismatches, values outside the documented alternatives, what CallTool would coerce), reports what the call would do (operation class, dryRun / confirm flags, precautions), whether the session prerequisites hold (connected, project bound) and one worked example. Use it before an unfamiliar call and after a correction from the user: fix the plan from this report, then call the tool (directly or through CallTool). Nothing touches TIA Portal or the project. |
 
 ### [Portal]（7）
 
@@ -73,10 +74,11 @@
 | `ListPortalProcessProjects` | L1 | SESSION* | List running TIA Portal processes and the projects/sessions visible in each process. |
 | `ReadPortalInfo` | L2 | READ | Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project. |
 
-### [Diagnostics]（5）
+### [Diagnostics]（6）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
+| `CheckForUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -ZipPath updates offline, -Rollback restores the previous install). Needs internet on the TIA machine; without it the tool reports the release page URL and the offline procedure. Nothing touches TIA Portal. |
 | `Doctor` | L0 | SESSION* | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. |
 | `RunCapabilitySelfTest` | L0 | EXECUTE* | Run a read-only MCP/TIA readiness self-test. It checks Openness group membership, connection state, visible portal processes, optional automation context, and optional project tree readback without writing to the project. |
 | `RunOnlineMonitoringSafetySelfTest` | L0 | EXECUTE* | Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. |
