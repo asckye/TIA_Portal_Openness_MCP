@@ -45,8 +45,8 @@
 .PARAMETER KillStrayEngine
   Kill a TiaMcpServer.exe left behind on this host (it locks runtime\v21\TiaMcpServer.exe) instead of refusing.
 .PARAMETER Resume
-  The three release commits already exist locally (HEAD is "Release X.Y.Z (3/3)", tree clean): skip bump, build, gates and
-  commits and continue with push, CI, tag and publish (for a run that stopped after committing).
+  The three release commits already exist locally (tree clean): skip bump, build, gates and commits and continue with
+  push, CI, tag (on HEAD - the publish workflow requires the tag to be master HEAD) and publish (for a run that stopped after committing).
 
 .EXAMPLE
   powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Release.ps1 -Version 2.7.57 -Summary "short description of the change"
@@ -153,13 +153,14 @@ Say ("Summary = " + $Summary)
 $resumed = $false
 if ($Resume) {
     # The (3/3) commit may already be followed by a docs/scripts commit (for instance the fix for whatever stopped the
-    # first run); the tag still goes on the validated (3/3) commit, later commits are pushed with it.
+    # first run). The publish workflow insists that the tag points at master HEAD ("Master changed" otherwise - the
+    # 2.7.57 run 58 failure), so the tag goes on HEAD; every push triggers validate-bundle / offline-checks, which are
+    # waited for on HEAD's own commit title.
     $threeOfThree = @(& $Git log --pretty='%H %s' -20) | Where-Object { $_ -like ('* Release ' + $Version + ' (3/3)*') } | Select-Object -First 1
     $dirtyNow = (& $Git status --porcelain) | Where-Object { $_ -notmatch '^\?\?' }
     if (-not $threeOfThree) { Fail ('-Resume needs the "Release ' + $Version + ' (3/3)" commit within the last 20 commits') }
     if ($dirtyNow) { Fail ('-Resume needs a clean tree; dirty: ' + ($dirtyNow -join '; ')) }
-    $tagTarget = ($threeOfThree -split ' ')[0]
-    Say ('resuming after the three commits (tag target ' + $tagTarget + ')')
+    Say ('resuming after the three commits (' + ($threeOfThree -split ' ')[0].Substring(0, 7) + '); the tag goes on HEAD')
     $resumed = $true
 }
 if (-not $resumed) {
@@ -260,7 +261,9 @@ $shas = (& $Git rev-list --reverse --first-parent origin/master..master)
 foreach ($sha in $shas) {
     Run $Git @('-c', 'http.postBuffer=157286400', 'push', 'origin', ($sha + ':refs/heads/master')) ('push ' + $sha)
 }
-$title3 = 'Release ' + $Version + ' (3/3)'
+# CI runs are found by the commit title on the workflow pages; HEAD is the (3/3) commit unless a follow-up commit was added before -Resume.
+$headTitle = (& $Git log -1 --pretty=%s).Trim()
+$title3 = $(if ($headTitle.Length -gt 60) { $headTitle.Substring(0, 60) } else { $headTitle })
 function WorkflowState([string]$workflow, [string]$titlePart) {
     # GitHub's unauthenticated API is rate-limited from here; the workflow page's aria-labels carry the same information.
     try {
@@ -291,7 +294,7 @@ if ($NoTag) { Say 'stopped before tag (-NoTag)'; exit 0 }
 
 # ---------------------------------------------------------------- 7. tag + publish
 $tag = 'v' + $Version
-$head = $(if ($resumed) { $tagTarget } else { (& $Git rev-parse HEAD).Trim() })
+$head = (& $Git rev-parse HEAD).Trim()
 $tagMsg = Join-Path $env:TEMP ('release-tag-' + [guid]::NewGuid().ToString('N') + '.txt')
 [IO.File]::WriteAllText($tagMsg, ($tag + ': ' + $Summary), (New-Object System.Text.UTF8Encoding($false)))
 & $Git tag -a $tag -F $tagMsg $head

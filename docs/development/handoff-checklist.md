@@ -1,4 +1,4 @@
-# 换机器交接单（2026-09-21，2.7.56 已部署并真机通过；在线族收口、`项目1` 已保存；下一版 2.7.57 更新器 + 调用规范）
+# 换机器交接单（2026-09-21，2.7.57 已发布、待部署（用更新器）；2.7.56 真机通过；下一版 2.7.58 全部工具的调用纪律）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -6,7 +6,7 @@
 
 ## 0. 一句话现状
 
-- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.56**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.56_20260921.zip` 已上传）。450 个工具，离线 2218，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.56**（2026-09-21 部署）。
+- 仓库 `master` = `origin/master`，最后一次发布 **v2.7.57**（tag、三条工作流全绿，ZIP `TIA_MCP_Delivery_v2.7.57_20260921.zip` 已上传；`Release.ps1` 第一次真跑）。452 个工具（lite 58），离线 2356，形状 V20 2805 / V21 3097。虚拟机上跑的是 **2.7.56**；2.7.57 待部署——**先停引擎，在解压目录里 `scripts\operations\Update-Engine.ps1 -ZipPath <2.7.57 ZIP>`（`.sha256` 放旁边），重启后 `Bootstrap` 看 `serverVersion 2.7.57.0`；出问题 `-Rollback`**。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷，**真机已通过**（按名附加到 4840、不自启、进程数不增）。
 - 在线族：PG 侧（Softbus）、TLS 信任、CPU 保护（`ManagePlcProtection`）都已解决；**F-CPU 不能经 Openness 下载**（TIA 规则），在线测试一律用标准 CPU `MCP_STD`。
 
