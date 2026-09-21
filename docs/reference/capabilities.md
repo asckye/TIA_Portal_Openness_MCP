@@ -1,6 +1,10 @@
 # 工程能力与验收边界
 
-本文说明 2.7.55 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 2.7.56 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 450 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 56 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 2.7.56 `Connect` 遇到多个 TIA 进程只附加、不再自启
+
+2.7.55 真机：singleStep 场景 PASSED（`SingleStep_C`，Cycles 恰好 +5），在线族收口；但引擎重启后 `Connect` 遇到两个 TIA 进程（维护者的工程 + `项目1`）在 2×30 s 内都没附上，就**又启动了一个空 TIA 实例**（MCP 客户端早已 60 s 超时，引擎绑在无工程的实例上）。现在：有 TIA 进程时按 `projectName` 找持有该工程的进程，否则取第一个有工程 / 会话的，再否则第一个可附加的；一个都附不上就拒绝并逐进程说明原因（超时 / 异常），**不再自启**——除非 `allowStart=true`；只有完全没有 TIA 进程时才启动新实例。每进程附加等待 20 s、总预算 45 s（客户端 60 s 之内）。`Meta` 回报 `processCount` / `candidates` / `boundProcessId` / `startedNew` / `warning`。纯逻辑 `ConnectLogic`（离线 +7）。详见 `docs/releases/v2.7.56.md`。
 
 ## 2.7.55 单步场景按同步点等待（`RunToNextSyncPoint` 是异步的）
 

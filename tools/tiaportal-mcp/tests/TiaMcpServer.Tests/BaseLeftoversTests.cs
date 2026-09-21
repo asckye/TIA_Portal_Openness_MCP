@@ -89,6 +89,19 @@ namespace TiaMcpServer.Tests
             BaseLeftoversLogic.ValidateOnlineCredentials("", "", ""); BaseLeftoversLogic.ValidateOnlineCredentials("", "pw", ""); BaseLeftoversLogic.ValidateOnlineCredentials("user", "pw", "ProjectUser"); BaseLeftoversLogic.ValidateOnlineCredentials("", "pw", "PasswordOnly");
             check(true, "baseleft: online credentials accepted");
             check(Fails<ArgumentException>(() => BaseLeftoversLogic.ValidateOnlineCredentials("user", "", "")), "baseleft: online user without password refused");
+            // 2.7.56 Connect with several TIA processes: attach by project name / first with a project / first attachable; never spawn
+            var c1 = new ConnectLogic.Candidate { ProcessId = 15100, Attached = true, ProjectNames = { "AutomaticDipCoatingMachine" } };
+            var c2 = new ConnectLogic.Candidate { ProcessId = 4840, Attached = true, ProjectNames = { "项目1" } };
+            var c3 = new ConnectLogic.Candidate { ProcessId = 15748, Attached = true };
+            var c4 = new ConnectLogic.Candidate { ProcessId = 9, Attached = false, Failure = "attach did not answer within 20000 ms" };
+            check(ConnectLogic.Choose(new[] { c1, c2, c3 }, "项目1")!.ProcessId == 4840, "connect: the process holding the wanted project wins");
+            check(ConnectLogic.Choose(new[] { c3, c1, c2 }, null)!.ProcessId == 15100, "connect: without a name the first process with a project wins over an empty one");
+            check(ConnectLogic.Choose(new[] { c3 }, "项目1")!.ProcessId == 15748, "connect: an empty process is still bound when nothing holds the wanted project (warning, not refusal)");
+            check(ConnectLogic.Choose(new[] { c4 }, null) == null, "connect: nothing attachable -> null (caller refuses instead of spawning)");
+            check(ConnectLogic.Refusal(new[] { c4 }, "项目1").Contains("No new instance was started") && ConnectLogic.Refusal(new[] { c4 }, "项目1").Contains("PID 9") && ConnectLogic.Refusal(new[] { c4 }, "项目1").Contains("allowStart=true"), "connect: refusal names the processes, the missing project and the allowStart escape hatch");
+            check(ConnectLogic.MissingProjectWarning(new[] { c1, c3 }, "项目1", c1).Contains("bound PID 15100"), "connect: missing-project warning names the bound process");
+            check(ConnectLogic.AttachTimeoutMsPerProcess * 2 <= ConnectLogic.AttachTotalBudgetMs + 1 && ConnectLogic.AttachTotalBudgetMs < 60000, "connect: two attach waits fit the 45 s budget, the budget stays under the client's 60 s");
+
             // 2.7.52 TLS trust decision for FW >= 2.9 PLCs (TlsVerificationConfiguration on OnlineLegitimation)
             check(BaseLeftoversLogic.TlsSelectionToApply(true, "NonVerified") == "Trusted" && BaseLeftoversLogic.TlsSelectionToApply(true, "NonTrusted") == "Trusted", "baseleft: unverified / untrusted certificate is answered Trusted when the caller allows it");
             check(BaseLeftoversLogic.TlsSelectionToApply(true, "Trusted") == null && BaseLeftoversLogic.TlsSelectionToApply(false, "NonVerified") == null, "baseleft: already trusted or trust refused -> nothing applied");

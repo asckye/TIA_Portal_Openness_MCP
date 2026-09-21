@@ -1,5 +1,12 @@
 # Change Log
 
+## [2.7.56] - 2026-09-21
+
+引擎 2.7.56.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.56](docs/releases/v2.7.56.md)。2.7.55 部署后的收口结果与 `Connect` 的多进程修复。
+
+- **2.7.55 真机**：`RunPlcSimAdvancedTestScenario singleStep` PASSED 8/8、4/4——`operatingModeApplied SingleStep_C`、`cyclesStepped 5`（71 ms）、`Cycles` 304→309 恰好 +5、`Start=false` 后 2 周期不增，**在线族收口**；`SaveProject` 通过（`项目1` 含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行）。
+- **`Connect` 多进程缺陷（真机）**：引擎重启后调用 `Connect` 时虚拟机开着两个 TIA 进程（维护者的 `AutomaticDipCoatingMachine` pid 15100 与 `项目1` pid 4840），两次 30 s 附加都没答复，旧代码于是**启动了第三个空 TIA 实例**（pid 15748）并绑在上面；MCP 客户端早已超时，`GetState` 显示 `project '-'`，`AttachToOpenProject {projectName:"项目1"}` 才换回 4840。修：`ConnectPortal(projectName, allowStart, info)`——有进程时只附加：`projectName` 命中的进程优先（命中即停，不再逐个探测），否则第一个有工程 / 会话的，再否则第一个可附加的；全部附不上 → `PortalException` 逐进程说明（超时毫秒 / 异常文案）并提示"TIA 可能正弹 Openness 访问对话框 / 实例忙 / 重试 / `ListPortalProcessProjects` / `allowStart=true` 或 `ConnectIsolated`"，**不自启**；只有 `GetProcesses()` 为空（或 `allowStart=true` 且无可附加）才 `new TiaPortal`。每进程等待 20 s、总预算 45 s。`Connect` 工具新增 `projectName`（命中时同时记为期望工程）与 `allowStart`（默认 false），`Meta` 回报 `processCount` / `candidates` / `boundProcessId` / `startedNew` / `attachElapsedMs` / `warning`。纯逻辑 `ConnectLogic`（离线 +7 = 2218）。空实例仍没有工具能关（引擎不杀别人的进程），要在 TIA 机器上手动关。
+
 ## [2.7.55] - 2026-09-21
 
 引擎 2.7.55.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.55](docs/releases/v2.7.55.md)。2.7.54 部署后的在线族收尾。

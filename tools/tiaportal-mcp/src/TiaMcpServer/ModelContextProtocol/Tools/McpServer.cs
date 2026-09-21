@@ -57,23 +57,26 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region portal
 
-        [McpServerTool(Name = "Connect"), Description("[L1][Portal] Connect to a running TIA Portal instance or start a new one. MUST be the first tool called in every session. On success, state becomes Connected=true. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first.")]
-        public static ResponseConnect Connect()
+        [McpServerTool(Name = "Connect"), Description("[L1][Portal] Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - to the process holding projectName when given, else the first one with an open project / session, else the first attachable - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first.")]
+        public static ResponseConnect Connect(
+            [Description("projectName: optional exact name of the project the session wants; the TIA process holding it is preferred and the name is remembered as the expected project.")] string projectName = "",
+            [Description("allowStart: false (default) never starts a new TIA Portal instance while others are running; true starts a separate headless instance when none of the running ones can be attached.")] bool allowStart = false)
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
 
             try
             {
                 // ConnectPortal 失败时抛 PortalException（结构化错误码），下方 catch 统一映射到 McpException
-                Portal.ConnectPortal();
+                var info = new JsonObject { ["timestamp"] = DateTime.Now };
+                Portal.ConnectPortal(string.IsNullOrWhiteSpace(projectName) ? null : projectName, allowStart, info);
+                info["success"] = true;
+                var bound = info["boundProcessId"]?.ToString();
+                var startedNew = info["startedNew"]?.GetValue<bool>() == true;
                 return new ResponseConnect
                 {
-                    Message = "Connected to TIA-Portal",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Message = startedNew ? "Started a new TIA Portal instance (PID " + bound + ") - no TIA Portal was running" + (allowStart ? " that could be attached" : "") + "."
+                                         : "Connected to TIA-Portal (attached to PID " + bound + ")" + (info["warning"] != null ? "; " + info["warning"] : "") + ".",
+                    Meta = info
                 };
             }
             catch (PortalException pex)

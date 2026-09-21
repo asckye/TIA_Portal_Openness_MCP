@@ -233,9 +233,23 @@ namespace TiaMcpServer.Siemens
             return false;
         }
 
-        public bool ConnectPortal()
+        public bool ConnectPortal() => ConnectPortal(null, false, null);
+
+        /// <summary>Last connect diagnostics (process candidates, the bound process, whether an instance was started).</summary>
+        public JsonObject? LastConnectInfo { get; private set; }
+
+        // 2.7.56 (real machine, 2026-09-21): two TIA processes (the maintainer's project + 项目1) - neither attached within 2 x 30 s and
+        // the old code then STARTED A THIRD, EMPTY INSTANCE, which the MCP client (already timed out) never learned about; the engine sat
+        // bound to a portal without a project. Now: attach (by wanted project name, else the first with a project / session, else the
+        // first attachable) or refuse with the per-process outcome; an instance is started only when no TIA process exists or the caller
+        // passes allowStart. Per-process wait 20 s inside a 45 s total budget so the answer arrives before the client's 60 s.
+        public bool ConnectPortal(string? projectName, bool allowStart, JsonObject? info)
         {
             _logger?.LogInformation("Connecting to TIA Portal...");
+            info ??= new JsonObject();
+            LastConnectInfo = info;
+            var wanted = string.IsNullOrWhiteSpace(projectName) ? null : projectName!.Trim();
+            info["projectName"] = wanted; info["allowStart"] = allowStart;
 
             try
             {
@@ -246,131 +260,104 @@ namespace TiaMcpServer.Siemens
                 _portal = null;
                 _expectedProjectName = null;
 
-                // connect to running TIA Portal
-                var processes = TiaPortal.GetProcesses();
-                _logger?.LogInformation($"TIA Portal process count: {processes.Count()}");
-                if (processes.Any())
+                var processes = TiaPortal.GetProcesses().ToList();
+                _logger?.LogInformation($"TIA Portal process count: {processes.Count}");
+                info["processCount"] = processes.Count;
+                if (processes.Count > 0)
                 {
-                    // IMPORTANT: multiple Siemens.Automation.Portal.exe can run at once.
-                    // Attaching to processes.First() is unstable and often attaches to an instance
-                    // without the user's open project, causing "project already opened by user" errors.
-                    //
-                    // Strategy:
-                    // - Try attach each process
-                    // - Prefer the first instance that exposes LocalSessions/Projects (i.e. has an open project)
-                    // - Otherwise fall back to the first attachable instance
-                    TiaPortal? firstAttachable = null;
-                    string? firstAttachableInfo = null;
-
+                    var candidates = new List<ConnectLogic.Candidate>();
+                    var portals = new Dictionary<int, TiaPortal>();
+                    var budget = System.Diagnostics.Stopwatch.StartNew();
                     foreach (var proc in processes)
                     {
-                        TiaPortal? candidate = null;
+                        var c = new ConnectLogic.Candidate { ProcessId = proc.Id };
+                        candidates.Add(c);
+                        var remaining = ConnectLogic.AttachTotalBudgetMs - (int)budget.ElapsedMilliseconds;
+                        if (remaining < 2000) { c.Failure = "skipped, attach budget of " + ConnectLogic.AttachTotalBudgetMs + " ms exhausted"; continue; }
                         try
                         {
                             _logger?.LogInformation($"Trying attach to TIA Portal process PID={proc.Id}");
-                            candidate = AttachWithTimeout(proc, 30000);
-                            _logger?.LogInformation(candidate == null
-                                ? $"Attach returned null/timed out for PID={proc.Id} — skipping"
-                                : $"Attach succeeded for PID={proc.Id}");
-                            if (candidate == null) continue;
-
-                            // record first attachable in case none has projects
-                            if (firstAttachable == null)
-                            {
-                                firstAttachable = candidate;
-                                firstAttachableInfo = $"PID={proc.Id}";
-                            }
-
-                            // Prefer instance with an open project/session
-                            bool hasSession = false;
-                            bool hasProject = false;
-                            try { hasSession = candidate.LocalSessions.Any(); } catch { }
-                            try { hasProject = candidate.Projects.Any(); } catch { }
-                            _logger?.LogInformation($"Portal PID={proc.Id}: hasSession={hasSession}, hasProject={hasProject}");
-
-                            if (hasSession || hasProject)
-                            {
-                                _portal = candidate; RememberBoundProcess(proc.Id);
-                                _logger?.LogInformation($"Selected attached TIA Portal PID={proc.Id}");
-
-                                if (hasSession)
-                                {
-                                    try
-                                    {
-                                        _session = _portal.LocalSessions.First();
-                                        _project = _session.Project;
-                                        _projectOpenedByUs = false;
-                                    }
-                                    catch { }
-                                }
-
-                                if (_project == null && hasProject)
-                                {
-                                    try { _project = _portal.Projects.First(); } catch { }
-                                    _projectOpenedByUs = false;
-                                }
-
-                                return true;
-                            }
+                            var candidate = AttachWithTimeout(proc, Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining));
+                            if (candidate == null) { c.Failure = "attach did not answer within " + Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining) + " ms"; continue; }
+                            c.Attached = true; portals[proc.Id] = candidate;
+                            try { c.HasSession = candidate.LocalSessions.Any(); } catch { }
+                            try { foreach (var pr in candidate.Projects) c.ProjectNames.Add(pr.Name); } catch { }
+                            _logger?.LogInformation($"Portal PID={proc.Id}: hasSession={c.HasSession}, projects={string.Join("/", c.ProjectNames)}");
+                            // The wanted project found: no need to probe the remaining processes (each probe can cost a dialog wait).
+                            if (wanted != null && c.ProjectNames.Contains(wanted, StringComparer.Ordinal)) break;
                         }
                         catch (Exception ex)
                         {
                             _logger?.LogWarning(ex, $"Attach failed for TIA Portal PID={proc.Id}");
+                            c.Failure = ex.Message;
                             LastConnectError = ex.ToString();
-
-                            // "这个候选连不上"（忙 / attach 超时 / 没有工程）可以换下一个；
-                            // 但白名单/授权被拒换谁都一样，继续扫毫无意义且有害：扫空所有候选后
-                            // 会落到下面"新起一个无头 TIA 实例"，那次同样被拒，却在用户机器上
-                            // 留下一个空转的孤儿 Siemens.Automation.Portal 进程。所以当场原样重抛，
-                            // 让调用方拿到真因而不是"没有可 attach 的实例"。
+                            // A whitelist / authorization refusal is the same for every process and for a new instance: stop here and say so.
                             if (IsSecurityRefusal(ex))
                             {
-                                // 先释放此前记下的可 attach 候选——已经不会有人用它了。
-                                // 置 null 后，当前候选（若正是它）也能被 finally 正常释放，不漏 COM 引用。
-                                if (firstAttachable != null)
-                                {
-                                    if (firstAttachable != candidate)
-                                    {
-                                        try { firstAttachable.Dispose(); } catch { }
-                                    }
-                                    firstAttachable = null;
-                                }
+                                foreach (var other in portals.Values) { try { other.Dispose(); } catch { } }
+                                info["candidates"] = new JsonArray(candidates.Select(x => (JsonNode)JsonValue.Create(ConnectLogic.Describe(x))!).ToArray());
                                 throw;
                             }
                         }
-                        finally
-                        {
-                            // If this candidate wasn't selected and isn't firstAttachable, dispose it.
-                            if (candidate != null && candidate != _portal && candidate != firstAttachable)
-                            {
-                                try { candidate.Dispose(); } catch { }
-                            }
-                        }
                     }
+                    info["candidates"] = new JsonArray(candidates.Select(x => (JsonNode)JsonValue.Create(ConnectLogic.Describe(x))!).ToArray());
+                    info["attachElapsedMs"] = budget.ElapsedMilliseconds;
 
-                    // fallback to first attachable instance
-                    if (firstAttachable != null)
+                    var chosen = ConnectLogic.Choose(candidates, wanted);
+                    if (chosen != null)
                     {
-                        _portal = firstAttachable; RememberBoundProcess();
-                        _logger?.LogInformation($"Falling back to first attachable TIA Portal ({firstAttachableInfo})");
-                        LastConnectError = $"Attached to first available portal ({firstAttachableInfo}), but it has no visible projects/sessions.";
+                        _portal = portals[chosen.ProcessId]; RememberBoundProcess(chosen.ProcessId);
+                        foreach (var kv in portals) if (kv.Key != chosen.ProcessId) { try { kv.Value.Dispose(); } catch { } }
+                        info["boundProcessId"] = chosen.ProcessId; info["startedNew"] = false;
+                        if (chosen.HasSession)
+                        {
+                            try { _session = _portal.LocalSessions.First(); _project = _session.Project; _projectOpenedByUs = false; } catch { }
+                        }
+                        if (_project == null && chosen.ProjectNames.Count > 0)
+                        {
+                            try
+                            {
+                                _project = wanted != null ? _portal.Projects.FirstOrDefault(pr => pr.Name == wanted) ?? _portal.Projects.First() : _portal.Projects.First();
+                            }
+                            catch { }
+                            _projectOpenedByUs = false;
+                        }
+                        if (wanted != null)
+                        {
+                            if (chosen.ProjectNames.Contains(wanted, StringComparer.Ordinal)) _expectedProjectName = wanted;
+                            else { var warning = ConnectLogic.MissingProjectWarning(candidates, wanted, chosen); info["warning"] = warning; LastConnectError = warning; }
+                        }
+                        else if (chosen.ProjectNames.Count == 0 && !chosen.HasSession)
+                        {
+                            LastConnectError = $"Attached to PID {chosen.ProcessId}, but it has no visible projects/sessions.";
+                            info["warning"] = LastConnectError;
+                        }
+                        _logger?.LogInformation($"Selected attached TIA Portal PID={chosen.ProcessId}");
                         return true;
                     }
 
-                    LastConnectError = "No attachable TIA Portal process found; starting a new TIA Portal instance.";
+                    if (!allowStart)
+                    {
+                        var refusal = ConnectLogic.Refusal(candidates, wanted);
+                        LastConnectError = refusal;
+                        info["startedNew"] = false;
+                        throw new PortalException(PortalErrorCode.InvalidState, refusal);
+                    }
+                    LastConnectError = "No attachable TIA Portal process; starting a new instance because allowStart=true.";
                     _logger?.LogInformation(LastConnectError);
                 }
 
-                // start new TIA Portal. Headless (WithoutUserInterface) is the default because it
-                // starts far faster than booting the full GUI; --with-ui flips it for visual inspection.
+                // No TIA process at all (or allowStart with nothing attachable): start one. Headless (WithoutUserInterface) is the default
+                // because it starts far faster than booting the full GUI; --with-ui flips it for visual inspection.
                 var launchMode = Engineering.LaunchWithUserInterface
                     ? TiaPortalMode.WithUserInterface
                     : TiaPortalMode.WithoutUserInterface;
                 _logger?.LogInformation($"Starting a new TIA Portal instance ({launchMode}).");
                 _portal = new TiaPortal(launchMode); RememberBoundProcess();
-
+                info["startedNew"] = true; info["boundProcessId"] = _boundProcessId; info["launchMode"] = launchMode.ToString();
                 return true;
             }
+            catch (PortalException) { throw; }
             catch (Exception ex)
             {
                 // 统一错误处理：硬失败抛结构化异常，替代 return false + LastConnectError 侧信道
