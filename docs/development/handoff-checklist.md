@@ -1,10 +1,13 @@
-# 换机器交接单（2026-09-21，2.7.61 发布中（配置器本机检测）；虚拟机 2.7.59；TIA 只开着 `项目1`）
+# 换机器交接单（2026-09-29，3.0.0 已发布；版本分支已同步；本次未部署 VM）
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
 这一页只回答"在另一台电脑上接着做，第一天要知道什么"。长期事实（每阶段固定动作、发布闸门、TIA 退出点、只在真机上学到的 API 事实）都在 [handoff.md](handoff.md)，不重复。
 
 ## 0. 一句话现状
+
+2026-09-29 当前：**[v3.0.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.0.0)**，提交 `32856cf2a35b`，完整包 `TIA_MCP_Delivery_v3.0.0_20260929.zip`（18,203,739 字节）；ZIP SHA-256 `5a97c0b4649f4dc20d5a8d2d38d9316ac1509d5657df25bb1ef9613e5b88757a`。发布前两项 CI 和发布后独立复核均通过。464 工具（lite 59），离线 2551；两版各 31 生态验证、28 HTTP、42 资源发现；配置器 111。 `master` 为当前 V20/V21 主线；上游 v17–v21 已作为独立分支同步，见[范围说明](../reference/version-branches.md)。克隆后先准备 PublicAPI 和 `scripts/ecosystem/Install-PlcTools.ps1` 的 Python 3.12+ 环境，再 `Build-Release.ps1`。本次未连接 VM，以下 VM 状态与旧版本数字均为 2026-09-21 历史记录，不能据此判断当前运行状态。
+
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.9.2**（ZIP `TIA_MCP_Delivery_v2.9.2_20260921.zip` 由本机 `Publish-Release.ps1` 上传，`Verify published release` 复核通过；二进制不在 Git 里——**clone 后先 `Build-Release.ps1`**）。453 个工具（lite 59），离线 2456，形状 V20 2805 / V21 3097；参数 2204 个，1310 个有自己的描述、其余 894 个词汇表覆盖，enum 提示 185。虚拟机**地址现在是 192.168.136.128**（克隆 VM，原 192.168.0.172 作废；`~/.claude.json` 的 `tia-portal-vm` 与配置器里都要用新地址），跑的是 **2.9.1**（配置器菜单“更新 → 更新引擎…”部署；安装目录仍是嵌套的 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.62_20260921\TIA_MCP_Delivery_v2.7.62_20260921`，虚拟机有外网）。TIA 里两个进程：`项目1` 与维护者工程，`Connect {projectName:"项目1"}` 按名附加。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（只在线，2.7.62 起没有 `-ZipPath` 离线路径，机器要能访问 github.com），**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。
 - 真机台账：见 `docs/reference/real-machine-ledger.md` 头部计数；**在线族收口**，🔁 0；`UploadStationFromPlc` 对 PLCSIM 实例是 TIA 侧不支持（⛔）。2.7.56 修了 `Connect` 多 TIA 进程时自启空实例的缺陷，**真机已通过**（按名附加到 4840、不自启、进程数不增）。

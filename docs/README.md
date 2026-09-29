@@ -1,6 +1,6 @@
 # 文档目录
 
-未发布生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [本地验证记录](development/ecosystem-integration-20260929.md)。
+v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [本地验证记录](development/ecosystem-integration-20260929.md)。
 
 重点核对：[Siemens 官方指南与 API 流程审计](development/official-openness-audit-20260929.md)（32 个主题、已修复问题、待验收项）。
 
@@ -22,6 +22,7 @@
 
 ## 参考与排错
 
+- [TIA 版本分支与适用范围](reference/version-branches.md)（master 与独立 v17–v21 分支）
 - [工具矩阵](reference/tool-matrix.md)、[能力与验收边界](reference/capabilities.md)、[真机台账（逐工具）](reference/real-machine-ledger.md)、[官方 API 覆盖清单](reference/openness-coverage.md)、[生态与参考资源](reference/ecosystem.md)、[自然语言配方](reference/natural-language-recipes.md)
 - [错误模型](troubleshooting/errors.md)、[Openness 限制](troubleshooting/openness-limitations.md)、[HMI 快照诊断](troubleshooting/hmi-snapshots.md)
 - [模板索引](../templates/README.md)、[AI 操作 skill](../tools/tiaportal-mcp/skill/SKILL.md)、[清单说明](../manifest/README.md)

@@ -42,6 +42,8 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 The static inventory contains **464 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **59**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
+`master` provides the current V20/V21 release. Independent upstream snapshots are also retained on `v17`–`v21`; V17 is a limited PLC phase, and V18/V19 do not yet contain dedicated implementations. See [version branches and scope](docs/reference/version-branches.md).
+
 Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 
 Delivery and engine versions are independent. [Delivery metadata](manifest/delivery.json) binds the engine and configurator records; [validation documentation](docs/development/validation.md) separates offline, API and real TIA checks.

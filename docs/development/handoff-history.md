@@ -4,8 +4,9 @@
 
 这一页只存历史：从 `handoff.md` §1 移出来的逐版本条目（每版做了什么、部署后真机结果）、2.7.42 覆盖审计与阶段 1–6 的收口清单（含当时用过的官方页面 id）、阶段 6 的旧类型清单。当前状态与下一步在 [handoff.md](handoff.md)；各版详情在 `../releases/`，变更摘要在 `../../CHANGELOG.md`。新发布后在本页 §1 顶部加一条，`handoff.md` §1 只改现状表。
 
-## 1. 逐版本记录（2.7.41–2.9.2，倒序；每条为当时写下的原文）
+## 1. 逐版本记录（2.7.41–3.0.0，倒序；每条为当时写下的原文）
 
+- **3.0.0**（2026-09-29）：**[v3.0.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.0.0)**，提交 `32856cf2a35b`，完整包 `TIA_MCP_Delivery_v3.0.0_20260929.zip`（18,203,739 字节）；ZIP SHA-256 `5a97c0b4649f4dc20d5a8d2d38d9316ac1509d5657df25bb1ef9613e5b88757a`。发布前两项 CI 和发布后独立复核均通过。464 工具（lite 59），离线 2551；两版各 31 生态验证、28 HTTP、42 资源发现；配置器 111。 11 个生态工具、官方指南 32 主题和 9 项流程修复；事务范围收紧、交叉引用默认拒绝。无 VM 部署或新增原生写入验收。发布后将上游 v17–v21 同步为独立分支（v18/v19 为同一历史提交），详见[版本范围](../reference/version-branches.md)。
 - **2.9.2**（2026-09-21，小修）：2.9.1 真机发现 `DeletePlcBlock(crossReferences=true)` 被护栏挡住时只说“取不到”——改用带 `out reason` 的重载，结果 `crossReferenceUnavailableReason` + 警告带原因（`DeletePlcType` 同）。ZIP `TIA_MCP_Delivery_v2.9.2_20260921.zip`。当天 2.9.1 部署到虚拟机（新地址 192.168.136.128，配置器菜单更新）后待真机全过：默认干跑不查、未编译即拒绝并点名 `Main, MCP_SimLogic`、编译后恢复、TIA 未退出。
 - **2.9.1**（2026-09-21，交叉引用护栏；一条命令 9 分钟）：维护者补了 TIA 崩溃的时间线（删 / 建变量 → 热开共享文件夹 → Override 导 4 UDT + 5 块未编译 → `DeletePlcBlock SYSTEM_INFO_FB_IDB` 干跑的交叉引用查询正常返回 26 条旧引用 → 下一次调用 PID 已不在）和 Windows 事件（`ProcessExitMonitor` 3000 `EVENT_PROCESSTERMINATION_SELF`，`Siemens.Automation.Portal.exe` 退出码 -1，10:42:38Z）——TIA 自己退出，内存 / 共享文件夹可排除，根因是“写操作后未编译”的状态，交叉引用查询是触发器；新 `CrossReferenceGuardLogic`：PLC 任一块 `IsConsistent=false` 就拒绝查询并点名前 10 个，`GetCrossReferences` 与 `DeletePlcTagTable(crossReferences=true)` 都先过门，块列表读不出也拒绝；离线 +5 = 2461；`docs/releases/v2.9.1.md` 写了查实步骤（TIA 日志、事件日志、`项目1` 受控复现）。ZIP `TIA_MCP_Delivery_v2.9.1_20260921.zip`。
 - **2.9.0**（2026-09-21，删除类工具的交叉引用开关；新发布模型第二次真跑一次通过，11 分钟）：维护者“DeletePlcBlock 干跑（它会做交叉引用查询）把 TIA 搞挂了”——`DeletePlcBlock` / `DeletePlcType` / `DeletePlcTagTable` 新参数 `crossReferences`（默认 false，不再调 `CrossReferenceService.GetCrossReferences`），响应 `crossReferenceQueried`，`GetCrossReferences` 描述标 KNOWN RISK；handoff §4 退出点 ⑧；台账三行备注。崩溃的工程 / 块信息待维护者补。ZIP `TIA_MCP_Delivery_v2.9.0_20260921.zip`。

@@ -40,13 +40,11 @@ Issue templates live in [`.github/ISSUE_TEMPLATE/`](ISSUE_TEMPLATE).
 
 ## Which branch does my change go to?
 
-All changes target this repository's `master`, which supports TIA Portal V20 / V21.
+Mainline changes target this repository's `master`, which supports TIA Portal V20 / V21.
 The two versions share source and are built with their matching PublicAPI assemblies.
 Check both runtimes when a shared change can affect either version.
 
-`master` is the only branch of this repository: no release, older-version or bot
-branches (the maintainer bumps the workflow action versions by hand, so there is no
-Dependabot configuration), and no synchronization with the original repository.
+Since 2026-09-29, `v17` through `v21` also retain independently synchronized upstream snapshots at the maintainer's request. Version-branch work targets its corresponding branch; it is not implicitly merged into `master`. See [version scope and pinned commits](../docs/reference/version-branches.md). The branch name alone is not a compatibility guarantee: `v18` and `v19` currently share an old snapshot without dedicated version projects. There is no automatic synchronization or Dependabot configuration.
 Preserve LICENSE, NOTICE.md and dependency notices.
 
 ---

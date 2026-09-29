@@ -2,6 +2,10 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
+## [Unreleased]
+
+- 在 v3.0.0 发布并通过 GitHub 独立复核后，按维护者要求将上游 v17–v21 同步为本仓库独立分支；提交号和功能边界见[版本分支](docs/reference/version-branches.md)。已发布的 v3.0.0 附件保持原样。
+
 ## [3.0.0] - 2026-09-29
 
 主要版本：事务执行范围及 PLC 交叉引用默认行为收紧；升级须阅读 [v3.0.0 迁移说明](docs/releases/v3.0.0.md)。V20/V21 共 464 个工具（新增 11 个），默认 lite 仍为 59 个。
