@@ -227,7 +227,7 @@ Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Pa
 # stage tracked changes plus new files under the known source/doc roots only - never "git add -A" at the repo root;
 # the binaries are ignored by .gitignore since 2.8.1, so they can never end up in the commit
 & $Git add -u
-& $Git add -- docs tools scripts templates hooks manifest .claude-plugin .github CHANGELOG.md CLAUDE.md README.md README.zh-CN.md NOTICE.md
+& $Git add -- docs tools scripts templates hooks manifest reference .claude-plugin .github CHANGELOG.md CLAUDE.md README.md README.zh-CN.md NOTICE.md
 $staged = @(& $Git diff --cached --name-only)
 $binariesStaged = @($staged | Where-Object { $_ -like 'runtime/v2*' -or $_ -eq 'TiaMcpConfigurator.exe' })
 if ($binariesStaged) { & $Git reset -q; Fail ('binaries must not be committed (2.8.1 policy): ' + ($binariesStaged -join ', ')) }

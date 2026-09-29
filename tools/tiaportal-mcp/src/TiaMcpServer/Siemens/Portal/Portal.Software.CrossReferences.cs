@@ -48,8 +48,13 @@ namespace TiaMcpServer.Siemens
         // reason for a null result - the reflective lookup swallowed everything (real project: filter "" -> Enum.Parse threw ->
         // "Cross reference service not available", although the service was there).
         public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason)
+            => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out _);
+
+        public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried)
         {
-            reason = null;
+            queried = false;
+            reason = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable));
+            if (reason != null) return null;
             if (IsProjectNull()) { reason = "No project is open."; return null; }
 
             IEngineeringServiceProvider? target = string.Equals(objectKind, "Type", StringComparison.OrdinalIgnoreCase)
@@ -72,7 +77,7 @@ namespace TiaMcpServer.Siemens
             if (crossReferenceService == null) { reason = "CrossReferenceService is not provided by this " + objectKind + " (TIA answers it for blocks and types; not for software / device level)."; return null; }
 
             global::Siemens.Engineering.CrossReference.CrossReferenceResult result;
-            try { result = crossReferenceService.GetCrossReferences(filterValue); }
+            try { queried = true; result = crossReferenceService.GetCrossReferences(filterValue); }
             catch (Exception ex) { reason = "GetCrossReferences(" + filterValue + ") failed: " + ex.GetBaseException().Message; return null; }
             if (result == null) { reason = "GetCrossReferences returned null."; return null; }
 
@@ -80,11 +85,13 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
-        /// 2.9.1: the refusal text when any block of the PLC is not compiled (IsConsistent=false), else null. Reading the
-        /// block list fails closed: a PLC whose blocks cannot be listed does not get a cross-reference query either.
+        /// Refuse before native access unless the server process explicitly enables queries. Even then, an unreadable
+        /// block list or consistency value fails closed; compiling is only a precondition, not proof of crash safety.
         /// </summary>
         public string? CrossReferenceRefusal(string softwarePath)
         {
+            var policy = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable));
+            if (policy != null) return policy;
             List<PlcBlock>? blocks;
             try { blocks = GetBlocks(softwarePath); }
             catch (Exception ex) { return "refused: the block list of '" + softwarePath + "' could not be read (" + ex.GetBaseException().Message + "), so the compile state is unknown; cross references are only queried on a compiled PLC."; }
@@ -125,8 +132,9 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        private static object? TryInvokeGetCrossReferences(object crossReferenceService, string filterName)
+        private static object? TryInvokeGetCrossReferences(object crossReferenceService, string filterName, out bool queried)
         {
+            queried = false;
             try
             {
                 var svcType = crossReferenceService.GetType();
@@ -138,6 +146,7 @@ namespace TiaMcpServer.Siemens
                 var m = svcType.GetMethod("GetCrossReferences", new[] { filterType });
                 if (m == null) return null;
 
+                queried = true;
                 return m.Invoke(crossReferenceService, new[] { filterValue });
             }
             catch

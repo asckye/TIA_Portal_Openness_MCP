@@ -2,9 +2,16 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
-## [Unreleased]
+## [3.0.0] - 2026-09-29
 
-- （未发布的改动写在这里，发版时移到版本标题下。）
+主要版本：事务执行范围及 PLC 交叉引用默认行为收紧；升级须阅读 [v3.0.0 迁移说明](docs/releases/v3.0.0.md)。V20/V21 共 464 个工具（新增 11 个），默认 lite 仍为 59 个。
+
+- 按 Siemens 官方 `tia-portal-ai-extensions` 的 32 个主题及 V21 API 手册完成[源码与流程审计](docs/development/official-openness-audit-20260929.md)，增加 `GetAuthoringGuide("openness-workflow")` 入口。修复指定工程连接误回退、工程所有权/断开清理、超时 Attach 晚到结果泄漏、版本路径优先级与 DLL 身份校验、事务提交误报及嵌套独占。`RunToolsInTransaction` 收紧为 8 个已审核的同步工程编辑工具，并预检全部参数；其他工具仍可单独使用。尚未做原生事务/关闭行为验收或部署。
+- 补入 11 个生态工具：官方指南检索、LAD 可视差异、批量读取/预览/应用、Git 工作流、PLC Tools 伴随进程、OPC UA 建模接口 XML 生成、工程质量审计（JSON/HTML/PDF）、XML 模板批量展开、布尔别名/报警 LAD 生成。保留 MIT 源码来源与许可证，GPL 功能按需求独立实现；已有工程/设备/PLC/HMI/库功能复用。见[接入记录](docs/development/ecosystem-integration-20260929.md)及[使用说明](docs/reference/ecosystem-tools.md)。本地构建与离线测试，尚未部署到 VM 或进行新工具的原生写入验收。
+- 所有 MCP 传输共用进程内调用串行门；工具及桥接调用记录 BEFORE/RETURNED/THREW，不记录参数或工程内容。修复引入项目引用后 V20 的中间文件目录传播冲突，并将第三方编译源码与模板纳入发布输入校验。
+
+- PLC 原生交叉引用因 TIA 崩溃反馈改为默认拒绝：`GetCrossReferences` 和三个删除工具共用进程级诊断开关 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`；未启用不调用原生服务，显式启用后仍拒绝未编译或编译状态无法读取的块。编译成功不再被描述为不会崩溃的保证。删除预览的 `crossReferenceQueried` 记录是否实际尝试原生查询，被保护拦截时返回 false 和具体原因；尚未部署到虚拟机。
+- 选择性移植上游 [cd0eed6](https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP/commit/cd0eed60378d03d5ae66cc50c3f8ab0463d9bb0c) 的 `DescribeBlockLogic` 回读修复：SCL/LAD 按符号分量加引号，保留特殊字符名称、LAD 数组下标和局部命名常量；无名称的实例调用不再多出 `?`。保留本项目的 FB 类型标注、绝对地址、位切片、ENO、块注释和 LAD 调用框。新增上游真实 V21 导出 fixture 及补充回归；本版随完整交付包发布；尚未部署到虚拟机。
 
 ## [2.9.2] - 2026-09-21
 

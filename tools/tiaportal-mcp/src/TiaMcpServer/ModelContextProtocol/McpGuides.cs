@@ -10,8 +10,8 @@ namespace TiaMcpServer.ModelContextProtocol
     ///      most hosts inject it into the model's system context automatically.
     ///   2. <see cref="Topic(string)"/> — on-demand cheat sheets via the GetAuthoringGuide
     ///      tool, for syntax details too large for the handshake.
-    /// All facts here are verified against live TIA V20/V21 machines; do not add
-    /// speculative syntax.
+    /// Syntax notes record prior live observations. The official workflow topic is
+    /// versioned reference guidance; it does not claim live acceptance of every tool.
     /// </summary>
     public static class McpGuides
     {
@@ -20,9 +20,11 @@ namespace TiaMcpServer.ModelContextProtocol
 
 FIRST CALL: Bootstrap — returns environment status, connection state, the recommended next tool, and operating rules. Do this before anything else. If the environment itself seems broken (TIA missing, group membership, nothing connects), call Doctor for a plain-language diagnosis with exact fixes.
 
-THE TOOL LIST YOU SEE IS NOT THE WHOLE SERVER. By default only ~48 core tools are listed, out of ~200. The rest — watch tables, alarms, GSD/hardware catalog, OPC UA, technology objects, HMI screens and themes, cross-reference and repair tools, online monitoring — are reached WITHOUT changing anything: call FindTools('what you need in plain words'), then CallTool(name, argumentsJson). So never conclude ""this server cannot do X"" from the visible list; run FindTools('X') first. (An operator who wants everything listed at once can start the server with --profile full, but the tool list then exceeds what VS Code/Copilot and Windsurf accept.)
+THE TOOL LIST YOU SEE IS NOT THE WHOLE SERVER. The lite profile lists a subset of the available tools. The rest — watch tables, alarms, GSD/hardware catalog, OPC UA, technology objects, HMI screens and themes, cross-reference and repair tools, online monitoring — are reached WITHOUT changing anything: call FindTools('what you need in plain words'), then CallTool(name, argumentsJson). So never conclude ""this server cannot do X"" from the visible list; run FindTools('X') first. (An operator who wants everything listed at once can start the server with --profile full, but the tool list then exceeds what VS Code/Copilot and Windsurf accept.)
 
 PLAN, DO NOT PROBE: every listed tool description ends with a worked Example. Before an unfamiliar call - and ALWAYS after the user corrects you - run PreflightToolCall(name, argumentsJson): it validates the arguments against the real signature (missing / unknown / mis-cased parameters, wrong types, values outside the documented alternatives), states what the call would do (dryRun / confirm flags, precautions) and whether the session prerequisites hold, without executing anything. Fix the plan from that report and then call once; do not try variants against TIA. Every FAILED call already carries meta.preflight (what was wrong, allowed values, prerequisite, example, next step) - read it before calling again. Every listed tool's inputSchema carries enum / default / examples where the parameter has documented values. For a multi-step job call GetRecipe(topic) first (connect-project, plc-scl-block, plc-s7dcl-import, watch-table, cpu-protection, download-plcsim, plcsim-test, hardware-device, hmi-unified-screen, export-import-block, large-response) and follow its exact calls in order.
+
+OFFICIAL OPENNESS REFERENCE: before implementing an unfamiliar native operation, call GetAuthoringGuide(topic: 'openness-workflow'), then ReadOpennessGuidance for the relevant Siemens topic (openness-base plus the domain guide). These are pinned Siemens V21 reference documents, not executable features or proof of live verification. Resolve conflicts against the matching version of the official API manual and PublicAPI signatures; do not assume V21-only APIs work on V20. Respect the user's project, save and online-operation scope.
 
 GOLDEN PATHS (pick one, do not improvise):
 - Whole new project → ScaffoldProject with ONE JSON spec (PLC + blocks + HMI + compile + save in a single call). The DEFAULT call is a dry run (offline spec validation, nothing created); when it reports clean, call again with dryRun=false to actually create.
@@ -36,7 +38,7 @@ ENCODING (breaks Chinese text if wrong):
 - .s7dcl / .s7res and ALL block/UDT/tag-table XML: UTF-8 WITH BOM.
 
 DISCIPLINE:
-- After ANY write: CompileSoftware (or CompileAndDiagnosePlc), then SaveProject. Nothing persists automatically.
+- After a write: read back the intended change and compile the relevant scope when appropriate (PLC software or Device for hardware + software). Compile and SaveProject must be separate from RunToolsInTransaction. Save only within the user-authorized workflow; nothing persists automatically.
 - Names are exact: if a path/name is rejected, read the real names with GetProjectTree / GetBlocks — do not guess variants.
 - On error: the message names the recovery tool; call it. Do not retry the same call unchanged and do not switch tools at random.
 - Prefer one big declarative call (ScaffoldProject / PlcBuildAndImport) over dozens of small calls — it is faster and far less error-prone.";
@@ -44,6 +46,18 @@ DISCIPLINE:
         /// <summary>Cheat-sheet topics for the GetAuthoringGuide tool.</summary>
         public static readonly IReadOnlyDictionary<string, string> Topics = new Dictionary<string, string>
         {
+            ["openness-workflow"] =
+@"OFFICIAL OPENNESS WORKFLOW (Siemens V21 reference, local audit 2026-09-29):
+1. ReadOpennessGuidance: query openness-base and the relevant domain; documentId + line offset reads the exact bundled text. Upstream siemens/tia-portal-ai-extensions commit 2119df978ffe26cf1436384b6d94549b28aa2264 has 32 guides. Matching API manuals/PublicAPI take precedence over guide examples and empirical notes. V20 needs its own capability check.
+2. Bootstrap/Doctor, choose the intended TIA process/project explicitly, then GetState and GetProjectTree. A non-null connection with empty compositions does not prove the project is usable. Never rebind another client's project implicitly.
+3. FindTools and PreflightToolCall, read exact target names/capabilities, then dryRun. Read-only inspection can still perform native IPC; it is not crash-proof. Native PLC GetCrossReferences remains disabled by default after the reported crashes.
+4. Serialize native work on compatible MTA threads. For a multi-step mutation use one ExclusiveAccess and, where supported, one project transaction. Never nest exclusive locks. RunToolsInTransaction accepts only its documented supported edits; compile, save, online, lifecycle, files and external processes run separately. ApplyToolBatch is sequential and cannot roll back.
+5. Import dependencies before users: UDTs, referenced blocks, callers/instance DBs. Route XML to Import, SCL to external sources, and V21 S7DCL to ImportFromDocuments; preserve associated S7RES resources. Re-fetch proxies after replace/import.
+6. Verify native results and intended content, recurse compiler diagnostics, report incomplete data/unknown results. Commit needs CanCommit + CommitRequested + successful disposal. Save/download only as authorized.
+7. On channel/process loss stop using old proxies; preserve append-only BEFORE/RETURNED breadcrumbs and TIA-side logs. A later IPC error does not identify the original crash. Do not blindly retry a write.
+8. Teardown closes only a project opened by this session; detach the TiaPortal connection. Never dispose TiaPortalProcess handles to clean up a process list.
+Local source audit: docs/development/official-openness-audit-20260929.md. Local build/offline tests are not live TIA acceptance; new faceplate-type internals are not established by these guides.",
+
             ["workflow"] =
 @"WORKFLOW (verified order):
 Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTree → read/write → CompileSoftware → SaveProject.
@@ -53,7 +67,7 @@ Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTr
 - Openness export does not work while online: tools auto GoOffline where safe; if you see 'not supported in online mode', call GoOffline(softwarePath) and retry.
 - Cold start is slow (TIA launch). If many operations are planned, keep one session; do not Disconnect between calls.
 - .s7dcl block/network TITLES cannot inline Chinese: S7_NetworkTitle / S7_BlockTitle := ""中文"" imports silently as zero blocks ('importedBlocks:0' or 'Failed importing'). Keep the header ASCII (Chinese inside SCL body comments is fine); put a Chinese title in a .s7res MLC reference instead.
-- Verify a change actually LANDED by the block's ModifiedDate (= today), NOT by 'compiled with 0 errors' — an old block body plus a freshly imported tag table still compiles clean, so 0 errors does not prove your new logic is in.",
+- Verify the intended block content by a fresh export/readback or fingerprint comparison. ModifiedDate and a clean compile alone do not prove the requested logic landed.",
 
             ["scl"] =
 @"SCL AUTHORING (verified):

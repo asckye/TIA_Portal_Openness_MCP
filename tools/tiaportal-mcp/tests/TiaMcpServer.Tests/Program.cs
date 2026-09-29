@@ -45,6 +45,8 @@ namespace TiaMcpServer.Tests
 
         private static int Main()
         {
+            EcosystemTests.Run(Check);
+            OfficialWorkflowTests.Run(Check);
             PlcTypeGroupCreationTests.Run(Check);
             EngineeringOperationsTests.Run(Check);
             EngineeringObjectAddressTests.Run(Check);
@@ -96,6 +98,7 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== DescribeBlockLogic 文本渲染：SCL 调用/命名常量/地址与 LAD <Call> 不许悄悄丢失 ==");
             LadTextRendererTests.Run(Check);
+            SymbolQuotingReadbackTests.Run(Check);
 
             Console.WriteLine("== Safety 工具族纯逻辑：动作门控、propertiesJson 四路拆分、GlobalSettings、打印件参数、签名行 ==");
             SafetyLogicTests.Run(Check);

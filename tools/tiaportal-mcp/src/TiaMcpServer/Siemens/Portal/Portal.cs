@@ -36,7 +36,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    public partial class Portal
+    public partial class Portal : IDisposable
     {
         // closing parantheses for regex characters ommitted, because they are not relevant for regex detection
         private readonly char[] _regexChars = ['.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|'];
@@ -82,7 +82,12 @@ namespace TiaMcpServer.Siemens
         // right for AttachToOpenProject, catastrophic for CreateProject/OpenProject, whose first act
         // is to Close() whatever is open. Without this flag those two silently close the engineer's
         // work, unsaved edits included. Set true only where we ourselves opened/created it.
-        private bool _projectOpenedByUs;
+        private ProjectBase? _openedProject;
+        private bool _projectOpenedByUs
+        {
+            get => ProjectOwnership.Owns(_openedProject, _project);
+            set => _openedProject = value ? _project : null;
+        }
 
         /// <summary>True when the open project is one the user already had open (we merely attached).</summary>
         public bool HasForeignProject => _project != null && !_projectOpenedByUs;
@@ -169,50 +174,23 @@ namespace TiaMcpServer.Siemens
         public void Dispose()
         {
             migrationPages.Dispose();
-            try
-            {
-                (_project as Project)?.Close();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "Error closing the project on Dispose");
-            }
-
-            try
-            {
-                _portal?.Dispose();
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogWarning(ex, "Error disposing TIA Portal on Dispose");
-            }
+            ProjectOwnership.Release(_projectOpenedByUs,
+                () => (_project as Project)?.Close(),
+                () => DisconnectPortal(),
+                ex => _logger?.LogWarning(ex, "Error releasing the Openness session"));
         }
 
         #endregion
 
         #region portal
 
-        // Attach to a portal process but never block longer than timeoutMs. An orphaned/dying
-        // Siemens.Automation.Portal (e.g. its controlling process was killed) can otherwise hang the
-        // COM Attach() call ~200s before throwing EngineeringSecurityException, stalling the whole
-        // connect. On timeout we return null so the caller skips this process and tries the next /
-        // launches a fresh instance. The worker thread is background and dies with the dead process.
+        // Timeout bounds the caller's wait, not the native operation. A late successful
+        // attachment must be detached; it must never become an untracked live session.
         private TiaPortal? AttachWithTimeout(TiaPortalProcess proc, int timeoutMs)
         {
-            TiaPortal? result = null;
-            Exception? error = null;
-            var worker = new System.Threading.Thread(() =>
-            {
-                try { result = proc.Attach(); }
-                catch (Exception ex) { error = ex; }
-            }) { IsBackground = true };
-            worker.Start();
-            if (!worker.Join(timeoutMs))
-            {
+            var result = TimedAttachment.Run(proc.Attach, attached => attached.Dispose(), timeoutMs);
+            if (result == null)
                 _logger?.LogWarning($"Attach to TIA Portal PID={proc.Id} exceeded {timeoutMs}ms; skipping (likely orphaned/dying instance).");
-                return null;
-            }
-            if (error != null) throw error;
             return result;
         }
 
@@ -251,14 +229,16 @@ namespace TiaMcpServer.Siemens
             var wanted = string.IsNullOrWhiteSpace(projectName) ? null : projectName!.Trim();
             info["projectName"] = wanted; info["allowStart"] = allowStart;
 
+            // Disposing a client-owned headless instance can close its unsaved project.
+            // Reconnecting is not implicit permission to discard that owned session.
+            if (_projectOpenedByUs)
+                throw new PortalException(PortalErrorCode.InvalidState,
+                    "This client already opened a project. Continue with GetState, or explicitly save/close/disconnect it before replacing the connection.");
+
             try
             {
                 LastConnectError = null;
-                _project = null;
-                _projectOpenedByUs = false;
-                _session = null;
-                _portal = null;
-                _expectedProjectName = null;
+                DisconnectPortal();
 
                 var processes = TiaPortal.GetProcesses().ToList();
                 _logger?.LogInformation($"TIA Portal process count: {processes.Count}");
@@ -280,7 +260,7 @@ namespace TiaMcpServer.Siemens
                             var candidate = AttachWithTimeout(proc, Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining));
                             if (candidate == null) { c.Failure = "attach did not answer within " + Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining) + " ms"; continue; }
                             c.Attached = true; portals[proc.Id] = candidate;
-                            try { c.HasSession = candidate.LocalSessions.Any(); } catch { }
+                            try { foreach (var session in candidate.LocalSessions) { c.HasSession = true; c.ProjectNames.Add(session.Project.Name); } } catch { }
                             try { foreach (var pr in candidate.Projects) c.ProjectNames.Add(pr.Name); } catch { }
                             _logger?.LogInformation($"Portal PID={proc.Id}: hasSession={c.HasSession}, projects={string.Join("/", c.ProjectNames)}");
                             // The wanted project found: no need to probe the remaining processes (each probe can cost a dialog wait).
@@ -311,21 +291,21 @@ namespace TiaMcpServer.Siemens
                         info["boundProcessId"] = chosen.ProcessId; info["startedNew"] = false;
                         if (chosen.HasSession)
                         {
-                            try { _session = _portal.LocalSessions.First(); _project = _session.Project; _projectOpenedByUs = false; } catch { }
+                            try { _session = _portal.LocalSessions.FirstOrDefault(s => wanted == null || s.Project.Name == wanted); _project = _session?.Project; _projectOpenedByUs = false; } catch { }
                         }
                         if (_project == null && chosen.ProjectNames.Count > 0)
                         {
                             try
                             {
-                                _project = wanted != null ? _portal.Projects.FirstOrDefault(pr => pr.Name == wanted) ?? _portal.Projects.First() : _portal.Projects.First();
+                                _project = wanted != null ? _portal.Projects.FirstOrDefault(pr => pr.Name == wanted) : _portal.Projects.First();
                             }
                             catch { }
                             _projectOpenedByUs = false;
                         }
                         if (wanted != null)
                         {
-                            if (chosen.ProjectNames.Contains(wanted, StringComparer.Ordinal)) _expectedProjectName = wanted;
-                            else { var warning = ConnectLogic.MissingProjectWarning(candidates, wanted, chosen); info["warning"] = warning; LastConnectError = warning; }
+                            _expectedProjectName = wanted;
+                            if (!chosen.ProjectNames.Contains(wanted, StringComparer.Ordinal)) { var warning = ConnectLogic.MissingProjectWarning(candidates, wanted, chosen); info["warning"] = warning; LastConnectError = warning; }
                         }
                         else if (chosen.ProjectNames.Count == 0 && !chosen.HasSession)
                         {
@@ -336,6 +316,7 @@ namespace TiaMcpServer.Siemens
                         return true;
                     }
 
+                    foreach (var other in portals.Values) { try { other.Dispose(); } catch { } }
                     if (!allowStart)
                     {
                         var refusal = ConnectLogic.Refusal(candidates, wanted);
@@ -354,6 +335,7 @@ namespace TiaMcpServer.Siemens
                     : TiaPortalMode.WithoutUserInterface;
                 _logger?.LogInformation($"Starting a new TIA Portal instance ({launchMode}).");
                 _portal = new TiaPortal(launchMode); RememberBoundProcess();
+                _expectedProjectName = wanted;
                 info["startedNew"] = true; info["boundProcessId"] = _boundProcessId; info["launchMode"] = launchMode.ToString();
                 return true;
             }
@@ -474,12 +456,18 @@ namespace TiaMcpServer.Siemens
             _logger?.LogInformation("Disconnecting from TIA Portal...");
             return Operation.Run(_logger, nameof(DisconnectPortal), () =>
             {
+                var connection = _portal;
+                _portal = null;
                 _project = null;
                 _projectOpenedByUs = false;
                 _session = null;
                 _expectedProjectName = null;
-                _portal?.Dispose();
-                _portal = null;
+                _boundProcessId = null;
+                _softwareContainerCache.Clear(); _softwareCacheProject = null;
+                InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
+                // TiaPortal.Dispose detaches an attached client; never call
+                // TiaPortalProcess.Dispose, which terminates the actual TIA process.
+                connection?.Dispose();
             });
         }
 
@@ -819,6 +807,7 @@ namespace TiaMcpServer.Siemens
                                 if (opened is ProjectBase pb)
                                 {
                                     _project = pb;
+                                    _projectOpenedByUs = true;
                                     LastConnectError = null;
                                     RememberExpectedProject();
                                     return true;

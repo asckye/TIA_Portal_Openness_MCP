@@ -16,3 +16,5 @@
 独立化前的完整 Git 历史已在维护者本地备份。独立仓库的旧版本标签采用保留原文件树的无父提交快照：导入者记录为当前维护者，原文件中的版权与许可证保持不变。旧 Release 附件保留为原始发布记录，其中的旧提交编号是构建时的来源记录。
 
 后续交付包应同时包含本文件、LICENSE 和依赖许可证。独立化后继续按 `vX.Y.Z` 发布完整的 V20/V21 交付包。
+
+2026-09-29 未发布的生态扩展另包含 Siemens 官方指南、Siemens OPC UA 接口生成源代码、Czarnak 的 TiaGitAddIn.Core 和 core-engineering 的 PLC Tools。固定提交、版权、许可及本地改动逐项记录在[第三方组件清单](docs/licenses/THIRD-PARTY-NOTICES.md)。上述作者不因此成为本项目的维护者或背书方。

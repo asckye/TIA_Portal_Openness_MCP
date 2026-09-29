@@ -685,15 +685,24 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static object? InvokeToolMethod(MethodInfo method, object?[] call)
         {
-            object? result = method.Invoke(null, call);
-            if (result is Task task)
+            string id = Guid.NewGuid().ToString("N");
+            RecordBridgeEvent(id, method.Name, "BEFORE");
+            try
             {
-                task.GetAwaiter().GetResult();
-                var resultProperty = task.GetType().GetProperty("Result");
-                result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
+                object? result = method.Invoke(null, call);
+                if (result is Task task)
+                {
+                    task.GetAwaiter().GetResult();
+                    var resultProperty = task.GetType().GetProperty("Result");
+                    result = resultProperty != null && resultProperty.PropertyType.Name != "VoidTaskResult" ? resultProperty.GetValue(task) : null;
+                }
+                RecordBridgeEvent(id, method.Name, "RETURNED");
+                return result;
             }
-            return result;
+            catch { RecordBridgeEvent(id, method.Name, "THREW"); throw; }
         }
+
+        static partial void RecordBridgeEvent(string id, string name, string phase);
 
         private static readonly Regex EnumRefusal = new Regex(@"(?<name>[A-Za-z][A-Za-z0-9]*) must be (?:one of:?\s*)?(?<values>[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)+)", RegexOptions.Compiled);
 

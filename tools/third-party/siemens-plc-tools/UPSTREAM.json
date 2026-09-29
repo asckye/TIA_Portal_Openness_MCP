@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/core-engineering/siemens-plc-tools",
+  "commit": "887eea1ea3495832648f47e42759320141952717",
+  "license": "MIT",
+  "scope": "Vendored source; invoked in a separate Python environment; no installed dependencies bundled",
+  "changes": [
+    "Safety cross-reference report paths normalized to POSIX separators for stable Windows/Linux diagnostics"
+  ]
+}

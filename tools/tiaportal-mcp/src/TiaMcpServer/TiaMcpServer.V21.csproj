@@ -4,9 +4,9 @@
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
     <OutputType>Exe</OutputType>
-    <AssemblyVersion>2.9.2</AssemblyVersion>
-    <FileVersion>2.9.2.0</FileVersion>
-    <InformationalVersion>2.9.2</InformationalVersion>
+    <AssemblyVersion>3.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+    <InformationalVersion>3.0.0</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <AssemblyName>TiaMcpServer</AssemblyName>
     <RootNamespace>TiaMcpServer</RootNamespace>
@@ -38,5 +38,10 @@
     <Reference Include="System.Management">
       <HintPath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\System.Management.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+    <Compile Include="..\..\..\third-party\SiemensOpcUaModelled\**\*.cs" LinkBase="SiemensOpcUaModelled" />
+    <EmbeddedResource Include="..\..\..\third-party\SiemensOpcUaModelled\Phases\Phase1\InterfaceTemplate.xml" LogicalName="TiaMcp.OpcUa.InterfaceTemplate.xml" />
   </ItemGroup>
 </Project>

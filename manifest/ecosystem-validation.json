@@ -1,0 +1,60 @@
+{
+  "scope": "Release 3.0.0 local build and offline validation; no VM deployment or live TIA writes",
+  "toolCount": 464,
+  "newTools": 11,
+  "offlineTests": {
+    "passed": 2551,
+    "failed": 0,
+    "skipped": 0
+  },
+  "pythonTests": {
+    "passed": 2091,
+    "failed": 0,
+    "skipped": 8,
+    "reasons": {
+      "upstream fixtures missing": 7,
+      "pandoc not installed": 1
+    }
+  },
+  "companionCommandEntries": 49,
+  "apiShapeChecks": {
+    "V21": 3097,
+    "V20": 2805
+  },
+  "ecosystemAssemblyChecks": {
+    "V21": 31,
+    "V20": 31
+  },
+  "liveAcceptance": "NOT PERFORMED",
+  "builds": {
+    "V21": {
+      "path": "runtime/v21/TiaMcpServer.exe",
+      "sha256": "230d116903cd48f52c9131ce3edd0f47527685d6c54d8cdffc8b7fe0ac5ee46d",
+      "compileErrors": 0,
+      "compileWarnings": 12
+    },
+    "V20": {
+      "path": "runtime/v20/TiaMcpServer.exe",
+      "sha256": "8f96464521a1b7bef26ab3240c98ed7003b93902c59788f7b6e3f8fb6d1c1db7",
+      "compileErrors": 0,
+      "compileWarnings": 14
+    }
+  },
+  "httpRegressionChecks": {
+    "V21": 28,
+    "V20": 28
+  },
+  "officialAudit": {
+    "upstream": "https://github.com/siemens/tia-portal-ai-extensions",
+    "commit": "2119df978ffe26cf1436384b6d94549b28aa2264",
+    "remoteHeadVerified": "2026-09-29",
+    "guidanceTopicsMapped": 32,
+    "findingsFixed": 9,
+    "newOfflineAssertions": 37,
+    "report": "docs/development/official-openness-audit-20260929.md",
+    "scope": "Source/workflow audit and local offline validation, not a complete live audit of all 464 tools",
+    "liveAcceptance": "NOT PERFORMED",
+    "runtimeDeployed": false
+  },
+  "release": "3.0.0"
+}

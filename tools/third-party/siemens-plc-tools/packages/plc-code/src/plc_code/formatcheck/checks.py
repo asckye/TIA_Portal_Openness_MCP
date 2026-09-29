@@ -1,0 +1,462 @@
+"""Pure checks over the bytes and text of one SIMATIC SD file.
+
+Each family of codes is one function. They never raise on bad input: a
+finding is the result. Nothing here reads the file system; the runner does.
+"""
+
+from __future__ import annotations
+
+import re
+import xml.etree.ElementTree as ET
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal
+
+Severity = Literal["ERROR", "WARNING"]
+
+BOM = b"\xef\xbb\xbf"
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One violation of the import contract.
+
+    Attributes
+    ----------
+    path : Path
+        File path where the violation occurs.
+    line : int | None
+        1-based line number (None for file-level violations like F001, F003).
+    code : str
+        Unique violation code (e.g., "F001", "F002", "F003").
+    severity : Severity
+        Violation severity level ("ERROR" or "WARNING").
+    message : str
+        Human-readable violation message.
+    """
+
+    path: Path
+    line: int | None
+    code: str
+    severity: Severity
+    message: str
+
+
+def check_bytes(path: Path, data: bytes) -> list[Finding]:
+    """Check raw bytes of a SIMATIC SD file for import-readiness violations.
+
+    Validates F001 (UTF-8 BOM), F002 (bare LF line endings), and F003 (UTF-8
+    encoding). Never raises on bad input; violations are returned as findings.
+    F003 short-circuits: undecodable bytes make line counting meaningless.
+
+    Parameters
+    ----------
+    path : Path
+        File path (used in Finding output; file is not read).
+    data : bytes
+        Raw file contents to check.
+
+    Returns
+    -------
+    list[Finding]
+        List of violations found. Empty list if all checks pass.
+    """
+    findings: list[Finding] = []
+    if not data.startswith(BOM):
+        findings.append(
+            Finding(
+                path,
+                None,
+                "F001",
+                "ERROR",
+                "file does not start with the UTF-8 BOM",
+            )
+        )
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        findings.append(
+            Finding(
+                path,
+                None,
+                "F003",
+                "ERROR",
+                f"bytes are not valid UTF-8 ({exc.reason} at byte {exc.start})",
+            )
+        )
+        return findings
+    line = _first_bare_lf_line(data)
+    if line is not None:
+        findings.append(Finding(path, line, "F002", "ERROR", "line ends with a bare LF (TIA writes CRLF)"))
+    return findings
+
+
+def _first_bare_lf_line(data: bytes) -> int | None:
+    """1-based number of the first line terminated by LF without a preceding CR."""
+    for number, raw in enumerate(data.split(b"\n")[:-1], start=1):
+        if not raw.endswith(b"\r"):
+            return number
+    return None
+
+
+_BLOCK_RE = re.compile(
+    r"^\s*(FUNCTION_BLOCK|FUNCTION|ORGANIZATION_BLOCK|DATA_BLOCK|TYPE)\b\s*(?:\"([^\"]+)\"|([A-Za-z_][\w]*))?",
+    re.MULTILINE,
+)
+# Case-sensitive: TIA always writes the block/UDT keywords exactly as shown here
+# (upper-case STRUCT for the "name : STRUCT" line that opens a UDT). An inline
+# Struct *member* is written "Struct" (mixed case) by TIA and must never match
+# this regex — that mismatch is what previously let a member's ": Struct" line
+# be picked up as if it were the UDT's own "name : STRUCT" line.
+_UDT_NAME_RE = re.compile(r"^\s*([A-Za-z_]\w*)\s*:\s*STRUCT\b", re.MULTILINE)
+_PRAGMA_ITEM_RE = re.compile(r"(S7_\w+)\s*:=\s*\"([^\"]*)\"")
+_S7_OPTIMIZED_ACCESS_RE = re.compile(r"S7_Optimized_Access")
+_TITLE_RE = re.compile(r"^\s*TITLE\s*=", re.MULTILINE)
+_BEGIN_RE = re.compile(r"^\s*BEGIN\s*$", re.MULTILINE)
+
+CODE_KINDS = ("FUNCTION_BLOCK", "FUNCTION", "ORGANIZATION_BLOCK")
+
+
+def _strip_comments_and_strings(text: str) -> str:
+    """Remove comments and string literals from text, replacing with spaces.
+
+    Removes:
+    - Single-quoted strings: 'text'
+    - Double-quoted strings: "text"
+    - Line comments: // to end of line
+    - Block comments: (* ... *)
+
+    Replaces each removed section with spaces to preserve line numbers and
+    column positions; any ``"\\n"`` inside a removed span is kept as-is (not
+    blanked), so the line count of the result always matches the input's,
+    even across a multi-line block comment or an unterminated string.
+
+    Parameters
+    ----------
+    text : str
+        Source text to clean.
+
+    Returns
+    -------
+    str
+        Text with comments and strings replaced by spaces (newlines kept).
+    """
+
+    def _blank(span: str) -> str:
+        return "".join(c if c == "\n" else " " for c in span)
+
+    result: list[str] = []
+    i = 0
+    while i < len(text):
+        # Check for single-quoted string
+        if text[i] == "'":
+            start = i
+            i += 1
+            while i < len(text):
+                if text[i] == "'":
+                    i += 1
+                    break
+                i += 1
+            result.append(_blank(text[start:i]))
+        # Check for double-quoted string
+        elif text[i] == '"':
+            start = i
+            i += 1
+            while i < len(text):
+                if text[i] == '"':
+                    i += 1
+                    break
+                i += 1
+            result.append(_blank(text[start:i]))
+        # Check for line comment
+        elif i + 1 < len(text) and text[i : i + 2] == "//":
+            start = i
+            while i < len(text) and text[i] != "\n":
+                i += 1
+            result.append(_blank(text[start:i]))
+        # Check for block comment
+        elif i + 1 < len(text) and text[i : i + 2] == "(*":
+            start = i
+            i += 2
+            while i + 1 < len(text):
+                if text[i : i + 2] == "*)":
+                    i += 2
+                    break
+                i += 1
+            else:
+                # Unclosed block comment, consume to end
+                i = len(text)
+            result.append(_blank(text[start:i]))
+        else:
+            result.append(text[i])
+            i += 1
+    return "".join(result)
+
+
+@dataclass(frozen=True)
+class BlockHeader:
+    """What the light scan learns about the (first) block of a file.
+
+    Attributes
+    ----------
+    kind : str
+        Block keyword (e.g., "FUNCTION_BLOCK", "DATA_BLOCK", "TYPE").
+    name : str
+        Block name (unquoted or extracted from STRUCT definition).
+    pragma : dict[str, str]
+        Dictionary of S7_* pragmas found before the block keyword.
+    line : int
+        1-based line number where the block keyword appears.
+    """
+
+    kind: str
+    name: str
+    pragma: dict[str, str]
+    line: int
+
+
+def _iter_block_matches(text: str, stripped: str) -> list[re.Match[str]]:
+    """``_BLOCK_RE`` matches whose keyword is real code, not comment/string text.
+
+    Matches (and their quoted-name capture, when present) are taken from
+    ``text`` — stripping blanks the quote characters themselves, which would
+    otherwise destroy a quoted block name like ``FUNCTION_BLOCK "Probe"``.
+    A match is kept only if its keyword (group 1) is unchanged at the same
+    position in ``stripped``: a keyword inside a ``(* ... *)`` comment (or a
+    string) is replaced by spaces there, so the comparison excludes it.
+
+    Parameters
+    ----------
+    text : str
+        Raw file text.
+    stripped : str
+        ``text`` with comments and strings blanked (``_strip_comments_and_strings``);
+        same length and newline positions as ``text``.
+
+    Returns
+    -------
+    list[re.Match[str]]
+        Matches whose keyword is not inside a comment or string, in order.
+    """
+    return [m for m in _BLOCK_RE.finditer(text) if stripped[m.start(1) : m.end(1)] == m.group(1)]
+
+
+def scan_block(text: str) -> BlockHeader | None:
+    """Locate the first block keyword, its name and the pragma that precedes it.
+
+    A regex scan, not the parser: a file that does not parse still gets its
+    format verdict. ``TYPE`` names sit inside the block (``name : STRUCT``).
+
+    The block keyword and the UDT name are matched with comments and strings
+    blanked out first, so a keyword or ``name : STRUCT`` line written inside a
+    ``(* ... *)`` comment is never mistaken for a real one. A quoted block name
+    (e.g. ``FUNCTION_BLOCK "Probe"``) is still read from the raw text, since
+    stripping blanks the quote characters themselves.
+
+    Parameters
+    ----------
+    text : str
+        File text to scan.
+
+    Returns
+    -------
+    BlockHeader | None
+        Header information for the first block, or None if no block found.
+    """
+    stripped = _strip_comments_and_strings(text)
+    blocks = _iter_block_matches(text, stripped)
+    if not blocks:
+        return None
+    match = blocks[0]
+    kind = match.group(1)
+    name = match.group(2) or match.group(3) or ""
+    if kind == "TYPE":
+        # First UDT name (name : STRUCT) at or after the TYPE keyword. Using
+        # match.start() (not match.end()) matters: when _BLOCK_RE already
+        # captured the name itself (the common unquoted case), match.end()
+        # sits mid-line, after the name and before " : STRUCT" — a `>` guard
+        # against match.end() then skips that very line (its `^\s*` start is
+        # to the left of match.end()) and falls through to the first inline
+        # `member : Struct` line instead, which is a false match. UDT/member
+        # names are always bare identifiers (never quoted), so matching
+        # directly against the stripped text is safe here.
+        for m in _UDT_NAME_RE.finditer(stripped):
+            if m.start() >= match.start():
+                name = m.group(1)
+                break
+    pragma = dict(_PRAGMA_ITEM_RE.findall(text[: match.start()]))
+    line = text.count("\n", 0, match.start()) + 1
+    return BlockHeader(kind=kind, name=name, pragma=pragma, line=line)
+
+
+def _has_external_markers(text: str) -> bool:
+    """Check if text contains external-source form markers (outside comments/strings).
+
+    Looks for:
+    - S7_Optimized_Access inside pragma blocks { ... }
+    - TITLE = at line start
+    - BEGIN on its own line
+
+    Parameters
+    ----------
+    text : str
+        File text to check.
+
+    Returns
+    -------
+    bool
+        True if external-source markers detected.
+    """
+    cleaned = _strip_comments_and_strings(text)
+
+    # Check for TITLE = at line start
+    if _TITLE_RE.search(cleaned):
+        return True
+
+    # Check for BEGIN on its own line
+    if _BEGIN_RE.search(cleaned):
+        return True
+
+    # Check for S7_Optimized_Access inside pragma blocks { ... }
+    i = 0
+    while i < len(cleaned):
+        brace_pos = cleaned.find("{", i)
+        if brace_pos == -1:
+            break
+        close_brace = cleaned.find("}", brace_pos)
+        if close_brace == -1:
+            break
+        pragma_block = cleaned[brace_pos : close_brace + 1]
+        if _S7_OPTIMIZED_ACCESS_RE.search(pragma_block):
+            return True
+        i = close_brace + 1
+
+    return False
+
+
+def check_text(path: Path, text: str) -> list[Finding]:
+    """F010 (external-source form), F011 (one block per file), F012 (file name), F020/F021 (header).
+
+    Parameters
+    ----------
+    path : Path
+        File path (used in Finding output; file is not read).
+    text : str
+        File text to check.
+
+    Returns
+    -------
+    list[Finding]
+        List of violations found. Empty list if all checks pass.
+    """
+    if _has_external_markers(text):
+        return [
+            Finding(
+                path,
+                None,
+                "F010",
+                "ERROR",
+                (
+                    "external-source form (TITLE/BEGIN/S7_Optimized_Access); a VCI workspace holds "
+                    "SIMATIC SD files"
+                ),
+            )
+        ]
+    findings: list[Finding] = []
+    # Comments and strings blanked first so a block keyword written inside a
+    # `(* ... *)` comment (e.g. change history) is never counted as a second
+    # block; see _iter_block_matches.
+    blocks = _iter_block_matches(text, _strip_comments_and_strings(text))
+    if len(blocks) > 1:
+        line = text.count("\n", 0, blocks[1].start()) + 1
+        msg = f"{len(blocks)} blocks in one file; TIA writes one block per file"
+        findings.append(Finding(path, line, "F011", "ERROR", msg))
+    header = scan_block(text)
+    if header is None:
+        return findings
+    if header.name and header.name != path.stem:
+        msg = f"block '{header.name}' in a file named '{path.stem}'"
+        findings.append(Finding(path, header.line, "F012", "ERROR", msg))
+    if (
+        header.kind in CODE_KINDS
+        and "S7_EditorMode" not in header.pragma
+        and "S7_PreferredLanguage" not in header.pragma
+    ):
+        # SCL blocks carry S7_EditorMode; LAD/FBD blocks (including safety
+        # ones, which add S7_Safety) carry S7_PreferredLanguage instead and
+        # never S7_EditorMode. Either one satisfies the header.
+        msg = f"{header.kind} header lacks S7_EditorMode (SCL) or S7_PreferredLanguage (LAD/FBD)"
+        findings.append(Finding(path, header.line, "F020", "ERROR", msg))
+    if header.kind == "DATA_BLOCK" and "S7_StandardRetain" not in header.pragma:
+        msg = "DATA_BLOCK header lacks S7_StandardRetain"
+        findings.append(Finding(path, header.line, "F020", "ERROR", msg))
+    if header.kind != "TYPE" and "S7_Optimized" not in header.pragma:
+        msg = f"{header.kind} header lacks S7_Optimized"
+        findings.append(Finding(path, header.line, "F021", "WARNING", msg))
+    return findings
+
+
+def check_xml(path: Path, text: str) -> list[Finding]:
+    """F030 for a tag table that TIA cannot import, F031 for an XML that is not a tag table.
+
+    Parameters
+    ----------
+    path : Path
+        File path (examined for "PLC tags" directory to determine severity).
+    text : str
+        XML document text.
+
+    Returns
+    -------
+    list[Finding]
+        List of findings (empty if clean).
+    """
+    under_plc_tags = any(part.lower() == "plc tags" for part in path.parts)
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError as exc:
+        if under_plc_tags:
+            return [
+                Finding(
+                    path,
+                    None,
+                    "F030",
+                    "ERROR",
+                    f"tag table XML is not well-formed: {exc}",
+                )
+            ]
+        return [Finding(path, None, "F031", "WARNING", f"XML is not well-formed: {exc}")]
+    is_tag_table = root.find(".//SW.Tags.PlcTagTable") is not None
+    engineering = root.find("Engineering")
+    has_version = engineering is not None and bool(engineering.get("version"))
+    if is_tag_table:
+        if not has_version:
+            return [
+                Finding(
+                    path,
+                    None,
+                    "F030",
+                    "ERROR",
+                    "tag table lacks <Engineering version=...>",
+                )
+            ]
+        return []
+    if under_plc_tags:
+        return [
+            Finding(
+                path,
+                None,
+                "F030",
+                "ERROR",
+                "not a SW.Tags.PlcTagTable document",
+            )
+        ]
+    return [
+        Finding(
+            path,
+            None,
+            "F031",
+            "WARNING",
+            "XML is not a SW.Tags.PlcTagTable document",
+        )
+    ]

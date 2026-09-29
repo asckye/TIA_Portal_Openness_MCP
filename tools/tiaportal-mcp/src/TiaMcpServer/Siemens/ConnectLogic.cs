@@ -33,7 +33,9 @@ namespace TiaMcpServer.Siemens
             {
                 var wantedName = projectName!.Trim();
                 var byName = attached.FirstOrDefault(c => c.ProjectNames.Any(n => string.Equals(n, wantedName, StringComparison.Ordinal)));
-                if (byName != null) return byName;
+                // An empty instance can be used to open the requested project later.
+                // A different open project is never a substitute for an explicit name.
+                return byName ?? attached.FirstOrDefault(c => !c.HasSession && c.ProjectNames.Count == 0);
             }
             return attached.FirstOrDefault(c => c.HasSession || c.ProjectNames.Count > 0) ?? attached[0];
         }
@@ -46,7 +48,7 @@ namespace TiaMcpServer.Siemens
         internal static string Refusal(IReadOnlyList<Candidate> candidates, string? projectName)
         {
             var wanted = string.IsNullOrWhiteSpace(projectName) ? "" : " Project '" + projectName!.Trim() + "' was not found in any of them.";
-            return "TIA Portal is running (" + candidates.Count + " process(es)) but none could be attached: " + string.Join("; ", candidates.Select(Describe))
+            return "TIA Portal is running (" + candidates.Count + " process(es)) but no acceptable target could be bound: " + string.Join("; ", candidates.Select(Describe))
                 + "." + wanted + " No new instance was started. Typical causes: TIA is showing the Openness access dialog for this engine build (allow it on the TIA machine),"
                 + " the instance is busy with a modal dialog / compile / download, or a previous attach is still pending. Retry, run ListPortalProcessProjects, or call"
                 + " Connect with allowStart=true (or ConnectIsolated) to deliberately start a separate headless instance.";

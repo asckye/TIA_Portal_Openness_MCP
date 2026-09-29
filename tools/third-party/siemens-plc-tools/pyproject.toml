@@ -1,0 +1,226 @@
+[project]
+name = "plc-tools"
+version = "0.4.0"
+description = "PLC Tools - Industrial automation toolset for PLC development"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Camille Martin", email = "cma@core-engineering.fr" }
+]
+keywords = ["plc", "tia-portal", "scl", "industrial-automation", "opcua", "modbus", "io-list"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Documentation",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "click>=8.1.0",
+    "fastapi>=0.128.0",
+    "pyyaml>=6.0.0",
+    "rich>=13.0.0",
+    "uvicorn[standard]>=0.40.0",
+]
+
+[project.optional-dependencies]
+core = [
+    "plc-core==0.4.0",
+]
+code = [
+    "plc-core==0.4.0",
+    "plc-code==0.4.0",
+]
+iol = [
+    "plc-core==0.4.0",
+    "plc-iol==0.4.0",
+]
+sim = [
+    "plc-core==0.4.0",
+    "plc-modbus==0.4.0",
+    "plc-sim==0.4.0",
+]
+sup = [
+    "plc-core==0.4.0",
+    "plc-sup==0.4.0",
+]
+net = [
+    "plc-net==0.4.0",
+]
+trace = [
+    "plc-core==0.4.0",
+    "plc-code==0.4.0",
+    "plc-trace==0.4.0",
+]
+all = [
+    "plc-core==0.4.0",
+    "plc-code[web]==0.4.0",
+    "plc-iol==0.4.0",
+    "plc-modbus==0.4.0",
+    "plc-sim[web]==0.4.0",
+    "plc-sup==0.4.0",
+    "plc-net==0.4.0",
+    "plc-trace==0.4.0",
+]
+dev = [
+    "pytest==9.0.3",
+    "pytest-cov==7.1.0",
+    "pytest-asyncio==1.4.0",
+    "black==26.5.1",
+    "ruff==0.15.16",
+    "mypy==2.1.0",
+    "types-PyYAML==6.0.12.20260518",
+]
+docs = [
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.0",
+    "mkdocstrings[python]>=0.24.0",
+]
+
+[project.scripts]
+plc = "plc_tools.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/core-engineering/siemens-plc-tools"
+Repository = "https://github.com/core-engineering/siemens-plc-tools"
+Issues = "https://github.com/core-engineering/siemens-plc-tools/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/plc_tools"]
+
+[dependency-groups]
+# Pinned exactly on purpose: these tools *are* the quality gate, so a floating
+# range makes CI go red on a tool release rather than on a code change. Bump
+# them deliberately, in their own commit, with the resulting fixes.
+dev = [
+    "pytest==9.0.3",
+    "pytest-cov==7.1.0",
+    "pytest-asyncio==1.4.0",
+    "black==26.5.1",
+    "ruff==0.15.16",
+    "mypy==2.1.0",
+    "types-PyYAML==6.0.12.20260518",
+    "python-docx==1.2.0",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/plc-core",
+    "packages/plc-code",
+    "packages/plc-iol",
+    "packages/plc-modbus",
+    "packages/plc-sim",
+    "packages/plc-sup",
+    "packages/plc-net",
+    "packages/plc-trace",
+]
+
+[tool.uv.sources]
+plc-core = { workspace = true }
+plc-code = { workspace = true }
+plc-iol = { workspace = true }
+plc-modbus = { workspace = true }
+plc-sim = { workspace = true }
+plc-sup = { workspace = true }
+plc-net = { workspace = true }
+plc-trace = { workspace = true }
+
+[tool.black]
+line-length = 110
+target-version = ['py312']
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    # UP042 wants `class X(str, Enum)` rewritten as `class X(StrEnum)`, but the
+    # two do not behave the same: StrEnum.__str__ returns the *value*, while a
+    # str/Enum mixin keeps Enum.__str__ ("IOCategory.DI"). These enums are
+    # interpolated into generated markdown, PDF and JSON reports, so the rewrite
+    # would silently change delivered documentation. Revisit as its own change,
+    # with the report snapshots checked.
+    "UP042",
+]
+
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "packages/*/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+# importlib mode avoids the "duplicate tests package" collision when running
+# tests across multiple workspace packages from the repo root.
+addopts = "--import-mode=importlib --cov=src --cov=packages/plc-core/src --cov=packages/plc-code/src --cov=packages/plc-iol/src --cov=packages/plc-modbus/src --cov=packages/plc-net/src --cov=packages/plc-sim/src --cov=packages/plc-sup/src --cov=packages/plc-trace/src --cov-report=term-missing --cov-report=html"
+# Required by async tests in plc-modbus and plc-sim when running from repo root.
+asyncio_mode = "auto"
+
+[tool.coverage.report]
+# Ratchet, not a target. Coverage was collected but never enforced, so nothing
+# stopped it sliding; this floor sits just under the last measured run so the
+# number can only go up. Raise it whenever a run clears the next step —
+# lowering it is a decision, not a fix.
+#
+# 59 (measured 59.86) -> 63 (measured 63.74, safety-boundary work and parser/CLI
+# fixes) -> 68 (measured 68.26, after the AST refactor's suites and the first
+# real unit suites for plc-net/plc-sup/plc-sim).
+#
+# CLAUDE.md's "85% per package" is the goal, not the state. Worst offender left:
+# plc-sim (32.7%), whose bulk is the CLI and the web layer.
+fail_under = 68
+precision = 2
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+mypy_path = "src:packages/plc-core/src:packages/plc-code/src:packages/plc-iol/src:packages/plc-modbus/src:packages/plc-sim/src:packages/plc-sup/src:packages/plc-trace/src"
+explicit_package_bases = true
+# Each package has its own tests/ directory; mypy collides on the duplicate
+# top-level "tests" module. test-cases/ at the repo root holds pytest-based
+# SCL integration scenarios — same rationale: not production code.
+exclude = ['(^|/)(tests|test-cases)/']
+
+[[tool.mypy.overrides]]
+module = [
+    "rich",
+    "rich.*",
+    "pygments",
+    "pygments.*",
+    "openpyxl",
+    "openpyxl.*",
+    "pydantic",
+    "pydantic.*",
+    "asyncua",
+    "asyncua.*",
+    "pymodbus",
+    "pymodbus.*",
+    "msgpack",
+    "scapy",
+    "scapy.*",
+    "docx",
+    "docx.*",
+]
+ignore_missing_imports = true

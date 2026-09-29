@@ -54,11 +54,12 @@ foreach($major in @(20,21)) {
     [xml]$xml=Get-Content $project -Raw
     if($xml.Project.PropertyGroup.FileVersion -ne $version -or $xml.Project.PropertyGroup.InformationalVersion -ne $release){throw 'V20/V21 source versions differ'}
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
-    $properties=@("-p:SiemensEngineeringDirectory=$api","-p:BaseIntermediateOutputPath=$obj","-p:MSBuildProjectExtensionsPath=$obj")
+    $properties=@("-p:SiemensEngineeringDirectory=$api")
     Restore $project $properties
     Run $Dotnet (@('build',$project,'-c','Release','--no-restore','-v:q')+$properties) "build-v$major.log"
     $built=Join-Path $source $(if($major -eq 20){'bin-v20/Release/net48'}else{'bin/Release/net48'})
     $runtime=Join-Path $repo "runtime/v$major"
+    New-Item -ItemType Directory -Force -Path $runtime | Out-Null
     $payload=@(Get-ChildItem -LiteralPath $built -File | Where-Object {$_.Extension -in '.exe','.dll','.config' -and $_.Name -notlike 'Siemens.Engineering*'})
     # Fail on obsolete dependencies so an old DLL is never silently republished.
     foreach($file in Get-ChildItem -LiteralPath $runtime -File | Where-Object {$_.Extension -in '.exe','.dll','.config'}){if($file.Name -notin $payload.Name){throw "Review obsolete runtime file: $($file.FullName)"}}
@@ -109,6 +110,10 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
     $checks["V$major"]['graphicSelectionPassed']=[int]$graphicSelection.Groups[1].Value
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
+    Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-EcosystemAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "ecosystem-v$major.log"
+    $ecosystem=[regex]::Match((Get-Content (Join-Path $out "ecosystem-v$major.log") -Raw),'COMPLETE: (\d+) ecosystem assembly checks passed')
+    if(!$ecosystem.Success -or [int]$ecosystem.Groups[1].Value -ne 31){throw 'Ecosystem runtime validation incomplete; install the companion Python environment first'}
+    $checks["V$major"]['ecosystemAssemblyPassed']=[int]$ecosystem.Groups[1].Value
     $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
     if($major -eq 21){
         # 两个确定性离线测试直接反射已发布的 V21 EXE：PG/PC 路由选择与 softwarePath 匹配器。
@@ -139,7 +144,7 @@ $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime') -File -Recurse | Where
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.
-$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
+$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
     $text=[IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n")
     $sha=[Security.Cryptography.SHA256]::Create()
     try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}

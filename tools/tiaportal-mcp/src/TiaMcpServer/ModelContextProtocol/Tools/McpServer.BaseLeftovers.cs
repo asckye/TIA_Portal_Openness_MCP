@@ -64,9 +64,9 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => Portal.ShowObjectInEditor(kind,devicePathJson,itemPathJson,softwarePath,objectPath,dryRun);
 
-        [McpServerTool(Name="RunToolsInTransaction"), Description("[L2][Project][WRITE] Run 1..20 tool calls (callsJson [{\"name\":\"<tool>\",\"arguments\":{...}}]) inside one ExclusiveAccess + Transaction(project, text): TIA groups them into a single undo unit and the transaction is committed (Transaction.CommitOnDispose) only when every call reports success; any failure rolls all of them back on dispose. Inner dryRun arguments are forced to false; CallTool / nested transactions are refused. Reports CanCommit / CommitRequested and each call's result. dryRun=true only validates the call list; real execution needs confirmChange. No save.")]
+        [McpServerTool(Name="RunToolsInTransaction"), Description("[L2][Project][WRITE] Run 1..20 supported synchronous project edits inside one ExclusiveAccess + Transaction(project, text). callsJson is [{name,arguments:{...}}]. Supported: CreatePlcTypeGroup, DeleteEmptyPlcBlockGroup, ManagePlcUserGroup, ManageDeviceUserGroup, ManageUnifiedHmiGroup, DeleteEmptyUnifiedHmiScreenGroup, UpdateUnifiedObjectProperties, UpdateUnifiedMultilingualProperty. Rejects all other tools, including compile, online, session, save, external files and nested orchestration. Forces inner dryRun=false; preflights every call before starting. Commits only with explicit operation success, CanCommit and CommitRequested, and successful disposal. dryRun=true validates arguments only, not native semantics. Real execution needs confirmChange. No save.")]
         public static ResponseMessage RunToolsInTransaction(
-            [Description("callsJson: JSON array of {name, argumentsJson} tool calls to run inside one transaction (CallTool itself is refused).")] string callsJson,
+            [Description("callsJson: JSON array of {name, arguments:{...}} supported tool calls to run inside one transaction.")] string callsJson,
             [Description("text: transaction text shown in TIA's undo history.")] string text,
             bool confirmChange=false,
             bool dryRun=true)
@@ -80,28 +80,28 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var call in calls)
                 {
                     if (!all.ContainsKey(call.Name)) throw new ArgumentException("No tool named '" + call.Name + "'.");
+                    TransactionExecution.RequireSupported(call.Name);
+                    call.ArgumentsJson = BaseLeftoversLogic.ForceRealExecution(call.ArgumentsJson);
+                    var preflight = PreflightToolCall(call.Name, call.ArgumentsJson);
+                    if (preflight.Meta?["ok"]?.GetValue<bool?>() != true)
+                        throw new ArgumentException("Preflight failed for " + call.Name + ": " + preflight.Message);
                     plan.Add(new JsonObject { ["name"] = call.Name, ["arguments"] = JsonNode.Parse(call.ArgumentsJson) });
                 }
                 meta["text"] = text;
                 if (dryRun) { meta["success"] = true; meta["operationSuccess"] = true; return new ResponseMessage { Message = "Transaction preview: " + calls.Length + " call(s) validated, nothing executed.", Meta = meta }; }
-                var results = new JsonArray(); meta["results"] = results; bool allOk = true;
-                using (var scope = Portal.BeginTransaction(text))
+                var results = new JsonArray(); meta["results"] = results;
+                bool committed = TransactionExecution.Run(calls.Length, () => Portal.BeginTransaction(text), index =>
                 {
-                    meta["mayHaveChanged"] = true;
-                    foreach (var call in calls)
-                    {
-                        var response = CallTool(call.Name, BaseLeftoversLogic.ForceRealExecution(call.ArgumentsJson));
-                        var innerMeta = response.Meta; bool ok = innerMeta?["success"]?.GetValue<bool>() == true && innerMeta?["operationSuccess"]?.GetValue<bool>() != false;
-                        JsonNode? payload; try { payload = JsonNode.Parse(response.Message); } catch { payload = response.Message; }
-                        results.Add(new JsonObject { ["name"] = call.Name, ["ok"] = ok, ["result"] = payload });
-                        if (!ok || scope.IsCancellationRequested) { allOk = false; meta["stoppedAt"] = call.Name; break; }
-                    }
-                    meta["canCommit"] = scope.CanCommit;
-                    if (allOk && scope.CanCommit) scope.Commit();
-                    meta["commitRequested"] = scope.CommitRequested;
-                }
-                meta["committed"] = allOk; meta["success"] = allOk; meta["operationSuccess"] = allOk; meta["apiCallSuccess"] = true;
-                return new ResponseMessage { Message = allOk ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction rolled back: a call failed or TIA requested cancellation (see results / stoppedAt). Nothing was kept.", Meta = meta };
+                    var call = calls[index];
+                    var response = CallTool(call.Name, call.ArgumentsJson);
+                    bool ok = response.Meta?["operationSuccess"]?.GetValue<bool?>() == true;
+                    JsonNode? payload; try { payload = JsonNode.Parse(response.Message); } catch { payload = response.Message; }
+                    results.Add(new JsonObject { ["name"] = call.Name, ["ok"] = ok, ["result"] = payload });
+                    if (!ok) meta["stoppedAt"] = call.Name;
+                    return ok;
+                }, meta);
+                meta["success"] = committed; meta["operationSuccess"] = committed; meta["apiCallSuccess"] = true;
+                return new ResponseMessage { Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta = meta };
             }
             catch (Exception ex)
             {

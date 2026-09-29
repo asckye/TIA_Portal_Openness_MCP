@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+  "commit": "317dfd06dae840ff229e721b140de4b89829120e",
+  "license": "Source code MIT under section 2 of retained Siemens terms",
+  "scope": "Phases 1-4 and XML template; no add-in/UI or binary copied",
+  "changes": [
+    "Unused WPF/WinForms imports removed; nullable disabled for legacy source",
+    "Headless execution context and error/progress/log adapters supplied by host",
+    "Template substitutions XML-escaped; minute format corrected; alias lists reset each run",
+    "Recursive user constants accumulate instead of clearing parent-group constants"
+  ]
+}

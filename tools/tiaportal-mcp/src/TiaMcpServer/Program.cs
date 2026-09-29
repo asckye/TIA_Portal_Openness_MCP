@@ -799,6 +799,9 @@ namespace TiaMcpServer
                 {
                     return null;
                 }
+                // Engineering assemblies must come from the selected installation,
+                // with identity checks in Engineering.Resolver (Copy Local=False).
+                if (name.StartsWith("Siemens.Engineering", StringComparison.OrdinalIgnoreCase)) return null;
 
                 var candidate = Path.Combine(AppContext.BaseDirectory, name + ".dll");
                 return File.Exists(candidate) ? Assembly.LoadFrom(candidate) : null;

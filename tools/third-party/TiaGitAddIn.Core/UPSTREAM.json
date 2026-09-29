@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/Czarnak/tia-git-addin",
+  "commit": "01d0bca9f92da9052aeb8f3130d25edb1847a22b",
+  "license": "MIT",
+  "scope": "Unmodified netstandard2.0 Core project; UI add-in not embedded"
+}

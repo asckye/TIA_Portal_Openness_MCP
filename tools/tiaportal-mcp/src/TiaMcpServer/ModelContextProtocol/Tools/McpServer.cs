@@ -57,9 +57,9 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region portal
 
-        [McpServerTool(Name = "Connect"), Description("[L1][Portal] Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - to the process holding projectName when given, else the first one with an open project / session, else the first attachable - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first.")]
+        [McpServerTool(Name = "Connect"), Description("[L1][Portal] Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - when projectName is given, to its matching process or an empty process only (never a different open project); without a name, to the first open project / session or attachable process - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first.")]
         public static ResponseConnect Connect(
-            [Description("projectName: optional exact name of the project the session wants; the TIA process holding it is preferred and the name is remembered as the expected project.")] string projectName = "",
+            [Description("projectName: optional exact project name; binds its process or an empty instance only, never another open project. The expected name is retained for subsequent reads/writes.")] string projectName = "",
             [Description("allowStart: false (default) never starts a new TIA Portal instance while others are running; true starts a separate headless instance when none of the running ones can be attached.")] bool allowStart = false)
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
@@ -316,13 +316,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 var rules = new[]
                 {
                     "ORDER: Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTree → read/write → CompileSoftware → SaveProject. The server now auto-connects and auto-binds an already-open project, but always confirm with GetState/GetProjectTree before writing.",
-                    "AFTER ANY WRITE: call CompileSoftware to validate, then SaveProject to persist. Changes are NOT saved automatically.",
+                    "AFTER A WRITE: read back the intended change, then compile the relevant scope. Compile and SaveProject run outside transactions; save only within the authorized workflow. Changes are NOT saved automatically.",
                     "NAMES ARE EXACT: plc software path defaults to 'PLC_1', HMI to 'HMI_RT_1'. If a name/path is rejected, call GetProjectTree / GetSoftwareTree to read the real names instead of guessing.",
                     "ON ERROR: read the error message — it names the recovery tool (e.g. 'call OpenProject/AttachToOpenProject'). Do that instead of retrying the same call or switching tools at random.",
                     "PLAN, DO NOT PROBE: before an unfamiliar call and after any correction from the user, run PreflightToolCall(name, argumentsJson) — it checks the arguments against the real signature and reports dryRun / confirm flags, precautions and session prerequisites without executing; fix the plan from that report, then call once. Every listed tool description ends with a worked Example; every FAILED call carries meta.preflight with the corrected plan; GetRecipe(topic) gives the exact call sequence of a multi-step job.",
+                    "OFFICIAL REFERENCE: GetAuthoringGuide('openness-workflow') routes to ReadOpennessGuidance and the matching API manual. Siemens V21 guide examples do not establish V20 support or live acceptance.",
                     "BIG TASKS: to create or extend a whole project in one shot, prefer ScaffoldProject (one JSON spec) over many small calls; pass dryRun=true first to validate the spec offline.",
                     "WRITING CODE: call GetAuthoringGuide('scl' or 'lad') BEFORE authoring block code — it returns the verified syntax and encoding rules. NEVER hand-write FlgNet XML for ladder logic; use S7DCL text via ImportFromDocuments/ImportBlocksFromScl.",
-                    "ENCODING: .scl external source = UTF-8 without BOM; .s7dcl/.s7res and all XML = UTF-8 WITH BOM. Wrong BOM is the #1 cause of mojibake/import failures with Chinese text.",
+                    "ENCODING: ASCII-only .scl can use UTF-8 without BOM; use a BOM for Chinese .scl; .s7dcl/.s7res and all XML = UTF-8 WITH BOM. Wrong BOM is the #1 cause of mojibake/import failures with Chinese text.",
                 };
 
                 var limits = new[]

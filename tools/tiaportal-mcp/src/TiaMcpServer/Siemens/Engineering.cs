@@ -52,6 +52,8 @@ namespace TiaMcpServer.Siemens
                 var assemblyPath = FindAssemblyRecursive(dir, assemblyName.Name + ".dll", excludedTiaMajorVersions);
                 if (assemblyPath != null)
                 {
+                    // Inspect metadata before LoadFrom can put the wrong API into this AppDomain.
+                    EngineeringAssemblyIdentity.RequireMatch(assemblyName, AssemblyName.GetAssemblyName(assemblyPath), assemblyPath);
                     return Assembly.LoadFrom(assemblyPath);
                 }
             }
@@ -64,8 +66,8 @@ namespace TiaMcpServer.Siemens
         /// Detection order:
         ///   1. TiaPortalLocation env var — extract version from path (e.g. "Portal V21" → 21)
         ///   2. Registry: HKLM\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP*\TIA_Opns
-        ///   3. Filesystem: C:\Program Files\Siemens\Automation\Portal V*
-        /// Returns the highest found version, or null if nothing detected.
+        /// Explicit path version wins; otherwise inspect installed-software registry entries.
+        /// Returns the highest registered version, or null if nothing detected.
         /// </summary>
         public static int? DetectTiaMajorVersion()
         {
@@ -74,24 +76,24 @@ namespace TiaMcpServer.Siemens
             // 0. Explicit override (CLI --tia-portal-location)
             if (!string.IsNullOrWhiteSpace(TiaPortalLocationOverride))
             {
-                var m = System.Text.RegularExpressions.Regex.Match(TiaPortalLocationOverride, @"[Vv](\d{2})", System.Text.RegularExpressions.RegexOptions.RightToLeft);
-                if (m.Success && int.TryParse(m.Groups[1].Value, out int ovVer))
-                    candidates.Add(ovVer);
+                var version = EngineeringAssemblyIdentity.PathVersion(TiaPortalLocationOverride);
+                if (version.HasValue) return version;
             }
 
             // 1. TiaPortalLocation env var
             var env = Environment.GetEnvironmentVariable("TiaPortalLocation");
             if (!string.IsNullOrWhiteSpace(env))
             {
-                var match = System.Text.RegularExpressions.Regex.Match(env, @"[Vv](\d{2})", System.Text.RegularExpressions.RegexOptions.RightToLeft);
-                if (match.Success && int.TryParse(match.Groups[1].Value, out int envVer))
-                    candidates.Add(envVer);
+                var version = EngineeringAssemblyIdentity.PathVersion(env);
+                if (version.HasValue) return version;
             }
 
             // 2. Registry scan
-            try
+            foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
             {
-                using var regBase = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+              try
+              {
+                using var regBase = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
                 using var installedSw = regBase.OpenSubKey(@"SOFTWARE\Siemens\Automation\_InstalledSW");
                 if (installedSw != null)
                 {
@@ -101,31 +103,17 @@ namespace TiaMcpServer.Siemens
                         var numMatch = System.Text.RegularExpressions.Regex.Match(subName, @"TIAP(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
                         if (!numMatch.Success || !int.TryParse(numMatch.Groups[1].Value, out int regVer)) continue;
 
-                        using var opnsKey = installedSw.OpenSubKey(subName + @"\TIA_Opns");
-                        if (opnsKey?.GetValue("Path") is string path && Directory.Exists(path))
-                            candidates.Add(regVer);
+                        foreach (var suffix in new[] { @"\TIA_Opns", @"\Global" })
+                        {
+                            using var opnsKey = installedSw.OpenSubKey(subName + suffix);
+                            if (opnsKey?.GetValue("Path") is string path && Directory.Exists(path))
+                                candidates.Add(regVer);
+                        }
                     }
                 }
+              }
+              catch { }
             }
-            catch { }
-
-            // 3. Filesystem scan
-            try
-            {
-                var siemensRoot = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
-                    "Siemens", "Automation");
-                if (Directory.Exists(siemensRoot))
-                {
-                    foreach (var dir in Directory.GetDirectories(siemensRoot, "Portal V*"))
-                    {
-                        var dirMatch = System.Text.RegularExpressions.Regex.Match(dir, @"Portal V(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-                        if (dirMatch.Success && int.TryParse(dirMatch.Groups[1].Value, out int fsVer))
-                            candidates.Add(fsVer);
-                    }
-                }
-            }
-            catch { }
 
             return candidates.Count > 0 ? candidates.Max() : (int?)null;
         }
@@ -147,8 +135,8 @@ namespace TiaMcpServer.Siemens
             if (string.IsNullOrEmpty(installPath))
             {
                 return (false, null, null,
-                    $"no TIA Portal V{TiaMajorVersion} install path (registry TIAP{TiaMajorVersion}\\TIA_Opns, " +
-                    "TiaPortalLocation env var and the default install folder were all checked)");
+                    $"no TIA Portal V{TiaMajorVersion} install path (registry TIAP{TiaMajorVersion}\\TIA_Opns / Global in both views, " +
+                    "explicit CLI path and matching TiaPortalLocation env var checked)");
             }
 
             var versionString = TiaMajorVersion.ToString();
@@ -199,29 +187,29 @@ namespace TiaMcpServer.Siemens
             }
 
             // 3. Version-specific registry entry — authoritative on multi-version machines.
-            var subKeyName = $@"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{TiaMajorVersion}\TIA_Opns";
-
-            using (var regBaseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-            using (var tiaOpnsKey = regBaseKey.OpenSubKey(subKeyName))
+            foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
             {
-                var regPath = tiaOpnsKey?.GetValue("Path")?.ToString();
-                if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath))
+              try
+              {
+                using var regBaseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
+                foreach (var section in new[] { "TIA_Opns", "Global" })
                 {
-                    return regPath;
+                    using var tiaOpnsKey = regBaseKey.OpenSubKey($@"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{TiaMajorVersion}\{section}");
+                    var regPath = tiaOpnsKey?.GetValue("Path")?.ToString();
+                    if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath)) return regPath;
                 }
+              }
+              catch (System.Security.SecurityException) { }
+              catch (UnauthorizedAccessException) { }
             }
-
-            // 4. Last resort: the env var even when its version looks different — better than nothing.
-            return envUsable ? env : null;
+            return null; // A path explicitly naming another version is not a fallback.
         }
 
         /// <summary>True when the path names no version at all, or names exactly V{version}.</summary>
         private static bool PathMatchesVersion(string path, int version)
         {
-            var m = System.Text.RegularExpressions.Regex.Match(path, @"[Vv](\d{2})",
-                System.Text.RegularExpressions.RegexOptions.RightToLeft);
-            if (!m.Success) return true;
-            return int.TryParse(m.Groups[1].Value, out int pv) && pv == version;
+            var named = EngineeringAssemblyIdentity.PathVersion(path);
+            return !named.HasValue || named.Value == version;
         }
 
         private static string? FindAssemblyRecursive(string directory, string fileName, IEnumerable<string> excludedTiaMajorVersions)

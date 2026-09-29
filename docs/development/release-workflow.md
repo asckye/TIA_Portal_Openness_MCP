@@ -1,4 +1,4 @@
-# 完整 Release 发布流程
+﻿# 完整 Release 发布流程
 
 每次正式 Release 都必须提供完整的 `TIA_MCP_Delivery_v<版本>_<YYYYMMDD>.zip` 和对应 `.sha256`，无需下载旧版补文件。不能以单版运行包、源码压缩包或补丁替代完整交付包。
 
@@ -30,7 +30,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Release.ps1 -V
 
 ## 引擎构建与本地验证
 
-需要 Windows、.NET SDK（包含测试项目所需运行时）、.NET Framework 4.8 开发环境、Python 3.10+、Git，以及本地 V20/V21 PublicAPI。两个参考路径均应直接包含对应的 Siemens DLL；V21 使用 `net48` 目录。HTTP 测试仅绑定本机测试端口，可能需要管理员终端。
+需要 Windows、.NET SDK（包含测试项目所需运行时）、.NET Framework 4.8 开发环境、Python 3.10+、Git，以及本地 V20/V21 PublicAPI。两个参考路径均应直接包含对应的 Siemens DLL；V21 使用 `net48` 目录。 v3.0.0 起完整构建还需要 Python 3.12+ 的伴随工具环境：先运行 `scripts/ecosystem/Install-PlcTools.ps1`（包含 ReportLab 与测试依赖），两版构建各执行 31 项生态工具验证。HTTP 测试仅绑定本机测试端口，可能需要管理员终端。
 
 1. Release 标签和标题仅使用 `vX.Y.Z`（例如 `v2.7.3`、`v2.7.4`），不添加个人或功能后缀；日期只进入附件名。同步两个 `.csproj` 的 `FileVersion` 和 `InformationalVersion`，同步 `AssemblyVersion`，更新 CHANGELOG、本版说明与 `README.zh-CN.md`。
 2. 运行统一构建入口（路径按本机安装修改）：

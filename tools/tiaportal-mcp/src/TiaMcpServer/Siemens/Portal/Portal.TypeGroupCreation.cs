@@ -13,7 +13,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
             lock (_blockGroupDeleteGate)
             {
-                using var access = dryRun ? null : _portal.ExclusiveAccess("MCP: create PLC type groups");
+                using var access = dryRun ? null : AcquireHmiEditAccess();
                 var plc = ResolveSoftwareContainerUncached(softwarePath)?.Software as PlcSoftware
                     ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);
                 var result = PlcTypeGroupCreation.Execute<PlcTypeGroup>(plc.TypeGroup, groupPath, dryRun,

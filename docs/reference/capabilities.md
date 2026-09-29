@@ -1,6 +1,12 @@
 # 工程能力与验收边界
 
-本文说明 2.9.2 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 453 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 3.0.0 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。静态清单 464 项（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 59 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+
+## 3.0.0 官方流程修复与生态工具
+
+新增 11 个工具，覆盖官方指南、PLC Tools 伴随进程、LAD 可视差异、三步批处理、Git、OPC UA 建模 XML、质量审计、模板和布尔报警 LAD。详见[生态工具](ecosystem-tools.md)。事务仅允许 8 个已审核同步编辑工具；PLC 原生交叉引用默认拒绝。官方指南的 32 个主题已映射，修复 9 项连接、资源清理、程序集解析、事务与独占问题，见[审计报告](../development/official-openness-audit-20260929.md)。
+
+验收边界：仅本地构建、API 形状及离线测试；新增工具的原生写入和事务关闭行为尚未真机验收。纯 Openness 从零创建 Unified 面板类型及修改类型内部控件/脚本仍未证实可行。
 
 ## 2.9.2 删除工具带上拒绝原因
 

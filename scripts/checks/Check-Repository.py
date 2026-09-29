@@ -7,7 +7,7 @@ import sys
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[2]
-SKIP = {'.git', 'bin-build', 'bin', 'bin-v20', 'obj', 'obj-v20', '__pycache__'}
+SKIP = {'.git', 'bin-build', 'bin', 'bin-v20', 'obj', 'obj-v20', '__pycache__', 'TiaMcp_Output', '.pytest_cache'}
 
 
 def documents(root):

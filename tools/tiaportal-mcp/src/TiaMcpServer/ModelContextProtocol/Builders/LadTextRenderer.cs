@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace TiaMcpServer.ModelContextProtocol
@@ -359,18 +360,19 @@ namespace TiaMcpServer.ModelContextProtocol
             if (scope.Contains("Constant"))
             {
                 // literal / typed: <Constant><ConstantValue>…; named (LocalConstant/GlobalConstant): <Constant Name="…"/>
-                var named = acc.Descendants("Constant").FirstOrDefault()?.Attribute("Name")?.Value;
-                if (!string.IsNullOrEmpty(named)) return (scope.Contains("Global") ? $"\"{named}\"" : $"#{named}", true);
-                var v = acc.Descendants("ConstantValue").FirstOrDefault()?.Value?.Trim() ?? "?";
+                var named = acc.Element("Constant")?.Attribute("Name")?.Value;
+                if (!string.IsNullOrEmpty(named)) return (Qualify(scope, named!), true);
+                var v = (acc.Element("Constant")?.Element("ConstantValue") ?? acc.Element("ConstantValue"))?.Value?.Trim() ?? "?";
                 return (v, true);
             }
             var address = acc.Element("Address");
             if (address != null) return (AddressText(address), false);
-            // symbol: join Component names with '.'
-            var comps = acc.Descendants("Component").Select(c => c.Attribute("Name")?.Value).Where(v => !string.IsNullOrEmpty(v)).ToList();
-            var name = string.Join(".", comps);
-            if (string.IsNullOrEmpty(name)) name = "?";
-            return (scope.Contains("Global") ? $"\"{name}\"" : $"#{name}", false);
+            // Share symbol rendering with SCL: quote individual components and retain array indexes.
+            // LAD call instances carry Components directly, without a Symbol wrapper.
+            var symbol = acc.Element("Symbol");
+            var text = symbol != null ? RenderStSymbol(symbol, scope)
+                : acc.Elements("Component").Any() ? RenderStSymbol(acc, scope) : RenderStAccess(acc);
+            return (string.IsNullOrEmpty(text) ? "?" : text, false);
         }
 
         // <Address Area="Input" Type="Bool" BitOffset="3"/> -> %I0.3 ; Area=Memory Type=Word BitOffset=80 -> %MW10
@@ -509,9 +511,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     case "Component":
                         if (!hasTokens && previousWasComponent) sb.Append('.');
-                        if (first) sb.Append(local ? "#" : global ? "\"" : "");
-                        sb.Append(ComponentText(child, hasTokens));
-                        if (first && global) sb.Append('"');
+                        if (first && local) sb.Append('#');
+                        sb.Append(ComponentText(child, hasTokens, first && global, quotedByTokens));
                         first = false; previousWasComponent = true;
                         break;
                     case "Token": sb.Append(child.Attribute("Text")?.Value ?? ""); previousWasComponent = false; break;
@@ -527,16 +528,22 @@ namespace TiaMcpServer.ModelContextProtocol
         // Named constant: #NAME locally, "NAME" globally.
         private static string Qualify(string scope, string name)
         {
-            if (scope.StartsWith("Local", StringComparison.OrdinalIgnoreCase)) return "#" + name;
-            if (scope.StartsWith("Global", StringComparison.OrdinalIgnoreCase)) return "\"" + name + "\"";
-            return name;
+            if (scope.StartsWith("Local", StringComparison.OrdinalIgnoreCase)) return "#" + SymbolName(name);
+            if (scope.StartsWith("Global", StringComparison.OrdinalIgnoreCase)) return SymbolName(name, true);
+            return SymbolName(name);
         }
+
+        // Adapted from upstream cd0eed6 (MIT): delimit each symbol component, never the whole path.
+        private static string SymbolName(string name, bool forceQuotes = false)
+            => forceQuotes || !Regex.IsMatch(name, @"^[\p{L}_][\p{L}\p{Nd}_]*$") ? "\"" + name + "\"" : name;
 
         // Component_T: Name plus optional Token / index-Access / Comment children. With tokens the children are
         // rendered verbatim (arr[#i]); without them the index brackets and a SliceAccessModifier (.%X0) are synthesised.
-        private static string ComponentText(XElement component, bool symbolHasTokens)
+        private static string ComponentText(XElement component, bool symbolHasTokens, bool forceQuotes = false, bool quotedByTokens = false)
         {
-            var sb = new StringBuilder(component.Attribute("Name")?.Value ?? "");
+            var name = component.Attribute("Name")?.Value ?? "";
+            var explicitlyQuoted = component.Elements("BooleanAttribute").Any(a => a.Attribute("Name")?.Value == "HasQuotes" && a.Value == "true");
+            var sb = new StringBuilder(quotedByTokens ? name : SymbolName(name, forceQuotes || explicitlyQuoted));
             if (component.Elements("Token").Any()) { RenderStNodes(component.Elements(), sb); return sb.ToString(); }
             var indexes = component.Elements("Access").Select(RenderStAccess).ToList();
             if (indexes.Count > 0) sb.Append('[').Append(string.Join(", ", indexes)).Append(']');
@@ -549,14 +556,14 @@ namespace TiaMcpServer.ModelContextProtocol
         // The FB type is not textually present in SCL for instance calls; the ⟨…⟩ annotation keeps it visible.
         private static void RenderStCallInfo(XElement callInfo, StringBuilder sb)
         {
-            var name = callInfo.Attribute("Name")?.Value ?? "?";
+            var name = callInfo.Attribute("Name")?.Value;
             var instance = callInfo.Element("Instance");
             if (instance != null)
             {
                 var inst = RenderStSymbol(instance, instance.Attribute("Scope")?.Value ?? "");
-                sb.Append(string.IsNullOrEmpty(inst) ? name : inst + "⟨" + name + "⟩");
+                sb.Append(string.IsNullOrEmpty(inst) ? name ?? "?" : inst + (string.IsNullOrEmpty(name) ? "" : "⟨" + name + "⟩"));
             }
-            else sb.Append(name);
+            else if (!string.IsNullOrEmpty(name)) sb.Append(SymbolName(name!));
             RenderStNodes(callInfo.Elements().Where(e => e.Name.LocalName != "Instance"), sb);
         }
 

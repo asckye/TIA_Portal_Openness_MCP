@@ -17,6 +17,11 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\TimedAttachment.cs" Link="TimedAttachment.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Engineering.cs" Link="Engineering.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectOwnership.cs" Link="ProjectOwnership.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\TransactionExecution.cs" Link="TransactionExecution.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeOutcome.cs" Link="NativeOutcome.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeFileOutput.cs" Link="NativeFileOutput.cs" />
@@ -126,6 +131,15 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVisualComparison.cs" Link="PlcVisualComparison.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EcosystemFiles.cs" Link="EcosystemFiles.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EngineeringQualityAudit.cs" Link="EngineeringQualityAudit.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcTemplateExpansion.cs" Link="PlcTemplateExpansion.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcAliasAlarmBuilder.cs" Link="PlcAliasAlarmBuilder.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcLadFcBlockXmlComposer.cs" Link="PlcLadFcBlockXmlComposer.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcFcBlockXmlComposer.cs" Link="PlcFcBlockXmlComposer.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\StructuredTextXmlBuilder.cs" Link="StructuredTextXmlBuilder.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\BatchPlanStore.cs" Link="BatchPlanStore.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\RuntimeChannelsLogic.cs" Link="RuntimeChannelsLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedLogic.cs" Link="PlcSimAdvancedLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
@@ -134,5 +148,8 @@
     <!-- DescribeBlockLogic 的渲染器：零依赖（只用 System.Xml.Linq）。原实现把 SCL 里的调用、命名常量、
          绝对地址和 LAD 里的 <Call> 块调用整段丢掉，而工具照样报 success —— 只有会失败的用例盯得住。 -->
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\LadTextRenderer.cs" Link="LadTextRenderer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
   </ItemGroup>
 </Project>

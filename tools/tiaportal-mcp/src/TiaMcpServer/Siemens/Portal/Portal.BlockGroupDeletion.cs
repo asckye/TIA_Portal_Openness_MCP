@@ -16,7 +16,7 @@ namespace TiaMcpServer.Siemens
             if (IsProjectNull() || _portal==null) throw new PortalException(PortalErrorCode.InvalidState, "No TIA project is open.");
             lock (_blockGroupDeleteGate)
             {
-                using var access = dryRun ? null : _portal.ExclusiveAccess("MCP: delete one empty PLC user block group");
+                using var access = dryRun ? null : AcquireHmiEditAccess();
                 // Destructive operations use the shared exact container resolver, never fuzzy PLC selection.
                 var sc=ResolveSoftwareContainerUncached(softwarePath);
                 var plc=sc?.Software as PlcSoftware ?? throw new PortalException(PortalErrorCode.NotFound, "PLC software not found: " + softwarePath);

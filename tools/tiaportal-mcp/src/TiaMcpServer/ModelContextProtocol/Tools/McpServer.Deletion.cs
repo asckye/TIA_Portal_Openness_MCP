@@ -31,18 +31,18 @@ namespace TiaMcpServer.ModelContextProtocol
             + "blocks inside nested groups. THIS IS ALSO THE TOOL FOR DELETING A DATA BLOCK: global DB, instance DB, "
             + "ARRAY DB, FB, FC and OB are all PLC blocks, so there is no separate DeleteGlobalDb / DeleteDb / "
             + "DeleteFunctionBlock tool - use this one. Defaults to dryRun=true, which changes nothing and reports "
-            + "the resolved target (pinned block number, warnings). Cross references are queried only with "
+            + "the resolved target (pinned block number, warnings). Native cross references are disabled by default at the server-process level; see GetCrossReferences. They also require "
             + "crossReferences=true: on the maintainer's real project (2026-09-21) that CrossReferenceService query took "
             + "TIA Portal V21 down during a dry run, so it is off by default and the response says 'not queried' - never "
             + "read that as 'nobody uses it'. It never deletes instance DBs or callers automatically. Before dryRun=false, "
-            + "back the block up with ExportAsDocuments (and, on a saved project, check GetCrossReferences); compile with "
+            + "back the block up with ExportAsDocuments and review dependencies (an unavailable query does not prove it is unused); compile with "
             + "CompileSoftware after deletion and before SaveProject. Regex and wildcards are rejected. To delete a tag "
             + "table use DeletePlcTagTable, a UDT use DeletePlcType.")]
         public static ResponseJsonReport DeletePlcBlock(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("blockPath: exact block path, e.g. 'DB_Test' or 'GroupA/FB_Motor'. Regex and wildcards are rejected.")] string blockPath,
             [Description("dryRun: true (default) only resolves and reports the target; false performs Delete() and verifies the block is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
         {
             try
             {
@@ -99,7 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "by name, including tables nested in user groups. Defaults to dryRun=true, which only reports what "
             + "the table contains and deletes nothing. DANGER: deleting a tag table removes the SYMBOLS of every "
             + "tag in it. HMI panels bind PLC tags by symbolic name, so the PLC may still compile clean while the "
-            + "HMI silently loses its bindings - always review the previewed tag list first. Cross references are "
+            + "HMI silently loses its bindings - always review the previewed tag list first. Native cross references are disabled by default at the server-process level; see GetCrossReferences. They are "
             + "queried only with crossReferences=true (the same TIA CrossReferenceService that took TIA Portal V21 down "
             + "during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21) and may be unavailable at "
             + "tag-table level anyway; the response says explicitly whether they were queried and obtained. Regex and "
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tagTableName: bare table name, or the group-qualified path from GetPlcTagTables (e.g. 'Drives/VFD tags'). Regex and wildcards are rejected.")] string tagTableName,
             [Description("dryRun: true (default) only resolves the table and lists its contents; false performs Delete() and verifies the table is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
         {
             try
             {
@@ -155,15 +155,15 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "DeletePlcType"), Description(
             "[L2][PLC-Software][WRITE] Preview or delete ONE PLC user data type (UDT / PlcType) by its exact "
             + "path. Defaults to dryRun=true. Deleting a UDT breaks every DB and block interface declared with it; "
-            + "its cross references are queried only with crossReferences=true (the TIA CrossReferenceService query "
+            + "native cross references are disabled by default at the server-process level (see GetCrossReferences) and also require crossReferences=true (the TIA CrossReferenceService query "
             + "took TIA Portal V21 down during a DeletePlcBlock dry run on the maintainer's project, 2026-09-21), so "
-            + "review them on a saved project before you commit. Regex and wildcards are rejected. Export the type "
+            + "review dependencies before deletion; an unavailable query is not evidence it is unused. Regex and wildcards are rejected. Export the type "
             + "first with ExportType, and CompileSoftware afterwards.")]
         public static ResponseJsonReport DeletePlcType(
             [Description("softwarePath: path in the project structure to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("typePath: exact UDT path, e.g. 'UDT_Motor' or 'GroupA/UDT_Motor'. Regex and wildcards are rejected.")] string typePath,
             [Description("dryRun: true (default) only resolves the type; false performs Delete() and verifies the type is absent")] bool dryRun = true,
-            [Description("crossReferences: false (default) does not query cross references; true asks TIA's CrossReferenceService who uses the target. On the maintainer's real project (2026-09-21) that query took TIA Portal V21 down during a dry run right after an Override import without a compile; since 2.9.1 it is refused while any block of the PLC is uncompiled (IsConsistent=false). Leave it false unless the PLC is compiled and the project saved - or run GetCrossReferences separately.")] bool crossReferences = false)
+            [Description("crossReferences: false (default) skips native references; true requests them but does not bypass the default-disabled process policy. Controlled diagnosis requires TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1 on the server; do not enable it automatically. Uncompiled or unreadable block state still refuses. Native queries have terminated TIA Portal V21; compiling does not guarantee safety. Inspect crossReferenceQueried and crossReferenceUnavailableReason; not queried never means unused.")] bool crossReferences = false)
         {
             try
             {
@@ -233,7 +233,8 @@ namespace TiaMcpServer.ModelContextProtocol
                             ? $"交叉引用 {data["crossReferenceCount"]} 条（见 data.crossReferences）。"
                             : queried
                                 ? "⚠️ 交叉引用查不到 —— 这不等于没人引用它，请先自行核对。"
-                                : "交叉引用未查询（crossReferences=false，默认；该查询在真机上让 TIA 退出过）—— 这不等于没人引用它。")
+                                : "交叉引用未查询（" + (data["crossReferenceUnavailableReason"]?.GetValue<string>() ?? "crossReferences=false，默认")
+                                    + "）—— 这不等于没人引用它。")
                         + dryRunTail;
             }
             else if (deleted && verifiedAbsent)

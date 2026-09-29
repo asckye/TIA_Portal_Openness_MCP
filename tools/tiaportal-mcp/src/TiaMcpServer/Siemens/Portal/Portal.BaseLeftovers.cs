@@ -413,13 +413,13 @@ namespace TiaMcpServer.Siemens
         // ---- transactions ---------------------------------------------------------------------------------------------------------
         // One ExclusiveAccess + Transaction wraps several tool calls into a single TIA undo unit; the inner tools reuse the ambient
         // exclusive access (AcquireHmiEditAccess) instead of opening a second one.
-        internal sealed class TransactionScope : IDisposable
+        internal sealed class TransactionScope : IEngineeringTransaction
         {
             private readonly Portal _portal; private readonly ExclusiveAccess _access; private readonly Transaction _transaction; private bool _disposed;
             internal TransactionScope(Portal portal, ExclusiveAccess access, Transaction transaction) { _portal = portal; _access = access; _transaction = transaction; }
-            public bool CanCommit { get { try { return _transaction.CanCommit; } catch { return false; } } }
-            public bool CommitRequested { get { try { return _transaction.CommitRequested; } catch { return false; } } }
-            public bool IsCancellationRequested { get { try { return _access.IsCancellationRequested; } catch { return false; } } }
+            public bool CanCommit => _transaction.CanCommit;
+            public bool CommitRequested => _transaction.CommitRequested;
+            public bool IsCancellationRequested { get { try { return _access.IsCancellationRequested; } catch { return true; } } }
             public void Commit() => _transaction.CommitOnDispose();
             public void Dispose()
             {
