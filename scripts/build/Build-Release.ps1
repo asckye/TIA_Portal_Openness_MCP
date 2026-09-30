@@ -1,11 +1,12 @@
-﻿param(
+param(
     [Parameter(Mandatory=$true)][string]$V20ReferenceRoot,
     [Parameter(Mandatory=$true)][string]$V21ReferenceRoot,
     [string]$Dotnet='dotnet',
     [string]$Python='python',
     [string]$NuGetConfig='',
     [ValidatePattern('^\d{8}$')][string]$ReleaseDate=(Get-Date -Format 'yyyyMMdd'),
-    [switch]$NoRestore
+    [switch]$NoRestore,
+    [ValidateRange(10,10000)][int]$LocalStabilityRounds=50
 )
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -71,7 +72,7 @@ foreach($major in @(20,21)) {
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){3097}else{2805}
+    $expectedEngineeringChecks=if($major -eq 21){3119}else{2833}
     if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
@@ -83,6 +84,12 @@ foreach($major in @(20,21)) {
     Run $Python @((Join-Path $repo 'scripts/checks/Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "resources-v$major.log"
     $resources=[regex]::Match((Get-Content (Join-Path $out "resources-v$major.log") -Raw),'COMPLETE: (\d+) resource discovery checks passed')
     if(!$resources.Success){throw 'Resource discovery validation did not report complete success'}
+    # Local-only release gate: mixed success/failure calls, full/lite, STDIO and
+    # eight HTTP clients. This explicitly cannot certify native TIA stability.
+    $stabilityOut=Join-Path $out ("stability-v$major-"+[Guid]::NewGuid().ToString('N'))
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-LocalStability.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--rounds',"$LocalStabilityRounds",'--output',$stabilityOut) "stability-v$major.log"
+    $stability=Get-Content (Join-Path $stabilityOut 'result.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($stability.status -ne 'passed' -or $stability.runs.Count -ne 4 -or $stability.runtimeSha256 -ne (Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()){throw 'Local stability validation incomplete or used a different EXE'}
     Run $harness @($exe,'native-export-only') "native-export-v$major.log"
     $nativeExport=[regex]::Match((Get-Content (Join-Path $out "native-export-v$major.log") -Raw),'COMPLETE: (\d+) native export remoting checks passed')
     if(!$nativeExport.Success){throw 'Native export remoting validation did not report complete success'}
@@ -105,6 +112,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
     $checks["V$major"]['softwareLookupPassed']=[int]$softwareLookup.Groups[1].Value
     $checks["V$major"]['engineeringApiShapePassed']=[int]$engineeringApi.Groups[1].Value
+    $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value
@@ -137,6 +145,15 @@ $manifest.capabilities.mcpToolCount=$roster.toolCount
 $layers=[ordered]@{}
 $roster.tools | Group-Object layer | ForEach-Object {$layers[$_.Name]=$_.Count}
 $manifest.capabilities.mcpToolLayers=$layers
+# Derive lite count from the explicit source roster, and reject missing/duplicate registrations.
+$profile=Get-Content (Join-Path $source 'ModelContextProtocol/Tools/McpServer.Profile.cs') -Raw -Encoding UTF8
+$liteBody=[regex]::Match($profile,'(?s)LiteToolNames\s*=.*?\{(.*?)\};').Groups[1].Value
+if(!$liteBody){throw 'Could not locate the explicit lite tool roster'}
+$liteBody=[regex]::Replace($liteBody,'(?m)//[^\r\n]*','')
+$liteNames=@([regex]::Matches($liteBody,'"([^"]+)"') | ForEach-Object {$_.Groups[1].Value})
+if(($liteNames | Select-Object -Unique).Count -ne $liteNames.Count){throw 'Duplicate lite tool names'}
+foreach($name in $liteNames){if($name -notin $roster.tools.name){throw "Lite tool missing from compiled roster: $name"}}
+$manifest.capabilities.liteProfile.toolCount=$liteNames.Count
 $manifest.capabilities.liteProfile.note='All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative.'
 $manifest.validationStatus='Both runtimes compiled and tested locally; new real-project acceptance remains pending'
 WriteJson $manifestPath $manifest

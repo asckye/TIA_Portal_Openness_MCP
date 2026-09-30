@@ -1132,6 +1132,7 @@ namespace TiaMcpServer.Siemens
 
         public bool ImportFromDocuments(string softwarePath, string groupPath, string importPath, string fileNameWithoutExtension, ImportDocumentOptions option)
         {
+            LastImportedDocumentBlocks = Array.Empty<string>();
             _logger?.LogInformation($"Importing block from documents: {fileNameWithoutExtension} in {importPath}");
 
             if (IsProjectNull())
@@ -1180,7 +1181,7 @@ namespace TiaMcpServer.Siemens
             // lives in a different group than the import target, deletes+recreates it (losing its
             // number and original group). We restore the number afterwards so callers/instance DBs
             // and the project tree stay stable.
-            var existing = FindBlockRecursive(plcSoftware.BlockGroup, fileNameWithoutExtension);
+            var existing = targetGroup.Blocks.Find(fileNameWithoutExtension);
             int? prevNumber = null;
             bool prevAutoNumber = false;
             try { if (existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { }
@@ -1188,7 +1189,7 @@ namespace TiaMcpServer.Siemens
             DocumentImportResultForBlocks? result;
             try
             {
-                result = targetGroup.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option);
+                result = InvocationJournal.Native("ImportFromDocuments.import", () => targetGroup.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option));
             }
             catch (EngineeringNotSupportedException ex)
             {
@@ -1214,7 +1215,7 @@ namespace TiaMcpServer.Siemens
             // are addressed by name, so this is cosmetic-but-important for a stable, diffable project).
             if (prevNumber.HasValue)
             {
-                var imported = FindBlockRecursive(plcSoftware.BlockGroup, fileNameWithoutExtension);
+                var imported = targetGroup.Blocks.Find(fileNameWithoutExtension);
                 if (imported != null)
                 {
                     try

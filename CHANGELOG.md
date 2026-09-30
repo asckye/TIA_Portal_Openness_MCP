@@ -4,7 +4,15 @@
 
 ## [Unreleased]
 
+- 3.1.0 本地候选：修复交叉引用反射旁路/失败结果、下载一致性误报、导入模糊回读及 lite 计数漂移；新增 10 个诊断、软件单元及 V20 选件工具，共 474 项。详见 [v3.1.0](docs/releases/v3.1.0.md) 和 [工具指南](docs/reference/v20-v21-audit-tools.md)。尚未发布或部署。
+
+- 增加本地混合负载发布门：两版 full/lite、STDIO/HTTP、8 并发、错误后恢复及资源/日志检查；打包核对测试脚本和运行时哈希。[范围及 GitHub 接入优先级](docs/development/stability-and-integrations-20260930.md)。原生 TIA 稳定性仍待工程副本验收。
+
 - 在 v3.0.0 发布并通过 GitHub 独立复核后，按维护者要求将上游 v17–v21 同步为本仓库独立分支；提交号和功能边界见[版本分支](docs/reference/version-branches.md)。已发布的 v3.0.0 附件保持原样。
+
+## [3.1.0] - 2026-09-30
+
+本地候选，尚未发布/部署。10 个新增工具与本轮修复见 [3.1.0 说明](docs/releases/v3.1.0.md)；完整构建与验证记录见 `manifest/release-build.json`。默认 lite 59，全量 474。
 
 ## [3.0.0] - 2026-09-29
 

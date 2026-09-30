@@ -20,7 +20,8 @@ def require(condition, message):
 
 
 @contextmanager
-def server(exe, portal_root, major, transport, profile, harness=None, public_api=None):
+def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
+           *, env_overrides=None, process_observer=None):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -34,6 +35,8 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         require(public_api is not None, '--public-api is required with --host-harness')
         args = [str(harness), str(exe), 'protocol-host', str(public_api)] + args[1:]
     env = dict(os.environ, TIA_MCP_PROFILE=profile)
+    if env_overrides:
+        env.update(env_overrides)
     process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE, text=True, encoding='utf-8',
                                env=env, creationflags=subprocess.CREATE_NO_WINDOW)
@@ -91,10 +94,12 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         return reply
 
     try:
+        if process_observer:
+            process_observer(process)
         if transport == 'http':
             deadline = time.monotonic() + 25
             while True:
-                require(process.poll() is None, 'HTTP server exited at startup')
+                require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors[-8:]))
                 try:
                     request = urllib.request.Request(endpoint + '/ready',
                                                      headers={'X-API-Key': key})

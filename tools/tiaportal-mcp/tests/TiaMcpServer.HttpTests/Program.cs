@@ -356,6 +356,7 @@ internal static class Program
                     TestSuiteShapeChecks.Run(Server, shapeCheck);
                     TeamcenterShapeChecks.Run(Server, shapeCheck);
                     CfcShapeChecks.Run(Server, shapeCheck);
+                    EngineeringAuditRuntimeChecks.Run(Server, shapeCheck);
                     Console.WriteLine("COMPLETE: " + Passed + " engineering API checks passed");
                     return 0;
                 }
@@ -416,6 +417,11 @@ internal static class Program
                 Console.OutputEncoding=new UTF8Encoding(false);
                 var cli=Server.GetType("TiaMcpServer.CliOptions",true)!;
                 var options=cli.GetMethod("ParseArgs",All)!.Invoke(null,new object[]{args.Skip(3).ToArray()});
+                // Match the production bootstrap's version selection without its
+                // machine/group setup or Openness.Initialize side effects.
+                var requestedMajor = cli.GetProperty("TiaMajorVersion")!.GetValue(options);
+                if (requestedMajor == null) throw new ArgumentException("protocol-host requires --tia-major-version");
+                Server.GetType("TiaMcpServer.Siemens.Engineering",true)!.GetProperty("TiaMajorVersion")!.SetValue(null, requestedMajor);
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;
                 await (Task)program.GetMethod(transport=="http"?"RunHttpHost":"RunStdioHost",All)!.Invoke(null,new[]{options})!;

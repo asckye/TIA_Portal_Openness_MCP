@@ -1,5 +1,9 @@
 # 官方 Openness API 覆盖清单（V21，2.7.42）
 
+> 3.1.0 本地候选已补入本轮 B1–B6 修正及 10 个工具，见 [补充工具指南](v20-v21-audit-tools.md)。未发布/部署，原生选件行为待验收；不能据工具数宣称覆盖全部 PublicAPI。
+
+> 2026-09-30 更新：本页保留历史 V21 词法统计，不能作为 3.0.0 的“全部功能已完成”证明。已重新扫描根目录 V20/V21 SDK，并核实了当前代码问题和 V20 专用工具缺口，见 [双版本核查](../development/v20-v21-bugs-and-gaps-20260930.md)。通用反射只覆盖部分可解析的公开调用，受参数转换和策略限制，不保证到达全部 API。
+
 [文档目录](../README.md) · [能力与验收边界](capabilities.md) · [路线图](../development/roadmap.md) · [Openness 限制](../troubleshooting/openness-limitations.md)
 
 本页回答"西门子官方 Openness API 有、而本项目没有专用封装的是什么"。数据由 [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) 对本机 V21 PublicAPI 的 18 个官方 XML 文档（不含 AddIn.*）与引擎源码逐成员对照生成；官方 XML 与 DLL 不随仓库分发。本次盘点对应 2.7.27 引擎源码（2026-09-18）；上一次为 2.7.26 / 2.7.25 / 2.7.24（同日）与 2.7.18。

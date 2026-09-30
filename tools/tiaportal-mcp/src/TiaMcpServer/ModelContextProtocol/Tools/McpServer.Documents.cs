@@ -269,7 +269,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it reads back to confirm the block is present (Meta.verified).")]
+        [McpServerTool(Name = "ImportFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (Meta.existsVerified / legacy verified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification.")]
         public static ResponseImportFromDocuments ImportFromDocuments(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: optional path within the PLC program where the block should be placed (empty for root)")] string groupPath,
@@ -313,6 +313,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     });
                 }
 
+                if (EngineeringGroupOperations.Parts(fileNameWithoutExtension).Length != 1 || fileNameWithoutExtension.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+                    throw new ArgumentException("fileNameWithoutExtension must be one safe document basename.");
+                var formatPreflight = EngineeringAuditLogic.DocumentPreflight(File.ReadAllText(Path.Combine(importPath, fileNameWithoutExtension + ".s7dcl")), Engineering.TiaMajorVersion, null);
                 var ok = WithAutoOffline(() => Portal.ImportFromDocuments(softwarePath, groupPath, importPath, fileNameWithoutExtension, option));
                 if (ok)
                 {
@@ -322,13 +325,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     string verifyDetail;
                     try
                     {
-                        var escaped = Regex.Escape(fileNameWithoutExtension);
-                        var found = Portal.GetBlocks(softwarePath, $"^{escaped}$");
-                        if (found == null || found.Count == 0) found = Portal.GetBlocks(softwarePath, escaped);
-                        verified = found != null && found.Count > 0;
-                        verifyDetail = verified
-                            ? $"block '{fileNameWithoutExtension}' present after import"
-                            : $"block '{fileNameWithoutExtension}' NOT found after import — check name/group";
+                        verified = Portal.VerifyLastDocumentImport(softwarePath, groupPath);
+                        verifyDetail = verified ? "Native imported names found in the exact target group; content completeness has not been verified."
+                            : "Exact target readback failed; imported content has not been verified.";
                     }
                     catch (Exception vex) { verifyDetail = "readback skipped: " + vex.Message; }
 
@@ -340,6 +339,10 @@ namespace TiaMcpServer.ModelContextProtocol
                             ["timestamp"] = DateTime.Now,
                             ["success"] = true,
                             ["verified"] = verified,
+                            ["existsVerified"] = verified,
+                            ["contentVerified"] = null,
+                            ["verificationScope"] = "exact target group and native ImportedPlcBlocks names",
+                            ["formatPreflight"] = formatPreflight,
                             ["verifyDetail"] = verifyDetail,
                             ["warnings"] = warnings
                         }
@@ -664,7 +667,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseObjectDescribe DescribeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
-            [Description("Service type suffix, e.g. CrossReferenceService or ICompilable")] string serviceTypeSuffix,
+            [Description("Service type suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",
             [Description("Max member count to return")] int maxMembers = 200)
         {
@@ -688,7 +691,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseObjectValue InvokeService(
             [Description("Target object kind: Project|Portal|Device|DeviceItem|Software|Block|Type|HmiScriptModule|HmiScripts")] string objectKind,
             [Description("Target object path. For Device/DeviceItem/Software: path in project tree. For Block/Type: blockPath/typePath. For HmiScriptModule: exact module name or /Scripts/URI-escaped-name with softwarePath; HmiScripts: /Scripts with softwarePath.")] string objectPath,
-            [Description("Service type suffix, e.g. CrossReferenceService or ICompilable")] string serviceTypeSuffix,
+            [Description("Service type suffix, e.g. PlcChecksumProvider or ICompilable")] string serviceTypeSuffix,
             [Description("Method name (case-insensitive)")] string methodName,
             [Description("JSON array of args, empty for no args")] System.Text.Json.JsonElement[]? args = null,
             [Description("softwarePath required for Block/Type and HmiScriptModule/HmiScripts")] string softwarePath = "",

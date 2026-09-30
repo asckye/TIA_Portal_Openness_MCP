@@ -1,11 +1,11 @@
 {
-    "release":  "3.0.0",
-    "releaseDate":  "20260929",
-    "fileVersion":  "3.0.0.0",
-    "package":  "TIA_MCP_Delivery_v3.0.0_20260929",
-    "generatedAt":  "2026-09-29T18:23:28.9871036+00:00",
+    "release":  "3.1.0",
+    "releaseDate":  "20260930",
+    "fileVersion":  "3.1.0.0",
+    "package":  "TIA_MCP_Delivery_v3.1.0_20260930",
+    "generatedAt":  "2026-09-30T22:36:51.1355588+00:00",
     "validation":  {
-                       "offlinePassed":  2551,
+                       "offlinePassed":  2579,
                        "runtimes":  {
                                         "V20":  {
                                                     "httpPassed":  28,
@@ -16,7 +16,334 @@
                                                     "realProjectAcceptance":  "NOT PERFORMED for this release",
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
-                                                    "engineeringApiShapePassed":  2805,
+                                                    "engineeringApiShapePassed":  2833,
+                                                    "localStability":  {
+                                                                           "schemaVersion":  1,
+                                                                           "major":  20,
+                                                                           "startedAtUtc":  "2026-09-30T22:35:07.126429+00:00",
+                                                                           "runtimeSha256":  "f7dc858787ffacd5f86476637db94ac104f003957a248ecbfea58c3c3282ff50",
+                                                                           "harnessSha256":  "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
+                                                                           "scriptSha256":  "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
+                                                                           "resourceHelperSha256":  "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
+                                                                           "scope":  "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
+                                                                           "rounds":  50,
+                                                                           "bounds":  {
+                                                                                          "maxPrivateMiB":  512,
+                                                                                          "maxHandleGrowth":  128
+                                                                                      },
+                                                                           "runs":  [
+                                                                                        {
+                                                                                            "transport":  "stdio",
+                                                                                            "profile":  "full",
+                                                                                            "concurrency":  1,
+                                                                                            "toolCount":  474,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  150,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  6.469,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  0.0,
+                                                                                                                        "p95":  16.0,
+                                                                                                                        "max":  16.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  48476160,
+                                                                                                                       "workingSetBytes":  71852032,
+                                                                                                                       "handleCount":  481
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52760576,
+                                                                                                                       "workingSetBytes":  76161024,
+                                                                                                                       "handleCount":  488
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52760576,
+                                                                                                                       "workingSetBytes":  76206080,
+                                                                                                                       "handleCount":  488
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52760576,
+                                                                                                                       "workingSetBytes":  76226560,
+                                                                                                                       "handleCount":  488
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52760576,
+                                                                                                                       "workingSetBytes":  76251136,
+                                                                                                                       "handleCount":  488
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52760576,
+                                                                                                                       "workingSetBytes":  76259328,
+                                                                                                                       "handleCount":  488
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  2242,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "stdio",
+                                                                                            "profile":  "lite",
+                                                                                            "concurrency":  1,
+                                                                                            "toolCount":  59,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  150,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  8.125,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  0.0,
+                                                                                                                        "p95":  16.0,
+                                                                                                                        "max":  16.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  40173568,
+                                                                                                                       "workingSetBytes":  64454656,
+                                                                                                                       "handleCount":  481
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42192896,
+                                                                                                                       "workingSetBytes":  66613248,
+                                                                                                                       "handleCount":  483
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42565632,
+                                                                                                                       "workingSetBytes":  66912256,
+                                                                                                                       "handleCount":  498
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42696704,
+                                                                                                                       "workingSetBytes":  67055616,
+                                                                                                                       "handleCount":  498
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42827776,
+                                                                                                                       "workingSetBytes":  67207168,
+                                                                                                                       "handleCount":  498
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42827776,
+                                                                                                                       "workingSetBytes":  67215360,
+                                                                                                                       "handleCount":  498
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  3160,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "http",
+                                                                                            "profile":  "full",
+                                                                                            "concurrency":  8,
+                                                                                            "toolCount":  474,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  200,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  10.438,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  31.0,
+                                                                                                                        "p95":  62.0,
+                                                                                                                        "max":  94.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  58920960,
+                                                                                                                       "workingSetBytes":  81281024,
+                                                                                                                       "handleCount":  535
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  61472768,
+                                                                                                                       "workingSetBytes":  83947520,
+                                                                                                                       "handleCount":  561
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62083072,
+                                                                                                                       "workingSetBytes":  84500480,
+                                                                                                                       "handleCount":  578
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62218240,
+                                                                                                                       "workingSetBytes":  84668416,
+                                                                                                                       "handleCount":  578
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62418944,
+                                                                                                                       "workingSetBytes":  84901888,
+                                                                                                                       "handleCount":  579
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62812160,
+                                                                                                                       "workingSetBytes":  85303296,
+                                                                                                                       "handleCount":  579
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  2242,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "http",
+                                                                                            "profile":  "lite",
+                                                                                            "concurrency":  8,
+                                                                                            "toolCount":  59,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  200,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  12.625,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  47.0,
+                                                                                                                        "p95":  79.0,
+                                                                                                                        "max":  110.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  41250816,
+                                                                                                                       "workingSetBytes":  67571712,
+                                                                                                                       "handleCount":  529
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44154880,
+                                                                                                                       "workingSetBytes":  70569984,
+                                                                                                                       "handleCount":  551
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44310528,
+                                                                                                                       "workingSetBytes":  70807552,
+                                                                                                                       "handleCount":  557
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44498944,
+                                                                                                                       "workingSetBytes":  70971392,
+                                                                                                                       "handleCount":  562
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44982272,
+                                                                                                                       "workingSetBytes":  71417856,
+                                                                                                                       "handleCount":  574
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  45117440,
+                                                                                                                       "workingSetBytes":  71516160,
+                                                                                                                       "handleCount":  574
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  3160,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        }
+                                                                                    ],
+                                                                           "status":  "passed",
+                                                                           "finishedAtUtc":  "2026-09-30T22:35:44.787499+00:00"
+                                                                       },
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "not exposed by supplied V20 API",
                                                     "globalScriptBridgePassed":  7,
@@ -34,7 +361,334 @@
                                                     "realProjectAcceptance":  "NOT PERFORMED for this release",
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
-                                                    "engineeringApiShapePassed":  3097,
+                                                    "engineeringApiShapePassed":  3119,
+                                                    "localStability":  {
+                                                                           "schemaVersion":  1,
+                                                                           "major":  21,
+                                                                           "startedAtUtc":  "2026-09-30T22:36:00.996910+00:00",
+                                                                           "runtimeSha256":  "80727bb06143a9d558b901ca12225c1ea1b285a2c84cf3c915582f13be38ddd7",
+                                                                           "harnessSha256":  "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
+                                                                           "scriptSha256":  "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
+                                                                           "resourceHelperSha256":  "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
+                                                                           "scope":  "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
+                                                                           "rounds":  50,
+                                                                           "bounds":  {
+                                                                                          "maxPrivateMiB":  512,
+                                                                                          "maxHandleGrowth":  128
+                                                                                      },
+                                                                           "runs":  [
+                                                                                        {
+                                                                                            "transport":  "stdio",
+                                                                                            "profile":  "full",
+                                                                                            "concurrency":  1,
+                                                                                            "toolCount":  474,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  150,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  6.219,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  0.0,
+                                                                                                                        "p95":  16.0,
+                                                                                                                        "max":  16.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  48508928,
+                                                                                                                       "workingSetBytes":  72384512,
+                                                                                                                       "handleCount":  488
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52592640,
+                                                                                                                       "workingSetBytes":  76570624,
+                                                                                                                       "handleCount":  490
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52604928,
+                                                                                                                       "workingSetBytes":  76599296,
+                                                                                                                       "handleCount":  490
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52670464,
+                                                                                                                       "workingSetBytes":  76619776,
+                                                                                                                       "handleCount":  490
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52670464,
+                                                                                                                       "workingSetBytes":  76627968,
+                                                                                                                       "handleCount":  490
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52670464,
+                                                                                                                       "workingSetBytes":  76640256,
+                                                                                                                       "handleCount":  490
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  2242,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "stdio",
+                                                                                            "profile":  "lite",
+                                                                                            "concurrency":  1,
+                                                                                            "toolCount":  59,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  150,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  8.093,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  0.0,
+                                                                                                                        "p95":  16.0,
+                                                                                                                        "max":  16.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  40218624,
+                                                                                                                       "workingSetBytes":  64917504,
+                                                                                                                       "handleCount":  493
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42258432,
+                                                                                                                       "workingSetBytes":  67112960,
+                                                                                                                       "handleCount":  494
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42389504,
+                                                                                                                       "workingSetBytes":  67223552,
+                                                                                                                       "handleCount":  495
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42520576,
+                                                                                                                       "workingSetBytes":  67379200,
+                                                                                                                       "handleCount":  495
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42586112,
+                                                                                                                       "workingSetBytes":  67452928,
+                                                                                                                       "handleCount":  495
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42586112,
+                                                                                                                       "workingSetBytes":  67518464,
+                                                                                                                       "handleCount":  495
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  3160,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "http",
+                                                                                            "profile":  "full",
+                                                                                            "concurrency":  8,
+                                                                                            "toolCount":  474,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  200,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  10.157,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  31.0,
+                                                                                                                        "p95":  62.0,
+                                                                                                                        "max":  78.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  61472768,
+                                                                                                                       "workingSetBytes":  84217856,
+                                                                                                                       "handleCount":  547
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62070784,
+                                                                                                                       "workingSetBytes":  84877312,
+                                                                                                                       "handleCount":  586
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62115840,
+                                                                                                                       "workingSetBytes":  85000192,
+                                                                                                                       "handleCount":  586
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62255104,
+                                                                                                                       "workingSetBytes":  85155840,
+                                                                                                                       "handleCount":  586
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62529536,
+                                                                                                                       "workingSetBytes":  85491712,
+                                                                                                                       "handleCount":  586
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  62595072,
+                                                                                                                       "workingSetBytes":  85540864,
+                                                                                                                       "handleCount":  586
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  2242,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        },
+                                                                                        {
+                                                                                            "transport":  "http",
+                                                                                            "profile":  "lite",
+                                                                                            "concurrency":  8,
+                                                                                            "toolCount":  59,
+                                                                                            "measuredToolCalls":  1050,
+                                                                                            "warmupToolCalls":  21,
+                                                                                            "recoveryToolCalls":  50,
+                                                                                            "protocolAndAuthChecks":  200,
+                                                                                            "cases":  {
+                                                                                                          "state":  50,
+                                                                                                          "compatibility":  50,
+                                                                                                          "format_preflight":  50,
+                                                                                                          "xref_block_refused":  50,
+                                                                                                          "xref_tag_refused":  50,
+                                                                                                          "xref_unit_refused":  50,
+                                                                                                          "reflect_invoke_refused":  50,
+                                                                                                          "reflect_suffix_refused":  50,
+                                                                                                          "reflect_object_refused":  50,
+                                                                                                          "journal":  50,
+                                                                                                          "journal_bad_range":  50,
+                                                                                                          "journal_bad_type":  50,
+                                                                                                          "format_missing_file":  50,
+                                                                                                          "format_bad_version":  50,
+                                                                                                          "bridge_success":  50,
+                                                                                                          "bridge_recursion":  50,
+                                                                                                          "bridge_bad_json":  50,
+                                                                                                          "bridge_bad_shape":  50,
+                                                                                                          "bridge_missing_args":  50,
+                                                                                                          "bridge_unknown_tool":  50,
+                                                                                                          "unknown_tool":  50
+                                                                                                      },
+                                                                                            "elapsedSeconds":  12.171,
+                                                                                            "latencyMilliseconds":  {
+                                                                                                                        "median":  47.0,
+                                                                                                                        "p95":  78.0,
+                                                                                                                        "max":  94.0
+                                                                                                                    },
+                                                                                            "processSamples":  [
+                                                                                                                   {
+                                                                                                                       "privateBytes":  41119744,
+                                                                                                                       "workingSetBytes":  68014080,
+                                                                                                                       "handleCount":  542
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44486656,
+                                                                                                                       "workingSetBytes":  71356416,
+                                                                                                                       "handleCount":  587
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44576768,
+                                                                                                                       "workingSetBytes":  71483392,
+                                                                                                                       "handleCount":  587
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  44912640,
+                                                                                                                       "workingSetBytes":  71815168,
+                                                                                                                       "handleCount":  587
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  45309952,
+                                                                                                                       "workingSetBytes":  72183808,
+                                                                                                                       "handleCount":  587
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  45707264,
+                                                                                                                       "workingSetBytes":  72626176,
+                                                                                                                       "handleCount":  587
+                                                                                                                   }
+                                                                                                               ],
+                                                                                            "journalEntries":  3160,
+                                                                                            "unmatchedJournalEntries":  0,
+                                                                                            "maxInvocationNesting":  2,
+                                                                                            "unexpectedExits":  0,
+                                                                                            "unexpectedFailures":  0,
+                                                                                            "tiaConnected":  false
+                                                                                        }
+                                                                                    ],
+                                                                           "status":  "passed",
+                                                                           "finishedAtUtc":  "2026-09-30T22:36:37.632782+00:00"
+                                                                       },
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "API present; native import not live-tested",
                                                     "globalScriptBridgePassed":  8,
@@ -359,12 +1013,12 @@
                          {
                              "path":  "runtime/v20/TiaGitAddIn.Core.dll",
                              "length":  210432,
-                             "sha256":  "62a092c669b1f92e8a98745938584288111ac478c5ea4fc7053a35c2dffaddea"
+                             "sha256":  "a8468126fc60ac583c22da07c61b778313e50544022b77a43d7a7c363bf7ba58"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
-                             "length":  4139520,
-                             "sha256":  "8f96464521a1b7bef26ab3240c98ed7003b93902c59788f7b6e3f8fb6d1c1db7"
+                             "length":  4192768,
+                             "sha256":  "f7dc858787ffacd5f86476637db94ac104f003957a248ecbfea58c3c3282ff50"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe.config",
@@ -694,12 +1348,12 @@
                          {
                              "path":  "runtime/v21/TiaGitAddIn.Core.dll",
                              "length":  210432,
-                             "sha256":  "62a092c669b1f92e8a98745938584288111ac478c5ea4fc7053a35c2dffaddea"
+                             "sha256":  "a8468126fc60ac583c22da07c61b778313e50544022b77a43d7a7c363bf7ba58"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
-                             "length":  4194816,
-                             "sha256":  "230d116903cd48f52c9131ce3edd0f47527685d6c54d8cdffc8b7fe0ac5ee46d"
+                             "length":  4237312,
+                             "sha256":  "80727bb06143a9d558b901ca12225c1ea1b285a2c84cf3c915582f13be38ddd7"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe.config",
@@ -1368,7 +2022,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/InvocationJournal.cs",
-                            "sha256":  "e5a6554fff027666ec22e0ed0862bbf1635011ce866309c526130d2542ba6fcc"
+                            "sha256":  "2fd07fb2d7eb82bea20e7066d9ad157acc5983041c26bf7610638d8afeb2d174"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpGuides.cs",
@@ -1392,7 +2046,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PreflightLogic.cs",
-                            "sha256":  "8df4c3d9bc9c8486dfc560c1658280c2f34059225ee234602891abd5f13fd5ab"
+                            "sha256":  "4e50242b429d76cb9f54dd89b18ab7a059294b380d6b911827216ce84380e000"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
@@ -1480,7 +2134,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Documents.cs",
-                            "sha256":  "3b1dde1b329367222180f2c3ba019442b1aef6f50ed8ad9c11e7585fee6f4564"
+                            "sha256":  "cccb46686e26d00e4b813d565c174e08a52edbf1a4c4d6916dd697535d63c6e4"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Ecosystem.cs",
@@ -1489,6 +2143,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.EcosystemFiles.cs",
                             "sha256":  "9bf84f4e59eea86974a6c75407ccbd2a904ce153988a1bc3b78e47bcdeff7b45"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.EngineeringAudit.cs",
+                            "sha256":  "190a3f62e6affb669058324cfd5feeadc995d995aef63f81ca72e37804d209cb"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.EngineeringGroups.cs",
@@ -1592,7 +2250,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.ExternalSources.cs",
-                            "sha256":  "f1957cb7bedaa88f21a5e255010b15dfd2b59b466898d3db305630f40d5749d5"
+                            "sha256":  "f7a434522f541b5572f8de72933094e795e3b85e95a07fa23891412f4ba38655"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.HmiDescribe.cs",
@@ -1739,6 +2397,10 @@
                             "sha256":  "a23761a5585420b28c6396fd8242156f726453fa957a041ea22ffba19c4db908"
                         },
                         {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.V20Options.cs",
+                            "sha256":  "e2084e1c1633bed1110fba8cc7c8df25c8628b52739be22114c6aa172970906f"
+                        },
+                        {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.VersionControl.cs",
                             "sha256":  "bf4d504e38ed21fbe1f3a600addc55ffc991372076d6490a9e24d73079e7826c"
                         },
@@ -1828,7 +2490,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/CrossReferenceGuardLogic.cs",
-                            "sha256":  "7ff2d7007b09a61ff5ebf3213683a3746c649cf17a98b100b0c1c7d908de7a80"
+                            "sha256":  "a2d74d5dc826a0c030560d46ef34fe2ad7eaf7abc709d4a2b33e8bd170ad1113"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/CrossReferenceTreeReader.cs",
+                            "sha256":  "258931a87e38f11d49c2c6c0ede0e999553a73203804b6ed6c4427daad5df7c1"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/DccLogic.cs",
@@ -1849,6 +2515,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineeringAssemblyIdentity.cs",
                             "sha256":  "23e15fd66e41cf2148a95ee7eafed8ed65627396651cb6595d5189183799c9d6"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineeringAuditLogic.cs",
+                            "sha256":  "126b5bc19755d868a189754e2c5c9e3e6d2d5915265e0724b5c11a1f53639b70"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineeringExport.cs",
@@ -2040,7 +2710,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Blocks.cs",
-                            "sha256":  "31f9798955094a627f6f26eabb7f879268a6d908eae9b27c00a7ef2c0697b18d"
+                            "sha256":  "917b1ceb7167e2c2b5f8a386b441767eb21cd7078f5bb765b396021c0acf0644"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.CausalTrace.cs",
@@ -2068,7 +2738,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Deletion.cs",
-                            "sha256":  "6597e57e3665850dd57057783497a69cecf21fc7b2587d94aceede9661433a47"
+                            "sha256":  "c948f7de2514245072a9df1dcfa03fa39c5a5e1eba82fc6ab24e425782bcd144"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
@@ -2080,7 +2750,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-                            "sha256":  "dd7b2a9bb80d13bf43a79c018cb12adc7cebe252e8c10722b78d4a50661a833f"
+                            "sha256":  "68306f6316850ce2593e4b3563f7aa076ed4b6d83c7e7aced7c8c7dec38f9233"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.EngineeringAudit.cs",
+                            "sha256":  "369d365faaa17ac53f1a95955b676ef3da839aa141c4dfb6697769160c0b3a87"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.EngineeringGroups.cs",
@@ -2108,7 +2782,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-                            "sha256":  "1d42f23e3a3b575c0f281587bad469e1567efa0278f49f5b42c0c6ba99679968"
+                            "sha256":  "93af273e02c999104da3645c06c4e15a8a7486e8e59af766890d374ae6200643"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.HmiEditAccess.cs",
@@ -2228,7 +2902,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.CrossReferences.cs",
-                            "sha256":  "d931ad732f57636babfb2318ce383a93d413dd383350b9a11553018f1f17adc7"
+                            "sha256":  "81dc0674639bfe7e5391f0a45a4f2df9045fd822599de9c283a146b1fcb6f927"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.cs",
@@ -2343,6 +3017,10 @@
                             "sha256":  "d35b5e059f99f6e794db3b7316be0e0217492ee58df01f57bec52de1c8535063"
                         },
                         {
+                            "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.V20Options.cs",
+                            "sha256":  "4518db8deb19d07f0ae3d90ada1a48078d77eae139c37c31a583a013b46eee3e"
+                        },
+                        {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.WatchMonitor.cs",
                             "sha256":  "16f487105e87f741ae55cd89bd3750e24cd746638a8a3b7032cb445e5c14823b"
                         },
@@ -2432,11 +3110,11 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-                            "sha256":  "ca128e06e8d4dcc9be50b9799136c14e09f97268c5e37fa28f25fd183566292e"
+                            "sha256":  "b3c5180f09d88b6de4b1e09ab88e6274c4f61fdf960c9d61f866a9379e971f13"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-                            "sha256":  "0a97f01d56dac4dd3a0116b53ddedfa6335bada279621834f3e2c04384c43795"
+                            "sha256":  "c84567de5e75012e6203791985ca0d290fbcc7fab177d234c4ac692ada6bbff6"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/BaseLeftoversShapeChecks.cs",
@@ -2461,6 +3139,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/EngineeringApiShapeTests.cs",
                             "sha256":  "cdcd391571112d1660cf3955b58c4df506bbef2bde0e339fac2e47e59c1f603d"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/EngineeringAuditRuntimeChecks.cs",
+                            "sha256":  "0516434f4e833dbcac2c138cbdb5f8df3145d66e1d9e03ab7fea833632951f02"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/GlobalScriptBridgeTests.cs",
@@ -2504,7 +3186,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/Program.cs",
-                            "sha256":  "b9989571917de4a4161523766f4cbbbe49416db891ac1401ed9f3deaa6b6ec6f"
+                            "sha256":  "3dbb1125e336d96b6be025cfa42c29668c460c05dbf703aaf3e130a51c3dbb73"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/ProjectSecurityShapeChecks.cs",
@@ -2613,6 +3295,10 @@
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EcosystemTests.cs",
                             "sha256":  "8660400e19e1d69fb324bdeeb0d8628ae0fdf51c14cb16f10a1bde4d02caf133"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EngineeringAuditTests.cs",
+                            "sha256":  "f9662a7d637cbecd270e0f6ba75bcfea73e458e2a463a919659b103b649ed3fb"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EngineeringDefectTests.cs",
@@ -2728,7 +3414,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs",
-                            "sha256":  "91a1a14c887f1709710a13b6d4cd7c160d6cddf3b887a569ec6aa76c07adf629"
+                            "sha256":  "cd233352f1a9f421622c71ada7fea4f4afac404a07c9c3ece971bf2995da5dde"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ProjectSecurityTests.cs",
@@ -2792,7 +3478,7 @@
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-                            "sha256":  "e497cbd8ddfd65787165d25643402cde912a8a8d798acf96c50a2e6450aaf353"
+                            "sha256":  "d6c5d9bfb8ec1e2ea2382986cbc6222a4b97f12b8dc998405e1e9336efde0ce1"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ToolBridgeFixtures.cs",

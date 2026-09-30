@@ -628,7 +628,7 @@ namespace TiaMcpServer.Siemens
 
             bool hasProvider = false;
             bool hasConfig = false;
-            bool isConsistent = false;
+            bool? isConsistent = null;
             var routes = new List<DownloadRoute>();
 
             try
@@ -653,17 +653,14 @@ namespace TiaMcpServer.Siemens
                 issues.Add($"Error accessing DownloadProvider: {ex.Message}");
             }
 
-            // Check compile consistency via ICompilable
             try
             {
-                var compilable = plcSoftware.GetService<ICompilable>();
-                if (compilable != null)
-                {
-                    // We skip an actual compile here; check block consistency heuristically
-                    isConsistent = true; // Assume consistent unless caller has run CompileSoftware
-                }
+                var consistency = ReadPlcConsistency(softwarePath);
+                isConsistent = EngineeringAuditLogic.Consistency(consistency.Select(x => x.Consistent), true);
+                if (isConsistent == false) issues.Add("One or more root/unit blocks or types are inconsistent; compilation must be reviewed.");
+                if (isConsistent == null) issues.Add("Compile consistency is unknown (no complete block/type evidence).");
             }
-            catch { }
+            catch (Exception ex) when (RecoverableAuditError(ex)) { issues.Add("Consistency read failed: " + ex.GetBaseException().Message); }
 
             ScoreDownloadRoutes(routes, null);
             var routesJson = new JsonArray();
@@ -679,20 +676,22 @@ namespace TiaMcpServer.Siemens
                     ["preferred"] = route.Score > 0
                 });
 
-            bool ready = hasProvider && hasConfig && issues.Count == 0;
+            bool? ready = EngineeringAuditLogic.DownloadReady(hasProvider, hasConfig, isConsistent, issues.Count != 0);
             return new ResponseCheckDownload
             {
                 Ready = ready,
                 HasDownloadProvider = hasProvider,
                 HasConfiguration = hasConfig,
                 IsConsistent = isConsistent,
-                Message = ready
-                    ? $"PLC '{softwarePath}' is ready for download."
-                    : $"PLC '{softwarePath}' has {issues.Count} readiness issue(s).",
+                Message = ready == false ? $"PLC '{softwarePath}' has {issues.Count} readiness issue(s)."
+                    : "Offline configuration checks passed; actual download readiness remains unknown.",
                 Issues = issues.Count > 0 ? issues.ToArray() : null,
                 Meta = new JsonObject
                 {
                     ["success"] = true,   // 2.7.52: the check itself ran; Ready carries the verdict
+                    ["configurationReady"] = hasProvider && hasConfig,
+                    ["consistencyScope"] = "root, software units and safety units: blocks and types",
+                    ["unchecked"] = new JsonArray("deviceReachability", "accessAuthorization", "hardwareConsistency", "downloadPrompts"),
                     ["downloadRouteCount"] = routes.Count,
                     // Ordered best-first — the same ranking DownloadToPlc applies. preferred=true
                     // means the PG/PC adapter shares an IPv4 /24 with the CPU it has to reach.

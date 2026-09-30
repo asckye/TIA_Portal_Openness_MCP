@@ -25,29 +25,32 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         #region plc software - ExternalSources
 
-        [McpServerTool(Name = "GetCrossReferences"), Description("[L2][PLC-Software] Native Step7 block/type cross references. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true.")]
+        [McpServerTool(Name = "GetCrossReferences"), Description("[L2][PLC-Software] Native Step7 block/type/tag/system-constant cross references, including software and safety units. DISABLED BY DEFAULT: CrossReferenceService queries have terminated TIA Portal V21, even after returning a result. Refusal means NOT QUERIED, never zero references. Controlled diagnosis on a saved test project requires the server-process setting TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1; do not enable it automatically. Even with opt-in, any uncompiled block or unreadable IsConsistent refuses the query. Compilation does not guarantee crash safety. Prefer exported PLC documents for partial offline call/reference analysis (GeneratePlcDocumentation); that is not a complete replacement for native references. Delete tools share this policy even with crossReferences=true.")]
         public static ResponseCrossReferences GetCrossReferences(
             [Description("softwarePath: path in the project structure to the PLC software")] string softwarePath,
-            [Description("objectPath: blockPath or typePath inside the PLC software")] string objectPath,
-            [Description("objectKind: Block or Type")] string objectKind = "Block",
-            [Description("filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)")] string filter = "AllObjects")
+            [Description("objectPath: exact relative block/type path, or [group/]table/tag-or-constant under the selected scope")] string objectPath,
+            [Description("objectKind: Block | Type | Tag | SystemConstant")] string objectKind = "Block",
+            [Description("filter: CrossReferenceFilter enum name (e.g. AllObjects, ObjectsWithReferences, UnusedObjects)")] string filter = "AllObjects",
+            [Description("unitName: exact software/safety unit; empty selects PLC root.")] string unitName = "",
+            [Description("unitKind: unit | safety. Empty unitName selects PLC root.")] string unitKind = "unit")
         {
             try
             {
-                var items = Portal.GetCrossReferences(softwarePath, objectPath, objectKind, filter, out var reason);
+                var items = Portal.GetCrossReferences(softwarePath, objectPath, objectKind, filter, out var reason, out var queried, unitName, unitKind);
                 if (items != null)
                 {
                     return new ResponseCrossReferences
                     {
                         Message = $"Cross references retrieved for {objectKind} '{objectPath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["queried"] = queried, ["complete"] = true, ["status"] = "complete" }
                     };
                 }
 
-                throw new McpException($"Cross references unavailable for {objectKind} '{objectPath}': {reason ?? "unknown reason"}", McpErrorCode.InvalidParams);
+                return new ResponseCrossReferences { Message = reason ?? "Cross-reference read failed.", Items = null,
+                    Meta = new JsonObject { ["success"] = false, ["queried"] = queried, ["complete"] = false, ["status"] = queried ? "failed" : "notQueried" } };
             }
-            catch (Exception ex) when (ex is not McpException)
+            catch (Exception ex) when (ex is not McpException && ex.GetBaseException() is not global::Siemens.Engineering.NonRecoverableException)
             {
                 throw new McpException($"Unexpected error retrieving cross references: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }

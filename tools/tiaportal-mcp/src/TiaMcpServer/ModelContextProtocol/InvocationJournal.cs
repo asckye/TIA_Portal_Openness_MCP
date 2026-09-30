@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
@@ -11,10 +12,19 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static readonly object Sync = new object();
         private static readonly string ProcessKey = Process.GetCurrentProcess().Id + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+        private static readonly AsyncLocal<string?> Current = new AsyncLocal<string?>();
         internal static string Begin(string name)
         {
-            string id = Guid.NewGuid().ToString("N"); Write(id, name, "BEFORE"); return id;
+            string id = Guid.NewGuid().ToString("N"); Current.Value = id; Write(id, name, "BEFORE"); return id;
         }
+        internal static T Native<T>(string stage, Func<T> call)
+        {
+            string id = Current.Value ?? Guid.NewGuid().ToString("N");
+            Write(id, "native:" + stage, "BEFORE");
+            try { T result = call(); Write(id, "native:" + stage, "RETURNED"); return result; }
+            catch { Write(id, "native:" + stage, "THREW"); throw; }
+        }
+        internal static void Native(string stage, Action call) => Native(stage, () => { call(); return true; });
         internal static void Write(string id, string name, string phase)
         {
             try

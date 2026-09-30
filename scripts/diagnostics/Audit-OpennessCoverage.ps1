@@ -33,9 +33,14 @@ param(
     [string]$Version = 'V21',
     [string]$OutputDirectory = '',
     [string]$SummaryMarkdown = '',
-    [string]$DynamicCoverage = (Join-Path $PSScriptRoot 'openness-dynamic-coverage.json')
+    [string]$DynamicCoverage = ''
 )
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 may not initialize PSScriptRoot while binding defaults.
+# An explicitly supplied empty value still disables the dynamic coverage registry.
+if (-not $PSBoundParameters.ContainsKey('DynamicCoverage')) {
+    $DynamicCoverage = Join-Path $PSScriptRoot 'openness-dynamic-coverage.json'
+}
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $src  = Join-Path $repo 'tools\tiaportal-mcp\src\TiaMcpServer'
 if (-not (Test-Path $PublicApiDirectory)) { throw "PublicAPI directory not found: $PublicApiDirectory" }

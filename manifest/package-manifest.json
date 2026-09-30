@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "3.0.0",
-    "packageName":  "TIA_MCP_Delivery_v3.0.0_20260929",
+    "bundleVersion":  "3.1.0",
+    "packageName":  "TIA_MCP_Delivery_v3.1.0_20260930",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-09-29T18:23:31.6062739+00:00",
+    "refreshedAt":  "2026-09-30T22:36:54.6709203+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -84,11 +84,11 @@
                               }
             },
     "capabilities":  {
-                         "mcpToolCount":  464,
+                         "mcpToolCount":  474,
                          "mcpToolLayers":  {
-                                               "L2":  404,
-                                               "L0":  15,
-                                               "L1":  45
+                                               "L2":  414,
+                                               "L1":  45,
+                                               "L0":  15
                                            },
                          "hmiTemplateJsonCount":  8,
                          "plcTemplateJsonCount":  9,
@@ -108,15 +108,15 @@
                                           "reflection-based API discovery for uncovered Openness shapes"
                                       ],
                          "liteProfile":  {
-                                             "toolCount":  56,
+                                             "toolCount":  59,
                                              "isDefault":  true,
                                              "scope":  "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
                                              "optOut":  "--profile full (or TIA_MCP_PROFILE=full)",
                                              "note":  "All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "3.0.0.0",
-    "validationStatus":  "Delivery 3.0.0; engine 3.0.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "3.1.0.0",
+    "validationStatus":  "Delivery 3.1.0; engine 3.1.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",

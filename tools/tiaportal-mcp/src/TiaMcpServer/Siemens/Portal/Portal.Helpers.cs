@@ -2166,6 +2166,8 @@ namespace TiaMcpServer.Siemens
         private static string? GetHardDeniedReflectionReason(object instance, string resultKind, string resultPath, string methodName)
         {
             var instanceType = instance.GetType().FullName ?? instance.GetType().Name;
+            var crossReferenceRefusal = CrossReferenceGuardLogic.ReflectionRefusal(instanceType, methodName);
+            if (crossReferenceRefusal != null) return crossReferenceRefusal;
             var haystack = string.Join(" ", instanceType, resultKind ?? "", resultPath ?? "", methodName ?? "");
 
             if (haystack.IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -2213,6 +2215,7 @@ namespace TiaMcpServer.Siemens
 
         public ModelContextProtocol.ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
         {
+            DenyCrossReferenceReflection(null, methodName);
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
@@ -2270,6 +2273,7 @@ namespace TiaMcpServer.Siemens
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeService(string objectKind, string objectPath, string serviceTypeSuffix, string softwarePath = "", int maxMembers = 200)
         {
+            DenyCrossReferenceReflection(serviceTypeSuffix, null);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
@@ -2308,6 +2312,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
+            DenyCrossReferenceReflection(st.FullName, null);
             var svc = TryGetService(o, st);
             if (svc == null)
             {
@@ -2333,6 +2338,7 @@ namespace TiaMcpServer.Siemens
 
         public ModelContextProtocol.ResponseObjectValue InvokeService(string objectKind, string objectPath, string serviceTypeSuffix, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
         {
+            DenyCrossReferenceReflection(serviceTypeSuffix, methodName);
             if ((serviceTypeSuffix ?? string.Empty).IndexOf("Force", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return new ModelContextProtocol.ResponseObjectValue
@@ -2367,6 +2373,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
+            DenyCrossReferenceReflection(st.FullName, null);
             var svc = TryGetService(o, st);
             if (svc == null)
             {
@@ -2380,6 +2387,12 @@ namespace TiaMcpServer.Siemens
 
             var svcPath = $"{objectKind}:{objectPath}::{serviceTypeSuffix}";
             return InvokeOnInstance(svc, "Service", svcPath, methodName, args, allowWrite);
+        }
+
+        private static void DenyCrossReferenceReflection(string? service, string? method)
+        {
+            var refusal = CrossReferenceGuardLogic.ReflectionRefusal(service, method);
+            if (refusal != null) throw new PortalException(PortalErrorCode.InvalidState, refusal);
         }
 
         #endregion

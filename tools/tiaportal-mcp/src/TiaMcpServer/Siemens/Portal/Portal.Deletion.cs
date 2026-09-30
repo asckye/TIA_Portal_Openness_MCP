@@ -1,3 +1,5 @@
+using Siemens.Engineering;
+using TiaMcpServer.ModelContextProtocol;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
 using System;
@@ -495,23 +497,27 @@ namespace TiaMcpServer.Siemens
             object table, string resolvedPath, out string? reason, out bool queried)
         {
             queried = false;
-            var svc = TryGetServiceByTypeSuffix(table, "CrossReferenceService");
-            if (svc == null)
+            reason = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable));
+            if (reason != null) return null;
+            try
             {
-                reason = "PlcTagTable 给不出 CrossReferenceService（V21 上已知 Software/Device/DeviceItem "
-                       + "三层都不给，只有 Block 层给得出）。所以这张表有没有人引用，本工具查不到。";
-                return null;
+                // The service belongs to tags/constants, not the table itself. Any failed child invalidates the aggregate.
+                var typed = table as global::Siemens.Engineering.SW.Tags.PlcTagTable ?? throw new NotSupportedException("Expected PlcTagTable.");
+                var items = new List<ModelContextProtocol.CrossReferenceEntry>();
+                var targets = EngineeringGroupOperations.Items(typed.Tags).Concat(EngineeringGroupOperations.Items(typed.SystemConstants));
+                foreach (IEngineeringServiceProvider target in targets)
+                {
+                    var service = InvocationJournal.Native("TagTable.CrossReference.GetService", () => target.GetService<global::Siemens.Engineering.CrossReference.CrossReferenceService>());
+                    if (service == null) throw new NotSupportedException("CrossReferenceService missing on a tag/system constant; table result incomplete.");
+                    queried = true;
+                    var raw = InvocationJournal.Native("TagTable.CrossReference.query", () => service.GetCrossReferences(global::Siemens.Engineering.CrossReference.CrossReferenceFilter.AllObjects));
+                    items.AddRange(InvocationJournal.Native("TagTable.CrossReference.read", () => TryFlattenCrossReferenceResult(raw, resolvedPath)));
+                }
+                reason = null;
+                return items;
             }
-
-            var raw = TryInvokeGetCrossReferences(svc, "AllObjects", out queried);
-            if (raw == null)
-            {
-                reason = "拿到了 CrossReferenceService，但 GetCrossReferences(AllObjects) 调不动。";
-                return null;
-            }
-
-            reason = null;
-            return TryFlattenCrossReferenceResult(raw, resolvedPath);
+            catch (Exception ex) when (RecoverableAuditError(ex))
+            { reason = "Tag table cross-reference result incomplete; partial rows discarded: " + ex.GetBaseException().Message; return null; }
         }
 
         private static bool TryInvokeVoidMethod(object target, string methodName)

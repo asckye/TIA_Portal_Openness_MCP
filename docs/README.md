@@ -1,5 +1,9 @@
 # 文档目录
 
+v3.1.0 本地候选：[V20/V21 补充工具和用法](reference/v20-v21-audit-tools.md) · [变更说明](releases/v3.1.0.md)（尚未发布/部署）。
+
+稳定性重点：[本地压力测试、原生验收边界及 GitHub 接入优先级](development/stability-and-integrations-20260930.md)。
+
 v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [本地验证记录](development/ecosystem-integration-20260929.md)。
 
 重点核对：[Siemens 官方指南与 API 流程审计](development/official-openness-audit-20260929.md)（32 个主题、已修复问题、待验收项）。
@@ -34,6 +38,9 @@ v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
 - [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v3.0.0.md)；历史发布说明按版本在 [releases/](releases/)（v2.7.16 起每版一篇，v2.7.2–v2.7.15 见下面的归档）
 - 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)（更早的多语言修复报告、v2.7.14 覆盖审计与配置器界面检查记录已删除，需要时看 Git 历史；覆盖审计的现行版本是[官方 API 覆盖清单](reference/openness-coverage.md)）
+
+- [PLC 交叉引用退出调查（2026-09-30）](development/cross-reference-investigation-20260930.md)：官方重建流程、GitHub 查询修复、部署核对与证据缺口。
+- [V20 / V21 缺陷与工具缺口核查（2026-09-30）](development/v20-v21-bugs-and-gaps-20260930.md)：两版 SDK 重新扫描、反射保护旁路、下载检查、导入验证及 V20 专用封装缺口。
 
 日常使用以入门和操作指南为准，归档保留当时结论。代码块内以 `docs/`、`runtime/`、`templates/`、`scripts/` 或 `tools/` 开头的路径相对仓库/交付包根目录。
 

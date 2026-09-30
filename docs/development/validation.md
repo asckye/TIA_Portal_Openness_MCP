@@ -31,6 +31,18 @@ GitHub `offline-checks` 和 `validate-bundle` 运行对应检查。完整引擎�
 
 专项脚本在 [scripts/checks](../../scripts/checks)。`Check-LiteProfile.py` 等协议探测可能启动服务，只在匹配环境执行。诊断脚本在 `scripts/diagnostics`，不是无 TIA 的 CI 项目。
 
+### 本地压力测试
+
+完整构建还必须通过 [Test-LocalStability.py](../../scripts/checks/Test-LocalStability.py)：两版各自运行 STDIO/HTTP、full/lite、正常与故障输入混合序列。默认每组合 50 轮，HTTP 8 并发；`Build-Release.ps1 -LocalStabilityRounds` 可以延长测试。详细范围见[稳定性记录](stability-and-integrations-20260930.md)。
+
+单独复测示例（输出目录必须尚不存在，PublicAPI 路径按本机设置）：
+
+```powershell
+python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcpServer.exe --major 21 --public-api TIA_V21_PublicAPI/V21/net48 --host-harness tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
+```
+
+脚本只启动属于测试自己的本机服务，强制关闭原生交叉引用，结束时只清理该测试子进程。测试所用运行时和宿主哈希记录在结果中。正常返回、预期错误、HTTP 认证和错误后恢复都要满足断言；测试没有连接 TIA，不证明所有工具或 Siemens 原生调用稳定。
+
 ## 真实工程验收
 
 在可恢复工程上确认设备、许可证、语言和安装版本，再进行读取、预览、授权修改、回读、编译及保存，记录实际错误/警告和未支持项。在线设备操作、网络/UAC、各 AI 客户端需分别验收。HTTP 可达、工具枚举、程序集加载或发布成功均不等于工程语义正确。

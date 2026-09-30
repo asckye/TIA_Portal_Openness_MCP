@@ -38,7 +38,7 @@
 
 ## 能力与验证范围
 
-当前静态清单共 **464 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **59 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+当前静态清单共 **474 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **59 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
 
 `master` 提供当前 V20/V21 最新发布；另保留上游 `v17`–`v21` 独立分支。V17 目前仅 PLC 第一阶段，V18/V19 尚无对应实现，见[版本分支与适用范围](docs/reference/version-branches.md)。
 

@@ -85,11 +85,32 @@ def main():
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Source changed after validation: {row['path']}")
     require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
+    extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
+    if extended is not None:
+        require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')
     for major in (20, 21):
         checks = metadata['validation']['runtimes'][f'V{major}']
         require(checks['httpPassed'] > 0 and checks['hmiPassed'] > 0 and checks['migrationAssembly'] == 'passed', f'V{major} validation incomplete')
         require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
         require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
+        proofs = [checks.get('localStability', {})]
+        if extended is not None:
+            proofs.append(extended['runtimes'][f'V{major}'])
+        for stability in proofs:
+            require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
+                    f'V{major} local stability validation missing')
+            require(stability['runtimeSha256'] == sha(files[f'runtime/v{major}/TiaMcpServer.exe']),
+                    f'V{major} stability test used a different runtime')
+            for field, path in (('scriptSha256', 'scripts/checks/Test-LocalStability.py'),
+                                ('resourceHelperSha256', 'scripts/checks/Test-ResourceDiscovery.py')):
+                require(stability.get(field) == sha(files[path]), f'Stability test script changed after validation: {path}')
+            runs = stability.get('runs', [])
+            require(len(runs) == 4 and {(r['transport'], r['profile']) for r in runs} ==
+                    {('stdio', 'full'), ('stdio', 'lite'), ('http', 'full'), ('http', 'lite')},
+                    f'V{major} stability profile/transport coverage incomplete')
+            require(all(r['unexpectedExits'] == 0 and r['unexpectedFailures'] == 0 and r['tiaConnected'] is False
+                        and r['unmatchedJournalEntries'] == 0 and r['measuredToolCalls'] > 0 for r in runs),
+                    f'V{major} local stability checks failed')
         require(f'runtime/v{major}/Esprima.dll' in files, f'V{major} script parser missing')
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     require(gui['testsPassed'] > 0, 'Missing configurator test result')

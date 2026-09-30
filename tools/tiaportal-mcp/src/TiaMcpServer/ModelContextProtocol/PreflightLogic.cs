@@ -257,7 +257,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var op = (operation ?? "").ToUpperInvariant();
             if (op == "SESSION" || op == "OFFLINE") return false;
             // Tools that read the environment rather than a project.
-            var exempt = new[] { "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetAuthoringGuide", "PreflightToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
+            var exempt = new[] { "ReadOpennessCompatibility", "ReadNativeInvocationLog", "InspectSimaticSdCompatibility", "Bootstrap", "Doctor", "GetState", "FindTools", "CallTool", "ListToolCategories", "GetAuthoringGuide", "PreflightToolCall", "CheckForUpdate", "ReadPortalInfo", "ListPortalProcessProjects", "SearchHardwareCatalog", "GetExport", "ListExports", "SaveExport", "DeleteExport", "ClearExports", "WritePlcSclSourceFile", "GenerateErrorReport", "GenerateAcceptanceReport", "RunCapabilitySelfTest", "RunOnlineMonitoringSafetySelfTest", "ReadPlcSimAdvancedInstances", "ManagePlcSimAdvancedInstance", "ReadPlcSimAdvancedTags", "WritePlcSimAdvancedTags", "RunPlcSimAdvancedTestScenario", "EnsureOpennessUserGroup" };
             return !exempt.Contains(toolName, StringComparer.OrdinalIgnoreCase);
         }
     }

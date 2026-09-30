@@ -19,6 +19,18 @@ namespace TiaMcpServer.Siemens
         public const int ListLimit = 10;
         public const string NativeQueryOptInVariable = "TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES";
 
+        // Reflection must never bypass the dedicated target / consistency checks, even after opt-in.
+        public static string? ReflectionRefusal(string? service, string? method)
+        {
+            const string type = "Siemens.Engineering.CrossReference.CrossReferenceService";
+            var suffix = (service ?? "").Trim();
+            bool matches = suffix.Length > 0 && (type.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
+                || suffix.IndexOf("CrossReference", StringComparison.OrdinalIgnoreCase) >= 0);
+            return matches || string.Equals(method, "GetCrossReferences", StringComparison.OrdinalIgnoreCase)
+                ? "Native PLC cross references cannot be accessed through reflection. Use the guarded GetCrossReferences tool; its default-disabled policy and consistency checks also apply after explicit opt-in."
+                : null;
+        }
+
         /// <summary>Only an explicit process setting enables this known-crashing native service.</summary>
         public static string? PolicyRefusal(string? setting)
             => setting == "1" ? null
@@ -45,7 +57,7 @@ namespace TiaMcpServer.Siemens
             string shown = string.Join(", ", stale.Take(ListLimit));
             if (stale.Count > ListLimit) shown += ", ... (+" + (stale.Count - ListLimit) + " more)";
             return "refused: " + stale.Count + " block(s) of '" + softwarePath + "' are not compiled (IsConsistent=false): " + shown
-                 + ". The cross-reference index is stale until the PLC compiles, and on the maintainer's real project TIA Portal V21 exited "
+                 + ". Uncompiled changes may leave cross-reference information outdated; on the maintainer's real project TIA Portal V21 exited "
                  + "right after such a query (2026-09-21: five blocks re-imported with Override, then a query on the old instance DB). "
                  + "Run CompileSoftware (errorCount=0) before considering a diagnostic query; compilation does not guarantee that the native service cannot crash.";
         }

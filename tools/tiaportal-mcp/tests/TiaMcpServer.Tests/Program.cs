@@ -159,6 +159,7 @@ namespace TiaMcpServer.Tests
             PreflightAndUpdateTests.Run(Check);
             Console.WriteLine("== 2.9.1 交叉引用护栏纯逻辑：PLC 有未编译块时拒绝查询并点名（真机 2026-09-21 TIA 自行退出）==");
             CrossReferenceGuardTests.Run(Check);
+            EngineeringAuditTests.Run(Check);
 
             Console.WriteLine("== 2.7.58 调用纪律纯逻辑：schema enum / default / examples、按签名派生示例、失败附带的预检摘要、配方表与 GetRecipe ==");
             CallDisciplineTests.Run(Check);

@@ -35,6 +35,7 @@ ALLOWED = {
     'GetSupportedFileFormats': 'Openness Workspace.GetSupportedFileFormats()',
     'GenerateLoadable': 'Native PLC loadable-file API method, exposed by GeneratePlcLoadableFile',
     'CreateFromDocuments': 'Native library type composition API method, exposed by ImportLibraryTypeDocuments',
+    'ImportAlarmTexts': 'V20 native SinumerikAlarmTextProvider.AlarmTextImporter.ImportAlarmTexts method, exposed by ImportSinumerikAlarmTexts',
     'ReadWrite': 'Global library open-mode enum value, not an MCP tool',
     'ReadOnly': 'Global library open-mode enum value (ManageGlobalLibrary openMode), not an MCP tool',
     'DeleteUnusedTypes': 'Openness CleanUpMode enum value (SynchronizeLibrary cleanUpMode), not an MCP tool',
