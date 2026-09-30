@@ -3,7 +3,7 @@
     "releaseDate":  "20260930",
     "fileVersion":  "3.1.0.0",
     "package":  "TIA_MCP_Delivery_v3.1.0_20260930",
-    "generatedAt":  "2026-09-30T22:36:51.1355588+00:00",
+    "generatedAt":  "2026-09-30T23:02:41.4636554+00:00",
     "validation":  {
                        "offlinePassed":  2579,
                        "runtimes":  {
@@ -17,12 +17,20 @@
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
                                                     "engineeringApiShapePassed":  2833,
+                                                    "nativeHarness":  {
+                                                                          "compiled":  true,
+                                                                          "safetyChecksPassed":  25,
+                                                                          "supervisorChecksPassed":  22,
+                                                                          "exeSha256":  "162fb7fab6693052d23931e4461e21fe17b638de581f9bd27c71c282b7e94eac",
+                                                                          "supervisorSha256":  "b6a638100ff41a200b6d22e3484454179ff3138af2728998d2670955052190fa",
+                                                                          "liveAcceptance":  "NOT RUN; explicit opt-in required"
+                                                                      },
                                                     "localStability":  {
                                                                            "schemaVersion":  1,
                                                                            "major":  20,
-                                                                           "startedAtUtc":  "2026-09-30T22:35:07.126429+00:00",
+                                                                           "startedAtUtc":  "2026-09-30T23:00:56.738028+00:00",
                                                                            "runtimeSha256":  "f7dc858787ffacd5f86476637db94ac104f003957a248ecbfea58c3c3282ff50",
-                                                                           "harnessSha256":  "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
+                                                                           "harnessSha256":  "1f0415cf31fe2b0ca6f2e8339495bfb5467d8d4a756f1c65e761035b9242a36c",
                                                                            "scriptSha256":  "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
                                                                            "resourceHelperSha256":  "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
                                                                            "scope":  "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
@@ -64,7 +72,7 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  6.469,
+                                                                                            "elapsedSeconds":  6.359,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  0.0,
                                                                                                                         "p95":  16.0,
@@ -72,34 +80,34 @@
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  48476160,
-                                                                                                                       "workingSetBytes":  71852032,
-                                                                                                                       "handleCount":  481
+                                                                                                                       "privateBytes":  48422912,
+                                                                                                                       "workingSetBytes":  71827456,
+                                                                                                                       "handleCount":  482
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52760576,
-                                                                                                                       "workingSetBytes":  76161024,
-                                                                                                                       "handleCount":  488
+                                                                                                                       "privateBytes":  52523008,
+                                                                                                                       "workingSetBytes":  75988992,
+                                                                                                                       "handleCount":  483
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52760576,
-                                                                                                                       "workingSetBytes":  76206080,
-                                                                                                                       "handleCount":  488
+                                                                                                                       "privateBytes":  52523008,
+                                                                                                                       "workingSetBytes":  76013568,
+                                                                                                                       "handleCount":  483
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52760576,
-                                                                                                                       "workingSetBytes":  76226560,
-                                                                                                                       "handleCount":  488
+                                                                                                                       "privateBytes":  52523008,
+                                                                                                                       "workingSetBytes":  76034048,
+                                                                                                                       "handleCount":  483
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52760576,
-                                                                                                                       "workingSetBytes":  76251136,
-                                                                                                                       "handleCount":  488
+                                                                                                                       "privateBytes":  52523008,
+                                                                                                                       "workingSetBytes":  76042240,
+                                                                                                                       "handleCount":  483
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52760576,
-                                                                                                                       "workingSetBytes":  76259328,
-                                                                                                                       "handleCount":  488
+                                                                                                                       "privateBytes":  52523008,
+                                                                                                                       "workingSetBytes":  76054528,
+                                                                                                                       "handleCount":  483
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  2242,
@@ -141,7 +149,7 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  8.125,
+                                                                                            "elapsedSeconds":  8.0,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  0.0,
                                                                                                                         "p95":  16.0,
@@ -149,34 +157,34 @@
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  40173568,
-                                                                                                                       "workingSetBytes":  64454656,
+                                                                                                                       "privateBytes":  40136704,
+                                                                                                                       "workingSetBytes":  64385024,
                                                                                                                        "handleCount":  481
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  42192896,
-                                                                                                                       "workingSetBytes":  66613248,
+                                                                                                                       "privateBytes":  42135552,
+                                                                                                                       "workingSetBytes":  66527232,
+                                                                                                                       "handleCount":  482
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42201088,
+                                                                                                                       "workingSetBytes":  66629632,
+                                                                                                                       "handleCount":  482
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42332160,
+                                                                                                                       "workingSetBytes":  66768896,
+                                                                                                                       "handleCount":  482
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42463232,
+                                                                                                                       "workingSetBytes":  66891776,
+                                                                                                                       "handleCount":  482
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42463232,
+                                                                                                                       "workingSetBytes":  66908160,
                                                                                                                        "handleCount":  483
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  42565632,
-                                                                                                                       "workingSetBytes":  66912256,
-                                                                                                                       "handleCount":  498
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  42696704,
-                                                                                                                       "workingSetBytes":  67055616,
-                                                                                                                       "handleCount":  498
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  42827776,
-                                                                                                                       "workingSetBytes":  67207168,
-                                                                                                                       "handleCount":  498
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  42827776,
-                                                                                                                       "workingSetBytes":  67215360,
-                                                                                                                       "handleCount":  498
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  3160,
@@ -218,42 +226,42 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  10.438,
+                                                                                            "elapsedSeconds":  9.125,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  31.0,
                                                                                                                         "p95":  62.0,
-                                                                                                                        "max":  94.0
+                                                                                                                        "max":  79.0
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  58920960,
-                                                                                                                       "workingSetBytes":  81281024,
-                                                                                                                       "handleCount":  535
+                                                                                                                       "privateBytes":  58839040,
+                                                                                                                       "workingSetBytes":  81125376,
+                                                                                                                       "handleCount":  534
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  61472768,
-                                                                                                                       "workingSetBytes":  83947520,
-                                                                                                                       "handleCount":  561
+                                                                                                                       "privateBytes":  61235200,
+                                                                                                                       "workingSetBytes":  83697664,
+                                                                                                                       "handleCount":  556
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62083072,
-                                                                                                                       "workingSetBytes":  84500480,
-                                                                                                                       "handleCount":  578
+                                                                                                                       "privateBytes":  62009344,
+                                                                                                                       "workingSetBytes":  84467712,
+                                                                                                                       "handleCount":  568
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62218240,
-                                                                                                                       "workingSetBytes":  84668416,
-                                                                                                                       "handleCount":  578
+                                                                                                                       "privateBytes":  62300160,
+                                                                                                                       "workingSetBytes":  84840448,
+                                                                                                                       "handleCount":  568
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62418944,
-                                                                                                                       "workingSetBytes":  84901888,
-                                                                                                                       "handleCount":  579
+                                                                                                                       "privateBytes":  62365696,
+                                                                                                                       "workingSetBytes":  84996096,
+                                                                                                                       "handleCount":  568
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62812160,
-                                                                                                                       "workingSetBytes":  85303296,
-                                                                                                                       "handleCount":  579
+                                                                                                                       "privateBytes":  62857216,
+                                                                                                                       "workingSetBytes":  85389312,
+                                                                                                                       "handleCount":  585
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  2242,
@@ -295,42 +303,42 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  12.625,
+                                                                                            "elapsedSeconds":  11.656,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  47.0,
                                                                                                                         "p95":  79.0,
-                                                                                                                        "max":  110.0
+                                                                                                                        "max":  109.0
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  41250816,
-                                                                                                                       "workingSetBytes":  67571712,
-                                                                                                                       "handleCount":  529
+                                                                                                                       "privateBytes":  41160704,
+                                                                                                                       "workingSetBytes":  67444736,
+                                                                                                                       "handleCount":  534
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44154880,
-                                                                                                                       "workingSetBytes":  70569984,
-                                                                                                                       "handleCount":  551
+                                                                                                                       "privateBytes":  43929600,
+                                                                                                                       "workingSetBytes":  70369280,
+                                                                                                                       "handleCount":  550
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44310528,
-                                                                                                                       "workingSetBytes":  70807552,
-                                                                                                                       "handleCount":  557
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  44498944,
-                                                                                                                       "workingSetBytes":  70971392,
+                                                                                                                       "privateBytes":  44470272,
+                                                                                                                       "workingSetBytes":  70864896,
                                                                                                                        "handleCount":  562
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44982272,
-                                                                                                                       "workingSetBytes":  71417856,
-                                                                                                                       "handleCount":  574
+                                                                                                                       "privateBytes":  45051904,
+                                                                                                                       "workingSetBytes":  71430144,
+                                                                                                                       "handleCount":  580
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  45117440,
-                                                                                                                       "workingSetBytes":  71516160,
-                                                                                                                       "handleCount":  574
+                                                                                                                       "privateBytes":  45314048,
+                                                                                                                       "workingSetBytes":  71704576,
+                                                                                                                       "handleCount":  580
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  45510656,
+                                                                                                                       "workingSetBytes":  71888896,
+                                                                                                                       "handleCount":  580
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  3160,
@@ -342,7 +350,7 @@
                                                                                         }
                                                                                     ],
                                                                            "status":  "passed",
-                                                                           "finishedAtUtc":  "2026-09-30T22:35:44.787499+00:00"
+                                                                           "finishedAtUtc":  "2026-09-30T23:01:31.893636+00:00"
                                                                        },
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "not exposed by supplied V20 API",
@@ -362,12 +370,20 @@
                                                     "hmiSnapshotRemotingPassed":  4,
                                                     "softwareLookupPassed":  45,
                                                     "engineeringApiShapePassed":  3119,
+                                                    "nativeHarness":  {
+                                                                          "compiled":  true,
+                                                                          "safetyChecksPassed":  25,
+                                                                          "supervisorChecksPassed":  22,
+                                                                          "exeSha256":  "160a7186886e7bd136a4db0b907d50652acec50a1daad330fee48bec87a31359",
+                                                                          "supervisorSha256":  "b6a638100ff41a200b6d22e3484454179ff3138af2728998d2670955052190fa",
+                                                                          "liveAcceptance":  "NOT RUN; explicit opt-in required"
+                                                                      },
                                                     "localStability":  {
                                                                            "schemaVersion":  1,
                                                                            "major":  21,
-                                                                           "startedAtUtc":  "2026-09-30T22:36:00.996910+00:00",
+                                                                           "startedAtUtc":  "2026-09-30T23:01:50.926640+00:00",
                                                                            "runtimeSha256":  "80727bb06143a9d558b901ca12225c1ea1b285a2c84cf3c915582f13be38ddd7",
-                                                                           "harnessSha256":  "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
+                                                                           "harnessSha256":  "1f0415cf31fe2b0ca6f2e8339495bfb5467d8d4a756f1c65e761035b9242a36c",
                                                                            "scriptSha256":  "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
                                                                            "resourceHelperSha256":  "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
                                                                            "scope":  "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
@@ -409,7 +425,7 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  6.219,
+                                                                                            "elapsedSeconds":  6.391,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  0.0,
                                                                                                                         "p95":  16.0,
@@ -417,33 +433,33 @@
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  48508928,
-                                                                                                                       "workingSetBytes":  72384512,
+                                                                                                                       "privateBytes":  48451584,
+                                                                                                                       "workingSetBytes":  72286208,
                                                                                                                        "handleCount":  488
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52592640,
-                                                                                                                       "workingSetBytes":  76570624,
+                                                                                                                       "privateBytes":  52547584,
+                                                                                                                       "workingSetBytes":  76455936,
+                                                                                                                       "handleCount":  489
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52547584,
+                                                                                                                       "workingSetBytes":  76484608,
+                                                                                                                       "handleCount":  489
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  52613120,
+                                                                                                                       "workingSetBytes":  76509184,
                                                                                                                        "handleCount":  490
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52604928,
-                                                                                                                       "workingSetBytes":  76599296,
+                                                                                                                       "privateBytes":  52613120,
+                                                                                                                       "workingSetBytes":  76521472,
                                                                                                                        "handleCount":  490
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  52670464,
-                                                                                                                       "workingSetBytes":  76619776,
-                                                                                                                       "handleCount":  490
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  52670464,
-                                                                                                                       "workingSetBytes":  76627968,
-                                                                                                                       "handleCount":  490
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  52670464,
-                                                                                                                       "workingSetBytes":  76640256,
+                                                                                                                       "privateBytes":  52613120,
+                                                                                                                       "workingSetBytes":  76525568,
                                                                                                                        "handleCount":  490
                                                                                                                    }
                                                                                                                ],
@@ -486,7 +502,7 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  8.093,
+                                                                                            "elapsedSeconds":  8.141,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  0.0,
                                                                                                                         "p95":  16.0,
@@ -494,33 +510,33 @@
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  40218624,
-                                                                                                                       "workingSetBytes":  64917504,
-                                                                                                                       "handleCount":  493
+                                                                                                                       "privateBytes":  40308736,
+                                                                                                                       "workingSetBytes":  65044480,
+                                                                                                                       "handleCount":  489
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  42258432,
-                                                                                                                       "workingSetBytes":  67112960,
-                                                                                                                       "handleCount":  494
+                                                                                                                       "privateBytes":  42336256,
+                                                                                                                       "workingSetBytes":  67162112,
+                                                                                                                       "handleCount":  489
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  42389504,
-                                                                                                                       "workingSetBytes":  67223552,
-                                                                                                                       "handleCount":  495
+                                                                                                                       "privateBytes":  42467328,
+                                                                                                                       "workingSetBytes":  67276800,
+                                                                                                                       "handleCount":  490
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  42520576,
-                                                                                                                       "workingSetBytes":  67379200,
-                                                                                                                       "handleCount":  495
+                                                                                                                       "privateBytes":  42598400,
+                                                                                                                       "workingSetBytes":  67403776,
+                                                                                                                       "handleCount":  490
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  42586112,
-                                                                                                                       "workingSetBytes":  67452928,
-                                                                                                                       "handleCount":  495
-                                                                                                                   },
-                                                                                                                   {
-                                                                                                                       "privateBytes":  42586112,
+                                                                                                                       "privateBytes":  42663936,
                                                                                                                        "workingSetBytes":  67518464,
+                                                                                                                       "handleCount":  490
+                                                                                                                   },
+                                                                                                                   {
+                                                                                                                       "privateBytes":  42799104,
+                                                                                                                       "workingSetBytes":  67645440,
                                                                                                                        "handleCount":  495
                                                                                                                    }
                                                                                                                ],
@@ -563,42 +579,42 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  10.157,
+                                                                                            "elapsedSeconds":  10.61,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  31.0,
                                                                                                                         "p95":  62.0,
-                                                                                                                        "max":  78.0
+                                                                                                                        "max":  63.0
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  61472768,
-                                                                                                                       "workingSetBytes":  84217856,
-                                                                                                                       "handleCount":  547
+                                                                                                                       "privateBytes":  59166720,
+                                                                                                                       "workingSetBytes":  81944576,
+                                                                                                                       "handleCount":  541
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62070784,
-                                                                                                                       "workingSetBytes":  84877312,
-                                                                                                                       "handleCount":  586
+                                                                                                                       "privateBytes":  61390848,
+                                                                                                                       "workingSetBytes":  84344832,
+                                                                                                                       "handleCount":  550
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62115840,
-                                                                                                                       "workingSetBytes":  85000192,
-                                                                                                                       "handleCount":  586
+                                                                                                                       "privateBytes":  62005248,
+                                                                                                                       "workingSetBytes":  84951040,
+                                                                                                                       "handleCount":  567
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62255104,
-                                                                                                                       "workingSetBytes":  85155840,
-                                                                                                                       "handleCount":  586
+                                                                                                                       "privateBytes":  63082496,
+                                                                                                                       "workingSetBytes":  85889024,
+                                                                                                                       "handleCount":  603
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62529536,
-                                                                                                                       "workingSetBytes":  85491712,
-                                                                                                                       "handleCount":  586
+                                                                                                                       "privateBytes":  63344640,
+                                                                                                                       "workingSetBytes":  86151168,
+                                                                                                                       "handleCount":  603
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  62595072,
-                                                                                                                       "workingSetBytes":  85540864,
-                                                                                                                       "handleCount":  586
+                                                                                                                       "privateBytes":  63430656,
+                                                                                                                       "workingSetBytes":  86237184,
+                                                                                                                       "handleCount":  603
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  2242,
@@ -640,42 +656,42 @@
                                                                                                           "bridge_unknown_tool":  50,
                                                                                                           "unknown_tool":  50
                                                                                                       },
-                                                                                            "elapsedSeconds":  12.171,
+                                                                                            "elapsedSeconds":  12.0,
                                                                                             "latencyMilliseconds":  {
                                                                                                                         "median":  47.0,
                                                                                                                         "p95":  78.0,
-                                                                                                                        "max":  94.0
+                                                                                                                        "max":  125.0
                                                                                                                     },
                                                                                             "processSamples":  [
                                                                                                                    {
-                                                                                                                       "privateBytes":  41119744,
-                                                                                                                       "workingSetBytes":  68014080,
-                                                                                                                       "handleCount":  542
+                                                                                                                       "privateBytes":  41594880,
+                                                                                                                       "workingSetBytes":  68304896,
+                                                                                                                       "handleCount":  547
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44486656,
-                                                                                                                       "workingSetBytes":  71356416,
-                                                                                                                       "handleCount":  587
+                                                                                                                       "privateBytes":  44621824,
+                                                                                                                       "workingSetBytes":  71434240,
+                                                                                                                       "handleCount":  569
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44576768,
-                                                                                                                       "workingSetBytes":  71483392,
-                                                                                                                       "handleCount":  587
+                                                                                                                       "privateBytes":  44687360,
+                                                                                                                       "workingSetBytes":  71606272,
+                                                                                                                       "handleCount":  569
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  44912640,
-                                                                                                                       "workingSetBytes":  71815168,
-                                                                                                                       "handleCount":  587
+                                                                                                                       "privateBytes":  44892160,
+                                                                                                                       "workingSetBytes":  71876608,
+                                                                                                                       "handleCount":  570
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  45309952,
-                                                                                                                       "workingSetBytes":  72183808,
-                                                                                                                       "handleCount":  587
+                                                                                                                       "privateBytes":  45182976,
+                                                                                                                       "workingSetBytes":  72146944,
+                                                                                                                       "handleCount":  576
                                                                                                                    },
                                                                                                                    {
-                                                                                                                       "privateBytes":  45707264,
-                                                                                                                       "workingSetBytes":  72626176,
-                                                                                                                       "handleCount":  587
+                                                                                                                       "privateBytes":  45641728,
+                                                                                                                       "workingSetBytes":  72581120,
+                                                                                                                       "handleCount":  581
                                                                                                                    }
                                                                                                                ],
                                                                                             "journalEntries":  3160,
@@ -687,7 +703,7 @@
                                                                                         }
                                                                                     ],
                                                                            "status":  "passed",
-                                                                           "finishedAtUtc":  "2026-09-30T22:36:37.632782+00:00"
+                                                                           "finishedAtUtc":  "2026-09-30T23:02:28.090732+00:00"
                                                                        },
                                                     "engineeringLiveEdits":  "NOT TESTED; preview/API shape and offline behavior only",
                                                     "unifiedGraphicLists":  "API present; native import not live-tested",
@@ -1013,7 +1029,7 @@
                          {
                              "path":  "runtime/v20/TiaGitAddIn.Core.dll",
                              "length":  210432,
-                             "sha256":  "a8468126fc60ac583c22da07c61b778313e50544022b77a43d7a7c363bf7ba58"
+                             "sha256":  "17824a27f5f51953ee298fd2f3887e0fde4e8db0dd4de89e7977fc39b1bafb29"
                          },
                          {
                              "path":  "runtime/v20/TiaMcpServer.exe",
@@ -1348,7 +1364,7 @@
                          {
                              "path":  "runtime/v21/TiaGitAddIn.Core.dll",
                              "length":  210432,
-                             "sha256":  "a8468126fc60ac583c22da07c61b778313e50544022b77a43d7a7c363bf7ba58"
+                             "sha256":  "17824a27f5f51953ee298fd2f3887e0fde4e8db0dd4de89e7977fc39b1bafb29"
                          },
                          {
                              "path":  "runtime/v21/TiaMcpServer.exe",
@@ -3263,6 +3279,26 @@
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/UnifiedUiModelShapeChecks.cs",
                             "sha256":  "fb2076e8c832b65cc65744928ffe62d30e9b50e0123e6ac7b08754df8910ac96"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/LiveSuite.cs",
+                            "sha256":  "bc046a85b9ed316b33b29890741b4566ff0359970e4619a3640701598924986a"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/NativeTests.props",
+                            "sha256":  "e28f7fa50754e6534d2dd55bdd890a6417ed17ef2af04a3cc1a91b469e3898db"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/Program.cs",
+                            "sha256":  "91430aa570083499fd3122e9032773036edb974aa9bffe3d5589b7859a92e8ea"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj",
+                            "sha256":  "a23abafd3a77e7b0578e67ed8f82f8236c5a6f2f8dd73107a5aa77e072c6a926"
+                        },
+                        {
+                            "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj",
+                            "sha256":  "5338c0f326a8b9f097d08c8a0cb16c08ec13c3f23bcc88d88d906b31fc8a1766"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BaseLeftoversTests.cs",

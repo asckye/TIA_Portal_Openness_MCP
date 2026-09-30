@@ -4,6 +4,8 @@
 
 命令从仓库根目录执行。结果分别存于 [引擎记录](../../manifest/release-build.json) 和 [配置器记录](../../manifest/configurator-build.json)。离线检查不代表真实 TIA 验收。
 
+独立 [V20/V21 原生生命周期框架](native-lifecycle-tests.md) 已纳入本地构建；发布门只编译它并执行离线安全检查和假进程故障注入，不启动 TIA。真正运行必须单独显式启用；当前尚未执行。
+
 ## 无需安装 TIA
 
 ```powershell

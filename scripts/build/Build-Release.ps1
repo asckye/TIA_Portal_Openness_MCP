@@ -48,6 +48,11 @@ $harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTest
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
 $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe'
+# Compile the separate opt-in native harness, but execute ONLY its offline safety
+# checks here. Live TIA creation belongs to a dedicated, explicitly enabled run.
+Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
+$nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
+if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
 $checks=[ordered]@{}
 foreach($major in @(20,21)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
@@ -56,6 +61,15 @@ foreach($major in @(20,21)) {
     if($xml.Project.PropertyGroup.FileVersion -ne $version -or $xml.Project.PropertyGroup.InformationalVersion -ne $release){throw 'V20/V21 source versions differ'}
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
     $properties=@("-p:SiemensEngineeringDirectory=$api")
+    $nativeProject=Join-Path $repo "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V$major/NativeTests.V$major.csproj"
+    Restore $nativeProject $properties
+    Run $Dotnet (@('build',$nativeProject,'-c','Release','--no-restore','-v:q')+$properties) "native-build-v$major.log"
+    $nativeOutput=Join-Path (Split-Path $nativeProject) 'bin/Release/net48'
+    $nativeExe=Join-Path $nativeOutput "NativeTests.V$major.exe"
+    if(@(Get-ChildItem -LiteralPath $nativeOutput -Filter 'Siemens.Engineering*.dll' -File).Count){throw 'Native test harness must not copy Siemens assemblies locally'}
+    Run $nativeExe @('--self-test') "native-safety-v$major.log"
+    $nativeSafety=[regex]::Match((Get-Content (Join-Path $out "native-safety-v$major.log") -Raw),'COMPLETE: (\d+) native harness safety checks passed; live TIA tests NOT RUN')
+    if(!$nativeSafety.Success){throw 'Native harness offline safety checks incomplete'}
     Restore $project $properties
     Run $Dotnet (@('build',$project,'-c','Release','--no-restore','-v:q')+$properties) "build-v$major.log"
     $built=Join-Path $source $(if($major -eq 20){'bin-v20/Release/net48'}else{'bin/Release/net48'})
@@ -112,6 +126,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
     $checks["V$major"]['softwareLookupPassed']=[int]$softwareLookup.Groups[1].Value
     $checks["V$major"]['engineeringApiShapePassed']=[int]$engineeringApi.Groups[1].Value
+    $checks["V$major"]['nativeHarness']=[ordered]@{compiled=$true;safetyChecksPassed=[int]$nativeSafety.Groups[1].Value;supervisorChecksPassed=[int]$nativeSupervisor.Groups[1].Value;exeSha256=(Get-FileHash $nativeExe).Hash.ToLowerInvariant();supervisorSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py')).Hash.ToLowerInvariant();liveAcceptance='NOT RUN; explicit opt-in required'}
     $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}

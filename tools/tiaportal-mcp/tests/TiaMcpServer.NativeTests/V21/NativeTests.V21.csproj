@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TiaMajor>21</TiaMajor>
+    <SiemensBaseAssembly>Siemens.Engineering.Base</SiemensBaseAssembly>
+    <AssemblyName>NativeTests.V21</AssemblyName>
+  </PropertyGroup>
+  <Import Project="..\NativeTests.props" />
+</Project>

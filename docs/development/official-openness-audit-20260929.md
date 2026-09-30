@@ -48,7 +48,7 @@
 | threading-and-concurrency | SerializedCallTool、MTA Attach | 进程内串行；不等于多客户端各有独立工程 |
 | engineering-objects | 属性/服务入口、RunToolsInTransaction | 深入核对；F4–F6，保留明确的事务边界 |
 | crash-diagnosis | InvocationJournal、HMI 读故障阻断、PLC 交叉引用禁用 | 有工具边界日志；仍缺全面的原生调用级日志 |
-| openness-testing | net8 纯逻辑、net48 API/HTTP/产物测试 | 已分层；尚无完整、显式启用的原生 scratch-project 测试矩阵 |
+| openness-testing | net8 纯逻辑、net48 API/HTTP/产物测试，独立 net48 V20/V21 NativeTests | 2026-09-30 补齐显式启用的自有 scratch 工程生命周期框架及进程监督；仅完成编译/离线安全检查，原生执行与各工具族矩阵仍待验收 |
 | performance-and-caching | 软件容器缓存、分页、ReadObjectIdentifier | 部分覆盖；缺少统一缓存失效与所有读取路径的批量属性策略 |
 | object-tree-walking | 有界对象树、GetService/DescribeService、精确软件查找 | 已有入口；全服务遍历不等于无崩溃风险 |
 | change-detection | ReadPlcChecksums / ReadPlcObjectFingerprints / 安全签名 | 已有入口；校验和、对象指纹、F 签名语义须保持区别 |
@@ -77,7 +77,7 @@
 
 ## 仍需补齐或专项验证
 
-1. **原生验收体系**：新增独立、显式开启的 net48 live-test 项目，在专用安装上创建自有 scratch 项目，验证事务回滚、超时后释放、关闭时工程保留、替换导入后回读；不得默认附加生产工程。当前用户要求不操作 TIA，本轮未执行这些测试。
+1. **原生验收体系**：已新增独立、显式开启的 V20/V21 net48 live-test 项目，实现自有 scratch 工程的创建、事务提交/回滚、保存重开及回读、清理与超时监督，见[原生测试框架](native-lifecycle-tests.md)。当前用户要求不操作 TIA，原生分支未执行；超时 Attach 晚到代理释放、共享连接的工程保留、替换导入后回读及各工具族矩阵仍未加入该框架。
 2. **崩溃定位粒度**：现有调用日志记录工具/桥接的 BEFORE/RETURNED/THREW，不包含每一个原生 getter/service 调用的对象路径。它能缩小范围，但不足以证明具体崩溃 API。PLC `GetCrossReferences` 保持默认禁用；未为了符合示例而复现崩溃或扩大全设备跳过列表。
 3. **跨客户端一致性**：串行门仅在一个 MCP 进程内有效，同端口客户端共享当前绑定。独立 MCP 进程/端口绑定独立 TIA 实例仍是隔离方案；`PreviewToolBatch` 的工程名/会话/PID 与预览比较不是完整修订锁，也不是分布式事务。同名工程还应扩展明确 PID/完整路径选择。
 4. **缓存和作用域覆盖**：缓存清理已修复到断开连接路径，但 GUI/另一个 Openness 客户端修改或导入替换仍需统一失效策略。软件单元的已有工具不代表所有旧工具支持完整的 root + unit 查找。批量属性优化、搜索索引暂停/恢复尚无统一策略；它们是优化与覆盖项，不应未经实测就全局开启。
