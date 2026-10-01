@@ -99,7 +99,7 @@ namespace TiaMcpServer.Isolation
                 try { effectiveArguments = inner is JsonObject obj ? obj : inner == null ? null : JsonNode.Parse(inner.GetValue<string>()) as JsonObject; }
                 catch { effectiveArguments = null; }
             }
-            bool binding = string.Equals(effectiveName, "ConnectIsolated", StringComparison.OrdinalIgnoreCase) ||
+            bool binding = string.Equals(effectiveName, "ConnectToProject", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "ConnectIsolated", StringComparison.OrdinalIgnoreCase) ||
                 ((string.Equals(effectiveName, "Connect", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "AttachToOpenProject", StringComparison.OrdinalIgnoreCase)) &&
                     !string.IsNullOrWhiteSpace(effectiveArguments?["projectName"]?.ToString()));
             var diagnostic = new[] { "GetState", "Bootstrap", "FindTools", "GetToolSchema", "ListToolCategories", "GetAuthoringGuide", "GetExport", "ListExports" }
@@ -108,7 +108,7 @@ namespace TiaMcpServer.Isolation
             lock (sync)
             {
                 if (disposed || state == "Faulted") throw new WorkerCallException("Worker unavailable; explicit restart and project rebind required.", false);
-                if (bindingRequired && !binding && !diagnostic) throw new WorkerCallException("Recovery requires an explicit named Connect/AttachToOpenProject or ConnectIsolated before other tools. No call was dispatched.", false);
+                if (bindingRequired && !binding && !diagnostic) throw new WorkerCallException("Recovery requires an explicit ConnectToProject, named Connect/AttachToOpenProject or ConnectIsolated before other tools. No call was dispatched.", false);
                 if (admitted >= QueueLimit) throw new WorkerCallException("Worker queue is full; request was not dispatched.", false);
                 admitted++; ticket = epoch;
             }

@@ -56,7 +56,7 @@ def main():
                     return content(rpc('tools/call', str(number), {'name': name, 'arguments': arguments or {}}))
                 state = call('ReadOpennessWorkerStatus')[1]['meta']['worker']
                 check(state['state'] == 'NotStarted' and state['workerPid'] is None, 'Diagnostics launched worker')
-                check(len(rpc('tools/list', 'list')['result']['tools']) == (476 if profile == 'full' else 61), 'Tool catalog drift')
+                check(len(rpc('tools/list', 'list')['result']['tools']) == (478 if profile == 'full' else 62), 'Tool catalog drift')
                 check(rpc('resources/list', 'resources')['result'] == {'resources': []}, 'Resources changed')
                 result, payload = call('GetState')
                 check(not result.get('isError') and payload['isConnected'] is False and payload['meta']['success'], 'Offline worker state mismatch')

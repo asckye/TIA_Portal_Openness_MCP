@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-01 08:21:56
+- 生成时间：2026-10-01 09:22:02
 - 引擎文件版本：3.1.0.0
-- 工具数量：476
+- 工具数量：478
 
 ## 读法
 
@@ -14,30 +14,30 @@
 
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
-| `SESSION` | 会话与发现，不改工程 | 17 |
+| `SESSION` | 会话与发现，不改工程 | 18 |
 | `READ` | 读取已打开工程，不改动 | 141 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 190 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 191 |
 | `FILE` | 导出/导入文件或生成离线产物 | 50 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 30 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
 | `EXECUTE` | 执行编译/测试/自检 | 13 |
 
-描述里未显式标注操作类型的工具（204 个）由 `ToolTaxonomy.OperationOf` 按工具名推断，表中以 `*` 标记；显式标注优先。
+描述里未显式标注操作类型的工具（203 个）由 `ToolTaxonomy.OperationOf` 按工具名推断，表中以 `*` 标记；显式标注优先。
 
 ## 分类总览
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 47 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (7)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `session` | 会话与基础设施 / Session & infrastructure | 48 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 64 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (10) |
 | `plc` | PLC 软件 / PLC software | 124 | `PLC-Software` (79)、`PLC-Builders` (11)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
-| `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 125 | `HMI` (31)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
 
-## session — 会话与基础设施 / Session & infrastructure（47）
+## session — 会话与基础设施 / Session & infrastructure（48）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -67,16 +67,17 @@
 | `PreviewToolBatch` | L2 | READ | Preview 1..50 project writes as [{name,arguments:{...}}]. Only tools explicitly tagged [WRITE] with a bool dryRun parameter are supported. Forces dryRun=true for previews; preserves explicit confirmation flags for later execution. expectedProject must exactly match the connected project. Successful previews yield a single-use 10-minute token bound to stored ordered calls, connection identity and preview results. No writes executed. No promise of atomic rollback or complete native state coverage. |
 | `ReadToolBatch` | L2 | READ | Sequentially invoke 1..50 tools explicitly declared [READ], or GetState. operationsJson is [{name,arguments:{...}}]. No inferred name classification and no native GetCrossReferences. Rejects nested orchestration. Returns every result with succeeded/failed/unknown status; unknown is not success. Optional expectedProject requires exact bound project. Not a consistent project snapshot; external TIA edits can occur. |
 
-### [Portal]（7）
+### [Portal]（8）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
-| `GetState` | L0 | SESSION* | Get current connection state: IsConnected, open Project name, and open Session name. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject. |
-| `Connect` | L1 | SESSION* | Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - when projectName is given, to its matching process or an empty process only (never a different open project); without a name, to the first open project / session or attachable process - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first. |
+| `ConnectToProject` | L0 | SESSION | Attach only to one running TIA process using processId, processStartUtc and full projectPath from ListPortalProcessProjects. Rejects stale identity, a competing MCP lease, and an unclean prior owner. Captures exact project identity; never starts TIA, saves, closes another project, or automatically retries. MCP-owned open projects must be explicitly closed/disconnected first. |
+| `GetState` | L0 | SESSION* | Get cached connection identity and OS process liveness: IsConnected, bound Project name, Session name, PID/start/path/generation and journal health. Does not query project collections, attach or rebind. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject. |
+| `Connect` | L1 | SESSION | Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectToProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolated to start a separate headless instance. Meta contains boundProcessId, startedNew and binding. |
 | `ConnectIsolated` | L1 | SESSION* | Start a BRAND-NEW headless TIA Portal instance instead of attaching to a running one. It never attaches to, modifies or closes any TIA window or project the user already has open. USE THIS when the user is working in the TIA Portal UI: plain Connect attaches to their instance and OpenProject then (correctly) refuses to touch their project, so the whole server is unusable until they close it. Must be the FIRST connection tool in a fresh MCP process — calling it after another connection leaves an orphaned portal process that later attaches steal. Afterwards use OpenProject / CreateProject as usual, then CloseProject and Disconnect. |
 | `Disconnect` | L1 | SESSION* | Disconnect from TIA Portal and release the Openness handle. Call after all project work is done. Any unsaved changes will be lost — call SaveProject first if needed. |
 | `EnsureOpennessUserGroup` | L1 | SESSION* | Ensure current Windows user is in TIA Openness user group (may prompt UI). Returns success=true when membership is OK. |
-| `ListPortalProcessProjects` | L1 | SESSION* | List running TIA Portal processes and the projects/sessions visible in each process. |
+| `ListPortalProcessProjects` | L1 | SESSION* | List running TIA process IDs, ISO start times and full project paths from process metadata without attaching. Use these values with ConnectToProject. |
 | `ReadPortalInfo` | L2 | READ | Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project. |
 
 ### [Diagnostics]（11）
@@ -488,15 +489,16 @@
 | `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
 | `UpdateDeviceItemChannel` | L2 | WRITE | SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. |
 
-## hmi — HMI 人机界面 / HMI（124）
+## hmi — HMI 人机界面 / HMI（125）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
-### [HMI]（30）
+### [HMI]（31）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `CompileAndDiagnoseHmi` | L1 | EXECUTE* | Compile an HMI and return structured errors/warnings, the HMI counterpart of CompileAndDiagnosePlc. Use it after generating screens/tags so you can read the diagnostics and fix them yourself instead of asking the engineer to compile in the TIA UI. WinCC Unified: HmiSoftware is not compilable on its own, so the owning device is compiled (same as the TIA UI does) and hardware diagnostics may appear alongside screen ones. Classic (Comfort/KTP): the HMI software itself is compiled. Requires: Connect + OpenProject. softwarePath from GetProjectTree, e.g. 'HMI_RT_1'. |
+| `DeleteHmiTag` | L2 | WRITE | Delete ONE exact ordinary Classic/Unified HMI tag in V20/V21. tagTablePath is /Folder/Table (no recursive name search); empty selects Unified device-root Tags only. Default dryRun=true previews existence. Actual deletion requires dryRun=false AND confirmDelete=true, acquires exclusive access, and verifies absence. No cross-reference call, no save/compile; screen/script/alarm/logging references are NOT checked and may break. No variable table, PLC tag, or system tag deletion. |
 | `DescribeHmiScreen` | L2 | READ* | Describe one HMI screen object (members/methods) by name under an HMI software. |
 | `DescribeHmiScreenItem` | L2 | READ* | Describe one HMI screen item (widget) by name under an HMI screen. |
 | `DescribeHmiSoftware` | L2 | READ* | Describe the HMI software object (members/methods) via reflection. Useful to discover Export/Import/Create APIs. |

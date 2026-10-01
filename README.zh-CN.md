@@ -38,7 +38,7 @@
 
 ## 能力与验证范围
 
-当前静态清单共 **476 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **61 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+当前静态清单共 **478 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **62 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
 
 本地候选新增可选[工作进程隔离](docs/guides/openness-worker-isolation.md)：`--isolate-openness` 默认关闭，工作进程故障后仍可查询宿主诊断。真实 TIA 验收、精确工程身份绑定及不同 MCP 服务间的协调仍未完成。
 

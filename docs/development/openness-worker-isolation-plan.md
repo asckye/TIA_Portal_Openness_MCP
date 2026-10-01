@@ -10,9 +10,9 @@
 | 单 worker 串行、16 个在途/排队请求上限、10–180 秒总期限 | 已实现；HTTP 的状态/诊断请求独立于原生队列 |
 | 故障锁定、停止自有 worker、不自动重放、显式重置与重新绑定 | 已实现；请求已发送时保守报告原生结果未知，不终止 TIA |
 | 父进程退出监测、旧导出/预览句柄失效、跨进程日志关联 | 已实现；日志仍是尽力记录，不保证磁盘故障时证据完整 |
-| 精确 TIA 工程身份：PID、启动时间、规范化完整路径、会话代次 | **未完成**；恢复目前要求显式按名称连接，不能替代精确绑定 |
-| 同一 TIA 实例跨 MCP 进程协调 | **未完成**；不同 MCP 服务仍应连接不同 TIA 实例 |
-| 所有原生调用级别的阶段/路径证据、Windows 事件/转储收集 | **未完成**；当前只有工具边界和部分原生阶段证据 |
+| 精确 TIA 工程身份：PID、启动时间、规范化完整路径、会话代次 | 已实现捕获/核验、ConnectToProject、同名候选拒绝和禁止自动换绑；本地测试通过，原生验收未运行 |
+| 同一 TIA 实例跨 MCP 进程协调 | 已实现同 Windows 用户会话独占租约和异常退出保留标记；不是共享并发队列，旧版本/其他用户/其他 Openness 客户端不受此锁约束 |
+| 原生阶段/路径证据、Windows 事件/转储收集 | 已增加绑定代次、线程、对象路径字段、日志失败计数及只读证据收集脚本；**全部原生 getter 的细粒度覆盖仍未完成** |
 | 假进程故障注入、MCP 分页与重置、宿主退出、本地压力门 | 已加入双版本构建流程；实际计数与哈希以 `manifest/release-build.json` 为准 |
 | 真实 V20/V21 工程读取/写入/编译/故障恢复验收 | **未运行**，遵守本轮仅本地测试的限制 |
 
@@ -20,7 +20,7 @@
 
 Siemens [线程与并发](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md)要求显式串行访问与合适的线程模型；[崩溃诊断](../../reference/siemens-openness/skills/crash-diagnosis/SKILL.md)要求在可能阻塞的 API 前后保留证据。第三方 [Czarnak 架构](https://github.com/Czarnak/tia-portal-mcp/blob/main/docs/ARCHITECTURE.md)将 MCP host 与 net48 worker 分进程，是值得参考的故障隔离边界。独立 worker 可以保住 MCP host；它无法修复或屏蔽 TIA 服务端自身崩溃。
 
-静态 SemaphoreSlim 和新 worker 队列仍只协调各自服务，不能协调两个 MCP 端口/进程。工具串行门不能取消已经进入 Openness 的同步调用。新 supervisor 统一处理传输/期限故障；已有异常分类器还不能覆盖所有被工具内部吞掉的原生故障。
+静态 SemaphoreSlim 和 worker 队列协调各自服务；新增会话租约使同 Windows 用户的两个新版本 MCP 不能同时附加同一 TIA PID/启动时间。工具串行门不能取消已经进入 Openness 的同步调用。新 supervisor 统一处理传输/期限故障；已有异常分类器还不能覆盖所有被工具内部吞掉的原生故障。
 
 ## 完整目标关卡（尚未全部达成）
 

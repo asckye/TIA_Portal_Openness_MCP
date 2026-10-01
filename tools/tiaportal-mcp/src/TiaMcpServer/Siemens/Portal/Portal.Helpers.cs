@@ -55,52 +55,8 @@ namespace TiaMcpServer.Siemens
 
         private bool IsProjectNull()
         {
-            if (_project == null)
-            {
-                // Isolated workers must not recover a lost session by silently attaching elsewhere.
-                if (Isolation.IsolatedWorkerHost.IsChild)
-                {
-                    _logger?.LogWarning("No bound project in isolated worker; explicitly connect/open the intended project.");
-                    return true;
-                }
-                // Self-heal for less-capable AI drivers that call a tool before Connect/Open.
-                // Deliberately conservative (this is a 99-call-site predicate):
-                //   - connected but unbound  -> rebind a project already open in the TIA UI;
-                //   - not connected, but a TIA process is already running -> attach & bind it;
-                //   - not connected and no TIA running -> do NOT launch (would be a slow failure);
-                //     fall through to the actionable "no project" message so the AI calls Connect.
-                try
-                {
-                    if (_expectedProjectName != null)
-                    {
-                        // 2.7.33: an explicit bind exists - only that project may come back (2.7.32 real project: with two TIA
-                        // instances the unconstrained ConnectPortal below bound the other instance's project between two calls).
-                        if (!AttachToOpenProject(_expectedProjectName, 3)) _logger?.LogWarning("IsProjectNull self-heal: expected project '{Name}' is not open in any TIA Portal instance; not binding anything else.", _expectedProjectName);
-                    }
-                    else if (_portal != null)
-                    {
-                        GetState();
-                    }
-                    else
-                    {
-                        bool tiaRunning = false;
-                        try { tiaRunning = TiaPortal.GetProcesses().Any(); } catch { }
-                        if (tiaRunning) ConnectPortal();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "IsProjectNull self-heal (auto connect/bind) failed");
-                }
-            }
-
-            if (_project == null)
-            {
-                _logger?.LogWarning("No TIA project available.");
-
-                return true;
-            }
-
+            if (_project == null) return true;
+            VerifyBinding("Project access");
             return false;
         }
 

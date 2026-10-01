@@ -57,10 +57,10 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region portal
 
-        [McpServerTool(Name = "Connect"), Description("[L1][Portal] Connect to TIA Portal. MUST be the first tool called in every session. With TIA Portal processes running it ATTACHES - when projectName is given, to its matching process or an empty process only (never a different open project); without a name, to the first open project / session or attachable process - and REFUSES (listing every process and why it could not be attached) when none can be attached; it never starts an extra instance next to running ones unless allowStart=true. Only when no TIA Portal process exists at all is a new (headless by default) instance started. Meta reports processCount, candidates, boundProcessId, startedNew and a warning when the wanted project is open elsewhere. If TIA Portal is not installed or the user is not in the 'Siemens TIA Openness' Windows group, this will fail — run EnsureOpennessUserGroup first.")]
+        [McpServerTool(Name = "Connect"), Description("[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectToProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolated to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.")]
         public static ResponseConnect Connect(
-            [Description("projectName: optional exact project name; binds its process or an empty instance only, never another open project. The expected name is retained for subsequent reads/writes.")] string projectName = "",
-            [Description("allowStart: false (default) never starts a new TIA Portal instance while others are running; true starts a separate headless instance when none of the running ones can be attached.")] bool allowStart = false)
+            [Description("projectName: optional exact project filename stem. Duplicate matches are refused; use ConnectToProject with full identity.")] string projectName = "",
+            [Description("allowStart: compatibility parameter. Attach failures never trigger automatic startup; use ConnectIsolated for an explicit new instance.")] bool allowStart = false)
         {
             Logger?.LogInformation("Connecting to TIA Portal...");
 
@@ -131,7 +131,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ListPortalProcessProjects"), Description("[L1][Portal]List running TIA Portal processes and the projects/sessions visible in each process.")]
+        [McpServerTool(Name = "ListPortalProcessProjects"), Description("[L1][Portal]List running TIA process IDs, ISO start times and full project paths from process metadata without attaching. Use these values with ConnectToProject.")]
         public static ResponseStringList ListPortalProcessProjects()
         {
             try
@@ -204,7 +204,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #region state
 
-        [McpServerTool(Name = "GetState"), Description("[L0][Portal] Get current connection state: IsConnected, open Project name, and open Session name. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject.")]
+        [McpServerTool(Name = "GetState"), Description("[L0][Portal] Get cached connection identity and OS process liveness: IsConnected, bound Project name, Session name, PID/start/path/generation and journal health. Does not query project collections, attach or rebind. Use this to check preconditions before other tools — if IsConnected=false, call Connect first; if Project is empty, call OpenProject or CreateProject.")]
         public static ResponseState GetState()
         {
             try
@@ -223,6 +223,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         {
                             ["timestamp"] = DateTime.Now,
                             ["hmiReadHealth"] = Portal.GetHmiReadHealth(),
+                            ["binding"] = Portal.GetBindingIdentity(),
+                            ["journalHealth"] = InvocationJournal.Health(),
                             ["success"] = true
                         }
                     };
@@ -315,7 +317,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 var rules = new[]
                 {
-                    "ORDER: Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTree → read/write → CompileSoftware → SaveProject. The server now auto-connects and auto-binds an already-open project, but always confirm with GetState/GetProjectTree before writing.",
+                    "ORDER: Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTree → read/write → CompileSoftware → SaveProject. Explicit connection is required. Use ConnectToProject for exact PID/start time/project path binding; GetState does not auto-attach.",
                     "AFTER A WRITE: read back the intended change, then compile the relevant scope. Compile and SaveProject run outside transactions; save only within the authorized workflow. Changes are NOT saved automatically.",
                     "NAMES ARE EXACT: plc software path defaults to 'PLC_1', HMI to 'HMI_RT_1'. If a name/path is rejected, call GetProjectTree / GetSoftwareTree to read the real names instead of guessing.",
                     "ON ERROR: read the error message — it names the recovery tool (e.g. 'call OpenProject/AttachToOpenProject'). Do that instead of retrying the same call or switching tools at random.",

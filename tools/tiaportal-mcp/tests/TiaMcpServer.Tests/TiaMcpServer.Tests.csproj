@@ -17,6 +17,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectBindingIdentity.cs" Link="ProjectBindingIdentity.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\PortalProcessLease.cs" Link="PortalProcessLease.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\TimedAttachment.cs" Link="TimedAttachment.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Engineering.cs" Link="Engineering.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />

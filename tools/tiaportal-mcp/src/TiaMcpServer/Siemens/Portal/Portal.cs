@@ -47,28 +47,20 @@ namespace TiaMcpServer.Siemens
         // fault record and GetState say whether the process is still alive instead of leaving the operator to guess.
         private void RememberBoundProcess(int? processId = null)
         {
-            if (processId != null) { _boundProcessId = processId; return; }
-            try { _boundProcessId = _portal?.GetCurrentProcess().Id; } catch { _boundProcessId = null; }
+            int pid = processId ?? _portal!.GetCurrentProcess().Id;
+            _processStartTicks = ProcessStart(pid);
+            _processLease = Reserve(pid, _processStartTicks);
+            _boundProcessId = pid;
         }
         private ProjectBase? _project;
 
-        // 2.7.32 real project: with two TIA Portal processes open, the IsProjectNull self-heal re-ran ConnectPortal and silently
-        // bound the OTHER instance's project between two tool calls. The name the caller bound explicitly (AttachToOpenProject /
-        // OpenProject / CreateProject) is remembered; self-heal only rebinds to that name and every write re-checks it.
+        // The cached name is retained for compatibility; all safety checks use the
+        // full process/path/generation identity in Portal.Binding.cs.
         private string? _expectedProjectName;
         /// <summary>Project name the caller bound explicitly, or null before any explicit bind (Connect resets it).</summary>
         public string? ExpectedProjectName => _expectedProjectName;
-        private void RememberExpectedProject() { try { _expectedProjectName = _project?.Name; } catch { _expectedProjectName = null; } }
-        /// <summary>Throws when the bound project no longer carries the explicitly bound name (stale handle or silent rebind).</summary>
-        internal void EnsureBoundProjectUnchanged(string operation)
-        {
-            if (_expectedProjectName == null || _project == null) return;
-            string actual;
-            try { actual = _project.Name; }
-            catch (Exception ex) { throw new PortalException(PortalErrorCode.InvalidState, operation + " refused: the bound project handle for '" + _expectedProjectName + "' is stale (" + ex.GetBaseException().Message + "). Re-attach with AttachToOpenProject before writing."); }
-            if (!string.Equals(actual, _expectedProjectName, StringComparison.OrdinalIgnoreCase))
-                throw new PortalException(PortalErrorCode.InvalidState, operation + " refused: the bound project changed from '" + _expectedProjectName + "' to '" + actual + "' since the last explicit AttachToOpenProject / OpenProject (another TIA Portal instance?). Re-attach explicitly before writing.");
-        }
+        private void RememberExpectedProject() => CaptureBinding();
+        internal void EnsureBoundProjectUnchanged(string operation) => VerifyBinding(operation);
 
         /// <summary>
         /// The currently open project/session, or null. Exposed because some Openness features are
@@ -105,6 +97,10 @@ namespace TiaMcpServer.Siemens
         public Portal(ILogger<Portal>? logger = null)
         {
             _logger = logger;
+            InvocationJournal.BindingSnapshot = () => _binding?.ToJson();
+            PortalFailureClassifier.ProcessLostObserved += reason => {
+                if (_portal != null) _bindingFault = "Native channel fault: " + reason + "; explicit recovery required.";
+            };
             EngineeringScalarProperties.ValueRenderer ??= HmiValueJson;   // 2.7.37: WinCC.Extension value types (V21)
         }
 
@@ -186,14 +182,6 @@ namespace TiaMcpServer.Siemens
 
         // Timeout bounds the caller's wait, not the native operation. A late successful
         // attachment must be detached; it must never become an untracked live session.
-        private TiaPortal? AttachWithTimeout(TiaPortalProcess proc, int timeoutMs)
-        {
-            var result = TimedAttachment.Run(proc.Attach, attached => attached.Dispose(), timeoutMs);
-            if (result == null)
-                _logger?.LogWarning($"Attach to TIA Portal PID={proc.Id} exceeded {timeoutMs}ms; skipping (likely orphaned/dying instance).");
-            return result;
-        }
-
         // 判断一个 attach 失败是不是"白名单/授权被拒"（Openness 用户组、授权白名单）。
         // 这类拒绝跟具体是哪个 Portal 进程无关——换下一个候选、乃至自己新起一个实例，
         // 结果都一样被拒。用类型名字符串匹配而不是 catch 具体类型：
@@ -216,209 +204,47 @@ namespace TiaMcpServer.Siemens
         /// <summary>Last connect diagnostics (process candidates, the bound process, whether an instance was started).</summary>
         public JsonObject? LastConnectInfo { get; private set; }
 
-        // 2.7.56 (real machine, 2026-09-21): two TIA processes (the maintainer's project + 项目1) - neither attached within 2 x 30 s and
-        // the old code then STARTED A THIRD, EMPTY INSTANCE, which the MCP client (already timed out) never learned about; the engine sat
-        // bound to a portal without a project. Now: attach (by wanted project name, else the first with a project / session, else the
-        // first attachable) or refuse with the per-process outcome; an instance is started only when no TIA process exists or the caller
-        // passes allowStart. Per-process wait 20 s inside a 45 s total budget so the answer arrives before the client's 60 s.
+        // Metadata selection precedes Attach; ambiguous names never choose an arbitrary instance.
         public bool ConnectPortal(string? projectName, bool allowStart, JsonObject? info)
         {
-            _logger?.LogInformation("Connecting to TIA Portal...");
-            info ??= new JsonObject();
-            LastConnectInfo = info;
-            var wanted = string.IsNullOrWhiteSpace(projectName) ? null : projectName!.Trim();
-            info["projectName"] = wanted; info["allowStart"] = allowStart;
-
-            // Disposing a client-owned headless instance can close its unsaved project.
-            // Reconnecting is not implicit permission to discard that owned session.
-            if (_projectOpenedByUs)
-                throw new PortalException(PortalErrorCode.InvalidState,
-                    "This client already opened a project. Continue with GetState, or explicitly save/close/disconnect it before replacing the connection.");
-
-            try
+            if (_projectOpenedByUs) throw new PortalException(PortalErrorCode.InvalidState,
+                "Explicitly save/close/disconnect the MCP-owned project before replacing the connection.");
+            string? wanted = string.IsNullOrWhiteSpace(projectName) ? null : projectName.Trim();
+            var processes = InvocationJournal.Native("TiaPortal.GetProcesses", () => TiaPortal.GetProcesses().ToList());
+            var candidates = wanted == null ? processes : processes.Where(p => p.ProjectPath != null &&
+                string.Equals(Path.GetFileNameWithoutExtension(p.ProjectPath.FullName), wanted, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (candidates.Count > 1) throw new PortalException(PortalErrorCode.InvalidState,
+                "Multiple TIA instances match. Use ListPortalProcessProjects then ConnectToProject with PID, start time and full project path.");
+            if (candidates.Count == 1)
             {
-                LastConnectError = null;
-                DisconnectPortal();
-
-                var processes = TiaPortal.GetProcesses().ToList();
-                _logger?.LogInformation($"TIA Portal process count: {processes.Count}");
-                info["processCount"] = processes.Count;
-                if (processes.Count > 0)
-                {
-                    var candidates = new List<ConnectLogic.Candidate>();
-                    var portals = new Dictionary<int, TiaPortal>();
-                    var budget = System.Diagnostics.Stopwatch.StartNew();
-                    foreach (var proc in processes)
-                    {
-                        var c = new ConnectLogic.Candidate { ProcessId = proc.Id };
-                        candidates.Add(c);
-                        var remaining = ConnectLogic.AttachTotalBudgetMs - (int)budget.ElapsedMilliseconds;
-                        if (remaining < 2000) { c.Failure = "skipped, attach budget of " + ConnectLogic.AttachTotalBudgetMs + " ms exhausted"; continue; }
-                        try
-                        {
-                            _logger?.LogInformation($"Trying attach to TIA Portal process PID={proc.Id}");
-                            var candidate = AttachWithTimeout(proc, Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining));
-                            if (candidate == null) { c.Failure = "attach did not answer within " + Math.Min(ConnectLogic.AttachTimeoutMsPerProcess, remaining) + " ms"; continue; }
-                            c.Attached = true; portals[proc.Id] = candidate;
-                            try { foreach (var session in candidate.LocalSessions) { c.HasSession = true; c.ProjectNames.Add(session.Project.Name); } } catch { }
-                            try { foreach (var pr in candidate.Projects) c.ProjectNames.Add(pr.Name); } catch { }
-                            _logger?.LogInformation($"Portal PID={proc.Id}: hasSession={c.HasSession}, projects={string.Join("/", c.ProjectNames)}");
-                            // The wanted project found: no need to probe the remaining processes (each probe can cost a dialog wait).
-                            if (wanted != null && c.ProjectNames.Contains(wanted, StringComparer.Ordinal)) break;
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogWarning(ex, $"Attach failed for TIA Portal PID={proc.Id}");
-                            c.Failure = ex.Message;
-                            LastConnectError = ex.ToString();
-                            // A whitelist / authorization refusal is the same for every process and for a new instance: stop here and say so.
-                            if (IsSecurityRefusal(ex))
-                            {
-                                foreach (var other in portals.Values) { try { other.Dispose(); } catch { } }
-                                info["candidates"] = new JsonArray(candidates.Select(x => (JsonNode)JsonValue.Create(ConnectLogic.Describe(x))!).ToArray());
-                                throw;
-                            }
-                        }
-                    }
-                    info["candidates"] = new JsonArray(candidates.Select(x => (JsonNode)JsonValue.Create(ConnectLogic.Describe(x))!).ToArray());
-                    info["attachElapsedMs"] = budget.ElapsedMilliseconds;
-
-                    var chosen = ConnectLogic.Choose(candidates, wanted);
-                    if (chosen != null)
-                    {
-                        _portal = portals[chosen.ProcessId]; RememberBoundProcess(chosen.ProcessId);
-                        foreach (var kv in portals) if (kv.Key != chosen.ProcessId) { try { kv.Value.Dispose(); } catch { } }
-                        info["boundProcessId"] = chosen.ProcessId; info["startedNew"] = false;
-                        if (chosen.HasSession)
-                        {
-                            try { _session = _portal.LocalSessions.FirstOrDefault(s => wanted == null || s.Project.Name == wanted); _project = _session?.Project; _projectOpenedByUs = false; } catch { }
-                        }
-                        if (_project == null && chosen.ProjectNames.Count > 0)
-                        {
-                            try
-                            {
-                                _project = wanted != null ? _portal.Projects.FirstOrDefault(pr => pr.Name == wanted) : _portal.Projects.First();
-                            }
-                            catch { }
-                            _projectOpenedByUs = false;
-                        }
-                        if (wanted != null)
-                        {
-                            _expectedProjectName = wanted;
-                            if (!chosen.ProjectNames.Contains(wanted, StringComparer.Ordinal)) { var warning = ConnectLogic.MissingProjectWarning(candidates, wanted, chosen); info["warning"] = warning; LastConnectError = warning; }
-                        }
-                        else if (chosen.ProjectNames.Count == 0 && !chosen.HasSession)
-                        {
-                            LastConnectError = $"Attached to PID {chosen.ProcessId}, but it has no visible projects/sessions.";
-                            info["warning"] = LastConnectError;
-                        }
-                        _logger?.LogInformation($"Selected attached TIA Portal PID={chosen.ProcessId}");
-                        return true;
-                    }
-
-                    foreach (var other in portals.Values) { try { other.Dispose(); } catch { } }
-                    if (!allowStart)
-                    {
-                        var refusal = ConnectLogic.Refusal(candidates, wanted);
-                        LastConnectError = refusal;
-                        info["startedNew"] = false;
-                        throw new PortalException(PortalErrorCode.InvalidState, refusal);
-                    }
-                    LastConnectError = "No attachable TIA Portal process; starting a new instance because allowStart=true.";
-                    _logger?.LogInformation(LastConnectError);
-                }
-
-                // No TIA process at all (or allowStart with nothing attachable): start one. Headless (WithoutUserInterface) is the default
-                // because it starts far faster than booting the full GUI; --with-ui flips it for visual inspection.
-                var launchMode = Engineering.LaunchWithUserInterface
-                    ? TiaPortalMode.WithUserInterface
-                    : TiaPortalMode.WithoutUserInterface;
-                _logger?.LogInformation($"Starting a new TIA Portal instance ({launchMode}).");
-                _portal = new TiaPortal(launchMode); RememberBoundProcess();
-                _expectedProjectName = wanted;
-                info["startedNew"] = true; info["boundProcessId"] = _boundProcessId; info["launchMode"] = launchMode.ToString();
-                return true;
+                var selected = candidates[0];
+                var path = selected.ProjectPath?.FullName;
+                ConnectSelectedProcess(selected, string.IsNullOrWhiteSpace(path) ? null : ProjectBindingIdentity.CanonicalPath(path));
             }
-            catch (PortalException) { throw; }
-            catch (Exception ex)
+            else
             {
-                // 统一错误处理：硬失败抛结构化异常，替代 return false + LastConnectError 侧信道
-                throw new PortalException(PortalErrorCode.OpennessError, $"ConnectPortal failed: {FormatExceptionDetail(ex)}", inner: ex);
+                if (wanted != null || (processes.Count != 0 && !allowStart))
+                    throw new PortalException(PortalErrorCode.NotFound, "Requested project is not open. Inspect ListPortalProcessProjects or explicitly use ConnectIsolated for a new instance.");
+                if (_portal != null) DisconnectPortal();
+                _portal = InvocationJournal.Native("TiaPortal.Create", () => new TiaPortal(Engineering.LaunchWithUserInterface ? TiaPortalMode.WithUserInterface : TiaPortalMode.WithoutUserInterface));
+                RememberBoundProcess();
+                LastConnectInfo = new JsonObject { ["boundProcessId"] = _boundProcessId, ["startedNew"] = true };
             }
+            LastConnectError = null;
+            if (info != null && LastConnectInfo != null) foreach (var field in LastConnectInfo) info[field.Key] = field.Value?.DeepClone();
+            return true;
         }
 
         public List<string> ListPortalProcessProjects()
         {
             var lines = new List<string>();
-            IReadOnlyList<TiaPortalProcess> processes;
-            try
+            foreach (var process in InvocationJournal.Native("TiaPortal.GetProcesses", () => TiaPortal.GetProcesses().ToList()))
             {
-                processes = TiaPortal.GetProcesses().ToList();
+                try { lines.Add(new JsonObject { ["processId"] = process.Id,
+                    ["processStartUtc"] = new DateTime(ProcessStart(process.Id), DateTimeKind.Utc).ToString("O"),
+                    ["projectPath"] = process.ProjectPath?.FullName, ["tiaMajorVersion"] = Engineering.TiaMajorVersion }.ToJsonString()); }
+                catch (Exception ex) { lines.Add("PID=" + process.Id + " metadata unavailable: " + ex.GetType().Name); }
             }
-            catch (Exception ex)
-            {
-                lines.Add("GetProcesses error: " + FormatExceptionDetail(ex));
-                return lines;
-            }
-
-            lines.Add("TIA Portal process count: " + processes.Count);
-            foreach (var proc in processes)
-            {
-                TiaPortal? candidate = null;
-                try
-                {
-                    lines.Add("PID=" + proc.Id + " attach: trying");
-                    candidate = proc.Attach();
-                    if (candidate == null)
-                    {
-                        lines.Add("PID=" + proc.Id + " attach: <null>");
-                        continue;
-                    }
-
-                    lines.Add("PID=" + proc.Id + " attach: OK");
-                    try
-                    {
-                        var any = false;
-                        foreach (var s in candidate.LocalSessions)
-                        {
-                            any = true;
-                            lines.Add("PID=" + proc.Id + " sessionProject=" + (s.Project?.Name ?? "<null>"));
-                        }
-                        if (!any) lines.Add("PID=" + proc.Id + " sessions=<empty>");
-                    }
-                    catch (Exception ex)
-                    {
-                        lines.Add("PID=" + proc.Id + " sessions error: " + FormatExceptionDetail(ex));
-                    }
-
-                    try
-                    {
-                        var any = false;
-                        foreach (var p in candidate.Projects)
-                        {
-                            any = true;
-                            lines.Add("PID=" + proc.Id + " project=" + (p?.Name ?? "<null>"));
-                        }
-                        if (!any) lines.Add("PID=" + proc.Id + " projects=<empty>");
-                    }
-                    catch (Exception ex)
-                    {
-                        lines.Add("PID=" + proc.Id + " projects error: " + FormatExceptionDetail(ex));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    lines.Add("PID=" + proc.Id + " attach error: " + FormatExceptionDetail(ex));
-                }
-                finally
-                {
-                    if (candidate != null && candidate != _portal)
-                    {
-                        try { candidate.Dispose(); } catch { }
-                    }
-                }
-            }
-
             return lines;
         }
 
@@ -441,7 +267,7 @@ namespace TiaMcpServer.Siemens
                     "ConnectIsolated: this MCP session already owns a TIA connection. "
                     + "Start a fresh MCP process before calling ConnectIsolated.");
             LastConnectError = null;
-            _portal = new TiaPortal(TiaPortalMode.WithoutUserInterface); RememberBoundProcess();
+            _portal = InvocationJournal.Native("TiaPortal.CreateIsolated", () => new TiaPortal(TiaPortalMode.WithoutUserInterface)); RememberBoundProcess();
             _logger?.LogInformation("Started isolated headless TIA Portal instance.");
             return true;
         }
@@ -457,8 +283,9 @@ namespace TiaMcpServer.Siemens
             return Operation.Run(_logger, nameof(DisconnectPortal), () =>
             {
                 var connection = _portal;
+                HmiExactAccess.InvalidateTokens();
                 _portal = null;
-                _project = null;
+                _project = null; _binding = null;
                 _projectOpenedByUs = false;
                 _session = null;
                 _expectedProjectName = null;
@@ -467,7 +294,11 @@ namespace TiaMcpServer.Siemens
                 InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
                 // TiaPortal.Dispose detaches an attached client; never call
                 // TiaPortalProcess.Dispose, which terminates the actual TIA process.
-                connection?.Dispose();
+                bool uncertain = _bindingFault != null || Isolation.IsolatedWorkerHost.NativeFault != null;
+                _binding = null; _bindingFault = null;
+                var lease = _processLease; _processLease = null;
+                try { connection?.Dispose(); if (!uncertain) lease?.ReleaseCleanly(); }
+                finally { lease?.Dispose(); }
             });
         }
 
@@ -477,178 +308,20 @@ namespace TiaMcpServer.Siemens
 
         public State GetState()
         {
-            _logger?.LogInformation("Getting TIA Portal state...");
-            // 2.7.40 real project: after TIA Portal exits, every touch of _portal throws EngineeringObjectDisposedException. Answer
-            // "not connected" and let the meta's portalProcess (processAlive=false) say why instead of throwing.
-            if (_portal != null && GetPortalProcessHealth()["processAlive"] is JsonValue aliveValue && aliveValue.TryGetValue<bool>(out var alive) && !alive)
-            {
-                _logger?.LogWarning("GetState: the bound TIA Portal process {Pid} is no longer running.", _boundProcessId);
-                return new State { IsConnected = false, Project = "-", Session = "-" };
-            }
-            if (_portal != null)
-            {
-                // 2.7.45 real project: with two TIA instances open (the maintainer's project in one, the scratch project in the other) this
-                // "first accessible project" rebind silently moved the session from the explicitly bound scratch project to the other
-                // instance's project, and the next AddDevice landed in the maintainer's project. With an explicit bind (_expectedProjectName)
-                // only a project of that name may be (re)bound; anything else is reported, never adopted.
-                bool Acceptable(ProjectBase? candidate)
-                {
-                    if (candidate == null) return false;
-                    if (_expectedProjectName == null) return true;
-                    try { return string.Equals(candidate.Name, _expectedProjectName, StringComparison.OrdinalIgnoreCase); } catch { return false; }
-                }
-                // check for existing local sessions
-                if (_portal.LocalSessions.Any())
-                {
-                    // pick first session whose Project is accessible (and, once bound explicitly, named like the bound project)
-                    foreach (var s in _portal.LocalSessions)
-                    {
-                        try
-                        {
-                            var p = s.Project;
-                            var _ = p?.Name; // touch to validate not disposed
-                            if (!Acceptable(p)) continue;
-                            _session = s;
-                            _project = p;
-                            break;
-                        }
-                        catch
-                        {
-                            // skip disposed/inaccessible session projects
-                        }
-                    }
-                }
-                // checks for existing projects
-                else if (_portal.Projects.Any())
-                {
-                    // pick first accessible project (avoid disposed placeholder; respect the explicit bind)
-                    foreach (var p in _portal.Projects)
-                    {
-                        try
-                        {
-                            var _ = p?.Name;
-                            if (!Acceptable(p)) continue;
-                            _project = p;
-                            break;
-                        }
-                        catch
-                        {
-                            // skip disposed
-                        }
-                    }
-                }
-            }
-
-            if (_expectedProjectName != null && _project != null)
-            {
-                try { if (!string.Equals(_project.Name, _expectedProjectName, StringComparison.OrdinalIgnoreCase)) _logger?.LogWarning("GetState: bound project '{Actual}' differs from the explicitly bound '{Expected}'.", _project.Name, _expectedProjectName); }
-                catch { }
-            }
-            return new State
-            {
-                IsConnected = IsConnected(),
-                Project = _project != null ? _project.Name : "-",
-                Session = _session != null ? _session.Project.Name : "-"
-            };
+            // Diagnostics do not inspect collections or silently adopt another project.
+            bool alive = _portal != null;
+            if (alive && _boundProcessId != null)
+            { try { alive = ProcessStart(_boundProcessId.Value) == _processStartTicks; } catch { alive = false; } }
+            return new State { IsConnected = alive && _bindingFault == null,
+                Project = _binding?.ProjectName ?? "-", Session = _session != null ? _binding?.ProjectName ?? "-" : "-" };
         }
 
-        public bool AttachToOpenProject(string projectName) => AttachToOpenProject(projectName, 15);
-
-        private bool AttachToOpenProject(string projectName, int timeoutSeconds)
+        public bool AttachToOpenProject(string projectName)
         {
-            _logger?.LogInformation($"Attaching to open project: {projectName}");
-
-            if (string.IsNullOrWhiteSpace(projectName)) return false;
-            projectName = projectName.Trim();
-
-            // Connect 之后 TIA 的 LocalSessions / Projects 是异步填充的，
-            // 这里轮询最多 15s，避免 Connect+Attach 并行或刚启动时刷出 false。
-            var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
-            while (true)
-            {
-                try
-                {
-                    if (_portal != null && TryAttachProjectInPortal(_portal, projectName))
-                    {
-                        RememberExpectedProject();
-                        return true;
-                    }
-
-                    foreach (var proc in TiaPortal.GetProcesses())
-                    {
-                        try
-                        {
-                            var candidate = proc.Attach();
-                            if (candidate == null) continue;
-                            if (TryAttachProjectInPortal(candidate, projectName))
-                            {
-                                if (_portal != null && !ReferenceEquals(_portal, candidate))
-                                {
-                                    try { _portal.Dispose(); } catch { }
-                                }
-
-                                _portal = candidate; RememberBoundProcess(proc.Id);
-                                RememberExpectedProject();
-                                return true;
-                            }
-
-                            if (!ReferenceEquals(_portal, candidate))
-                            {
-                                try { candidate.Dispose(); } catch { }
-                            }
-                        }
-                        catch { }
-                    }
-                }
-                catch { }
-
-                if (DateTime.UtcNow >= deadline) break;
-                System.Threading.Thread.Sleep(500);
-            }
-
-            return false;
-        }
-
-        private bool TryAttachProjectInPortal(TiaPortal portal, string projectName)
-        {
-            try
-            {
-                foreach (var s in portal.LocalSessions)
-                {
-                    try
-                    {
-                        var p = s.Project;
-                        if (p != null && string.Equals(p.Name, projectName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            _session = s;
-                            _project = p;
-                            InvalidateHmiSoftwareCache();
-                            ResetHmiReadHealth();
-                            return true;
-                        }
-                    }
-                    catch { }
-                }
-
-                foreach (var p in portal.Projects)
-                {
-                    try
-                    {
-                        if (p != null && string.Equals(p.Name, projectName, StringComparison.OrdinalIgnoreCase))
-                        {
-                            _session = null;
-                            _project = p;
-                            InvalidateHmiSoftwareCache();
-                            ResetHmiReadHealth();
-                            return true;
-                        }
-                    }
-                    catch { }
-                }
-            }
-            catch { }
-
-            return false;
+            if (string.IsNullOrWhiteSpace(projectName)) throw new ArgumentException("projectName is required.");
+            if (_project != null && string.Equals(_binding?.ProjectName, projectName.Trim(), StringComparison.Ordinal))
+            { VerifyBinding("AttachToOpenProject"); return true; }
+            return ConnectPortal(projectName, false, null);
         }
 
         #endregion
@@ -719,6 +392,7 @@ namespace TiaMcpServer.Siemens
         private bool OpenProjectCore(string projectPath, bool closeForeignProject, UmacDelegate? umacDelegate)
         {
 
+            EnsureBoundProjectUnchanged("Open/create project");
             var foreign = ForeignOpenProjectName();
             if (foreign != null && !closeForeignProject)
             {
@@ -740,7 +414,7 @@ namespace TiaMcpServer.Siemens
             if (_project != null)
             {
                 (_project as Project)?.Close();
-                _project = null;
+                _project = null; _binding = null;
                 _projectOpenedByUs = false;
             }
 
@@ -841,6 +515,7 @@ namespace TiaMcpServer.Siemens
 
         public bool CreateProject(string directoryPath, string projectName, bool closeForeignProject = false)
         {
+            EnsureBoundProjectUnchanged("Open/create project");
             var foreign = ForeignOpenProjectName();
             if (foreign != null && !closeForeignProject)
             {
@@ -859,7 +534,7 @@ namespace TiaMcpServer.Siemens
                 if (_project != null)
                 {
                     (_project as Project)?.Close();
-                    _project = null;
+                    _project = null; _binding = null;
                     _projectOpenedByUs = false;
                 }
 
@@ -940,6 +615,7 @@ namespace TiaMcpServer.Siemens
             var di = new DirectoryInfo(path);
 
             (_project as Project)?.SaveAs(di);
+            CaptureBinding();
 
             return true;
         }
@@ -957,6 +633,7 @@ namespace TiaMcpServer.Siemens
             _project = null;
             _projectOpenedByUs = false;
             _expectedProjectName = null;
+            _binding = null;
 
             return true;
         }
@@ -998,7 +675,7 @@ namespace TiaMcpServer.Siemens
 
             if (_session != null)
             {
-                _project = null;
+                _project = null; _binding = null;
                 _projectOpenedByUs = false;
                 _session?.Close();
                 _session = null;
@@ -1018,6 +695,7 @@ namespace TiaMcpServer.Siemens
                     {
                         // Correctly cast MultiuserProject to Project  
                         _project = _session.Project;
+                        CaptureBinding();
                         return _project != null;
                     }
                 }
@@ -1028,6 +706,7 @@ namespace TiaMcpServer.Siemens
                     {
                         // Correctly cast MultiuserProject to Project
                         _project = _session.Project;
+                        CaptureBinding();
                         return _project != null;
                     }
                 }
@@ -1045,6 +724,7 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation("Saving session...");
 
+            EnsureBoundProjectUnchanged("Session operation");
             if (IsSessionNull())
             {
                 return false;
@@ -1060,6 +740,7 @@ namespace TiaMcpServer.Siemens
         {
             _logger?.LogInformation("Closing session...");
 
+            EnsureBoundProjectUnchanged("Session operation");
             if (IsSessionNull())
             {
                 return false;
@@ -1069,6 +750,7 @@ namespace TiaMcpServer.Siemens
             _projectOpenedByUs = false;
             _session?.Close();
             _session = null;
+            _binding = null; _expectedProjectName = null;
 
             return true;
         }

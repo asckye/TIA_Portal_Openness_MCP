@@ -689,6 +689,7 @@ namespace TiaMcpServer.ModelContextProtocol
             RecordBridgeEvent(id, method.Name, "BEFORE");
             try
             {
+                ValidateRuntimeBinding(method);
                 object? result = method.Invoke(null, call);
                 if (result is Task task)
                 {
@@ -703,6 +704,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         static partial void RecordBridgeEvent(string id, string name, string phase);
+        static partial void ValidateRuntimeBinding(MethodInfo method);
 
         private static readonly Regex EnumRefusal = new Regex(@"(?<name>[A-Za-z][A-Za-z0-9]*) must be (?:one of:?\s*)?(?<values>[A-Za-z0-9_]+(?:/[A-Za-z0-9_]+)+)", RegexOptions.Compiled);
 

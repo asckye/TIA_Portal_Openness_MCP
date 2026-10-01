@@ -53,6 +53,10 @@ $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
 $nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
 if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
+Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--self-test') 'native-mcp-safety.log'
+if ((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw) -notmatch 'COMPLETE: 8 native MCP safety checks passed') { throw 'Native MCP safety checks incomplete' }
+Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
+if ((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw) -notmatch 'COMPLETE: 6 crash evidence checks passed') { throw 'Crash evidence collector checks incomplete' }
 $checks=[ordered]@{}
 foreach($major in @(20,21)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
@@ -81,6 +85,8 @@ foreach($major in @(20,21)) {
     $payload | Copy-Item -Destination $runtime -Force
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
+    Run $harness @($exe,'process-leases-only') "process-leases-v$major.log"
+    if ((Get-Content (Join-Path $out "process-leases-v$major.log") -Raw) -notmatch 'COMPLETE: 2 process lease checks passed') { throw 'Cross-process lease checks incomplete' }
     Run $harness @($exe,'worker-supervisor-only') "worker-supervisor-v$major.log"
     $workerFaults=[regex]::Match((Get-Content (Join-Path $out "worker-supervisor-v$major.log") -Raw),'COMPLETE: (\d+) worker supervisor checks passed; no TIA connection attempted')
     if(!$workerFaults.Success -or [int]$workerFaults.Groups[1].Value -lt 25){throw 'Worker supervisor fault checks incomplete'}
@@ -92,7 +98,7 @@ foreach($major in @(20,21)) {
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){3119}else{2833}
+    $expectedEngineeringChecks=if($major -eq 21){3124}else{2838}
     if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
@@ -139,6 +145,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['nativeHarness']=[ordered]@{compiled=$true;safetyChecksPassed=[int]$nativeSafety.Groups[1].Value;supervisorChecksPassed=[int]$nativeSupervisor.Groups[1].Value;exeSha256=(Get-FileHash $nativeExe).Hash.ToLowerInvariant();supervisorSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py')).Hash.ToLowerInvariant();liveAcceptance='NOT RUN; explicit opt-in required'}
     $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['isolatedLocalStability']=$isolatedStability
+    $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=2;nativeMcpSafetyChecksPassed=8;crashEvidenceChecksPassed=6;nativeMcpExecuted=$false}
     $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$false;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}

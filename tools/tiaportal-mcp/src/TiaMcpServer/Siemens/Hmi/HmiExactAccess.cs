@@ -11,6 +11,9 @@ namespace TiaMcpServer.Siemens
 {
     internal static class HmiExactAccess
     {
+        private static string tokenGeneration = Guid.NewGuid().ToString("N");
+        // Both worker restart and explicit project rebinding invalidate old preview hashes.
+        internal static void InvalidateTokens() => tokenGeneration = Guid.NewGuid().ToString("N");
         internal static object? Get(object value, string name) => value.GetType().GetProperty(name)?.GetValue(value);
         internal static List<object> Items(object? value)
         {
@@ -115,7 +118,7 @@ namespace TiaMcpServer.Siemens
             if (content is JsonObject snapshot && snapshot["kind"]?.ToString() == "InspectionSnapshot")
                 snapshot.Remove("elapsedMs");
             using var sha = SHA256.Create();
-            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(scope+"\n"+content.ToJsonString()))).Replace("-", "").ToLowerInvariant();
+            return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(tokenGeneration+"\n"+scope+"\n"+content.ToJsonString()))).Replace("-", "").ToLowerInvariant();
         }
         internal static void Delete(object value)
         {

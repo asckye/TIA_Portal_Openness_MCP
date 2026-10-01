@@ -29,6 +29,7 @@ def sha(data):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--git', default='git')
+    parser.add_argument('--output-directory', type=Path, help='Optional new local output directory; existing archives/stages are never overwritten')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     subprocess.run([sys.executable, str(root / 'scripts/checks/Check-Repository.py')], check=True)
@@ -157,7 +158,7 @@ def main():
         'package': package, 'sourceCommit': commit,
         'files': {name: sha(data) for name, data in sorted(files.items())}
     }, ensure_ascii=False, indent=2).encode('utf-8')
-    out = root / 'bin-build/releases' / ('v' + release)
+    out = args.output_directory.resolve() if args.output_directory else root / 'bin-build/releases' / ('v' + release)
     out.mkdir(parents=True, exist_ok=True)
     stage, archive = out / package, out / (package + '.zip')
     require(not stage.exists() and not archive.exists(), 'Output already exists; inspect it before choosing to remove it')

@@ -322,6 +322,8 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length > 1 && args[1] == "lease-holder") return LeaseFixture(args);
+            if (args.Length > 1 && args[1] == "process-leases-only") { await ProcessLeaseTests(); return 0; }
             if(args.Length > 1 && args[1] == "worker-supervisor-only") { await WorkerSupervisorTests(); return 0; }
             if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only")) {
                 string api=Path.GetFullPath(args[2]);
@@ -332,6 +334,7 @@ internal static partial class Program
                 if(args[1] == "engineering-api-only") {
                     Action<bool,string> shapeCheck = (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); };
                     EngineeringApiShapeTests.Run(Server, shapeCheck);
+                    BindingAndTagShapeChecks.Run(Server, shapeCheck);
                     DeviceTransferShapeChecks.Run(Server, shapeCheck);
                     PlcBlockServicesShapeChecks.Run(Server, shapeCheck);
                     HardwareServicesShapeChecks.Run(Server, shapeCheck);

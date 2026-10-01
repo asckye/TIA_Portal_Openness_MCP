@@ -9,6 +9,20 @@ namespace TiaMcpServer.ModelContextProtocol
     public static partial class McpServer
     {
         static partial void RecordBridgeEvent(string id, string name, string phase) => InvocationJournal.Write(id, name, phase);
+        static partial void ValidateRuntimeBinding(System.Reflection.MethodInfo method)
+        {
+            // The bridge has already selected an attributed overload. Looking it up
+            // again by name is ambiguous for compatibility overloads (InvokeObject).
+            var description = method.GetCustomAttributes(typeof(System.ComponentModel.DescriptionAttribute), false);
+            ValidateRuntimeTool(method.Name, description.Length > 0 ? ((System.ComponentModel.DescriptionAttribute)description[0]).Description : "");
+        }
+        internal static void ValidateRuntimeTool(string name, string? description)
+        {
+            // Never create a Portal for an offline request; inspection stays available after a fault.
+            var portal = _services?.GetService(typeof(Siemens.Portal)) as Siemens.Portal ?? _portal;
+            if (portal != null && PreflightLogic.NeedsProject(ToolTaxonomy.OperationOf(name, description).Operation, name))
+                portal.VerifyBinding(name);
+        }
         internal static IList<McpServerTool> WrapWithSerializedCalls(IList<McpServerTool> tools)
         {
             var result = new List<McpServerTool>();
@@ -18,7 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
     }
     internal sealed class SerializedCallTool : McpServerTool
     {
-        // All transports in this server process share the gate. Separate servers must bind separate TIA processes.
+        // All transports share this gate; session leases coordinate separate MCP processes.
         private static readonly SemaphoreSlim Gate = new SemaphoreSlim(1, 1);
         private readonly McpServerTool _inner;
         public SerializedCallTool(McpServerTool inner) { _inner = inner; }
@@ -39,6 +53,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string id = InvocationJournal.Begin(ProtocolTool.Name, correlation);
             try
             {
+                McpServer.ValidateRuntimeTool(ProtocolTool.Name, ProtocolTool.Description);
                 var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
                 ExitFaultedWorker(id);
                 InvocationJournal.Write(id, ProtocolTool.Name, "RETURNED");

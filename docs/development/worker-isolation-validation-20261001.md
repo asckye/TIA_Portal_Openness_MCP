@@ -1,5 +1,7 @@
 # 工作进程隔离与本地验证（2026-10-01）
 
+历史记录：本页对应提交 `8ba01a6` 和当天首个封存包。后续修改及当前构建验证见[会话稳定性与 HMI 变量删除](session-stability-validation-20261001.md)；下文的数量、哈希及未完成项均是当时状态。
+
 3.1.0 本地候选，未推送、发布或部署。本轮仅本地测试，没有初始化 Openness、连接虚拟机或打开任何 TIA 工程。实现及使用方法见[隔离指南](../guides/openness-worker-isolation.md)，完整剩余项见[实施状态](openness-worker-isolation-plan.md)。
 
 ## 本轮实现

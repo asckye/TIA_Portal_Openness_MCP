@@ -50,7 +50,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Release.
 python scripts/build/Package-Release.py
 ```
 
-Git 不在 PATH 时加 `--git "Git可执行文件完整路径"`。打包器取 Git 里的全部文件加本机 `runtime/v20`、`runtime/v21`、`TiaMcpConfigurator.exe`（缺一个或被跟踪都拒绝），核对编译输入、依赖和版本，运行完整交付目录的严格检查，回读 ZIP 中的每个文件，生成 SHA256。任何校验失败均停止。已存在输出时不覆盖，须先检查已有产物。随后 `python scripts/checks/Verify-ReleaseAsset.py bin-build/releases/vX.Y.Z/<包名>.zip` 证明 ZIP 就是当前提交的树加清单里记录哈希的二进制。
+Git 不在 PATH 时加 `--git "Git可执行文件完整路径"`。打包器取 Git 里的全部文件加本机 `runtime/v20`、`runtime/v21`、`TiaMcpConfigurator.exe`（缺一个或被跟踪都拒绝），核对编译输入、依赖和版本，运行完整交付目录的严格检查，回读 ZIP 中的每个文件，生成 SHA256。任何校验失败均停止。已存在输出时不覆盖，须先检查已有产物。同日的本地候选可使用 `--output-directory <新的绝对目录>` 保留旧包；包内版本、日期与所有校验不变，此参数不发布任何内容。随后 `python scripts/checks/Verify-ReleaseAsset.py bin-build/releases/vX.Y.Z/<包名>.zip` 证明 ZIP 就是当前提交的树加清单里记录哈希的二进制。
 
 ## 上传与发布检查
 

@@ -38,6 +38,14 @@ namespace TiaMcpServer.ModelContextProtocol
                 return plan;
             }
         }
+        internal static string BindingState(JsonObject binding)
+        {
+            var identity = binding["identity"] as JsonObject ?? throw new InvalidOperationException("Exact project identity is unavailable.");
+            foreach (string key in new[] { "tiaMajorVersion", "processId", "processStartUtc", "projectPath", "projectName", "generation" })
+                if (identity[key] == null || string.IsNullOrWhiteSpace(identity[key]!.ToString()))
+                    throw new InvalidOperationException("Incomplete batch project identity: " + key);
+            return Stable(identity);
+        }
         internal static string Stable(JsonNode? value)
         {
             if (value is JsonObject obj)

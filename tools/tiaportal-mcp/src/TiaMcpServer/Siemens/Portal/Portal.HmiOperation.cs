@@ -11,11 +11,12 @@ namespace TiaMcpServer.Siemens
         private JsonObject? _hmiReadFault;
         // 2.7.40: OS process behind the bound TiaPortal (set by RememberBoundProcess in Portal.cs); pure .NET so the offline suite compiles it.
         private int? _boundProcessId;
+        private long _processStartTicks;
         public JsonObject GetPortalProcessHealth()
         {
             var row = new JsonObject { ["boundProcessId"] = _boundProcessId };
             if (_boundProcessId == null) { row["processAlive"] = null; row["note"] = "no TIA Portal process bound"; return row; }
-            try { using var process = System.Diagnostics.Process.GetProcessById(_boundProcessId.Value); row["processAlive"] = !process.HasExited; row["processName"] = process.ProcessName; }
+            try { using var process = System.Diagnostics.Process.GetProcessById(_boundProcessId.Value); row["processAlive"] = !process.HasExited && (_processStartTicks == 0 || process.StartTime.ToUniversalTime().Ticks == _processStartTicks); row["processName"] = process.ProcessName; }
             catch (ArgumentException) { row["processAlive"] = false; row["note"] = "TIA Portal process " + _boundProcessId + " is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject."; }
             catch (Exception ex) { row["processAlive"] = null; row["note"] = ex.GetBaseException().Message; }
             return row;

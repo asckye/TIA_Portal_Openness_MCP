@@ -132,6 +132,7 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== 经典 WinCC 文件夹纯逻辑：画面树、弹出 / 模板 / 滑入 / 总览 / 全局元素对象请求、五类文件夹请求、多语言图形请求 ==");
             ClassicHmiFoldersTests.Run(Check);
+            BindingAndTagDeletionTests.Run(Check);
 
             Console.WriteLine("== SiVArc 纯逻辑：规则族、文件夹 / 表请求、规则 / 组请求（属性、引用、设备列）、块定义请求、表达式 / 布局请求、生成选项 ==");
             SivarcTests.Run(Check);
