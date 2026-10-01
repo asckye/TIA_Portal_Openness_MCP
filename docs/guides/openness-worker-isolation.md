@@ -1,5 +1,7 @@
 # Opt-in Openness worker isolation
 
+Release builds also include [per-call Openness diagnostics](../development/native-call-diagnostics.md), independently of whether worker isolation is enabled. See the [latest local validation record](../development/native-diagnostics-validation-20261001.md) for its tested scope.
+
 The local 3.1.0 candidate can run its Openness tools in a supervised child process. This mode is **off by default**. Local protocol and fault tests do not establish stability with a running TIA Portal installation.
 
 Add these arguments to the existing MCP server command (HTTP or STDIO):

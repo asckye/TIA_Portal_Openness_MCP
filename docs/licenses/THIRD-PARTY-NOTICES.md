@@ -28,6 +28,10 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 `Siemens.Collaboration.Net.TiaPortal.Packages.Openness` 仅在编译时使用，不随包分发。2.7.18 引入 Webserver API 后，`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.DependencyInjection.Abstractions`、`System.Diagnostics.DiagnosticSource` 由传递依赖提升到 10.0.x 正式版（仍为 MIT），其余 Microsoft.Extensions.* 保持 10.0.0-preview.4；以 `manifest/release-build.json` 的逐文件记录为准。
 
+## 仅构建期的诊断覆盖工具
+
+`tools/native-call-weaver` 使用 [Mono.Cecil 0.11.6](https://www.nuget.org/packages/Mono.Cecil/0.11.6)，作者 Jb Evain，MIT 许可证（[官方源码许可证](https://github.com/jbevain/cecil/blob/0.11.6/LICENSE.txt)）。通过 NuGet 还原，仅处理本项目的 Release 中间程序集；`Mono.Cecil.dll` 和构建工具二进制不随引擎运行目录分发，不修改 Siemens PublicAPI。
+
 ## 配置器（`TiaMcpConfigurator.exe`）
 
 仅依赖 .NET Framework 4.8 自带的 WPF 与基础类库，无第三方程序集。

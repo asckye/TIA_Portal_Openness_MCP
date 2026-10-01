@@ -1,9 +1,9 @@
 {
     "package":  "TIA_MCP_Delivery_v3.1.0_20261001",
-    "generatedAt":  "2026-10-01T16:22:01.7093507+00:00",
+    "generatedAt":  "2026-10-01T17:26:42.6309211+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.1.0.0",
-    "exeSha256":  "9fbcdc243b5d85968d0f9264b7737f80b8da43a9dd6e005ee6ec335698aa8cad",
+    "exeSha256":  "7cfbdd44e87e42a4cbf6d16edc8dcf60f8219012e125515be0443ec2969ec592",
     "toolCount":  478,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
@@ -1289,7 +1289,7 @@
                       "parameters":  [
                                          "take"
                                      ],
-                      "description":  "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW invocation journal entries from this MCP\u0027s configured diagnostics directory. Native breadcrumbs currently instrument cross references, consistency reads, document imports/readback and V20 option tools. No native calls, no arbitrary file access, no tool arguments or credentials in the journal. An unmatched BEFORE helps locate interruption but does not prove crash causality. take 1..500.",
+                      "description":  "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP\u0027s configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500.",
                       "example":  null
                   },
                   {

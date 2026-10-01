@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup Condition="'$(Configuration)' == 'Release' and '$(DesignTimeBuild)' != 'true'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\..\..\native-call-weaver\NativeCallWeaver.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;TargetFramework;RuntimeIdentifier" />
+    <CustomAdditionalCompileInputs Include="$(MSBuildThisFileDirectory)..\..\..\native-call-weaver\bin\$(Configuration)\net8.0\NativeCallWeaver.dll" />
+  </ItemGroup>
+  <!-- Instrument our own intermediate EXE before any copy/package/test. Never patch PublicAPI.
+       Re-running on an unchanged EXE verifies its inventory instead of double-instrumenting. -->
+  <Target Name="InstrumentNativeCallBoundaries" AfterTargets="CoreCompile" Condition="'$(Configuration)' == 'Release' and '$(DesignTimeBuild)' != 'true'">
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="dotnet &quot;$(MSBuildThisFileDirectory)..\..\..\native-call-weaver\bin\$(Configuration)\net8.0\NativeCallWeaver.dll&quot; weave &quot;@(IntermediateAssembly)&quot; &quot;$(IntermediateOutputPath)native-call-coverage.json&quot;" />
+  </Target>
+</Project>

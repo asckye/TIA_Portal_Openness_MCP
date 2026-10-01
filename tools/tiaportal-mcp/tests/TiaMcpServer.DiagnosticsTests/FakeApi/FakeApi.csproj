@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net48</TargetFramework><LangVersion>latest</LangVersion><AssemblyName>Siemens.Engineering.DiagnosticFixture</AssemblyName></PropertyGroup>
+</Project>

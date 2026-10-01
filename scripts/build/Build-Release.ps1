@@ -48,6 +48,18 @@ $harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTest
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
 $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe'
+$weaverProject=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
+Restore $weaverProject @()
+Run $Dotnet @('build',$weaverProject,'-c','Release','--no-restore','-v:q') 'native-weaver-build.log'
+$weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll'
+$diagnosticProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj'
+Restore $diagnosticProject @()
+Run $Dotnet @('build',$diagnosticProject,'-c','Release','--no-restore','-v:q') 'native-diagnostics-build.log'
+$diagnosticFixture=Join-Path (Split-Path $diagnosticProject) 'bin/Release/net48/DiagnosticsTests.exe'
+$diagnosticOut=Join-Path $out ('native-diagnostics-'+[Guid]::NewGuid().ToString('N'))
+Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py'),'--fixture',$diagnosticFixture,'--weaver',$weaver,'--output',$diagnosticOut) 'native-diagnostics-tests.log'
+$diagnosticTests=Get-Content (Join-Path $diagnosticOut 'result.json') -Raw | ConvertFrom-Json
+if($diagnosticTests.behaviorChecks -lt 36 -or $diagnosticTests.rejectionChecks -ne 5 -or $diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate incomplete'}
 # Compile the separate opt-in native harness, but execute ONLY its offline safety
 # checks here. Live TIA creation belongs to a dedicated, explicitly enabled run.
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
@@ -85,6 +97,13 @@ foreach($major in @(20,21)) {
     $payload | Copy-Item -Destination $runtime -Force
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
+    $coveragePath=Join-Path $out "native-call-coverage-v$major.json"
+    Run $Dotnet @($weaver,'verify',$exe,$coveragePath) "native-coverage-v$major.log"
+    $coverage=Get-Content $coveragePath -Raw | ConvertFrom-Json
+    Run $harness @($exe,'native-diagnostics-only',$api) "native-jit-v$major.log"
+    $nativeJit=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) native diagnostic wrappers JIT prepared; (\d+) open generic wrappers')
+    if(!$nativeJit.Success -or ([int]$nativeJit.Groups[1].Value+[int]$nativeJit.Groups[2].Value) -ne $coverage.count){throw 'Diagnostic wrapper JIT/inventory mismatch'}
+    if((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw) -notmatch 'COMPLETE: 3 native journal reader checks passed'){throw 'Native journal reader checks incomplete'}
     Run $harness @($exe,'process-leases-only') "process-leases-v$major.log"
     if ((Get-Content (Join-Path $out "process-leases-v$major.log") -Raw) -notmatch 'COMPLETE: 2 process lease checks passed') { throw 'Cross-process lease checks incomplete' }
     Run $harness @($exe,'worker-supervisor-only') "worker-supervisor-v$major.log"
@@ -146,6 +165,9 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['isolatedLocalStability']=$isolatedStability
     $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=2;nativeMcpSafetyChecksPassed=8;crashEvidenceChecksPassed=6;nativeMcpExecuted=$false}
+    $categories=[ordered]@{}
+    $coverage.sites | Group-Object category | ForEach-Object {$categories[$_.Name]=$_.Count}
+    $checks["V$major"]['nativeDiagnostics']=[ordered]@{status='passed';sites=$coverage.count;categories=$categories;uncoveredSupportedBoundaries=0;coverageSha256=(Get-FileHash $coveragePath).Hash.ToLowerInvariant();instrumenterSha256=$coverage.instrumenterSha256;jitPrepared=[int]$nativeJit.Groups[1].Value;openGenericWrappers=[int]$nativeJit.Groups[2].Value;fixture=$diagnosticTests;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py')).Hash.ToLowerInvariant();liveTiaExecuted=$false;scope='Engine-owned Openness call sites; not SDK/server internals or a native stability claim'}
     $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$false;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
@@ -195,7 +217,7 @@ $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime') -File -Recurse | Where
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.
-$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
+$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
     $text=[IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n")
     $sha=[Security.Cryptography.SHA256]::Create()
     try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}

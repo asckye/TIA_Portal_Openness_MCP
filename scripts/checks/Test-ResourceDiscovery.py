@@ -21,7 +21,7 @@ def require(condition, message):
 
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None, isolate=False):
+           *, env_overrides=None, process_observer=None, isolate=False, evidence_directory=None):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -123,6 +123,8 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             process.wait(timeout=5)
         for reader in readers:
             reader.join(timeout=5)
+        if evidence_directory is not None:
+            Path(evidence_directory, 'host-stderr.log').write_text(''.join(errors), encoding='utf-8')
         process.stdout.close()
         process.stderr.close()
 

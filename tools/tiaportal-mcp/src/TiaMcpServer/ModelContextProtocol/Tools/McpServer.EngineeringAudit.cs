@@ -55,14 +55,16 @@ namespace TiaMcpServer.ModelContextProtocol
                     "https://docs.tia.siemens.cloud/r/en-us/v21.0/tia-portal-hotfixes-readme/improvements-in-update-2-hotfix-1/deletion-of-invalid-networks-during-compilation") } };
         }
 
-        [McpServerTool(Name = "ReadNativeInvocationLog"), Description("[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW invocation journal entries from this MCP's configured diagnostics directory. Native breadcrumbs currently instrument cross references, consistency reads, document imports/readback and V20 option tools. No native calls, no arbitrary file access, no tool arguments or credentials in the journal. An unmatched BEFORE helps locate interruption but does not prove crash causality. take 1..500.")]
+        [McpServerTool(Name = "ReadNativeInvocationLog"), Description("[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500.")]
         public static ResponseMessage ReadNativeInvocationLog([Description("Number of recent entries, 1..500.")] int take = 100)
         {
             if (take < 1 || take > 500) throw new ArgumentException("take must be 1..500.");
             var root = Environment.GetEnvironmentVariable("TIA_MCP_DIAGNOSTICS_DIRECTORY");
             if (string.IsNullOrWhiteSpace(root)) root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TiaMcp", "diagnostics");
             if (!Path.IsPathRooted(root)) throw new ArgumentException("Diagnostics directory must be absolute.");
-            var files = Directory.Exists(root) ? new DirectoryInfo(root).GetFiles("calls-*.jsonl").OrderByDescending(f => f.LastWriteTimeUtc).Take(3).Reverse().ToArray() : Array.Empty<FileInfo>();
+            var files = Directory.Exists(root) ? new DirectoryInfo(root).GetFiles("calls-*.jsonl*")
+                .Where(f => f.Name.EndsWith(".jsonl", StringComparison.Ordinal) || f.Name.EndsWith(".jsonl.previous", StringComparison.Ordinal))
+                .OrderByDescending(f => f.LastWriteTimeUtc).Take(6).Reverse().ToArray() : Array.Empty<FileInfo>();
             var queue = new Queue<JsonNode>(); int malformed = 0;
             foreach (var file in files)
                 using (var stream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))

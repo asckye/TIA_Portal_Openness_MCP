@@ -4,7 +4,7 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-01 09:22:02
+- 生成时间：2026-10-01 10:26:43
 - 引擎文件版本：3.1.0.0
 - 工具数量：478
 
@@ -92,7 +92,7 @@
 | `RunOnlineMonitoringSafetySelfTest` | L0 | EXECUTE* | Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. |
 | `ValidateAutomationContext` | L1 | READ* | Preflight current project for automation: devices, software, expected PLC/HMI paths, and project tree. |
 | `InspectSimaticSdCompatibility` | L2 | READ | Offline SIMATIC SD format/patch preflight of one .s7dcl on the server (maximum 20 MiB). Reports V20 Update 4 language requirements, textual-interface data-loss warning and non-lossless format limits. installedUpdate=-1 means unknown; a supplied value is a caller assertion, never derived from SDK versions. Does not parse/compile or modify a project; not a syntax validator. |
-| `ReadNativeInvocationLog` | L2 | READ | Read recent BEFORE/RETURNED/THREW invocation journal entries from this MCP's configured diagnostics directory. Native breadcrumbs currently instrument cross references, consistency reads, document imports/readback and V20 option tools. No native calls, no arbitrary file access, no tool arguments or credentials in the journal. An unmatched BEFORE helps locate interruption but does not prove crash causality. take 1..500. |
+| `ReadNativeInvocationLog` | L2 | READ | Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP's configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500. |
 | `ReadOpennessCompatibility` | L2 | READ | Read this server's loaded Siemens.Engineering assembly file versions and compiled engine capabilities without connecting to TIA. SDK file versions do not establish installed TIA Update/Hotfix: installedPatch remains unknown. Includes links to relevant Siemens V20 SD and V21 stability fixes, native-cross-reference policy and unsupported faceplate-type authoring boundary. |
 | `RunHmiActionScriptRecipeSafetySelfTest` | L2 | EXECUTE* | Offline-only helper: prove deterministic HMI button action scripts are allowed only for safe set/reset/toggle bit recipes, while high-risk writes and unverified navigation/popup recipes are blocked. |
 

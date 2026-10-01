@@ -80,12 +80,18 @@ def main():
     require(runtime_names == {r['path'] for r in metadata['runtimeFiles']}, 'Runtime file inventory changed after validation')
     for row in metadata['runtimeFiles']:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml')}
+    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml')}
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Source changed after validation: {row['path']}")
     require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
+    for major in ('V20', 'V21'):
+        proof = metadata['validation']['runtimes'][major].get('nativeDiagnostics', {})
+        require(proof.get('status') == 'passed' and proof.get('uncoveredSupportedBoundaries') == 0 and proof.get('sites', 0) > 1000,
+                f'{major}: missing native diagnostic coverage validation')
+        require(proof['jitPrepared'] + proof['openGenericWrappers'] == proof['sites'], f'{major}: wrapper inventory/JIT mismatch')
+        require(proof['scriptSha256'] == sha(files['scripts/checks/Test-NativeDiagnostics.py']), f'{major}: diagnostic test driver changed after validation')
     extended = json.loads(files['manifest/local-stability-extended.json'].decode('utf-8-sig')) if 'manifest/local-stability-extended.json' in files else None
     if extended is not None:
         require(extended['release'] == release and extended['status'] == 'passed', 'Extended stability record does not match this release')

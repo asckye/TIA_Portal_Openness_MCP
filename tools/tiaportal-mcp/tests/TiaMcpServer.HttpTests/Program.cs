@@ -322,6 +322,7 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if (args.Length >= 3 && args[1] == "native-diagnostics-only") { NativeDiagnosticsJit(args[2]); return 0; }
             if (args.Length > 1 && args[1] == "lease-holder") return LeaseFixture(args);
             if (args.Length > 1 && args[1] == "process-leases-only") { await ProcessLeaseTests(); return 0; }
             if(args.Length > 1 && args[1] == "worker-supervisor-only") { await WorkerSupervisorTests(); return 0; }

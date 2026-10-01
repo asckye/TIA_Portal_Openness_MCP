@@ -131,6 +131,7 @@ def run_profile(args, transport, profile, run_dir):
     started = time.monotonic()
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
             args.host_harness, args.public_api, process_observer=owned.append, isolate=args.isolate_openness,
+            evidence_directory=run_dir,
             env_overrides={'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics)}) as (rpc, http, logs):
         hello = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},
@@ -159,6 +160,8 @@ def run_profile(args, transport, profile, run_dir):
             elif expectation == 'bridge_error':
                 require(meta.get('bridgeSuccess') is False and meta.get('success') is False, label + ': bridge failure masked')
             elif expectation == 'bridge_success':
+                if meta.get('bridgeSuccess') is not True or meta.get('operationSuccess') is not True:
+                    (run_dir / 'failed-response.json').write_text(json.dumps({'case': label, 'requestId': request_id, 'reply': reply}, ensure_ascii=False, indent=2), encoding='utf-8')
                 require(meta.get('bridgeSuccess') is True and meta.get('operationSuccess') is True, label + ': bridge failed')
                 require(bridge_document(value)['meta']['engineMajor'] == args.major, 'Wrong bridge engine version')
             elif expectation == 'xref':

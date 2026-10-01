@@ -83,7 +83,7 @@ namespace TiaMcpServer.Siemens
             // A timeout cannot cancel Attach. The MTA worker owns the lease until it
             // returns and detaches. A dead worker leaves ACTIVE for this TIA identity.
             TiaPortal? attached = TimedAttachment.Run(() => {
-                try { return InvocationJournal.Native("TiaPortal.Attach", process.Attach); }
+                try { return InvocationJournal.Native("TiaPortal.Attach", () => process.Attach()); }
                 catch (Exception ex) { if (IsSecurityRefusal(ex)) lease.ReleaseCleanly(); else lease.Dispose(); throw; }
             }, late => { try { late.Dispose(); lease.ReleaseCleanly(); } finally { lease.Dispose(); } }, ConnectLogic.AttachTimeoutMsPerProcess);
             if (attached == null) throw new PortalException(PortalErrorCode.InvalidState, "Attach timed out; no second instance will be probed or started. Inspect diagnostics before retrying.");

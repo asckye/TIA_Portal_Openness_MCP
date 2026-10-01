@@ -141,13 +141,13 @@ namespace TiaMcpServer.Siemens
                 {
                     ScreenOverview overview = hmi.ScreenOverview ?? throw new NotSupportedException("ScreenOverview unavailable on this HMI device.");
                     if (action == "read") { meta["object"] = new JsonObject { ["screenClass"] = overview.GetType().Name }; return "Screen overview present; export it for its content."; }
-                    return action == "export" ? Export(overview.Export, "Screen overview") : Import((f, o) => { hmi.ImportScreenOverview(f, o); return null; }, "Screen overview");
+                    return action == "export" ? Export((f, o) => overview.Export(f, o), "Screen overview") : Import((f, o) => { hmi.ImportScreenOverview(f, o); return null; }, "Screen overview");
                 }
                 if (objectKind == "globalElements")
                 {
                     ScreenGlobalElements elements = hmi.ScreenGlobalElements ?? throw new NotSupportedException("ScreenGlobalElements unavailable on this HMI device.");
                     if (action == "read") { meta["object"] = new JsonObject { ["screenClass"] = elements.GetType().Name }; return "Global screen elements present; export them for their content."; }
-                    return action == "export" ? Export(elements.Export, "Global screen elements") : Import((f, o) => { hmi.ImportScreenGlobalElements(f, o); return null; }, "Global screen elements");
+                    return action == "export" ? Export((f, o) => elements.Export(f, o), "Global screen elements") : Import((f, o) => { hmi.ImportScreenGlobalElements(f, o); return null; }, "Global screen elements");
                 }
                 if (objectKind == "slidein")
                 {
@@ -158,7 +158,7 @@ namespace TiaMcpServer.Siemens
                     ScreenSlidein slidein = slideins.Find(type) ?? throw new PortalException(PortalErrorCode.NotFound, "Slide-in screen not found for SlideinType " + objectPath + " (present: " + string.Join(", ", EngineeringGroupOperations.Items(slideins).Cast<ScreenSlidein>().Select(s => s.SlideinType.ToString())) + ").");
                     meta["object"] = SlideinRow(slidein);
                     if (action == "read") return "Slide-in screen read; export it for its content.";
-                    return Export(slidein.Export, "Slide-in screen " + objectPath);
+                    return Export((f, o) => slidein.Export(f, o), "Slide-in screen " + objectPath);
                 }
                 var parts = EngineeringGroupOperations.Parts(objectPath, true);
                 string folderPath = action == "import" ? objectPath : string.Join("/", parts.Take(Math.Max(0, parts.Length - 1)));
@@ -171,7 +171,7 @@ namespace TiaMcpServer.Siemens
                     ScreenPopup popup = popups.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Pop-up screen not found: " + objectPath);
                     meta["object"] = new JsonObject { ["name"] = popup.Name, ["screenClass"] = popup.GetType().Name };
                     if (action == "read") return "Pop-up screen read; export it for its content.";
-                    if (action == "export") return Export(popup.Export, "Pop-up screen " + name);
+                    if (action == "export") return Export((f, o) => popup.Export(f, o), "Pop-up screen " + name);
                     if (!writing) return "Pop-up screen deletion preview; no changes.";
                     meta["mayHaveChanged"] = true; popup.Delete(); meta["apiCallSuccess"] = true;
                     if (ExactPopupFolder(hmi, folderPath).ScreenPopups.Find(name) != null) throw new InvalidOperationException("Pop-up screen remains after Delete.");
@@ -184,7 +184,7 @@ namespace TiaMcpServer.Siemens
                 ScreenTemplate template = templates.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Screen template not found: " + objectPath);
                 meta["object"] = new JsonObject { ["name"] = template.Name, ["screenClass"] = template.GetType().Name };
                 if (action == "read") return "Screen template read; export it for its content.";
-                if (action == "export") return Export(template.Export, "Screen template " + name);
+                if (action == "export") return Export((f, o) => template.Export(f, o), "Screen template " + name);
                 if (!writing) return "Screen template deletion preview; no changes.";
                 meta["mayHaveChanged"] = true; template.Delete(); meta["apiCallSuccess"] = true;
                 if (ExactTemplateFolder(hmi, folderPath).ScreenTemplates.Find(name) != null) throw new InvalidOperationException("Screen template remains after Delete.");
