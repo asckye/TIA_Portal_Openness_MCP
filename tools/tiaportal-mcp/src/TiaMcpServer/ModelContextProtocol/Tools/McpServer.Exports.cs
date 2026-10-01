@@ -89,7 +89,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "in half. Concatenate every page first, THEN parse; never parse a single page on its own. "
             + "Handles live for 24 hours and only inside the current engine session.")]
         public static ResponseMessage GetExport(
-            [Description("exportId: the handle from a truncated response, e.g. 'ex_20260902103000_0001'")] string exportId,
+            [Description("exportId: copy the opaque handle exactly from the truncated response; never construct it or reuse it after a worker/server restart.")] string exportId,
             [Description("offset: character index to start at; use the previous page's nextOffset. 0 = beginning")] int offset = 0,
             [Description("length: how many characters to return. 0 or omitted = this session's response limit.")] int length = 0)
         {

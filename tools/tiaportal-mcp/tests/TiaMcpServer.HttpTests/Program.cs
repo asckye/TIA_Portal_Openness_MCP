@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
-internal static class Program
+internal static partial class Program
 {
     private static Assembly Server = null!;
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
@@ -315,12 +315,14 @@ internal static class Program
     private static async Task<int> Main(string[] args)
     {
         try {
+            if(args.Length > 0 && args[0] == "worker-fixture") return RunWorkerFixture(args);
             string exe=Path.GetFullPath(args[0]); string dir=Path.GetDirectoryName(exe)!;
             AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
                 string dependency=Path.Combine(dir,new AssemblyName(e.Name).Name+".dll");
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length > 1 && args[1] == "worker-supervisor-only") { await WorkerSupervisorTests(); return 0; }
             if(args.Length >= 3 && (args[1] == "software-lookup-only" || args[1] == "engineering-api-only")) {
                 string api=Path.GetFullPath(args[2]);
                 AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
@@ -404,7 +406,7 @@ internal static class Program
                 Console.WriteLine("COMPLETE: " + Passed + " native export remoting checks passed");
                 return 0;
             }
-            if(args.Length >= 3 && args[1] == "protocol-host") {
+            if(args.Length >= 3 && (args[1] == "protocol-host" || args[1] == "isolated-worker-host")) {
                 // Load the EXE's real host methods in a test process. This avoids
                 // changing the machine's Openness group or adding a production
                 // bypass; the protocol test never calls Connect or opens a project.
@@ -422,9 +424,18 @@ internal static class Program
                 var requestedMajor = cli.GetProperty("TiaMajorVersion")!.GetValue(options);
                 if (requestedMajor == null) throw new ArgumentException("protocol-host requires --tia-major-version");
                 Server.GetType("TiaMcpServer.Siemens.Engineering",true)!.GetProperty("TiaMajorVersion")!.SetValue(null, requestedMajor);
+                Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("SetProfileOverride",All)!.Invoke(null,new[]{cli.GetProperty("Profile")!.GetValue(options)});
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;
+                var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;
+                if(args[1] == "isolated-worker-host") {
+                    isolated.GetMethod("BeginChild",All)!.Invoke(null,new[]{options});
+                } else if((bool)cli.GetProperty("IsolateOpenness")!.GetValue(options)!) {
+                    Func<System.Diagnostics.ProcessStartInfo> start=()=>TestWorkerStart(exe,api,(int)requestedMajor,options!);
+                    isolated.GetMethod("Configure",All)!.Invoke(null,new object[]{options!,start});
+                }
                 await (Task)program.GetMethod(transport=="http"?"RunHttpHost":"RunStdioHost",All)!.Invoke(null,new[]{options})!;
+                isolated.GetMethod("Stop",All)!.Invoke(null,null);
                 return 0;
             }
             if(args.Skip(1).Contains("hmi-only")) {

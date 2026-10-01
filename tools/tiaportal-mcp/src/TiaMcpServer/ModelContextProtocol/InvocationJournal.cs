@@ -13,9 +13,10 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly object Sync = new object();
         private static readonly string ProcessKey = Process.GetCurrentProcess().Id + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
         private static readonly AsyncLocal<string?> Current = new AsyncLocal<string?>();
-        internal static string Begin(string name)
+        internal static string Begin(string name, string? correlation = null)
         {
-            string id = Guid.NewGuid().ToString("N"); Current.Value = id; Write(id, name, "BEFORE"); return id;
+            string id = Guid.TryParseExact(correlation, "N", out var parsed) ? parsed.ToString("N") : Guid.NewGuid().ToString("N");
+            Current.Value = id; Write(id, name, "BEFORE"); return id;
         }
         internal static T Native<T>(string stage, Func<T> call)
         {

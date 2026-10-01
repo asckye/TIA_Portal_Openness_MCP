@@ -57,6 +57,12 @@ namespace TiaMcpServer.Siemens
         {
             if (_project == null)
             {
+                // Isolated workers must not recover a lost session by silently attaching elsewhere.
+                if (Isolation.IsolatedWorkerHost.IsChild)
+                {
+                    _logger?.LogWarning("No bound project in isolated worker; explicitly connect/open the intended project.");
+                    return true;
+                }
                 // Self-heal for less-capable AI drivers that call a tool before Connect/Open.
                 // Deliberately conservative (this is a 99-call-site predicate):
                 //   - connected but unbound  -> rebind a project already open in the TIA UI;

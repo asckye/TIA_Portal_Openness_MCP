@@ -26,11 +26,14 @@ namespace TiaMcpServer
             = new Dictionary<string, TaskCompletionSource<string>>(StringComparer.Ordinal);
         private Exception? _terminalError;
         private long _nextId;
+        private readonly bool serializeRequests;
 
         internal Task Completion { get; }
 
-        internal McpHttpResponseRouter(McpBlockingStream requests, McpBlockingStream responses)
+        internal McpHttpResponseRouter(McpBlockingStream requests, McpBlockingStream responses) : this(requests, responses, true) { }
+        internal McpHttpResponseRouter(McpBlockingStream requests, McpBlockingStream responses, bool serializeRequests)
         {
+            this.serializeRequests = serializeRequests;
             _requests = requests;
             _responses = responses;
             _writer = new StreamWriter(requests, new UTF8Encoding(false), 1024, leaveOpen: true)
@@ -51,7 +54,7 @@ namespace TiaMcpServer
             var elapsed = Stopwatch.StartNew();
             try
             {
-                if (!await _requestGate.WaitAsync(timeout, _ended.Token).ConfigureAwait(false))
+                if (serializeRequests && !await _requestGate.WaitAsync(timeout, _ended.Token).ConfigureAwait(false))
                     throw new TimeoutException("MCP request expired while queued.");
             }
             catch (OperationCanceledException)
@@ -112,7 +115,7 @@ namespace TiaMcpServer
                 {
                     lock (_stateLock) _pending.Remove(wireId);
                 }
-                _requestGate.Release();
+                if (serializeRequests) _requestGate.Release();
             }
         }
 

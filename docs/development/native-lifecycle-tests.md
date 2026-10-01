@@ -13,7 +13,7 @@
 - [监督器](../../scripts/checks/Test-NativeLifecycle.py) 给整个测试进程设置期限，捕捉异常退出、超时及结果不完整。只终止它启动的测试程序，不结束 TIA 进程、不遍历用户进程、不自动重试操作。超时后原生结果未知，TIA 可能仍运行，需结合 OWNED_PORTAL 记录人工检查；构造 TIA 时卡住可能来不及记录 PID。
 - 只有进程正常退出、报告中的版本/轮次/7 项断言均正确、各阶段日志完全配对、所有轮次和清理均完成，监督器才报告 PASSED。
 
-这套程序测试原始 Openness 的最小生命周期，不经 MCP 工具分发，不能替代 474 个工具的原生验收。尚未覆盖 PLC/HMI 内容、编译、导入、原生并发争用、超时 Attach 晚到代理释放或生产 MCP 工作进程隔离。测试进程监督器也不等于生产 MCP 已具备原生进程隔离。
+这套程序测试原始 Openness 的最小生命周期，不经 MCP 工具分发，不能替代 476 个工具的原生验收。尚未覆盖 PLC/HMI 内容、编译、导入、原生并发争用、超时 Attach 晚到代理释放或生产 MCP 工作进程隔离。测试进程监督器也不等于生产 MCP 已具备原生进程隔离。
 
 ## 本地构建和默认行为
 
@@ -45,4 +45,4 @@ python scripts/checks/Test-NativeLifecycle.py `
 
 遵循项目固定版本的 Siemens [openness-testing](../../reference/siemens-openness/skills/openness-testing/SKILL.md)、[session-and-project](../../reference/siemens-openness/skills/session-and-project/SKILL.md)、[threading-and-concurrency](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md) 和 [crash-diagnosis](../../reference/siemens-openness/skills/crash-diagnosis/SKILL.md) 的适用流程。指南面向 V21+；V20 适配另外依据本地 V20 PublicAPI 编译核对，不宣称官方指南保证 V20 行为。
 
-生产隔离后续实施顺序见 [工作进程隔离设计](openness-worker-isolation-plan.md)。目前生产服务依然只有进程内串行门、MTA Attach、工具边界日志与部分原生阶段日志；没有实现完整隔离，也不能保证 TIA 不会崩溃。
+2026-10-01 已加入可选生产 MCP worker，见[使用说明](../guides/openness-worker-isolation.md)与[剩余设计关卡](openness-worker-isolation-plan.md)。本框架仍独立于 MCP 分发；两者的本地测试都不能证明 TIA 不会崩溃。

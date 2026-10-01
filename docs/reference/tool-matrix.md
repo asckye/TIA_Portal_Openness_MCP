@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-09-30 16:02:39
+- 生成时间：2026-10-01 08:21:56
 - 引擎文件版本：3.1.0.0
-- 工具数量：474
+- 工具数量：476
 
 ## 读法
 
@@ -15,8 +15,8 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 17 |
-| `READ` | 读取已打开工程，不改动 | 140 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 189 |
+| `READ` | 读取已打开工程，不改动 | 141 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 190 |
 | `FILE` | 导出/导入文件或生成离线产物 | 50 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 30 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
@@ -29,7 +29,7 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 45 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (7)、`Diagnostics` (9)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `session` | 会话与基础设施 / Session & infrastructure | 47 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (7)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
 | `project` | 工程与协作 / Project & collaboration | 64 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (10) |
 | `plc` | PLC 软件 / PLC software | 124 | `PLC-Software` (79)、`PLC-Builders` (11)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
@@ -37,7 +37,7 @@
 | `hmi` | HMI 人机界面 / HMI | 124 | `HMI` (30)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
 
-## session — 会话与基础设施 / Session & infrastructure（45）
+## session — 会话与基础设施 / Session & infrastructure（47）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -79,12 +79,14 @@
 | `ListPortalProcessProjects` | L1 | SESSION* | List running TIA Portal processes and the projects/sessions visible in each process. |
 | `ReadPortalInfo` | L2 | READ | Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project. |
 
-### [Diagnostics]（9）
+### [Diagnostics]（11）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `CheckForUpdate` | L0 | SESSION | Read-only update check: compares this engine's version with the latest GitHub release of the project and reports the delivery ZIP (name, size, download URL, .sha256 sidecar) plus the exact steps to update. The engine never replaces its own files: the update is scripts/operations/Update-Engine.ps1, run by the maintainer with every TiaMcpServer.exe stopped (it refuses while one runs; -Rollback restores the previous install). The TIA machine needs access to github.com; without it the tool reports the release page URL. Nothing touches TIA Portal. |
 | `Doctor` | L0 | SESSION* | One-call environment doctor for non-experts. Checks TIA install, Openness group membership, and connection/project state, and returns a plain-language diagnosis with the exact fix per problem. When fix=true (default) it ENSURES Openness group membership (adds the current user; may prompt a Windows UAC dialog). Read-only apart from that one fix. Call this first when setup is failing or you are unsure the environment is ready. |
+| `ReadOpennessWorkerStatus` | L0 | READ | Read the local Openness worker supervisor without contacting TIA. Reports process state, generation, deadline, queue and fault. Available while the worker is hung or faulted. Isolation requires --isolate-openness; a healthy worker is not proof of native TIA stability. |
+| `RestartOpennessWorker` | L0 | WRITE | Preview or explicitly reset an idle/faulted isolated Openness worker. confirmRestart defaults false. Refuses while calls remain active/queued. Resets all worker-held project bindings, exports and preview plans; never saves, attaches or replays a write. After confirmation, explicitly connect to the intended project again. Does not kill TIA; an interrupted native operation can have an unknown outcome. |
 | `RunCapabilitySelfTest` | L0 | EXECUTE* | Run a read-only MCP/TIA readiness self-test. It checks Openness group membership, connection state, visible portal processes, optional automation context, and optional project tree readback without writing to the project. |
 | `RunOnlineMonitoringSafetySelfTest` | L0 | EXECUTE* | Run a static, read-only safety self-test for online monitoring guardrails. It does not connect to TIA Portal, open projects, modify watch tables, write PLC values, or expose forced-value operations. |
 | `ValidateAutomationContext` | L1 | READ* | Preflight current project for automation: devices, software, expected PLC/HMI paths, and project tree. |

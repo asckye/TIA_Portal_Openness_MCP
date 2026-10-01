@@ -14,6 +14,10 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     internal static class PortalFailureClassifier
     {
+        // A worker can latch recognized channel loss even if an inner tool converts it to a normal error response.
+        // No hook is installed in the ordinary host or the offline suite.
+        internal static Action<string>? ProcessLostObserved;
+        private static bool Lost(string reason) { try { ProcessLostObserved?.Invoke(reason); } catch { } return true; }
         /// <summary>
         /// 一律按类型名（含 InnerException 链）判断，不硬引用具体异常类型，原因有两条：
         /// 1) Openness 程序集是运行时按 TIA 版本解析进来的，异常类型随大版本变；
@@ -29,20 +33,22 @@ namespace TiaMcpServer.ModelContextProtocol
                 // Openness 的 NonRecoverableException：进程级致命错，博途已经退出。
                 if (Has(name, "NonRecoverable"))
                 {
-                    return true;
+                    return Lost(name);
                 }
 
                 // 反射调用外面包着 TargetInvocation 层时，真正的类型名有时只出现在消息里。
-                if (Has(e.Message, "NonRecoverableException"))
+                string message;
+                try { message = e.Message; } catch { message = ""; }
+                if (Has(message, "NonRecoverableException"))
                 {
-                    return true;
+                    return Lost("NonRecoverableException");
                 }
 
                 // 进程没了以后再碰任何 Openness 对象，拿到的是 RPC / 远程调用层的错。
                 if (Has(name, "System.Runtime.InteropServices.COMException") ||
-                    Has(name, "RemotingException"))
+                    Has(name, "RemotingException") || Has(name, "CommunicationObjectFaultedException") || Has(name, "CommunicationObjectAbortedException"))
                 {
-                    return true;
+                    return Lost(name);
                 }
             }
 

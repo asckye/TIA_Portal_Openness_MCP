@@ -11,6 +11,11 @@ namespace TiaMcpServer
         public string? Transport { get; set; } // "stdio" (default) or "http"
         public string? HttpPrefix { get; set; } // e.g. "http://127.0.0.1:8765/"
         public string? HttpApiKey { get; set; } // optional X-API-Key header value
+        public bool IsolateOpenness { get; set; }
+        public int WorkerTimeoutSeconds { get; set; } = 120;
+        internal bool OpennessWorkerChild { get; set; }
+        internal int WorkerParentPid { get; set; }
+        internal long WorkerParentStart { get; set; }
         public bool RunFlowLightTest { get; set; }
         public bool FixCurrentFlowBinding { get; set; }
         public bool ProbeS71200Device { get; set; }
@@ -121,6 +126,18 @@ namespace TiaMcpServer
             {
                 switch (args[i].ToLowerInvariant())
                 {
+                    case "--isolate-openness": options.IsolateOpenness = true; break;
+                    case "--openness-worker-child": options.OpennessWorkerChild = true; break;
+                    case "--worker-timeout-seconds":
+                        if (++i >= args.Length || !int.TryParse(args[i], out int workerTimeout) || workerTimeout < 10 || workerTimeout > 180)
+                            throw new System.ArgumentException("--worker-timeout-seconds must be 10..180 (below the HTTP transport deadline).");
+                        options.WorkerTimeoutSeconds = workerTimeout; break;
+                    case "--worker-parent-pid":
+                        if (++i >= args.Length || !int.TryParse(args[i], out int parentPid) || parentPid <= 0) throw new System.ArgumentException("Invalid worker parent PID.");
+                        options.WorkerParentPid = parentPid; break;
+                    case "--worker-parent-start":
+                        if (++i >= args.Length || !long.TryParse(args[i], out long parentStart) || parentStart <= 0) throw new System.ArgumentException("Invalid worker parent identity.");
+                        options.WorkerParentStart = parentStart; break;
                     case "-tia-major-version":
                     case "--tia-major-version":
                         if (i + 1 < args.Length && int.TryParse(args[i + 1], out int v))
@@ -755,6 +772,7 @@ namespace TiaMcpServer
                         break;
                 }
             }
+            if (options.IsolateOpenness && options.OpennessWorkerChild) throw new System.ArgumentException("A worker cannot supervise another worker.");
             return options;
         }
     }

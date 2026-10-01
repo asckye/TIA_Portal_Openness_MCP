@@ -94,8 +94,22 @@ def main():
         require(checks.get('resourceDiscoveryPassed', 0) > 0, f'V{major} resource discovery validation missing')
         require(checks.get('nativeExportRemotingPassed', 0) > 0, f'V{major} native export remoting validation missing')
         proofs = [checks.get('localStability', {})]
+        isolation = checks.get('workerIsolation')
+        if isolation is not None:
+            require(isolation.get('faultChecksPassed', 0) >= 25 and isolation.get('protocolChecksPassed', 0) >= 58,
+                    f'V{major} worker fault/protocol validation incomplete')
+            require(isolation.get('protocolScriptSha256') == sha(files['scripts/checks/Test-WorkerIsolation.py']),
+                    f'V{major} worker protocol script changed after validation')
+            require(checks.get('isolatedLocalStability', {}).get('isolatedWorker') is True,
+                    f'V{major} isolated stability proof missing')
+            proofs.append(checks['isolatedLocalStability'])
         if extended is not None:
             proofs.append(extended['runtimes'][f'V{major}'])
+            if 'isolatedRuntimes' in extended:
+                isolated_extended = extended['isolatedRuntimes'][f'V{major}']
+                require(isolated_extended.get('isolatedWorker') is True,
+                        f'V{major} extended isolated proof is not an isolated run')
+                proofs.append(isolated_extended)
         for stability in proofs:
             require(stability.get('status') == 'passed' and stability.get('rounds', 0) >= 10,
                     f'V{major} local stability validation missing')

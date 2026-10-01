@@ -380,7 +380,7 @@ USAGE
                                                           One-click: register this MCP into all detected AI hosts
                                                           (Claude Desktop / Claude Code / Cursor / VS Code); auto-picks
                                                           the exe matching your installed TIA version.
-                                                          Default lists ~48 core tools; the rest stay reachable
+                                                          Default lists 61 core tools; the rest stay reachable
                                                           on demand via FindTools + CallTool.
                                                           --full = list every tool instead (rejected by VS Code/
                                                           Copilot above 128 and Windsurf above 100)
@@ -390,6 +390,8 @@ USAGE
   tia version
 
 GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-major-version N
+MCP SERVER FLAGS (no subcommand): --isolate-openness, --worker-timeout-seconds 10..180 (default 120)
+  Opt-in worker isolation; local tests do not establish native TIA stability. See docs/guides/openness-worker-isolation.md.
 Exit code: 0 = success, 1 = completed with failed steps, 2 = error.";
 
         private const string SchemaText =

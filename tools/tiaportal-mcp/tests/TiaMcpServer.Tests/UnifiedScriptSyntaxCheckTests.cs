@@ -57,6 +57,19 @@ namespace TiaMcpServer.Tests
             // [哨兵] null 不许崩：分类器本身坏掉不该把调用方一起带走。
             check(!PortalFailureClassifier.IsPortalProcessLost(null),
                 "[哨兵] null 返回 false 且不抛");
+            string? observed = null;
+            try
+            {
+                PortalFailureClassifier.ProcessLostObserved = reason => observed = reason;
+                check(PortalFailureClassifier.IsPortalProcessLost(new FakeCommunicationObjectFaultedException()), "Faulted channel is terminal");
+                check(observed != null, "Worker hook sees a caught native channel fault");
+                observed = null;
+                check(!PortalFailureClassifier.IsPortalProcessLost(new ArgumentException()) && observed == null, "Ordinary error does not invalidate worker");
+                check(!PortalFailureClassifier.IsPortalProcessLost(new ThrowingMessageException()), "Fault classification tolerates an unreadable remote exception message");
+                PortalFailureClassifier.ProcessLostObserved = _ => throw new IOException("diagnostics unavailable");
+                check(PortalFailureClassifier.IsPortalProcessLost(new FakeNonRecoverableException("lost")), "Diagnostic hook failure does not hide terminal fault");
+            }
+            finally { PortalFailureClassifier.ProcessLostObserved = null; }
         }
 
         private static void RunDefaultOffContractTests(Action<bool, string> check, Action<string, string> skip)
@@ -125,5 +138,7 @@ namespace TiaMcpServer.Tests
             {
             }
         }
+        private sealed class FakeCommunicationObjectFaultedException : Exception { }
+        private sealed class ThrowingMessageException : Exception { public override string Message => throw new InvalidOperationException("remote exception unavailable"); }
     }
 }

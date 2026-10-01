@@ -21,7 +21,7 @@ def require(condition, message):
 
 @contextmanager
 def server(exe, portal_root, major, transport, profile, harness=None, public_api=None,
-           *, env_overrides=None, process_observer=None):
+           *, env_overrides=None, process_observer=None, isolate=False):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -31,6 +31,8 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             str(portal_root), '--transport', transport, '--logging', '1']
     if transport == 'http':
         args += ['--http-prefix', f'http://127.0.0.1:{port}/', '--http-api-key', key]
+    if isolate:
+        args += ['--isolate-openness', '--worker-timeout-seconds', '10']
     if harness:
         require(public_api is not None, '--public-api is required with --host-harness')
         args = [str(harness), str(exe), 'protocol-host', str(public_api)] + args[1:]

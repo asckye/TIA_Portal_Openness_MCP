@@ -95,6 +95,8 @@ namespace TiaMcpServer.Tests
             check(PreflightLogic.NeedsProject("WRITE", "ImportBlock") && !PreflightLogic.NeedsProject("SESSION", "Connect") && !PreflightLogic.NeedsProject("OFFLINE", "BuildPlcGlobalDbJson") && !PreflightLogic.NeedsProject("READ", "SearchHardwareCatalog") && !PreflightLogic.NeedsProject("ONLINE", "ReadPlcSimAdvancedTags"), "preflight: project prerequisite only for project-bound operations");
 
             // ---- the bridge wiring on the linked tools (no portal in this suite -> prerequisites unknown) ----
+            check(!PreflightLogic.NeedsProject("READ", "ReadOpennessWorkerStatus"), "worker status is independent of a TIA project");
+            check(!PreflightLogic.NeedsProject("WRITE", "RestartOpennessWorker"), "worker recovery must not require connecting a faulted worker first");
             var probe = McpServer.PreflightToolCall("updateunifiedruntimesettings", "{\"SoftwarePath\":\"HMI\",\"changesJson\":{\"BitSelection\":true},\"dryRun\":\"false\"}");
             check(probe.Meta!["toolFound"]!.GetValue<bool>() && probe.Meta["tool"]!.GetValue<string>() == "UpdateUnifiedRuntimeSettings" && probe.Meta["ok"]!.GetValue<bool>() == false, "preflight tool: case-insensitive name resolved, missing expectedProject makes it not ok");
             check(probe.Meta["missing"]!.AsArray().Select(x => x!.GetValue<string>()).SequenceEqual(new[] { "expectedProject" }) && probe.Meta["caseFixes"]!.AsArray().Count == 1 && probe.Meta["coercions"]!.AsArray().Count == 2, "preflight tool: missing / case fix / coercions reported");

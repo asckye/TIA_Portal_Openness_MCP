@@ -81,6 +81,12 @@ foreach($major in @(20,21)) {
     $payload | Copy-Item -Destination $runtime -Force
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
+    Run $harness @($exe,'worker-supervisor-only') "worker-supervisor-v$major.log"
+    $workerFaults=[regex]::Match((Get-Content (Join-Path $out "worker-supervisor-v$major.log") -Raw),'COMPLETE: (\d+) worker supervisor checks passed; no TIA connection attempted')
+    if(!$workerFaults.Success -or [int]$workerFaults.Groups[1].Value -lt 25){throw 'Worker supervisor fault checks incomplete'}
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "worker-protocol-v$major.log"
+    $workerProtocol=[regex]::Match((Get-Content (Join-Path $out "worker-protocol-v$major.log") -Raw),'COMPLETE: (\d+) isolated MCP checks passed; no TIA connection attempted')
+    if(!$workerProtocol.Success -or [int]$workerProtocol.Groups[1].Value -lt 58){throw 'Isolated MCP protocol checks incomplete'}
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
@@ -102,6 +108,10 @@ foreach($major in @(20,21)) {
     # eight HTTP clients. This explicitly cannot certify native TIA stability.
     $stabilityOut=Join-Path $out ("stability-v$major-"+[Guid]::NewGuid().ToString('N'))
     Run $Python @((Join-Path $repo 'scripts/checks/Test-LocalStability.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--rounds',"$LocalStabilityRounds",'--output',$stabilityOut) "stability-v$major.log"
+    $isolatedOut=Join-Path $out ("isolated-stability-v$major-"+[Guid]::NewGuid().ToString('N'))
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-LocalStability.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--rounds',"$LocalStabilityRounds",'--output',$isolatedOut,'--isolate-openness') "isolated-stability-v$major.log"
+    $isolatedStability=Get-Content (Join-Path $isolatedOut 'result.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($isolatedStability.status -ne 'passed' -or $isolatedStability.runs.Count -ne 4 -or !$isolatedStability.isolatedWorker -or $isolatedStability.runtimeSha256 -ne (Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()){throw 'Isolated local stability checks failed or used a different EXE'}
     $stability=Get-Content (Join-Path $stabilityOut 'result.json') -Raw -Encoding UTF8 | ConvertFrom-Json
     if($stability.status -ne 'passed' -or $stability.runs.Count -ne 4 -or $stability.runtimeSha256 -ne (Get-FileHash $exe -Algorithm SHA256).Hash.ToLowerInvariant()){throw 'Local stability validation incomplete or used a different EXE'}
     Run $harness @($exe,'native-export-only') "native-export-v$major.log"
@@ -128,6 +138,8 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['engineeringApiShapePassed']=[int]$engineeringApi.Groups[1].Value
     $checks["V$major"]['nativeHarness']=[ordered]@{compiled=$true;safetyChecksPassed=[int]$nativeSafety.Groups[1].Value;supervisorChecksPassed=[int]$nativeSupervisor.Groups[1].Value;exeSha256=(Get-FileHash $nativeExe).Hash.ToLowerInvariant();supervisorSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py')).Hash.ToLowerInvariant();liveAcceptance='NOT RUN; explicit opt-in required'}
     $checks["V$major"]['localStability']=$stability
+    $checks["V$major"]['isolatedLocalStability']=$isolatedStability
+    $checks["V$major"]['workerIsolation']=[ordered]@{enabledByDefault=$false;faultChecksPassed=[int]$workerFaults.Groups[1].Value;protocolChecksPassed=[int]$workerProtocol.Groups[1].Value;nativeAcceptance='NOT RUN';protocolScriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py')).Hash.ToLowerInvariant()}
     $checks["V$major"]['engineeringLiveEdits']='NOT TESTED; preview/API shape and offline behavior only'
     $checks["V$major"]['unifiedGraphicLists']=if($major -eq 21){'API present; native import not live-tested'}else{'not exposed by supplied V20 API'}
     $checks["V$major"]['globalScriptBridgePassed']=[int]$globalScript.Groups[1].Value

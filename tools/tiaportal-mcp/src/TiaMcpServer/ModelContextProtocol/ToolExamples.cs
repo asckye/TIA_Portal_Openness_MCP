@@ -112,10 +112,10 @@ namespace TiaMcpServer.ModelContextProtocol
             E("ImportHmiScreen", @"{'softwarePath':'HMI_RT_1','folderPath':'','importPath':'C:\\Temp\\Screen_1.xml'}"),
             E("ImportHmiTagTable", @"{'softwarePath':'HMI_RT_1','folderPath':'','importPath':'C:\\Temp\\HmiTags.xml'}"),
             // ---- export store (large responses)
-            E("GetExport", @"{'exportId':'ex_20260902103000_0001','offset':0}", "offset = the previous page's nextOffset"),
+            E("GetExport", @"{'exportId':'<exportId from response>','offset':0}", "copy the exact exportId; offset = the previous page's nextOffset"),
             E("ListExports", @"{'tool':'GetBlocks','limit':10}"),
-            E("SaveExport", @"{'exportId':'ex_20260902103000_0001','outputPath':'C:\\Temp\\blocks.json'}", "overwrite=true only after the user agreed"),
-            E("DeleteExport", @"{'exportId':'ex_20260902103000_0001'}"),
+            E("SaveExport", @"{'exportId':'<exportId from response>','outputPath':'C:\\Temp\\blocks.json'}", "overwrite=true only after the user agreed"),
+            E("DeleteExport", @"{'exportId':'<exportId from response>'}"),
             E("ClearExports", @"{'olderThanHours':0}", "0 drops every handle"),
         };
 

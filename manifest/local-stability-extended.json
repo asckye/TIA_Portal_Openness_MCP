@@ -1,19 +1,21 @@
 {
   "release": "3.1.0",
   "status": "passed",
+  "generatedAtUtc": "2026-10-01T15:31:52.765533+00:00",
   "simultaneousEngineHosts": true,
-  "scope": "Additional local-only bounded soak; not a native TIA acceptance test or long-duration leak proof.",
+  "scope": "Final candidate, normal and isolated hosts, 300 rounds per profile/transport. Local-only bounded soak; no TIA connection, no native acceptance or long-duration leak proof.",
   "runtimes": {
     "V20": {
       "schemaVersion": 1,
       "major": 20,
-      "startedAtUtc": "2026-09-30T22:38:45.986611+00:00",
-      "runtimeSha256": "f7dc858787ffacd5f86476637db94ac104f003957a248ecbfea58c3c3282ff50",
-      "harnessSha256": "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
-      "scriptSha256": "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
-      "resourceHelperSha256": "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
+      "startedAtUtc": "2026-10-01T15:19:52.190296+00:00",
+      "runtimeSha256": "fbbfb59696645f2ab405c032bccd38cf6e43e0c0c1ecb97bdb617ee3ce05620e",
+      "harnessSha256": "128d4afa2234a304907bf7b1b89256de6db2a5551b36ab55c0844042cd04c160",
+      "scriptSha256": "bdbd6d1414a0e990456908f633ead882ac004e4d58ddabf6485ae9675139a320",
+      "resourceHelperSha256": "7af2e44dc000c7031c50d9624466781622b0acdbccd38cccd051f6c0c42e3632",
       "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
       "rounds": 300,
+      "isolatedWorker": false,
       "bounds": {
         "maxPrivateMiB": 512,
         "maxHandleGrowth": 128
@@ -23,7 +25,8 @@
           "transport": "stdio",
           "profile": "full",
           "concurrency": 1,
-          "toolCount": 474,
+          "toolCount": 476,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -51,7 +54,7 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 42.859,
+          "elapsedSeconds": 40.641,
           "latencyMilliseconds": {
             "median": 0.0,
             "p95": 16.0,
@@ -59,159 +62,159 @@
           },
           "processSamples": [
             {
-              "privateBytes": 48525312,
-              "workingSetBytes": 74182656,
-              "handleCount": 489
+              "privateBytes": 48623616,
+              "workingSetBytes": 71995392,
+              "handleCount": 481
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78364672,
-              "handleCount": 490
+              "privateBytes": 52633600,
+              "workingSetBytes": 76099584,
+              "handleCount": 483
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78393344,
-              "handleCount": 490
+              "privateBytes": 52633600,
+              "workingSetBytes": 76115968,
+              "handleCount": 483
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78405632,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76206080,
+              "handleCount": 488
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78413824,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76267520,
+              "handleCount": 488
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78454784,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76275712,
+              "handleCount": 488
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78467072,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76283904,
+              "handleCount": 488
             },
             {
-              "privateBytes": 52645888,
-              "workingSetBytes": 78467072,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76288000,
+              "handleCount": 488
             },
             {
-              "privateBytes": 51597312,
-              "workingSetBytes": 77422592,
-              "handleCount": 490
+              "privateBytes": 52744192,
+              "workingSetBytes": 76296192,
+              "handleCount": 488
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77500416,
+              "privateBytes": 51666944,
+              "workingSetBytes": 75239424,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75239424,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75259904,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75259904,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75272192,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75272192,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51666944,
+              "workingSetBytes": 75272192,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51372032,
+              "workingSetBytes": 74985472,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51437568,
+              "workingSetBytes": 75010048,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51437568,
+              "workingSetBytes": 75022336,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51437568,
+              "workingSetBytes": 75026432,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 51511296,
+              "workingSetBytes": 75083776,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 51511296,
+              "workingSetBytes": 75096064,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 51511296,
+              "workingSetBytes": 75100160,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 51441664,
+              "workingSetBytes": 75046912,
               "handleCount": 495
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77500416,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75087872,
               "handleCount": 495
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77524992,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75100160,
               "handleCount": 495
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77524992,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75108352,
               "handleCount": 495
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77524992,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75116544,
               "handleCount": 495
             },
             {
-              "privateBytes": 51712000,
-              "workingSetBytes": 77524992,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75128832,
               "handleCount": 495
             },
             {
-              "privateBytes": 51367936,
-              "workingSetBytes": 77185024,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75128832,
               "handleCount": 495
             },
             {
-              "privateBytes": 51367936,
-              "workingSetBytes": 77185024,
+              "privateBytes": 51507200,
+              "workingSetBytes": 75132928,
               "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77189120,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77197312,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77205504,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77217792,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77221888,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 51433472,
-              "workingSetBytes": 77230080,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51359744,
-              "workingSetBytes": 77189120,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51425280,
-              "workingSetBytes": 77193216,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51425280,
-              "workingSetBytes": 77197312,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51425280,
-              "workingSetBytes": 77221888,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51425280,
-              "workingSetBytes": 77230080,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51425280,
-              "workingSetBytes": 77234176,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51322880,
-              "workingSetBytes": 77172736,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 51388416,
-              "workingSetBytes": 77221888,
-              "handleCount": 497
             }
           ],
           "journalEntries": 13242,
@@ -225,7 +228,8 @@
           "transport": "stdio",
           "profile": "lite",
           "concurrency": 1,
-          "toolCount": 59,
+          "toolCount": 61,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -253,7 +257,7 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 56.875,
+          "elapsedSeconds": 56.234,
           "latencyMilliseconds": {
             "median": 15.0,
             "p95": 16.0,
@@ -261,159 +265,159 @@
           },
           "processSamples": [
             {
-              "privateBytes": 40157184,
-              "workingSetBytes": 66756608,
-              "handleCount": 489
+              "privateBytes": 40046592,
+              "workingSetBytes": 64389120,
+              "handleCount": 482
             },
             {
-              "privateBytes": 42188800,
-              "workingSetBytes": 68907008,
-              "handleCount": 489
+              "privateBytes": 42364928,
+              "workingSetBytes": 66777088,
+              "handleCount": 492
             },
             {
-              "privateBytes": 42254336,
-              "workingSetBytes": 68968448,
-              "handleCount": 489
+              "privateBytes": 42430464,
+              "workingSetBytes": 66850816,
+              "handleCount": 492
             },
             {
-              "privateBytes": 42385408,
-              "workingSetBytes": 69107712,
-              "handleCount": 490
+              "privateBytes": 42561536,
+              "workingSetBytes": 66994176,
+              "handleCount": 492
             },
             {
-              "privateBytes": 42516480,
-              "workingSetBytes": 69206016,
-              "handleCount": 490
+              "privateBytes": 42692608,
+              "workingSetBytes": 67072000,
+              "handleCount": 492
             },
             {
-              "privateBytes": 42516480,
-              "workingSetBytes": 69214208,
-              "handleCount": 490
+              "privateBytes": 42692608,
+              "workingSetBytes": 67100672,
+              "handleCount": 493
             },
             {
-              "privateBytes": 42651648,
-              "workingSetBytes": 69328896,
+              "privateBytes": 42692608,
+              "workingSetBytes": 67117056,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42614784,
+              "workingSetBytes": 67096576,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67170304,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67170304,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67174400,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67174400,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42614784,
+              "workingSetBytes": 67108864,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67178496,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67178496,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67178496,
+              "handleCount": 493
+            },
+            {
+              "privateBytes": 42680320,
+              "workingSetBytes": 67190784,
               "handleCount": 495
             },
             {
-              "privateBytes": 42426368,
-              "workingSetBytes": 69103616,
+              "privateBytes": 42680320,
+              "workingSetBytes": 67215360,
               "handleCount": 495
-            },
-            {
-              "privateBytes": 42622976,
-              "workingSetBytes": 69345280,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69365760,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69382144,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69386240,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42295296,
-              "workingSetBytes": 69033984,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42622976,
-              "workingSetBytes": 69328896,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69378048,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69382144,
-              "handleCount": 495
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69394432,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69402624,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42557440,
-              "workingSetBytes": 69263360,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69390336,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69402624,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69414912,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69419008,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42426368,
-              "workingSetBytes": 69197824,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42622976,
-              "workingSetBytes": 69386240,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42622976,
-              "workingSetBytes": 69394432,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69414912,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42688512,
-              "workingSetBytes": 69431296,
-              "handleCount": 497
-            },
-            {
-              "privateBytes": 42356736,
-              "workingSetBytes": 69107712,
-              "handleCount": 497
             },
             {
               "privateBytes": 42618880,
-              "workingSetBytes": 69398528,
-              "handleCount": 497
+              "workingSetBytes": 67153920,
+              "handleCount": 495
             },
             {
               "privateBytes": 42684416,
-              "workingSetBytes": 69410816,
-              "handleCount": 497
+              "workingSetBytes": 67170304,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67186688,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67203072,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67215360,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42422272,
+              "workingSetBytes": 66977792,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67203072,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67211264,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67215360,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67223552,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42422272,
+              "workingSetBytes": 66957312,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67198976,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42684416,
+              "workingSetBytes": 67215360,
+              "handleCount": 495
             }
           ],
           "journalEntries": 18660,
@@ -427,7 +431,8 @@
           "transport": "http",
           "profile": "full",
           "concurrency": 8,
-          "toolCount": 474,
+          "toolCount": 476,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -455,167 +460,167 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 59.703,
+          "elapsedSeconds": 51.562,
           "latencyMilliseconds": {
-            "median": 47.0,
-            "p95": 78.0,
-            "max": 157.0
+            "median": 32.0,
+            "p95": 63.0,
+            "max": 94.0
           },
           "processSamples": [
             {
-              "privateBytes": 60403712,
-              "workingSetBytes": 85168128,
-              "handleCount": 546
+              "privateBytes": 57659392,
+              "workingSetBytes": 82964480,
+              "handleCount": 530
             },
             {
-              "privateBytes": 61587456,
-              "workingSetBytes": 86474752,
-              "handleCount": 575
+              "privateBytes": 58617856,
+              "workingSetBytes": 83968000,
+              "handleCount": 563
             },
             {
-              "privateBytes": 62074880,
-              "workingSetBytes": 86990848,
-              "handleCount": 575
+              "privateBytes": 59199488,
+              "workingSetBytes": 84561920,
+              "handleCount": 563
             },
             {
-              "privateBytes": 62418944,
-              "workingSetBytes": 87339008,
-              "handleCount": 586
+              "privateBytes": 59273216,
+              "workingSetBytes": 84643840,
+              "handleCount": 563
             },
             {
-              "privateBytes": 62812160,
-              "workingSetBytes": 87670784,
-              "handleCount": 586
+              "privateBytes": 59408384,
+              "workingSetBytes": 84787200,
+              "handleCount": 563
             },
             {
-              "privateBytes": 63209472,
-              "workingSetBytes": 88068096,
-              "handleCount": 586
+              "privateBytes": 59826176,
+              "workingSetBytes": 85159936,
+              "handleCount": 573
             },
             {
-              "privateBytes": 63533056,
-              "workingSetBytes": 88387584,
-              "handleCount": 592
+              "privateBytes": 60096512,
+              "workingSetBytes": 85397504,
+              "handleCount": 579
             },
             {
-              "privateBytes": 63561728,
-              "workingSetBytes": 88420352,
-              "handleCount": 592
+              "privateBytes": 60096512,
+              "workingSetBytes": 85401600,
+              "handleCount": 579
             },
             {
-              "privateBytes": 63561728,
-              "workingSetBytes": 88420352,
-              "handleCount": 592
+              "privateBytes": 60182528,
+              "workingSetBytes": 85471232,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63561728,
-              "workingSetBytes": 88424448,
-              "handleCount": 592
+              "privateBytes": 60248064,
+              "workingSetBytes": 85536768,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63561728,
-              "workingSetBytes": 88444928,
-              "handleCount": 592
+              "privateBytes": 60379136,
+              "workingSetBytes": 85733376,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63463424,
-              "workingSetBytes": 88485888,
-              "handleCount": 587
+              "privateBytes": 60510208,
+              "workingSetBytes": 85864448,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63512576,
-              "workingSetBytes": 88510464,
-              "handleCount": 592
+              "privateBytes": 61247488,
+              "workingSetBytes": 86626304,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63512576,
-              "workingSetBytes": 88510464,
-              "handleCount": 592
+              "privateBytes": 61345792,
+              "workingSetBytes": 86872064,
+              "handleCount": 580
             },
             {
-              "privateBytes": 63516672,
-              "workingSetBytes": 88514560,
-              "handleCount": 592
+              "privateBytes": 61345792,
+              "workingSetBytes": 86884352,
+              "handleCount": 580
             },
             {
-              "privateBytes": 63516672,
-              "workingSetBytes": 88539136,
-              "handleCount": 592
+              "privateBytes": 61345792,
+              "workingSetBytes": 86888448,
+              "handleCount": 580
             },
             {
-              "privateBytes": 63516672,
-              "workingSetBytes": 88543232,
-              "handleCount": 594
+              "privateBytes": 61394944,
+              "workingSetBytes": 86941696,
+              "handleCount": 585
             },
             {
-              "privateBytes": 63713280,
-              "workingSetBytes": 88743936,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 63713280,
-              "workingSetBytes": 88743936,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 63660032,
-              "workingSetBytes": 88715264,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 64253952,
-              "workingSetBytes": 89300992,
+              "privateBytes": 61550592,
+              "workingSetBytes": 87076864,
               "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90050560,
-              "handleCount": 594
+              "privateBytes": 61550592,
+              "workingSetBytes": 87076864,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90050560,
-              "handleCount": 594
+              "privateBytes": 61550592,
+              "workingSetBytes": 87089152,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90050560,
-              "handleCount": 594
+              "privateBytes": 61550592,
+              "workingSetBytes": 87093248,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90050560,
-              "handleCount": 594
+              "privateBytes": 61550592,
+              "workingSetBytes": 87093248,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90050560,
-              "handleCount": 594
+              "privateBytes": 61747200,
+              "workingSetBytes": 87298048,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90062848,
-              "handleCount": 594
+              "privateBytes": 61747200,
+              "workingSetBytes": 87298048,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64983040,
-              "workingSetBytes": 90062848,
-              "handleCount": 594
+              "privateBytes": 61747200,
+              "workingSetBytes": 87298048,
+              "handleCount": 599
             },
             {
-              "privateBytes": 65097728,
-              "workingSetBytes": 90152960,
-              "handleCount": 606
+              "privateBytes": 62074880,
+              "workingSetBytes": 87625728,
+              "handleCount": 599
             },
             {
-              "privateBytes": 65146880,
-              "workingSetBytes": 90177536,
-              "handleCount": 611
+              "privateBytes": 62025728,
+              "workingSetBytes": 87605248,
+              "handleCount": 599
             },
             {
-              "privateBytes": 65155072,
-              "workingSetBytes": 90185728,
-              "handleCount": 611
+              "privateBytes": 62025728,
+              "workingSetBytes": 87613440,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 62095360,
+              "workingSetBytes": 87633920,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 62898176,
+              "workingSetBytes": 88457216,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 63029248,
+              "workingSetBytes": 88588288,
+              "handleCount": 604
             }
           ],
           "journalEntries": 13242,
@@ -629,7 +634,8 @@
           "transport": "http",
           "profile": "lite",
           "concurrency": 8,
-          "toolCount": 59,
+          "toolCount": 61,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -657,167 +663,167 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 74.766,
+          "elapsedSeconds": 71.375,
           "latencyMilliseconds": {
             "median": 62.0,
-            "p95": 109.0,
-            "max": 172.0
+            "p95": 110.0,
+            "max": 203.0
           },
           "processSamples": [
             {
-              "privateBytes": 41279488,
-              "workingSetBytes": 70197248,
-              "handleCount": 536
+              "privateBytes": 40988672,
+              "workingSetBytes": 67362816,
+              "handleCount": 535
             },
             {
-              "privateBytes": 44359680,
-              "workingSetBytes": 73273344,
-              "handleCount": 563
+              "privateBytes": 43921408,
+              "workingSetBytes": 70381568,
+              "handleCount": 555
             },
             {
-              "privateBytes": 44584960,
-              "workingSetBytes": 73482240,
-              "handleCount": 570
+              "privateBytes": 44879872,
+              "workingSetBytes": 71307264,
+              "handleCount": 592
             },
             {
-              "privateBytes": 44797952,
-              "workingSetBytes": 73719808,
-              "handleCount": 570
+              "privateBytes": 45170688,
+              "workingSetBytes": 71610368,
+              "handleCount": 592
             },
             {
-              "privateBytes": 45346816,
+              "privateBytes": 45338624,
+              "workingSetBytes": 71843840,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 45932544,
+              "workingSetBytes": 72425472,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 46063616,
+              "workingSetBytes": 72523776,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 46071808,
+              "workingSetBytes": 72536064,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 46071808,
+              "workingSetBytes": 72536064,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 44883968,
+              "workingSetBytes": 71569408,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 45539328,
+              "workingSetBytes": 72200192,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 45604864,
+              "workingSetBytes": 72286208,
+              "handleCount": 592
+            },
+            {
+              "privateBytes": 45850624,
+              "workingSetBytes": 72474624,
+              "handleCount": 597
+            },
+            {
+              "privateBytes": 46178304,
+              "workingSetBytes": 72802304,
+              "handleCount": 597
+            },
+            {
+              "privateBytes": 46182400,
+              "workingSetBytes": 72822784,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46182400,
+              "workingSetBytes": 72826880,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46247936,
+              "workingSetBytes": 72953856,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46379008,
+              "workingSetBytes": 73089024,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46325760,
+              "workingSetBytes": 73060352,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46522368,
+              "workingSetBytes": 73244672,
+              "handleCount": 599
+            },
+            {
+              "privateBytes": 46637056,
+              "workingSetBytes": 73322496,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 46637056,
+              "workingSetBytes": 73322496,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 46637056,
+              "workingSetBytes": 73342976,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 47099904,
+              "workingSetBytes": 73818112,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 47169536,
+              "workingSetBytes": 73920512,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 47300608,
+              "workingSetBytes": 74006528,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 47390720,
               "workingSetBytes": 74203136,
-              "handleCount": 587
+              "handleCount": 601
             },
             {
-              "privateBytes": 45805568,
-              "workingSetBytes": 74686464,
-              "handleCount": 587
+              "privateBytes": 47394816,
+              "workingSetBytes": 74248192,
+              "handleCount": 601
             },
             {
-              "privateBytes": 45813760,
-              "workingSetBytes": 74706944,
-              "handleCount": 587
+              "privateBytes": 47394816,
+              "workingSetBytes": 74248192,
+              "handleCount": 601
             },
             {
-              "privateBytes": 45813760,
-              "workingSetBytes": 74764288,
-              "handleCount": 587
+              "privateBytes": 47591424,
+              "workingSetBytes": 74461184,
+              "handleCount": 601
             },
             {
-              "privateBytes": 45813760,
-              "workingSetBytes": 74768384,
-              "handleCount": 587
-            },
-            {
-              "privateBytes": 45813760,
-              "workingSetBytes": 74780672,
-              "handleCount": 587
-            },
-            {
-              "privateBytes": 45813760,
-              "workingSetBytes": 74780672,
-              "handleCount": 587
-            },
-            {
-              "privateBytes": 45764608,
-              "workingSetBytes": 74829824,
-              "handleCount": 587
-            },
-            {
-              "privateBytes": 45961216,
-              "workingSetBytes": 75001856,
-              "handleCount": 587
-            },
-            {
-              "privateBytes": 45961216,
-              "workingSetBytes": 75005952,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 45961216,
-              "workingSetBytes": 75018240,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 46227456,
-              "workingSetBytes": 75288576,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 46227456,
-              "workingSetBytes": 75288576,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 46227456,
-              "workingSetBytes": 75288576,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 46292992,
-              "workingSetBytes": 75399168,
-              "handleCount": 589
-            },
-            {
-              "privateBytes": 46407680,
-              "workingSetBytes": 75476992,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 46473216,
-              "workingSetBytes": 75550720,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 46800896,
-              "workingSetBytes": 75829248,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 46866432,
-              "workingSetBytes": 75927552,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 46931968,
-              "workingSetBytes": 76005376,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 47464448,
-              "workingSetBytes": 76500992,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 47366144,
-              "workingSetBytes": 76517376,
-              "handleCount": 591
-            },
-            {
-              "privateBytes": 47493120,
-              "workingSetBytes": 76619776,
-              "handleCount": 596
-            },
-            {
-              "privateBytes": 47689728,
-              "workingSetBytes": 76861440,
-              "handleCount": 596
-            },
-            {
-              "privateBytes": 47648768,
-              "workingSetBytes": 76849152,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 47648768,
-              "workingSetBytes": 76849152,
-              "handleCount": 594
-            },
-            {
-              "privateBytes": 47845376,
-              "workingSetBytes": 77000704,
-              "handleCount": 594
+              "privateBytes": 47591424,
+              "workingSetBytes": 74469376,
+              "handleCount": 601
             }
           ],
           "journalEntries": 18660,
@@ -829,18 +835,19 @@
         }
       ],
       "status": "passed",
-      "finishedAtUtc": "2026-09-30T22:42:40.220586+00:00"
+      "finishedAtUtc": "2026-10-01T15:23:32.017644+00:00"
     },
     "V21": {
       "schemaVersion": 1,
       "major": 21,
-      "startedAtUtc": "2026-09-30T22:38:48.039758+00:00",
-      "runtimeSha256": "80727bb06143a9d558b901ca12225c1ea1b285a2c84cf3c915582f13be38ddd7",
-      "harnessSha256": "868e328ecfd48ee01f6171ee2f4486648bdc06267be407dd3a4c56b1edf08543",
-      "scriptSha256": "cded63e35704878690c4a5e0ca8e9a8f7eba07f73297ee5f564f1e0ae1cdbba3",
-      "resourceHelperSha256": "83d64748e1a29ee1ed82b8320da61f98f957b7ca5fb7909a007e053789a53afe",
+      "startedAtUtc": "2026-10-01T15:22:36.813189+00:00",
+      "runtimeSha256": "fea48eb3903890ad17a2b0a1142395887da6fcca6b552ac64974d58bf712f6ea",
+      "harnessSha256": "128d4afa2234a304907bf7b1b89256de6db2a5551b36ab55c0844042cd04c160",
+      "scriptSha256": "bdbd6d1414a0e990456908f633ead882ac004e4d58ddabf6485ae9675139a320",
+      "resourceHelperSha256": "7af2e44dc000c7031c50d9624466781622b0acdbccd38cccd051f6c0c42e3632",
       "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
       "rounds": 300,
+      "isolatedWorker": false,
       "bounds": {
         "maxPrivateMiB": 512,
         "maxHandleGrowth": 128
@@ -850,7 +857,8 @@
           "transport": "stdio",
           "profile": "full",
           "concurrency": 1,
-          "toolCount": 474,
+          "toolCount": 476,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -878,7 +886,7 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 43.234,
+          "elapsedSeconds": 41.047,
           "latencyMilliseconds": {
             "median": 0.0,
             "p95": 16.0,
@@ -886,159 +894,159 @@
           },
           "processSamples": [
             {
-              "privateBytes": 48308224,
-              "workingSetBytes": 74473472,
+              "privateBytes": 48418816,
+              "workingSetBytes": 72384512,
+              "handleCount": 488
+            },
+            {
+              "privateBytes": 52404224,
+              "workingSetBytes": 76468224,
+              "handleCount": 489
+            },
+            {
+              "privateBytes": 52404224,
+              "workingSetBytes": 76496896,
+              "handleCount": 489
+            },
+            {
+              "privateBytes": 52518912,
+              "workingSetBytes": 76623872,
               "handleCount": 495
             },
             {
-              "privateBytes": 52416512,
-              "workingSetBytes": 78663680,
-              "handleCount": 496
+              "privateBytes": 52518912,
+              "workingSetBytes": 76627968,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52482048,
-              "workingSetBytes": 78680064,
-              "handleCount": 496
+              "privateBytes": 52518912,
+              "workingSetBytes": 76668928,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52613120,
-              "workingSetBytes": 78807040,
-              "handleCount": 502
+              "privateBytes": 52584448,
+              "workingSetBytes": 76677120,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52613120,
-              "workingSetBytes": 78811136,
-              "handleCount": 502
+              "privateBytes": 52584448,
+              "workingSetBytes": 76685312,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52613120,
-              "workingSetBytes": 78811136,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75624448,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52613120,
-              "workingSetBytes": 78815232,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75624448,
+              "handleCount": 495
             },
             {
-              "privateBytes": 52613120,
-              "workingSetBytes": 78823424,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75624448,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77774848,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75624448,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77791232,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75624448,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77791232,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75632640,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77803520,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75632640,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77803520,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75632640,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77803520,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75632640,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51527680,
-              "workingSetBytes": 77803520,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75636736,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51130368,
-              "workingSetBytes": 77406208,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75649024,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77451264,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75669504,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77471744,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75685888,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77471744,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75685888,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51261440,
-              "workingSetBytes": 77479936,
-              "handleCount": 502
+              "privateBytes": 51466240,
+              "workingSetBytes": 75685888,
+              "handleCount": 495
             },
             {
-              "privateBytes": 51261440,
-              "workingSetBytes": 77479936,
-              "handleCount": 502
+              "privateBytes": 51167232,
+              "workingSetBytes": 75390976,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51261440,
-              "workingSetBytes": 77488128,
-              "handleCount": 504
+              "privateBytes": 51167232,
+              "workingSetBytes": 75390976,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51130368,
-              "workingSetBytes": 77414400,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75395072,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77451264,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75399168,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77463552,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75403264,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77463552,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75436032,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77471744,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75444224,
+              "handleCount": 497
             },
             {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77475840,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77479936,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 51130368,
-              "workingSetBytes": 77430784,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 51195904,
-              "workingSetBytes": 77484032,
-              "handleCount": 504
+              "privateBytes": 51232768,
+              "workingSetBytes": 75448320,
+              "handleCount": 497
             }
           ],
           "journalEntries": 13242,
@@ -1052,7 +1060,8 @@
           "transport": "stdio",
           "profile": "lite",
           "concurrency": 1,
-          "toolCount": 59,
+          "toolCount": 61,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -1080,7 +1089,7 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 56.984,
+          "elapsedSeconds": 58.594,
           "latencyMilliseconds": {
             "median": 15.0,
             "p95": 16.0,
@@ -1088,159 +1097,159 @@
           },
           "processSamples": [
             {
-              "privateBytes": 40206336,
-              "workingSetBytes": 67166208,
-              "handleCount": 496
+              "privateBytes": 40390656,
+              "workingSetBytes": 65163264,
+              "handleCount": 493
             },
             {
-              "privateBytes": 42217472,
-              "workingSetBytes": 69320704,
-              "handleCount": 497
+              "privateBytes": 42475520,
+              "workingSetBytes": 67399680,
+              "handleCount": 494
             },
             {
-              "privateBytes": 42483712,
-              "workingSetBytes": 69517312,
+              "privateBytes": 42541056,
+              "workingSetBytes": 67538944,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42737664,
+              "workingSetBytes": 67690496,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42737664,
+              "workingSetBytes": 67768320,
+              "handleCount": 495
+            },
+            {
+              "privateBytes": 42905600,
+              "workingSetBytes": 67858432,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42536960,
+              "workingSetBytes": 67567616,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42799104,
+              "workingSetBytes": 67768320,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67850240,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67858432,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67862528,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67870720,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42668032,
+              "workingSetBytes": 67678208,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67866624,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67878912,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67891200,
+              "handleCount": 500
+            },
+            {
+              "privateBytes": 42864640,
+              "workingSetBytes": 67903488,
               "handleCount": 502
             },
             {
-              "privateBytes": 42614784,
-              "workingSetBytes": 69664768,
+              "privateBytes": 42602496,
+              "workingSetBytes": 67641344,
               "handleCount": 502
             },
             {
-              "privateBytes": 42680320,
-              "workingSetBytes": 69754880,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67870720,
               "handleCount": 502
             },
             {
-              "privateBytes": 42680320,
-              "workingSetBytes": 69767168,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67887104,
               "handleCount": 502
             },
             {
-              "privateBytes": 42680320,
-              "workingSetBytes": 69812224,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67899392,
               "handleCount": 502
             },
             {
-              "privateBytes": 42618880,
-              "workingSetBytes": 69771264,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67907584,
               "handleCount": 502
             },
             {
-              "privateBytes": 42684416,
-              "workingSetBytes": 69799936,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67907584,
               "handleCount": 502
             },
             {
-              "privateBytes": 42684416,
-              "workingSetBytes": 69816320,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67870720,
               "handleCount": 502
             },
             {
-              "privateBytes": 42684416,
-              "workingSetBytes": 69824512,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67919872,
               "handleCount": 502
             },
             {
-              "privateBytes": 42684416,
-              "workingSetBytes": 69832704,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67928064,
               "handleCount": 502
             },
             {
-              "privateBytes": 42414080,
-              "workingSetBytes": 69545984,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67936256,
               "handleCount": 502
             },
             {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69820416,
+              "privateBytes": 42536960,
+              "workingSetBytes": 67633152,
               "handleCount": 502
             },
             {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69836800,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67907584,
               "handleCount": 502
             },
             {
-              "privateBytes": 42741760,
-              "workingSetBytes": 69844992,
+              "privateBytes": 42864640,
+              "workingSetBytes": 67919872,
               "handleCount": 502
             },
             {
-              "privateBytes": 42741760,
-              "workingSetBytes": 69853184,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42348544,
-              "workingSetBytes": 69513216,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69799936,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69816320,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69824512,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69828608,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69832704,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42545152,
-              "workingSetBytes": 69660672,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69812224,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69832704,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69844992,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69849088,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42479616,
-              "workingSetBytes": 69595136,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69824512,
-              "handleCount": 504
-            },
-            {
-              "privateBytes": 42676224,
-              "workingSetBytes": 69832704,
-              "handleCount": 504
+              "privateBytes": 42864640,
+              "workingSetBytes": 67944448,
+              "handleCount": 502
             }
           ],
           "journalEntries": 18660,
@@ -1254,7 +1263,8 @@
           "transport": "http",
           "profile": "full",
           "concurrency": 8,
-          "toolCount": 474,
+          "toolCount": 476,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -1282,7 +1292,7 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 59.422,
+          "elapsedSeconds": 61.578,
           "latencyMilliseconds": {
             "median": 47.0,
             "p95": 78.0,
@@ -1290,159 +1300,159 @@
           },
           "processSamples": [
             {
-              "privateBytes": 61341696,
-              "workingSetBytes": 86634496,
-              "handleCount": 549
+              "privateBytes": 57483264,
+              "workingSetBytes": 83353600,
+              "handleCount": 537
             },
             {
-              "privateBytes": 62050304,
-              "workingSetBytes": 87367680,
+              "privateBytes": 59666432,
+              "workingSetBytes": 85704704,
+              "handleCount": 557
+            },
+            {
+              "privateBytes": 59834368,
+              "workingSetBytes": 85905408,
+              "handleCount": 564
+            },
+            {
+              "privateBytes": 59834368,
+              "workingSetBytes": 85909504,
+              "handleCount": 564
+            },
+            {
+              "privateBytes": 60047360,
+              "workingSetBytes": 86081536,
+              "handleCount": 575
+            },
+            {
+              "privateBytes": 60047360,
+              "workingSetBytes": 86081536,
+              "handleCount": 575
+            },
+            {
+              "privateBytes": 60157952,
+              "workingSetBytes": 86171648,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60162048,
+              "workingSetBytes": 86179840,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60162048,
+              "workingSetBytes": 86183936,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60162048,
+              "workingSetBytes": 86183936,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60162048,
+              "workingSetBytes": 86183936,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60112896,
+              "workingSetBytes": 86228992,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60256256,
+              "workingSetBytes": 86409216,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60256256,
+              "workingSetBytes": 86413312,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60256256,
+              "workingSetBytes": 86413312,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 60522496,
+              "workingSetBytes": 86671360,
+              "handleCount": 583
+            },
+            {
+              "privateBytes": 60620800,
+              "workingSetBytes": 86749184,
               "handleCount": 588
             },
             {
-              "privateBytes": 62267392,
-              "workingSetBytes": 87629824,
+              "privateBytes": 60620800,
+              "workingSetBytes": 86753280,
               "handleCount": 588
             },
             {
-              "privateBytes": 62750720,
-              "workingSetBytes": 88129536,
-              "handleCount": 593
+              "privateBytes": 60915712,
+              "workingSetBytes": 87027712,
+              "handleCount": 594
             },
             {
-              "privateBytes": 62849024,
-              "workingSetBytes": 88223744,
-              "handleCount": 593
+              "privateBytes": 60915712,
+              "workingSetBytes": 87027712,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63381504,
-              "workingSetBytes": 88678400,
-              "handleCount": 611
+              "privateBytes": 60915712,
+              "workingSetBytes": 87027712,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63655936,
-              "workingSetBytes": 88928256,
-              "handleCount": 611
+              "privateBytes": 61181952,
+              "workingSetBytes": 87293952,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63655936,
-              "workingSetBytes": 88932352,
-              "handleCount": 611
+              "privateBytes": 61181952,
+              "workingSetBytes": 87322624,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63660032,
-              "workingSetBytes": 88936448,
-              "handleCount": 611
+              "privateBytes": 61132800,
+              "workingSetBytes": 87314432,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63660032,
-              "workingSetBytes": 88936448,
-              "handleCount": 611
+              "privateBytes": 61132800,
+              "workingSetBytes": 87343104,
+              "handleCount": 594
             },
             {
-              "privateBytes": 63676416,
-              "workingSetBytes": 89067520,
-              "handleCount": 611
+              "privateBytes": 61931520,
+              "workingSetBytes": 88117248,
+              "handleCount": 599
             },
             {
-              "privateBytes": 63627264,
-              "workingSetBytes": 89055232,
-              "handleCount": 606
+              "privateBytes": 61997056,
+              "workingSetBytes": 88199168,
+              "handleCount": 599
             },
             {
-              "privateBytes": 63770624,
-              "workingSetBytes": 89169920,
-              "handleCount": 611
+              "privateBytes": 62062592,
+              "workingSetBytes": 88268800,
+              "handleCount": 599
             },
             {
-              "privateBytes": 63975424,
-              "workingSetBytes": 89407488,
-              "handleCount": 611
+              "privateBytes": 62259200,
+              "workingSetBytes": 88485888,
+              "handleCount": 599
             },
             {
-              "privateBytes": 63975424,
-              "workingSetBytes": 89415680,
-              "handleCount": 611
+              "privateBytes": 62259200,
+              "workingSetBytes": 88498176,
+              "handleCount": 599
             },
             {
-              "privateBytes": 64040960,
-              "workingSetBytes": 89481216,
-              "handleCount": 611
-            },
-            {
-              "privateBytes": 64512000,
-              "workingSetBytes": 89976832,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 64512000,
-              "workingSetBytes": 89976832,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 64643072,
-              "workingSetBytes": 90050560,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 64843776,
-              "workingSetBytes": 90308608,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 64794624,
-              "workingSetBytes": 90292224,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 64794624,
-              "workingSetBytes": 90292224,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 65122304,
-              "workingSetBytes": 90570752,
-              "handleCount": 617
-            },
-            {
-              "privateBytes": 65122304,
-              "workingSetBytes": 90574848,
-              "handleCount": 617
-            },
-            {
-              "privateBytes": 65150976,
-              "workingSetBytes": 90591232,
-              "handleCount": 617
-            },
-            {
-              "privateBytes": 65462272,
-              "workingSetBytes": 90939392,
-              "handleCount": 622
-            },
-            {
-              "privateBytes": 65478656,
-              "workingSetBytes": 90963968,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 65478656,
-              "workingSetBytes": 90963968,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 65609728,
-              "workingSetBytes": 91062272,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 65609728,
-              "workingSetBytes": 91062272,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 65605632,
-              "workingSetBytes": 91070464,
-              "handleCount": 617
+              "privateBytes": 62144512,
+              "workingSetBytes": 88485888,
+              "handleCount": 596
             }
           ],
           "journalEntries": 13242,
@@ -1456,7 +1466,8 @@
           "transport": "http",
           "profile": "lite",
           "concurrency": 8,
-          "toolCount": 59,
+          "toolCount": 61,
+          "workerSamples": [],
           "measuredToolCalls": 6300,
           "warmupToolCalls": 21,
           "recoveryToolCalls": 300,
@@ -1484,167 +1495,167 @@
             "bridge_unknown_tool": 300,
             "unknown_tool": 300
           },
-          "elapsedSeconds": 74.047,
+          "elapsedSeconds": 71.407,
           "latencyMilliseconds": {
-            "median": 62.0,
+            "median": 63.0,
             "p95": 109.0,
-            "max": 141.0
+            "max": 203.0
           },
           "processSamples": [
             {
-              "privateBytes": 41218048,
-              "workingSetBytes": 70475776,
-              "handleCount": 542
+              "privateBytes": 40869888,
+              "workingSetBytes": 67825664,
+              "handleCount": 535
             },
             {
-              "privateBytes": 44138496,
-              "workingSetBytes": 73486336,
-              "handleCount": 570
+              "privateBytes": 44097536,
+              "workingSetBytes": 71127040,
+              "handleCount": 575
             },
             {
-              "privateBytes": 44593152,
-              "workingSetBytes": 73863168,
-              "handleCount": 588
+              "privateBytes": 44273664,
+              "workingSetBytes": 71331840,
+              "handleCount": 576
             },
             {
-              "privateBytes": 45125632,
-              "workingSetBytes": 74342400,
+              "privateBytes": 44613632,
+              "workingSetBytes": 71761920,
+              "handleCount": 576
+            },
+            {
+              "privateBytes": 44945408,
+              "workingSetBytes": 72085504,
+              "handleCount": 576
+            },
+            {
+              "privateBytes": 45010944,
+              "workingSetBytes": 72171520,
+              "handleCount": 576
+            },
+            {
+              "privateBytes": 45096960,
+              "workingSetBytes": 72232960,
+              "handleCount": 581
+            },
+            {
+              "privateBytes": 45232128,
+              "workingSetBytes": 72347648,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45232128,
+              "workingSetBytes": 72359936,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45301760,
+              "workingSetBytes": 72437760,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45301760,
+              "workingSetBytes": 72458240,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45367296,
+              "workingSetBytes": 72523776,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45694976,
+              "workingSetBytes": 72826880,
+              "handleCount": 587
+            },
+            {
+              "privateBytes": 45641728,
+              "workingSetBytes": 72867840,
+              "handleCount": 589
+            },
+            {
+              "privateBytes": 45641728,
+              "workingSetBytes": 72880128,
+              "handleCount": 589
+            },
+            {
+              "privateBytes": 45707264,
+              "workingSetBytes": 72966144,
+              "handleCount": 589
+            },
+            {
+              "privateBytes": 45887488,
+              "workingSetBytes": 73097216,
               "handleCount": 594
             },
             {
-              "privateBytes": 45408256,
-              "workingSetBytes": 74661888,
+              "privateBytes": 45953024,
+              "workingSetBytes": 73187328,
               "handleCount": 594
             },
             {
-              "privateBytes": 45576192,
-              "workingSetBytes": 74813440,
-              "handleCount": 600
+              "privateBytes": 46215168,
+              "workingSetBytes": 73461760,
+              "handleCount": 594
             },
             {
-              "privateBytes": 45580288,
-              "workingSetBytes": 74817536,
-              "handleCount": 600
+              "privateBytes": 46215168,
+              "workingSetBytes": 73478144,
+              "handleCount": 594
             },
             {
-              "privateBytes": 45580288,
-              "workingSetBytes": 74821632,
-              "handleCount": 600
+              "privateBytes": 46215168,
+              "workingSetBytes": 73506816,
+              "handleCount": 594
             },
             {
-              "privateBytes": 45715456,
-              "workingSetBytes": 74973184,
-              "handleCount": 600
+              "privateBytes": 46215168,
+              "workingSetBytes": 73506816,
+              "handleCount": 594
             },
             {
-              "privateBytes": 45715456,
-              "workingSetBytes": 74973184,
-              "handleCount": 600
-            },
-            {
-              "privateBytes": 45715456,
-              "workingSetBytes": 75051008,
-              "handleCount": 605
-            },
-            {
-              "privateBytes": 45985792,
-              "workingSetBytes": 75313152,
-              "handleCount": 605
-            },
-            {
-              "privateBytes": 45985792,
-              "workingSetBytes": 75337728,
-              "handleCount": 605
-            },
-            {
-              "privateBytes": 45985792,
-              "workingSetBytes": 75366400,
-              "handleCount": 607
-            },
-            {
-              "privateBytes": 46055424,
-              "workingSetBytes": 75431936,
-              "handleCount": 607
-            },
-            {
-              "privateBytes": 46383104,
-              "workingSetBytes": 75726848,
-              "handleCount": 607
-            },
-            {
-              "privateBytes": 46329856,
-              "workingSetBytes": 75730944,
-              "handleCount": 607
-            },
-            {
-              "privateBytes": 46379008,
-              "workingSetBytes": 75755520,
+              "privateBytes": 46968832,
+              "workingSetBytes": 74207232,
               "handleCount": 612
             },
             {
-              "privateBytes": 46383104,
-              "workingSetBytes": 75759616,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46383104,
-              "workingSetBytes": 75771904,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46383104,
-              "workingSetBytes": 75780096,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46645248,
-              "workingSetBytes": 76001280,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46645248,
-              "workingSetBytes": 76038144,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46592000,
-              "workingSetBytes": 76009472,
-              "handleCount": 612
-            },
-            {
-              "privateBytes": 46641152,
-              "workingSetBytes": 76034048,
+              "privateBytes": 47017984,
+              "workingSetBytes": 74235904,
               "handleCount": 617
             },
             {
-              "privateBytes": 46911488,
-              "workingSetBytes": 76312576,
-              "handleCount": 626
+              "privateBytes": 47149056,
+              "workingSetBytes": 74326016,
+              "handleCount": 617
             },
             {
-              "privateBytes": 46911488,
-              "workingSetBytes": 76312576,
-              "handleCount": 626
+              "privateBytes": 47415296,
+              "workingSetBytes": 74596352,
+              "handleCount": 617
             },
             {
-              "privateBytes": 47439872,
-              "workingSetBytes": 76865536,
-              "handleCount": 626
+              "privateBytes": 47296512,
+              "workingSetBytes": 74575872,
+              "handleCount": 614
             },
             {
-              "privateBytes": 47464448,
-              "workingSetBytes": 76922880,
-              "handleCount": 624
+              "privateBytes": 47296512,
+              "workingSetBytes": 74579968,
+              "handleCount": 614
             },
             {
-              "privateBytes": 47529984,
-              "workingSetBytes": 77021184,
-              "handleCount": 624
+              "privateBytes": 47300608,
+              "workingSetBytes": 74604544,
+              "handleCount": 614
             },
             {
-              "privateBytes": 47742976,
-              "workingSetBytes": 77262848,
-              "handleCount": 624
+              "privateBytes": 47271936,
+              "workingSetBytes": 74596352,
+              "handleCount": 614
+            },
+            {
+              "privateBytes": 47271936,
+              "workingSetBytes": 74608640,
+              "handleCount": 614
             }
           ],
           "journalEntries": 18660,
@@ -1656,7 +1667,2921 @@
         }
       ],
       "status": "passed",
-      "finishedAtUtc": "2026-09-30T22:42:41.789382+00:00"
+      "finishedAtUtc": "2026-10-01T15:26:29.464132+00:00"
+    }
+  },
+  "isolatedRuntimes": {
+    "V20": {
+      "schemaVersion": 1,
+      "major": 20,
+      "startedAtUtc": "2026-10-01T15:23:32.157379+00:00",
+      "runtimeSha256": "fbbfb59696645f2ab405c032bccd38cf6e43e0c0c1ecb97bdb617ee3ce05620e",
+      "harnessSha256": "128d4afa2234a304907bf7b1b89256de6db2a5551b36ab55c0844042cd04c160",
+      "scriptSha256": "bdbd6d1414a0e990456908f633ead882ac004e4d58ddabf6485ae9675139a320",
+      "resourceHelperSha256": "7af2e44dc000c7031c50d9624466781622b0acdbccd38cccd051f6c0c42e3632",
+      "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
+      "rounds": 300,
+      "isolatedWorker": true,
+      "bounds": {
+        "maxPrivateMiB": 512,
+        "maxHandleGrowth": 128
+      },
+      "runs": [
+        {
+          "transport": "stdio",
+          "profile": "full",
+          "concurrency": 1,
+          "toolCount": 476,
+          "workerSamples": [
+            {
+              "privateBytes": 47796224,
+              "workingSetBytes": 70324224,
+              "handleCount": 467
+            },
+            {
+              "privateBytes": 52199424,
+              "workingSetBytes": 74637312,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 52199424,
+              "workingSetBytes": 74665984,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 52199424,
+              "workingSetBytes": 74686464,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 52199424,
+              "workingSetBytes": 74702848,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 52199424,
+              "workingSetBytes": 74702848,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73625600,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73625600,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73629696,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73629696,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73629696,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73629696,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51081216,
+              "workingSetBytes": 73633792,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 51040256,
+              "workingSetBytes": 73625600,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51040256,
+              "workingSetBytes": 73625600,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51040256,
+              "workingSetBytes": 73625600,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51040256,
+              "workingSetBytes": 73641984,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51040256,
+              "workingSetBytes": 73641984,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73224192,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73232384,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73236480,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73236480,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50675712,
+              "workingSetBytes": 73256960,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73236480,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50610176,
+              "workingSetBytes": 73240576,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50532352,
+              "workingSetBytes": 73252864,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 50532352,
+              "workingSetBytes": 73252864,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 50532352,
+              "workingSetBytes": 73252864,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 50597888,
+              "workingSetBytes": 73289728,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 50532352,
+              "workingSetBytes": 73252864,
+              "handleCount": 477
+            },
+            {
+              "privateBytes": 50532352,
+              "workingSetBytes": 73261056,
+              "handleCount": 477
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 900,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 74.859,
+          "latencyMilliseconds": {
+            "median": 15.0,
+            "p95": 16.0,
+            "max": 47.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 56840192,
+              "workingSetBytes": 76992512,
+              "handleCount": 507
+            },
+            {
+              "privateBytes": 58626048,
+              "workingSetBytes": 78970880,
+              "handleCount": 508
+            },
+            {
+              "privateBytes": 58757120,
+              "workingSetBytes": 79081472,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58892288,
+              "workingSetBytes": 79245312,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79409152,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58642432,
+              "workingSetBytes": 79052800,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58843136,
+              "workingSetBytes": 79237120,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59039744,
+              "workingSetBytes": 79458304,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59150336,
+              "workingSetBytes": 79593472,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59150336,
+              "workingSetBytes": 79601664,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58892288,
+              "workingSetBytes": 79368192,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79581184,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79597568,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59154432,
+              "workingSetBytes": 79613952,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 58892288,
+              "workingSetBytes": 79351808,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79605760,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59154432,
+              "workingSetBytes": 79622144,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59154432,
+              "workingSetBytes": 79638528,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 58892288,
+              "workingSetBytes": 79384576,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79613952,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79626240,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59154432,
+              "workingSetBytes": 79638528,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 58822656,
+              "workingSetBytes": 79314944,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59088896,
+              "workingSetBytes": 79626240,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 59031552,
+              "workingSetBytes": 79597568,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59031552,
+              "workingSetBytes": 79601664,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58568704,
+              "workingSetBytes": 79192064,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58966016,
+              "workingSetBytes": 79577088,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59031552,
+              "workingSetBytes": 79589376,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59031552,
+              "workingSetBytes": 79605760,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 59031552,
+              "workingSetBytes": 79618048,
+              "handleCount": 509
+            }
+          ],
+          "journalEntries": 24078,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "stdio",
+          "profile": "lite",
+          "concurrency": 1,
+          "toolCount": 61,
+          "workerSamples": [
+            {
+              "privateBytes": 39641088,
+              "workingSetBytes": 63021056,
+              "handleCount": 466
+            },
+            {
+              "privateBytes": 41697280,
+              "workingSetBytes": 65118208,
+              "handleCount": 466
+            },
+            {
+              "privateBytes": 41771008,
+              "workingSetBytes": 65212416,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41771008,
+              "workingSetBytes": 65261568,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41836544,
+              "workingSetBytes": 65294336,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41902080,
+              "workingSetBytes": 65372160,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65445888,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65466368,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65466368,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65466368,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65466368,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41697280,
+              "workingSetBytes": 65277952,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41762816,
+              "workingSetBytes": 65343488,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41762816,
+              "workingSetBytes": 65343488,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41828352,
+              "workingSetBytes": 65433600,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65503232,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41701376,
+              "workingSetBytes": 65314816,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41766912,
+              "workingSetBytes": 65331200,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41766912,
+              "workingSetBytes": 65359872,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41832448,
+              "workingSetBytes": 65417216,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41897984,
+              "workingSetBytes": 65474560,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41762816,
+              "workingSetBytes": 65376256,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41644032,
+              "workingSetBytes": 65343488,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41644032,
+              "workingSetBytes": 65343488,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41709568,
+              "workingSetBytes": 65413120,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41775104,
+              "workingSetBytes": 65478656,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41578496,
+              "workingSetBytes": 65282048,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41644032,
+              "workingSetBytes": 65351680,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41644032,
+              "workingSetBytes": 65351680,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41709568,
+              "workingSetBytes": 65417216,
+              "handleCount": 472
+            },
+            {
+              "privateBytes": 41775104,
+              "workingSetBytes": 65482752,
+              "handleCount": 472
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 900,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 85.844,
+          "latencyMilliseconds": {
+            "median": 15.0,
+            "p95": 31.0,
+            "max": 62.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 41373696,
+              "workingSetBytes": 65576960,
+              "handleCount": 502
+            },
+            {
+              "privateBytes": 43048960,
+              "workingSetBytes": 67375104,
+              "handleCount": 504
+            },
+            {
+              "privateBytes": 43106304,
+              "workingSetBytes": 67411968,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43253760,
+              "workingSetBytes": 67608576,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67682304,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67686400,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67686400,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67686400,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67698688,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67723264,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67723264,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67735552,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67743744,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67756032,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67764224,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67764224,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67764224,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67764224,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43319296,
+              "workingSetBytes": 67764224,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43384832,
+              "workingSetBytes": 67784704,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43384832,
+              "workingSetBytes": 67788800,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43384832,
+              "workingSetBytes": 67792896,
+              "handleCount": 511
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67743744,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67747840,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67772416,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 43261952,
+              "workingSetBytes": 67776512,
+              "handleCount": 509
+            }
+          ],
+          "journalEntries": 29496,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "http",
+          "profile": "full",
+          "concurrency": 8,
+          "toolCount": 476,
+          "workerSamples": [
+            {
+              "privateBytes": 47730688,
+              "workingSetBytes": 70270976,
+              "handleCount": 467
+            },
+            {
+              "privateBytes": 51945472,
+              "workingSetBytes": 74485760,
+              "handleCount": 468
+            },
+            {
+              "privateBytes": 52019200,
+              "workingSetBytes": 74575872,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 52019200,
+              "workingSetBytes": 74584064,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 52133888,
+              "workingSetBytes": 74661888,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 52133888,
+              "workingSetBytes": 74690560,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73605120,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73609216,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73617408,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73621504,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73621504,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73621504,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73633792,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73633792,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73637888,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73637888,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73646080,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51011584,
+              "workingSetBytes": 73658368,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50556928,
+              "workingSetBytes": 73203712,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50556928,
+              "workingSetBytes": 73203712,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50556928,
+              "workingSetBytes": 73203712,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50622464,
+              "workingSetBytes": 73224192,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50622464,
+              "workingSetBytes": 73256960,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50372608,
+              "workingSetBytes": 73117696,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50372608,
+              "workingSetBytes": 73121792,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50438144,
+              "workingSetBytes": 73134080,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50438144,
+              "workingSetBytes": 73158656,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50503680,
+              "workingSetBytes": 73203712,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50503680,
+              "workingSetBytes": 73252864,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50372608,
+              "workingSetBytes": 73134080,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 50372608,
+              "workingSetBytes": 73134080,
+              "handleCount": 478
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 1200,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 80.5,
+          "latencyMilliseconds": {
+            "median": 63.0,
+            "p95": 109.0,
+            "max": 203.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 67219456,
+              "workingSetBytes": 89153536,
+              "handleCount": 554
+            },
+            {
+              "privateBytes": 68120576,
+              "workingSetBytes": 90157056,
+              "handleCount": 603
+            },
+            {
+              "privateBytes": 68259840,
+              "workingSetBytes": 90279936,
+              "handleCount": 608
+            },
+            {
+              "privateBytes": 68276224,
+              "workingSetBytes": 90357760,
+              "handleCount": 608
+            },
+            {
+              "privateBytes": 68452352,
+              "workingSetBytes": 90521600,
+              "handleCount": 614
+            },
+            {
+              "privateBytes": 68452352,
+              "workingSetBytes": 90521600,
+              "handleCount": 614
+            },
+            {
+              "privateBytes": 68456448,
+              "workingSetBytes": 90529792,
+              "handleCount": 614
+            },
+            {
+              "privateBytes": 68743168,
+              "workingSetBytes": 90775552,
+              "handleCount": 626
+            },
+            {
+              "privateBytes": 69070848,
+              "workingSetBytes": 91242496,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 69398528,
+              "workingSetBytes": 91623424,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 69398528,
+              "workingSetBytes": 91623424,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 69398528,
+              "workingSetBytes": 91643904,
+              "handleCount": 623
+            },
+            {
+              "privateBytes": 69398528,
+              "workingSetBytes": 91684864,
+              "handleCount": 623
+            },
+            {
+              "privateBytes": 69402624,
+              "workingSetBytes": 91697152,
+              "handleCount": 623
+            },
+            {
+              "privateBytes": 69402624,
+              "workingSetBytes": 91697152,
+              "handleCount": 623
+            },
+            {
+              "privateBytes": 69701632,
+              "workingSetBytes": 91922432,
+              "handleCount": 641
+            },
+            {
+              "privateBytes": 69750784,
+              "workingSetBytes": 91967488,
+              "handleCount": 641
+            },
+            {
+              "privateBytes": 61427712,
+              "workingSetBytes": 83673088,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61431808,
+              "workingSetBytes": 83681280,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61431808,
+              "workingSetBytes": 83681280,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61431808,
+              "workingSetBytes": 83681280,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61435904,
+              "workingSetBytes": 83689472,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61435904,
+              "workingSetBytes": 83689472,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 61390848,
+              "workingSetBytes": 83742720,
+              "handleCount": 643
+            },
+            {
+              "privateBytes": 61743104,
+              "workingSetBytes": 84119552,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 62136320,
+              "workingSetBytes": 84504576,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 62197760,
+              "workingSetBytes": 84537344,
+              "handleCount": 643
+            },
+            {
+              "privateBytes": 62197760,
+              "workingSetBytes": 84561920,
+              "handleCount": 643
+            },
+            {
+              "privateBytes": 62853120,
+              "workingSetBytes": 85217280,
+              "handleCount": 643
+            },
+            {
+              "privateBytes": 62951424,
+              "workingSetBytes": 85352448,
+              "handleCount": 643
+            },
+            {
+              "privateBytes": 62951424,
+              "workingSetBytes": 85352448,
+              "handleCount": 643
+            }
+          ],
+          "journalEntries": 24078,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "http",
+          "profile": "lite",
+          "concurrency": 8,
+          "toolCount": 61,
+          "workerSamples": [
+            {
+              "privateBytes": 39514112,
+              "workingSetBytes": 62877696,
+              "handleCount": 467
+            },
+            {
+              "privateBytes": 41590784,
+              "workingSetBytes": 65011712,
+              "handleCount": 468
+            },
+            {
+              "privateBytes": 41664512,
+              "workingSetBytes": 65114112,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 41664512,
+              "workingSetBytes": 65163264,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 41844736,
+              "workingSetBytes": 65282048,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41910272,
+              "workingSetBytes": 65359872,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65392640,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65400832,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65400832,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65400832,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65404928,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65413120,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65413120,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65413120,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65417216,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65421312,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65421312,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65421312,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65449984,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41975808,
+              "workingSetBytes": 65449984,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41857024,
+              "workingSetBytes": 65421312,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41611264,
+              "workingSetBytes": 65236992,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41611264,
+              "workingSetBytes": 65236992,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41676800,
+              "workingSetBytes": 65253376,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41742336,
+              "workingSetBytes": 65310720,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41742336,
+              "workingSetBytes": 65359872,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41611264,
+              "workingSetBytes": 65241088,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41611264,
+              "workingSetBytes": 65241088,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41676800,
+              "workingSetBytes": 65290240,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41742336,
+              "workingSetBytes": 65327104,
+              "handleCount": 478
+            },
+            {
+              "privateBytes": 41807872,
+              "workingSetBytes": 65384448,
+              "handleCount": 478
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 1200,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 91.828,
+          "latencyMilliseconds": {
+            "median": 93.0,
+            "p95": 125.0,
+            "max": 235.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 42119168,
+              "workingSetBytes": 68038656,
+              "handleCount": 546
+            },
+            {
+              "privateBytes": 45195264,
+              "workingSetBytes": 71237632,
+              "handleCount": 590
+            },
+            {
+              "privateBytes": 45686784,
+              "workingSetBytes": 71774208,
+              "handleCount": 591
+            },
+            {
+              "privateBytes": 46555136,
+              "workingSetBytes": 72605696,
+              "handleCount": 591
+            },
+            {
+              "privateBytes": 47435776,
+              "workingSetBytes": 73441280,
+              "handleCount": 615
+            },
+            {
+              "privateBytes": 47779840,
+              "workingSetBytes": 73756672,
+              "handleCount": 615
+            },
+            {
+              "privateBytes": 47853568,
+              "workingSetBytes": 73834496,
+              "handleCount": 620
+            },
+            {
+              "privateBytes": 47874048,
+              "workingSetBytes": 73854976,
+              "handleCount": 620
+            },
+            {
+              "privateBytes": 47923200,
+              "workingSetBytes": 73924608,
+              "handleCount": 620
+            },
+            {
+              "privateBytes": 47927296,
+              "workingSetBytes": 73965568,
+              "handleCount": 620
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74022912,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74035200,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74039296,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74039296,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74039296,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74043392,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47882240,
+              "workingSetBytes": 74043392,
+              "handleCount": 622
+            },
+            {
+              "privateBytes": 47931392,
+              "workingSetBytes": 74072064,
+              "handleCount": 627
+            },
+            {
+              "privateBytes": 48128000,
+              "workingSetBytes": 74321920,
+              "handleCount": 627
+            },
+            {
+              "privateBytes": 48918528,
+              "workingSetBytes": 75075584,
+              "handleCount": 627
+            },
+            {
+              "privateBytes": 49123328,
+              "workingSetBytes": 75407360,
+              "handleCount": 624
+            },
+            {
+              "privateBytes": 49180672,
+              "workingSetBytes": 75464704,
+              "handleCount": 624
+            },
+            {
+              "privateBytes": 49127424,
+              "workingSetBytes": 75436032,
+              "handleCount": 624
+            },
+            {
+              "privateBytes": 49205248,
+              "workingSetBytes": 75513856,
+              "handleCount": 627
+            },
+            {
+              "privateBytes": 49295360,
+              "workingSetBytes": 75579392,
+              "handleCount": 633
+            },
+            {
+              "privateBytes": 49295360,
+              "workingSetBytes": 75583488,
+              "handleCount": 633
+            },
+            {
+              "privateBytes": 49352704,
+              "workingSetBytes": 75620352,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 49426432,
+              "workingSetBytes": 75661312,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 49426432,
+              "workingSetBytes": 75661312,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 49688576,
+              "workingSetBytes": 75948032,
+              "handleCount": 638
+            },
+            {
+              "privateBytes": 49688576,
+              "workingSetBytes": 75960320,
+              "handleCount": 638
+            }
+          ],
+          "journalEntries": 29496,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        }
+      ],
+      "status": "passed",
+      "finishedAtUtc": "2026-10-01T15:29:05.216789+00:00"
+    },
+    "V21": {
+      "schemaVersion": 1,
+      "major": 21,
+      "startedAtUtc": "2026-10-01T15:26:29.604195+00:00",
+      "runtimeSha256": "fea48eb3903890ad17a2b0a1142395887da6fcca6b552ac64974d58bf712f6ea",
+      "harnessSha256": "128d4afa2234a304907bf7b1b89256de6db2a5551b36ab55c0844042cd04c160",
+      "scriptSha256": "bdbd6d1414a0e990456908f633ead882ac004e4d58ddabf6485ae9675139a320",
+      "resourceHelperSha256": "7af2e44dc000c7031c50d9624466781622b0acdbccd38cccd051f6c0c42e3632",
+      "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
+      "rounds": 300,
+      "isolatedWorker": true,
+      "bounds": {
+        "maxPrivateMiB": 512,
+        "maxHandleGrowth": 128
+      },
+      "runs": [
+        {
+          "transport": "stdio",
+          "profile": "full",
+          "concurrency": 1,
+          "toolCount": 476,
+          "workerSamples": [
+            {
+              "privateBytes": 47755264,
+              "workingSetBytes": 70770688,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 52002816,
+              "workingSetBytes": 75055104,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 52072448,
+              "workingSetBytes": 75120640,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 52142080,
+              "workingSetBytes": 75190272,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 52142080,
+              "workingSetBytes": 75210752,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 52142080,
+              "workingSetBytes": 75210752,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74149888,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74158080,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74182656,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74186752,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74186752,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51048448,
+              "workingSetBytes": 74186752,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 51007488,
+              "workingSetBytes": 74174464,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 51007488,
+              "workingSetBytes": 74182656,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 51007488,
+              "workingSetBytes": 74194944,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 51007488,
+              "workingSetBytes": 74203136,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 51007488,
+              "workingSetBytes": 74203136,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50446336,
+              "workingSetBytes": 73641984,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50511872,
+              "workingSetBytes": 73674752,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50511872,
+              "workingSetBytes": 73707520,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50577408,
+              "workingSetBytes": 73744384,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50577408,
+              "workingSetBytes": 73777152,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50446336,
+              "workingSetBytes": 73646080,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50511872,
+              "workingSetBytes": 73658368,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50511872,
+              "workingSetBytes": 73699328,
+              "handleCount": 481
+            },
+            {
+              "privateBytes": 50499584,
+              "workingSetBytes": 73715712,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50565120,
+              "workingSetBytes": 73781248,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50368512,
+              "workingSetBytes": 73641984,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50368512,
+              "workingSetBytes": 73646080,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50434048,
+              "workingSetBytes": 73687040,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 50499584,
+              "workingSetBytes": 73732096,
+              "handleCount": 479
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 900,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 75.5,
+          "latencyMilliseconds": {
+            "median": 15.0,
+            "p95": 16.0,
+            "max": 47.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 56680448,
+              "workingSetBytes": 77365248,
+              "handleCount": 509
+            },
+            {
+              "privateBytes": 58433536,
+              "workingSetBytes": 79331328,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58564608,
+              "workingSetBytes": 79458304,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58826752,
+              "workingSetBytes": 79716352,
+              "handleCount": 515
+            },
+            {
+              "privateBytes": 58957824,
+              "workingSetBytes": 79872000,
+              "handleCount": 515
+            },
+            {
+              "privateBytes": 59023360,
+              "workingSetBytes": 79880192,
+              "handleCount": 515
+            },
+            {
+              "privateBytes": 58773504,
+              "workingSetBytes": 79626240,
+              "handleCount": 515
+            },
+            {
+              "privateBytes": 58970112,
+              "workingSetBytes": 79876096,
+              "handleCount": 515
+            },
+            {
+              "privateBytes": 58920960,
+              "workingSetBytes": 79917056,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79929344,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58724352,
+              "workingSetBytes": 79687680,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58920960,
+              "workingSetBytes": 79949824,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79966208,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79986688,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58724352,
+              "workingSetBytes": 79765504,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58920960,
+              "workingSetBytes": 79962112,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79974400,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79990784,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58724352,
+              "workingSetBytes": 79761408,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58920960,
+              "workingSetBytes": 79962112,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79978496,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58986496,
+              "workingSetBytes": 79986688,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58724352,
+              "workingSetBytes": 79728640,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58920960,
+              "workingSetBytes": 79978496,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 58863616,
+              "workingSetBytes": 79945728,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58863616,
+              "workingSetBytes": 79953920,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58523648,
+              "workingSetBytes": 79626240,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58785792,
+              "workingSetBytes": 79941632,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58851328,
+              "workingSetBytes": 79958016,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58851328,
+              "workingSetBytes": 79966208,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 58535936,
+              "workingSetBytes": 79642624,
+              "handleCount": 510
+            }
+          ],
+          "journalEntries": 24078,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "stdio",
+          "profile": "lite",
+          "concurrency": 1,
+          "toolCount": 61,
+          "workerSamples": [
+            {
+              "privateBytes": 39665664,
+              "workingSetBytes": 63537152,
+              "handleCount": 473
+            },
+            {
+              "privateBytes": 41738240,
+              "workingSetBytes": 65720320,
+              "handleCount": 474
+            },
+            {
+              "privateBytes": 41811968,
+              "workingSetBytes": 65794048,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 41877504,
+              "workingSetBytes": 65851392,
+              "handleCount": 479
+            },
+            {
+              "privateBytes": 42127360,
+              "workingSetBytes": 66056192,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66109440,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66142208,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66154496,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66170880,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66183168,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42192896,
+              "workingSetBytes": 66191360,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66031616,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66031616,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 42045440,
+              "workingSetBytes": 66048000,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 42045440,
+              "workingSetBytes": 66097152,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66031616,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66031616,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66031616,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 42045440,
+              "workingSetBytes": 66072576,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 42110976,
+              "workingSetBytes": 66113536,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66035712,
+              "handleCount": 486
+            },
+            {
+              "privateBytes": 41906176,
+              "workingSetBytes": 66035712,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41971712,
+              "workingSetBytes": 66039808,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41971712,
+              "workingSetBytes": 66093056,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42037248,
+              "workingSetBytes": 66134016,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41906176,
+              "workingSetBytes": 66043904,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41906176,
+              "workingSetBytes": 66043904,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41971712,
+              "workingSetBytes": 66064384,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 42037248,
+              "workingSetBytes": 66138112,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41828352,
+              "workingSetBytes": 65966080,
+              "handleCount": 484
+            },
+            {
+              "privateBytes": 41893888,
+              "workingSetBytes": 65990656,
+              "handleCount": 484
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 900,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 87.765,
+          "latencyMilliseconds": {
+            "median": 15.0,
+            "p95": 31.0,
+            "max": 63.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 41431040,
+              "workingSetBytes": 66068480,
+              "handleCount": 503
+            },
+            {
+              "privateBytes": 43073536,
+              "workingSetBytes": 67866624,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43073536,
+              "workingSetBytes": 67874816,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68083712,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68141056,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68145152,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68157440,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68157440,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68161536,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68165632,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43339776,
+              "workingSetBytes": 68165632,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68186112,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68194304,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68194304,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68198400,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68202496,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68210688,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68210688,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68251648,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68251648,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43298816,
+              "workingSetBytes": 68251648,
+              "handleCount": 512
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68218880,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68227072,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68231168,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            },
+            {
+              "privateBytes": 43216896,
+              "workingSetBytes": 68247552,
+              "handleCount": 510
+            }
+          ],
+          "journalEntries": 29496,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "http",
+          "profile": "full",
+          "concurrency": 8,
+          "toolCount": 476,
+          "workerSamples": [
+            {
+              "privateBytes": 48099328,
+              "workingSetBytes": 71106560,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 52338688,
+              "workingSetBytes": 75382784,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 52338688,
+              "workingSetBytes": 75407360,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 52338688,
+              "workingSetBytes": 75419648,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 52338688,
+              "workingSetBytes": 75427840,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 52338688,
+              "workingSetBytes": 75436032,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51240960,
+              "workingSetBytes": 74358784,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51240960,
+              "workingSetBytes": 74358784,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51240960,
+              "workingSetBytes": 74371072,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51240960,
+              "workingSetBytes": 74371072,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 51240960,
+              "workingSetBytes": 74379264,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50724864,
+              "workingSetBytes": 73879552,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50724864,
+              "workingSetBytes": 73879552,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73924608,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73945088,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73977856,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50814976,
+              "workingSetBytes": 74018816,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50683904,
+              "workingSetBytes": 73928704,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50683904,
+              "workingSetBytes": 73928704,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73957376,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73994240,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50814976,
+              "workingSetBytes": 74047488,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50683904,
+              "workingSetBytes": 73945088,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50683904,
+              "workingSetBytes": 73945088,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50683904,
+              "workingSetBytes": 73949184,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50749440,
+              "workingSetBytes": 73990144,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 50737152,
+              "workingSetBytes": 74035200,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50606080,
+              "workingSetBytes": 73945088,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50606080,
+              "workingSetBytes": 73957376,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50606080,
+              "workingSetBytes": 73957376,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 50671616,
+              "workingSetBytes": 73986048,
+              "handleCount": 480
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 1200,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 72.39,
+          "latencyMilliseconds": {
+            "median": 62.0,
+            "p95": 94.0,
+            "max": 203.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 67616768,
+              "workingSetBytes": 90009600,
+              "handleCount": 563
+            },
+            {
+              "privateBytes": 68808704,
+              "workingSetBytes": 91246592,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 68997120,
+              "workingSetBytes": 91463680,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69033984,
+              "workingSetBytes": 91533312,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69058560,
+              "workingSetBytes": 91566080,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69259264,
+              "workingSetBytes": 91746304,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69259264,
+              "workingSetBytes": 91750400,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69206016,
+              "workingSetBytes": 91856896,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69226496,
+              "workingSetBytes": 91881472,
+              "handleCount": 632
+            },
+            {
+              "privateBytes": 69488640,
+              "workingSetBytes": 92123136,
+              "handleCount": 639
+            },
+            {
+              "privateBytes": 69509120,
+              "workingSetBytes": 92147712,
+              "handleCount": 639
+            },
+            {
+              "privateBytes": 69582848,
+              "workingSetBytes": 92196864,
+              "handleCount": 644
+            },
+            {
+              "privateBytes": 69582848,
+              "workingSetBytes": 92200960,
+              "handleCount": 646
+            },
+            {
+              "privateBytes": 69804032,
+              "workingSetBytes": 92397568,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 69816320,
+              "workingSetBytes": 92409856,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 69832704,
+              "workingSetBytes": 92442624,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 69832704,
+              "workingSetBytes": 92446720,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 69779456,
+              "workingSetBytes": 92422144,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 69857280,
+              "workingSetBytes": 92475392,
+              "handleCount": 663
+            },
+            {
+              "privateBytes": 61497344,
+              "workingSetBytes": 84209664,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 61501440,
+              "workingSetBytes": 84217856,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 61501440,
+              "workingSetBytes": 84221952,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 61513728,
+              "workingSetBytes": 84258816,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 61644800,
+              "workingSetBytes": 84373504,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 61976576,
+              "workingSetBytes": 84738048,
+              "handleCount": 658
+            },
+            {
+              "privateBytes": 62193664,
+              "workingSetBytes": 84987904,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 62337024,
+              "workingSetBytes": 85118976,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 62402560,
+              "workingSetBytes": 85192704,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 62746624,
+              "workingSetBytes": 85581824,
+              "handleCount": 655
+            },
+            {
+              "privateBytes": 63082496,
+              "workingSetBytes": 85913600,
+              "handleCount": 655
+            },
+            {
+              "privateBytes": 63082496,
+              "workingSetBytes": 85925888,
+              "handleCount": 655
+            }
+          ],
+          "journalEntries": 24078,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        },
+        {
+          "transport": "http",
+          "profile": "lite",
+          "concurrency": 8,
+          "toolCount": 61,
+          "workerSamples": [
+            {
+              "privateBytes": 39669760,
+              "workingSetBytes": 63614976,
+              "handleCount": 475
+            },
+            {
+              "privateBytes": 41738240,
+              "workingSetBytes": 65740800,
+              "handleCount": 475
+            },
+            {
+              "privateBytes": 41738240,
+              "workingSetBytes": 65761280,
+              "handleCount": 475
+            },
+            {
+              "privateBytes": 41803776,
+              "workingSetBytes": 65806336,
+              "handleCount": 475
+            },
+            {
+              "privateBytes": 41943040,
+              "workingSetBytes": 65937408,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 42008576,
+              "workingSetBytes": 65990656,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41865216,
+              "workingSetBytes": 65908736,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41865216,
+              "workingSetBytes": 65937408,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41865216,
+              "workingSetBytes": 65941504,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41930752,
+              "workingSetBytes": 65957888,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41930752,
+              "workingSetBytes": 65998848,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41783296,
+              "workingSetBytes": 65863680,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41848832,
+              "workingSetBytes": 65900544,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41914368,
+              "workingSetBytes": 65961984,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66027520,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66056192,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66056192,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66056192,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66056192,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41979904,
+              "workingSetBytes": 66056192,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41820160,
+              "workingSetBytes": 65859584,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41820160,
+              "workingSetBytes": 65904640,
+              "handleCount": 482
+            },
+            {
+              "privateBytes": 41762816,
+              "workingSetBytes": 65892352,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41902080,
+              "workingSetBytes": 66060288,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41902080,
+              "workingSetBytes": 66105344,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41771008,
+              "workingSetBytes": 65916928,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41771008,
+              "workingSetBytes": 65953792,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41836544,
+              "workingSetBytes": 66019328,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41902080,
+              "workingSetBytes": 66064384,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41709568,
+              "workingSetBytes": 65916928,
+              "handleCount": 480
+            },
+            {
+              "privateBytes": 41775104,
+              "workingSetBytes": 65937408,
+              "handleCount": 480
+            }
+          ],
+          "measuredToolCalls": 6300,
+          "warmupToolCalls": 21,
+          "recoveryToolCalls": 300,
+          "protocolAndAuthChecks": 1200,
+          "cases": {
+            "state": 300,
+            "compatibility": 300,
+            "format_preflight": 300,
+            "xref_block_refused": 300,
+            "xref_tag_refused": 300,
+            "xref_unit_refused": 300,
+            "reflect_invoke_refused": 300,
+            "reflect_suffix_refused": 300,
+            "reflect_object_refused": 300,
+            "journal": 300,
+            "journal_bad_range": 300,
+            "journal_bad_type": 300,
+            "format_missing_file": 300,
+            "format_bad_version": 300,
+            "bridge_success": 300,
+            "bridge_recursion": 300,
+            "bridge_bad_json": 300,
+            "bridge_bad_shape": 300,
+            "bridge_missing_args": 300,
+            "bridge_unknown_tool": 300,
+            "unknown_tool": 300
+          },
+          "elapsedSeconds": 82.672,
+          "latencyMilliseconds": {
+            "median": 78.0,
+            "p95": 109.0,
+            "max": 204.0
+          },
+          "processSamples": [
+            {
+              "privateBytes": 42139648,
+              "workingSetBytes": 68485120,
+              "handleCount": 551
+            },
+            {
+              "privateBytes": 45174784,
+              "workingSetBytes": 71606272,
+              "handleCount": 604
+            },
+            {
+              "privateBytes": 45932544,
+              "workingSetBytes": 72339456,
+              "handleCount": 616
+            },
+            {
+              "privateBytes": 46755840,
+              "workingSetBytes": 73175040,
+              "handleCount": 616
+            },
+            {
+              "privateBytes": 47546368,
+              "workingSetBytes": 74022912,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47616000,
+              "workingSetBytes": 74051584,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47616000,
+              "workingSetBytes": 74063872,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47616000,
+              "workingSetBytes": 74067968,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47628288,
+              "workingSetBytes": 74084352,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47628288,
+              "workingSetBytes": 74145792,
+              "handleCount": 621
+            },
+            {
+              "privateBytes": 47693824,
+              "workingSetBytes": 74272768,
+              "handleCount": 627
+            },
+            {
+              "privateBytes": 47697920,
+              "workingSetBytes": 74285056,
+              "handleCount": 629
+            },
+            {
+              "privateBytes": 47697920,
+              "workingSetBytes": 74309632,
+              "handleCount": 629
+            },
+            {
+              "privateBytes": 47697920,
+              "workingSetBytes": 74330112,
+              "handleCount": 629
+            },
+            {
+              "privateBytes": 47751168,
+              "workingSetBytes": 74358784,
+              "handleCount": 634
+            },
+            {
+              "privateBytes": 47755264,
+              "workingSetBytes": 74362880,
+              "handleCount": 634
+            },
+            {
+              "privateBytes": 47759360,
+              "workingSetBytes": 74366976,
+              "handleCount": 634
+            },
+            {
+              "privateBytes": 47759360,
+              "workingSetBytes": 74375168,
+              "handleCount": 634
+            },
+            {
+              "privateBytes": 47759360,
+              "workingSetBytes": 74379264,
+              "handleCount": 634
+            },
+            {
+              "privateBytes": 47755264,
+              "workingSetBytes": 74399744,
+              "handleCount": 639
+            },
+            {
+              "privateBytes": 47759360,
+              "workingSetBytes": 74428416,
+              "handleCount": 639
+            },
+            {
+              "privateBytes": 47902720,
+              "workingSetBytes": 74612736,
+              "handleCount": 639
+            },
+            {
+              "privateBytes": 47910912,
+              "workingSetBytes": 74661888,
+              "handleCount": 636
+            },
+            {
+              "privateBytes": 48304128,
+              "workingSetBytes": 75108352,
+              "handleCount": 636
+            },
+            {
+              "privateBytes": 48881664,
+              "workingSetBytes": 75558912,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 48873472,
+              "workingSetBytes": 75587584,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 49266688,
+              "workingSetBytes": 76009472,
+              "handleCount": 660
+            },
+            {
+              "privateBytes": 50106368,
+              "workingSetBytes": 76791808,
+              "handleCount": 665
+            },
+            {
+              "privateBytes": 50106368,
+              "workingSetBytes": 76800000,
+              "handleCount": 665
+            },
+            {
+              "privateBytes": 50135040,
+              "workingSetBytes": 76828672,
+              "handleCount": 665
+            },
+            {
+              "privateBytes": 50196480,
+              "workingSetBytes": 76894208,
+              "handleCount": 665
+            }
+          ],
+          "journalEntries": 29496,
+          "unmatchedJournalEntries": 0,
+          "maxInvocationNesting": 2,
+          "unexpectedExits": 0,
+          "unexpectedFailures": 0,
+          "tiaConnected": false
+        }
+      ],
+      "status": "passed",
+      "finishedAtUtc": "2026-10-01T15:31:47.988953+00:00"
     }
   }
 }

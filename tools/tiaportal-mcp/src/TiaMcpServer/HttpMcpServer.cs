@@ -57,7 +57,7 @@ namespace TiaMcpServer
             string? secret = options?.HttpApiKey;
 
             using var listener = new HttpListener();
-            using var router = new McpHttpResponseRouter(httpToMcp, mcpToHttp);
+            using var router = new McpHttpResponseRouter(httpToMcp, mcpToHttp, Isolation.IsolatedWorkerHost.Current == null);
             var handlers = new HashSet<Task>();
             Action stop = () =>
             {

@@ -76,6 +76,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly Dictionary<string, ExportEntry> _entries =
             new Dictionary<string, ExportEntry>(StringComparer.Ordinal);
         private static int _counter;
+        private static readonly string SessionKey = Guid.NewGuid().ToString("N");
 
         // 墓碑：被淘汰/被删的 id 记一笔，好让 Slice 能报 "evicted" 而不是 "unknown"。
         // 「你的句柄被挤掉了，重跑原工具」和「没这个 id，你记错了」给出的下一步完全不同，
@@ -100,7 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var now = NowUtc();
             PurgeExpiredLocked(now);
             var id = "ex_" + now.ToString("yyyyMMddHHmmss", CultureInfo.InvariantCulture)
-                   + "_" + (++_counter).ToString("D4", CultureInfo.InvariantCulture);
+                   + "_" + SessionKey + "_" + (++_counter).ToString("D4", CultureInfo.InvariantCulture);
             _entries[id] = new ExportEntry
             {
                 Id = id,
@@ -335,7 +336,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             if (string.IsNullOrEmpty(id) || !id!.StartsWith("ex_", StringComparison.Ordinal)) return false;
             var parts = id.Split('_');
-            if (parts.Length != 3) return false;
+            if (parts.Length != 4 || parts[2] != SessionKey) return false;
             if (!DateTime.TryParseExact(parts[1], "yyyyMMddHHmmss", CultureInfo.InvariantCulture,
                                         DateTimeStyles.None, out var created)) return false;
             return (now - created).TotalHours >= DefaultTtlHours;

@@ -7,7 +7,7 @@ description: Drive Siemens TIA Portal end-to-end through the TiaMcpServer MCP pl
 
 This is the operating skill for TIA Portal MCP automation. The
 companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
-**464** MCP tools (default lite profile: 59; exact runtime set: call `tools/list` on the running server) covering
+**476** MCP tools (default lite profile: 61; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -28,7 +28,7 @@ it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
 
 ## 0.1 Small models / newcomers: these 15 tools are all you ever need (ignore the rest at first)
 
-This server contains 464 tools, with 59 exposed by default (the lite profile). **You do NOT need most of them.** A small or
+This server contains 476 tools, with 61 exposed by default (the lite profile). **You do NOT need most of them.** A small or
 non-expert model should pick **only** from this whitelist and ignore everything
 else unless one of these tools' output explicitly tells you to call another:
 
@@ -52,7 +52,7 @@ copy it from this table or the "exact parameter names" in §8 - do not guess. HM
 **Preflight, then call (since 2.7.57):** every listed tool description ends with an `Example: {...}`; before an unfamiliar tool, and **after any correction from the user**, run `PreflightToolCall(name, argumentsJson)` - it checks the arguments against the real signature (missing / unknown or wrongly cased names / wrong types / values outside the documented alternatives), explains what the call would do (dryRun / confirm flags, precautions) and the session prerequisites (connected? project bound?), and **executes nothing**; fix the plan from that report and call once instead of trial-and-error against TIA. `FindTools` results and `CallTool` missing-argument refusals carry the same example. **Since 2.7.58 the engine does this automatically**: every tool's `inputSchema` carries `enum` / `default` / `examples` for parameters with documented alternatives, and every failed response carries `meta.preflight` (what is missing / the parameter names / the values to use / prerequisites / example / next step) - read it before the next call instead of trying variants; for multi-step jobs start with `GetRecipe(topic)` (connect-project, plc-scl-block, plc-s7dcl-import, plc-builder, watch-table, cpu-protection, download-plcsim, plcsim-test, hardware-device, hmi-unified-screen, export-import-block, large-response) and follow it step by step.
 
 **Three built-in helpers for small models:**
-- **Lite tool profile** - 59 common entry points are exposed by default; the rest are found with `FindTools` and called with `CallTool`.
+- **Lite tool profile** - 61 common entry points are exposed by default; the rest are found with `FindTools` and called with `CallTool`.
   `TIA_MCP_PROFILE=lite` sets it explicitly; `--profile full` or `TIA_MCP_PROFILE=full` exposes everything.
   The full static list is `manifest/tools-list.json`; the live list is whatever `tools/list` returns.
 - **Tolerant parameters** - `softwarePath` tolerates extra spaces and case; in a single-PLC project or with a unique match

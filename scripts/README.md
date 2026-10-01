@@ -12,6 +12,7 @@
 | 检查 | [Check-Repository.py](checks/Check-Repository.py)、[Validate-Bundle.ps1](checks/Validate-Bundle.ps1)、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`--no-binaries` / `-NoBinaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |
+| 检查 | [Test-WorkerIsolation.py](checks/Test-WorkerIsolation.py)、[Test-LocalStability.py](checks/Test-LocalStability.py) | 本地 worker 故障恢复、分页与宿主退出；普通/隔离模式压力及日志配对。使用测试宿主，不连接 TIA；双版本构建门自动执行 |
 | 检查 | [Test-DownloadRouteSelection.ps1](checks/Test-DownloadRouteSelection.ps1)、[Test-MatchPlcName.ps1](checks/Test-MatchPlcName.ps1)、[Test-MigrationReadAssembly.ps1](checks/Test-MigrationReadAssembly.ps1) | 路由、名称匹配和程序集专项回归，反射已发布的 V21 EXE；均由 Build-Release 调用（路由测试需 -PublicApiDirectory） |
 | 检查 | [Test-WriteGuard.ps1](checks/Test-WriteGuard.ps1) | Claude Code 写保护钩子 `hooks/tia-write-guard.ps1` 的拒绝/放行/审计自检；由 Build-Release 调用 |
 | 生成 | [Generate-ToolCapabilityMatrix.ps1](generate/Generate-ToolCapabilityMatrix.ps1) | 从 manifest/tools-list.json 按大类→域生成工具矩阵（由 Build-Release 调用） |

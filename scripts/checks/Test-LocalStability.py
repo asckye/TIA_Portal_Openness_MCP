@@ -18,6 +18,7 @@ from pathlib import Path
 import statistics
 import time
 import urllib.error
+from types import SimpleNamespace
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -33,7 +34,8 @@ def sha(path):
 
 def process_sample(process):
     """Read only the owned child PID; no system-wide process enumeration."""
-    require(process.poll() is None, 'Owned test host exited unexpectedly')
+    if hasattr(process, 'poll'):
+        require(process.poll() is None, 'Owned test host exited unexpectedly')
     from ctypes import wintypes
     class Counters(ctypes.Structure):
         _fields_ = [('cb', wintypes.DWORD), ('PageFaultCount', wintypes.DWORD)] + [
@@ -46,11 +48,15 @@ def process_sample(process):
     kernel.OpenProcess.restype = wintypes.HANDLE
     kernel.CloseHandle.argtypes = [wintypes.HANDLE]
     kernel.GetProcessHandleCount.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    kernel.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
     psapi.GetProcessMemoryInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(Counters), wintypes.DWORD]
     handle = kernel.OpenProcess(0x410, False, process.pid)
     if not handle:
         raise ctypes.WinError(ctypes.get_last_error())
     try:
+        exit_code = wintypes.DWORD()
+        require(kernel.GetExitCodeProcess(handle, ctypes.byref(exit_code)) and exit_code.value == 259,
+                'Owned host/worker exited unexpectedly')  # STILL_ACTIVE
         counters = Counters(); counters.cb = ctypes.sizeof(counters)
         handles = wintypes.DWORD()
         if not psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
@@ -118,12 +124,13 @@ def run_profile(args, transport, profile, run_dir):
     source.write_text('FUNCTION "Soak" : Void\nBEGIN\nEND_FUNCTION\n', encoding='utf-8-sig')
     diagnostics = run_dir / 'diagnostics'
     owned = []
-    latencies, samples = [], []
+    latencies, samples, worker_samples = [], [], []
+    worker_process = None
     counts = Counter()
     sequence = 0
     started = time.monotonic()
     with resources.server(args.exe, args.public_api, args.major, transport, profile,
-            args.host_harness, args.public_api, process_observer=owned.append,
+            args.host_harness, args.public_api, process_observer=owned.append, isolate=args.isolate_openness,
             env_overrides={'TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES': '0',
                            'TIA_MCP_DIAGNOSTICS_DIRECTORY': str(diagnostics)}) as (rpc, http, logs):
         hello = rpc('initialize', 'init', {'protocolVersion': '2024-11-05', 'capabilities': {},
@@ -169,6 +176,11 @@ def run_profile(args, transport, profile, run_dir):
         for index, case in enumerate(scenario):
             execute(case, 'warm-' + str(index))
         samples.append(process_sample(owned[0]))
+        if args.isolate_openness:
+            state = document(rpc('tools/call', 'worker-state', {'name': 'ReadOpennessWorkerStatus', 'arguments': {}}))['meta']['worker']
+            require(state['state'] == 'Ready' and state['workerPid'] != owned[0].pid, 'Worker isolation not active')
+            worker_process = SimpleNamespace(pid=state['workerPid'])
+            worker_samples.append(process_sample(worker_process))
         concurrency = args.concurrency if transport == 'http' else 1
         with ThreadPoolExecutor(max_workers=concurrency) as pool:
             for batch in range(args.rounds):
@@ -196,37 +208,50 @@ def run_profile(args, transport, profile, run_dir):
                         require(error.code == 401, 'Authentication returned wrong status')
                 if (batch + 1) % 10 == 0 or batch + 1 == args.rounds:
                     samples.append(process_sample(owned[0]))
+                    if worker_process:
+                        worker_samples.append(process_sample(worker_process))
                     print(f'PASS V{args.major} {transport} {profile}: {batch + 1}/{args.rounds} rounds', flush=True)
         sample = process_sample(owned[0])
         require(sample['privateBytes'] < args.max_private_mib * 1024 * 1024, 'Host exceeded private memory bound')
         require(max(s['privateBytes'] for s in samples) < args.max_private_mib * 1024 * 1024, 'Sampled private memory exceeded bound')
         require(max(s['handleCount'] for s in samples) - samples[0]['handleCount'] <= args.max_handle_growth, 'Sampled handles exceeded growth bound')
+        if worker_samples:
+            require(max(s['privateBytes'] for s in worker_samples) < args.max_private_mib * 1024 * 1024, 'Worker exceeded private memory bound')
+            require(max(s['handleCount'] for s in worker_samples) - worker_samples[0]['handleCount'] <= args.max_handle_growth, 'Worker handles exceeded growth bound')
     # The context shuts down only this owned test host. It never stops a TIA process.
-    entries = [json.loads(line) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
+    entries = [(path.name, json.loads(line)) for path in diagnostics.glob('calls-*.jsonl') for line in path.read_text(encoding='utf-8').splitlines()]
     require(entries, 'Invocation journal was not written')
     outstanding = Counter()
-    stack = []
+    stacks = {}
+    forwarded, executed = set(), set()
     max_nesting = 0
-    for row in entries:
+    for process_log, row in entries:
         require(not row['tool'].startswith('native:'), 'A native stage was entered during a local-only soak')
-        key = (row['id'], row['tool'])
+        worker_dispatch = row['tool'].startswith('worker:')
+        # Host controls intentionally remain independent of the blocked worker queue.
+        # Each process's tool gate and the host dispatch gate must serialize separately.
+        stack = stacks.setdefault((process_log, worker_dispatch), [])
+        key = (process_log, row['id'], row['tool'])
         if row['phase'] == 'BEFORE':
-            require(not stack or len(stack) == 1 and stack[0][1] == 'CallTool', 'Concurrent top-level tool invocations entered the serialized gate')
+            require(not stack or len(stack) == 1 and stack[0][2] == 'CallTool', 'Concurrent top-level tool invocations entered the serialized gate')
             stack.append(key)
             max_nesting = max(max_nesting, len(stack))
             outstanding[key] += 1
+            (forwarded if worker_dispatch else executed).add((row['id'], row['tool'][7:] if worker_dispatch else row['tool']))
         else:
             require(row['phase'] in ('RETURNED', 'THREW') and outstanding[key] > 0, 'Uncorrelated journal completion')
             require(stack and stack.pop() == key, 'Tool invocations overlapped or completed out of order')
             outstanding[key] -= 1
     require(not any(outstanding.values()), 'Incomplete invocation after all responses returned')
+    if args.isolate_openness:
+        require(forwarded and forwarded <= executed, 'Host/child invocation correlation lost')
     log_text = ''.join(logs)
     (run_dir / 'host-stderr.log').write_text(log_text, encoding='utf-8')
     require('Invocation journal unavailable:' not in log_text, 'Invocation journal write failed')
     require(not any(word in log_text for word in ('StackOverflowException', 'OutOfMemoryException', 'Unhandled exception')), 'Fatal host diagnostic')
     ordered = sorted(latencies)
     return {'transport': transport, 'profile': profile, 'concurrency': concurrency,
-        'toolCount': len(names), 'measuredToolCalls': len(latencies), 'warmupToolCalls': len(scenario),
+        'toolCount': len(names), 'workerSamples': worker_samples, 'measuredToolCalls': len(latencies), 'warmupToolCalls': len(scenario),
         'recoveryToolCalls': args.rounds, 'protocolAndAuthChecks': args.rounds * (4 if transport == 'http' else 3),
         'cases': dict(counts), 'elapsedSeconds': round(time.monotonic() - started, 3),
         'latencyMilliseconds': {'median': round(statistics.median(latencies) * 1000, 3),
@@ -244,8 +269,9 @@ def main():
     parser.add_argument('--major', type=int, choices=(20, 21), required=True)
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--concurrency', type=int, default=8)
-    parser.add_argument('--full-tool-count', type=int, default=474)
-    parser.add_argument('--lite-tool-count', type=int, default=59)
+    parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
+    parser.add_argument('--full-tool-count', type=int, default=476)
+    parser.add_argument('--lite-tool-count', type=int, default=61)
     parser.add_argument('--max-private-mib', type=int, default=512)
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
@@ -259,7 +285,7 @@ def main():
         'runtimeSha256': sha(args.exe), 'harnessSha256': sha(args.host_harness), 'scriptSha256': sha(Path(__file__)),
         'resourceHelperSha256': sha(Path(resources.__file__)),
         'scope': 'Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.',
-        'rounds': args.rounds, 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
+        'rounds': args.rounds, 'isolatedWorker': args.isolate_openness, 'bounds': {'maxPrivateMiB': args.max_private_mib, 'maxHandleGrowth': args.max_handle_growth}, 'runs': []}
     try:
         for transport in ('stdio', 'http'):
             for profile in ('full', 'lite'):

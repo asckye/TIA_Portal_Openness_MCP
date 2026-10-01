@@ -4,6 +4,8 @@ v3.1.0 本地候选：[V20/V21 补充工具和用法](reference/v20-v21-audit-to
 
 稳定性重点：[本地压力测试、原生验收边界及 GitHub 接入优先级](development/stability-and-integrations-20260930.md)。
 
+2026-10-01：[工作进程隔离实现与最终本地验证结果](development/worker-isolation-validation-20261001.md)（故障注入、普通/隔离压力、原生未验收项）。
+
 v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [本地验证记录](development/ecosystem-integration-20260929.md)。
 
 重点核对：[Siemens 官方指南与 API 流程审计](development/official-openness-audit-20260929.md)（32 个主题、已修复问题、待验收项）。
@@ -17,6 +19,7 @@ v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [
 
 ## 操作指南
 
+- [Openness 工作进程隔离与故障恢复](guides/openness-worker-isolation.md)：可选开启，原生验收尚未完成。
 - [完整 PLC + HMI 工程生成](guides/project-generation.md)
 - [版本控制与 Git](guides/version-control.md)
 - [在线实时读值](guides/online-monitoring.md)

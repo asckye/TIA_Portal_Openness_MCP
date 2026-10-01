@@ -161,13 +161,19 @@ internal static class ExportsAndArgDiagnosticsTests
         Check(spinRounds < 50, "length=1 逐字符翻页能翻到底（不死循环）");
 
         // ── 过期 vs 记错了：对模型是两件事 ────────────────────────────────
-        Check(ExportStore.Slice("ex_20260101000000_0001", 0, 10).Error == "expired",
+        ExportStore.NowUtc = () => fixedNow.AddHours(-ExportStore.DefaultTtlHours - 1);
+        var expiredId = ExportStore.Put("GetState", "", "expired content");
+        ExportStore.NowUtc = () => fixedNow;
+        Check(ExportStore.Slice(expiredId, 0, 10).Error == "expired",
               "本引擎发过、时间已过 24h 的句柄报 expired");
+        Check(ExportStore.Slice(expiredId.Replace(expiredId.Split('_')[2], Guid.NewGuid().ToString("N")), 0, 10).Error == "unknown",
+              "其他进程的旧句柄不属于本引擎");
         Check(ExportStore.Slice("我瞎编的", 0, 10).Error == "unknown",
               "格式对不上的句柄报 unknown");
         Check(ExportStore.Slice(null, 0, 10).Error == "unknown", "null 句柄报 unknown 不抛异常");
         // 反向哨兵：格式对但**还没到期**的，不能报成 expired（那会让模型白白重跑）
-        Check(ExportStore.Slice("ex_20260902095900_0009", 0, 10).Error == "unknown",
+        var unissuedId = id.Substring(0, id.LastIndexOf('_') + 1) + "999999";
+        Check(ExportStore.Slice(unissuedId, 0, 10).Error == "unknown",
               "[哨兵] 格式对但未到期的未知句柄报 unknown，不是 expired");
 
         // ── 过期清理真的会发生 ────────────────────────────────────────────

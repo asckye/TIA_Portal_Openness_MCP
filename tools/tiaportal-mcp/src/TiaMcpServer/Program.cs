@@ -333,6 +333,20 @@ namespace TiaMcpServer
                     return;
                 }
 
+                if (options.IsolateOpenness)
+                {
+                    // Parent owns protocol/diagnostics only; Openness initialization happens in the child.
+                    Isolation.IsolatedWorkerHost.Configure(options);
+                    try
+                    {
+                        if (string.Equals(options.Transport, "http", StringComparison.OrdinalIgnoreCase)) await RunHttpHost(options);
+                        else await RunStdioHost(options);
+                    }
+                    finally { Isolation.IsolatedWorkerHost.Stop(); }
+                    return;
+                }
+                if (options.OpennessWorkerChild) Isolation.IsolatedWorkerHost.BeginChild(options);
+
                 if (Engineering.TiaMajorVersion >= 20)
                 {
                     try
@@ -668,7 +682,7 @@ namespace TiaMcpServer
                 }
 
                 // Register the Portal service for dependency injection
-                builder.Services.AddSingleton<Portal>();
+                if (Isolation.IsolatedWorkerHost.Current == null) builder.Services.AddSingleton<Portal>();
 
                 var host = builder.Build();
 
@@ -749,7 +763,7 @@ namespace TiaMcpServer
                     mcpHttp.WithPromptsFromAssembly();
                     ConfigureResourceDiscovery(mcpHttp);
 
-                    builder.Services.AddSingleton<TiaMcpServer.Siemens.Portal>();
+                    if (Isolation.IsolatedWorkerHost.Current == null) builder.Services.AddSingleton<TiaMcpServer.Siemens.Portal>();
 
                     using var host = builder.Build();
                     McpServer.SetServiceProvider(host.Services);
