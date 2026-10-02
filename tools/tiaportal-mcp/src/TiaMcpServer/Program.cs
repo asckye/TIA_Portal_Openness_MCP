@@ -89,6 +89,12 @@ namespace TiaMcpServer
                 LogDiag($"Exe: {Assembly.GetExecutingAssembly().Location}");
                 LogDiag($"Args: {string.Join(" ", args.Select((arg, i) => i > 0 && string.Equals(args[i - 1], "--http-api-key", StringComparison.OrdinalIgnoreCase) ? "[redacted]" : arg))}");
 
+                if (CliOptions.IsInformationalCommand(args))
+                {
+                    Environment.ExitCode = Cli.CliCommands.Run(args);
+                    return;
+                }
+
                 var options = CliOptions.ParseArgs(args);
 
                 // Default logging to stderr (mode 1) when the user doesn't pass --logging,
@@ -119,13 +125,21 @@ namespace TiaMcpServer
                 else
                 {
                     var detected = Engineering.DetectTiaMajorVersion();
-                    tiaMajorVersion = detected ?? 21;
+                    tiaMajorVersion = detected ?? EngineRouter.CompiledTiaMajorVersion;
                     tiaVersionReliable = detected.HasValue;
                     LogDiag(detected.HasValue
                         ? $"TIA major version (auto-detected): {tiaMajorVersion}"
                         : $"TIA major version (default fallback): {tiaMajorVersion} — install not detected, specify --tia-major-version if wrong");
                 }
                 Engineering.TiaMajorVersion = tiaMajorVersion;
+                // Diagnostics must remain reachable even when an old installation is detected.
+                // No native engine is started; doctor reports unsupported versions as failures.
+                if (args.Length > 0 && string.Equals(args[0], "doctor", StringComparison.OrdinalIgnoreCase))
+                {
+                    Environment.ExitCode = Cli.CliCommands.Run(args);
+                    return;
+                }
+                TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(tiaMajorVersion);
 
                 // Version-aware self-routing (issue #8): this exe's IL is bound to one TIA major
                 // version; when the machine actually wants a different one, re-exec the sibling
@@ -138,10 +152,10 @@ namespace TiaMcpServer
                         Environment.Exit(routedExit);
                         return;
                     }
-                    LogDiag($"WARN: TIA V{tiaMajorVersion} requested but this exe is built for V{EngineRouter.CompiledTiaMajorVersion} " +
-                            $"and no V{tiaMajorVersion} sibling exe was found next to it — Siemens assembly load will likely fail. " +
-                            $"Run the V{tiaMajorVersion} exe from the bundle, or pass --tia-major-version {EngineRouter.CompiledTiaMajorVersion} to force.");
+                    LogDiag($"ERROR: No usable V{tiaMajorVersion} sibling engine was found, or redirect was blocked.");
                 }
+
+                TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(tiaMajorVersion, EngineRouter.CompiledTiaMajorVersion);
 
                 // 静态自检也会枚举 MCP 工具特性，方法签名里引用的 Siemens 程序集需要先能被解析。
                 // 这里只注册程序集解析器，不初始化 Openness，也不连接或打开 TIA 项目。

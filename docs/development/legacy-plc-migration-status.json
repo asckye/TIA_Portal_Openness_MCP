@@ -1,0 +1,4898 @@
+{
+  "sourceCommit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+  "sourceProfile": "PlcSoftwareV17McpTools",
+  "sourceCount": 62,
+  "releaseKeys": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ],
+  "productionEnabled": false,
+  "contractCompatibleMigrationComplete": false,
+  "tools": [
+    {
+      "tool": "Bootstrap",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseBootstrap",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ready",
+            "type": "bool?"
+          },
+          {
+            "name": "Environment",
+            "type": "BootstrapEnvironment?"
+          },
+          {
+            "name": "Portal",
+            "type": "BootstrapPortal?"
+          },
+          {
+            "name": "RecommendedNextTool",
+            "type": "string?"
+          },
+          {
+            "name": "RecommendedReason",
+            "type": "string?"
+          },
+          {
+            "name": "KnownLimitations",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ToolLayers",
+            "type": "BootstrapToolLayers?"
+          },
+          {
+            "name": "SkillFile",
+            "type": "string?"
+          },
+          {
+            "name": "ServerVersion",
+            "type": "string?"
+          },
+          {
+            "name": "Capabilities",
+            "type": "IEnumerable<TiaMcpServer.Siemens.CapabilityInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "RunCapabilitySelfTest",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "connectIfNeeded",
+            "type": "bool",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "includeProjectTree",
+            "type": "bool",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "inspectPortalProcesses",
+            "type": "bool",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "expectedPlcSoftwarePath",
+            "type": "string",
+            "required": false,
+            "default": "PLC_1"
+          },
+          {
+            "name": "expectedHmiSoftwarePath",
+            "type": "string",
+            "required": false,
+            "default": "HMI_RT_1"
+          }
+        ],
+        "returnType": "ResponseCapabilitySelfTest",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "IncludeProjectTree",
+            "type": "bool?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<CapabilitySelfTestItem>?"
+          },
+          {
+            "name": "ProjectTree",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "Connect",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "Attach",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseConnect",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Stage",
+            "type": "string?"
+          },
+          {
+            "name": "Strategy",
+            "type": "string?"
+          },
+          {
+            "name": "AttemptedPids",
+            "type": "IEnumerable<int>?"
+          },
+          {
+            "name": "LaunchMode",
+            "type": "string?"
+          },
+          {
+            "name": "NeedsUserConfirmation",
+            "type": "bool?"
+          },
+          {
+            "name": "DetectedPromptTitles",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DetectedPromptPids",
+            "type": "IEnumerable<int>?"
+          },
+          {
+            "name": "ElapsedMs",
+            "type": "long?"
+          },
+          {
+            "name": "CleanupPids",
+            "type": "IEnumerable<int>?"
+          },
+          {
+            "name": "Recommendations",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ErrorCode",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "Disconnect",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseDisconnect",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "EnsureOpennessUserGroup",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ListPortalProcessProjects",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseStringList",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "DiagnosePortalConnectReadiness",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "includeWindows",
+            "type": "bool",
+            "required": false,
+            "default": true
+          }
+        ],
+        "returnType": "ResponsePortalConnectReadiness",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Stage",
+            "type": "string?"
+          },
+          {
+            "name": "Strategy",
+            "type": "string?"
+          },
+          {
+            "name": "NeedsUserConfirmation",
+            "type": "bool?"
+          },
+          {
+            "name": "VisibleProcessCount",
+            "type": "int?"
+          },
+          {
+            "name": "Processes",
+            "type": "IEnumerable<PortalProcessDiagnostic>?"
+          },
+          {
+            "name": "Windows",
+            "type": "IEnumerable<PortalWindowObservation>?"
+          },
+          {
+            "name": "Recommendations",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ElapsedMs",
+            "type": "long?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetState",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseState",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "IsConnected",
+            "type": "bool?"
+          },
+          {
+            "name": "Project",
+            "type": "string?"
+          },
+          {
+            "name": "Session",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ListProjects",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseGetProjects",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseProjectInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "OpenProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "OpenProject",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseOpenProject",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+    },
+    {
+      "tool": "AttachToOpenProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "BindProject",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "projectName",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "CreateProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "CreateProject",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "directoryPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "projectName",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "SaveProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "SaveProject",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseSaveProject",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+    },
+    {
+      "tool": "CloseProject",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "CloseProject",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseCloseProject",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+    },
+    {
+      "tool": "GetProjectTree",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ListPlcs",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [],
+        "returnType": "ResponseProjectTree",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Tree",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
+        "response": "V17 Message/Meta, Items and fenced Tree envelopes with real project/hardware/software values",
+        "errors": "Explicit lifecycle preconditions; returned project identity checked; unknown outcomes poison session without retry",
+        "intentionalSafetyChanges": [
+          "never launch TIA or choose a process automatically",
+          "bind exact name and absolute project path; never replace an existing binding",
+          "open only release-specific .ap or supported .als; no upgrade/archive/server workflow",
+          "create only a new directory under an existing parent",
+          "save local session locally without server commit",
+          "close only an owned, unmodified project or session",
+          "dispose connection without saving, closing projects or killing TIA"
+        ],
+        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-project-safe-v1",
+      "featureGates": {
+        "localSession": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "SearchHardwareCatalog",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "keyword",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "limit",
+            "type": "int",
+            "required": false,
+            "default": 50
+          }
+        ],
+        "returnType": "ResponseHardwareCatalogSearch",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Keyword",
+            "type": "string?"
+          },
+          {
+            "name": "Count",
+            "type": "int?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<HardwareCatalogCandidate>?"
+          },
+          {
+            "name": "Error",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "AddDeviceWithFallback",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "preferredMlfb",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "preferredVersion",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "deviceName",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "family",
+            "type": "string",
+            "required": false,
+            "default": "S7-1500"
+          }
+        ],
+        "returnType": "ResponseDeviceProbe",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "DeviceName",
+            "type": "string?"
+          },
+          {
+            "name": "Family",
+            "type": "string?"
+          },
+          {
+            "name": "MlfbUsed",
+            "type": "string?"
+          },
+          {
+            "name": "VersionUsed",
+            "type": "string?"
+          },
+          {
+            "name": "Attempts",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Error",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildPlcUdtXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "udtJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildPlcTagTableXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "tagTableJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildPlcGlobalDbXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "globalDbJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildStructuredTextXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "structuredTextJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "innerOnly",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildFlgNetCallXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "flgNetJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ComposePlcFcBlockXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "fcBlockJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ComposePlcFbBlockXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "fbBlockJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ComposePlcLadFcBlockXml",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "ladFcBlockJson",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseXmlBuild",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          },
+          {
+            "name": "Xml",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "BuildPlcSymbolManifestFromXmlPath",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "path",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseJsonReport",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "Data",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Errors",
+            "type": "string[]?"
+          },
+          {
+            "name": "Warnings",
+            "type": "string[]?"
+          },
+          {
+            "name": "OutputPath",
+            "type": "string?"
+          },
+          {
+            "name": "OutputFiles",
+            "type": "string[]?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetSoftwareInfo",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseSoftwareInfo",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Attributes",
+            "type": "IEnumerable<Attribute>?"
+          },
+          {
+            "name": "Name",
+            "type": "string?"
+          },
+          {
+            "name": "Description",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "PlcBuildAndImport",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "kind",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "json",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "typeGroupPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "tagFolderPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "blockGroupPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "compileAfter",
+            "type": "bool",
+            "required": false,
+            "default": true
+          },
+          {
+            "name": "dryRun",
+            "type": "bool",
+            "required": false,
+            "default": true
+          }
+        ],
+        "returnType": "ResponsePlcProgramImport",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "DryRun",
+            "type": "bool?"
+          },
+          {
+            "name": "BuildKind",
+            "type": "string?"
+          },
+          {
+            "name": "GeneratedDirectory",
+            "type": "string?"
+          },
+          {
+            "name": "WrittenFiles",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTypes",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTagTables",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTechnologyObjects",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredBlocks",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTypes",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTagTables",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTechnologyObjects",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedBlocks",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Failed",
+            "type": "IEnumerable<ImportFailure>?"
+          },
+          {
+            "name": "Compile",
+            "type": "ResponseCompile?"
+          },
+          {
+            "name": "CapabilityDecision",
+            "type": "string?"
+          },
+          {
+            "name": "CapabilityWarnings",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "RecommendedNextActions",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetPlcExternalSources",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadExternalSourceNames",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Exact-release official navigation/composition chapters and actual XML Name property close narrow root-name reader; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseStringList",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 softwarePath",
+        "response": "V17 Items string list; native order/case and empty composition preserved",
+        "errors": "Missing object/native read failure and invalid payload are explicit MCP errors; no fabricated empty fallback",
+        "scope": "Root external source collection only; no units, source contents or generation",
+        "remaining": "Native NOT RUN; source contents/generation/software units and special ownership excluded"
+      },
+      "contractVersion": "v17-external-source-read-v1",
+      "apiEvidence": "legacy-external-source-read-api-evidence.json",
+      "implementationOfflineVerified": true,
+      "sourceComplete": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root external-source names only; source contents, generation, software units, system groups and special ownership excluded; native NOT RUN"
+    },
+    {
+      "tool": "GetPlcTagTables",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadTagTableNames",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseStringList",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/types/defaults aligned",
+        "response": "V17 fields/envelope; actual recursive blocks/types/hierarchy and root-only tag tables; SDK serializer tested",
+        "paths": "Unique V17 PLC/device/device-host/group aliases with V17 case rules; canonical addresses supported",
+        "errors": "McpException InvalidParams/InternalError; known read failure does not poison session",
+        "intentionalSafetyChanges": [
+          "ambiguous aliases rejected instead of first match",
+          "unused path segments rejected",
+          "native failures and invalid regex are errors instead of partial/empty success",
+          "regex evaluation bounded"
+        ],
+        "remaining": "Native acceptance NOT RUN; no outstanding source-path gap in declared v17-read-safe-v1 contract"
+      },
+      "sourceComplete": true,
+      "contractVersion": "v17-read-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "ExportPlcTagTable",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ExportTagTable",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "tagTableName",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseExportFile",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "ExportPath",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "staged publication implemented; publication gate removed; native opt-in and project/session guards retained"
+    },
+    {
+      "tool": "ImportPlcTagTable",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ImportTagTables",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "folderPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json"
+    },
+    {
+      "tool": "GetPlcWatchTables",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseStringList",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ExportPlcWatchTable",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "watchTableName",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseExportFile",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "ExportPath",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportPlcExternalSource",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "filePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "DeletePlcExternalSource",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "externalSourceName",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GenerateBlocksFromExternalSource",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "externalSourceName",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "CompileSoftware",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "CompileSoftware",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "password",
+            "type": "string",
+            "required": false,
+            "default": ""
+          }
+        ],
+        "returnType": "ResponseCompile",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "State",
+            "type": "string?"
+          },
+          {
+            "name": "ErrorCount",
+            "type": "int?"
+          },
+          {
+            "name": "WarningCount",
+            "type": "int?"
+          },
+          {
+            "name": "Messages",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 softwarePath/password defaults preserved; dryRun/confirm/exact expectedProjectFile added",
+        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts",
+        "paths": "v17-read-safe-v1 selection binds software and its actual host device together",
+        "errors": "classified failures; unknown compile/login/cleanup outcome stops session; no password echo",
+        "intentionalSafetyChanges": [
+          "preview performs no login/compile and returns null state/counts",
+          "password never silently ignored when API/service missing",
+          "Safety login added only for verified V17+ API; V21 split assembly identity/directory verified",
+          "only log off a safety session established by this call",
+          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting"
+        ],
+        "remaining": "Native acceptance NOT RUN, including authentication, compilation and session cleanup"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-compile-safe-v1",
+      "featureGates": {
+        "passwordFreeCompile": {
+          "14sp1": "implemented-source-offline",
+          "15.1": "implemented-source-offline",
+          "16": "implemented-source-offline",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "safetyPassword": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "ApiMetadataTests scans all native DLL type definitions for first three releases; login/logoff/properties and V21 identity checked for later releases."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "CompileAndDiagnosePlc",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "CompileSoftware",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "password",
+            "type": "string",
+            "required": false,
+            "default": ""
+          }
+        ],
+        "returnType": "ResponseCompileDiagnose",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "State",
+            "type": "string?"
+          },
+          {
+            "name": "ErrorCount",
+            "type": "int?"
+          },
+          {
+            "name": "WarningCount",
+            "type": "int?"
+          },
+          {
+            "name": "Errors",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Warnings",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Info",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "RawMessages",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 softwarePath/password defaults preserved; dryRun/confirm/exact expectedProjectFile added",
+        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts",
+        "paths": "v17-read-safe-v1 selection binds software and its actual host device together",
+        "errors": "classified failures; unknown compile/login/cleanup outcome stops session; no password echo",
+        "intentionalSafetyChanges": [
+          "preview performs no login/compile and returns null state/counts",
+          "password never silently ignored when API/service missing",
+          "Safety login added only for verified V17+ API; V21 split assembly identity/directory verified",
+          "only log off a safety session established by this call",
+          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting"
+        ],
+        "remaining": "Native acceptance NOT RUN, including authentication, compilation and session cleanup"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-compile-safe-v1",
+      "featureGates": {
+        "passwordFreeCompile": {
+          "14sp1": "implemented-source-offline",
+          "15.1": "implemented-source-offline",
+          "16": "implemented-source-offline",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "safetyPassword": {
+          "14sp1": "unavailable-in-supplied-native-api",
+          "15.1": "unavailable-in-supplied-native-api",
+          "16": "unavailable-in-supplied-native-api",
+          "17": "implemented-source-offline",
+          "18": "implemented-source-offline",
+          "19": "implemented-source-offline",
+          "20": "implemented-source-offline",
+          "21": "implemented-source-offline"
+        },
+        "evidence": "ApiMetadataTests scans all native DLL type definitions for first three releases; login/logoff/properties and V21 identity checked for later releases."
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "GetSoftwareTree",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseSoftwareTree",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Tree",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetBlockInfo",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadBlockInfo",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "blockPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseBlockInfo",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Attributes",
+            "type": "IEnumerable<Attribute>?"
+          },
+          {
+            "name": "Path",
+            "type": "string?"
+          },
+          {
+            "name": "TypeName",
+            "type": "string?"
+          },
+          {
+            "name": "Name",
+            "type": "string?"
+          },
+          {
+            "name": "Namespace",
+            "type": "string?"
+          },
+          {
+            "name": "ProgrammingLanguage",
+            "type": "string?"
+          },
+          {
+            "name": "MemoryLayout",
+            "type": "string?"
+          },
+          {
+            "name": "IsConsistent",
+            "type": "bool?"
+          },
+          {
+            "name": "HeaderName",
+            "type": "string?"
+          },
+          {
+            "name": "ModifiedDate",
+            "type": "DateTime?"
+          },
+          {
+            "name": "IsKnowHowProtected",
+            "type": "bool?"
+          },
+          {
+            "name": "Description",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 exact required names",
+        "response": "Flat V17 fields with SDK casing/null behavior and actual native metadata",
+        "paths": "Exact case-sensitive group-qualified object path; no basename/root fallback; ambiguous identities rejected",
+        "errors": "InvalidParams on selection/validation; InternalError on native read failure; no fabricated empty success",
+        "remaining": "Version-specific official manual reconciliation and native acceptance NOT RUN"
+      },
+      "contractVersion": "v17-object-read-safe-v1",
+      "apiEvidence": "legacy-object-info-api-evidence.json",
+      "implementationOfflineVerified": true,
+      "sourceComplete": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "GetBlocks",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadBlocks",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          }
+        ],
+        "returnType": "ResponseBlocks",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseBlockInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/types/defaults aligned",
+        "response": "V17 fields/envelope; actual recursive blocks/types/hierarchy and root-only tag tables; SDK serializer tested",
+        "paths": "Unique V17 PLC/device/device-host/group aliases with V17 case rules; canonical addresses supported",
+        "errors": "McpException InvalidParams/InternalError; known read failure does not poison session",
+        "intentionalSafetyChanges": [
+          "ambiguous aliases rejected instead of first match",
+          "unused path segments rejected",
+          "native failures and invalid regex are errors instead of partial/empty success",
+          "regex evaluation bounded"
+        ],
+        "remaining": "Native acceptance NOT RUN; no outstanding source-path gap in declared v17-read-safe-v1 contract"
+      },
+      "sourceComplete": true,
+      "contractVersion": "v17-read-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "GetBlocksWithHierarchy",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadBlockHierarchy",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseBlocksWithHierarchy",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Root",
+            "type": "BlockGroupInfo?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/types/defaults aligned",
+        "response": "V17 fields/envelope; actual recursive blocks/types/hierarchy and root-only tag tables; SDK serializer tested",
+        "paths": "Unique V17 PLC/device/device-host/group aliases with V17 case rules; canonical addresses supported",
+        "errors": "McpException InvalidParams/InternalError; known read failure does not poison session",
+        "intentionalSafetyChanges": [
+          "ambiguous aliases rejected instead of first match",
+          "unused path segments rejected",
+          "native failures and invalid regex are errors instead of partial/empty success",
+          "regex evaluation bounded"
+        ],
+        "remaining": "Native acceptance NOT RUN; no outstanding source-path gap in declared v17-read-safe-v1 contract"
+      },
+      "sourceComplete": true,
+      "contractVersion": "v17-read-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "ExportBlock",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ExportBlock",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "blockPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportBlock",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "ImportBlock",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ImportBlocks",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseImportBlock",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "ImportBlocksFromDirectory",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "dir",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "overwrite",
+            "type": "bool",
+            "required": false,
+            "default": true
+          }
+        ],
+        "returnType": "ResponseImportBatch",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Imported",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Failed",
+            "type": "IEnumerable<ImportFailure>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportPlcProgramFromDirectory",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "sourceDir",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "typeGroupPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "tagFolderPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "technologyFolderPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "blockGroupPath",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "compileAfter",
+            "type": "bool",
+            "required": false,
+            "default": true
+          },
+          {
+            "name": "stopOnImportFailure",
+            "type": "bool",
+            "required": false,
+            "default": false
+          },
+          {
+            "name": "dryRun",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponsePlcProgramImport",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "DryRun",
+            "type": "bool?"
+          },
+          {
+            "name": "BuildKind",
+            "type": "string?"
+          },
+          {
+            "name": "GeneratedDirectory",
+            "type": "string?"
+          },
+          {
+            "name": "WrittenFiles",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTypes",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTagTables",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredTechnologyObjects",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "DiscoveredBlocks",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTypes",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTagTables",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedTechnologyObjects",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "ImportedBlocks",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Failed",
+            "type": "IEnumerable<ImportFailure>?"
+          },
+          {
+            "name": "Compile",
+            "type": "ResponseCompile?"
+          },
+          {
+            "name": "CapabilityDecision",
+            "type": "string?"
+          },
+          {
+            "name": "CapabilityWarnings",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "RecommendedNextActions",
+            "type": "IEnumerable<string>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ExportBlocks",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportBlocks",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseBlockInfo>?"
+          },
+          {
+            "name": "Inconsistent",
+            "type": "IEnumerable<ResponseBlockInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetTypeInfo",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadTypeInfo",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "typePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseTypeInfo",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Attributes",
+            "type": "IEnumerable<Attribute>?"
+          },
+          {
+            "name": "Path",
+            "type": "string?"
+          },
+          {
+            "name": "Name",
+            "type": "string?"
+          },
+          {
+            "name": "TypeName",
+            "type": "string?"
+          },
+          {
+            "name": "Namespace",
+            "type": "string?"
+          },
+          {
+            "name": "IsConsistent",
+            "type": "bool?"
+          },
+          {
+            "name": "ModifiedDate",
+            "type": "DateTime?"
+          },
+          {
+            "name": "IsKnowHowProtected",
+            "type": "bool?"
+          },
+          {
+            "name": "Description",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "Pinned V17 exact required names",
+        "response": "Flat V17 fields with SDK casing/null behavior and actual native metadata",
+        "paths": "Exact case-sensitive group-qualified object path; no basename/root fallback; ambiguous identities rejected",
+        "errors": "InvalidParams on selection/validation; InternalError on native read failure; no fabricated empty success",
+        "remaining": "Version-specific official manual reconciliation and native acceptance NOT RUN"
+      },
+      "contractVersion": "v17-object-read-safe-v1",
+      "apiEvidence": "legacy-object-info-api-evidence.json",
+      "implementationOfflineVerified": true,
+      "sourceComplete": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "GetTypes",
+      "status": "source-offline-complete-ordinary-plc",
+      "operation": "ReadTypes",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Independent exact-release official manual evidence and pure serialization/API checks close ordinary-PLC read contract; no native support claim",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          }
+        ],
+        "returnType": "ResponseTypes",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseTypeInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "complete-ordinary-plc",
+      "releaseState": {
+        "14sp1": "source-offline-complete-ordinary-plc",
+        "15.1": "source-offline-complete-ordinary-plc",
+        "16": "source-offline-complete-ordinary-plc",
+        "17": "source-offline-complete-ordinary-plc",
+        "18": "source-offline-complete-ordinary-plc",
+        "19": "source-offline-complete-ordinary-plc",
+        "20": "source-offline-complete-ordinary-plc",
+        "21": "source-offline-complete-ordinary-plc"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/types/defaults aligned",
+        "response": "V17 fields/envelope; actual recursive blocks/types/hierarchy and root-only tag tables; SDK serializer tested",
+        "paths": "Unique V17 PLC/device/device-host/group aliases with V17 case rules; canonical addresses supported",
+        "errors": "McpException InvalidParams/InternalError; known read failure does not poison session",
+        "intentionalSafetyChanges": [
+          "ambiguous aliases rejected instead of first match",
+          "unused path segments rejected",
+          "native failures and invalid regex are errors instead of partial/empty success",
+          "regex evaluation bounded"
+        ],
+        "remaining": "Native acceptance NOT RUN; no outstanding source-path gap in declared v17-read-safe-v1 contract"
+      },
+      "sourceComplete": true,
+      "contractVersion": "v17-read-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "closed-ordinary-plc",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "completionScope": "Ordinary PLC root/user groups; no system groups, software units, R/H-specific ownership or multiuser-specific semantics; native NOT RUN"
+    },
+    {
+      "tool": "ExportType",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ExportType",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "typePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportType",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "ImportType",
+      "status": "implementation-offline-verified-manual-pending",
+      "operation": "ImportTypes",
+      "nativeAcceptance": "NOT RUN",
+      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseImportType",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "manual-pending",
+      "releaseState": {
+        "14sp1": "implementation-offline-verified-manual-pending",
+        "15.1": "implementation-offline-verified-manual-pending",
+        "16": "implementation-offline-verified-manual-pending",
+        "17": "implementation-offline-verified-manual-pending",
+        "18": "implementation-offline-verified-manual-pending",
+        "19": "implementation-offline-verified-manual-pending",
+        "20": "implementation-offline-verified-manual-pending",
+        "21": "implementation-offline-verified-manual-pending"
+      },
+      "contractAlignment": {
+        "parameters": "V17 names/order/defaults preserved plus explicit dryRun, confirm, expectedProjectFile, and import overwrite guards",
+        "response": "V17 Message/Meta and tag-table ExportPath; execution/preview, exact project/file and input SHA256 evidence in Meta",
+        "paths": "Unique software aliases; exact group-relative object paths; export directory/name.xml with optional preserved hierarchy; root-only named tag-table export",
+        "errors": "InvalidParams for validation; InternalError for native failure; unknown execution poisons session without retry",
+        "intentionalSafetyChanges": [
+          "preview defaults true",
+          "overwrite defaults false for imports; exports never overwrite",
+          "no XML version rewrite or fallback to root group",
+          "preservePath requires existing output directories",
+          "explicit confirmation and exact project identity required",
+          "source file read-locked during validation/hash/import; failure evidence retained"
+        ],
+        "remaining": "Native acceptance NOT RUN; file-lock compatibility and installed runtime dependencies remain native acceptance checks"
+      },
+      "sourceComplete": false,
+      "contractVersion": "v17-exchange-safe-v1",
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+    },
+    {
+      "tool": "ExportTypes",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportTypes",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseTypeInfo>?"
+          },
+          {
+            "name": "Inconsistent",
+            "type": "IEnumerable<ResponseTypeInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "GetTechnologyObjects",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseTechnologyObjectList",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Ok",
+            "type": "bool?"
+          },
+          {
+            "name": "SoftwarePath",
+            "type": "string?"
+          },
+          {
+            "name": "Count",
+            "type": "int?"
+          },
+          {
+            "name": "Items",
+            "type": "TechnologyObjectInfo[]?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ExportTechnologyObject",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "toName",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportTechnologyObject",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "folderPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseMessage",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportTechnologyObjectsFromDirectory",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "folderPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "dir",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "overwrite",
+            "type": "bool",
+            "required": false,
+            "default": true
+          }
+        ],
+        "returnType": "ResponseImportBatch",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Imported",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Failed",
+            "type": "IEnumerable<ImportFailure>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ExportAsDocuments",
+      "status": "pending-version-gate",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "blockPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportAsDocuments",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ExportBlocksAsDocuments",
+      "status": "pending-version-gate",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "exportPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "preservePath",
+            "type": "bool",
+            "required": false,
+            "default": false
+          }
+        ],
+        "returnType": "ResponseExportBlocksAsDocuments",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseBlockInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportFromDocuments",
+      "status": "pending-version-gate",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "fileNameWithoutExtension",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importOption",
+            "type": "string",
+            "required": false,
+            "default": "Override"
+          }
+        ],
+        "returnType": "ResponseImportFromDocuments",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "ImportBlocksFromDocuments",
+      "status": "pending-version-gate",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "softwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "groupPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "importPath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "regexName",
+            "type": "string",
+            "required": false,
+            "default": ""
+          },
+          {
+            "name": "importOption",
+            "type": "string",
+            "required": false,
+            "default": "Override"
+          }
+        ],
+        "returnType": "ResponseImportBlocksFromDocuments",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Items",
+            "type": "IEnumerable<ResponseBlockInfo>?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    },
+    {
+      "tool": "SeedProjectFromReference",
+      "status": "pending",
+      "operation": null,
+      "nativeAcceptance": "NOT RUN",
+      "note": "Not exposed by preview host; no placeholder success.",
+      "v17Contract": {
+        "parameters": [
+          {
+            "name": "plcSoftwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "hmiSoftwarePath",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "referenceDir",
+            "type": "string",
+            "required": true,
+            "default": null
+          },
+          {
+            "name": "placeholders",
+            "type": "JsonObject?",
+            "required": false,
+            "default": null
+          }
+        ],
+        "returnType": "ResponseSeed",
+        "returnProperties": [
+          {
+            "name": "Message",
+            "type": "string?"
+          },
+          {
+            "name": "Meta",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "Imported",
+            "type": "IEnumerable<string>?"
+          },
+          {
+            "name": "Failed",
+            "type": "IEnumerable<ImportFailure>?"
+          },
+          {
+            "name": "Placeholders",
+            "type": "JsonObject?"
+          },
+          {
+            "name": "TempDir",
+            "type": "string?"
+          }
+        ]
+      },
+      "source": {
+        "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
+        "wrapper": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PlcSoftwareV17McpTools.cs",
+        "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
+        "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
+      },
+      "migrationState": "unimplemented",
+      "releaseState": {
+        "14sp1": "unimplemented",
+        "15.1": "unimplemented",
+        "16": "unimplemented",
+        "17": "unimplemented",
+        "18": "unimplemented",
+        "19": "unimplemented",
+        "20": "unimplemented",
+        "21": "unimplemented"
+      },
+      "contractAlignment": {
+        "parameters": "unimplemented",
+        "response": "unimplemented",
+        "errors": "unimplemented"
+      }
+    }
+  ],
+  "additionalFoundationTools": [
+    "CreatePlcTag",
+    "CreatePlcTagTable",
+    "CreatePlcUserConstant",
+    "ReadPlcSystemConstants",
+    "ReadPlcTags",
+    "ReadPlcUserConstants"
+  ],
+  "completeContractMigrations": 7,
+  "sourceOfflineComplete": 7,
+  "partial": 0,
+  "unimplemented": 39,
+  "implementationOfflineVerified": 23,
+  "manualPending": 16
+}

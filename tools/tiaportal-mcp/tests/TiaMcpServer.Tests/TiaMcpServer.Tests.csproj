@@ -17,6 +17,14 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer.PlcFoundation\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Capability.cs" Link="Capability.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\CliOptions.cs" Link="CliOptions.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcOfflineReferences.cs" Link="PlcOfflineReferences.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />

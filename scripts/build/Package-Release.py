@@ -136,7 +136,10 @@ def main():
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     require(gui['testsPassed'] > 0, 'Missing configurator test result')
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
-    gui_inputs = {n for n in files if n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml')} | {'scripts/build/Build-Configurator.ps1'}
+    gui_inputs = {n for n in files if n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml')} | {
+        'scripts/build/Build-Configurator.ps1',
+        'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs',
+    }
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')

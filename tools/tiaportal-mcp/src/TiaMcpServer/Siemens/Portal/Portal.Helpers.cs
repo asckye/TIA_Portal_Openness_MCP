@@ -1279,6 +1279,17 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound, $"Block '{blockName}' not found in '{softwarePath}'");
             }
 
+            // Siemens SIMATIC SD import recreates OBs as cyclic OBs with a new
+            // number. Do not delete an original OB through this generic move route.
+            if (block is OB)
+            {
+                var existingGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
+                if (existingGroup != null && ReferenceEquals(block.Parent, existingGroup))
+                    return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
+                throw new PortalException(PortalErrorCode.NotSupportedOnVersion,
+                    "Moving organization blocks by export/delete/import is disabled: SIMATIC SD import does not preserve OB type/number. Move this OB in TIA Portal.");
+            }
+
             // 2) ensure the target group exists
             var targetGroup = autoCreateGroup
                 ? EnsurePlcBlockGroup(softwarePath, targetGroupPath, out _)
@@ -1294,11 +1305,15 @@ namespace TiaMcpServer.Siemens
             {
                 return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
             }
+            if (targetGroup.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)))
+                throw new PortalException(PortalErrorCode.InvalidParams,
+                    $"Target group already contains '{blockName}'; relocation never overwrites another block.");
 
             // 3) export -> delete -> import into target group (no native reparent)
             var tempDir = Path.Combine(Path.GetTempPath(), "tia_mcp_move", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(tempDir);
             string method;
+            bool moveVerified = false;
             try
             {
                 bool usedDocs;
@@ -1336,19 +1351,22 @@ namespace TiaMcpServer.Siemens
                     }
                     method = "xml(SimaticML)";
                 }
+                var verifyGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
+                moveVerified = verifyGroup?.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)) == true;
+                if (!moveVerified) throw new PortalException(PortalErrorCode.ImportFailed,
+                    $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
+            }
+            catch (Exception ex)
+            {
+                throw new PortalException(PortalErrorCode.ImportFailed,
+                    $"Move failed: {ex.Message}. Recovery export retained at '{tempDir}'; inspect the source and destination before retrying.", null, ex);
             }
             finally
             {
-                try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* best-effort cleanup */ }
-            }
-
-            // 4) verify the block is now under the target group
-            var verifyGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-            var present = verifyGroup?.Blocks.FirstOrDefault(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)) != null;
-            if (!present)
-            {
-                throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
+                // A failed import may have already deleted the source. Never erase
+                // its only recovery export during exception cleanup.
+                if (moveVerified)
+                    try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* best-effort cleanup */ }
             }
 
             return $"Moved '{blockName}' to '{targetGroupPath}' via {method}";

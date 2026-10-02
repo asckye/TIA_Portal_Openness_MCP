@@ -94,8 +94,16 @@ namespace TiaMcpServer.Runtime
 
         private static Check EngineVersionMatch(int compiled, int? detected)
         {
-            bool ok = detected == null || detected.Value == compiled
-                      || Siemens.EngineRouter.FindSiblingExe(detected.Value) != null;
+            return EngineVersionMatch(compiled, detected, Siemens.EngineRouter.FindSiblingExe);
+        }
+
+        internal static Check EngineVersionMatch(int compiled, int? detected, Func<int, string?> findSibling)
+        {
+            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == compiled)
+                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == detected.Value));
+            bool ok = supported && (detected == null || detected.Value == compiled
+                      || findSibling(detected.Value) != null);
+            string unsupported = "Only V20/V21 have runnable engines; older catalog entries are planned only. No engine is provided for the detected version.";
             return new Check
             {
                 Id = "engine-version",
@@ -104,8 +112,8 @@ namespace TiaMcpServer.Runtime
                 NameZh = "引擎 exe 与 TIA 版本匹配",
                 DetailEn = $"exe built for V{compiled}" + (detected != null ? $", machine has V{detected}" : ", machine version unknown"),
                 DetailZh = $"该 exe 为 V{compiled} 构建" + (detected != null ? $"，本机装的是 V{detected}" : "，本机版本未知"),
-                FixEn = ok || detected == null ? null : $"Use runtime\\v{detected}\\TiaMcpServer.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}.",
-                FixZh = ok || detected == null ? null : $"改用交付包里的 runtime\\v{detected}\\TiaMcpServer.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。",
+                FixEn = !supported ? unsupported : (ok || detected == null ? null : $"Use runtime\\v{detected}\\TiaMcpServer.exe from the delivery (both versions ship), or keep this one and pass --tia-major-version {compiled}."),
+                FixZh = !supported ? unsupported : (ok || detected == null ? null : $"改用交付包里的 runtime\\v{detected}\\TiaMcpServer.exe（两个版本都随包提供），或继续用当前这个并加参数 --tia-major-version {compiled}。"),
             };
         }
 

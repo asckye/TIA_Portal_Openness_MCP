@@ -9,6 +9,19 @@ namespace TiaMcpServer.Siemens
     // clean-up, type and version details, detailed object comparison, global library infos and archiving). No Siemens dependency.
     internal static class LibraryDeepLogic
     {
+        // Siemens V20/V21, "Creating new type from document" / "Updating type
+        // from document": project library only, and basename must be unambiguous.
+        internal static void ValidateDocumentImportScope(int major, bool projectLibrary,
+            string importOptions, bool xmlExists, bool sdExists)
+        {
+            if (!projectLibrary) throw new NotSupportedException("Library document import is supported only in the project library.");
+            RequireOneOf(importOptions, ImportOptions, "importOptions");
+            if (major == 20 && importOptions != "None")
+                throw new NotSupportedException("V20 library document import supports LibraryImportOptions.None only; inactive-culture options are unsupported.");
+            if (xmlExists && sdExists)
+                throw new ArgumentException("Both .xml and .s7dcl exist with the same basename; use a directory with one unambiguous document set.");
+        }
+
         // Enum member names of Siemens.Engineering.Library(.Types/.Compare) in the V20/V21 PublicAPI (identical in both).
         internal static readonly string[] UpdateCheckModes = { "ReportOutOfDateOnly", "ReportOutOfDateAndUpToDate" };
         internal static readonly string[] ForceUpdateModes = { "SetOnlyHigherUpdatedVersionAsDefault", "ForceSetAnyUpdatedVersionAsDefault", "NoDefaultVersionChange" };

@@ -1,0 +1,103 @@
+# Explicit release adapters and source-preview worker builds
+
+These eight peer projects compile the existing real PLC foundation subset into
+separate typed libraries. V20 and V21 have exactly the same project structure as
+the earlier releases. They do not replace the full V20/V21 engines, publish an
+MCP tool catalog, start a worker, or enable a release in the configurator. The standalone preview worker now references exactly one selected adapter.
+
+The native source allowlist is shared by source, not by an API-bound binary.
+It is intentionally transitional: `PlcReadContracts.cs` still contains typed
+implementation and the existing PLC feature constants remain internal to this
+subset. No full eight-copy source fork is introduced. Contract extraction and
+per-feature native implementation migration remain separate work.
+
+## Build
+
+From the repository root, with the matching real PublicAPI directory and the
+real .NET Framework targeting pack installed:
+
+```powershell
+dotnet build tools/native-call-weaver/NativeCallWeaver.csproj -c Release
+dotnet build tools/tiaportal-mcp/src/TiaMcp.Adapters/V20/Adapter.20.csproj -c Release -p:SiemensEngineeringDirectory="C:/authorized-sdk/TIA_V20_PublicAPI/V20"
+```
+
+`scripts/build/Build-PlcAdapterWorkers.ps1 -PublicApiRoot <eight-version-root>`
+builds each source-preview worker with exactly its matching Adapter project. It
+verifies coverage again on the copied Adapter DLL, checks that no old Foundation
+or Siemens DLL was copied, and records hashes. It never launches a worker or TIA.
+`-SourceRoot` can select a read-only snapshot; outputs stay in the candidate tree.
+
+The release is fixed by the project. An optional `TiaReleaseKey` must match it.
+V14 SP1, V15.1 and V16 target net461; V17 through V21 target net48. Missing
+targeting packs are a prerequisite failure, never a reason to substitute a TFM.
+For net461, `-p:UseReferenceAssemblyPackage=true` explicitly opts into Microsoft's
+`Microsoft.NETFramework.ReferenceAssemblies.net461` 1.0.3 package instead of an
+installed targeting pack. An existing authorized package cache can be selected
+with `RestoreSources`; this still uses actual net461 reference assemblies.
+V21 checks Base, Step7 and Safety; other targets check the monolithic core.
+Every selected assembly must have the exact expected full strong-name identity.
+Siemens references are non-copy-local. No Siemens package, DLL or stub ships here.
+
+In a read-only source review, `-p:AdapterSourceRoot=<repo>/tools/tiaportal-mcp/src`
+reads the original allowlisted source while all outputs remain next to these new
+projects. Normally the source root is derived from the integrated layout.
+
+Each project owns `obj/<key>/` and `bin/<key>/<configuration>/<framework>/`.
+There are no project references into the original tree and no source glob.
+The projects opt out of inherited Directory.Build props/targets so the existing
+EXE instrumentation target does not silently execute on these libraries.
+Their own target now invokes the existing weaver on the intermediate Adapter DLL
+after CoreCompile and verifies it before output copying. Missing weaver or failed
+coverage stops the build. `NativeCallWeaverPath` may select an existing verified
+tool build; the tool is an additional compile input so changes invalidate output.
+
+`Diagnostics/` is one API-independent runtime source shared by all eight builds.
+It preserves the existing runtime's call bracketing, weak object lineage,
+enumeration adapters, exception redaction and best-effort flushed journal. Its
+serializer uses the already-used Newtonsoft.Json 13.0.4, which supports net461;
+the original modern runtime and its System.Text.Json dependency are unchanged.
+The exact existing PortalFailureClassifier source is linked without Siemens
+references. This is a serializer variant to maintain in parallel until a later
+common diagnostic abstraction removes the duplication, not eight runtime copies.
+
+## Integration and remaining work
+
+The Worker csproj selects one exact Adapter and rejects unknown/missing release
+keys, framework replacement and multiple project references. No `else` selects
+V21. Host, Worker Program/protocol, TiaVersionCatalog, UI and full V20/V21 engine
+projects remain untouched. Do not reference both this adapter and
+the old PLC foundation assembly in one process: they intentionally expose the
+same transitional implementation types. A future worker must reference exactly
+one selected adapter and preserve its exact resolver, STA and session guards.
+
+Adapter and Worker Publish/Pack are blocked. Static weave/verify is not end-to-end
+diagnostic acceptance: Worker IPC correlation and binding snapshot hooks are not
+wired, and the process-loss observer remains unset. Existing request failure
+handling is unchanged. No claim of complete production replacement or native
+runtime compatibility follows from the compile and offline diagnostic tests.
+
+Compile success establishes type compatibility only. Official workflow evidence,
+per-tool capability admission, complete functional coverage, IPC integration and
+native acceptance are separate gates; none is claimed by this increment.
+
+## Input regression checks
+
+`build/Test-AdapterInputs.ps1 -SourceRoot <repo>/tools/tiaportal-mcp/src
+-PublicApiRoot <eight-version-sdk-root> -EvidenceDirectory <writable-output>`
+checks eight real API selections and twelve invalid configurations. It invokes
+only the metadata validation target, without restore, compilation or native
+execution. Compile each adapter separately to verify its actual source bindings.
+For isolated builds, set DOTNET_CLI_HOME and NuGet caches to writable task-local
+directories; set DOTNET_GENERATE_ASPNET_CERTIFICATE=false and
+DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1. Use `-p:UseSharedCompilation=false` if a shared
+compiler process has a different sandbox identity.
+
+After eight builds, `build/Test-WorkerIsolation.ps1 -EvidenceDirectory <output>
+-NativeCallWeaverPath <weaver.dll>` checks project selection, copied PE coverage,
+five deliberate coverage corruptions per release, invalid worker configurations,
+missing instrumentation tooling and publication gates.
+
+`Diagnostics.Tests` builds only the API-independent runtime against net8.0. Run
+its DLL with `<worker-bin-root> <new-writable-journal-directory>` to exercise
+diagnostic behavior and inspect eight worker/adapter PE files without loading
+them. It contains no Siemens references, replacement SDK, or native tests.

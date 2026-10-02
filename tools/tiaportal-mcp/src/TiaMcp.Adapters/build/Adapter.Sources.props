@@ -1,0 +1,34 @@
+<Project>
+  <!-- Transitional shared native source, compiled separately against each exact API.
+       Deliberately no glob, project reference, generated placeholder, or Siemens copy. -->
+  <ItemGroup>
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExchangePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExportPublication.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcFoundationPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcLifecyclePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcOfflineChecks.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcReadContracts.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcReadPathPolicy.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/TiaVersionCatalog.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/EngineeringAssemblyIdentity.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/OpennessReleaseContract.cs" />
+    <Compile Include="@(AdapterSource)" Link="NativeShared/%(Filename)%(Extension)" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />
+    <Compile Include="$(AdapterSourceRoot)/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Reference Include="@(AdapterApi)">
+      <HintPath>%(Reference.Identity)</HintPath><Private>false</Private><SpecificVersion>true</SpecificVersion>
+    </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(AdapterReleaseKey)</_Parameter2></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>AdapterIntegration</_Parameter1><_Parameter2>standalone-worker-preview</_Parameter2></AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>NativeCallInstrumentation</_Parameter1><_Parameter2>weave-and-verify-required</_Parameter2></AssemblyAttribute>
+  </ItemGroup>
+</Project>

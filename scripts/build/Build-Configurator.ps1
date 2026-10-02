@@ -4,6 +4,8 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $sources = @('Configurator.cs', 'ConfigCore.cs', 'ClientProfiles.cs', 'UpdateCheck.cs') | ForEach-Object { Join-Path $root "tools\mcp-configurator\$_" }
+$versionCatalog = Join-Path $root 'tools\tiaportal-mcp\src\TiaMcpServer\Siemens\TiaVersionCatalog.cs'
+$sources += $versionCatalog
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
 $resource = "/resource:$root\tools\mcp-configurator\MainWindow.xaml,MainWindow.xaml"
@@ -19,7 +21,7 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Configurator tests failed.' }
     $match = [regex]::Match(($results -join "`n"), '(?m)^Passed: (\d+)\s*$')
     if (!$match.Success) { throw 'Missing configurator test result.' }
-    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath)
+    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item $versionCatalog)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $text = [IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")
         $algorithm = [Security.Cryptography.SHA256]::Create()

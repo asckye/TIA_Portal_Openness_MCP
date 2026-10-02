@@ -57,7 +57,8 @@ def main():
                 state = call('ReadOpennessWorkerStatus')[1]['meta']['worker']
                 check(state['state'] == 'NotStarted' and state['workerPid'] is None, 'Diagnostics launched worker')
                 roster = rpc('tools/list', 'list')['result']['tools']
-                check(len(roster) == (486 if profile == 'full' else 62), 'Tool catalog drift')
+                expected_full = 475 if args.major == 20 else 486  # 11 known V21-only tools are hidden on V20.
+                check(len(roster) == (expected_full if profile == 'full' else 62), 'Version-aware tool catalog drift')
                 if profile == 'full':
                     check({'ReadPlcBlockEditCapabilities', 'AnalyzePlcReferences', 'PatchPlcBlockDocument', 'ImportPlcBlockVerified'} <= {t['name'] for t in roster}, 'PLC editing tools missing from runtime catalog')
                 check(rpc('resources/list', 'resources')['result'] == {'resources': []}, 'Resources changed')

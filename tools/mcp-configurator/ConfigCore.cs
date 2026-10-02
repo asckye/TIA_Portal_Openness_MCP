@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 
 using System.IO;
 using System.Linq;
@@ -11,6 +12,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web.Script.Serialization;
+using TiaMcp.Versioning;
 
 
 namespace TiaMcpConfigurator
@@ -71,12 +73,17 @@ namespace TiaMcpConfigurator
 
         public static string Engine(string root, int version)
         {
-            if (version != 20 && version != 21) throw new ArgumentException("仅支持 V20 / V21。");
+            return Engine(root, version.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static string Engine(string root, string versionKey)
+        {
+            var version = TiaVersionCatalog.RequireRunnable(versionKey);
             var candidates = new[] {
-                Path.Combine(root, "runtime", "v" + version, "TiaMcpServer.exe"),
-                Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version == 20 ? "bin-v20" : "bin", "Release", "net48", "TiaMcpServer.exe") };
+                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe"),
+                Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
-            if (path == null) throw new FileNotFoundException("找不到 V" + version + " 引擎。请将配置程序放在完整 Release 包的根目录，与 runtime 文件夹同级。");
+            if (path == null) throw new FileNotFoundException("找不到 " + version.DisplayName + " 引擎。请将配置程序放在完整 Release 包的根目录，与 runtime 文件夹同级。");
             return path;
         }
 

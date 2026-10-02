@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <AdapterReleaseKey>20</AdapterReleaseKey>
+    <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">20</TiaReleaseKey>
+    <AdapterExpectedFramework>net48</AdapterExpectedFramework>
+    <TargetFramework>net48</TargetFramework>
+    <AdapterFeatureConstants>PLC_RH;PLC_SAFETY</AdapterFeatureConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.dll"><ApiName>Siemens.Engineering</ApiName><ExpectedIdentity>Siemens.Engineering, Version=20.0.0.0, Culture=neutral, PublicKeyToken=d29ec89bac048f84</ExpectedIdentity></AdapterApi>
+  </ItemGroup>
+</Project>

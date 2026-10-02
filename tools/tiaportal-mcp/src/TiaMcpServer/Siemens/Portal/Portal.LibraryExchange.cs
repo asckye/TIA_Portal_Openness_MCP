@@ -47,6 +47,9 @@ namespace TiaMcpServer.Siemens
                 if(targetGroupKind!="" && targetGroupKind!="blocks" && targetGroupKind!="types")throw new ArgumentException("targetGroupKind must be empty, blocks or types.");
                 if((targetGroupKind=="")!=string.IsNullOrEmpty(targetSoftwarePath))throw new ArgumentException("targetSoftwarePath and targetGroupKind go together (STEP 7 documents need a PlcBlockGroup/PlcTypeGroup target environment).");
                 var library=ExactOpenEngineeringLibrary(libraryName);
+                string basePath=Path.Combine(file.DirectoryName!,Path.GetFileNameWithoutExtension(file.Name));
+                LibraryDeepLogic.ValidateDocumentImportScope(Engineering.TiaMajorVersion, library is ProjectLibrary,
+                    importOptions, File.Exists(basePath+".xml"), File.Exists(basePath+".s7dcl"));
                 var options=(LibraryImportOptions)System.Enum.Parse(typeof(LibraryImportOptions),importOptions);var create=(CreateOptions)System.Enum.Parse(typeof(CreateOptions),createOptions);
                 string fileName=Path.GetFileNameWithoutExtension(file.Name);meta["fileName"]=fileName;meta["importOptions"]=importOptions;meta["dryRun"]=dryRun;meta["mayHaveChanged"]=false;
                 IEngineeringObject? environment=null;

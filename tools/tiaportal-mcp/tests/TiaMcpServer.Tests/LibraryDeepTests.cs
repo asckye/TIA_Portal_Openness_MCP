@@ -15,6 +15,17 @@ namespace TiaMcpServer.Tests
 
         internal static void Run(Action<bool, string> check)
         {
+            foreach (int major in new[] { 20, 21 })
+            {
+                check(Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateDocumentImportScope(major, false, "None", true, false)), "document import rejects global library on V" + major);
+                check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateDocumentImportScope(major, true, "None", true, true)), "document import rejects ambiguous basename on V" + major);
+                LibraryDeepLogic.ValidateDocumentImportScope(major, true, "None", false, true);
+            }
+            foreach (string option in new[] { "SkipInactiveCultures", "ActivateInactiveCultures" })
+            {
+                check(Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateDocumentImportScope(20, true, option, false, true)), "V20 rejects library option " + option);
+                LibraryDeepLogic.ValidateDocumentImportScope(21, true, option, false, true);
+            }
             // Selection JSON.
             var sel = LibraryDeepLogic.ParseSelection("[{\"folder\":\"\"}]");
             check(sel.Length == 1 && sel[0].IsFolder && sel[0].Path == "", "libdeep: empty folder = whole Types folder");

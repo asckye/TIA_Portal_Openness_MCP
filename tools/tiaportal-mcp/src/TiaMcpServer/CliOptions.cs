@@ -119,6 +119,17 @@ namespace TiaMcpServer
         public int? TiaStepTimeoutSeconds { get; set; }
         public bool PortalWithUserInterface { get; set; } // --with-ui: launch TIA with full GUI (slower) instead of headless
 
+        // These commands print static information and must work without a supported install.
+        public static bool IsInformationalCommand(string[] args)
+        {
+            if (args.Length == 0) return false;
+            switch (args[0].ToLowerInvariant())
+            {
+                case "help": case "--help": case "-h": case "version": case "schema": return true;
+                default: return false;
+            }
+        }
+
         public static CliOptions ParseArgs(string[] args)
         {
             var options = new CliOptions();
@@ -140,11 +151,13 @@ namespace TiaMcpServer
                         options.WorkerParentStart = parentStart; break;
                     case "-tia-major-version":
                     case "--tia-major-version":
-                        if (i + 1 < args.Length && int.TryParse(args[i + 1], out int v))
-                        {
-                            options.TiaMajorVersion = v;
-                            i++;
-                        }
+                    case "--tia-version":
+                        if (++i >= args.Length)
+                            throw new System.ArgumentException("A canonical TIA version key is required after " + args[i - 1] + ".");
+                        var selectedVersion = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(args[i]);
+                        if (options.TiaMajorVersion.HasValue && options.TiaMajorVersion.Value != selectedVersion.MajorVersion)
+                            throw new System.ArgumentException("Conflicting TIA version options are not allowed.");
+                        options.TiaMajorVersion = selectedVersion.MajorVersion;
                         break;
 
                     case "-tia-portal-location":

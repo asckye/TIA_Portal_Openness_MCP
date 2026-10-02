@@ -28,9 +28,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // name -> the static method carrying [McpServerTool]. Built once; ~212 entries.
         private static Dictionary<string, MethodInfo>? _allToolMethods;
 
-        private static Dictionary<string, MethodInfo> AllToolMethods()
+        private static Dictionary<string, MethodInfo> AllToolMethods(bool includeUnavailable = false)
         {
-            if (_allToolMethods != null) return _allToolMethods;
+            if (_allToolMethods != null) return AvailableToolMethods(_allToolMethods, includeUnavailable);
             var map = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
             foreach (var m in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
             {
@@ -39,7 +39,25 @@ namespace TiaMcpServer.ModelContextProtocol
                 map[attr.Name ?? m.Name] = m;
             }
             _allToolMethods = map;
-            return map;
+            return AvailableToolMethods(map, includeUnavailable);
+        }
+
+        private static Dictionary<string, MethodInfo> AvailableToolMethods(Dictionary<string, MethodInfo> methods, bool includeUnavailable)
+            => includeUnavailable ? methods : methods.Where(kv => VersionToolProblem(kv.Key).Length == 0)
+                .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
+
+        internal static string VersionToolProblem(string name)
+            => Siemens.ToolVersionPolicy.ToolProblem(Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), name);
+
+        internal static string VersionCallProblem(string name, Func<string, string?> argument)
+            => Siemens.ToolVersionPolicy.CallProblem(Siemens.EngineRouter.CompiledTiaMajorVersion.ToString(System.Globalization.CultureInfo.InvariantCulture), name, argument);
+
+        private static string DuplicateArgumentProblem(JsonObject arguments)
+        {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var pair in arguments)
+                if (!seen.Add(pair.Key)) return "Duplicate argument names differing only by case are ambiguous: " + pair.Key + ". Nothing was executed.";
+            return "";
         }
 
         private static string ToolDescription(MethodInfo m)
@@ -232,7 +250,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CallTool"), Description(
-            "[L0][Meta] Invoke ANY tool in the full roster by name, including ones not listed in this session. " +
+            "[L0][Meta] Invoke any available tool for this engine version by name, including non-lite tools. " +
             "Use FindTools first to get the exact name and parameter signature. " +
             "Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. " +
             "Example: name='ExportPlcWatchTable', argumentsJson='{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}'.")]
@@ -261,6 +279,15 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (string.Equals(target, "CallTool", StringComparison.OrdinalIgnoreCase))
                     return new ResponseMessage { Message = "CallTool cannot invoke itself. Pass the target tool's own name.", Meta = BridgeMeta(false) };
 
+                if (AllToolMethods(includeUnavailable: true).ContainsKey(target))
+                {
+                    var unavailable = VersionToolProblem(target);
+                    if (unavailable.Length != 0)
+                    {
+                        var denial = BridgeMeta(false); denial["toolFound"] = true; denial["versionAvailable"] = false;
+                        return new ResponseMessage { Message = unavailable, Meta = denial };
+                    }
+                }
                 var all = AllToolMethods();
                 MethodInfo? method;
                 if (!all.TryGetValue(target, out method))
@@ -317,6 +344,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     args = obj;
                 }
 
+                var duplicate = DuplicateArgumentProblem(args);
+                if (duplicate.Length != 0) return new ResponseMessage { Message = duplicate, Meta = BridgeMeta(false) };
                 var ps = method.GetParameters();
                 var call = new object?[ps.Length];
                 var missing = new List<string>();
@@ -455,6 +484,15 @@ namespace TiaMcpServer.ModelContextProtocol
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
             if (target.Length == 0)
                 return new ResponseStringList { Message = "PreflightToolCall: 'name' is required.", Meta = BridgeMeta(false) };
+            if (AllToolMethods(includeUnavailable: true).ContainsKey(target))
+            {
+                var unavailable = VersionToolProblem(target);
+                if (unavailable.Length != 0)
+                {
+                    meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true; meta["versionAvailable"] = false;
+                    return new ResponseStringList { Message = unavailable, Meta = meta };
+                }
+            }
             var all = AllToolMethods();
             if (!all.TryGetValue(target, out var method))
             {
@@ -494,6 +532,24 @@ namespace TiaMcpServer.ModelContextProtocol
                 args = obj;
             }
 
+            var duplicate = DuplicateArgumentProblem(args);
+            if (duplicate.Length != 0)
+            {
+                meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
+                return new ResponseStringList { Message = duplicate, Meta = meta };
+            }
+            var versionProblem = VersionCallProblem(canonical, key =>
+            {
+                var pair = args.FirstOrDefault(kv => string.Equals(kv.Key, key, StringComparison.OrdinalIgnoreCase));
+                if (pair.Key != null) return pair.Value?.ToString();
+                return method.GetParameters().FirstOrDefault(p => p.Name == key)?.DefaultValue?.ToString();
+            });
+            if (versionProblem.Length != 0)
+            {
+                meta["success"] = false; meta["ok"] = false; meta["toolFound"] = true;
+                meta["versionAvailable"] = false;
+                return new ResponseStringList { Message = versionProblem, Meta = meta };
+            }
             var specs = SpecsOf(method);
             var report = PreflightLogic.Analyze(specs, args);
 
@@ -623,7 +679,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Build gate: every recipe step must name a real tool and fit its signature.</summary>
         public static IReadOnlyList<string> ValidateToolRecipes()
         {
-            var all = AllToolMethods();
+            var all = AllToolMethods(includeUnavailable: true);
             return ToolRecipes.ValidateAgainst(tool =>
             {
                 if (!all.Keys.Any(k => string.Equals(k, tool, StringComparison.Ordinal))) return null;
@@ -674,7 +730,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>Build gate (Generate-ToolsListFromAssembly.ps1): every example in ToolExamples must fit a real tool, spelled exactly.</summary>
         public static IReadOnlyList<string> ValidateToolExamples()
         {
-            var all = AllToolMethods();
+            var all = AllToolMethods(includeUnavailable: true);
             return ToolExamples.ValidateAgainst(tool =>
             {
                 if (!all.Keys.Any(k => string.Equals(k, tool, StringComparison.Ordinal))) return null;
@@ -689,6 +745,14 @@ namespace TiaMcpServer.ModelContextProtocol
             RecordBridgeEvent(id, method.Name, "BEFORE");
             try
             {
+                var parameters = method.GetParameters();
+                var toolName = method.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? method.Name;
+                var problem = VersionCallProblem(toolName, key =>
+                {
+                    int index = Array.FindIndex(parameters, p => string.Equals(p.Name, key, StringComparison.OrdinalIgnoreCase));
+                    return index < 0 ? null : call[index]?.ToString();
+                });
+                if (problem.Length != 0) throw new NotSupportedException(problem);
                 ValidateRuntimeBinding(method);
                 object? result = method.Invoke(null, call);
                 if (result is Task task)

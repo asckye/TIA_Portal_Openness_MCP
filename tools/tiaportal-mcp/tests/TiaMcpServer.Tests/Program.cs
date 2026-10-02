@@ -45,6 +45,8 @@ namespace TiaMcpServer.Tests
 
         private static int Main()
         {
+            PlcFoundationPolicyTests.Run(Check);
+            TiaVersionCatalogTests.Run(Check);
             EcosystemTests.Run(Check);
             OfficialWorkflowTests.Run(Check);
             PlcTypeGroupCreationTests.Run(Check);

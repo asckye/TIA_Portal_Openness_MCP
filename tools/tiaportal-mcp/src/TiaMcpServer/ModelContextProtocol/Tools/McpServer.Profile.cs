@@ -77,7 +77,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var attr = method.GetCustomAttribute<McpServerToolAttribute>();
                 if (attr == null) continue;
                 var name = attr.Name ?? method.Name;
-                if (LiteToolNames.Contains(name))
+                if (LiteToolNames.Contains(name) && VersionToolProblem(name).Length == 0)
                 {
                     tools.Add(CreateTool(name, method));
                 }
@@ -96,7 +96,8 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var method in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
             {
                 if (method.GetCustomAttribute<McpServerToolAttribute>() == null) continue;
-                tools.Add(CreateTool(method.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? method.Name, method));
+                var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? method.Name;
+                if (VersionToolProblem(name).Length == 0) tools.Add(CreateTool(name, method));
             }
             return tools;
         }

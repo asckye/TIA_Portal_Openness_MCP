@@ -154,7 +154,7 @@
         <TextBlock x:Name="ServerCardNote" Text="装有 TIA 的机器" Style="{StaticResource Mono}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
        </Grid>
        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="132"/><ColumnDefinition Width="16"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-        <StackPanel><TextBlock Text="VERSION" Style="{StaticResource Mono}" Margin="0,0,0,9"/><ComboBox x:Name="Version" SelectedIndex="0"><ComboBoxItem Content="V21"/><ComboBoxItem Content="V20"/></ComboBox></StackPanel>
+        <StackPanel><TextBlock Text="VERSION" Style="{StaticResource Mono}" Margin="0,0,0,9"/><ComboBox x:Name="Version" DisplayMemberPath="DisplayName" SelectedValuePath="Key"/></StackPanel>
         <StackPanel Grid.Column="2"><TextBlock Text="INSTALL PATH · 不带 BIN" Style="{StaticResource Mono}" Margin="0,0,0,9"/><DockPanel><Button x:Name="BrowseTia" Content="浏览" DockPanel.Dock="Right" Margin="8,0,0,0"/><Button x:Name="DetectTia" Content="自动检测" DockPanel.Dock="Right" Margin="8,0,0,0" ToolTip="按环境变量 TiaPortalLocation、注册表和默认安装目录探测"/><TextBox x:Name="TiaPath" FontFamily="Consolas" FontSize="12"/></DockPanel></StackPanel>
        </Grid>
        <Grid x:Name="AddressRow" Margin="0,20,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="16"/><ColumnDefinition Width="150"/></Grid.ColumnDefinitions>

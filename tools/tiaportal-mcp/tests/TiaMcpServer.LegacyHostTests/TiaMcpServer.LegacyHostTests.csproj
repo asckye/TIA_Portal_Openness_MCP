@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/FoundationTools.cs" Link="FoundationTools.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/WorkerClient.cs" Link="WorkerClient.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/DeclarationReadContract.cs" Link="DeclarationReadContract.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/V17ReadEnvelope.cs" Link="V17ReadEnvelope.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/WorkerProtocol.cs" Link="WorkerProtocol.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExportPublication.cs" Link="PlcExportPublication.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs" Link="PlcBlockXmlPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExchangePolicy.cs" Link="PlcExchangePolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/V17MutationEnvelope.cs" Link="V17MutationEnvelope.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/V17CompileEnvelope.cs" Link="V17CompileEnvelope.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs" Link="PlcOfflinePolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+  </ItemGroup>
+</Project>

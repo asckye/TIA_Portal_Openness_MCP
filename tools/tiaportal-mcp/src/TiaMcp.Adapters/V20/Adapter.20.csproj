@@ -1,0 +1,9 @@
+<Project TreatAsLocalProperty="AdapterReleaseKey;AdapterExpectedFramework;AdapterFeatureConstants">
+  <!-- Typed PLC subset referenced by one exact standalone preview worker; no production full-engine replacement. -->
+  <Import Project="Release.props" />
+  <Import Project="../build/Adapter.Common.props" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="../build/Adapter.Sources.props" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="../build/Adapter.Common.targets" />
+</Project>

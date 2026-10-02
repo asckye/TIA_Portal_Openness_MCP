@@ -16,6 +16,7 @@ using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using TiaMcp.Versioning;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
@@ -35,7 +36,15 @@ namespace TiaMcpConfigurator
         private bool busy, closing;
         private T Find<T>(string name) where T : FrameworkElement { return (T)Window.FindName(name); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
-        private int Version { get { return Find<ComboBox>("Version").SelectedIndex == 1 ? 20 : 21; } }
+        private int Version
+        {
+            get
+            {
+                var selected = Find<ComboBox>("Version").SelectedItem as TiaVersionDescriptor;
+                if (selected == null) throw new InvalidOperationException("请选择可运行的 TIA Portal 版本。");
+                return TiaVersionCatalog.RequireRunnable(selected.Key).MajorVersion;
+            }
+        }
         private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + Version + ".json"); } }
         // 虚拟机 ↔ 宿主机（HTTP）或同一台电脑（stdio）。两种模式共用同一页的 A/B 两栏。
         private bool Remote { get { return Find<RadioButton>("RemoteNav").IsChecked == true; } }
@@ -45,6 +54,9 @@ namespace TiaMcpConfigurator
         public ConfigWindow(bool loadExisting = true)
         {
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("MainWindow.xaml")) Window = (Window)XamlReader.Load(stream);
+            var versions = Find<ComboBox>("Version");
+            versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
+            versions.SelectedValue = "21";
             Window.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 3;
             Window.SizeChanged += delegate { Window.Resources["ClientColumns"] = Window.ActualWidth < 1180 ? 2 : 3; };
             var choices = Find<ListBox>("ClientChoices");
@@ -68,7 +80,7 @@ namespace TiaMcpConfigurator
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
             Find<TextBox>("ServerPort").TextChanged += delegate { UpdateLink(); };
             Click("BrowseTia", delegate {
-                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V20 / V21 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V" + Version + " 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { DetectTiaPath(true); });
@@ -86,12 +98,12 @@ namespace TiaMcpConfigurator
             MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
             MenuClick("AboutItem", delegate { MessageBox.Show(Window, "TIA Portal · MCP Bridge 配置器 " + Assembly.GetExecutingAssembly().GetName().Version + "\n引擎：" + (UpdateCheck.Installed(root) ?? "未知（不在交付包里）") + "\n目录：" + root + "\n\n更新走菜单“更新 → 更新引擎…”，由 scripts\\operations\\Update-Engine.ps1 在引擎停止后完成。", "关于", MessageBoxButton.OK, MessageBoxImage.Information); });
             ShowInstalledVersion();
-            Find<ComboBox>("Version").SelectionChanged += delegate { Guard(LoadServer); UpdateLink(); };
+            Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); };
             if (loadExisting)
             {
                 Window.Width = Math.Max(Window.MinWidth, Math.Min(Window.Width, SystemParameters.WorkArea.Width - 32));
                 Window.Height = Math.Max(Window.MinHeight, Math.Min(Window.Height, SystemParameters.WorkArea.Height - 32));
-                Guard(LoadServer);
+                Guard(delegate { LoadServer(true); });
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
                 var ignored = CheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
@@ -186,11 +198,11 @@ namespace TiaMcpConfigurator
             if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + Version + " 安装目录（" + found.Value + "）：" + found.Key); }
             else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + Version + " 安装根目录。");
         }
-        private void LoadServer()
+        private void LoadServer(bool loadExisting)
         {
             Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", "Portal V" + Version);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("");
-            if (!File.Exists(StatePath)) { DetectTiaPath(false); return; }
+            if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
             if (settings.Version != Version) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");

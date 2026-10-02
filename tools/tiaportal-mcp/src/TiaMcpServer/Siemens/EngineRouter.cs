@@ -34,6 +34,7 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         public static string? FindSiblingExe(int version)
         {
+            var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
             try
             {
                 string own = Process.GetCurrentProcess().MainModule.FileName;
@@ -44,14 +45,14 @@ namespace TiaMcpServer.Siemens
                 var m = Regex.Match(dir, @"^(.*)[\\/]bin(-v20)?[\\/]Release[\\/]net48$", RegexOptions.IgnoreCase);
                 if (m.Success)
                 {
-                    string binDir = version == 20 ? "bin-v20" : "bin";
+                    string binDir = target.EngineOutputDirectory;
                     candidates.Add(Path.Combine(m.Groups[1].Value, binDir, "Release", "net48", exeName));
                 }
 
                 var parent = new DirectoryInfo(dir);
                 if (parent.Parent != null && Regex.IsMatch(parent.Name, @"^v\d+$", RegexOptions.IgnoreCase))
                 {
-                    candidates.Add(Path.Combine(parent.Parent.FullName, "v" + version, exeName));
+                    candidates.Add(Path.Combine(parent.Parent.FullName, target.RuntimeDirectory, exeName));
                 }
 
                 foreach (var c in candidates)
@@ -65,7 +66,7 @@ namespace TiaMcpServer.Siemens
             }
             catch
             {
-                // best-effort only; caller falls back to a warning
+                // Lookup failure is returned to the caller, which must fail closed.
             }
             return null;
         }

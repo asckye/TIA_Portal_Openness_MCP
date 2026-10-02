@@ -1,0 +1,26 @@
+<Project>
+  <ItemGroup>
+    <CustomAdditionalCompileInputs Include="$(NativeCallWeaverPath)" />
+  </ItemGroup>
+  <Target Name="ValidateAdapterInputs" BeforeTargets="PrepareForBuild;ResolveAssemblyReferences">
+    <Error Condition="'$(TiaReleaseKey)' != '$(AdapterReleaseKey)'" Text="Adapter release mismatch: this project is $(AdapterReleaseKey), requested $(TiaReleaseKey)." />
+    <Error Condition="'$(TargetFramework)' != '$(AdapterExpectedFramework)'" Text="Adapter framework mismatch: $(AdapterReleaseKey) requires $(AdapterExpectedFramework)." />
+    <Error Condition="'$(OutputType)' != 'Library' or '$(PlatformTarget)' != 'x64'" Text="This adapter is a compile-only x64 library." />
+    <Error Condition="'$(EnableDefaultCompileItems)' != 'false'" Text="Adapter sources must use the explicit allowlist." />
+    <Error Condition="'$(SiemensEngineeringDirectory)' == '' or !Exists('$(SiemensEngineeringDirectory)')" Text="An explicit real PublicAPI directory is required; no installed-SDK fallback." />
+    <Error Condition="!Exists('%(AdapterSource.Identity)')" Text="Missing allowlisted adapter source: %(AdapterSource.Identity)" />
+    <Error Condition="!Exists('%(AdapterApi.Identity)')" Text="Missing exact adapter API module: %(AdapterApi.Identity)" />
+    <!-- Reads PE metadata only. Never Assembly.Load, reflection invocation or TIA startup. -->
+    <GetAssemblyIdentity AssemblyFiles="@(AdapterApi)"><Output TaskParameter="Assemblies" ItemName="_AdapterIdentity" /></GetAssemblyIdentity>
+    <Error Condition="'%(_AdapterIdentity.Identity)' != '%(_AdapterIdentity.ExpectedIdentity)'" Text="Wrong adapter API identity at %(_AdapterIdentity.OriginalItemSpec): %(_AdapterIdentity.Identity). Expected %(_AdapterIdentity.ExpectedIdentity)" />
+    <Message Importance="high" Text="Adapter $(AdapterReleaseKey): $(TargetFramework); @(_AdapterIdentity); native NOT RUN; standalone worker preview only; production full engines unchanged." />
+  </Target>
+  <Target Name="InstrumentAdapterNativeBoundaries" AfterTargets="CoreCompile" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(NativeCallWeaverPath)')" Text="Native call weaver missing. Build the repository weaver first or provide NativeCallWeaverPath. Uninstrumented adapter output is refused." />
+    <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; weave &quot;@(IntermediateAssembly)&quot; &quot;$(IntermediateOutputPath)native-call-coverage.json&quot;" />
+    <Exec Command="dotnet &quot;$(NativeCallWeaverPath)&quot; verify &quot;@(IntermediateAssembly)&quot;" />
+  </Target>
+  <Target Name="BlockUninstrumentedAdapterPublication" BeforeTargets="PrepareForPublish;GenerateNuspec;Publish;Pack">
+    <Error Text="Production replacement blocked: adapter diagnostics are build-verified only; worker IPC correlation, functional coverage and native acceptance remain pending. Existing full V20/V21 engines remain unchanged." />
+  </Target>
+</Project>

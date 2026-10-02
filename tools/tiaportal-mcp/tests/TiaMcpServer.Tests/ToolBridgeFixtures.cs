@@ -16,6 +16,14 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         private static bool IsLiteProfile() => false;
         private static readonly HashSet<string> LiteToolNames = new HashSet<string>();
+        internal static int VersionProbeCalls;
+        // Application-boundary fixtures, not fabricated Siemens SDK classes.
+        [global::ModelContextProtocol.Server.McpServerTool(Name = "ManageDcbLibraries")]
+        public static ResponseMessage ProbeVersionedDcb(string action = "read")
+        { VersionProbeCalls++; return ProbeResult(true); }
+        [global::ModelContextProtocol.Server.McpServerTool(Name = "ReadSafetyActivationTests")]
+        public static ResponseMessage ProbeVersionedSafety()
+        { VersionProbeCalls++; return ProbeResult(true); }
         [global::ModelContextProtocol.Server.McpServerTool]
         public static ResponseMessage ProbeResult(bool success) => new ResponseMessage { Message = "probe", Meta = new JsonObject { ["success"] = success } };
         [global::ModelContextProtocol.Server.McpServerTool]

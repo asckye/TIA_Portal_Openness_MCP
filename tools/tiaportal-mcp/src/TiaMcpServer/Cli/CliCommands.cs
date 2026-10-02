@@ -176,9 +176,9 @@ namespace TiaMcpServer.Cli
         // version from the registry, and the version-matching sibling exe.
         private static int Config(string[] args)
         {
-            int ver = int.TryParse(Opt(args, "--tia-major-version"), out var v) && v > 0
-                ? v
-                : (TiaMcpServer.Siemens.Engineering.DetectTiaMajorVersion() ?? 21);
+            // Main has already resolved all aliases and selected the matching engine.
+            int ver = TiaMcpServer.Siemens.Engineering.TiaMajorVersion;
+            TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(ver, Siemens.EngineRouter.CompiledTiaMajorVersion);
             string exe = McpConfigInstaller.ExeForVersion(ver);
             // The engine itself now defaults to the ~48-tool lite roster, so a plain config is
             // already the right one and pins no profile. --full is the opt-out; --lite is still
@@ -251,6 +251,14 @@ namespace TiaMcpServer.Cli
 
             var detected = TiaMcpServer.Siemens.Engineering.DetectTiaMajorVersion();
             int compiled = TiaMcpServer.Siemens.EngineRouter.CompiledTiaMajorVersion;
+
+            int effective = TiaMcpServer.Siemens.Engineering.TiaMajorVersion;
+            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == effective)
+                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == detected.Value));
+            Line(supported, "Engine version support", "Selected V" + effective + "; detected " +
+                (detected.HasValue ? "V" + detected.Value : "unknown"),
+                "Only V20/V21 have runnable engines; earlier catalog entries are planned only.");
+            ready &= supported;
 
             foreach (var c in Runtime.EnvironmentDoctor.Run(compiled, detected))
             {
@@ -389,7 +397,11 @@ USAGE
   tia schema                                              Print the spec field reference
   tia version
 
-GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-major-version N
+GLOBAL FLAGS (also accepted): --with-ui, --tia-portal-location PATH, --tia-version KEY
+  Runnable keys: 20, 21. --tia-major-version N remains an alias.
+  Keys 14sp1, 15.1, 16, 17, 18, 19 are planned only and cannot run.
+  Original V14 and V15 are outside the target scope and are unsupported.
+  Put project/spec paths before global flags. help/version/schema need no TIA installation.
 MCP SERVER FLAGS (no subcommand): --isolate-openness, --worker-timeout-seconds 10..180 (default 120)
   Opt-in worker isolation; local tests do not establish native TIA stability. See docs/guides/openness-worker-isolation.md.
 Exit code: 0 = success, 1 = completed with failed steps, 2 = error.";

@@ -1,0 +1,478 @@
+{
+  "scope": "ReadPlcTags/ReadPlcUserConstants/ReadPlcSystemConstants; supplied XML read only",
+  "note": "System constant properties inherited from PlcConstant; compiled PE inheritance checked separately. Manual examples incorrectly use PlcTag for system constant in several releases; actual API types govern implementation.",
+  "releases": [
+    {
+      "releaseKey": "14sp1",
+      "xml": "TIA_V14SP1_PublicAPI/V14 SP1/Siemens.Engineering.xml",
+      "sha256": "67892ad36b697bd0919c6b4ac0f4b6fe65b3128235c90333f5f509f4a389b6e6",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "15.1",
+      "xml": "TIA_V15.1_PublicAPI/V15.1/Siemens.Engineering.xml",
+      "sha256": "e6864dad4478bffac958e1d2ce72328d3b5218ccf1447557fa1da6d3469991b6",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "16",
+      "xml": "TIA_V16_PublicAPI/V16/Siemens.Engineering.xml",
+      "sha256": "b2b6542acc3ad33270193487eae57f896e11acd281038377f1bdce1cb478413a",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "17",
+      "xml": "TIA_V17_PublicAPI/V17/Siemens.Engineering.xml",
+      "sha256": "5ab7b2e24b129ede6daa7e28d53dc6e9e724f6ee7f86c13c20625d35190f53fa",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "18",
+      "xml": "TIA_V18_PublicAPI/V18/Siemens.Engineering.xml",
+      "sha256": "4ee727da5077757f28081197cb26d222df9bb90329ab2176400fc39c163b5245",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "19",
+      "xml": "TIA_V19_PublicAPI/V19/Siemens.Engineering.xml",
+      "sha256": "a6bf56b1adb638e6b4b7ff9a52e7d89021323ee3b46e52967c95eb3764dae684",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "20",
+      "xml": "TIA_V20_PublicAPI/V20/Siemens.Engineering.xml",
+      "sha256": "154d83b9cf013c2428b514bbafdb4802946661b177c6323e53e037f05a297cd8",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    },
+    {
+      "releaseKey": "21",
+      "xml": "TIA_V21_PublicAPI/V21/net48/Siemens.Engineering.Step7.xml",
+      "sha256": "344f0652a1b10fedca6cd3501434ae8b1a8c4c0a014b3ef0ff1ef444f3fddda0",
+      "members": [
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.Tags",
+          "summary": "Composition of Plc tags"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.UserConstants",
+          "summary": "Composition of Plc user constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTagTable.SystemConstants",
+          "summary": "Composition of Plc system constants"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.Name",
+          "summary": "The name of the Plc tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.DataTypeName",
+          "summary": "Defines the data type of this tag"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcTag.LogicalAddress",
+          "summary": "The address in the PLC's address space"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcUserConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Name",
+          "summary": "The name of the Plc constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.DataTypeName",
+          "summary": "Defines the data type of this constant"
+        },
+        {
+          "id": "P:Siemens.Engineering.SW.Tags.PlcConstant.Value",
+          "summary": "Defines the value of this constant."
+        },
+        {
+          "id": "T:Siemens.Engineering.SW.Tags.PlcSystemConstant",
+          "summary": "Represents a Plc system constant"
+        }
+      ]
+    }
+  ]
+}

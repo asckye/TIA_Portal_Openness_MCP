@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <AdapterReleaseKey>15.1</AdapterReleaseKey>
+    <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">15.1</TiaReleaseKey>
+    <AdapterExpectedFramework>net461</AdapterExpectedFramework>
+    <TargetFramework>net461</TargetFramework>
+    <AdapterFeatureConstants>PLC_RH</AdapterFeatureConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.dll"><ApiName>Siemens.Engineering</ApiName><ExpectedIdentity>Siemens.Engineering, Version=15.1.0.0, Culture=neutral, PublicKeyToken=d29ec89bac048f84</ExpectedIdentity></AdapterApi>
+  </ItemGroup>
+</Project>

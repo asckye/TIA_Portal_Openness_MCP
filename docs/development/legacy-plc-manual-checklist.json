@@ -1,0 +1,1493 @@
+{
+  "scope": "23 implemented V17-profile tools; seven scoped ordinary-PLC read tools closed independently",
+  "reviewDate": "2026-10-02",
+  "completion": "Seven tools source/offline/manual closed in their declared ordinary PLC scopes; 16 implemented tools manual-partial; 39 profile tools unimplemented; native NOT RUN",
+  "sources": {
+    "CONNECT": {
+      "title": "Connecting to the TIA Portal",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/connecting-to-the-tia-portal",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Existing-process attachment is documented; runtime options/HSP must be installed. Resolver registration must precede JIT compilation of Siemens-dependent code."
+    },
+    "FIREWALL": {
+      "title": "TIA Portal Openness firewall",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/tia-portal-openness-firewall",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Attachment can prompt for authorization. No registry whitelist edits or prompt auto-acceptance are implemented."
+    },
+    "OPEN": {
+      "title": "Opening a project",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/opening-a-project",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Project must not be open in another Portal instance; ordinary Open does not upgrade. Protected-project authentication requires an explicit supported mechanism."
+    },
+    "CREATE": {
+      "title": "Creating a project",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/creating-a-project",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Create receives parent DirectoryInfo and project name, creating a named subdirectory and project file."
+    },
+    "SAVE": {
+      "title": "Saving a project",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/saving-a-project",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires attachment and an open project; Save and SaveAs have distinct effects."
+    },
+    "CLOSE": {
+      "title": "Closing a project",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/closing-a-project",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires attachment and a project opened by the application. Close is an explicit action."
+    },
+    "ATTR": {
+      "title": "Read operations for attributes",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/read-operations-for-attributes",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Read via IEngineeringObject metadata and GetAttribute; dynamic attributes depend on the current object state."
+    },
+    "TREE": {
+      "title": "Determining the object structure and attributes",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/determining-the-object-structure-and-attributes",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires attachment and an open project; compositions and attributes expose the object hierarchy."
+    },
+    "PLC": {
+      "title": "Querying PLC and HMI targets",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-devices-networks-and-connections/querying-plc-and-hmi-targets",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "SoftwareContainer is a device-item service; check its software target type before treating it as PLC software."
+    },
+    "GROUPS": {
+      "title": "Enumerating user-defined block groups",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/enumerating-user-defined-block-groups",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires a selected PLC in an open project; group traversal is recursive and Find is composition-local."
+    },
+    "BLOCKS": {
+      "title": "Enumerating all blocks",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/enumerating-all-blocks",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Block collection enumeration and local named lookup are documented; wrapper recursion is explicit."
+    },
+    "INFO": {
+      "title": "Querying information of a block/user data type",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/querying-information-of-a-block/user-data-type",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Modified and compile timestamps are UTC. Consistency is native state, not inferred from successful attribute reads."
+    },
+    "TAGS": {
+      "title": "Enumerating PLC tag tables in a folder",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/enumerating-plc-tag-tables-in-a-folder",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Enumerate the selected system or user-group composition; root enumeration does not imply recursive coverage."
+    },
+    "EXPORT_BLOCK": {
+      "title": "Exporting blocks",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/exporting-blocks",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires attachment, open project and offline PLC; documented XML export covers consistent supported blocks/types. Protected and special block rules need separate review."
+    },
+    "IMPORT_BLOCK": {
+      "title": "Importing block",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/importing-block",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires offline PLC. Imported XML can remain inconsistent; missing instance DBs are not automatically created. Redundant data conflicts can fail import."
+    },
+    "EXPORT_TYPE": {
+      "title": "Exporting user data type",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/exporting-user-data-type",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires offline PLC; uses a selected PlcType and FileInfo destination."
+    },
+    "IMPORT_TYPE": {
+      "title": "Importing user data type",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/importing-user-data-type",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Requires offline PLC; malformed referenced-type syntax causes an exception."
+    },
+    "EXPORT_TAG": {
+      "title": "Exporting PLC tag tables",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/tag-tables/exporting-plc-tag-tables",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "One XML file per table; recursive folder traversal is available. This wrapper deliberately exports a selected root table only."
+    },
+    "IMPORT_TAG": {
+      "title": "Importing PLC tag table",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/tag-tables/importing-plc-tag-table",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Import targets system-group or user-group TagTables. Manual example permits Override; adapter keeps it opt-in."
+    },
+    "COMPILE": {
+      "title": "Compiling a project",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "All devices must be offline. ICompilable returns aggregate counts and nested messages. Password-protected safety compilation requires login; failure may throw. Timestamps are UTC."
+    },
+    "LOGIN": {
+      "title": "LoginToSafetyOfflineProgram",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/f-related-openness/safetyadministration/logintosafetyofflineprogram",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Wrong/unset password, non-offline state, missing Safety license or disallowed safety changes can cause exceptions; UMAC restrictions apply."
+    },
+    "LOGOFF": {
+      "title": "LogoffFromSafetyOfflineProgram",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/f-related-openness/safetyadministration/logofffromsafetyofflineprogram",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Logoff can fail when password, modification permission, offline state or Safety license requirements are unmet; cleanup must not conceal failure."
+    },
+    "SESSION_OPEN": {
+      "title": "Opening local/exclusive session",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-support-for-multiuser/opening-local/exclusive-session",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Opening an exclusive session automatically locks the server project; authentication events are required for protected server projects."
+    },
+    "SESSION_SAVE": {
+      "title": "Saving a local session",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-support-for-multiuser/saving-a-local-session",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Save applies to engineering/exclusive sessions; a server-project session causes MultiuserException. This is not server commit."
+    },
+    "SESSION_CLOSE": {
+      "title": "Closing local session",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-support-for-multiuser/closing-local-session",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "Close applies to server, multiuser and exclusive sessions and discards pending changes."
+    },
+    "M151": {
+      "title": "M151",
+      "release": "15.1",
+      "url": "https://cache.industry.siemens.com/dl/files/163/109477163/att_926042/v1/TIAPortalOpennessenUS_en-US.pdf?download=true",
+      "readStatus": "selected-sections-read-2026-10-02",
+      "finding": "Read pp97,116,119-121: cross-instance open exclusion, all-device offline compile prerequisite, explicit Save/Close. Other chapters remain unreviewed in this pass."
+    },
+    "M16": {
+      "title": "M16",
+      "release": "16",
+      "url": "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf",
+      "readStatus": "selected-sections-read-2026-10-02",
+      "finding": "Read pp129,870-872,912-913: all-device offline compilation and offline PLC block/type import/export requirements."
+    },
+    "M17": {
+      "title": "M17",
+      "release": "17",
+      "url": "https://cache.industry.siemens.com/dl/files/533/109798533/att_1069908/v1/TIAPortalOpennessenUS_en-US.pdf",
+      "readStatus": "selected-sections-read-2026-10-02",
+      "finding": "Read pp137,703,996: all-device offline compilation, discard-on-close local sessions and offline block import. Remaining chapters require review."
+    },
+    "COMPILE21": {
+      "title": "COMPILE21",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project",
+      "readStatus": "selected-sections-read-2026-10-02",
+      "finding": "Read: all-device offline prerequisite and safety login requirement; no cross-version inference."
+    },
+    "STATE20": {
+      "title": "Determining the status of a PLC",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/determining-the-status-of-a-plc",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "State service is on DeviceItem; R/H primary and backup state service is on Device. Read-only sampling is not an atomic guarantee against external UI changes."
+    },
+    "RH20": {
+      "title": "Setting PLC online of R/H system",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/setting-plc-online-of-r/h-system",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "State service is on DeviceItem; R/H primary and backup state service is on Device. Read-only sampling is not an atomic guarantee against external UI changes."
+    },
+    "STATE21": {
+      "title": "Determining the status of a PLC",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/determining-the-status-of-a-plc",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "State service is on DeviceItem; R/H primary and backup state service is on Device. Read-only sampling is not an atomic guarantee against external UI changes."
+    },
+    "RH21": {
+      "title": "Setting PLC online of R/H system",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/setting-plc-online-of-r/h-system",
+      "readStatus": "chapter-read-2026-10-02",
+      "finding": "State service is on DeviceItem; R/H primary and backup state service is on Device. Read-only sampling is not an atomic guarantee against external UI changes."
+    },
+    "OFFLINE18": {
+      "title": "Official V18 offline workflow chapters",
+      "release": "18",
+      "url": "https://cache.industry.siemens.com/dl/files/199/109815199/att_1122276/v2/TIAPortalOpeness_deDE_de-DE.pdf",
+      "readStatus": "independent parent research read chapters; supplied exact URL and printed pages 2026-10-02",
+      "pages": "state 391-392; R/H 410-412; compile 138-139; blocks 1069/1071; types 1110-1112",
+      "finding": "Ordinary State is DeviceItem service; R/H PrimaryState and BackupState are Device service. XML text requires PLC not online; compile text requires all devices Offline."
+    },
+    "OFFLINE19": {
+      "title": "Official V19 offline workflow chapters",
+      "release": "19",
+      "url": "https://cache.industry.siemens.com/dl/files/886/109826886/att_1163875/v1/TIAPortalOpenness_enUS_en-US.pdf",
+      "readStatus": "independent parent research read chapters; supplied exact URL and printed pages 2026-10-02",
+      "pages": "state 433; R/H 453-454; compile 153-154; blocks 1349/1351; types 1386-1388",
+      "finding": "Ordinary State is DeviceItem service; R/H PrimaryState and BackupState are Device service. XML text requires PLC not online; compile text requires all devices Offline."
+    },
+    "M14SP1": {
+      "title": "TIA Portal Openness V14 SP1, Chinese 05/2017",
+      "release": "14sp1",
+      "url": "https://cache.industry.siemens.com/dl/files/163/109477163/att_923000/v1/TIAPortalOpennesszhCN_zh-CHS.pdf",
+      "readStatus": "parent-independent-text-review-2026-10-02; screenshot unavailable",
+      "finding": "Open 96-97; Save 98; compile 99-100 requires all devices offline; Create 101-103; Close 103. OnlineProvider on CPU DeviceItem, State 255-257. XML block export 422-425/import 428-430 and UDT 435-437 require PLC offline. Page 422: SCL XML exports interface only, not full SCL program."
+    },
+    "SESSION17": {
+      "title": "V17 multiuser workflows",
+      "release": "17",
+      "url": "https://cache.industry.siemens.com/dl/files/533/109798533/att_1069908/v1/TIAPortalOpennessenUS_en-US.pdf",
+      "readStatus": "parent-independent-review-2026-10-02",
+      "finding": "Pages 696-704: Open and OpenServerProject return LocalSession; exclusive creation/open locks server project. Save supports engineering/exclusive; server-project type throws MultiuserException. Close discards pending changes. CloseAndCommit is distinct and not implemented."
+    },
+    "SESSION_CLOSE21": {
+      "title": "closing local session",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-support-for-multiuser/closing-local-session",
+      "readStatus": "parent-independent-review-2026-10-02",
+      "finding": "Close discards all pending changes."
+    },
+    "SESSION_SAVE21": {
+      "title": "saving a local session",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-support-for-multiuser/saving-a-local-session",
+      "readStatus": "parent-independent-review-2026-10-02",
+      "finding": "Save supports engineering/exclusive; server-project type throws MultiuserException. Local save is not server check-in."
+    },
+    "EXTERNAL20": {
+      "title": "Generating blocks from source (collection navigation evidence only)",
+      "release": "20",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source",
+      "readStatus": "body-read-2026-10-02",
+      "finding": "Example enumerates PlcSoftware.ExternalSourceGroup.ExternalSources. The implemented reader only obtains names; it never invokes generation. Generation-specific offline requirement is not claimed as a name-read requirement."
+    },
+    "EXTERNAL21": {
+      "title": "Generating blocks from source (collection navigation evidence only)",
+      "release": "21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source",
+      "readStatus": "body-read-2026-10-02",
+      "finding": "Example enumerates PlcSoftware.ExternalSourceGroup.ExternalSources. The implemented reader only obtains names; it never invokes generation. Generation-specific offline requirement is not claimed as a name-read requirement."
+    },
+    "M18": {
+      "title": "TIA Portal Openness official manual (German 12/2022)",
+      "release": "18",
+      "url": "https://cache.industry.siemens.com/dl/files/199/109815199/att_1122276/v2/TIAPortalOpeness_deDE_de-DE.pdf",
+      "sha256": "4315d84b575df35ceae67dcb815eecafd4498a8b831c906b200e982a53d83a1b",
+      "readStatus": "Local official PDF relevant chapter text read 2026-10-02",
+      "finding": "German manual p102 composition enumeration; pp462-463 source-generation chapter explicitly traverses root ExternalSources; generation code is navigation evidence only, no mutation requirement inferred for root name read."
+    },
+    "M19": {
+      "title": "TIA Portal Openness official manual (English 11/2023)",
+      "release": "19",
+      "url": "https://cache.industry.siemens.com/dl/files/886/109826886/att_1163875/v1/TIAPortalOpenness_enUS_en-US.pdf",
+      "sha256": "b9837ad27beb03e731effa22a09dd116f454b41adcee92a5c3d92fa93e72d976",
+      "readStatus": "Local official PDF relevant chapter text read 2026-10-02",
+      "finding": "Manual pp111-112 composition enumeration; p512 source-generation chapter explicitly traverses root ExternalSources; generation code is navigation evidence only, no mutation requirement inferred for root name read."
+    }
+  },
+  "tools": [
+    {
+      "tool": "Connect",
+      "signatureEvidence": {
+        "api": "TiaPortal.GetProcesses / TiaPortalProcess.Attach",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "CONNECT",
+        "FIREWALL"
+      ],
+      "differencesAndFixes": "Explicit PID; resolver has NoInlining boundary; installed options, permissions and interactive firewall remain prerequisites.",
+      "offlineNegativeTests": "LifecycleContractTests: repeated/invalid attach; Program: native-disabled and cancellation",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "process attachment"
+        ],
+        "remaining": [
+          "Exact-release process attachment/disposal semantics and snapshot identity",
+          "Firewall/permission prerequisites; no automatic launch or process selection"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "GetProject",
+      "signatureEvidence": {
+        "api": "TiaPortal.Projects / LocalSessions / ProjectBase.Path",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "OPEN",
+        "ATTR",
+        "SESSION_OPEN",
+        "SESSION17",
+        "SESSION_CLOSE21",
+        "SESSION_SAVE21"
+      ],
+      "differencesAndFixes": "Existing-project/session enumeration is implemented; local-session Path identity and non-engineering session scope remain unknown.",
+      "offlineNegativeTests": "LifecycleContractTests; ApiMetadataTests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
+      "sessionEvidence": "sessionReview",
+      "independentCompletion": {
+        "dependencies": [
+          "project enumeration"
+        ],
+        "remaining": [
+          "Ordinary-project identity and collection evidence",
+          "LocalSession kind/path semantics is a separate unsupported scope, not a blocker for ordinary-project reads"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "AttachToOpenProject",
+      "signatureEvidence": {
+        "api": "Projects / LocalSessions enumeration, no native Open",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "OPEN",
+        "SESSION_OPEN",
+        "SESSION17",
+        "SESSION_CLOSE21",
+        "SESSION_SAVE21"
+      ],
+      "differencesAndFixes": "Exact name+path binding is adapter policy. Local-session identity mapping and server-session discrimination remain unknown.",
+      "offlineNegativeTests": "LifecycleContractTests: exact identity, borrowed ownership",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
+      "sessionEvidence": "sessionReview",
+      "independentCompletion": {
+        "dependencies": [
+          "project binding"
+        ],
+        "remaining": [
+          "Exact ordinary-project name/path binding evidence",
+          "LocalSession identity discrimination remains separate"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "OpenProject",
+      "signatureEvidence": {
+        "api": "ProjectComposition.Open(FileInfo) / LocalSessionComposition.Open(FileInfo)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "OPEN",
+        "SESSION_OPEN",
+        "M151",
+        "M14SP1",
+        "SESSION17",
+        "SESSION_CLOSE21",
+        "SESSION_SAVE21"
+      ],
+      "differencesAndFixes": "No upgrade; same-process duplicate blocked. Cross-instance exclusion delegated to Siemens and must not be claimed prevalidated. Local-session execution now blocked.",
+      "offlineNegativeTests": "LifecycleContractTests: wrong release/archive, repeated bind, session execution gate",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
+      "sessionEvidence": "sessionReview",
+      "independentCompletion": {
+        "dependencies": [
+          "project lifecycle",
+          "local-session gate for .als only"
+        ],
+        "remaining": [
+          "Ordinary Open versus upgrade/protection/cross-instance prerequisites per release",
+          "Local-session kind/path/server-lock evidence before .als execution"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "CreateProject",
+      "signatureEvidence": {
+        "api": "ProjectComposition.Create(DirectoryInfo,string)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "CREATE",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "New directory under existing parent; preview path matches documented pattern. Caller extension is not proof of model version.",
+      "offlineNegativeTests": "LifecycleContractTests: creation identity; PathAndIdentityTests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "project lifecycle"
+        ],
+        "remaining": [
+          "Per-release parent/name/new-directory creation contract and authentication/read-only contexts"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "SaveProject",
+      "signatureEvidence": {
+        "api": "Project.Save / LocalSession.Save",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "SAVE",
+        "SESSION_SAVE",
+        "M151",
+        "M14SP1",
+        "SESSION17",
+        "SESSION_CLOSE21",
+        "SESSION_SAVE21"
+      ],
+      "differencesAndFixes": "Explicit save; no commit/SaveAs. Local-session mutation blocked pending kind/identity review.",
+      "offlineNegativeTests": "LifecycleContractTests: exact identity/session gate",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
+      "sessionEvidence": "sessionReview",
+      "independentCompletion": {
+        "dependencies": [
+          "project lifecycle",
+          "local-session gate when bound"
+        ],
+        "remaining": [
+          "Ordinary project save/read-only permissions per release",
+          "LocalSession kind/path/server-side effects before session writes"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "CloseProject",
+      "signatureEvidence": {
+        "api": "Project.Close / LocalSession.Close / IsModified",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "CLOSE",
+        "SESSION_CLOSE",
+        "M151",
+        "M17",
+        "M14SP1",
+        "SESSION17",
+        "SESSION_CLOSE21",
+        "SESSION_SAVE21"
+      ],
+      "differencesAndFixes": "Owned and unmodified only; session mutation blocked because discard and server effects require further reconciliation.",
+      "offlineNegativeTests": "LifecycleContractTests: borrowed/dirty/repeated close/session gate",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
+      "sessionEvidence": "sessionReview",
+      "independentCompletion": {
+        "dependencies": [
+          "project lifecycle",
+          "local-session gate when bound"
+        ],
+        "remaining": [
+          "Ordinary owned-project close semantics; do not infer local-session discard",
+          "LocalSession close/lock semantics remains a separate gate"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "GetProjectTree",
+      "signatureEvidence": {
+        "api": "Devices / DeviceGroups / DeviceItems / SoftwareContainer",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "TREE",
+        "PLC"
+      ],
+      "differencesAndFixes": "Typed hierarchy subset, not arbitrary complete object graph. Missing services do not imply missing product capability.",
+      "offlineNegativeTests": "V17ProjectEnvelope and LifecycleContractTests; real PE members",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "project read"
+        ],
+        "remaining": [
+          "Per-release Devices/DeviceGroups/UngroupedDevices/DeviceItems traversal scope",
+          "Tree subset and unreadable service behavior"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "GetBlocks",
+      "signatureEvidence": {
+        "api": "PlcSoftware.BlockGroup / Groups / Blocks",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "GROUPS",
+        "BLOCKS",
+        "INFO",
+        "ATTR"
+      ],
+      "differencesAndFixes": "Root and user groups only; system block groups/software units are outside declared profile. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests; PathAndIdentityTests: alias ambiguity/extra segments; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "GetBlocksWithHierarchy",
+      "signatureEvidence": {
+        "api": "PlcBlockGroup.Groups / Blocks",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "GROUPS",
+        "BLOCKS"
+      ],
+      "differencesAndFixes": "Preserves empty nested user groups; same excluded system/unit scope. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests: empty groups; path tests; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "GetTypes",
+      "signatureEvidence": {
+        "api": "PlcSoftware.TypeGroup / Groups / Types",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "INFO",
+        "ATTR"
+      ],
+      "differencesAndFixes": "Root/user type groups; unit/system-type scope not implied. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests; ApiMetadataTests; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "GetPlcTagTables",
+      "signatureEvidence": {
+        "api": "PlcSoftware.TagTableGroup.TagTables",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "TAGS"
+      ],
+      "differencesAndFixes": "Root table names only, intentionally narrower than recursive manual examples. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests: string list/root scope; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "GetBlockInfo",
+      "signatureEvidence": {
+        "api": "PlcBlock properties / IEngineeringObject attributes",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "legacy-object-info-api-evidence.json"
+      },
+      "workflowSources": [
+        "INFO",
+        "ATTR"
+      ],
+      "differencesAndFixes": "Flat fields and exact group path; unreadable attributes explicitly marked. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests: malformed DTO, missing/ambiguous/case paths; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "GetTypeInfo",
+      "signatureEvidence": {
+        "api": "PlcType properties / IEngineeringObject attributes",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "legacy-object-info-api-evidence.json"
+      },
+      "workflowSources": [
+        "INFO",
+        "ATTR"
+      ],
+      "differencesAndFixes": "Flat fields and exact group path; optional namespace is whitelisted. Ordinary-PLC manual workflow now closed for all eight exact releases; native DateTime values are preserved without timezone coercion.",
+      "offlineNegativeTests": "V17ContractTests: malformed DTO, missing/ambiguous/case paths; actual Newtonsoft Utc/Local/Unspecified round-trip and host envelope preservation",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "scope": "ordinary bound project; LocalSession-specific identity review is separate",
+        "remaining": [],
+        "reviewOwner": "Independent review integrated and timestamp regression passed",
+        "specialScopes": [
+          "System groups",
+          "Software units",
+          "R/H-specific software ownership",
+          "Multiuser-specific session semantics"
+        ]
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "sixReadClosure"
+    },
+    {
+      "tool": "ExportBlock",
+      "signatureEvidence": {
+        "api": "PlcBlock.Export(FileInfo,ExportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "EXPORT_BLOCK",
+        "M16",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication. V14 SP1 SCL result/preview is interface-only and cannot represent full-program restore. Hardware coverage gate still prevents native execution.",
+      "offlineNegativeTests": "ExchangeContractTests; CompileContractTests: offline execution gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests; ExportPublicationTests real filesystem competition, validation, exception and evidence",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "publicationEvidence": "publicationReview",
+      "subitemStatus": {
+        "stagedPublication": "source-offline-closed, all eight compile targets",
+        "v14sp1SclFormat": "source-offline-closed; no native execution"
+      },
+      "sclFormatEvidence": "sclFormatReview",
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC offline coverage",
+          "export format"
+        ],
+        "remaining": [
+          "R/H versus standard selected hardware evidence",
+          "Protected/special/system blocks, export options and target schema; publication and V14 SCL policy closed"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "ExportType",
+      "signatureEvidence": {
+        "api": "PlcType.Export(FileInfo,ExportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "EXPORT_TYPE",
+        "EXPORT_BLOCK",
+        "M16",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication; consistent-only export. Hardware coverage gate remains.",
+      "offlineNegativeTests": "ExchangeContractTests; CompileContractTests: offline execution gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests; ExportPublicationTests real filesystem competition, validation, exception and evidence",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "publicationEvidence": "publicationReview",
+      "subitemStatus": {
+        "stagedPublication": "source-offline-closed, all eight compile targets"
+      },
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC offline coverage",
+          "export format"
+        ],
+        "remaining": [
+          "R/H versus standard selected hardware evidence",
+          "UDT export options and target schema; staged publication closed"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "ExportPlcTagTable",
+      "signatureEvidence": {
+        "api": "PlcTagTable.Export(FileInfo,ExportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "EXPORT_TAG"
+      ],
+      "differencesAndFixes": "Single root table; actual callback now uses staged XML validation and no-overwrite publication. Publication-specific gate removed. None versus WithDefaults and native acceptance remain to reconcile.",
+      "offlineNegativeTests": "ExchangeContractTests: output collision, path traversal; ExportPublicationTests real filesystem competition, validation, exception and evidence",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "executionGate": "publication gate removed; native opt-in and project/session safeguards retained; native acceptance NOT RUN",
+      "publicationEvidence": "publicationReview",
+      "subitemStatus": {
+        "stagedPublication": "source-offline-closed, all eight compile targets"
+      },
+      "independentCompletion": {
+        "dependencies": [
+          "tag-table format"
+        ],
+        "remaining": [
+          "Per-release export options None/WithDefaults and schema semantics; publication closed",
+          "No dependency on R/H hardware gate in current tool"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "ImportBlock",
+      "signatureEvidence": {
+        "api": "PlcBlockComposition.Import(FileInfo,ImportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "IMPORT_BLOCK",
+        "M16",
+        "M17",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "Input read-lock/hash retained; format policy rejects V14 SP1 SCL and V14-produced interface-only SCL as full-program import, with explicit preview limitations. No version rewrite or root fallback. Hardware coverage and target-schema gaps remain.",
+      "offlineNegativeTests": "ExchangeContractTests: XML/DTD/hash/lock/overwrite; offline gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "sclFormatEvidence": "sclFormatReview",
+      "subitemStatus": {
+        "v14sp1SclFormat": "source-offline-closed; no native execution"
+      },
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC offline coverage",
+          "import format"
+        ],
+        "remaining": [
+          "R/H versus standard selected hardware evidence",
+          "Target XSD, consistency/protected/special block semantics; V14 SCL policy closed"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "ImportType",
+      "signatureEvidence": {
+        "api": "PlcTypeComposition.Import(FileInfo,ImportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "IMPORT_TYPE",
+        "M16",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "Read-only state implementation and exact group/overwrite policies retained; hardware coverage gate remains. Target schema/format validation incomplete.",
+      "offlineNegativeTests": "ExchangeContractTests: malformed XML/path/overwrite; offline gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC offline coverage",
+          "import format"
+        ],
+        "remaining": [
+          "R/H versus standard selected hardware evidence",
+          "Target XSD/type references and overwrite semantics"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "ImportPlcTagTable",
+      "signatureEvidence": {
+        "api": "PlcTagTableComposition.Import(FileInfo,ImportOptions)",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "IMPORT_TAG"
+      ],
+      "differencesAndFixes": "Exact target; no rewrite. Target-installed XSD validation and cross-version format policy remain gaps.",
+      "offlineNegativeTests": "ExchangeContractTests: XML/DTD/exact group/overwrite",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "tag-table format"
+        ],
+        "remaining": [
+          "Per-release XSD/version/overwrite and named-object handling",
+          "No dependency on R/H hardware gate in current tool"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "CompileSoftware",
+      "signatureEvidence": {
+        "api": "ICompilable.Compile / CompilerResult / SafetyAdministration",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "COMPILE",
+        "LOGIN",
+        "LOGOFF",
+        "M151",
+        "M16",
+        "M17",
+        "COMPILE21",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "All-device traversal and exact Offline checks compiled for all eight releases; separate hardware classification gate remains. Safety availability/authentication/license/UMAC acceptance unverified.",
+      "offlineNegativeTests": "CompileContractTests: gate, password capability, result counts, diagnostics; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC and all-project offline coverage",
+          "Safety optional"
+        ],
+        "remaining": [
+          "Hardware topology and passive/unknown classification",
+          "Version-specific Safety/UMAC prerequisites and cleanup; result contracts already offline tested"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "CompileAndDiagnosePlc",
+      "signatureEvidence": {
+        "api": "Same typed compile operation plus diagnostic classifier",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
+      },
+      "workflowSources": [
+        "COMPILE",
+        "LOGIN",
+        "LOGOFF",
+        "M151",
+        "M16",
+        "M17",
+        "COMPILE21",
+        "M14SP1"
+      ],
+      "differencesAndFixes": "Same all-device traversal and hardware gate; classified detail counts remain separate from native aggregate counts.",
+      "offlineNegativeTests": "CompileContractTests: nested diagnostics, summary filtering, invalid counts; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "nativeAcceptance": "NOT RUN",
+      "offlineStateEvidence": "offlineStateReview",
+      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "independentCompletion": {
+        "dependencies": [
+          "selected PLC and all-project offline coverage",
+          "Safety optional"
+        ],
+        "remaining": [
+          "Same hardware/Safety prerequisites as CompileSoftware",
+          "Diagnostic timestamps and actual aggregate versus classified count semantics"
+        ],
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      }
+    },
+    {
+      "tool": "GetPlcExternalSources",
+      "signatureEvidence": {
+        "api": "PlcSoftware.ExternalSourceGroup.ExternalSources -> PlcExternalSource.Name",
+        "releaseKeys": [
+          "14sp1",
+          "15.1",
+          "16",
+          "17",
+          "18",
+          "19",
+          "20",
+          "21"
+        ],
+        "verification": "Eight typed adapter/worker builds, real PE members and 24 XML members",
+        "xmlEvidence": "legacy-external-source-read-api-evidence.json"
+      },
+      "workflowSources": [
+        "M14SP1",
+        "M151",
+        "M16",
+        "M17",
+        "EXTERNAL20",
+        "EXTERNAL21",
+        "M18",
+        "M19"
+      ],
+      "differencesAndFixes": "Root names preserve V17 string-list contract. Reflection best-effort fallback replaced by typed access and explicit read errors. No state/write gates inherited.",
+      "offlineNegativeTests": "V17ContractTests: native order/case/empty list, malformed payload, actual MCP SDK string envelope and explicit read failure; PE member/parameter tests",
+      "manualStatus": "closed-ordinary-plc",
+      "nativeAcceptance": "NOT RUN",
+      "independentCompletion": {
+        "dependsOnRHGate": false,
+        "dependsOnLocalSessionMutationGate": false,
+        "remaining": [],
+        "scope": "Ordinary PLC root external-source collection names only; no source contents, generation, software units, system groups or multiuser-specific semantics"
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "externalSourceReadReview"
+    }
+  ],
+  "remainingResearch": [
+    "All releases: protected/system blocks, export options, target XSDs and XML version rules; read-only/UMAC contexts; process exit and session kind/path semantics.",
+    "V18/V19 offline/compile/XML preconditions reviewed; remaining lifecycle/read/special-format workflows still need reconciliation.",
+    "V17/V20/V21 session side effects partly reviewed; exact session-kind/path/lock release semantics still missing. V18/V19 session chapters remain to read.",
+    "Engineering Offline is not physical CPU STOP. External UI changes can race the checks; no atomicity claim.",
+    "V14 SP1 SCL interface-only policy and staged export publication are source/offline closed. Target XSD/special/protected block formats and real native export remain unverified.",
+    "Classify R/H versus standard CPUs and passive versus unknown hardware before removing hardware coverage gate.",
+    "Six ordinary-PLC read workflows are closed independently; do not reopen them due to unrelated write/Safety/session gaps. Special scopes remain separate."
+  ],
+  "accessNotes": [
+    "V17 PDF first web fetch timed out, later succeeded. V15.1/V16 PDFs accessible via browser tool.",
+    "Direct local PDF download was denied by network sandbox (WinError 10013); no escalation or system change attempted.",
+    "No Siemens DLL uploaded. No TIA/native process executed."
+  ],
+  "offlineStateReview": {
+    "implementation": "Read-only typed State and R/H two-sided checks immediately before operation; no cached state, GoOnline or GoOffline",
+    "apiEvidence": "legacy-offline-state-api-evidence.json plus PE State/PrimaryState/BackupState checks",
+    "releaseState": {
+      "14sp1": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "15.1": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "16": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "17": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "18": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "19": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "20": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
+      "21": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN"
+    },
+    "oldManualPages": {
+      "15.1": "status 257-258; R/H 262-263",
+      "16": "status 425-426; R/H 440-441",
+      "17": "status 523-524; R/H 536-538",
+      "14sp1": "status 255-257; compile 99-100; block XML 422-430; UDT 435-437"
+    },
+    "policy": "Exact Offline for XML exchange is a deliberately stricter adapter policy than manual wording not online. Compile requires every observed connection Offline. Unknown enum, missing provider, incomplete inventory or exception fails closed.",
+    "compileScope": "Top-level, nested groups, ungrouped devices and recursive DeviceItems. Devices without recognized states or non-PLC software are conservatively blocked; no unsupported hardware coverage claimed.",
+    "raceLimit": "Checks and native actions are not atomic against external Portal/UI activity. Same selection supplies the actual exchange target and device/item state, preventing alias re-resolution to another PLC.",
+    "v14sp1Gate": "Exact 14sp1 is now admitted by the documented-release subgate. The separate hardware classification gate still blocks all releases; explicit SCL format policy is implemented.",
+    "executionEnabled": false
+  },
+  "architectureDirection": {
+    "requested": "One master branch/UI; per-release API references/adapters/capability inventory/build outputs/tests and worker processes; share API-independent protocol/logging/pure validation only",
+    "currentFinding": "Eight exact peer adapters and single-adapter workers integrated. Each Adapter now includes shared portable diagnostics and mandatory weave/verify; eight rebuilt copied outputs pass coverage checks. IPC request correlation, binding snapshot and process-loss observer remain unwired; Publish/Pack blocked. Full V20/V21 services unchanged.",
+    "migration": "Retain tested pure policies; subsequently extract version adapter boundaries without cloning eight whole trees. Parent owns separate architecture review."
+  },
+  "sessionReview": {
+    "evidence": [
+      "SESSION17",
+      "SESSION_CLOSE21",
+      "SESSION_SAVE21",
+      "SESSION_OPEN"
+    ],
+    "executionGate": "Opening a LocalSession and every worker mutation bound to a LocalSession remain blocked; only read/bind/preview paths remain.",
+    "unknown": "Exact session-kind accessor, ProjectBase.Path versus local-session file identity, lock ownership/release and sync semantics remain unproved. No automatic unlock/delete/commit or Close fallback after Save failure.",
+    "ordinaryProject": "Owned and unmodified close policy retained; LocalSession discard behavior is not generalized to ordinary Project.Close. No numeric composition index used as identity.",
+    "processIdentity": "V15.1 manual pages 83-86 distinguish TiaPortal.Dispose, TiaPortalProcess.Dispose and TiaPortalSession.Dispose; AcquisitionTime is not proved process start time or UTC. No process-kill or snapshot-time identity substitution."
+  },
+  "reviewFindings": {
+    "confirmedP2": "CreateTagTable/CreateTag/CreateUserConstant now use worker-lock result validation for Executed and exact ProjectFile; malformed/null/conflicting results poison session. Pure regression tests added.",
+    "conditionalP1": "RHOnlineProvider absent plus ordinary Offline cannot establish non-R/H hardware; device classification evidence missing.",
+    "conditionalP2Coverage": "Items with neither provider nor software cannot be assumed passive. Classification and coverage tests remain incomplete.",
+    "conditionalP2Export": "Resolved source/offline: all three actual export callbacks use staged validation plus no-overwrite same-volume Move; collision/exception/parallel publisher tests pass. See publicationReview.",
+    "finalGate": "Hardware classification gate still blocks block/type exchange and compile. Export publication gate removed after implementation/testing; tag-table export uses the tested publication helper. Local-session and general native opt-in gates remain.",
+    "next": "Obtain per-release hardware classification evidence and pure coverage model; independent review before removing hardware gate. Integrate eight adapter build projects without double-referencing Foundation.",
+    "regression": "Independent 95 assertions remain integrated. Current main pure suite: 1851 passed/0 failed/0 skipped; separate diagnostic/PE checks 124 passed. Pure checks do not establish native service discovery."
+  },
+  "publicationReview": {
+    "status": "source/offline closed for all eight exact compile targets; native acceptance NOT RUN",
+    "implementation": "All block/type/tag-table Export callbacks write only to an independent sibling staging directory. Validate nonempty regular Openness XML with DTD disabled and size bound, hash under read lock, then same-volume two-argument File.Move without overwrite. No copy/delete/retry fallback.",
+    "failure": "Retain stage and any partial output; worker exposes only destination/staged paths, recovery directory, phase and SHA256. Fixed public error message excludes native exception contents. Successful publication preserves unexpected sidecars and returns recovery directory.",
+    "tests": "Real Windows filesystem: existing target, target created during export, two concurrent publishers, competing directory, callback exception with secret text, partial/missing/empty/malformed/wrong-root/DTD output, successful cleanup and retained sidecar. No Siemens execution.",
+    "limits": "Native export/file-lock interaction remains untested. Same-volume publication does not establish native runtime support or protect against a hostile actor replacing directories/reparse points."
+  },
+  "sclFormatReview": {
+    "status": "V14 SP1 SCL format subitem source/offline closed; native acceptance NOT RUN",
+    "source": "M14SP1 page 422",
+    "export": "Preview and result expose XmlContent=interface-only, FullProgramRestoreSupported=false and explicit warning: interface XML is not complete SCL backup/restoration. No XML marker rewrite.",
+    "import": "Under existing input read lock, reject SCL block imports into V14 SP1 and V14-produced SCL XML into any target. Unknown producer SCL and unknown V14 SP1 block language are refused. Preview discloses restriction; no source code reconstruction or silent full-restore claim.",
+    "otherReleases": "No full-program restoration guarantee inferred from modern XML; schemas, special blocks and native acceptance remain separate gaps."
+  },
+  "hardwareCoverageDesign": {
+    "scope": "Only block/type exchange requires selected PLC offline; compile additionally requires all-project coverage. Read tools and tag-table exchange do not inherit this gate.",
+    "evidenceObserved": "V17 XML DeviceItem.Classification is a flags enum; CPU means CPU, HM means head module, None means no classification. These values do not prove standard versus R/H, nor passive hardware. SoftwareContainer proves a software target, not complete device topology.",
+    "neededEvidence": [
+      "Exact-release authoritative discriminator for standard versus redundant system, independent of RHOnlineProvider presence",
+      "Authoritative passive item/device classification: no provider or no software is not enough",
+      "Per-release semantics for ungrouped, nested, HMI/head modules, racks, drives and unsupported devices in all-devices-offline precondition"
+    ],
+    "proposedModel": "Version adapter supplies independent topology Standard/Redundant/Unknown and role Cpu/HeadModule/ProvenPassive/Unknown with source evidence. Pure policy requires ordinary provider for Standard, both R/H sides for Redundant, rejects Unknown. Every observed connection must be Offline; missing known required services fail closed.",
+    "invariants": [
+      "Check state on exact selected Device/DeviceItem, never re-resolve aliases",
+      "Device classification does not follow from service presence/absence",
+      "Traverse all groups/ungrouped/nested items; unknown terminal ownership or exception rejects",
+      "None classification is not passive; do not infer it from no software",
+      "Engineering Offline is not CPU STOP; external UI state changes remain non-atomic"
+    ],
+    "implementationStatus": "Design only; evidence incomplete, existing hardware execution gate retained. No fabricated model tests presented as native discovery coverage."
+  },
+  "sixReadClosure": {
+    "tools": [
+      "GetBlockInfo",
+      "GetBlocks",
+      "GetBlocksWithHierarchy",
+      "GetPlcTagTables",
+      "GetTypeInfo",
+      "GetTypes"
+    ],
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "manualEvidence": "Independent official chapter review supplied by parent; page mapping below; XML 176/176 reverified locally",
+    "pages": {
+      "14sp1": "groups 262-263; blocks 263-264; info 264-266; tags 323-324; compositions 333-334",
+      "15.1": "groups 301-302; blocks 302-303; info 303-304; tags 363-364; compositions 171",
+      "16": "groups 500-501; blocks 501-502; info 502-503; tags 573-574; compositions 96-97",
+      "17": "groups 568-569; blocks 569-570; info 570-571; tags 646-647; compositions 101-102",
+      "18": "German groups 443; blocks 444; info 445-446; tags 528-529; compositions 102",
+      "19": "groups 493-494; blocks 494-495; info 495-496; tags 583-584; compositions 111-112",
+      "20": "Versioned user-group, block enumeration, block/UDT info and tag-table chapters; composition enumeration shown in examples; direct generic composition URL unavailable",
+      "21": "Versioned user-group, block enumeration, block/UDT info, tag-table and working-with-compositions chapters"
+    },
+    "apiEvidence": "legacy-six-read-api-evidence.json",
+    "scope": "Ordinary PLC root/user groups; exact object path for single-object reads; root-only table names per V17 contract",
+    "excludedScopes": [
+      "System groups",
+      "Software units",
+      "R/H-specific software ownership",
+      "Multiuser-specific session semantics"
+    ],
+    "notDependencies": [
+      "Offline mutation coverage",
+      "Safety authentication",
+      "LocalSession save/close/server-lock gates"
+    ],
+    "datePolicy": "Native ModifiedDate assigned directly; actual Newtonsoft serializer preserves Utc/Local/Unspecified Kind and ticks; host preserves serialized representation. No guessed UTC coercion. Manual UTC meaning is documented, actual Siemens-returned Kind remains native observation, not synthesized.",
+    "nativeAcceptance": "NOT RUN"
+  },
+  "externalSourceReadReview": {
+    "tool": "GetPlcExternalSources",
+    "apiEvidence": "legacy-external-source-read-api-evidence.json: 24/24 members and exact XML hashes",
+    "implementation": "Typed root external source names, native order/case preserved; unique existing software selection; malformed names and native failures are errors. No file reads, generation, deletion, writes or unit traversal.",
+    "manualEvidence": {
+      "14sp1": "manual p275 collection path in generation example",
+      "15.1": "manual p317 collection path",
+      "16": "manual p517 collection path",
+      "17": "manual p588 collection path; unit collection separately p668",
+      "20": "EXTERNAL20",
+      "21": "EXTERNAL21 and working-with-compositions chapter",
+      "18": "German manual p102 composition enumeration; pp462-463 source-generation chapter explicitly traverses root ExternalSources",
+      "19": "Manual pp111-112 composition enumeration; p512 source-generation chapter explicitly traverses root ExternalSources"
+    },
+    "remaining": [],
+    "notDependencies": [
+      "R/H offline coverage",
+      "LocalSession mutation gate"
+    ],
+    "nativeAcceptance": "NOT RUN",
+    "manualDocuments": {
+      "18": {
+        "sha256": "4315d84b575df35ceae67dcb815eecafd4498a8b831c906b200e982a53d83a1b",
+        "url": "https://cache.industry.siemens.com/dl/files/199/109815199/att_1122276/v2/TIAPortalOpeness_deDE_de-DE.pdf"
+      },
+      "19": {
+        "sha256": "b9837ad27beb03e731effa22a09dd116f454b41adcee92a5c3d92fa93e72d976",
+        "url": "https://cache.industry.siemens.com/dl/files/886/109826886/att_1163875/v1/TIAPortalOpenness_enUS_en-US.pdf"
+      }
+    },
+    "status": "closed-ordinary-plc",
+    "scope": "Ordinary PLC root external-source collection names only; no source contents, generation, software units, system groups or multiuser-specific semantics",
+    "reasoning": "Documented read-only composition enumeration plus explicit root navigation and actual XML Name property establish this narrow name reader. Generation examples establish the collection path only; their mutation/offline requirements do not apply to this reader."
+  },
+  "extraDeclarationReadClosure": {
+    "tools": [
+      "ReadPlcTags",
+      "ReadPlcUserConstants",
+      "ReadPlcSystemConstants"
+    ],
+    "profileMembership": "Three existing extra tools; not in pinned 62-tool V17 profile. Public tool count remains 29.",
+    "status": "source/offline/manual closed in declared ordinary-PLC table scope",
+    "scope": "One exact case-sensitive PLC address and exact URI-segment-encoded root/user-group table path. Enumerates only the selected table composition; no software units or special ownership/session semantics. SystemConstants means the native table composition, not all hardware constants.",
+    "manualPages": {
+      "14sp1": "pp323-324 table access; pp326-327 tags; pp329-330 constants",
+      "15.1": "pp364-365 table access; pp367-368 tags; pp369-370 constants",
+      "16": "pp574-575 table access; pp577-578 tags; pp579-580 constants",
+      "17": "pp647-648 table access; pp650-651 tags; pp652-653 constants",
+      "18": "German pp528-529 table access; pp532-533 tags; pp535-536 constants",
+      "19": "pp583-584 table access; pp587-588 tags; pp589-590 constants",
+      "20": "Versioned tags-and-tag-tables: enumerating-plc-tags, accessing-plc-tags, accessing-plc-constants",
+      "21": "Versioned tags-and-tag-tables: enumerating-plc-tags, accessing-plc-tags, accessing-plc-constants"
+    },
+    "sources": {
+      "M14SP1": "https://cache.industry.siemens.com/dl/files/163/109477163/att_923000/v1/TIAPortalOpennesszhCN_zh-CHS.pdf",
+      "M151": "https://cache.industry.siemens.com/dl/files/163/109477163/att_926042/v1/TIAPortalOpennessenUS_en-US.pdf?download=true",
+      "M16": "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf",
+      "M17": "https://cache.industry.siemens.com/dl/files/533/109798533/att_1069908/v1/TIAPortalOpennessenUS_en-US.pdf",
+      "M18": "https://cache.industry.siemens.com/dl/files/199/109815199/att_1122276/v2/TIAPortalOpeness_deDE_de-DE.pdf",
+      "M19": "https://cache.industry.siemens.com/dl/files/886/109826886/att_1163875/v1/TIAPortalOpenness_enUS_en-US.pdf",
+      "V20": [
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/enumerating-plc-tags",
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/accessing-plc-tags",
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/accessing-plc-constants"
+      ],
+      "V21": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/enumerating-plc-tags",
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/accessing-plc-tags",
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/tags-and-tag-tables/accessing-plc-constants"
+      ]
+    },
+    "preconditions": "Existing exact PLC/table in an attached open ordinary project; no GoOnline, offline mutation gate, Safety login, writes or expression evaluation.",
+    "apiEvidence": "legacy-declaration-read-api-evidence.json: 104 XML member entries with hashes; real PE PlcSystemConstant -> PlcConstant inheritance and compiled operation parameters verified for all eight releases.",
+    "manualErrata": "Several official examples declare a system constant as PlcTag, or misspell PlcUserConstant. The implementation follows actual supplied typed assemblies/XML, not those sample typos.",
+    "output": "Existing PascalCase array of exactly Name,Path,Kind,DataType,Value. Name/order/case/raw text retained; Value is LogicalAddress for tags, Value property for constants. Empty native text is preserved; no numeric/date/boolean conversion.",
+    "fix": "Reject null/nonarray/mixed rows, missing/wrong-type/unknown fields, kind mismatch, cross-table paths, unescaped identities and duplicate paths. Blank selection rejected before worker. Genuine empty array remains success; malformed/native failures cannot become empty/partial success.",
+    "errorContract": "These three extras now use standard MCP InvalidParams/InternalError, matching the other typed preview reads; successful array format unchanged.",
+    "validation": "1851 main pure checks passed, including 308 new declaration/PE/XML assertions; host build passed. Native typed source/worker/adapter files unchanged, previously verified eight builds retained; all eight PE outputs inspected again.",
+    "nativeAcceptance": "NOT RUN",
+    "notDependencies": [
+      "R/H mutation coverage",
+      "LocalSession mutation gate",
+      "IPC diagnostic completion"
+    ]
+  }
+}

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AdapterSourceRoot Condition="'$(AdapterSourceRoot)' == ''">$(MSBuildProjectDirectory)/../../</AdapterSourceRoot>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Compile Include="Program.cs" />
+    <Compile Include="../Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="../Diagnostics/NativeCallDiagnostics.cs" Link="NativeCallDiagnostics.cs" />
+    <Compile Include="$(AdapterSourceRoot)/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
+  </ItemGroup>
+</Project>

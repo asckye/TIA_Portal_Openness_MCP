@@ -44,6 +44,17 @@ Run $Dotnet @('run','--project',$offline,'-c','Release','--no-restore') 'offline
 $match=[regex]::Match((Get-Content (Join-Path $out 'offline.log') -Raw),'(\d+) passed, 0 failed, 0 skipped')
 if(!$match.Success){throw 'Offline suite did not report complete success'}
 $offlinePassed=[int]$match.Groups[1].Value
+Run $Python @((Join-Path $repo 'scripts/checks/Test-VersionCatalogWiring.py')) 'version-catalog-wiring.log'
+# Exercise admission and bridge refusal with both compiled identities, not only
+# the default V21 symbol. These are offline tests, never native TIA calls.
+Run $Dotnet @('run','--project',$offline,'-c','Release','--no-restore','-p:DefineConstants=TIA_V20') 'offline-v20.log'
+$v20Offline=[regex]::Match((Get-Content (Join-Path $out 'offline-v20.log') -Raw),'(\d+) passed, 0 failed, 0 skipped')
+if(!$v20Offline.Success){throw 'V20-symbol offline suite did not report complete success'}
+$versionPolicyProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj'
+Restore $versionPolicyProject @()
+Run $Dotnet @('run','--project',$versionPolicyProject,'-c','Release','--no-restore') 'version-policy-sdk.log'
+$versionPolicySdk=[regex]::Match((Get-Content (Join-Path $out 'version-policy-sdk.log') -Raw),'(\d+) passed, 0 failed, 0 skipped')
+if(!$versionPolicySdk.Success){throw 'MCP SDK version-policy checks incomplete'}
 $harnessProject=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj'
 Restore $harnessProject @()
 Run $Dotnet @('build',$harnessProject,'-c','Release','--no-restore','-v:q') 'build-harness.log'
@@ -219,7 +230,7 @@ $liteNames=@([regex]::Matches($liteBody,'"([^"]+)"') | ForEach-Object {$_.Groups
 if(($liteNames | Select-Object -Unique).Count -ne $liteNames.Count){throw 'Duplicate lite tool names'}
 foreach($name in $liteNames){if($name -notin $roster.tools.name){throw "Lite tool missing from compiled roster: $name"}}
 $manifest.capabilities.liteProfile.toolCount=$liteNames.Count
-$manifest.capabilities.liteProfile.note='All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative.'
+$manifest.capabilities.liteProfile.note='Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative.'
 $manifest.validationStatus='Both runtimes compiled and tested locally; new real-project acceptance remains pending'
 WriteJson $manifestPath $manifest
 $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime') -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config'} | Sort-Object FullName | ForEach-Object {
@@ -232,7 +243,6 @@ $sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-P
     try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=$digest}
 })
-WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles})
+WriteJson (Join-Path $repo 'manifest/release-build.json') ([ordered]@{release=$release;releaseDate=$ReleaseDate;fileVersion=$version;package=$package;generatedAt=[DateTimeOffset]::UtcNow.ToString('o');validation=[ordered]@{offlinePassed=$offlinePassed;offlineV20Passed=[int]$v20Offline.Groups[1].Value;versionPolicySdkPassed=[int]$versionPolicySdk.Groups[1].Value;runtimes=$checks};runtimeFiles=$runtimeFiles;sourceFiles=$sourceFiles})
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Prepare-Delivery.ps1'),'-Release',$release,'-ReleaseDate',$ReleaseDate) 'delivery.log'
 Write-Output "Built and checked both runtimes: $version. Review and commit changes, then run scripts/build/Package-Release.py. Real TIA acceptance is separate."
-

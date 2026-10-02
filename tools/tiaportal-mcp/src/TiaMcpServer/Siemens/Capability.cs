@@ -42,16 +42,22 @@ namespace TiaMcpServer.Siemens
         private static readonly IReadOnlyDictionary<TiaFeature, string> Notes =
             new Dictionary<TiaFeature, string>
             {
-                [TiaFeature.HardwareHmiConnection] = "Siemens.Engineering.HW.CommunicationConnections is not exposed on TIA V20; hardware HMI connection creation requires V21 or newer.",
-                [TiaFeature.DocumentExport] = "ExportAsDocuments (SIMATIC SD / S7DCL) requires TIA Portal V20 or newer."
+                [TiaFeature.HardwareHmiConnection] = "Siemens.Engineering.HW.CommunicationConnections is not exposed on TIA V20; this build provides the API route on V21 only.",
+                [TiaFeature.DocumentExport] = "ExportAsDocuments API route exists in the V20/V21 engines. Availability is not proof of language, update-level, object or round-trip support; SIMATIC SD content restrictions still apply."
             };
 
-        /// <summary>True when the connected portal version supports the feature. Unknown version (0) is treated as supported to avoid false negatives.</summary>
+        /// <summary>Unknown, planned and unrecognized versions fail closed.</summary>
         public static bool IsSupported(TiaFeature feature)
         {
-            int major = Engineering.TiaMajorVersion;
-            if (major <= 0) return true; // version unknown -> don't block; the call itself will surface any real error
-            return major >= MinVersion[feature];
+            return IsSupported(feature, Engineering.TiaMajorVersion);
+        }
+
+        internal static bool IsSupported(TiaFeature feature, int major)
+        {
+            int minimum;
+            return MinVersion.TryGetValue(feature, out minimum)
+                && TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == major)
+                && major >= minimum;
         }
 
         /// <summary>Throws <see cref="PortalException"/> (NotSupportedOnVersion) when the feature is unavailable on the connected version.</summary>
@@ -64,7 +70,7 @@ namespace TiaMcpServer.Siemens
         /// <summary>Human-readable explanation of why a feature is/isn't available, including the version requirement.</summary>
         public static string Describe(TiaFeature feature)
         {
-            return Notes.TryGetValue(feature, out var note) ? note : $"{feature} requires TIA Portal V{MinVersion[feature]} or newer.";
+            return Notes.TryGetValue(feature, out var note) ? note : $"{feature} has no registered version capability.";
         }
 
         /// <summary>Snapshot of every feature's availability against the connected version, for Bootstrap to advertise.</summary>

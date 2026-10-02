@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Version-specific typed engine module, deliberately not a selectable MCP host. -->
+  <PropertyGroup>
+    <TargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</TargetFramework>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net48</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>TiaMcp.PlcFoundation.$(TiaReleaseKey)</AssemblyName>
+    <LangVersion>latest</LangVersion><Nullable>enable</Nullable>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_SAFETY</DefineConstants>
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants Condition="'$(TiaReleaseKey)' != '14sp1'">$(DefineConstants);PLC_RH</DefineConstants>
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <CoreApiName Condition="'$(TiaReleaseKey)' != '21'">Siemens.Engineering</CoreApiName>
+    <CoreApiName Condition="'$(TiaReleaseKey)' == '21'">Siemens.Engineering.Base</CoreApiName>
+    <ExpectedApiVersion>$(TiaReleaseKey).0.0.0</ExpectedApiVersion>
+    <ExpectedApiVersion Condition="'$(TiaReleaseKey)' == '14sp1'">14.0.1.0</ExpectedApiVersion>
+    <ExpectedApiVersion Condition="'$(TiaReleaseKey)' == '15.1'">15.1.0.0</ExpectedApiVersion>
+    <ExpectedPublicKey>d29ec89bac048f84</ExpectedPublicKey>
+    <ExpectedPublicKey Condition="'$(TiaReleaseKey)' == '21'">29bfe5fdf4ba5d3b</ExpectedPublicKey>
+    <ExpectedTargetFramework>net48</ExpectedTargetFramework>
+    <ExpectedTargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</ExpectedTargetFramework>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../TiaMcpServer/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../TiaMcpServer/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../TiaMcpServer/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
+    <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Siemens.Engineering.Step7" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Siemens.Engineering.Safety" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Safety.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="System.Xml.Linq" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
+  </ItemGroup>
+  <Target Name="ValidateSelectedApi" BeforeTargets="ResolveReferences">
+    <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/Siemens.Engineering.Safety.dll" Condition="'$(TiaReleaseKey)' == '21'"><Output TaskParameter="Assemblies" ItemName="SelectedSafetyIdentity" /></GetAssemblyIdentity>
+    <Error Condition="'$(TiaReleaseKey)' == '21' and ('%(SelectedSafetyIdentity.Version)' != '21.0.0.0' or '%(SelectedSafetyIdentity.PublicKeyToken)' != '29bfe5fdf4ba5d3b')" Text="V21 Safety assembly identity mismatch." />
+    <Error Condition="'$(TiaReleaseKey)' != '14sp1' and '$(TiaReleaseKey)' != '15.1' and '$(TiaReleaseKey)' != '16' and '$(TiaReleaseKey)' != '17' and '$(TiaReleaseKey)' != '18' and '$(TiaReleaseKey)' != '19' and '$(TiaReleaseKey)' != '20' and '$(TiaReleaseKey)' != '21'" Text="An exact TiaReleaseKey is required; original V14 and V15 are excluded." />
+    <Error Condition="'$(TargetFramework)' != '$(ExpectedTargetFramework)'" Text="A different target framework cannot stand in for this release." />
+    <Error Condition="'$(SiemensEngineeringDirectory)' == '' or !Exists('$(SiemensEngineeringDirectory)/$(CoreApiName).dll')" Text="An explicit matching PublicAPI directory is required." />
+    <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/$(CoreApiName).dll"><Output TaskParameter="Assemblies" ItemName="SelectedCoreIdentity" /></GetAssemblyIdentity>
+    <Error Condition="'%(SelectedCoreIdentity.Version)' != '$(ExpectedApiVersion)' or '%(SelectedCoreIdentity.PublicKeyToken)' != '$(ExpectedPublicKey)'" Text="PublicAPI core identity mismatch: @(SelectedCoreIdentity)" />
+    <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll" Condition="'$(TiaReleaseKey)' == '21'"><Output TaskParameter="Assemblies" ItemName="SelectedStep7Identity" /></GetAssemblyIdentity>
+    <Error Condition="'$(TiaReleaseKey)' == '21' and ('%(SelectedStep7Identity.Version)' != '21.0.0.0' or '%(SelectedStep7Identity.PublicKeyToken)' != '29bfe5fdf4ba5d3b')" Text="V21 Step7 identity mismatch." />
+    <Message Importance="high" Text="PLC foundation $(TiaReleaseKey), $(TargetFramework), @(SelectedCoreIdentity), source $(SiemensEngineeringDirectory); native acceptance NOT performed" />
+  </Target>
+</Project>
