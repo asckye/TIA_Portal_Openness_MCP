@@ -1,5 +1,6 @@
 # 会话稳定性与 HMI 变量删除（2026-10-01）
 
+本页延长压力数字是历史候选的结果，原记录现保存在 `manifest/local-stability-extended-r3-20261001.json`。当前发布 EXE 的验收以 `manifest/release-build.json` 为准；不能相加或视为本版重复验收。
 本页保留提交 `82164ff` 的历史验证结果；后续原生调用诊断覆盖见[新的验证记录](native-diagnostics-validation-20261001.md)。这里的测试数字不代表后续二进制，历史构建清单可从该提交读取。
 
 这是 `8ba01a6` 后续的 3.1.0 本地候选修改。只做本地实现、编译与测试；未连接虚拟机、操作 TIA 工程或界面，未推送或发布。先前封存包保留，不覆盖。
@@ -28,7 +29,7 @@
 
 本轮最终 EXE 合计 **123,872 次场景请求、19,600 项协议/认证检查**，非预期退出、失败、未闭合日志均为 0。包含预期拒绝/错误恢复，不能理解为等量的真实工程操作。门限保持每进程 512 MiB、相对预热采样最多增加 128 个句柄；短时通过不代表长期无泄漏。
 
-较早构建中止的压力记录不计入。当前证据与 EXE、测试宿主和脚本哈希分别保存在 [release-build.json](../../manifest/release-build.json) 和 [local-stability-extended.json](../../manifest/local-stability-extended.json)；打包继续核对这些输入。
+较早构建中止的压力记录不计入。当前证据与 EXE、测试宿主和脚本哈希分别保存在 [release-build.json](../../manifest/release-build.json) 和 [local-stability-extended-r3-20261001.json](../../manifest/local-stability-extended-r3-20261001.json)；打包继续核对这些输入。
 
 压力检查已发现并修复 lite 工具桥接的重载查找歧义；绑定检查改为直接使用已选中的 `MethodInfo`，避免 `InvokeObject` 在到达自身拒绝逻辑前报错。V20 API 形状测试的程序集回退名称和新增断言计数也已修正。
 

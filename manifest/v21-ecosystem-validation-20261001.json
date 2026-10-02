@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "createdAtUtc": "2026-10-01T21:49:30.639014+00:00",
+  "createdAtUtc": "2026-10-02T03:06:00.830140+00:00",
   "status": "passed_local_only",
   "candidate": "3.1.0",
   "toolCount": 486,
@@ -46,7 +46,7 @@
         "major": 20,
         "nativeTiaExecuted": false,
         "selfTestOnly": false,
-        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd",
+        "runtimeSha256": "c81fee30e85a66ca0ce549d51b6f6c5b4736b400aa4f84edda9df52e0f242089",
         "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
         "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
       },
@@ -56,7 +56,7 @@
         "major": 21,
         "nativeTiaExecuted": false,
         "selfTestOnly": false,
-        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227",
+        "runtimeSha256": "2fe900d2653c62227108585b9bff5194d68ef256dcd9379bc5adf2b72bf8919e",
         "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
         "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
       }
@@ -69,7 +69,7 @@
         "status": "passed",
         "unexpectedExits": 0,
         "unexpectedFailures": 0,
-        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd"
+        "runtimeSha256": "c81fee30e85a66ca0ce549d51b6f6c5b4736b400aa4f84edda9df52e0f242089"
       },
       {
         "version": "V20",
@@ -78,7 +78,7 @@
         "status": "passed",
         "unexpectedExits": 0,
         "unexpectedFailures": 0,
-        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd"
+        "runtimeSha256": "c81fee30e85a66ca0ce549d51b6f6c5b4736b400aa4f84edda9df52e0f242089"
       },
       {
         "version": "V21",
@@ -87,7 +87,7 @@
         "status": "passed",
         "unexpectedExits": 0,
         "unexpectedFailures": 0,
-        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227"
+        "runtimeSha256": "2fe900d2653c62227108585b9bff5194d68ef256dcd9379bc5adf2b72bf8919e"
       },
       {
         "version": "V21",
@@ -96,7 +96,7 @@
         "status": "passed",
         "unexpectedExits": 0,
         "unexpectedFailures": 0,
-        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227"
+        "runtimeSha256": "2fe900d2653c62227108585b9bff5194d68ef256dcd9379bc5adf2b72bf8919e"
       }
     ],
     "totalLocalToolCalls": 17936,
@@ -121,7 +121,7 @@
   },
   "buildRecord": {
     "path": "manifest/release-build.json",
-    "sha256": "828a5e64f035ca21dd32bb2f97530a15c46e4acc6fd1877d23ba9d0f3dff10af"
+    "sha256": "48412435aab77f2d093d600ee25c3a061068c5600bc70cd6402c482adba90635"
   },
   "inputFiles": [
     {
@@ -142,127 +142,127 @@
     },
     {
       "path": "scripts/build/Build-Release.ps1",
-      "sha256": "53baa3842b49018bbb0b23661d7870d2b488fdb72a574f014aa6e383876d698e"
+      "sha256": "0bdf77934d1eb6a30452118d382e512c765bec513636af1e432db611e98ad168"
     },
     {
       "path": "tools/third-party/simaticml-decoder/CONTRIBUTING.md",
-      "sha256": "48c1fad55eaac242afa13e362319f39848b97d7a571f1360e6b751bb29780779"
+      "sha256": "c461715c454700e919fcc5811321b9af2c6a700b717f00fcd3332e58e59cfbbc"
     },
     {
       "path": "tools/third-party/simaticml-decoder/LICENSE",
-      "sha256": "128ae560e1c66d045bc43b005ce3e2ee3c94307cccb0530d440cd60b6502e370"
+      "sha256": "6d076f4c3974064ead8de928f876e831049751e0751edb23190da45da266e819"
     },
     {
       "path": "tools/third-party/simaticml-decoder/README.md",
-      "sha256": "6124ef7cb092d6f37ae5adca68f02fdc2919b1bb289b86f9cc9af77ea00cd69d"
+      "sha256": "3b872a5249186f43fc67fbea9a2bc29edbbfa17382fa822e2722e9baf851c2cc"
     },
     {
       "path": "tools/third-party/simaticml-decoder/ROADMAP.md",
-      "sha256": "f5628c366440aee9ffd1506266b384ec25ab7f579eadeb207ea2757d0c4bdb22"
+      "sha256": "2cfb5782f32b4a670c03d313595c55a5ea8735bde6b9fd464ecca55ba4070c8d"
     },
     {
       "path": "tools/third-party/simaticml-decoder/SECURITY.md",
-      "sha256": "efc68d2e31efe9cd8c1fc51f9a944361e7db9904750d55dae0cd79ac0b3eb888"
+      "sha256": "c5f9df324d69ad6cb3c357acffacc4c9219d3250d028b48fe20a19ef5187a750"
     },
     {
       "path": "tools/third-party/simaticml-decoder/UPSTREAM.json",
-      "sha256": "4f8cd3ecd4985f938f13b29b765013bc4054a8eacd6ccdf9ced6899b344967bb"
+      "sha256": "69419c99698fd8e52b50c393de857c3769eb4924e3a4ce02aa7517613e23a374"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/ADVANCED_TRANSLATION_ACCEPTANCE_CRITERIA.md",
-      "sha256": "aaee6900ff533d91cef38df4136694ca51c4a4dcb577872c68332ac2dc31be30"
+      "sha256": "af998467e6182294d17aa10636fcc6e89ac25346c5e459e5e01344b3ad4087d4"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/ADVANCED_TRANSLATION_ROADMAP.md",
-      "sha256": "79266442c73bfaf1db265f7211784dd1d408e8f196bf7dde6558d1984971c6da"
+      "sha256": "515bc840f810e0c5c2053251dc6038cc47103a58d0291977b7393d882caf7f44"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/ARCHITECTURE.md",
-      "sha256": "128845d57d378e24c395fa777bf79c83ec53478039f6810875c3c991635db343"
+      "sha256": "3af93ed2be33594e4a55de12730cc0e8abd7c6578d8419f3f7aeb6603bd4b309"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/CAPABILITIES.md",
-      "sha256": "6280519f1f89ed4dc200e3c98e6f94c93a94dc71c64601cd572073863d1c3c81"
+      "sha256": "cd097d9c2babd46a2b8a85adb6d0d57876ec04439ed227199bd8cef908a44e4c"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/IMPLEMENTATION_PLAN.md",
-      "sha256": "360f894353994f8cedaf9f50ede1732a4ec0379ee4c3c5ad7f63043a4e648b7e"
+      "sha256": "d3e6fbd3e614567e2ff28b5225974934d5c330f1970aff00c0077d03ad1b988d"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/PROJECT_CAPABILITY_ASSESSMENT.md",
-      "sha256": "77908eb5ccb27c26d33c8ecaf8494daaa309d7e19029fb64331708766eadee18"
+      "sha256": "8b839cc9ca58538547d4e94e91b406b96e39f14852a82934bb29b30b4a8cf6f7"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/PROJECT_INPUT_CONTRACT.md",
-      "sha256": "6d157231074ff55fc1f7d3b1435f69dd2c695dabd485907d27cf4fdefd931e34"
+      "sha256": "0375c1d2b98ed4d930eecda378f99c97d1402c858066c9cee7f62c50000f2a37"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/README.md",
-      "sha256": "48b70fd15f7e4fb6b54ad3ec75879ffbfd867663c4c12d836a810d82d7d40294"
+      "sha256": "44fa113f3fd7067741a146d915ef727d671e0adf68db5e429b026a7650b241a4"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/SIMATICML_READING_GUIDE.md",
-      "sha256": "53b39cd83ba43c19b39ab93ff84bd9fba4cd622ebaa258f66a85b2b8ea3b5f46"
+      "sha256": "b00a66d874d634b9b9a06714d28b1a0c6c1584443992313e1cde35ba7c27d470"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/roadmap/advanced-translation-acceptance.md",
-      "sha256": "a1f3c2378fa3d7d8b3a823480dc451466a2ad9ba13743196999ac1c6bfb97813"
+      "sha256": "3622c94d90d5b919ea6328b7fe6df9d1efe215daf1aca241ae3242bff5466def"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/roadmap/advanced-translation.md",
-      "sha256": "5ed6ddc0097b7133cf260939b95816e547e8ad245bb9d09103110a48d71514a4"
+      "sha256": "be7b618e23e4aefcbbb8cf8679f74af76085dec201eace648a9c1643426aa674"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/README.md",
-      "sha256": "385030f5b21cad28c6d988676d3bbd860defb322d1e56a3bc01c45dceea15f2e"
+      "sha256": "3986e3afde629d5fcfdd4c3d9314fecdb9cb8b56dbc8fca8c230436bc7831dcb"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/artifact-traversal-contract.md",
-      "sha256": "40216105760f7059fcef7f3163b3119b587b08a23d3dc2d2b15ab47cce4489ef"
+      "sha256": "fd59d9f3f31bb7d3f16855fc5ae5f5141581709cac50666648fed79ef1849751"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/input-boundary-module-card.md",
-      "sha256": "1601b79d03e2edb9ea913fa0058162a5947c349e7f33fc1fb404bb6ceb2736f7"
+      "sha256": "7ca256d4277a11e5babfc819e5040fc1091daba8002b4e947579012cd7a9110c"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/lessons/closures-over-open-handles-need-explicit-close.md",
-      "sha256": "1762083d53675e8173aa8d0b60d25acdb26fdbbb9c1ed4932029d7bbdb966d5e"
+      "sha256": "d91171555e78b6f3bb09423c2c5b54397d1320153acbb9d002b01cfb361b5f27"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/lessons/platform-gated-module-imported-unconditionally-in-tests.md",
-      "sha256": "f4f46f81d4b19b0c81fd0567bfa24f1f916986771f404fb2fedc365ae7b827aa"
+      "sha256": "77132f9edc7e747e8a25c5040faf4376f778a260c7ca2e70284f680a124e95d6"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/native-handle-traversal-decision.md",
-      "sha256": "bfbf54c8701e65b72e3284ddd40fa7e8e5b97360ee1ae91cda0868944253cc13"
+      "sha256": "2abc3a6eb03d44531fa30a7774690122653afb9dbdd5e5d33b4b7319f9e6201e"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/reports/2026-07-13-native-windows-handle-traversal.md",
-      "sha256": "6198153b16593834b751008266a7d2e2cdcdd4750da6063b9babf27d64302724"
+      "sha256": "0673d7e7ae0d46ff95810997716b235a08ceec83a0dc6caba8ec50cd22e468f6"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-fbd-and-advanced-flgnet-qualification.md",
-      "sha256": "3069886486250e26f7ea43ddb8a2ed3722ca2a7f67248a545f195ab56d66408e"
+      "sha256": "49842c89cb0ca9aa0bc161aa870d87b6c24253c0641a6d14d59fcb2268c93a4f"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-native-windows-handle-traversal.md",
-      "sha256": "3a641f0063241fc0ef5451652dbbb499cd5bf0f2da1311f584b0a919646b5b3a"
+      "sha256": "f41e2cbe7e55054cb06869fee5e21fc01252f171e36a66792c5971dbc37d69b1"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-project-scale-simaticml-ingestion.md",
-      "sha256": "bfe4ed61565381fd6d82aa80b8c8028cc19fda79f81626dacd75ed2cf242b9a6"
+      "sha256": "e56f21d00be88ac18ef4c0db1919dc71f60217f68dd5e44fb3675b7b8da22ffe"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-v21-simatic-sd-adapter.md",
-      "sha256": "62761cb83220d39d0f4be859d73afe7b1db9a5ad9b43f6599ac6dbb021a116a5"
+      "sha256": "c03e3e5c78c602813f38b8b1fa5938c20dd94224f6ede62073ecba1eae847d73"
     },
     {
       "path": "tools/third-party/simaticml-decoder/docs/superpowers/specs/2026-08-08-documentation-reorganization-design.md",
-      "sha256": "990ae06dde4030eb7018a1f157d3c05f255782b805432a64f98146c198695481"
+      "sha256": "2d66dfded043c98b2eb577e9c653a14c8868035fdd383fd1163b1da22150b853"
     },
     {
       "path": "tools/third-party/simaticml-decoder/pyproject.toml",
-      "sha256": "80499ff99d59941f3f76ec92226ed9f1ed872ad8aa7459e6376cda92706f3c8c"
+      "sha256": "0d8e1faf6fe2650a90018e70ddb924995001239ab026575b3b5c60b3b73912fb"
     },
     {
       "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/__init__.py",
@@ -348,5 +348,6 @@
     "CWC helper checks basic package conventions, not full manifest/JavaScript/runtime behavior.",
     "Official MAC and Project Check are not embedded; installed prerequisites and native acceptance remain.",
     "Unified script-library rename crash and faceplate internals remain unresolved."
-  ]
+  ],
+  "purpose": "Formal v3.1.0 pre-publication build; flags describe validation time. Publication is recorded separately."
 }

@@ -1,6 +1,6 @@
 # 接续工作交接（2026-10-01，3.1.0 本地候选 / 3.0.0 已发布）
 
-最新状态先看[可选工作进程隔离](../guides/openness-worker-isolation.md)及[剩余关卡](openness-worker-isolation-plan.md)。2026-09-30 的[收尾记录](local-checkpoint-20260930.md)和备份保留为历史基线；当前已实现可选生产隔离，但原生执行仍未验证。用户于 2026-10-01 在生态工具补充完成后授权推送当前开发分支 `codex/v3.1-audit-stability`；此前“仅本地保存、不推送”的限制已被本次授权更新。本次不合并主线、不创建 Release，也不部署到虚拟机。下文旧 VM 地址/PID 均为历史资料，不能直接作为连接目标。
+最新状态先看[可选工作进程隔离](../guides/openness-worker-isolation.md)及[剩余关卡](openness-worker-isolation-plan.md)。2026-09-30 的[收尾记录](local-checkpoint-20260930.md)和备份保留为历史基线；当前已实现可选生产隔离，但原生执行仍未验证。用户于 2026-10-01 在生态工具补充完成后授权推送当前开发分支 `codex/v3.1-audit-stability`；此前“仅本地保存、不推送”的限制已被本次授权更新。随后用户明确授权合并主线并发布 v3.1.0；当前正按发布流程处理，仍不部署到虚拟机。下文旧 VM 地址/PID 均为历史资料，不能直接作为连接目标。
 
 [文档目录](../README.md) · **[换机器交接单](handoff-checklist.md)** · [交接历史](handoff-history.md) · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)
 

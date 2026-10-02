@@ -1,5 +1,6 @@
 # V21 Unified 脚本模块库类型改名故障（2026-10-01）
 
+本页延长压力数字是历史候选的结果，原记录现保存在 `manifest/local-stability-extended-r3-20261001.json`。当前发布 EXE 的验收以 `manifest/release-build.json` 为准；不能相加或视为本版重复验收。
 ## 最新现场结果：指定样本的两次隔离复现
 
 用户随后明确指定 AutomaticDipCoatingMachine 项目库中的 `LSicar_GeneralScripts` 用于测试。11:32–11:44（现场服务时间 `-07:00`）实际完成了样本复制和两次原生改名测试，**两次均失败并伴随测试 TIA 进程退出；目前没有可交付的可用改名修复**。下文最初恢复阶段和离线阶段的“尚未附加/重试”仅描述当时状态。
@@ -111,7 +112,7 @@ V20/V21 临时隔离候选的 Release 构建通过（未发布）；**2,630 项�
 | V21 | normal | 26,484 | 4,200 | 0 |
 | V21 | isolated | 26,484 | 4,200 | 0 |
 
-加上发布流程中的 50 轮基础检查，共 **123,872 次本地场景请求、19,600 项协议/认证检查**。只计算与最终源码/引擎/测试脚本哈希一致的 r3 结果，早期候选、构建中止和旧包数字不混入。内存和句柄门限未降低。证明见 [release-build.json](../../manifest/release-build.json) 和 [local-stability-extended.json](../../manifest/local-stability-extended.json)。
+加上发布流程中的 50 轮基础检查，共 **123,872 次本地场景请求、19,600 项协议/认证检查**。只计算与最终源码/引擎/测试脚本哈希一致的 r3 结果，早期候选、构建中止和旧包数字不混入。内存和句柄门限未降低。证明见 [release-build.json](../../manifest/release-build.json) 和 [local-stability-extended-r3-20261001.json](../../manifest/local-stability-extended-r3-20261001.json)。
 
 真实改名操作未重试；本地验证不等于解决 Siemens 服务端缺陷，也不证明其他未执行过的原生操作不会崩溃。8765 的失效连接清理是独立的现场恢复，不计入上述本地压力数字。
 

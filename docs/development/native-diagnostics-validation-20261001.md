@@ -1,5 +1,6 @@
 # 原生调用诊断覆盖验证（2026-10-01）
 
+本页延长压力数字是历史候选的结果，原记录现保存在 `manifest/local-stability-extended-r3-20261001.json`。当前发布 EXE 的验收以 `manifest/release-build.json` 为准；不能相加或视为本版重复验收。
 历史验收：本页对应提交 `cebbf3e` 及 `native-diagnostics-20261001` 本地包。后续库类型改名保护见[事件与修复记录](unified-library-rename-incident-20261001.md)，不能将本页压力数字当作所有后续二进制的验证结果。
 
 这是本地提交 `82164ff` 之后的诊断覆盖候选。只做本地编译、替身执行和协议压力检查，没有连接虚拟机、启动 TIA、操作工程或推送 GitHub。先前本地包保留。
@@ -36,7 +37,7 @@
 
 最终二进制合计 **123,872 次本地场景请求、19,600 项协议/认证检查**，非预期失败、退出和未闭合日志均为 0。该数字只计算 r5 最终候选；较早候选、失败或中止记录不计入。资源门限保持每进程 512 MiB、预热后句柄增长不超过 128，未降低门限来通过测试。
 
-这些请求包含正常本地读取、预期拒绝和错误恢复，不是真实 TIA 工程操作。源代码、引擎和测试哈希见 [release-build.json](../../manifest/release-build.json) 与 [local-stability-extended.json](../../manifest/local-stability-extended.json)。完整调用清单嵌入各版 EXE，构建时另存于 `bin-build/releases/v3.1.0/native-call-coverage-v20.json` / `native-call-coverage-v21.json`。
+这些请求包含正常本地读取、预期拒绝和错误恢复，不是真实 TIA 工程操作。源代码、引擎和测试哈希见 [release-build.json](../../manifest/release-build.json) 与 [local-stability-extended-r3-20261001.json](../../manifest/local-stability-extended-r3-20261001.json)。完整调用清单嵌入各版 EXE，构建时另存于 `bin-build/releases/v3.1.0/native-call-coverage-v20.json` / `native-call-coverage-v21.json`。
 
 ## 范围与限制
 

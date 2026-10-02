@@ -5,7 +5,7 @@
 | [package-manifest.json](package-manifest.json) | 交付版本、入口、模板和工具统计 |
 | [tools-list.json](tools-list.json) | 静态工具清单；实际暴露以 tools/list 为准 |
 | [release-build.json](release-build.json) | 原始引擎日期、测试结果、源码与双版本运行文件哈希 |
-| [local-stability-extended.json](local-stability-extended.json) | 当前 EXE 的延长本地负载证据；不代表真实 TIA 稳定性 |
+| [local-stability-extended-r3-20261001.json](local-stability-extended-r3-20261001.json) | 较早 r3 候选的延长本地负载历史证据；不适用于当前发布 EXE，不代表真实 TIA 稳定性 |
 | [configurator-build.json](configurator-build.json) | 最近一次配置器隔离测试、源码和 EXE 哈希 |
 | [delivery.json](delivery.json) | 交付版本与两个构建记录的绑定 |
 

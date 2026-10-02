@@ -2,7 +2,7 @@
 
 [文档目录](../README.md) · [接入与验证记录](../development/ecosystem-integration-20260929.md) · [第三方许可](../licenses/THIRD-PARTY-NOTICES.md)
 
-这些功能位于未发布的本地源码中。引擎构建后通过 `FindTools` / `CallTool` 调用；正在运行的旧 MCP 服务不会自动加载新工具。无需操作 TIA 界面。此轮没有连接 VM、修改工程、保存或下载到 PLC。
+这些功能已纳入 3.1.0 源码和交付包。启动对应版本引擎后通过 `FindTools` / `CallTool` 调用；正在运行的旧 MCP 服务不会自动加载新工具。无需操作 TIA 界面。此轮没有连接 VM、修改工程、保存或下载到 PLC。
 
 官方 `tia-portal-ai-extensions` 为优先参考。先调用 `GetAuthoringGuide(topic="openness-workflow")` 了解开发流程，再用 `ReadOpennessGuidance` 阅读对应主题。指南与具体版本手册冲突时，以手册和 PublicAPI 为准；详细差异、修复与缺口见[官方流程审计](../development/official-openness-audit-20260929.md)。`RunToolsInTransaction` 已收紧为其描述中的 8 个同步编辑工具，编译、保存、在线、文件和嵌套编排不能放进该事务。
 
@@ -100,9 +100,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/ecosystem/Install-Pl
 
 上游 `code export pdf` 使用 pandoc/XeLaTeX/Eisvogel，需要另外配置；本项目的 `AuditEngineeringExports(..., reportPath="...pdf")` 使用 ReportLab，无需 TeX。来源工具的“测试通过”不等于 TIA 编译或真实 PLC 行为通过。
 
-## PLC editing and offline references (local 3.1.0 candidate)
+<a id="plc-editing-and-offline-references-local-310-candidate"></a>
 
-The following additions implement gaps identified during the TiaCommander comparison using this project's code and Siemens' documented interfaces. No TiaCommander source or binaries are incorporated. They are available through `FindTools` and `CallTool` after installing the newly built engine; an already running service does not reload them automatically.
+## PLC editing and offline references (3.1.0)
+
+The following additions implement gaps identified during the TiaCommander comparison using this project's code and Siemens' documented interfaces. No TiaCommander source or binaries are incorporated. They are available through `FindTools` and `CallTool` after installing the 3.1.0 engine; an already running service does not reload them automatically.
 
 | Tool | Implemented scope |
 |---|---|

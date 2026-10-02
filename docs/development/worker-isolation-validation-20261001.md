@@ -1,5 +1,6 @@
 # 工作进程隔离与本地验证（2026-10-01）
 
+本页延长压力数字是历史候选的结果，原记录现保存在 `manifest/local-stability-extended-r3-20261001.json`。当前发布 EXE 的验收以 `manifest/release-build.json` 为准；不能相加或视为本版重复验收。
 历史记录：本页对应提交 `8ba01a6` 和当天首个封存包。后续修改及当前构建验证见[会话稳定性与 HMI 变量删除](session-stability-validation-20261001.md)；下文的数量、哈希及未完成项均是当时状态。
 
 3.1.0 本地候选，未推送、发布或部署。本轮仅本地测试，没有初始化 Openness、连接虚拟机或打开任何 TIA 工程。实现及使用方法见[隔离指南](../guides/openness-worker-isolation.md)，完整剩余项见[实施状态](openness-worker-isolation-plan.md)。
@@ -34,7 +35,7 @@
 
 每个进程的本地门限为 512 MiB 私有内存、相对预热采样不超过 128 个句柄增长。采样与短时有界压力通过不能证明长期无泄漏或真实 TIA 无崩溃。较早构建的中止测试不计入以上结果。
 
-证据与 EXE、测试脚本、测试宿主哈希见 [release-build.json](../../manifest/release-build.json) 及 [local-stability-extended.json](../../manifest/local-stability-extended.json)。打包再次核对这些输入，不能沿用旧 EXE 的测试结果。
+证据与 EXE、测试脚本、测试宿主哈希见 [release-build.json](../../manifest/release-build.json) 及 [local-stability-extended-r3-20261001.json](../../manifest/local-stability-extended-r3-20261001.json)。打包再次核对这些输入，不能沿用旧 EXE 的测试结果。
 
 ## 尚未完成
 

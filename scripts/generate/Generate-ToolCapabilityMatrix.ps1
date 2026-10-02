@@ -92,5 +92,18 @@ foreach ($c in $data.categories) {
 }
 $unc = @($tools | Where-Object { $_.category -eq 'uncategorized' })
 if ($unc.Count) { throw "Uncategorized tools present: $(($unc | ForEach-Object name) -join ', ')" }
-[IO.File]::WriteAllText($OutFile, $sb.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+# A viewer/indexer may memory-map the existing matrix. Do not truncate that
+# file in place: replace it only after the complete new content is written.
+$destination = [IO.Path]::GetFullPath($OutFile)
+$temporary = Join-Path ([IO.Path]::GetDirectoryName($destination)) ('.tool-matrix-' + [guid]::NewGuid().ToString('N') + '.tmp')
+try {
+    [IO.File]::WriteAllText($temporary, $sb.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+    if ([IO.File]::Exists($destination)) {
+        [IO.File]::Replace($temporary, $destination, [System.Management.Automation.Language.NullString]::Value)
+    } else {
+        [IO.File]::Move($temporary, $destination)
+    }
+} finally {
+    if ([IO.File]::Exists($temporary)) { [IO.File]::Delete($temporary) }
+}
 Write-Output "tool-matrix.md: $($tools.Count) tools in $(@($data.categories).Count) categories -> $OutFile"

@@ -40,9 +40,9 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 ## Capabilities and limits
 
-The static inventory contains **478 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **62**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+The static inventory contains **486 tools** in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **62**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
 
-The local candidate also offers opt-in [Openness worker isolation](docs/guides/openness-worker-isolation.md) with `--isolate-openness`. It keeps host diagnostics available after worker failure; real TIA acceptance and coordination between separate MCP services remain pending.
+Version 3.1.0 offers opt-in [Openness worker isolation](docs/guides/openness-worker-isolation.md) with `--isolate-openness`. It keeps host diagnostics available after worker failure; real TIA acceptance and coordination between separate MCP services remain pending.
 
 `master` provides the current V20/V21 release. Independent upstream snapshots are also retained on `v17`–`v21`; V17 is a limited PLC phase, and V18/V19 do not yet contain dedicated implementations. See [version branches and scope](docs/reference/version-branches.md).
 
