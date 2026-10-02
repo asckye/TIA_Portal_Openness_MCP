@@ -1,6 +1,6 @@
-# 换机器交接单（历史资料；最新状态见本地收尾记录）
+# 换机器交接单（历史资料；最新状态见交接总页）
 
-**2026-09-30 更新：**本次不换机继续开发；请先看[本地收尾记录](local-checkpoint-20260930.md)。当前开发分支为 `codex/v3.1-audit-stability`，3.1.0 仅本地候选，新增原生测试框架仅经离线检查，未执行 TIA 测试。本次不推送/发布。下文保留原历史说明，版本、VM 地址和 PID 不代表当前状态，不能照用。
+**2026-10-01 更新：**用户已授权合并主线并发布 v3.1.0，发布流程和三项 GitHub 工作流均已通过；详见[交接总页](handoff.md)。开发分支 `codex/v3.1-audit-stability` 保留。本次未部署虚拟机或执行新原生测试，旧地址/PID 不代表当前状态。
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)
 
@@ -8,7 +8,7 @@
 
 ## 0. 一句话现状
 
-2026-09-29 当前：**[v3.0.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.0.0)**，提交 `32856cf2a35b`，完整包 `TIA_MCP_Delivery_v3.0.0_20260929.zip`（18,203,739 字节）；ZIP SHA-256 `5a97c0b4649f4dc20d5a8d2d38d9316ac1509d5657df25bb1ef9613e5b88757a`。发布前两项 CI 和发布后独立复核均通过。464 工具（lite 59），离线 2551；两版各 31 生态验证、28 HTTP、42 资源发现；配置器 111。 `master` 为当前 V20/V21 主线；上游 v17–v21 已作为独立分支同步，见[范围说明](../reference/version-branches.md)。克隆后先准备 PublicAPI 和 `scripts/ecosystem/Install-PlcTools.ps1` 的 Python 3.12+ 环境，再 `Build-Release.ps1`。本次未连接 VM，以下 VM 状态与旧版本数字均为 2026-09-21 历史记录，不能据此判断当前运行状态。
+2026-10-01 当前：**[v3.1.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.1.0)**，提交 `7316071a6b28`，完整包 `TIA_MCP_Delivery_v3.1.0_20261001.zip`（22,408,358 字节）；ZIP SHA-256 `f99f231a165075ed6f1cf6de35182f443eed02946583c02dd2b458f6f5a62454`。发布前两项 CI 和发布后独立验包均通过。486 工具（lite 62），离线 2,703 项，新增生态协议两版共 150 项，本地压力共 17,936 次；配置器 111 项。[发布凭证](../../manifest/publication-v3.1.0.json)。未部署虚拟机或执行新增原生验收。 `master` 为当前 V20/V21 主线，克隆后先准备 PublicAPI 和伴随 Python 环境，再运行 `Build-Release.ps1`。以下 VM 状态与旧版本数字保留为历史，不能据此判断当前运行状态。
 
 
 - 仓库 `master` = `origin/master`，最后一次发布 **v2.9.2**（ZIP `TIA_MCP_Delivery_v2.9.2_20260921.zip` 由本机 `Publish-Release.ps1` 上传，`Verify published release` 复核通过；二进制不在 Git 里——**clone 后先 `Build-Release.ps1`**）。453 个工具（lite 59），离线 2456，形状 V20 2805 / V21 3097；参数 2204 个，1310 个有自己的描述、其余 894 个词汇表覆盖，enum 提示 185。虚拟机**地址现在是 192.168.136.128**（克隆 VM，原 192.168.0.172 作废；`~/.claude.json` 的 `tia-portal-vm` 与配置器里都要用新地址），跑的是 **2.9.1**（配置器菜单“更新 → 更新引擎…”部署；安装目录仍是嵌套的 `C:\Users\SIEMENS\Desktop\TIA_MCP_Delivery_v2.7.62_20260921\TIA_MCP_Delivery_v2.7.62_20260921`，虚拟机有外网）。TIA 里两个进程：`项目1` 与维护者工程，`Connect {projectName:"项目1"}` 按名附加。以后部署：先停引擎，在安装目录 `scripts\operations\Update-Engine.ps1`（只在线，2.7.62 起没有 `-ZipPath` 离线路径，机器要能访问 github.com），**更新完要手动重启引擎**（8765 端口在重启前无响应），`Bootstrap` 看版本；出问题 `-Rollback`。

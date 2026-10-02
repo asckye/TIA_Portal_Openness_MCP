@@ -1,0 +1,54 @@
+{
+  "release": "v3.1.0",
+  "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.1.0",
+  "sourceCommit": "7316071a6b284034f200347eab81ce2fda98e1a9",
+  "publishedAtUtc": "2026-10-02T03:11:33Z",
+  "formalRelease": true,
+  "package": {
+    "name": "TIA_MCP_Delivery_v3.1.0_20261001.zip",
+    "bytes": 22408358,
+    "sha256": "f99f231a165075ed6f1cf6de35182f443eed02946583c02dd2b458f6f5a62454",
+    "files": 1608
+  },
+  "assets": [
+    {
+      "name": "TIA_MCP_Delivery_v3.1.0_20261001.sha256",
+      "bytes": 104,
+      "digest": "sha256:cf65eceb97ebafd8d6edf4307600b14351b248e2ddaec5fc9c4c94a5fb2a1713",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.1.0/TIA_MCP_Delivery_v3.1.0_20261001.sha256"
+    },
+    {
+      "name": "TIA_MCP_Delivery_v3.1.0_20261001.zip",
+      "bytes": 22408358,
+      "digest": "sha256:f99f231a165075ed6f1cf6de35182f443eed02946583c02dd2b458f6f5a62454",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.1.0/TIA_MCP_Delivery_v3.1.0_20261001.zip"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "validate-bundle",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/36958691377",
+      "headSha": "7316071a6b284034f200347eab81ce2fda98e1a9"
+    },
+    {
+      "name": "offline-checks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/36958691373",
+      "headSha": "7316071a6b284034f200347eab81ce2fda98e1a9"
+    },
+    {
+      "name": "Verify v3.1.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/36959069415",
+      "headSha": "7316071a6b284034f200347eab81ce2fda98e1a9"
+    }
+  ],
+  "nativeTiaExecuted": false,
+  "vmDeployed": false
+}

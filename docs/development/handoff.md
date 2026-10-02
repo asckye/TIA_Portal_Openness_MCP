@@ -1,6 +1,6 @@
-# 接续工作交接（2026-10-01，3.1.0 本地候选 / 3.0.0 已发布）
+# 接续工作交接（2026-10-01，3.1.0 已发布）
 
-最新状态先看[可选工作进程隔离](../guides/openness-worker-isolation.md)及[剩余关卡](openness-worker-isolation-plan.md)。2026-09-30 的[收尾记录](local-checkpoint-20260930.md)和备份保留为历史基线；当前已实现可选生产隔离，但原生执行仍未验证。用户于 2026-10-01 在生态工具补充完成后授权推送当前开发分支 `codex/v3.1-audit-stability`；此前“仅本地保存、不推送”的限制已被本次授权更新。随后用户明确授权合并主线并发布 v3.1.0；当前正按发布流程处理，仍不部署到虚拟机。下文旧 VM 地址/PID 均为历史资料，不能直接作为连接目标。
+当前主线已按用户授权合并开发分支并发布 v3.1.0，完整包和 SHA-256 已上传，发布前两项 CI 及发布后独立验包通过。此前仅本地保存/不推送的限制已被后续授权更新。本次未连接或部署虚拟机；可选工作进程隔离与新原生写入仍有待验收，见[剩余关卡](openness-worker-isolation-plan.md)。旧 VM 地址/PID 均为历史资料，不能直接作为连接目标。
 
 [文档目录](../README.md) · **[换机器交接单](handoff-checklist.md)** · [交接历史](handoff-history.md) · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)
 
@@ -8,17 +8,17 @@
 
 ## 1. 现状（2026-10-01）
 
-最新本地构建见 [release-build.json](../../manifest/release-build.json) 和 [V21 生态补充验证](../../manifest/v21-ecosystem-validation-20261001.json)：离线 2,703 项；V20/V21 普通及隔离模式合计 17,936 次本地压力调用；本次四个生态工具有 150 项实际 MCP 协议检查通过。另有解码器上游测试 107 通过、2 因符号链接权限跳过。此前 [PLC 补充验证](../../manifest/plc-editing-supplement-20261001.json) 的 176 项协议检查对应前一构建，仅作历史证据。原生导入仍未验收，未部署或发布。此前的[工作进程隔离验证](worker-isolation-validation-20261001.md)保留为历史压力测试证据，不能将其次数当作当前二进制的重复验收。
+最新本地构建见 [release-build.json](../../manifest/release-build.json) 和 [V21 生态补充验证](../../manifest/v21-ecosystem-validation-20261001.json)：离线 2,703 项；V20/V21 普通及隔离模式合计 17,936 次本地压力调用；本次四个生态工具有 150 项实际 MCP 协议检查通过。另有解码器上游测试 107 通过、2 因符号链接权限跳过。此前 [PLC 补充验证](../../manifest/plc-editing-supplement-20261001.json) 的 176 项协议检查对应前一构建，仅作历史证据。3.1.0 已发布；原生导入仍未验收，未部署虚拟机。此前的[工作进程隔离验证](worker-isolation-validation-20261001.md)保留为历史压力测试证据，不能将其次数当作当前二进制的重复验收。
 
 | 项 | 值 |
 |---|---|
-| 本地候选 | 3.1.0：486 工具（lite 62）；新增 V21 生态目录、官方 XSD 片段校验、SimaticML 只读解码和 CWC 打包；86 项来源的兼容/许可/接入边界见[生态目录](../../reference/v21-ecosystem.json)。保留 PLC 编辑能力查询、离线引用分析、XML 局部修改和备份/回读校验导入，见[用法与边界](../reference/ecosystem-tools.md#plc-editing-and-offline-references-local-310-candidate)。保留此前审计、隔离和库改名保护。仅本地实现和构建，尚未发布/部署；Unified 脚本库类型改名仍未解决。 |
-| 最新发布 | **[v3.0.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.0.0)**，提交 `32856cf2a35b`，完整包 `TIA_MCP_Delivery_v3.0.0_20260929.zip`（18,203,739 字节）；ZIP SHA-256 `5a97c0b4649f4dc20d5a8d2d38d9316ac1509d5657df25bb1ef9613e5b88757a`。发布前两项 CI 和发布后独立复核均通过。464 工具（lite 59），离线 2551；两版各 31 生态验证、28 HTTP、42 资源发现；配置器 111。 |
+| 当前版本 | 3.1.0：486 工具（lite 62）；新增 V21 生态目录、官方 XSD 片段校验、SimaticML 只读解码和 CWC 打包；86 项来源的兼容/许可/接入边界见[生态目录](../../reference/v21-ecosystem.json)。保留 PLC 编辑能力查询、离线引用分析、XML 局部修改和备份/回读校验导入，见[用法与边界](../reference/ecosystem-tools.md#plc-editing-and-offline-references-local-310-candidate)。保留此前审计、隔离和库改名保护。已发布，尚未部署虚拟机；Unified 脚本库类型改名仍未解决。 |
+| 最新发布 | **[v3.1.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.1.0)**，提交 `7316071a6b28`，完整包 `TIA_MCP_Delivery_v3.1.0_20261001.zip`（22,408,358 字节）；ZIP SHA-256 `f99f231a165075ed6f1cf6de35182f443eed02946583c02dd2b458f6f5a62454`。发布前两项 CI 和发布后独立验包均通过。486 工具（lite 62），离线 2,703 项，新增生态协议两版共 150 项，本地压力共 17,936 次；配置器 111 项。[发布凭证](../../manifest/publication-v3.1.0.json)。未部署虚拟机或执行新增原生验收。 |
 | 虚拟机（历史记录，本次未连接或部署） | **地址改为 192.168.136.128**（克隆 VM；`~/.claude.json` 的 `tia-portal-vm` 已指过去，但已开的 Claude 会话要重连才用得上）。跑的是 **2.9.1**（配置器菜单“更新 → 更新引擎…”部署）；v2.9.1 待真机全过（未编译即拒绝并点名、编译后恢复、默认干跑不查），2.8.0 的派生示例项也过。TIA 现在两个进程：11200 = `项目1`、11324 = 维护者工程 `AutomaticDipCoatingMachine`——**只连 11200**。宿主机配置器已换新，检测日志正常（2026-09-21）。TIA 只开着 `项目1`（pid 12060）。**TIA 现在只开着维护者的工程（pid 11104），`项目1` 未打开**——写类真机测试前要请维护者打开 `项目1`；`项目1` 已保存（2026-09-21 05:48 UTC，含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行） |
-| 规模 | 本地候选工具 486、默认 lite 62；离线套件 2703；API 形状及运行回归 V20 2840 / V21 3126；两版各 31 生态程序集验证、75 项新增生态 MCP 协议检查；配置器 111。精确构建输入和结果见 `manifest/release-build.json` |
+| 规模 | 当前工具 486、默认 lite 62；离线套件 2703；API 形状及运行回归 V20 2840 / V21 3126；两版各 31 生态程序集验证、75 项新增生态 MCP 协议检查；配置器 111。精确构建输入和结果见 `manifest/release-build.json` |
 | 真机（历史记录） | 台账 `docs/reference/real-machine-ledger.md`：✅ 330 / 手工 5 / 早期 24 / ⛔ 31 / ⚠ 60 / 🔁 0。**在线族收口**（标准 CPU `MCP_STD` + PLCSIM Advanced Softbus：下载 / 上线 / 比较 / 标签读写 / default 与 singleStep 场景全部通过）；F-CPU 不能经 Openness 下载（TIA 规则）；站上载对 PLCSIM 实例是 TIA 侧不支持 |
 | API 对齐 | 2026-09-29 官方指南 32 主题映射、9 项流程修复，见 [官方审计](official-openness-audit-20260929.md)。2.7.42 的类型词法覆盖统计属于历史口径，不等于全部原生行为验收通过 |
-| 待办 | 3.0.0 发布和五个版本分支同步已完成；3.1.0 开发分支获准推送，尚未发布或部署。后续按官方审计剩余项做原生验收；本次不操作 VM 界面。V17 仅独立同步，V18/V19 尚无专用实现；不得据分支名宣称兼容 |
+| 待办 | 3.1.0 已发布，开发分支及上游 v17–v21 独立分支保留。后续按官方审计剩余项做原生验收；本次不操作 VM。Unified 脚本库类型改名仍未解决；V18/V19 尚无专用实现，不得据分支名宣称兼容。 |
 
 2026-09-30 最新用户约束：本轮只做本地压力测试，虚拟机稍后。两版 full/lite 与 STDIO/HTTP 混合压测已加入构建门，HTTP 8 并发；详情和下一步 GitHub 接入优先级见[稳定性记录](stability-and-integrations-20260930.md)。2026-10-01 新增可选独立 worker、故障锁定与显式恢复，默认关闭。精确 TIA 身份绑定、跨 MCP 协调与完整原生验收仍未完成；不能把本地测试通过解释为所有 TIA 原生工具已稳定。
 
@@ -26,7 +26,7 @@
 
 ## 2. 下一步（按顺序）
 
-2026-09-29：先发布再同步版本分支的任务已完成，见[版本分支](../reference/version-branches.md)。后续真实 TIA 验收以[官方审计](official-openness-audit-20260929.md)的剩余项为准；用户当前要求先做本地工作，不操作虚拟机界面，且不得使用 `AutomaticDipCoatingMachine` 测试。下列旧发布部署计划仅保留为历史，不表示当前授权。
+2026-10-01：开发分支已合并主线并正式发布 v3.1.0；独立版本分支保留，见[版本分支](../reference/version-branches.md)。后续真实 TIA 验收以[官方审计](official-openness-audit-20260929.md)的剩余项及最新用户授权为准。本次发布没有连接或部署虚拟机；下列旧部署计划仅保留为历史，不表示当前测试目标。
 
 
 1. ~~部署 2.7.56，验证 `Connect` 附加而不自启~~ **已通过**（2026-09-21，`docs/releases/v2.7.56.md` "真机结果"）：两个 TIA 进程时 `Connect {projectName:"项目1"}` 70 ms 附加到 4840、命中即停、`startedNew false`、进程数不增；名字不存在时绑 4840 并带 `warning`。未跑的只剩"只开维护者工程时按名 Connect 应带 warning 绑过去"（要关 `项目1`）。

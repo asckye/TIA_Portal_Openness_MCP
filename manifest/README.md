@@ -8,6 +8,7 @@
 | [local-stability-extended-r3-20261001.json](local-stability-extended-r3-20261001.json) | 较早 r3 候选的延长本地负载历史证据；不适用于当前发布 EXE，不代表真实 TIA 稳定性 |
 | [configurator-build.json](configurator-build.json) | 最近一次配置器隔离测试、源码和 EXE 哈希 |
 | [delivery.json](delivery.json) | 交付版本与两个构建记录的绑定 |
+| [publication-v3.1.0.json](publication-v3.1.0.json) | v3.1.0 的 GitHub 发布地址、附件摘要和三项通过的工作流 |
 
 打包另生成 `manifest/release-file-hashes.json`，列出文件哈希及 sourceCommit；它属于发布产物，不提交到仓库。旧临时修复清单已被统一构建记录替代。
 
