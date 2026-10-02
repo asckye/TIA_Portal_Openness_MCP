@@ -676,12 +676,12 @@ namespace TiaMcpServer
                         ModelContextProtocol.McpServer.IsLiteProfile()
                             ? ModelContextProtocol.McpServer.GetLiteTools()
                             : ModelContextProtocol.McpServer.GetAllTools()));
-                    mcp.WithPromptsFromAssembly();
+                    ModelContextProtocol.McpPromptRegistration.Configure(mcp);
                     ConfigureResourceDiscovery(mcp);
                 }
                 catch (ReflectionTypeLoadException ex)
                 {
-                    LogDiag("WithToolsFromAssembly failed: ReflectionTypeLoadException");
+                    LogDiag("MCP registration failed: ReflectionTypeLoadException");
                     LogDiag(ex.ToString());
                     if (ex.LoaderExceptions != null)
                     {
@@ -774,7 +774,7 @@ namespace TiaMcpServer
                         ModelContextProtocol.McpServer.IsLiteProfile()
                             ? ModelContextProtocol.McpServer.GetLiteTools()
                             : ModelContextProtocol.McpServer.GetAllTools()));
-                    mcpHttp.WithPromptsFromAssembly();
+                    ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);
                     ConfigureResourceDiscovery(mcpHttp);
 
                     if (Isolation.IsolatedWorkerHost.Current == null) builder.Services.AddSingleton<TiaMcpServer.Siemens.Portal>();
