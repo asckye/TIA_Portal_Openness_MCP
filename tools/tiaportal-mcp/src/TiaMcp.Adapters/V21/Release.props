@@ -4,7 +4,7 @@
     <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">21</TiaReleaseKey>
     <AdapterExpectedFramework>net48</AdapterExpectedFramework>
     <TargetFramework>net48</TargetFramework>
-    <AdapterFeatureConstants>PLC_RH;PLC_SAFETY</AdapterFeatureConstants>
+    <AdapterFeatureConstants>PLC_RH;PLC_SAFETY;PLC_WATCH_READ;PLC_TECH_GROUP_READ;PLC_WATCH_EXPORT</AdapterFeatureConstants>
   </PropertyGroup>
   <ItemGroup>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.Base.dll"><ApiName>Siemens.Engineering.Base</ApiName><ExpectedIdentity>Siemens.Engineering.Base, Version=21.0.0.0, Culture=neutral, PublicKeyToken=29bfe5fdf4ba5d3b</ExpectedIdentity></AdapterApi>

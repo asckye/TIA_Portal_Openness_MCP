@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.WorkerProtocol.HostTransport/TiaMcp.WorkerProtocol.HostTransport.csproj" />
+    <ProjectReference Include="../../src/TiaMcp.WorkerProtocol.Endpoint/TiaMcp.WorkerProtocol.Endpoint.csproj" />
+    <ProjectReference Include="../TiaMcp.EndpointFixture/TiaMcp.EndpointFixture.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

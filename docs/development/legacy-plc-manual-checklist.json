@@ -1,7 +1,7 @@
 {
-  "scope": "23 implemented V17-profile tools; seven scoped ordinary-PLC read tools closed independently",
+  "scope": "52 source-implemented V17-profile tools: 12 scoped manual closures and 40 partial implementations (11 earlier manual-partial implementations and 29 cloud partial candidates)",
   "reviewDate": "2026-10-02",
-  "completion": "Seven tools source/offline/manual closed in their declared ordinary PLC scopes; 16 implemented tools manual-partial; 39 profile tools unimplemented; native NOT RUN",
+  "completion": "12 scoped ordinary source/offline/manual closures; exactly compatible migration count remains seven. 40 partial implementations (11 earlier manual-partial and 29 cloud partial candidates); 10 unimplemented. Native NOT RUN; current candidate typed builds and Windows/native groups pending. Disconnect is terminal non-owning-only partial candidate. LAD FC-call candidates generate explicit V21 output only; schema/import/program validation false. Catalog V19–21 and document V20/V21 routes are new scoped partial candidates; additional external-source plan does not close its original import route.",
   "sources": {
     "CONNECT": {
       "title": "Connecting to the TIA Portal",
@@ -333,18 +333,21 @@
       ],
       "differencesAndFixes": "Explicit PID; resolver has NoInlining boundary; installed options, permissions and interactive firewall remain prerequisites.",
       "offlineNegativeTests": "LifecycleContractTests: repeated/invalid attach; Program: native-disabled and cancellation",
-      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "manualStatus": "closed-scoped-ordinary-project",
       "nativeAcceptance": "NOT RUN",
       "independentCompletion": {
         "dependencies": [
           "process attachment"
         ],
         "remaining": [
-          "Exact-release process attachment/disposal semantics and snapshot identity",
-          "Firewall/permission prerequisites; no automatic launch or process selection"
+          "Native acceptance NOT RUN; Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit."
         ],
-        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
-      }
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist",
+        "scope": "Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit."
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md",
+      "manualClosureScope": "Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit."
     },
     {
       "tool": "GetProject",
@@ -457,7 +460,7 @@
       ],
       "differencesAndFixes": "No upgrade; same-process duplicate blocked. Cross-instance exclusion delegated to Siemens and must not be claimed prevalidated. Local-session execution now blocked.",
       "offlineNegativeTests": "LifecycleContractTests: wrong release/archive, repeated bind, session execution gate",
-      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "manualStatus": "closed-scoped-ordinary-project",
       "nativeAcceptance": "NOT RUN",
       "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
       "sessionEvidence": "sessionReview",
@@ -467,11 +470,14 @@
           "local-session gate for .als only"
         ],
         "remaining": [
-          "Ordinary Open versus upgrade/protection/cross-instance prerequisites per release",
-          "Local-session kind/path/server-lock evidence before .als execution"
+          "Native acceptance NOT RUN; Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked."
         ],
-        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
-      }
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist",
+        "scope": "Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked."
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md",
+      "manualClosureScope": "Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked."
     },
     {
       "tool": "CreateProject",
@@ -496,17 +502,21 @@
       ],
       "differencesAndFixes": "New directory under existing parent; preview path matches documented pattern. Caller extension is not proof of model version.",
       "offlineNegativeTests": "LifecycleContractTests: creation identity; PathAndIdentityTests",
-      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "manualStatus": "closed-scoped-ordinary-project",
       "nativeAcceptance": "NOT RUN",
       "independentCompletion": {
         "dependencies": [
           "project lifecycle"
         ],
         "remaining": [
-          "Per-release parent/name/new-directory creation contract and authentication/read-only contexts"
+          "Native acceptance NOT RUN; Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup."
         ],
-        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
-      }
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist",
+        "scope": "Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup."
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md",
+      "manualClosureScope": "Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup."
     },
     {
       "tool": "SaveProject",
@@ -536,7 +546,7 @@
       ],
       "differencesAndFixes": "Explicit save; no commit/SaveAs. Local-session mutation blocked pending kind/identity review.",
       "offlineNegativeTests": "LifecycleContractTests: exact identity/session gate",
-      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "manualStatus": "closed-scoped-ordinary-project",
       "nativeAcceptance": "NOT RUN",
       "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
       "sessionEvidence": "sessionReview",
@@ -546,11 +556,14 @@
           "local-session gate when bound"
         ],
         "remaining": [
-          "Ordinary project save/read-only permissions per release",
-          "LocalSession kind/path/server-side effects before session writes"
+          "Native acceptance NOT RUN; Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked."
         ],
-        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
-      }
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist",
+        "scope": "Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked."
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md",
+      "manualClosureScope": "Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked."
     },
     {
       "tool": "CloseProject",
@@ -581,7 +594,7 @@
       ],
       "differencesAndFixes": "Owned and unmodified only; session mutation blocked because discard and server effects require further reconciliation.",
       "offlineNegativeTests": "LifecycleContractTests: borrowed/dirty/repeated close/session gate",
-      "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
+      "manualStatus": "closed-scoped-ordinary-project",
       "nativeAcceptance": "NOT RUN",
       "sessionReview": "LocalSession exposes Project but no verified session-kind accessor in reviewed public properties. ProjectBase.Path and LocalSessionInfo.ProjectFileInfo XML descriptions do not prove equality. Open/Save/Close and worker mutation on a bound local session remain blocked; read enumeration/binding does not certify identity.",
       "sessionEvidence": "sessionReview",
@@ -591,11 +604,14 @@
           "local-session gate when bound"
         ],
         "remaining": [
-          "Ordinary owned-project close semantics; do not infer local-session discard",
-          "LocalSession close/lock semantics remains a separate gate"
+          "Native acceptance NOT RUN; Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked."
         ],
-        "rule": "Close this tool against its own dependencies, not the entire shared checklist"
-      }
+        "rule": "Close this tool against its own dependencies, not the entire shared checklist",
+        "scope": "Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked."
+      },
+      "sourceComplete": true,
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md",
+      "manualClosureScope": "Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked."
     },
     {
       "tool": "GetProjectTree",
@@ -894,7 +910,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -902,16 +918,17 @@
         "M16",
         "M14SP1"
       ],
-      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication. V14 SP1 SCL result/preview is interface-only and cannot represent full-program restore. Hardware coverage gate still prevents native execution.",
-      "offlineNegativeTests": "ExchangeContractTests; CompileContractTests: offline execution gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests; ExportPublicationTests real filesystem competition, validation, exception and evidence",
+      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication. V14 SP1 SCL result/preview is interface-only and cannot represent full-program restore. Selected standard-provider offline precondition now implemented; current exact-SDK compilation and native acceptance pending.",
+      "offlineNegativeTests": "OfflineCoverageBoundaryTests: fake graph unique/equal owner, missing/ambiguous/cyclic/deep/incomplete owner, provider/state/equality failures, R/H exclusion, and separate compile blocker; existing exchange/publication tests retained",
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Unique selected owner plus positive standard OnlineProvider and exact Offline required; R/H unsupported. Other XML/session/native opt-in constraints unchanged. Current changed-source exact-SDK compile and native acceptance pending.",
       "publicationEvidence": "publicationReview",
       "subitemStatus": {
         "stagedPublication": "source-offline-closed, all eight compile targets",
-        "v14sp1SclFormat": "source-offline-closed; no native execution"
+        "v14sp1SclFormat": "source-offline-closed; no native execution",
+        "selectedTargetOffline": "implemented-manually-supported; scoped standard-provider path, not full XML completion"
       },
       "sclFormatEvidence": "sclFormatReview",
       "independentCompletion": {
@@ -920,8 +937,8 @@
           "export format"
         ],
         "remaining": [
-          "R/H versus standard selected hardware evidence",
-          "Protected/special/system blocks, export options and target schema; publication and V14 SCL policy closed"
+          "Protected/special/system blocks, export options and target schema; publication and V14 SCL policy closed",
+          "Current changed-source exact-SDK compilation and native acceptance; R/H remains explicitly outside supported target scope"
         ],
         "rule": "Close this tool against its own dependencies, not the entire shared checklist"
       }
@@ -940,7 +957,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -949,15 +966,16 @@
         "M16",
         "M14SP1"
       ],
-      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication; consistent-only export. Hardware coverage gate remains.",
-      "offlineNegativeTests": "ExchangeContractTests; CompileContractTests: offline execution gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests; ExportPublicationTests real filesystem competition, validation, exception and evidence",
+      "differencesAndFixes": "All eight builds wire staged XML validation and no-overwrite publication; consistent-only export. Selected standard-provider offline precondition now implemented; current exact-SDK compilation and native acceptance pending.",
+      "offlineNegativeTests": "OfflineCoverageBoundaryTests: fake graph unique/equal owner, missing/ambiguous/cyclic/deep/incomplete owner, provider/state/equality failures, R/H exclusion, and separate compile blocker; existing exchange/publication tests retained",
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Unique selected owner plus positive standard OnlineProvider and exact Offline required; R/H unsupported. Other XML/session/native opt-in constraints unchanged. Current changed-source exact-SDK compile and native acceptance pending.",
       "publicationEvidence": "publicationReview",
       "subitemStatus": {
-        "stagedPublication": "source-offline-closed, all eight compile targets"
+        "stagedPublication": "source-offline-closed, all eight compile targets",
+        "selectedTargetOffline": "implemented-manually-supported; scoped standard-provider path, not full XML completion"
       },
       "independentCompletion": {
         "dependencies": [
@@ -965,8 +983,8 @@
           "export format"
         ],
         "remaining": [
-          "R/H versus standard selected hardware evidence",
-          "UDT export options and target schema; staged publication closed"
+          "UDT export options and target schema; staged publication closed",
+          "Current changed-source exact-SDK compilation and native acceptance; R/H remains explicitly outside supported target scope"
         ],
         "rule": "Close this tool against its own dependencies, not the entire shared checklist"
       }
@@ -1025,7 +1043,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -1034,15 +1052,16 @@
         "M17",
         "M14SP1"
       ],
-      "differencesAndFixes": "Input read-lock/hash retained; format policy rejects V14 SP1 SCL and V14-produced interface-only SCL as full-program import, with explicit preview limitations. No version rewrite or root fallback. Hardware coverage and target-schema gaps remain.",
-      "offlineNegativeTests": "ExchangeContractTests: XML/DTD/hash/lock/overwrite; offline gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "differencesAndFixes": "Input read-lock/hash retained; format policy rejects V14 SP1 SCL and V14-produced interface-only SCL as full-program import, with explicit preview limitations. No version rewrite or root fallback. Selected standard-provider offline precondition now implemented; target-schema gaps remain.",
+      "offlineNegativeTests": "OfflineCoverageBoundaryTests: fake graph unique/equal owner, missing/ambiguous/cyclic/deep/incomplete owner, provider/state/equality failures, R/H exclusion, and separate compile blocker; existing exchange/publication tests retained",
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Unique selected owner plus positive standard OnlineProvider and exact Offline required; R/H unsupported. Other XML/session/native opt-in constraints unchanged. Current changed-source exact-SDK compile and native acceptance pending.",
       "sclFormatEvidence": "sclFormatReview",
       "subitemStatus": {
-        "v14sp1SclFormat": "source-offline-closed; no native execution"
+        "v14sp1SclFormat": "source-offline-closed; no native execution",
+        "selectedTargetOffline": "implemented-manually-supported; scoped standard-provider path, not full XML completion"
       },
       "independentCompletion": {
         "dependencies": [
@@ -1050,8 +1069,8 @@
           "import format"
         ],
         "remaining": [
-          "R/H versus standard selected hardware evidence",
-          "Target XSD, consistency/protected/special block semantics; V14 SCL policy closed"
+          "Target XSD, consistency/protected/special block semantics; V14 SCL policy closed",
+          "Current changed-source exact-SDK compilation and native acceptance; R/H remains explicitly outside supported target scope"
         ],
         "rule": "Close this tool against its own dependencies, not the entire shared checklist"
       }
@@ -1070,7 +1089,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -1078,22 +1097,25 @@
         "M16",
         "M14SP1"
       ],
-      "differencesAndFixes": "Read-only state implementation and exact group/overwrite policies retained; hardware coverage gate remains. Target schema/format validation incomplete.",
-      "offlineNegativeTests": "ExchangeContractTests: malformed XML/path/overwrite; offline gate; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
+      "differencesAndFixes": "Read-only state implementation and exact group/overwrite policies retained; selected standard-provider offline precondition now implemented. Target schema/format validation incomplete.",
+      "offlineNegativeTests": "OfflineCoverageBoundaryTests: fake graph unique/equal owner, missing/ambiguous/cyclic/deep/incomplete owner, provider/state/equality failures, R/H exclusion, and separate compile blocker; existing exchange/publication tests retained",
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Unique selected owner plus positive standard OnlineProvider and exact Offline required; R/H unsupported. Other XML/session/native opt-in constraints unchanged. Current changed-source exact-SDK compile and native acceptance pending.",
       "independentCompletion": {
         "dependencies": [
           "selected PLC offline coverage",
           "import format"
         ],
         "remaining": [
-          "R/H versus standard selected hardware evidence",
-          "Target XSD/type references and overwrite semantics"
+          "Target XSD/type references and overwrite semantics",
+          "Current changed-source exact-SDK compilation and native acceptance; R/H remains explicitly outside supported target scope"
         ],
         "rule": "Close this tool against its own dependencies, not the entire shared checklist"
+      },
+      "subitemStatus": {
+        "selectedTargetOffline": "implemented-manually-supported; scoped standard-provider path, not full XML completion"
       }
     },
     {
@@ -1145,7 +1167,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -1158,12 +1180,12 @@
         "COMPILE21",
         "M14SP1"
       ],
-      "differencesAndFixes": "All-device traversal and exact Offline checks compiled for all eight releases; separate hardware classification gate remains. Safety availability/authentication/license/UMAC acceptance unverified.",
+      "differencesAndFixes": "All-device traversal and exact Offline checks have historical eight-release build evidence; current changed-source exact-SDK compilation pending. Project-wide inventory coverage gate remains blocked. Safety availability/authentication/license/UMAC acceptance unverified.",
       "offlineNegativeTests": "CompileContractTests: gate, password capability, result counts, diagnostics; exact Offline, both R/H sides, missing services, unknown enum and release gate tests",
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Project-wide compile blocked pending positive all-device inventory coverage; selected target guard does not unlock compile; native acceptance NOT RUN",
       "independentCompletion": {
         "dependencies": [
           "selected PLC and all-project offline coverage",
@@ -1190,7 +1212,7 @@
           "20",
           "21"
         ],
-        "verification": "Eight exact-reference typed builds and ApiMetadataTests; no DLL execution",
+        "verification": "Historical exact-reference typed builds and ApiMetadataTests; current changed-source exact-SDK compilation pending; no DLL execution",
         "xmlEvidence": "PublicAPI XML available; exact eight-version member ledger remains to be consolidated"
       },
       "workflowSources": [
@@ -1208,7 +1230,7 @@
       "manualStatus": "partial; version gaps and listed workflow gaps prevent completion",
       "nativeAcceptance": "NOT RUN",
       "offlineStateEvidence": "offlineStateReview",
-      "executionGate": "hardware classification/R-H coverage pending; native acceptance NOT RUN",
+      "executionGate": "Project-wide compile blocked pending positive all-device inventory coverage; selected target guard does not unlock compile; native acceptance NOT RUN",
       "independentCompletion": {
         "dependencies": [
           "selected PLC and all-project offline coverage",
@@ -1268,7 +1290,7 @@
     "V17/V20/V21 session side effects partly reviewed; exact session-kind/path/lock release semantics still missing. V18/V19 session chapters remain to read.",
     "Engineering Offline is not physical CPU STOP. External UI changes can race the checks; no atomicity claim.",
     "V14 SP1 SCL interface-only policy and staged export publication are source/offline closed. Target XSD/special/protected block formats and real native export remain unverified.",
-    "Classify R/H versus standard CPUs and passive versus unknown hardware before removing hardware coverage gate.",
+    "Establish positive all-device topology/passive/unknown coverage before removing project compile gate; scoped positive standard-provider target XML guard is implemented. R/H exchange remains unsupported.",
     "Six ordinary-PLC read workflows are closed independently; do not reopen them due to unrelated write/Safety/session gaps. Special scopes remain separate."
   ],
   "accessNotes": [
@@ -1277,17 +1299,17 @@
     "No Siemens DLL uploaded. No TIA/native process executed."
   ],
   "offlineStateReview": {
-    "implementation": "Read-only typed State and R/H two-sided checks immediately before operation; no cached state, GoOnline or GoOffline",
+    "implementation": "Read-only target guard verifies unique equal software owner within selected Device, positive standard OnlineProvider and exact Offline; positive R/H rejected. No cached state, GoOnline or GoOffline. Separate project compile inventory gate remains blocked.",
     "apiEvidence": "legacy-offline-state-api-evidence.json plus PE State/PrimaryState/BackupState checks",
     "releaseState": {
-      "14sp1": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "15.1": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "16": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "17": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "18": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "19": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "20": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN",
-      "21": "state API/workflow reviewed; typed source compiled; hardware classification gate blocks execution; native NOT RUN"
+      "14sp1": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "15.1": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "16": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "17": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "18": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "19": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "20": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked",
+      "21": "selected standard-provider offline precondition implemented and manually supported; current changed-source exact-SDK compilation pending; native NOT RUN; all-device compile coverage remains blocked"
     },
     "oldManualPages": {
       "15.1": "status 257-258; R/H 262-263",
@@ -1295,11 +1317,14 @@
       "17": "status 523-524; R/H 536-538",
       "14sp1": "status 255-257; compile 99-100; block XML 422-430; UDT 435-437"
     },
-    "policy": "Exact Offline for XML exchange is a deliberately stricter adapter policy than manual wording not online. Compile requires every observed connection Offline. Unknown enum, missing provider, incomplete inventory or exception fails closed.",
-    "compileScope": "Top-level, nested groups, ungrouped devices and recursive DeviceItems. Devices without recognized states or non-PLC software are conservatively blocked; no unsupported hardware coverage claimed.",
+    "policy": "Selected block/type XML target requires unique owner, positive standard provider and exact Offline; stricter than manual not-online wording. Missing/ambiguous owner, unknown state, absent provider or exception fails closed. Project-wide compile remains blocked pending positive all-device inventory coverage.",
+    "compileScope": "Compile-only inventory design covers top-level/nested/ungrouped devices and recursive DeviceItems, but unconditional review gate remains: passive/unknown/HMI coverage is unproved. Target-only XML does not require all-project coverage.",
     "raceLimit": "Checks and native actions are not atomic against external Portal/UI activity. Same selection supplies the actual exchange target and device/item state, preventing alias re-resolution to another PLC.",
-    "v14sp1Gate": "Exact 14sp1 is now admitted by the documented-release subgate. The separate hardware classification gate still blocks all releases; explicit SCL format policy is implemented.",
-    "executionEnabled": false
+    "v14sp1Gate": "Exact 14sp1 positive target guard follows 05/2017 pp255–257 CPU-provider/state and pp422–437 block/type target-offline evidence. SCL interface-only restriction remains. Current changed-source exact-SDK compilation and native acceptance pending.",
+    "targetPrecondition": "implemented-manually-supported; only positively evidenced standard-provider scope; R/H unsupported; not full XML tool completion",
+    "projectCompileExecutionEnabled": false,
+    "evidence": "scoped-standard-plc-offline-review-20261002.md",
+    "pureValidation": "Initial scoped suite 1681 passed/0 failed/1 Windows-only skip; independent reviewer later rebuilt integrated suite 1906 passed/0 failed/1 Windows-only skip, including concurrent additions. Fake graph/policy only; no Siemens assembly or worker loaded."
   },
   "architectureDirection": {
     "requested": "One master branch/UI; per-release API references/adapters/capability inventory/build outputs/tests and worker processes; share API-independent protocol/logging/pure validation only",
@@ -1320,11 +1345,11 @@
   },
   "reviewFindings": {
     "confirmedP2": "CreateTagTable/CreateTag/CreateUserConstant now use worker-lock result validation for Executed and exact ProjectFile; malformed/null/conflicting results poison session. Pure regression tests added.",
-    "conditionalP1": "RHOnlineProvider absent plus ordinary Offline cannot establish non-R/H hardware; device classification evidence missing.",
-    "conditionalP2Coverage": "Items with neither provider nor software cannot be assumed passive. Classification and coverage tests remain incomplete.",
+    "conditionalP1": "Resolved for bounded target XML: positive standard OnlineProvider on unique equal software owner and exact Offline, with official R/H service exclusion evidence; missing R/H provider alone is not proof. R/H XML remains unsupported.",
+    "conditionalP2Coverage": "Compile remains blocked: items with neither provider nor software cannot be assumed passive; positive complete inventory evidence remains missing.",
     "conditionalP2Export": "Resolved source/offline: all three actual export callbacks use staged validation plus no-overwrite same-volume Move; collision/exception/parallel publisher tests pass. See publicationReview.",
-    "finalGate": "Hardware classification gate still blocks block/type exchange and compile. Export publication gate removed after implementation/testing; tag-table export uses the tested publication helper. Local-session and general native opt-in gates remain.",
-    "next": "Obtain per-release hardware classification evidence and pure coverage model; independent review before removing hardware gate. Integrate eight adapter build projects without double-referencing Foundation.",
+    "finalGate": "Target XML uses scoped standard-provider guard instead of universal hardware block. Project compile inventory gate remains. Publication, LocalSession, native opt-in and XML-special-format constraints unchanged; current changed-source exact-SDK compilation and native acceptance pending.",
+    "next": "Compile and independently review current target guard against exact SDKs without TIA execution. Continue all-device coverage research for compile independently of target XML; retain special XML/schema limits.",
     "regression": "Independent 95 assertions remain integrated. Current main pure suite: 1851 passed/0 failed/0 skipped; separate diagnostic/PE checks 124 passed. Pure checks do not establish native service discovery."
   },
   "publicationReview": {
@@ -1342,22 +1367,22 @@
     "otherReleases": "No full-program restoration guarantee inferred from modern XML; schemas, special blocks and native acceptance remain separate gaps."
   },
   "hardwareCoverageDesign": {
-    "scope": "Only block/type exchange requires selected PLC offline; compile additionally requires all-project coverage. Read tools and tag-table exchange do not inherit this gate.",
-    "evidenceObserved": "V17 XML DeviceItem.Classification is a flags enum; CPU means CPU, HM means head module, None means no classification. These values do not prove standard versus R/H, nor passive hardware. SoftwareContainer proves a software target, not complete device topology.",
+    "scope": "Project-wide compile inventory design remains unresolved. Block/type XML uses the implemented positive standard-provider target guard separately; read tools and tag-table exchange do not inherit this guard.",
+    "evidenceObserved": "V17 XML DeviceItem.Classification is a flags enum; CPU means CPU, HM means head module, None means no classification. These values do not prove standard versus R/H, nor passive hardware. SoftwareContainer proves a software target, not complete device topology. Official V15.1 changes deny standard OnlineProvider on R/H individual CPUs; V14 SP1 CPU-provider/state sample supports the positive selected-owner standard path. Null RHOnlineProvider alone is never proof.",
     "neededEvidence": [
-      "Exact-release authoritative discriminator for standard versus redundant system, independent of RHOnlineProvider presence",
+      "For broad project inventory and any future R/H support: exact-release topology and service ownership evidence; not a prerequisite to positive standard-provider target-only XML",
       "Authoritative passive item/device classification: no provider or no software is not enough",
       "Per-release semantics for ungrouped, nested, HMI/head modules, racks, drives and unsupported devices in all-devices-offline precondition"
     ],
-    "proposedModel": "Version adapter supplies independent topology Standard/Redundant/Unknown and role Cpu/HeadModule/ProvenPassive/Unknown with source evidence. Pure policy requires ordinary provider for Standard, both R/H sides for Redundant, rejects Unknown. Every observed connection must be Offline; missing known required services fail closed.",
+    "proposedModel": "Future all-device compile coverage model only: positively evidenced device roles/topology, reject unknown terminal hardware, require all relevant connections Offline. No such model is implemented or claimed complete.",
     "invariants": [
       "Check state on exact selected Device/DeviceItem, never re-resolve aliases",
-      "Device classification does not follow from service presence/absence",
-      "Traverse all groups/ungrouped/nested items; unknown terminal ownership or exception rejects",
+      "No standard/passive proof from missing services; positive standard OnlineProvider on the exact software owner supports only bounded target XML",
+      "Compile needs all groups/ungrouped/nested inventory; target XML traverses selected Device ownership only; unknown ownership or exception rejects",
       "None classification is not passive; do not infer it from no software",
       "Engineering Offline is not CPU STOP; external UI state changes remain non-atomic"
     ],
-    "implementationStatus": "Design only; evidence incomplete, existing hardware execution gate retained. No fabricated model tests presented as native discovery coverage."
+    "implementationStatus": "Target-only standard-provider guard implemented and pure-tested; current exact-SDK compilation/native acceptance pending. Project-wide inventory remains design-only behind unconditional compile gate. No fake graph tests presented as native discovery coverage."
   },
   "sixReadClosure": {
     "tools": [
@@ -1489,5 +1514,101 @@
       "LocalSession mutation gate",
       "IPC diagnostic completion"
     ]
+  },
+  "ordinaryLifecycleReview": {
+    "date": "2026-10-02",
+    "evidence": "ordinary-project-lifecycle-review-20261002.md",
+    "closedTools": [
+      "Connect",
+      "OpenProject",
+      "CreateProject",
+      "SaveProject",
+      "CloseProject"
+    ],
+    "nativeAcceptance": "NOT RUN",
+    "localSessionExecution": "blocked; separate workflow, never included in ordinary closure",
+    "unchangedLimitations": [
+      "Connect is PID-only, no stale PID guard.",
+      "Save requires native writable permissions; no fabricated IsPrimary preflight.",
+      "Close is owned/unmodified; external concurrent edits are not atomically excluded.",
+      "Historical review snapshot: Disconnect was unimplemented. Superseded by partial acknowledged terminal-session candidate, acknowledged-disconnect-candidate-20261002.md; native NOT RUN."
+    ]
+  },
+  "runtimeQueryCandidate": {
+    "tools": [
+      "GetState",
+      "ListPortalProcessProjects",
+      "DiagnosePortalConnectReadiness"
+    ],
+    "evidence": "legacy-runtime-query-candidate.md",
+    "manualStatus": "scoped-evidence-not-closed",
+    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "nativeAcceptance": "NOT RUN"
+  },
+  "offlineCompositionCandidate": {
+    "tools": [
+      "BuildPlcGlobalDbXml",
+      "BuildStructuredTextXml"
+    ],
+    "evidence": "legacy-offline-composition-candidate.md",
+    "outputReleaseKey": "21 only",
+    "schemaValidated": false,
+    "importValidated": false,
+    "nativeAcceptance": "NOT RUN"
+  },
+  "boundedBatchExportCandidate": {
+    "tools": [
+      "ExportBlocks",
+      "ExportTypes"
+    ],
+    "evidence": "legacy-bounded-batch-export-candidate.md",
+    "manualStatus": "scoped-evidence-recorded-not-closed",
+    "officialManualRead": "V17 Openness system manual 05/2021, 6.4.1.13, printed pp. 998-1005; existing EXPORT_BLOCK/EXPORT_TYPE group/composition evidence reused. Native single-item Export(FileInfo, ExportOptions.None); no invented native batch API.",
+    "sourceScope": "Exact ordinary standard PLC/group; complete bounded deterministic inventory, dry-run first, exact project/confirm/inventory hash, original native XML unchanged and per-item partial outcomes. No LocalSession, R/H or software-unit expansion; compile gate unchanged.",
+    "verification": "2046 managed aggregate passed, 0 failed, 2 skipped; LegacyHost build passed; independent 112 discovery-only stdio assertions across eight host keys. No native execution.",
+    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "windowsFilesystemPublication": "NOT RUN on Linux; both single-item and batch Windows-only groups skipped",
+    "nativeAcceptance": "NOT RUN",
+    "complete": false
+  },
+  "acknowledgedDisconnectCandidate": {
+    "status": "partial",
+    "date": "2026-10-02",
+    "evidence": "acknowledged-disconnect-candidate-20261002.md",
+    "nativeAcceptance": "NOT RUN",
+    "scope": "Proven non-owning existing-process attachment only; terminal session; no project prerequisite, save, close, kill, launch, retry or autoreconnect; strict worker acknowledgement with distinct idle host response."
+  },
+  "boundedBatchDocumentExportCandidate": {
+    "tools": [
+      "ExportBlocksAsDocuments"
+    ],
+    "evidence": "legacy-batch-document-export-candidate.md",
+    "manualStatus": "scoped-evidence-recorded-not-closed",
+    "sourceScope": "Exact V20/V21 ordinary LAD/DB group inventory; complete bound, explicit preview/hash/project confirmation, one new non-overwrite output tree, retained staged/failed/not-attempted outcomes and no replay.",
+    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "windowsFilesystemPublication": "NOT RUN; test mover injection only",
+    "nativeAcceptance": "NOT RUN",
+    "complete": false
+  },
+  "externalSourceDeleteCandidate": {
+    "tools": [
+      "DeletePlcExternalSource"
+    ],
+    "evidence": "external-source-delete-candidate.md",
+    "manualStatus": "scoped-evidence-recorded-not-closed",
+    "nativeAcceptance": "NOT RUN",
+    "complete": false
+  },
+  "singleDocumentImportCandidate": {
+    "tools": [
+      "ImportFromDocuments"
+    ],
+    "evidence": "legacy-single-document-import-candidate.md",
+    "manualStatus": "scoped-evidence-recorded-not-closed",
+    "sourceScope": "Exact V20/V21 primitive-scalar global DB only; single declared identity and complete admitted grammar; native None; held unchanged input bytes; complete bounded ordinary inventory; exact project/target/input/inventory/plan confirmation. Uncertain attempted outcomes poison and never retry.",
+    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "windowsFilesystemLocking": "NOT RUN on Linux; stream lifecycle/fault injections only",
+    "nativeAcceptance": "NOT RUN",
+    "complete": false
   }
 }

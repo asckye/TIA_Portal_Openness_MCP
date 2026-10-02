@@ -390,9 +390,9 @@ namespace TiaMcpServer
                     }
                 }
 
-                // Ensure user is in user group 'Siemens TIA Openness'.
+                // Check only; permission repair is an explicit doctor --fix or tool action.
                 LogDiag("Checking Windows group membership: Siemens TIA Openness");
-                var opennessUserOk = await Openness.IsUserInGroup();
+                var opennessUserOk = Openness.IsUserInGroupNoFix();
                 LogDiag($"Siemens TIA Openness group membership: {opennessUserOk}");
                 if (opennessUserOk)
                 {

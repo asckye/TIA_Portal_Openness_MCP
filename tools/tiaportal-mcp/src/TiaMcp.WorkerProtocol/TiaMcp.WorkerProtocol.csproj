@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net461;net8.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion><Nullable>enable</Nullable>
+    <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="ProtocolIdentity.cs" /><Compile Include="RequestGuard.cs" /><Compile Include="RequestLogContext.cs" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+  </ItemGroup>
+</Project>

@@ -43,12 +43,16 @@ Engineering Offline is not CPU STOP; external UI changes can race state checks.
 ## Current implementation
 
 `TiaMcpServer.LegacyHost` is a .NET 8 stdio MCP host with no Siemens reference.
-It uses the actual MCP SDK and publishes 29 foundation tools. Twenty-three names occur
-in the V17 profile: twenty-three have implementation and offline checks under declared
-safe contracts. Seven scoped ordinary-PLC read contracts are source/offline/manual closed;
-16 implemented entries remain manual-partial and 39 are unimplemented. Six tools
-add explicit tag and constant operations. The exact 62-row inventory is in
+It uses the actual MCP SDK. Of the original 62-profile names, 52 are source-implemented:
+12 scoped ordinary source/offline/manual closures and 40 partial candidates; 10 remain
+unimplemented. Exactly compatible migrations remain seven. Additional foundation tools
+include explicit tag/constant operations and the distinct read-only external-source import
+plan, which does not implement the original import route. The exact inventory is in
 [legacy-plc-migration-status.json](legacy-plc-migration-status.json).
+
+The latest partial candidates add [bounded catalog search](hardware-catalog-search-candidate.md)
+for V19–21 and [document export](legacy-document-export-candidate.md) for V20/V21 ordinary
+LAD/DB blocks. The [bounded batch document route](legacy-batch-document-export-candidate.md) publishes one new tree, retaining staged/failed/not-attempted outcomes on failure. The [external-source delete candidate](external-source-delete-candidate.md) adds separately confirmed exact-root single-source deletion without generation or save. All retain exact-release gates and current typed/native acceptance gaps.
 
 `TiaMcpServer.PlcWorker` supplies a separate framework worker for each exact
 release. It serializes calls on its owning STA thread and invokes only the typed

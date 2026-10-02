@@ -13,6 +13,6 @@ builder.Logging.AddConsole(o=>o.LogToStandardErrorThreshold=LogLevel.Trace);
 builder.Logging.SetMinimumLevel(LogLevel.Warning);
 builder.Logging.AddFilter("ModelContextProtocol",LogLevel.Warning); // Never enable request/password trace logging here.
 builder.Services.AddMcpServer(o=>o.ServerInstructions="PLC foundation source-preview host. Native acceptance is NOT complete. Only listed tools exist; HMI/download/online writes are unavailable. Legacy production catalog remains disabled. Native operations default to disabled; mutations default to dryRun=true.")
-    .WithStdioServerTransport().WithTools(FoundationTools.Create(worker));
+    .WithStdioServerTransport().WithTools(LegacyHostToolRegistry.Create(worker, release, args.Contains("--native-session")));
 using var host=builder.Build();
 await host.RunAsync();

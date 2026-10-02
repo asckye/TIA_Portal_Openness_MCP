@@ -43,6 +43,12 @@ namespace TiaMcpServer.Siemens
 
         public void ImportTechnologyObject(string softwarePath, string folderPath, string importPath)
         {
+            // Keep the existing public entry point and its overwrite behavior.
+            ImportTechnologyObject(softwarePath, folderPath, importPath, true, new List<string>());
+        }
+
+        private void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
+        {
             if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
 
             var plc = GetPlcSoftware(softwarePath);
@@ -54,7 +60,7 @@ namespace TiaMcpServer.Siemens
                 // always fell through to the PLC ("TechnologyObjects collection not found", real project).
                 var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, folderPath ?? "");
                 var col = group.TechnologicalObjects;
-                if (TryImportEngineeringObjectIntoCollection(col, importPath, out _, out var err)) return;
+                if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
                 throw new PortalException(PortalErrorCode.ImportFailed, err ?? "ImportTechnologyObject failed");
             }
             catch (PortalException)
@@ -92,13 +98,20 @@ namespace TiaMcpServer.Siemens
                     regex = new Regex(regexName, RegexOptions.IgnoreCase);
                 }
 
-                foreach (var file in Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly))
+                var selected = Directory.EnumerateFiles(dir, "*.xml", SearchOption.TopDirectoryOnly)
+                    .OrderBy(f => f, StringComparer.OrdinalIgnoreCase).ThenBy(f => f, StringComparer.Ordinal).ToList();
+                foreach (var file in selected)
                 {
                     var name = Path.GetFileNameWithoutExtension(file);
                     if (regex != null && !regex.IsMatch(name)) continue;
 
-                    try { ImportTechnologyObject(softwarePath, folderPath, file); imported.Add(name); }
-                    catch (PortalException pex) { failed.Add(new ImportFailure { Path = file, Error = pex.Message }); }
+                    // Preserve native returned identities, including those read before an enumeration failure.
+                    try { ImportTechnologyObject(softwarePath, folderPath, file, overwrite, imported); }
+                    catch (PortalException pex)
+                    {
+                        failed.Add(new ImportFailure { Path = file, Error = pex.Message + " Batch stopped; later files were not attempted." });
+                        break;
+                    }
                 }
 
                 return new ResponseImportBatch { Imported = imported, Failed = failed };

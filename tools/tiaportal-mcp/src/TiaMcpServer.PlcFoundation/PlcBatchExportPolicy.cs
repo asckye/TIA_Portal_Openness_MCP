@@ -1,0 +1,92 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace TiaMcp.PlcFoundation
+{
+    public sealed class PlcBatchExportItem
+    {
+        public string ObjectPath { get; internal set; } = "";
+        public string OutputFile { get; internal set; } = "";
+        public string Status { get; internal set; } = "planned";
+        public string XmlContent { get; internal set; } = "native-xml";
+        public string[] Warnings { get; internal set; } = new string[0];
+        public Dictionary<string,string> Evidence { get; internal set; } = new Dictionary<string,string>();
+    }
+    public sealed class PlcBatchExportResult
+    {
+        public bool Executed { get; internal set; }
+        public string ProjectFile { get; internal set; } = "";
+        public string SoftwarePath { get; internal set; } = "";
+        public string GroupPath { get; internal set; } = "";
+        public bool Recursive { get; internal set; }
+        public string InventoryHash { get; internal set; } = "";
+        public bool InventoryComplete { get; internal set; } = true;
+        public bool RequiresSessionReset { get; internal set; }
+        public PlcBatchExportItem[] Items { get; internal set; } = new PlcBatchExportItem[0];
+    }
+    internal sealed class PlcBatchExportSource
+    {
+        internal string Path="";
+        internal bool Consistent;
+        internal PlcBlockXmlCapability Capability=new PlcBlockXmlCapability();
+        internal Action<FileInfo> Export=null!;
+    }
+    internal static class PlcBatchExportPolicy
+    {
+        internal const int MaximumItems=256;
+        internal static string Hash(string value)
+        { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(Encoding.UTF8.GetBytes(value))).Replace("-","").ToLowerInvariant(); }
+        internal static PlcBatchExportResult Run(string kind,string project,string software,string group,bool recursive,string directory,int maxItems,bool dryRun,string expectedInventoryHash,IEnumerable<PlcBatchExportSource> inventory,Action requireOffline,Func<FileInfo,Action<FileInfo>,string?>? publish=null)
+        {
+            if(kind!="blocks" && kind!="types") throw new ArgumentException("Unknown batch kind.");
+            if(maxItems<1 || maxItems>MaximumItems) throw new ArgumentException("maxItems must be between 1 and 256; oversized inventories are refused, never truncated.");
+            if(!Path.IsPathRooted(directory)) throw new ArgumentException("An absolute existing export directory is required.");
+            var root=new DirectoryInfo(directory);
+            if(!root.Exists) throw new ArgumentException("Export directory must already exist.");
+            for(var ancestor=root; ancestor!=null; ancestor=ancestor.Parent)
+                if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new ArgumentException("Export directory ancestry cannot contain reparse points.");
+            var sources=inventory.Take(maxItems+1).OrderBy(x=>x.Path,StringComparer.Ordinal).ToArray();
+            if(sources.Length>maxItems) throw new ArgumentException("Complete inventory exceeds maxItems; narrow the exact group scope.");
+            if(sources.Select(x=>x.Path).Distinct(StringComparer.Ordinal).Count()!=sources.Length) throw new ArgumentException("Ambiguous inventory paths.");
+            var result=new PlcBatchExportResult { Executed=!dryRun,ProjectFile=project,SoftwarePath=software,GroupPath=group,Recursive=recursive };
+            result.Items=sources.Select(source=>new PlcBatchExportItem {
+                ObjectPath=PlcExchangePolicy.ObjectPath(source.Path),
+                // Hash the full canonical path; never place a PLC name in a filesystem path.
+                // Prefix avoids reserved Windows devices; fixed ASCII avoids traversal/case collisions.
+                OutputFile=PlcFoundationPolicy.XmlOutput(Path.Combine(root.FullName,kind+"-"+Hash(source.Path)+".xml")).FullName,
+                Status=source.Consistent ? "planned" : "inconsistent",XmlContent=source.Capability.Content,Warnings=source.Capability.Warnings
+            }).ToArray();
+            if(result.Items.Select(x=>x.OutputFile).Distinct(StringComparer.OrdinalIgnoreCase).Count()!=sources.Length) throw new ArgumentException("Export destination collision.");
+            result.InventoryHash=Hash(kind+"\n"+project+"\n"+software+"\n"+group+"\n"+recursive+"\n"+string.Join("\n",result.Items.Select(x=>x.ObjectPath+"\t"+x.Status+"\t"+x.XmlContent+"\t"+x.OutputFile)));
+            if(dryRun) return result;
+            if(!string.Equals(expectedInventoryHash,result.InventoryHash,StringComparison.Ordinal)) throw new ArgumentException("Execution requires the exact inventory hash from a fresh preview.");
+            publish=publish ?? PlcExportPublication.Publish;
+            bool stopped=false;
+            for(int i=0;i<sources.Length;i++)
+            {
+                var item=result.Items[i];
+                if(item.Status=="inconsistent") continue;
+                if(stopped) { item.Status="not-attempted"; continue; }
+                try
+                {
+                    requireOffline();
+                    var recovery=publish(new FileInfo(item.OutputFile),sources[i].Export);
+                    item.Status="exported";
+                    if(recovery!=null) item.Evidence["recoveryDirectory"]=recovery;
+                }
+                catch(Exception error)
+                {
+                    item.Status="failed"; stopped=true; result.RequiresSessionReset=true;
+                    // Preserve only allowlisted publication evidence, never native messages/XML.
+                    foreach(var name in new[]{"outputFile","stagedFile","recoveryDirectory","exportPhase","stagedSha256"})
+                        if(error.Data[name] is string value) item.Evidence[name]=value;
+                }
+            }
+            return result;
+        }
+    }
+}

@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Version-specific typed engine module, deliberately not a selectable MCP host. -->
   <PropertyGroup>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_DOCUMENT_EXPORT</DefineConstants>
     <TargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</TargetFramework>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net48</TargetFramework>
     <OutputType>Library</OutputType>
     <AssemblyName>TiaMcp.PlcFoundation.$(TiaReleaseKey)</AssemblyName>
     <LangVersion>latest</LangVersion><Nullable>enable</Nullable>
     <DefineConstants Condition="'$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_SAFETY</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16' or '$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_WATCH_READ</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_TECH_GROUP_READ</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '16' or '$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20'">$(DefineConstants);PLC_SPECIAL_EXPORT</DefineConstants>
+    <DefineConstants Condition="'$(TiaReleaseKey)' == '21'">$(DefineConstants);PLC_WATCH_EXPORT</DefineConstants>
     <PlatformTarget>x64</PlatformTarget>
     <DefineConstants Condition="'$(TiaReleaseKey)' != '14sp1'">$(DefineConstants);PLC_RH</DefineConstants>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>

@@ -11,6 +11,11 @@ namespace TiaMcp.PlcFoundation
     {
         internal static string? Publish(FileInfo destination, Action<FileInfo> export)
         {
+            // The native worker runs on Windows. Unix File.Move may race between
+            // destination existence checks and rename, overwriting another publisher.
+            // Refuse unsupported hosts before invoking export or touching the filesystem.
+            if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
+                throw new PlatformNotSupportedException("Safe XML export publication requires the Windows worker.");
             var output=PlcFoundationPolicy.XmlOutput(destination.FullName);
             var stage=new DirectoryInfo(Path.Combine(output.Directory!.FullName,".tia-export-"+Guid.NewGuid().ToString("N")));
             var staged=new FileInfo(Path.Combine(stage.FullName,output.Name));
@@ -36,7 +41,7 @@ namespace TiaMcp.PlcFoundation
                     stream.Position=0;
                     using(var sha=SHA256.Create()) hash=BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
                     phase="publish";
-                    // Two-argument Move never replaces an existing destination. No copy,
+                    // On the supported Windows worker, Move uses non-replacing rename. No copy,
                     // delete, overwrite flag or retry is used if another writer wins.
                     File.Move(staged.FullName,output.FullName);
                 }

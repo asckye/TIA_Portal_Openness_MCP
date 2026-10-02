@@ -5,14 +5,28 @@ using TiaMcp.PlcFoundation;
 
 internal static class ExportPublicationTests
 {
-    internal static void Run(Action<bool,string> check)
+    internal static void Run(Action<bool,string> check,Action<string> skip)
     {
+        if(Environment.OSVersion.Platform!=PlatformID.Win32NT)
+        {
+            string unsupported=Path.Combine(Path.GetTempPath(),"tia-unsupported-publication-"+Guid.NewGuid().ToString("N"));
+            bool invoked=false;
+            try { PlcExportPublication.Publish(new FileInfo(Path.Combine(unsupported,"output.xml")),_=>invoked=true); throw new Exception("Unsupported platform accepted publication."); }
+            catch(PlatformNotSupportedException)
+            {
+                check(!invoked,"Unsupported publication refuses before export callback");
+                check(!Directory.Exists(unsupported),"Unsupported publication creates no filesystem artifacts");
+            }
+            skip("Windows atomic publication filesystem cases require a Windows host; Linux fail-closed guard verified.");
+        }
         var root=Path.Combine(Path.GetTempPath(),"tia-publication-tests-"+Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
         const string xml="<Document><Engineering version=\"V17\" /></Document>";
         FileInfo Output(string name)=>new(Path.Combine(root,name+".xml"));
         try
         {
+            if(Environment.OSVersion.Platform==PlatformID.Win32NT)
+            {
             string? stagedDirectory=null;
             var good=Output("success");
             var recovery=PlcExportPublication.Publish(good,f=>{
@@ -76,6 +90,7 @@ internal static class ExportPublicationTests
             var sidecar=PlcExportPublication.Publish(Output("sidecar"),f=>{File.WriteAllText(f.FullName,xml);File.WriteAllText(Path.Combine(f.DirectoryName!,"additional.txt"),"evidence");});
             check(sidecar!=null && File.ReadAllText(Path.Combine(sidecar,"additional.txt"))=="evidence" && File.Exists(Output("sidecar").FullName),"Successful publication preserves unexpected sidecar and returns recovery location");
 
+            }
             foreach(var release in new[]{"14sp1","15.1","16","17","18","19","20","21"})
             {
                 var capability=PlcBlockXmlPolicy.Export(release,"SCL");

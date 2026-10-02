@@ -261,7 +261,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Transport = Environment.GetEnvironmentVariable("MCP_TRANSPORT") ?? "stdio",
                 };
 
-                try { env.OpennessGroupOk = await Siemens.Openness.IsUserInGroup(); }
+                try { env.OpennessGroupOk = Siemens.Openness.IsUserInGroupNoFix(); }
                 catch { env.OpennessGroupOk = false; }
 
                 var portalDto = new BootstrapPortal();
@@ -410,7 +410,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 bool opennessOk;
                 try
                 {
-                    opennessOk = await Siemens.Openness.IsUserInGroup();
+                    opennessOk = Siemens.Openness.IsUserInGroupNoFix();
                     Add("openness.user-group", "Siemens TIA Openness user group", opennessOk ? "pass" : "fail", opennessOk ? "Current user is in the Openness group." : "Current user is not in the Openness group, or membership could not be confirmed.");
                 }
                 catch (Exception ex)

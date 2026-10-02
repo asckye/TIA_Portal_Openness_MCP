@@ -25,6 +25,26 @@ internal static class PathAndIdentityTests
         check(PlcReadPathPolicy.Resolve(new[]{cpu,ungrouped},ungrouped.ExactPath)==5,"Ungrouped canonical address works");
         Reject(()=>PlcReadPathPolicy.Resolve(new[]{cpu,cpu},cpu.ExactPath),"Duplicate canonical path refused");
 
+        foreach(var pair in new[]{
+            new[]{@"C:\Projects\P\P.ap17",@"c:/projects/P/./P.ap17"},
+            new[]{@"C:\Projects\P\P.ap17",@"C:\Projects\Other\..\P\P.ap17"},
+            new[]{@"\\server\share\P\P.ap17",@"//SERVER/share/P/./P.ap17"},
+            new[]{@"\\server\share\P\P.ap17",@"\\server\share\Other\..\P\P.ap17"}})
+        { MutationIdentityPolicy.RequireSameProject(pair[0],pair[1]); check(true,"Deterministic Windows identity normalization "+pair[1]); }
+        foreach(var invalid in new[]{@"C:P.ap17",@"\P.ap17","/tmp/P.ap17",@"\\server",@"\\server\",@"\\server\\P.ap17",@"\\?\C:\P.ap17",@"\\.\C:\P.ap17",@"C:\..\P.ap17",@"\\server\share\..\P.ap17",@"C:\P.ap17:stream",@"C:\P.\P.ap17",@"C:\CON\P.ap17",@"C:\P \P.ap17",@"C:\P?\P.ap17", "C:\\P\0.ap17"})
+            Reject(()=>MutationIdentityPolicy.RequireSameProject(invalid,invalid),"Malformed/ambiguous Windows identity rejected "+invalid);
+        Reject(()=>MutationIdentityPolicy.RequireSameProject(@"\\server\share\P.ap17",@"\\server\other\P.ap17"),"UNC share is part of identity");
+        Reject(()=>MutationIdentityPolicy.RequireSameProject(@"C:\P.ap17",@"D:\P.ap17"),"Drive is part of identity");
+
+        Reject(()=>MutationIdentityPolicy.RequireSameProject(@"C:\P.ap17\",@"C:\P.ap17"),"Trailing separator cannot alias a project file");
+        Reject(()=>MutationIdentityPolicy.RequireSameProject(@"\\server\share\P.ap17\",@"\\server\share\P.ap17"),"UNC trailing separator cannot alias a project file");
+        foreach(var device in new[]{"COM¹","COM²","COM³","LPT¹","LPT²","LPT³"})
+            Reject(()=>MutationIdentityPolicy.RequireSameProject(@"C:\"+device+@"\P.ap17",@"C:\"+device+@"\P.ap17"),"Reserved DOS superscript device rejected "+device);
+        foreach(var directory in new[]{@"\\server\share",@"\\server\share\"})
+            check(PlcLifecyclePolicy.CreationFile("17",directory,"New")==@"\\server\share\New\New.ap17","UNC share root creation parent "+directory);
+
+        foreach(var invalid in new[]{@"C:\P.ap17\",@"\\server\share\P.ap17\"})
+            Reject(()=>MutationIdentityPolicy.RequireSameProject(invalid,invalid),"Identical trailing-separator paths are not project files");
         int boundChecks=0;
         Action<string> bound=expected=>{boundChecks++; MutationIdentityPolicy.RequireSameProject(expected,@"C:\Projects\P\P.ap17");};
         void Gate(bool dry,bool confirm,string expected,string op="SaveProject",string key="17",string file="",string directory="",string name="")=>MutationIdentityPolicy.ValidateTarget(dry,confirm,expected,op,key,file,directory,name,bound);

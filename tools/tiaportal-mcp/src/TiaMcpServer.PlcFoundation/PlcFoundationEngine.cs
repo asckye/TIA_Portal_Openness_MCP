@@ -36,6 +36,8 @@ namespace TiaMcp.PlcFoundation
         private Siemens.Engineering.Multiuser.LocalSession? localSession;
 #endif
         private bool disposed;
+        private readonly PlcDisconnectState disconnect = new PlcDisconnectState();
+        private bool? ownsPortal;
         public string ReleaseKey { get; }
 
         public PlcFoundationEngine(string releaseKey, string selectedPublicApiDirectory)
@@ -60,24 +62,27 @@ namespace TiaMcp.PlcFoundation
             ownerThread = Thread.CurrentThread.ManagedThreadId;
         }
 
-        private void Check()
+        private void Check(bool allowDisconnected=false)
         {
             if (disposed) throw new ObjectDisposedException(nameof(PlcFoundationEngine));
+            if (!allowDisconnected) disconnect.RequireActive();
             if (Thread.CurrentThread.ManagedThreadId != ownerThread)
                 throw new InvalidOperationException("Use the owning STA thread; cross-thread native access is refused.");
         }
-        private TiaPortal Portal() { Check(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
+        private TiaPortal Portal() { Check(); disconnect.RequireActive(); return portal ?? throw new InvalidOperationException("Attach to an explicitly selected TIA process first."); }
         private EngineeringProject Project() { Portal(); lifecycle.RequireBound(); return project ?? throw new InvalidOperationException("Bind, open or create an explicit project first."); }
 
         // No process launch, automatic process selection, kill, project upgrade or UI interaction.
         public PlcConnectionResult Attach(int processId)
         {
             Check();
+            disconnect.RequireActive();
             lifecycle.RequireAttach(processId);
             var process = TiaPortal.GetProcesses().SingleOrDefault(p => p.Id == processId)
                 ?? throw new InvalidOperationException("Selected TIA process was not found by this release's API.");
             portal = process.Attach();
             lifecycle.Attached(processId);
+            ownsPortal=false;
             return new PlcConnectionResult { AttemptedPids=new[]{processId} };
         }
         public PlcProjectDetails[] ListProjects()
@@ -415,13 +420,23 @@ namespace TiaMcp.PlcFoundation
                 foreach (var child in Messages(m.Messages, depth + 1)) yield return child;
             }
         }
+        public PlcDisconnectResult Disconnect()
+        {
+            Check(true);
+            var result=disconnect.Execute(lifecycle.ProcessId,ownsPortal,()=>portal!.Dispose());
+            portal=null; project=null; lifecycle.Detached();
+#if PLC_SAFETY
+            localSession=null;
+#endif
+            return result;
+        }
         public void Dispose()
         {
             if (disposed) return;
-            Check();
-            // Never save, close a project or terminate TIA while detaching.
-            if (portal != null) portal.Dispose();
-            portal = null; project = null; lifecycle.Detached(); disposed = true;
+            Check(true);
+            // Never retry an attempted detach, including one whose acknowledgement was lost.
+            try { if (!disconnect.Attempted) Disconnect(); }
+            finally { disposed=true; }
         }
     }
 }

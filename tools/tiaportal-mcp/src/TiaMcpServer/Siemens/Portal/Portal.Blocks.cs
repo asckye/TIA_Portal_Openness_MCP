@@ -523,24 +523,9 @@ namespace TiaMcpServer.Siemens
                         }
                         var fi = new FileInfo(PrepareXmlForImport(file));
 
-                        if (!overwrite)
-                        {
-                            try
-                            {
-                                var exists = group.Blocks.Find(name);
-                                if (exists != null)
-                                {
-                                    failed.Add(new ImportFailure { Path = file, Error = $"Block '{name}' already exists (overwrite=false)" });
-                                    continue;
-                                }
-                            }
-                            catch
-                            {
-                                // best effort only; if Find fails, we still import with Override semantics below
-                            }
-                        }
-
-                        var list = group.Blocks.Import(fi, ImportOptions.Override);
+                        // Let Openness check the XML object's identity atomically. A filename
+                        // lookup cannot enforce overwrite=false (and may miss renamed files).
+                        var list = group.Blocks.Import(fi, overwrite ? ImportOptions.Override : ImportOptions.None);
                         if (list != null && list.Count > 0)
                         {
                             imported.AddRange(list.Select(b => b?.Name).Where(n => !string.IsNullOrWhiteSpace(n))!.Cast<string>());
@@ -1177,14 +1162,13 @@ namespace TiaMcpServer.Siemens
                         $"Group path '{groupPath}' not found under PLC '{softwarePath}'. Use GetSoftwareTree for exact group names, or pass an empty groupPath to import at the root.");
             }
 
-            // Capture the existing block's identity BEFORE import. Openness Override, when the block
-            // lives in a different group than the import target, deletes+recreates it (losing its
-            // number and original group). We restore the number afterwards so callers/instance DBs
-            // and the project tree stay stable.
+            // Preserve the existing Override-only number-restoration feature. These are additional
+            // writes, not transactional rollback or proof that the import preserved all attributes.
+            // Do not perform these writes for None or culture-only options.
             var existing = targetGroup.Blocks.Find(fileNameWithoutExtension);
             int? prevNumber = null;
             bool prevAutoNumber = false;
-            try { if (existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { }
+            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { }
 
             DocumentImportResultForBlocks? result;
             try
@@ -1193,54 +1177,88 @@ namespace TiaMcpServer.Siemens
             }
             catch (EngineeringNotSupportedException ex)
             {
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, $"ImportFromDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}", null, ex);
+                throw new PortalException(PortalErrorCode.NotSupportedOnVersion, $"ImportFromDocuments not supported for '{fileNameWithoutExtension}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
             }
             catch (EngineeringTargetInvocationException ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.", null, ex);
+                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically. Check the .s7dcl syntax (types/attributes) and that .s7res matches the S7_MLC ids.", null, ex);
             }
             catch (Exception ex)
             {
-                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}", null, ex);
+                throw new PortalException(PortalErrorCode.ImportFailed, $"ImportFromDocuments failed for '{fileNameWithoutExtension}' into group '{(string.IsNullOrWhiteSpace(groupPath) ? "<root>" : groupPath)}': {ex.Message}. The native call was attempted and the project may have changed; do not retry automatically.", null, ex);
             }
 
-            if (result == null || result.State != DocumentResultState.Success)
+            try
             {
-                throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"ImportFromDocuments returned state '{result?.State.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The document set was not imported." + DocumentMessageSuffix(result));
-            }
-            LastImportedDocumentBlocks = result.ImportedPlcBlocks == null ? Array.Empty<string>() : EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
-
-            // Restore the original block number if Override renumbered it (symbolic/optimized blocks
-            // are addressed by name, so this is cosmetic-but-important for a stable, diffable project).
-            if (prevNumber.HasValue)
-            {
-                var imported = targetGroup.Blocks.Find(fileNameWithoutExtension);
-                if (imported != null)
+                if (result == null || result.State != DocumentResultState.Success || result.ImportedPlcBlocks == null)
                 {
-                    try
+                    throw new PortalException(PortalErrorCode.ImportFailed,
+                        $"ImportFromDocuments returned state '{result?.State.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                }
+                try
+                {
+                    LastImportedDocumentBlocks = result.ImportedPlcBlocks == null ? Array.Empty<string>() : EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
+                }
+                catch (Exception ex)
+                {
+                    throw new PortalException(PortalErrorCode.ImportFailed,
+                        $"Native import reported Success but imported-name readback failed: {ex.Message}. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result), null, ex);
+                }
+
+                // Legacy Override-only post-import writes; preservation is best-effort, not verified.
+                if (prevNumber.HasValue)
+                {
+                    var imported = targetGroup.Blocks.Find(fileNameWithoutExtension);
+                    if (imported != null)
                     {
-                        if (imported.Number != prevNumber.Value)
+                        try
                         {
-                            imported.AutoNumber = false;
-                            imported.Number = prevNumber.Value;
+                            if (imported.Number != prevNumber.Value)
+                            {
+                                imported.AutoNumber = false;
+                                imported.Number = prevNumber.Value;
+                            }
+                            else
+                            {
+                                imported.AutoNumber = prevAutoNumber;
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            imported.AutoNumber = prevAutoNumber;
+                            _logger?.LogWarning(ex, $"Could not restore block number {prevNumber} for {fileNameWithoutExtension}");
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, $"Could not restore block number {prevNumber} for {fileNameWithoutExtension}");
                     }
                 }
+                return true;
             }
-            return true;
+            catch (PortalException) { throw; }
+            catch (Exception ex)
+            {
+                throw new PortalException(PortalErrorCode.ImportFailed,
+                    $"Post-import result or identity readback failed: {ex.Message}. The project may have changed; do not retry automatically."
+                    + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result), null, ex);
+            }
         }
 
         /// <summary>Names of the blocks the last single-document import created (DocumentImportResultForBlocks.ImportedPlcBlocks).</summary>
         public string[] LastImportedDocumentBlocks { get; private set; } = Array.Empty<string>();
+        // Report names as evidence, never as proof that an ambiguous import was rolled back.
+        private static string DocumentImportedNamesSuffix(DocumentImportResultForBlocks? result)
+        {
+            var names = new List<string>();
+            try
+            {
+                if (result?.ImportedPlcBlocks != null)
+                    foreach (var block in result.ImportedPlcBlocks)
+                        if (block != null) names.Add(block.Name);
+                return " Native reported imported names: [" + string.Join(", ", names) + "].";
+            }
+            catch (Exception ex)
+            {
+                return " Native reported imported names (incomplete): [" + string.Join(", ", names) + "]. Readback error: " + ex.Message;
+            }
+        }
+
         // Native log lines of a document export / import (DocumentResultMessageComposition of DocumentResultMessage).
         private static string DocumentMessageSuffix(DocumentImportResult? result)
         {
@@ -1275,19 +1293,13 @@ namespace TiaMcpServer.Siemens
             return null;
         }
 
-        /// <summary>
-        /// 上一次 <see cref="ImportBlocksFromDocuments"/> 里**逐文件失败的原因**。
-        ///
-        /// 这个属性存在的理由：原来每个文件的导入异常只 `LogWarning` 就吞掉，函数返回空列表，
-        /// 工具层于是报「0 blocks imported，无警告」—— 调用方（尤其是弱模型）只能得出
-        /// 「这个服务器坏了」的结论，而真相往往只是文档里某一个元素不合法。
-        /// Openness 对 .s7dcl 是**原子失败且不给行号**的，把仅有的这点异常文本也扔掉，
-        /// 等于把唯一的诊断线索销毁。
-        /// </summary>
+        /// <summary>Per-file diagnostics; native failures can leave partial project changes.</summary>
         public IReadOnlyList<string> LastImportFromDocumentsFailures { get; private set; } = new List<string>();
-
-        /// <summary>上一次扫描到的 .s7dcl 文件数（未经 regex 过滤）。0 和「都失败了」是两回事。</summary>
         public int LastImportFromDocumentsScanned { get; private set; }
+        public int LastImportFromDocumentsSelected { get; private set; }
+        public int LastImportFromDocumentsAttempted { get; private set; }
+        public int LastImportFromDocumentsSucceeded { get; private set; }
+        public bool LastImportFromDocumentsStopped { get; private set; }
 
         public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(string softwarePath, string groupPath, string importPath, string regexName, ImportDocumentOptions option, bool preservePath = false)
         {
@@ -1295,92 +1307,59 @@ namespace TiaMcpServer.Siemens
             var failures = new List<string>();
             LastImportFromDocumentsFailures = failures;
             LastImportFromDocumentsScanned = 0;
+            LastImportFromDocumentsSelected = 0;
+            LastImportFromDocumentsAttempted = 0;
+            LastImportFromDocumentsSucceeded = 0;
+            LastImportFromDocumentsStopped = false;
 
-            if (IsProjectNull())
-            {
-                return null;
-            }
+            if (IsProjectNull()) return null;
+            if (Engineering.TiaMajorVersion < 20) return null;
 
-            if (Engineering.TiaMajorVersion < 20)
-            {
-                _logger?.LogWarning("ImportBlocksFromDocuments is only supported on TIA Portal V20 or newer");
-                return null;
-            }
-
+            var softwareContainer = GetSoftwareContainer(softwarePath);
+            if (!(softwareContainer?.Software is PlcSoftware plcSoftware))
+                throw new PortalException(PortalErrorCode.NotFound, $"PLC software '{softwarePath}' not found.");
+            // Resolve before any native import. Only an explicitly empty path selects root.
+            var group = string.IsNullOrWhiteSpace(groupPath) ? plcSoftware.BlockGroup
+                : GetPlcBlockGroupByPath(softwarePath, groupPath)
+                    ?? throw new PortalException(PortalErrorCode.NotFound, $"Group path '{groupPath}' not found under PLC '{softwarePath}'. No import attempted.");
+            var dir = new DirectoryInfo(importPath);
+            if (!dir.Exists)
+                throw new PortalException(PortalErrorCode.InvalidParams, $"Import directory does not exist: {importPath}. No import attempted.");
+            var rx = string.IsNullOrWhiteSpace(regexName) ? null : new Regex(regexName, RegexOptions.Compiled);
+            var files = dir.GetFiles("*.s7dcl", SearchOption.TopDirectoryOnly)
+                .OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ThenBy(f => f.Name, StringComparer.Ordinal).ToArray();
+            LastImportFromDocumentsScanned = files.Length;
+            var selected = files.Where(f => rx == null || rx.IsMatch(Path.GetFileNameWithoutExtension(f.Name))).ToArray();
+            LastImportFromDocumentsSelected = selected.Length;
             var imported = new List<PlcBlock>();
-
-            try
+            foreach (var file in selected)
             {
-                var softwareContainer = GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is PlcSoftware plcSoftware)
+                var name = Path.GetFileNameWithoutExtension(file.Name);
+                DocumentImportResultForBlocks? result = null;
+                try
                 {
-                    var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
-                    var dir = new DirectoryInfo(importPath);
-                    if (!dir.Exists)
+                    LastImportFromDocumentsAttempted++;
+                    result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => group.Blocks.ImportFromDocuments(dir, name, option));
+                    if (result == null || result.State != DocumentResultState.Success || result.ImportedPlcBlocks == null)
                     {
-                        _logger?.LogWarning($"Import directory does not exist: {importPath}");
-                        return imported;
+                        failures.Add($"{name}: native state={result?.State.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
+                            + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                        LastImportFromDocumentsStopped = true;
+                        break;
                     }
-
-                    var rx = string.IsNullOrWhiteSpace(regexName)
-                        ? null
-                        : new Regex(regexName, RegexOptions.Compiled);
-
-                    // Consider .s7dcl as the primary index; .s7res is optional supplemental
-                    var files = dir.GetFiles("*.s7dcl", SearchOption.TopDirectoryOnly);
-                    LastImportFromDocumentsScanned = files.Length;
-                    foreach (var file in files)
-                    {
-                        var name = Path.GetFileNameWithoutExtension(file.Name);
-                        if (rx != null && !rx.IsMatch(name))
-                        {
-                            // 被 regex 滤掉也要留痕：「文件在、但被你自己的 regexName 挡了」
-                            // 和「文件不合法」是完全不同的两件事，报同一个 0 会把人带偏。
-                            failures.Add($"{name}: 被 regexName '{regexName}' 过滤，未尝试导入");
-                            continue;
-                        }
-
-                        try
-                        {
-                            DocumentImportResultForBlocks result = (group != null)
-                                ? group.Blocks.ImportFromDocuments(dir, name, option)
-                                : plcSoftware.BlockGroup.Blocks.ImportFromDocuments(dir, name, option);
-
-                            if (result != null && result.State == DocumentResultState.Success && result.ImportedPlcBlocks != null)
-                            {
-                                foreach (var blk in result.ImportedPlcBlocks)
-                                {
-                                    if (blk != null)
-                                    {
-                                        imported.Add(blk);
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // State 不是 Success 也是失败，只是不抛异常 —— 以前这条路径连日志都没有。
-                                failures.Add($"{name}: ImportFromDocuments 返回 state="
-                                             + (result?.State.ToString() ?? "null") + "，整份文档未导入" + DocumentMessageSuffix(result));
-                            }
-                        }
-                        catch (EngineeringNotSupportedException ex)
-                        {
-                            _logger?.LogWarning(ex, "Skipping '{Name}': not supported (likely mixed languages)", name);
-                            failures.Add($"{name}: 本版本不支持（常见于混编语言）—— {ex.Message}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger?.LogWarning(ex, "Skipping '{Name}' due to import error", name);
-                            failures.Add($"{name}: {ex.Message}");
-                        }
-                    }
+                    // Materialize before adding: failed result enumeration must not masquerade as success.
+                    var blocks = EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Where(block => block != null).ToArray();
+                    imported.AddRange(blocks);
+                    LastImportFromDocumentsSucceeded++;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Stopping document batch after '{Name}'", name);
+                    failures.Add($"{name}: {ex.Message}. Native import was attempted; the project may have changed. Batch stopped, remaining files not attempted. Do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                    LastImportFromDocumentsStopped = true;
+                    break;
                 }
             }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error importing blocks from documents");
-            }
-
             return imported;
         }
 

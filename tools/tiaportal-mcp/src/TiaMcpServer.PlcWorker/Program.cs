@@ -45,6 +45,8 @@ internal static class Program
             var methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => WorkerOperations.Names.Contains(m.Name)).ToDictionary(m => m.Name, StringComparer.Ordinal);
             if(methods.Count!=WorkerOperations.Names.Count) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
+            bool batchOutcomeUnknown=false;
+            bool disconnectAttempted=false;
             string? line;
             while ((line = Console.ReadLine()) != null)
             {
@@ -57,13 +59,16 @@ internal static class Program
                     var request = JObject.Parse(line, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
                     id = request["id"];
                     var name = (string?)request["operation"] ?? "";
-                    readOnly=name=="ReadExternalSourceNames" || name=="ListTags" || name=="ListUserConstants" || name=="ListSystemConstants" || name=="ReadBlockInfo" || name=="ReadTypeInfo" || name=="ReadBlocks" || name=="ReadTypes" || name=="ReadTagTableNames" || name=="ReadBlockHierarchy" || name=="ReadProjectTree" || name=="ListProjects";
+                    readOnly=name=="SearchHardwareCatalog" || name=="PlanPlcExternalSourceImport" || name=="ReadState" || name=="ReadPortalProcessProjects" || name=="ReadPortalConnectReadiness" || name=="ReadWatchTableNames" || name=="ReadTechnologyObjects" || name=="ReadSoftwareInfo" || name=="ReadSoftwareTree" || name=="ReadExternalSourceNames" || name=="ListTags" || name=="ListUserConstants" || name=="ListSystemConstants" || name=="ReadBlockInfo" || name=="ReadTypeInfo" || name=="ReadBlocks" || name=="ReadTypes" || name=="ReadTagTableNames" || name=="ReadBlockHierarchy" || name=="ReadProjectTree" || name=="ListProjects";
                     if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
                     var values = request["arguments"] as JObject ?? new JObject();
+                    if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
+                    if(name=="Disconnect" && values.HasValues) throw new ArgumentException("Disconnect takes no arguments.");
                     readOnly=readOnly || (values["dryRun"]?.Type==JTokenType.Boolean && (bool)values["dryRun"]!);
+                    if(batchOutcomeUnknown && !readOnly) throw new InvalidOperationException("Prior batch outcome is unknown; no further execution in this worker session.");
                     var confirm=values["confirm"];
                     var expected=values["expectedProjectFile"];
-                    values.Remove("confirm");
+                    if(!method.GetParameters().Any(p=>p.Name=="confirm")) values.Remove("confirm");
                     if(!method.GetParameters().Any(p=>p.Name=="expectedProjectFile")) values.Remove("expectedProjectFile");
                     if(values["dryRun"]?.Type==JTokenType.Boolean && !(bool)values["dryRun"]!)
                     {
@@ -85,12 +90,23 @@ internal static class Program
                         }
                         if ((p.ParameterType == typeof(string) && value.Type != JTokenType.String) ||
                             (p.ParameterType == typeof(bool) && value.Type != JTokenType.Boolean) ||
-                            (p.ParameterType == typeof(int) && value.Type != JTokenType.Integer))
+                            (p.ParameterType == typeof(int) && value.Type != JTokenType.Integer) ||
+                            (p.ParameterType == typeof(string[]) && (value.Type != JTokenType.Array || value.Count()>256 || value.Any(x=>x.Type!=JTokenType.String))))
                             throw new ArgumentException("Incorrect worker argument type: " + p.Name);
                         return value.ToObject(p.ParameterType);
                     }).ToArray();
                     enteredOperation=true;
+                    if(name=="Disconnect") disconnectAttempted=true;
                     var result = method.Invoke(engine, call);
+                    if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcExternalSourceDeleteResult deleted && deleted.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcBatchDocumentExportResult documents && documents.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcDocumentExportResult document && document.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcSpecialExportResult special && special.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcBatchExportResult batch && batch.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcBatchImportResult imported && imported.RequiresSessionReset) batchOutcomeUnknown=true;
                     Console.WriteLine(JsonConvert.SerializeObject(new { id, result }));
                 }
                 catch (Exception ex)

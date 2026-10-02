@@ -355,11 +355,11 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch (Exception ex) when (ex is not McpException)
             {
-                throw new McpException($"Unexpected error importing from documents: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error importing from documents: {ex.Message}. If import was attempted, the project may have changed; do not retry automatically.", ex, McpErrorCode.InternalError);
             }
         }
 
-        [McpServerTool(Name = "ImportBlocksFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer.")]
+        [McpServerTool(Name = "ImportBlocksFromDocuments"), Description("[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically.")]
         public static async Task<ResponseImportBlocksFromDocuments> ImportBlocksFromDocuments(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
@@ -437,91 +437,86 @@ namespace TiaMcpServer.ModelContextProtocol
                 var option = ParseImportDocumentOption(importOption);
                 var imported = await Task.Run(() => Portal.ImportBlocksFromDocuments(softwarePath, groupPath, importPath, regexName, option));
 
+                // Snapshot native evidence before block metadata/progress readback can fail.
+                var failures = Portal.LastImportFromDocumentsFailures.ToList();
+                int scanned = Portal.LastImportFromDocumentsScanned;
+                int selected = Portal.LastImportFromDocumentsSelected;
+                int attempted = Portal.LastImportFromDocumentsAttempted;
+                int succeeded = Portal.LastImportFromDocumentsSucceeded;
+                bool stopped = Portal.LastImportFromDocumentsStopped;
+                bool responseReportingFailed = false;
+
                 var responseList = new List<ResponseBlockInfo>();
                 int processed = 0;
-                if (imported != null)
+                try
                 {
-                    foreach (var block in imported)
+                    if (imported != null)
                     {
-                        if (block != null)
+                        foreach (var block in imported)
                         {
-                            var attributes = Helper.GetAttributeList(block);
-                            responseList.Add(new ResponseBlockInfo
+                            if (block != null)
                             {
-                                Name = block.Name,
-                                TypeName = block.GetType().Name,
-                                Namespace = block.Namespace,
-                                ProgrammingLanguage = Enum.GetName(typeof(ProgrammingLanguage), block.ProgrammingLanguage),
-                                MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
-                                IsConsistent = block.IsConsistent,
-                                HeaderName = block.HeaderName,
-                                ModifiedDate = block.ModifiedDate,
-                                IsKnowHowProtected = block.IsKnowHowProtected,
-                                Attributes = attributes,
-                                Description = block.ToString()
-                            });
+                                var attributes = Helper.GetAttributeList(block);
+                                responseList.Add(new ResponseBlockInfo
+                                {
+                                    Name = block.Name,
+                                    TypeName = block.GetType().Name,
+                                    Namespace = block.Namespace,
+                                    ProgrammingLanguage = Enum.GetName(typeof(ProgrammingLanguage), block.ProgrammingLanguage),
+                                    MemoryLayout = Enum.GetName(typeof(MemoryLayout), block.MemoryLayout),
+                                    IsConsistent = block.IsConsistent,
+                                    HeaderName = block.HeaderName,
+                                    ModifiedDate = block.ModifiedDate,
+                                    IsKnowHowProtected = block.IsKnowHowProtected,
+                                    Attributes = attributes,
+                                    Description = block.ToString()
+                                });
+                            }
+                            processed++;
                         }
-                        processed++;
                     }
                 }
-
-                if (progressToken != null)
+                catch (Exception ex)
                 {
-                    await server.SendNotificationAsync("notifications/progress", new
+                    responseReportingFailed = true;
+                    failures.Add("Block metadata readback failed after import: " + ex.Message + ". Project changes may already exist; do not retry automatically.");
+                }
+
+                try
+                {
+                    if (progressToken != null)
                     {
-                        Progress = processed,
-                        Total = total,
-                        Message = $"Document import completed: {processed} blocks imported successfully",
-                        progressToken
-                    });
+                        await server.SendNotificationAsync("notifications/progress", new
+                        {
+                            Progress = processed,
+                            Total = total,
+                            Message = $"Document import ended: {succeeded}/{selected} document sets reported Success; stopped={stopped}",
+                            progressToken
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    responseReportingFailed = true;
+                    failures.Add("Progress notification failed after import: " + ex.Message + ". Project changes may already exist; do not retry automatically.");
                 }
 
                 var duration = (DateTime.Now - startTime).TotalSeconds;
                 Logger?.LogInformation($"Document import completed: {processed} blocks imported in {duration:F2} seconds");
 
-                // 逐文件失败原因必须回给调用方。以前这些异常只进日志，响应是
-                // 「0 blocks imported，无警告」—— 调用方据此得出的结论是「服务器坏了」，
-                // 而真相通常只是文档里一个元素不合法。Openness 对 .s7dcl 原子失败且不给行号，
-                // 这点异常文本是**唯一**的线索，不能吞。
-                var failures = Portal.LastImportFromDocumentsFailures;
-                int scanned = Portal.LastImportFromDocumentsScanned;
                 var failArr = new JsonArray();
                 foreach (var f in failures.Take(50)) failArr.Add(f);
 
-                // 四种「0 块」的病因完全不同，必须分开说 —— 报同一句话就是把人往错方向带。
-                string msg;
-                bool ok;
-                if (processed > 0)
-                {
-                    msg = $"Document import completed: {processed} blocks imported from '{importPath}'"
-                        + (failures.Count > 0 ? $"；另有 {failures.Count} 个文件失败（见 meta.failures）" : "");
-                    ok = true;
-                }
-                else if (imported == null)
-                {
-                    // Portal 层只有「没连上/没打开项目」和「版本不够」两条路返回 null。
-                    // 以前这会被误报成「目录里没文件」，让人去查一个根本没问题的路径。
-                    msg = "没有连接到 TIA Portal 项目，导入根本没开始。先调用 Connect / OpenProject "
-                        + "（或 AttachToOpenProject 接管已打开的工程），再重试。";
-                    ok = false;
-                }
-                else if (!Directory.Exists(importPath))
-                {
-                    msg = $"导入目录 '{importPath}' 不存在。检查路径拼写，以及它是否指向**目录**而不是单个文件。";
-                    ok = false;
-                }
-                else if (scanned == 0)
-                {
-                    msg = $"目录 '{importPath}' 里一个 .s7dcl 文件都没有，所以没有东西可导。"
-                        + "检查文件扩展名是否为 .s7dcl（.scl 走 GenerateBlocksFromExternalSource）。";
-                    ok = false;
-                }
-                else
-                {
-                    msg = $"扫描到 {scanned} 个 .s7dcl，**一个都没导进去**。逐份原因见 meta.failures。"
-                        + DocumentImportHelp;
-                    ok = false;
-                }
+                bool ok = imported != null && selected > 0 && !stopped && !responseReportingFailed && succeeded == selected;
+                string msg = stopped
+                    ? $"Document import stopped after {attempted}/{selected} selected document sets: {succeeded} reported Success, {selected - attempted} not attempted. The failed or unknown import may have changed the project; do not retry automatically. See meta.failures."
+                    : responseReportingFailed
+                        ? $"Native import ended with {succeeded}/{selected} document sets reporting Success, but response readback or progress reporting failed. The project may have changed; do not retry automatically. See meta.failures."
+                    : imported == null
+                        ? "No document import attempted: no open project or unsupported version."
+                        : selected == 0
+                            ? $"No document sets selected from {scanned} scanned .s7dcl files; no import attempted."
+                            : $"Document import completed: {succeeded} document sets reported Success, returning {processed} blocks. Content completeness has not been verified.";
 
                 return new ResponseImportBlocksFromDocuments
                 {
@@ -530,10 +525,17 @@ namespace TiaMcpServer.ModelContextProtocol
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
-                        // 一份都没导进去时不能报 success=true —— 那正是「看着绿、其实什么也没发生」。
                         ["success"] = ok,
                         ["totalBlocks"] = total,
                         ["scannedFiles"] = scanned,
+                        ["selectedFiles"] = selected,
+                        ["attemptedFiles"] = attempted,
+                        ["succeededFiles"] = succeeded,
+                        ["notAttemptedFiles"] = selected - attempted,
+                        ["stopped"] = stopped,
+                        ["responseReportingFailed"] = responseReportingFailed,
+                        ["mayHaveChanged"] = attempted > 0,
+                        ["contentVerified"] = null,
                         ["importedBlocks"] = processed,
                         ["duration"] = duration,
                         ["failures"] = failArr,
@@ -560,7 +562,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 Logger?.LogError(ex, $"Failed importing documents from '{importPath}'");
-                throw new McpException($"Unexpected error importing documents from '{importPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+                throw new McpException($"Unexpected error importing documents from '{importPath}': {ex.Message}. If import was attempted, the project may have changed; do not retry automatically.", ex, McpErrorCode.InternalError);
             }
         }
 

@@ -17,10 +17,10 @@
   "tools": [
     {
       "tool": "Bootstrap",
-      "status": "pending",
-      "operation": null,
-      "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "status": "source-implemented-passive-host-contract-tested",
+      "operation": "LegacyHostPassiveDiagnostics.Inspect",
+      "nativeAcceptance": "NOT RUN (host-only passive candidate)",
+      "note": "Managed host registration, structural schema and source operation allowlist inspection only. Distinct legacy-host-passive-diagnostics-v1 response explicitly upstreamResponseCompatible=false; nativeCertified=false. No worker call, TIA launch/attach, group inspection/repair or persistent settings. Installed API/SDK, permissions, readiness and native state explicitly not-probed.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseBootstrap",
@@ -81,29 +81,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-passive-host-contract-tested-native-not-probed",
+        "15.1": "candidate-passive-host-contract-tested-native-not-probed",
+        "16": "candidate-passive-host-contract-tested-native-not-probed",
+        "17": "candidate-passive-host-contract-tested-native-not-probed",
+        "18": "candidate-passive-host-contract-tested-native-not-probed",
+        "19": "candidate-passive-host-contract-tested-native-not-probed",
+        "20": "candidate-passive-host-contract-tested-native-not-probed",
+        "21": "candidate-passive-host-contract-tested-native-not-probed"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Bootstrap retains its no-argument signature.",
+        "response": "Distinct bounded host-only diagnostic JSON: exact selected release/catalog state, source-preview/native-gate configuration, actual registered roster, wired protocol operations, structural checks and explicit not-probed facts. Not pinned V17 response parity or native readiness.",
+        "errors": "Unsupported arguments fail with redacted InvalidParams before roster inspection; internal failures use fixed redacted errors. Failed structural checks return an error result; cancellation propagates.",
+        "remaining": "Full baseline diagnostic behavior/response parity, installed SDK/API, group membership, permission, connection readiness and native acceptance are outside this passive candidate."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "passive-host-scope-not-baseline-contract-closure",
+      "typedApiCompilation": "not-applicable-host-only-no-native-calls",
+      "manualEvidence": "legacy-host-passive-diagnostics.md",
+      "offlineEvidence": "Independent review reproduced 400 real MCP stdio checks across eight releases and both native-session settings, plus 15 adversarial/default cases; worker-launch sentinel remained absent. InvokeAsync tests passed in the pre-ladder-registration aggregate of 2540 passed, 0 failed, 3 explicit skips (earlier 2536 before four added structural checks). This is scoped passive evidence, not a claim that the later combined ladder source tree is green; its unrelated ladder assertion failure was separately reported.",
+      "scope": "Pure managed host-only registration and bounded structural object-schema checks; source allowlist membership is not worker execution or installed SDK verification. No machine paths, identities, process IDs, environment variables or supplied argument text are returned."
     },
     {
       "tool": "RunCapabilitySelfTest",
-      "status": "pending",
-      "operation": null,
-      "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "status": "source-implemented-passive-host-contract-tested",
+      "operation": "LegacyHostPassiveDiagnostics.Inspect",
+      "nativeAcceptance": "NOT RUN (host-only passive candidate)",
+      "note": "Managed host registration, structural schema and source operation allowlist inspection only. Distinct legacy-host-passive-diagnostics-v1 response explicitly upstreamResponseCompatible=false; nativeCertified=false. No worker call, TIA launch/attach, group inspection/repair or persistent settings. Installed API/SDK, permissions, readiness and native state explicitly not-probed.",
       "v17Contract": {
         "parameters": [
           {
@@ -171,29 +179,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-passive-host-contract-tested-native-not-probed",
+        "15.1": "candidate-passive-host-contract-tested-native-not-probed",
+        "16": "candidate-passive-host-contract-tested-native-not-probed",
+        "17": "candidate-passive-host-contract-tested-native-not-probed",
+        "18": "candidate-passive-host-contract-tested-native-not-probed",
+        "19": "candidate-passive-host-contract-tested-native-not-probed",
+        "20": "candidate-passive-host-contract-tested-native-not-probed",
+        "21": "candidate-passive-host-contract-tested-native-not-probed"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Only connectIfNeeded/includeProjectTree/inspectPortalProcesses=false are accepted, default false. True native flags, selfConnect, automation-context paths and unknown/type-mismatched arguments are rejected before even pure registry inspection. Narrowed signature deliberately not baseline-compatible.",
+        "response": "Distinct bounded host-only diagnostic JSON: exact selected release/catalog state, source-preview/native-gate configuration, actual registered roster, wired protocol operations, structural checks and explicit not-probed facts. Not pinned V17 response parity or native readiness.",
+        "errors": "Unsupported arguments fail with redacted InvalidParams before roster inspection; internal failures use fixed redacted errors. Failed structural checks return an error result; cancellation propagates.",
+        "remaining": "Full baseline diagnostic behavior/response parity, installed SDK/API, group membership, permission, connection readiness and native acceptance are outside this passive candidate."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "passive-host-scope-not-baseline-contract-closure",
+      "typedApiCompilation": "not-applicable-host-only-no-native-calls",
+      "manualEvidence": "legacy-host-passive-diagnostics.md",
+      "offlineEvidence": "Independent review reproduced 400 real MCP stdio checks across eight releases and both native-session settings, plus 15 adversarial/default cases; worker-launch sentinel remained absent. InvokeAsync tests passed in the pre-ladder-registration aggregate of 2540 passed, 0 failed, 3 explicit skips (earlier 2536 before four added structural checks). This is scoped passive evidence, not a claim that the later combined ladder source tree is green; its unrelated ladder assertion failure was separately reported.",
+      "scope": "Pure managed host-only registration and bounded structural object-schema checks; source allowlist membership is not worker execution or installed SDK verification. No machine paths, identities, process IDs, environment variables or supplied argument text are returned."
     },
     {
       "tool": "Connect",
-      "status": "implementation-offline-verified-manual-pending",
+      "status": "source-offline-complete-ordinary-project",
       "operation": "Attach",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Scoped ordinary-project source/offline/manual closure; native acceptance NOT RUN. Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseConnect",
@@ -258,16 +274,16 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "manual-pending",
+      "migrationState": "scoped-safe-contract-closed",
       "releaseState": {
-        "14sp1": "implementation-offline-verified-manual-pending",
-        "15.1": "implementation-offline-verified-manual-pending",
-        "16": "implementation-offline-verified-manual-pending",
-        "17": "implementation-offline-verified-manual-pending",
-        "18": "implementation-offline-verified-manual-pending",
-        "19": "implementation-offline-verified-manual-pending",
-        "20": "implementation-offline-verified-manual-pending",
-        "21": "implementation-offline-verified-manual-pending"
+        "14sp1": "source-offline-complete-ordinary-project",
+        "15.1": "source-offline-complete-ordinary-project",
+        "16": "source-offline-complete-ordinary-project",
+        "17": "source-offline-complete-ordinary-project",
+        "18": "source-offline-complete-ordinary-project",
+        "19": "source-offline-complete-ordinary-project",
+        "20": "source-offline-complete-ordinary-project",
+        "21": "source-offline-complete-ordinary-project"
       },
       "contractAlignment": {
         "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
@@ -282,33 +298,35 @@
           "close only an owned, unmodified project or session",
           "dispose connection without saving, closing projects or killing TIA"
         ],
-        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+        "remaining": "Native acceptance NOT RUN. Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit."
       },
-      "sourceComplete": false,
+      "sourceComplete": true,
       "contractVersion": "v17-project-safe-v1",
       "featureGates": {
         "localSession": {
           "14sp1": "unavailable-in-supplied-native-api",
           "15.1": "unavailable-in-supplied-native-api",
           "16": "unavailable-in-supplied-native-api",
-          "17": "implemented-source-offline",
-          "18": "implemented-source-offline",
-          "19": "implemented-source-offline",
-          "20": "implemented-source-offline",
-          "21": "implemented-source-offline"
+          "17": "execution-blocked-kind-identity-lock-review",
+          "18": "execution-blocked-kind-identity-lock-review",
+          "19": "execution-blocked-kind-identity-lock-review",
+          "20": "execution-blocked-kind-identity-lock-review",
+          "21": "execution-blocked-kind-identity-lock-review"
         },
         "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
       },
       "implementationOfflineVerified": true,
-      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
-      "manualChecklist": "legacy-plc-manual-checklist.json"
+      "manualReconciliation": "closed-scoped-ordinary-project",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "manualClosureScope": "Explicit positive existing PID only; no start-time binding, launch, fallback or permission bypass. PID reuse remains a documented limit.",
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md"
     },
     {
       "tool": "Disconnect",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-acknowledged-terminal-candidate",
+      "operation": "Disconnect",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Explicit terminal-session disconnect of proven non-owning existing-process attachment only. No project prerequisite, save, close, process disposal/kill, launch, retry or autoreconnect. Idle host returns distinct no-worker acknowledgement without worker startup. Strict worker acknowledgement and PID validation; uncertain outcomes retain poisoning. Owned/unknown Portal semantics gated. Native/typed candidate acceptance pending; no upstream response parity claim.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseDisconnect",
@@ -329,22 +347,25 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "partial",
+        "21": "partial"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "aligned-empty-arguments",
+        "response": "partial-explicit-acknowledgement-not-upstream-ResponseDisconnect",
+        "errors": "fail-stop-uncertain-outcomes-no-retry"
+      },
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "bounded-non-owning-source-candidate",
+      "manualClosureEvidence": "acknowledged-disconnect-candidate-20261002.md"
     },
     {
       "tool": "EnsureOpennessUserGroup",
@@ -391,10 +412,10 @@
     },
     {
       "tool": "ListPortalProcessProjects",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadPortalProcessProjects",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Current source and managed host tests only; exact SDK metadata does not substitute for compiling this new code or native acceptance.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseStringList",
@@ -419,29 +440,36 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Exact case-sensitive argument keys; bounded safe contract documented in candidate notes.",
+        "response": "Typed validated structured data; not claimed pinned-V17 response-compatible.",
+        "errors": "Malformed data and native read failures are errors, never empty success.",
+        "remaining": "Current typed rebuild and native acceptance NOT RUN."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-runtime-query-candidate.md",
+      "scope": "Detached diagnostic metadata; SnapshotAcquisitionTime is not process start; separate OS UTC observation may be unknown and is never a binding token."
     },
     {
       "tool": "DiagnosePortalConnectReadiness",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadPortalConnectReadiness",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Current source and managed host tests only; exact SDK metadata does not substitute for compiling this new code or native acceptance.",
       "v17Contract": {
         "parameters": [
           {
@@ -501,29 +529,36 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Exact case-sensitive argument keys; bounded safe contract documented in candidate notes.",
+        "response": "Typed validated structured data; not claimed pinned-V17 response-compatible.",
+        "errors": "Malformed data and native read failures are errors, never empty success.",
+        "remaining": "Current typed rebuild and native acceptance NOT RUN."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-runtime-query-candidate.md",
+      "scope": "Explicit processId; never auto-select, enumerate windows, attach, start or open. Found process remains readiness unknown and permission not-probed."
     },
     {
       "tool": "GetState",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadState",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Current source and managed host tests only; exact SDK metadata does not substitute for compiling this new code or native acceptance.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseState",
@@ -556,22 +591,29 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Exact case-sensitive argument keys; bounded safe contract documented in candidate notes.",
+        "response": "Typed validated structured data; not claimed pinned-V17 response-compatible.",
+        "errors": "Malformed data and native read failures are errors, never empty success.",
+        "remaining": "Current typed rebuild and native acceptance NOT RUN."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-runtime-query-candidate.md",
+      "scope": "Cached lifecycle only; IsAttached is not connection liveness; PID remains unverified."
     },
     {
       "tool": "GetProject",
@@ -650,10 +692,10 @@
     },
     {
       "tool": "OpenProject",
-      "status": "implementation-offline-verified-manual-pending",
+      "status": "source-offline-complete-ordinary-project",
       "operation": "OpenProject",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Scoped ordinary-project source/offline/manual closure; native acceptance NOT RUN. Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked.",
       "v17Contract": {
         "parameters": [
           {
@@ -681,16 +723,16 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "manual-pending",
+      "migrationState": "scoped-safe-contract-closed",
       "releaseState": {
-        "14sp1": "implementation-offline-verified-manual-pending",
-        "15.1": "implementation-offline-verified-manual-pending",
-        "16": "implementation-offline-verified-manual-pending",
-        "17": "implementation-offline-verified-manual-pending",
-        "18": "implementation-offline-verified-manual-pending",
-        "19": "implementation-offline-verified-manual-pending",
-        "20": "implementation-offline-verified-manual-pending",
-        "21": "implementation-offline-verified-manual-pending"
+        "14sp1": "source-offline-complete-ordinary-project",
+        "15.1": "source-offline-complete-ordinary-project",
+        "16": "source-offline-complete-ordinary-project",
+        "17": "source-offline-complete-ordinary-project",
+        "18": "source-offline-complete-ordinary-project",
+        "19": "source-offline-complete-ordinary-project",
+        "20": "source-offline-complete-ordinary-project",
+        "21": "source-offline-complete-ordinary-project"
       },
       "contractAlignment": {
         "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
@@ -705,27 +747,29 @@
           "close only an owned, unmodified project or session",
           "dispose connection without saving, closing projects or killing TIA"
         ],
-        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+        "remaining": "Native acceptance NOT RUN. Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked."
       },
-      "sourceComplete": false,
+      "sourceComplete": true,
       "contractVersion": "v17-project-safe-v1",
       "featureGates": {
         "localSession": {
           "14sp1": "unavailable-in-supplied-native-api",
           "15.1": "unavailable-in-supplied-native-api",
           "16": "unavailable-in-supplied-native-api",
-          "17": "implemented-source-offline",
-          "18": "implemented-source-offline",
-          "19": "implemented-source-offline",
-          "20": "implemented-source-offline",
-          "21": "implemented-source-offline"
+          "17": "execution-blocked-kind-identity-lock-review",
+          "18": "execution-blocked-kind-identity-lock-review",
+          "19": "execution-blocked-kind-identity-lock-review",
+          "20": "execution-blocked-kind-identity-lock-review",
+          "21": "execution-blocked-kind-identity-lock-review"
         },
         "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
       },
       "implementationOfflineVerified": true,
-      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualReconciliation": "closed-scoped-ordinary-project",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation",
+      "manualClosureScope": "Ordinary exact-release .ap opening only; no upgrade/protected credentials/server workflow. Native cross-instance exclusion is not prevalidated; LocalSession execution blocked.",
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md"
     },
     {
       "tool": "AttachToOpenProject",
@@ -807,10 +851,10 @@
     },
     {
       "tool": "CreateProject",
-      "status": "implementation-offline-verified-manual-pending",
+      "status": "source-offline-complete-ordinary-project",
       "operation": "CreateProject",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Scoped ordinary-project source/offline/manual closure; native acceptance NOT RUN. Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup.",
       "v17Contract": {
         "parameters": [
           {
@@ -844,16 +888,16 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "manual-pending",
+      "migrationState": "scoped-safe-contract-closed",
       "releaseState": {
-        "14sp1": "implementation-offline-verified-manual-pending",
-        "15.1": "implementation-offline-verified-manual-pending",
-        "16": "implementation-offline-verified-manual-pending",
-        "17": "implementation-offline-verified-manual-pending",
-        "18": "implementation-offline-verified-manual-pending",
-        "19": "implementation-offline-verified-manual-pending",
-        "20": "implementation-offline-verified-manual-pending",
-        "21": "implementation-offline-verified-manual-pending"
+        "14sp1": "source-offline-complete-ordinary-project",
+        "15.1": "source-offline-complete-ordinary-project",
+        "16": "source-offline-complete-ordinary-project",
+        "17": "source-offline-complete-ordinary-project",
+        "18": "source-offline-complete-ordinary-project",
+        "19": "source-offline-complete-ordinary-project",
+        "20": "source-offline-complete-ordinary-project",
+        "21": "source-offline-complete-ordinary-project"
       },
       "contractAlignment": {
         "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
@@ -868,33 +912,35 @@
           "close only an owned, unmodified project or session",
           "dispose connection without saving, closing projects or killing TIA"
         ],
-        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+        "remaining": "Native acceptance NOT RUN. Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup."
       },
-      "sourceComplete": false,
+      "sourceComplete": true,
       "contractVersion": "v17-project-safe-v1",
       "featureGates": {
         "localSession": {
           "14sp1": "unavailable-in-supplied-native-api",
           "15.1": "unavailable-in-supplied-native-api",
           "16": "unavailable-in-supplied-native-api",
-          "17": "implemented-source-offline",
-          "18": "implemented-source-offline",
-          "19": "implemented-source-offline",
-          "20": "implemented-source-offline",
-          "21": "implemented-source-offline"
+          "17": "execution-blocked-kind-identity-lock-review",
+          "18": "execution-blocked-kind-identity-lock-review",
+          "19": "execution-blocked-kind-identity-lock-review",
+          "20": "execution-blocked-kind-identity-lock-review",
+          "21": "execution-blocked-kind-identity-lock-review"
         },
         "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
       },
       "implementationOfflineVerified": true,
-      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
-      "manualChecklist": "legacy-plc-manual-checklist.json"
+      "manualReconciliation": "closed-scoped-ordinary-project",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "manualClosureScope": "Ordinary new project in a new named child directory under an existing parent; no replacement or authentication setup.",
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md"
     },
     {
       "tool": "SaveProject",
-      "status": "implementation-offline-verified-manual-pending",
+      "status": "source-offline-complete-ordinary-project",
       "operation": "SaveProject",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Scoped ordinary-project source/offline/manual closure; native acceptance NOT RUN. Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseSaveProject",
@@ -915,16 +961,16 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "manual-pending",
+      "migrationState": "scoped-safe-contract-closed",
       "releaseState": {
-        "14sp1": "implementation-offline-verified-manual-pending",
-        "15.1": "implementation-offline-verified-manual-pending",
-        "16": "implementation-offline-verified-manual-pending",
-        "17": "implementation-offline-verified-manual-pending",
-        "18": "implementation-offline-verified-manual-pending",
-        "19": "implementation-offline-verified-manual-pending",
-        "20": "implementation-offline-verified-manual-pending",
-        "21": "implementation-offline-verified-manual-pending"
+        "14sp1": "source-offline-complete-ordinary-project",
+        "15.1": "source-offline-complete-ordinary-project",
+        "16": "source-offline-complete-ordinary-project",
+        "17": "source-offline-complete-ordinary-project",
+        "18": "source-offline-complete-ordinary-project",
+        "19": "source-offline-complete-ordinary-project",
+        "20": "source-offline-complete-ordinary-project",
+        "21": "source-offline-complete-ordinary-project"
       },
       "contractAlignment": {
         "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
@@ -939,34 +985,36 @@
           "close only an owned, unmodified project or session",
           "dispose connection without saving, closing projects or killing TIA"
         ],
-        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+        "remaining": "Native acceptance NOT RUN. Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked."
       },
-      "sourceComplete": false,
+      "sourceComplete": true,
       "contractVersion": "v17-project-safe-v1",
       "featureGates": {
         "localSession": {
           "14sp1": "unavailable-in-supplied-native-api",
           "15.1": "unavailable-in-supplied-native-api",
           "16": "unavailable-in-supplied-native-api",
-          "17": "implemented-source-offline",
-          "18": "implemented-source-offline",
-          "19": "implemented-source-offline",
-          "20": "implemented-source-offline",
-          "21": "implemented-source-offline"
+          "17": "execution-blocked-kind-identity-lock-review",
+          "18": "execution-blocked-kind-identity-lock-review",
+          "19": "execution-blocked-kind-identity-lock-review",
+          "20": "execution-blocked-kind-identity-lock-review",
+          "21": "execution-blocked-kind-identity-lock-review"
         },
         "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
       },
       "implementationOfflineVerified": true,
-      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualReconciliation": "closed-scoped-ordinary-project",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation",
+      "manualClosureScope": "Explicit save of the exact bound ordinary writable project, including borrowed writable projects; native read-only/permission rejection remains possible; no SaveAs/server commit; LocalSession execution blocked.",
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md"
     },
     {
       "tool": "CloseProject",
-      "status": "implementation-offline-verified-manual-pending",
+      "status": "source-offline-complete-ordinary-project",
       "operation": "CloseProject",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Scoped ordinary-project source/offline/manual closure; native acceptance NOT RUN. Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked.",
       "v17Contract": {
         "parameters": [],
         "returnType": "ResponseCloseProject",
@@ -987,16 +1035,16 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "manual-pending",
+      "migrationState": "scoped-safe-contract-closed",
       "releaseState": {
-        "14sp1": "implementation-offline-verified-manual-pending",
-        "15.1": "implementation-offline-verified-manual-pending",
-        "16": "implementation-offline-verified-manual-pending",
-        "17": "implementation-offline-verified-manual-pending",
-        "18": "implementation-offline-verified-manual-pending",
-        "19": "implementation-offline-verified-manual-pending",
-        "20": "implementation-offline-verified-manual-pending",
-        "21": "implementation-offline-verified-manual-pending"
+        "14sp1": "source-offline-complete-ordinary-project",
+        "15.1": "source-offline-complete-ordinary-project",
+        "16": "source-offline-complete-ordinary-project",
+        "17": "source-offline-complete-ordinary-project",
+        "18": "source-offline-complete-ordinary-project",
+        "19": "source-offline-complete-ordinary-project",
+        "20": "source-offline-complete-ordinary-project",
+        "21": "source-offline-complete-ordinary-project"
       },
       "contractAlignment": {
         "parameters": "Pinned V17 contract retained as reference; explicit process ID, exact project identity and preview/confirmation extend the safe contract",
@@ -1011,27 +1059,29 @@
           "close only an owned, unmodified project or session",
           "dispose connection without saving, closing projects or killing TIA"
         ],
-        "remaining": "Native acceptance NOT RUN; installed attachment, local-session Path and Save/Close semantics remain unverified"
+        "remaining": "Native acceptance NOT RUN. Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked."
       },
-      "sourceComplete": false,
+      "sourceComplete": true,
       "contractVersion": "v17-project-safe-v1",
       "featureGates": {
         "localSession": {
           "14sp1": "unavailable-in-supplied-native-api",
           "15.1": "unavailable-in-supplied-native-api",
           "16": "unavailable-in-supplied-native-api",
-          "17": "implemented-source-offline",
-          "18": "implemented-source-offline",
-          "19": "implemented-source-offline",
-          "20": "implemented-source-offline",
-          "21": "implemented-source-offline"
+          "17": "execution-blocked-kind-identity-lock-review",
+          "18": "execution-blocked-kind-identity-lock-review",
+          "19": "execution-blocked-kind-identity-lock-review",
+          "20": "execution-blocked-kind-identity-lock-review",
+          "21": "execution-blocked-kind-identity-lock-review"
         },
         "evidence": "PE metadata scans all native DLL definitions for first three releases and required LocalSession members for V17-V21."
       },
       "implementationOfflineVerified": true,
-      "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
+      "manualReconciliation": "closed-scoped-ordinary-project",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation"
+      "executionGate": "local-session opening and all bound worker mutations blocked pending session kind, identity and server-lock reconciliation",
+      "manualClosureScope": "Explicit close of exact bound ordinary project opened/created here, only unmodified; no implicit save or discard. Concurrent external edits remain a native race; LocalSession execution blocked.",
+      "manualClosureEvidence": "ordinary-project-lifecycle-review-20261002.md"
     },
     {
       "tool": "GetProjectTree",
@@ -1110,10 +1160,10 @@
     },
     {
       "tool": "SearchHardwareCatalog",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-bounded-catalog-contract-tested",
+      "operation": "SearchHardwareCatalog",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "One literal query, exact identifiers, bounded client enumeration/results and explicit truncation. Existing attached session and explicit open project binding required. No insertion/probe/repair/launch; native Find has no server limit/cancellation. Exact static SDK member evidence; current typed rebuild and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -1163,29 +1213,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "unavailable-catalog-api-absent",
+        "15.1": "unavailable-catalog-api-absent",
+        "16": "unavailable-catalog-api-absent",
+        "17": "unavailable-catalog-api-absent",
+        "18": "signature-verified-semantics-pending-execution-gated",
+        "19": "manual-signature-source-candidate-typed-rebuild-pending",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original keyword and limit=50 retained; keyword 256 characters and result limit1\u2013100; manual open-project requirement conservatively enforced.",
+        "response": "Keyword/Count/Items preserved with explicit bounded-scope/truncation metadata; exact raw identifiers, insertion and score unknown. No undocumented filter expansion.",
+        "errors": "Invalid input fails before native access; native/enumeration failures propagate instead of empty success. Unexpected host payload fields are refused.",
+        "remaining": "V18 precise manual semantics pending; all current exact-SDK builds and native acceptance NOT RUN. See hardware-catalog-search-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "V19\u201321 installed catalog read only; bounded client traversal, not bounded native Find duration or materialization."
     },
     {
       "tool": "AddDeviceWithFallback",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-bounded-device-add-candidate",
+      "operation": "AddDeviceWithFallback",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Exact CPU1211C/CPU1513 article + version or full identifier selection; complete bounded root/group/ungrouped identity graph and parent checks. Preview and explicit project/hash confirmation; exactly one native CreateWithItem. Shared session poisoning after unknown outcome, never retry. Dedicated pure policy/fake adapter and host dispatch candidate; SDK/native NOT RUN. See device-add-candidate.md.",
       "v17Contract": {
         "parameters": [
           {
@@ -1259,29 +1315,34 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "gated-catalog-selection-evidence",
+        "15.1": "gated-catalog-selection-evidence",
+        "16": "gated-catalog-selection-evidence",
+        "17": "gated-catalog-selection-evidence",
+        "18": "gated-catalog-selection-evidence",
+        "19": "source-candidate-native-unverified",
+        "20": "source-candidate-native-unverified",
+        "21": "source-candidate-native-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original four names retained, exact input only; adds dryRun/hash/project confirmation. Family-only/automatic fallback not supported.",
+        "response": "Distinct PlcDeviceAddResult evidence envelope, not upstream ResponseDeviceProbe parity.",
+        "errors": "Fail closed pre-entry; every uncertain post-entry outcome poisons shared mutation session. No fallback retries."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "V19\u201321 exact installed catalog, two documented standard PLC articles only; no fallback probes"
     },
     {
       "tool": "BuildPlcUdtXml",
-      "status": "pending",
+      "status": "source-implemented-offline-v21-output-candidate",
       "operation": null,
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory generation using existing V21 helpers; explicit outputReleaseKey=21 required. XML well-formedness only; target XSD and import validation NOT RUN. No worker dispatch or file I/O; not a completed V17 contract migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1337,29 +1398,44 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added deliberately to prevent host-version/output-version confusion.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false and importValidated=false in metadata/data and top-level warning.",
+        "errors": "Malformed/oversized input, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; generator failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-builders-candidate.md"
     },
     {
       "tool": "BuildPlcTagTableXml",
-      "status": "pending",
+      "status": "source-implemented-offline-v21-output-candidate",
       "operation": null,
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory generation using existing V21 helpers; explicit outputReleaseKey=21 required. XML well-formedness only; target XSD and import validation NOT RUN. No worker dispatch or file I/O; not a completed V17 contract migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1415,29 +1491,44 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added deliberately to prevent host-version/output-version confusion.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false and importValidated=false in metadata/data and top-level warning.",
+        "errors": "Malformed/oversized input, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; generator failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-builders-candidate.md"
     },
     {
       "tool": "BuildPlcGlobalDbXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineCompositionBuilders.GlobalDb",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory explicit V21 output candidate; no worker, filesystem or native calls; schema/import false. Not a completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1493,29 +1584,45 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added deliberately to prevent host-version/output-version confusion.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false and importValidated=false in metadata/data and top-level warning.",
+        "errors": "Malformed/oversized input, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; generator failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-composition-candidate.md",
+      "helperCorrection": "AttributeList/StartValue/Comment ordering fixed to match documented V21 block-interface sequence; whole-document schema and import not validated."
     },
     {
       "tool": "BuildStructuredTextXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineCompositionBuilders.StructuredText",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory explicit V21 output candidate; no worker, filesystem or native calls; schema/import false. Not a completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1577,29 +1684,44 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added deliberately to prevent host-version/output-version confusion.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false and importValidated=false in metadata/data and top-level warning.",
+        "errors": "Malformed/oversized input, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; generator failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-composition-candidate.md"
     },
     {
       "tool": "BuildFlgNetCallXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineLadderBuilders.Build",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory bounded FC-call-only V21 candidate using unchanged helpers. Explicit outputReleaseKey=21; no raw XML, worker, file IO or native calls. Generated UID/wire/reference checks are structural only; schema/import/program semantics false. Not general ladder, not completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1655,29 +1777,46 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey=21 added. Required structured parameter arrays; simple identifiers; exact Input/Output only; 15 basic bit/numeric datatype spellings. Omitted/empty sourceKind defaults global; unknown values rejected; constants explicit. Structured call-only networks; unsupported aliases, raw XML, caller IDs, paths and other LAD elements rejected.",
+        "response": "Pinned ResponseXmlBuild envelope fields with SDK naming. Candidate Meta/Data explicitly schemaValidated=false, importValidated=false and programSemanticsValidated=false; null OutputPath/OutputFiles. LAD composer preserves fixed Ret_Val/Void return interface.",
+        "errors": "Malformed/oversized JSON, duplicate or unknown fields, conflicting aliases, invalid Unicode/XML characters and unsupported release/source/port/type are fixed sanitized InvalidParams. Unexpected helper failures are fixed InternalError; cancellation propagates.",
+        "remaining": "Exact V17 parameter compatibility, all non-V21 output formats, full installed XSD validation, callee/symbol/type/program semantics and native import/compile acceptance remain unimplemented or unverified."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; unchanged V21 FlgNet/v5 helper; structural XML checks only; no installed Siemens XSD/import proof"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-ladder-candidate.md",
+      "offlineEvidence": "Independent fresh host build, pure SDK aggregate 2883 passed/0 failed/3 explicit skips, and 144 real stdio assertions across eight host keys. No worker/Siemens assembly/native execution. Original helper hashes unchanged. Review found no remaining source blocker."
     },
     {
       "tool": "ComposePlcFcBlockXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineBlockCompositionBuilders.FC",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory explicit V21 SCL block candidate; unchanged Compose helper; bounded operation JSON only, no raw XML, worker, filesystem or native calls. Schema/import/program semantics false; not a completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1733,29 +1872,44 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added; only bounded structuredText operations accepted; raw inner XML deliberately rejected. FC requires inputs/outputs; FB sections optional.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false, importValidated=false and programSemanticsValidated=false plus candidate warning.",
+        "errors": "Malformed/oversized input, invalid Unicode/XML characters, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; unexpected helper failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-block-composition-candidate.md"
     },
     {
       "tool": "ComposePlcFbBlockXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineBlockCompositionBuilders.FB",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory explicit V21 SCL block candidate; unchanged Compose helper; bounded operation JSON only, no raw XML, worker, filesystem or native calls. Schema/import/program semantics false; not a completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1811,29 +1965,44 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey added; only bounded structuredText operations accepted; raw inner XML deliberately rejected. FC requires inputs/outputs; FB sections optional.",
+        "response": "All pinned ResponseXmlBuild fields with SDK naming; explicit schemaValidated=false, importValidated=false and programSemanticsValidated=false plus candidate warning.",
+        "errors": "Malformed/oversized input, invalid Unicode/XML characters, unknown/duplicate fields, conflicting aliases and unsupported output release are invalid-params; unexpected helper failure is internal-error."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; existing V21 helper, XML parse checked; exact target XSD/import acceptance not established"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-block-composition-candidate.md"
     },
     {
       "tool": "ComposePlcLadFcBlockXml",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-offline-v21-output-candidate",
+      "operation": "OfflineLadderBuilders.Build",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Pure-memory bounded FC-call-only V21 candidate using unchanged helpers. Explicit outputReleaseKey=21; no raw XML, worker, file IO or native calls. Generated UID/wire/reference checks are structural only; schema/import/program semantics false. Not general ladder, not completed V17 migration.",
       "v17Contract": {
         "parameters": [
           {
@@ -1889,29 +2058,46 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "output-format-unimplemented-rejected",
+        "15.1": "output-format-unimplemented-rejected",
+        "16": "output-format-unimplemented-rejected",
+        "17": "output-format-unimplemented-rejected",
+        "18": "output-format-unimplemented-rejected",
+        "19": "output-format-unimplemented-rejected",
+        "20": "output-format-unimplemented-rejected",
+        "21": "v21-output-candidate-schema-import-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original JSON parameter retained; required outputReleaseKey=21 added. Required structured parameter arrays; simple identifiers; exact Input/Output only; 15 basic bit/numeric datatype spellings. Omitted/empty sourceKind defaults global; unknown values rejected; constants explicit. Structured call-only networks; unsupported aliases, raw XML, caller IDs, paths and other LAD elements rejected.",
+        "response": "Pinned ResponseXmlBuild envelope fields with SDK naming. Candidate Meta/Data explicitly schemaValidated=false, importValidated=false and programSemanticsValidated=false; null OutputPath/OutputFiles. LAD composer preserves fixed Ret_Val/Void return interface.",
+        "errors": "Malformed/oversized JSON, duplicate or unknown fields, conflicting aliases, invalid Unicode/XML characters and unsupported release/source/port/type are fixed sanitized InvalidParams. Unexpected helper failures are fixed InternalError; cancellation propagates.",
+        "remaining": "Exact V17 parameter compatibility, all non-V21 output formats, full installed XSD validation, callee/symbol/type/program semantics and native import/compile acceptance remain unimplemented or unverified."
+      },
+      "outputReleaseCoverage": {
+        "21": "candidate-only; unchanged V21 FlgNet/v5 helper; structural XML checks only; no installed Siemens XSD/import proof"
+      },
+      "hostAvailability": {
+        "14sp1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "15.1": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "16": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "17": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "18": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "19": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "20": "pure-memory-candidate-generation; explicit outputReleaseKey=21",
+        "21": "pure-memory-candidate-generation; explicit outputReleaseKey=21"
+      },
+      "sourceComplete": false,
+      "evidence": "docs/development/legacy-offline-ladder-candidate.md",
+      "offlineEvidence": "Independent fresh host build, pure SDK aggregate 2883 passed/0 failed/3 explicit skips, and 144 real stdio assertions across eight host keys. No worker/Siemens assembly/native execution. Original helper hashes unchanged. Review found no remaining source blocker."
     },
     {
       "tool": "BuildPlcSymbolManifestFromXmlPath",
-      "status": "pending",
-      "operation": null,
-      "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "status": "source-implemented-offline-contract-tested",
+      "operation": "OfflineSymbolManifest.Build",
+      "nativeAcceptance": "NOT RUN (offline-only candidate)",
+      "note": "Bounded read-only tag/GlobalDB declaration extraction from an explicit caller-owned immutable XML snapshot. No worker/TIA, directory discovery, output writes, symbol semantics or import certification; narrowed safe contract remains partial.",
       "v17Contract": {
         "parameters": [
           {
@@ -1963,29 +2149,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-offline-extraction-contract-tested",
+        "15.1": "candidate-offline-extraction-contract-tested",
+        "16": "candidate-offline-extraction-contract-tested",
+        "17": "candidate-offline-extraction-contract-tested",
+        "18": "candidate-offline-extraction-contract-tested",
+        "19": "candidate-offline-extraction-contract-tested",
+        "20": "candidate-offline-extraction-contract-tested",
+        "21": "candidate-offline-extraction-contract-tested"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Narrowed safe inputRoot/files/expectedOrigin contract replaces uncontrolled path discovery; closed schema with explicit bounded files and caller ownership/immutability attestation. Baseline signature parity pending.",
+        "response": "Deterministic offline symbol declaration manifest and bounded file diagnostics, preserving raw declaration names. Not PLC program-semantic correctness, native schema validation or baseline response parity.",
+        "errors": "Unsupported/mixed/wrapped declarations, duplicate fields, unsafe paths, mutable/oversized/deep/DTD XML fail closed; no hidden file writes or native fallback.",
+        "remaining": "Full baseline parity and release-specific native XML/schema semantics remain outside this read-only extraction candidate."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "bounded-extraction-scope-not-full-semantic-closure",
+      "typedApiCompilation": "not-applicable-offline-only-no-native-calls",
+      "manualEvidence": "legacy-offline-symbol-manifest-candidate.md",
+      "offlineEvidence": "65 focused assertions passed with independent review; integrated in 2251-passed, 0-failed, 3-explicit-skip aggregate. No worker process or Siemens assembly loaded.",
+      "scope": "Explicit bounded relative XML file list under caller-attested owned immutable snapshot. Tag and GlobalDB Static declarations only; mixed/unknown XML, DTD, links/reparse paths, path aliases and oversized/deep inputs refused. Filesystem ancestry checks are not atomic no-follow proof."
     },
     {
       "tool": "GetSoftwareInfo",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadSoftwareInfo",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Read-only candidate registered in preview v1; 39 pure/source-fake checks and 978 MCP contract checks pass. Fake Siemens shapes are not SDK compilation. Windows per-release typed rebuild, full manual reconciliation and native acceptance remain pending. See legacy-software-read-candidate.md.",
       "v17Contract": {
         "parameters": [
           {
@@ -2025,22 +2219,23 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "source-candidate-typed-build-unverified",
+        "15.1": "source-candidate-typed-build-unverified",
+        "16": "source-candidate-typed-build-unverified",
+        "17": "source-candidate-typed-build-unverified",
+        "18": "source-candidate-typed-build-unverified",
+        "19": "source-candidate-typed-build-unverified",
+        "20": "source-candidate-typed-build-unverified",
+        "21": "source-candidate-typed-build-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "exact-v17-softwarePath",
+        "response": "v17-fields-sdk-naming-plus-scope-and-path-metadata",
+        "errors": "missing/ambiguous inputs invalid-params; required native enumeration errors never partial-success; optional display failures explicit"
+      },
+      "evidence": "docs/development/legacy-software-read-candidate.md"
     },
     {
       "tool": "PlcBuildAndImport",
@@ -2494,10 +2689,10 @@
     },
     {
       "tool": "GetPlcWatchTables",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadWatchTableNames",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Current source and managed host tests only; exact SDK metadata does not substitute for compiling this new code or native acceptance.",
       "v17Contract": {
         "parameters": [
           {
@@ -2529,29 +2724,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "unavailable-no-WatchTableGroup",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Exact case-sensitive argument keys; bounded safe contract documented in candidate notes.",
+        "response": "Typed validated structured data; not claimed pinned-V17 response-compatible.",
+        "errors": "Malformed data and native read failures are errors, never empty success.",
+        "remaining": "Current typed rebuild and native acceptance NOT RUN."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "Root/user-group escaped watch-table paths, no force tables or values."
     },
     {
       "tool": "ExportPlcWatchTable",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-special-export-contract-tested",
+      "operation": "ExportPlcWatchTable",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded preview/apply source candidate. Exact project/software/object/output/hash contract; no overwrite, XML changes or snapshots; scoped offline guard and failure poisoning. Static SDK signature verified, genuine current-source compilation and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -2595,22 +2796,28 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "unavailable-watch-type-and-navigation-absent",
+        "15.1": "signature-verified-preview-only-semantics-pending",
+        "16": "manual-signature-source-candidate-typed-rebuild-pending",
+        "17": "manual-signature-source-candidate-typed-rebuild-pending",
+        "18": "manual-signature-source-candidate-typed-rebuild-pending",
+        "19": "manual-signature-source-candidate-typed-rebuild-pending",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original named target/output arguments plus preview-default dryRun, confirm, expectedProjectFile and expectedPlanHash; exact canonical identities required.",
+        "response": "Validated structured single-object export plan/outcome; not pinned-V17 response-compatible.",
+        "errors": "Malformed response or unknown outcome poisons session, retains allowlisted evidence, never retries or disposes TIA.",
+        "remaining": "Native NOT RUN; source SDK compile pending; some release semantics and broad TO support unclosed. See legacy-special-object-export-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "Watch root/user groups; no force tables."
     },
     {
       "tool": "ImportPlcExternalSource",
@@ -2676,10 +2883,10 @@
     },
     {
       "tool": "DeletePlcExternalSource",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-bounded-root-delete-contract-tested",
+      "operation": "DeletePlcExternalSource",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Exact unique externalSourceName, empty root group, complete 4096-item inventory, offline standard PLC, confirmed project/session/identity-bound preview hash. One typed Delete call; no generation/compile/save. Unknown outcome poisons session; no retry. Recovery/filesystem effects and current typed rebuild/native acceptance unverified.",
       "v17Contract": {
         "parameters": [
           {
@@ -2713,22 +2920,27 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "manual-signature-source-candidate-typed-rebuild-pending",
+        "15.1": "manual-signature-source-candidate-typed-rebuild-pending",
+        "16": "manual-signature-source-candidate-typed-rebuild-pending",
+        "17": "manual-signature-source-candidate-typed-rebuild-pending",
+        "18": "manual-signature-source-candidate-typed-rebuild-pending",
+        "19": "manual-signature-source-candidate-typed-rebuild-pending",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original softwarePath and externalSourceName retained; adds required empty groupPath, default dryRun=true, expectedPlanHash, confirm and expectedProjectFile. No fuzzy matching.",
+        "response": "Distinct planned, not-found-not-deleted, deleted-verified and outcome-unknown statuses; no placeholder success. Not upstream response-compatible.",
+        "errors": "Fail closed on ambiguous/wrong-parent/incomplete/changed inventory before Delete; one attempted call, unknown outcome poisons host/worker session.",
+        "remaining": "Native equality/proxy behavior, deletion effects/recovery and exact SDK current builds NOT RUN. See external-source-delete-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild"
     },
     {
       "tool": "GenerateBlocksFromExternalSource",
@@ -3020,10 +3232,10 @@
     },
     {
       "tool": "GetSoftwareTree",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadSoftwareTree",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Read-only candidate registered in preview v1; 39 pure/source-fake checks and 978 MCP contract checks pass. Fake Siemens shapes are not SDK compilation. Windows per-release typed rebuild, full manual reconciliation and native acceptance remain pending. See legacy-software-read-candidate.md.",
       "v17Contract": {
         "parameters": [
           {
@@ -3055,22 +3267,23 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "source-candidate-typed-build-unverified",
+        "15.1": "source-candidate-typed-build-unverified",
+        "16": "source-candidate-typed-build-unverified",
+        "17": "source-candidate-typed-build-unverified",
+        "18": "source-candidate-typed-build-unverified",
+        "19": "source-candidate-typed-build-unverified",
+        "20": "source-candidate-typed-build-unverified",
+        "21": "source-candidate-typed-build-unverified"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "exact-v17-softwarePath",
+        "response": "v17-fields-sdk-naming-plus-scope-and-path-metadata",
+        "errors": "missing/ambiguous inputs invalid-params; required native enumeration errors never partial-success; optional display failures explicit"
+      },
+      "evidence": "docs/development/legacy-software-read-candidate.md"
     },
     {
       "tool": "GetBlockInfo",
@@ -3491,10 +3704,10 @@
     },
     {
       "tool": "ImportBlocksFromDirectory",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ImportBlocksFromDirectory",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded ordinary XML batch import source candidate, not full baseline parity. Reviewed ordered input/content manifest, exact project/PID/software/group identity and plan hash, native None only, compileAfter blocked before import, stop-first-failure partial evidence, no rollback/replay. Windows SDK and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -3554,29 +3767,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original selected names retained; safe defaults dryRun=true, overwrite=false, compileAfter=false. Complete explicit importOrder, expectedPlanHash and exact project confirmation required for execution. overwrite=true, compileAfter=true, stopOnImportFailure=false and technology destination refused before import. Not complete baseline parameter/behavior parity.",
+        "response": "Legacy-shaped Imported name array and Failed Path/Error array plus counts and full per-file actual returned evidence; null/unknown failed native evidence retained. Not full pinned-V17 response parity.",
+        "errors": "Unknown/mixed roots, unsupported producer, duplicate paths/names, bounded scan/bytes, known number collisions and typed recognized dependencies fail closed before mutation. First uncertain call or failed verification preserves prior results, poisons replay and leaves worker alive.",
+        "remaining": "Changed-source exact-release SDK builds, installed-schema/native validation, Windows input locking, complete dependency analysis and baseline contract parity remain pending."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-bounded-batch-import-candidate.md",
+      "offlineEvidence": "2251 managed aggregate assertions passed, 0 failed, 3 platform/native groups explicitly skipped; independent reviewer reproduced. LegacyHost build passed, no Siemens assembly or worker process loaded. Fake native callbacks only; Windows file locking and SDK/native behavior NOT RUN.",
+      "scope": "Exact ordinary standard PLC and existing groups, one root per native XML file, same producer release only. Blocks tool top-directory scan; program tool recursive bounded scan. Safety/system/software-unit/technology scope refused; V14 SP1 SCL interface-only input refused. Native Parent ownership verification is source-reviewed only."
     },
     {
       "tool": "ImportPlcProgramFromDirectory",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ImportPlcProgramFromDirectory",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded ordinary XML batch import source candidate, not full baseline parity. Reviewed ordered input/content manifest, exact project/PID/software/group identity and plan hash, native None only, compileAfter blocked before import, stop-first-failure partial evidence, no rollback/replay. Windows SDK and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -3726,29 +3947,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original selected names retained; safe defaults dryRun=true, overwrite=false, compileAfter=false. Complete explicit importOrder, expectedPlanHash and exact project confirmation required for execution. overwrite=true, compileAfter=true, stopOnImportFailure=false and technology destination refused before import. Not complete baseline parameter/behavior parity.",
+        "response": "Legacy-shaped Imported name array and Failed Path/Error array plus counts and full per-file actual returned evidence; null/unknown failed native evidence retained. Not full pinned-V17 response parity.",
+        "errors": "Unknown/mixed roots, unsupported producer, duplicate paths/names, bounded scan/bytes, known number collisions and typed recognized dependencies fail closed before mutation. First uncertain call or failed verification preserves prior results, poisons replay and leaves worker alive.",
+        "remaining": "Changed-source exact-release SDK builds, installed-schema/native validation, Windows input locking, complete dependency analysis and baseline contract parity remain pending."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-bounded-batch-import-candidate.md",
+      "offlineEvidence": "2251 managed aggregate assertions passed, 0 failed, 3 platform/native groups explicitly skipped; independent reviewer reproduced. LegacyHost build passed, no Siemens assembly or worker process loaded. Fake native callbacks only; Windows file locking and SDK/native behavior NOT RUN.",
+      "scope": "Exact ordinary standard PLC and existing groups, one root per native XML file, same producer release only. Blocks tool top-directory scan; program tool recursive bounded scan. Safety/system/software-unit/technology scope refused; V14 SP1 SCL interface-only input refused. Native Parent ownership verification is source-reviewed only."
     },
     {
       "tool": "ExportBlocks",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ExportBlocks",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded exact-group batch source candidate, not complete baseline parity. Complete deterministic previews, explicit inventory-hash consent, selected standard-target offline checks, atomic non-overwrite publication and retained per-item partial outcomes. No native execution; Windows filesystem and current typed-SDK checks pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -3802,22 +4031,30 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Safe scoped contract: exact softwarePath and groupPath, recursive opt-in, bounded maxItems, dryRun default, confirm/exact project and preview inventory hash for execution. Baseline regexName/preservePath batch signature not reproduced.",
+        "response": "Complete deterministic per-item XML output plan/results with explicit inconsistent/failed/not-attempted states, retained allowlisted recovery evidence and RequiresSessionReset; not pinned-V17 response parity.",
+        "errors": "Malformed or cross-scope results rejected. First uncertain native/file outcome stops all later exports, preserves prior progress, poisons replay; no fake all-or-nothing success.",
+        "remaining": "Changed-source eight-release typed SDK compile, Windows-only filesystem groups, native acceptance, and baseline signature/response parity remain pending."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-bounded-batch-export-candidate.md",
+      "offlineEvidence": "2046 managed aggregate passed, 0 failed, 2 Windows publication groups skipped; LegacyHost build passed. Independent 112 stdio assertions across eight discovery hosts; no Siemens/worker native session.",
+      "scope": "Ordinary project; exact standard PLC owner with positive OnlineProvider/Offline proof. LocalSession, R/H and software units excluded. Original XML numbers/symbols unmodified; V14 SP1 SCL remains interface-only. Compile project gate unchanged."
     },
     {
       "tool": "GetTypeInfo",
@@ -4158,10 +4395,10 @@
     },
     {
       "tool": "ExportTypes",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ExportTypes",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded exact-group batch source candidate, not complete baseline parity. Complete deterministic previews, explicit inventory-hash consent, selected standard-target offline checks, atomic non-overwrite publication and retained per-item partial outcomes. No native execution; Windows filesystem and current typed-SDK checks pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -4215,29 +4452,37 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Safe scoped contract: exact softwarePath and groupPath, recursive opt-in, bounded maxItems, dryRun default, confirm/exact project and preview inventory hash for execution. Baseline regexName/preservePath batch signature not reproduced.",
+        "response": "Complete deterministic per-item XML output plan/results with explicit inconsistent/failed/not-attempted states, retained allowlisted recovery evidence and RequiresSessionReset; not pinned-V17 response parity.",
+        "errors": "Malformed or cross-scope results rejected. First uncertain native/file outcome stops all later exports, preserves prior progress, poisons replay; no fake all-or-nothing success.",
+        "remaining": "Changed-source eight-release typed SDK compile, Windows-only filesystem groups, native acceptance, and baseline signature/response parity remain pending."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "manualEvidence": "legacy-bounded-batch-export-candidate.md",
+      "offlineEvidence": "2046 managed aggregate passed, 0 failed, 2 Windows publication groups skipped; LegacyHost build passed. Independent 112 stdio assertions across eight discovery hosts; no Siemens/worker native session.",
+      "scope": "Ordinary project; exact standard PLC owner with positive OnlineProvider/Offline proof. LocalSession, R/H and software units excluded. Original XML numbers/symbols unmodified; V14 SP1 SCL remains interface-only. Compile project gate unchanged."
     },
     {
       "tool": "GetTechnologyObjects",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-contract-tested-typed-build-pending",
+      "operation": "ReadTechnologyObjects",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Current source and managed host tests only; exact SDK metadata does not substitute for compiling this new code or native acceptance.",
       "v17Contract": {
         "parameters": [
           {
@@ -4281,29 +4526,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "candidate-typed-rebuild-pending",
+        "15.1": "candidate-typed-rebuild-pending",
+        "16": "candidate-typed-rebuild-pending",
+        "17": "candidate-typed-rebuild-pending",
+        "18": "candidate-typed-rebuild-pending",
+        "19": "candidate-typed-rebuild-pending",
+        "20": "candidate-typed-rebuild-pending",
+        "21": "candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Exact case-sensitive argument keys; bounded safe contract documented in candidate notes.",
+        "response": "Typed validated structured data; not claimed pinned-V17 response-compatible.",
+        "errors": "Malformed data and native read failures are errors, never empty success.",
+        "remaining": "Current typed rebuild and native acceptance NOT RUN."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "Root ordinary PLC technology metadata through V18; root/user groups V19\u2013V21; no online values."
     },
     {
       "tool": "ExportTechnologyObject",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-special-export-contract-tested",
+      "operation": "ExportTechnologyObject",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Bounded preview/apply source candidate. Exact project/software/object/output/hash contract; no overwrite, XML changes or snapshots; scoped offline guard and failure poisoning. Static SDK signature verified, genuine current-source compilation and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -4343,22 +4594,28 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "signature-verified-preview-only-semantics-pending",
+        "15.1": "signature-verified-preview-only-semantics-pending",
+        "16": "manual-signature-source-candidate-typed-rebuild-pending",
+        "17": "manual-signature-source-candidate-typed-rebuild-pending",
+        "18": "manual-signature-source-candidate-typed-rebuild-pending",
+        "19": "manual-signature-source-candidate-typed-rebuild-pending",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "signature-verified-preview-only-semantics-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original named target/output arguments plus preview-default dryRun, confirm, expectedProjectFile and expectedPlanHash; exact canonical identities required.",
+        "response": "Validated structured single-object export plan/outcome; not pinned-V17 response-compatible.",
+        "errors": "Malformed response or unknown outcome poisons session, retains allowlisted evidence, never retries or disposes TIA.",
+        "remaining": "Native NOT RUN; source SDK compile pending; some release semantics and broad TO support unclosed. See legacy-special-object-export-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "TO root before V19, root/user groups V19 onward; no protected/sub-level TOs or software units."
     },
     {
       "tool": "ImportTechnologyObject",
@@ -4506,10 +4763,10 @@
     },
     {
       "tool": "ExportAsDocuments",
-      "status": "pending-version-gate",
-      "operation": null,
+      "status": "source-implemented-document-export-contract-tested",
+      "operation": "ExportAsDocuments",
       "nativeAcceptance": "NOT RUN",
-      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "note": "V20/V21 ordinary LAD/DB single-block source candidate. Preview zero writes, exact plan hash and project confirmation; no overwrite. Staged .s7dcl with required V20 or optional V21 .s7res; preservePath=true refused. Static SDK signature verified; current exact build, Windows publication and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -4555,29 +4812,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "not-enabled-version-gated-document-scope",
+        "15.1": "not-enabled-version-gated-document-scope",
+        "16": "not-enabled-version-gated-document-scope",
+        "17": "not-enabled-version-gated-document-scope",
+        "18": "not-enabled-version-gated-document-scope",
+        "19": "not-enabled-version-gated-document-scope",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original softwarePath/blockPath/exportPath/preservePath names retained; preservePath=true refused. New output directory only; dryRun preview, exact project, confirm and expectedPlanHash required for apply.",
+        "response": "Strict structured document plan/outcome with published files and failure evidence; not pinned-V17 response-compatible.",
+        "errors": "No overwrite, format conversion or fallback; only native Success accepted. Ambiguous publication retains evidence and poisons session.",
+        "remaining": "Exact typed rebuild, Windows publication groups and native acceptance NOT RUN. See legacy-document-export-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "V20/V21 ordinary LAD/DB blocks only; no full-format, version-conversion or restore claim."
     },
     {
       "tool": "ExportBlocksAsDocuments",
-      "status": "pending-version-gate",
-      "operation": null,
+      "status": "source-implemented-batch-document-export-contract-tested",
+      "operation": "ExportBlocksAsDocuments",
       "nativeAcceptance": "NOT RUN",
-      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "note": "V20/V21 exact ordinary LAD/DB group source candidate; complete bounded deterministic inventory, explicit preview/project/hash confirmation and one no-overwrite output tree. Reuses single document file policy. Failure retains staged/failed/not-attempted outcomes and poisons session; no replay. Exact SDK build, Windows publication and native acceptance pending.",
       "v17Contract": {
         "parameters": [
           {
@@ -4627,29 +4890,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "not-enabled-version-gated-document-scope",
+        "15.1": "not-enabled-version-gated-document-scope",
+        "16": "not-enabled-version-gated-document-scope",
+        "17": "not-enabled-version-gated-document-scope",
+        "18": "not-enabled-version-gated-document-scope",
+        "19": "not-enabled-version-gated-document-scope",
+        "20": "manual-signature-source-candidate-typed-rebuild-pending",
+        "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "softwarePath/exportPath/preservePath retained; new exact groupPath plus explicit recursion and maxItems replace regexName. preservePath=true refused. New output tree only; dryRun preview, exact project, confirm and expectedPlanHash required for apply.",
+        "response": "Strict complete deterministic per-item plan/outcome; staged does not claim publication. Not pinned-V17 response-compatible.",
+        "errors": "Fail-closed whole-inventory eligibility; stop first native failure, no overwrite/cleanup/replay. Failed or ambiguous publication retains recovery evidence and poisons session.",
+        "remaining": "Exact typed rebuild, Windows publication and native acceptance NOT RUN. See legacy-batch-document-export-candidate.md."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "V20/V21 ordinary unprotected LAD/DB blocks; root/user groups only; no regex selection, hierarchy preservation, PLC types or full-format claim."
     },
     {
       "tool": "ImportFromDocuments",
-      "status": "pending-version-gate",
-      "operation": null,
+      "status": "source-implemented-single-document-import-candidate",
+      "operation": "ImportFromDocuments",
       "nativeAcceptance": "NOT RUN",
-      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "note": "Exact V20/V21 None (SDK XML: Throw if exists), one ordinary global DB from complete bounded lexical admission. Declaration-derived identity, byte-locked hashes, complete ordinary inventory and exact target/project/plan confirmation. Every attempted uncertain native/readback/cleanup outcome mayHaveChanged, poisons session and cannot be replayed. No compiler/content-validity/full-format or atomicity claim. See legacy-single-document-import-candidate.md.",
       "v17Contract": {
         "parameters": [
           {
@@ -4701,29 +4970,35 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "not-supported-exact-release-gate",
+        "15.1": "not-supported-exact-release-gate",
+        "16": "not-supported-exact-release-gate",
+        "17": "not-supported-exact-release-gate",
+        "18": "not-supported-exact-release-gate",
+        "19": "not-supported-exact-release-gate",
+        "20": "source-candidate-native-pending",
+        "21": "source-candidate-native-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "softwarePath/groupPath/importPath/fileNameWithoutExtension retained; importOption Override replaced by overwrite=false only, dryRun, exact expectedProjectFile/expectedPlanHash and confirm.",
+        "response": "Dedicated strict DocumentImport envelope, recomputed plan hash, exact declaration/inventory/input/target evidence and attempted/mayHaveChanged/unknown outcomes. Not pinned-V17 response compatible.",
+        "errors": "Fail closed before native call for unsupported grammar/targets/collisions/changed bytes or inventory. Native null, non-Success, exception, identity/readback/cleanup failure are unknown with session poison, no automatic retry/rollback.",
+        "remaining": "Exact typed rebuild pending; Windows read locking and all native acceptance NOT RUN. FC/FB/LAD and broader SD grammar remain excluded."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "V20/V21 primitive Bool/integer global DB single document; ordinary root/user groups only; no software units, instance DBs, protection, SCL/LAD/FBD/OB/TYPE, manual block numbers or unknown pragmas."
     },
     {
       "tool": "ImportBlocksFromDocuments",
-      "status": "pending-version-gate",
-      "operation": null,
+      "status": "source-implemented-batch-document-import-candidate",
+      "operation": "ImportBlocksFromDocuments",
       "nativeAcceptance": "NOT RUN",
-      "note": "V17 wrapper declares a V20+ gate. Per-release member evidence must be reconciled before asserting unsupported; currently unimplemented/hidden in preview.",
+      "note": "Exact V20/V21 ordered 1..16 admitted GlobalDB document sets, shared None-only single-item policy, whole-manifest locks/hashes, complete collision inventory, exact target/project confirmation and fail-stop evidence. See legacy-batch-document-import-candidate.md.",
       "v17Contract": {
         "parameters": [
           {
@@ -4779,22 +5054,29 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "not-supported-exact-release-gate",
+        "15.1": "not-supported-exact-release-gate",
+        "16": "not-supported-exact-release-gate",
+        "17": "not-supported-exact-release-gate",
+        "18": "not-supported-exact-release-gate",
+        "19": "not-supported-exact-release-gate",
+        "20": "source-candidate-native-pending",
+        "21": "source-candidate-native-pending"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Explicit ordered fileNamesWithoutExtension replaces regexName; None-only overwrite=false replaces Override; dryRun plus exact expectedPlanHash, confirm and expectedProjectFile.",
+        "response": "Strict batch evidence: original previews, actual single-item outcomes and post-import inventory chain. Host independently validates hash, identity, chain and stop ordering.",
+        "errors": "Before-native failure makes no native call. After any native entry, uncertainty retains prior evidence, stops remaining items and poisons whole host/worker. No replay or rollback.",
+        "remaining": "Exact typed rebuild, Windows locks and native acceptance NOT RUN. Independent final wiring review incomplete after automated block. Broad document grammar excluded."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": false,
+      "manualReconciliation": "scoped-evidence-recorded-not-closed",
+      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "scope": "Only primitive Bool/integer ordinary GlobalDB document grammar; exact root/user group; no general SD or pinned-wrapper compatibility.",
+      "offlineEvidence": "Implementer aggregate 3655 passed, 0 failed, 4 skips; host build 0 errors, 2 existing warnings. Partial independent review reproduced 42 checks and fixes for both findings; final wiring review blocked by automated classification and incomplete. Windows locks/current exact typed rebuild/native acceptance NOT RUN."
     },
     {
       "tool": "SeedProjectFromReference",
@@ -4887,12 +5169,16 @@
     "CreatePlcUserConstant",
     "ReadPlcSystemConstants",
     "ReadPlcTags",
-    "ReadPlcUserConstants"
+    "ReadPlcUserConstants",
+    "PlanPlcExternalSourceImport"
   ],
   "completeContractMigrations": 7,
-  "sourceOfflineComplete": 7,
-  "partial": 0,
-  "unimplemented": 39,
+  "sourceOfflineComplete": 12,
+  "partial": 43,
+  "unimplemented": 7,
   "implementationOfflineVerified": 23,
-  "manualPending": 16
+  "manualPending": 11,
+  "sourceImplementedCandidates": 32,
+  "sourceImplemented": 55,
+  "implementationSummary": "55 source implementations: 12 scoped source/offline/manual closures (7 ordinary PLC reads and 5 ordinary lifecycle safe contracts), 43 partial implementations (11 earlier manual-partial implementations and 32 cloud partial candidates); 7 unimplemented. Exactly compatible migrations remain7; native NOT RUN; current candidate typed rebuild and Windows/native groups remain pending. ExportAsDocuments adds a V20/V21 LAD/DB single-block staged publication candidate, not full-format support. SearchHardwareCatalog adds a bounded V19\u201321 catalog read candidate; V18 signature known but semantics gated, V14SP1\u201317 API absent. The separate PlanPlcExternalSourceImport is an additional read-only tool and does not implement the original ImportPlcExternalSource. Existing special-object exports, terminal non-owning Disconnect, passive host diagnostics and V21-output LAD builders remain scoped partial candidates. DeletePlcExternalSource adds a separately confirmed exact-root single-source candidate; no generation/save and native deletion NOT RUN. ExportBlocksAsDocuments adds a bounded exact-group V20/V21 LAD/DB document-tree candidate with retained partial staging, not full-wrapper parity. ImportFromDocuments adds one bounded V20/V21 ordinary global DB declaration candidate. AddDeviceWithFallback adds a V19\u201321 two-model exact-catalog single-attempt creation candidate, not automatic fallback compatibility. ImportBlocksFromDocuments adds an ordered batch of admitted GlobalDB document sets with full-manifest locks and fail-stop evidence; independent final wiring review remains incomplete."
 }

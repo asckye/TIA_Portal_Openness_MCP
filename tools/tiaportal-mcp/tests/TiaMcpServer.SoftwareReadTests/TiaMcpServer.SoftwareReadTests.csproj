@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSoftwareRead.cs" Link="PlcSoftwareRead.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSoftwareReadPolicy.cs" Link="PlcSoftwareReadPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/SoftwareReadContract.cs" Link="SoftwareReadContract.cs" />
+  </ItemGroup>
+</Project>

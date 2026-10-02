@@ -6,10 +6,15 @@ namespace TiaMcp.PlcWorker
     internal static class WorkerOperations
     {
         internal static readonly HashSet<string> Names=new HashSet<string>(StringComparer.Ordinal) {
+            "SearchHardwareCatalog",
+            "ReadState","ReadPortalProcessProjects","ReadPortalConnectReadiness",
+            "ReadWatchTableNames","ReadTechnologyObjects",
+            "PlanPlcExternalSourceImport","DeletePlcExternalSource","AddDeviceWithFallback",
+            "ReadSoftwareInfo","ReadSoftwareTree",
             "ReadBlockInfo","ReadTypeInfo","ReadExternalSourceNames",
-            "Attach","ListProjects","BindProject","OpenProject","CreateProject","SaveProject","CloseProject","ReadProjectTree",
+            "Attach","Disconnect","ListProjects","BindProject","OpenProject","CreateProject","SaveProject","CloseProject","ReadProjectTree",
             "ReadBlocks","ReadBlockHierarchy","ReadTypes","ReadTagTableNames","ListTags","ListUserConstants","ListSystemConstants",
-            "ExportBlock","ExportType","ExportTagTable","ImportBlocks","ImportTypes","ImportTagTables","CreateTagTable","CreateTag","CreateUserConstant","CompileSoftware"
+            "ImportFromDocuments","ImportBlocksFromDocuments","ImportBlocksFromDirectory","ImportPlcProgramFromDirectory","ExportAsDocuments","ExportBlocksAsDocuments","ExportPlcWatchTable","ExportTechnologyObject","ExportBlocks","ExportTypes","ExportBlock","ExportType","ExportTagTable","ImportBlocks","ImportTypes","ImportTagTables","CreateTagTable","CreateTag","CreateUserConstant","CompileSoftware"
         };
     }
 }

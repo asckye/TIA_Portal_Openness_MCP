@@ -14,18 +14,35 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     private readonly SemaphoreSlim serial = new(1, 1);
     private Process? process;
     private long sequence;
+    private int? attachedProcessId;
+    private JsonObject? disconnectAcknowledgement;
     private readonly WorkerOutcomeState outcome=new();
     private readonly Queue<string> diagnostics = new();
 
     public async Task<JsonNode?> Call(string operation, JsonObject arguments, CancellationToken token)
     {
-        // No worker process and no Siemens assemblies are touched in discovery mode.
-        if (!nativeEnabled) throw new InvalidOperationException("Native calls are disabled. This source-preview host is not accepted for production; explicit --native-session is required for a separately authorized validation session.");
         await serial.WaitAsync(token);
         bool sent = false;
         try
         {
             outcome.RequireUsable();
+            token.ThrowIfCancellationRequested();
+            if (disconnectAcknowledgement != null)
+            {
+                if (operation=="Disconnect" && arguments.Count==0) return disconnectAcknowledgement.DeepClone();
+                throw new InvalidOperationException("Disconnect ended this session. A subsequent explicit Attach requires a new host session; automatic restart is refused.");
+            }
+            if (operation=="Disconnect")
+            {
+                if(arguments.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
+                if(process==null)
+                {
+                    disconnectAcknowledgement=DisconnectContract.Validate(DisconnectContract.Idle(),false,null,true);
+                    return disconnectAcknowledgement.DeepClone();
+                }
+            }
+            // Idle Disconnect above must not launch a worker, even in native-disabled discovery.
+            if (!nativeEnabled) throw new InvalidOperationException("Native calls are disabled. Explicit --native-session is required for a separately authorized validation session.");
             if (process == null)
             {
                 if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
@@ -47,7 +64,10 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             var response = await process.StandardOutput.ReadLineAsync(timeout.Token);
             if (response == null) throw new IOException("Worker exited; native outcome is unknown.");
             var result=WorkerProtocol.Decode(response,id);
-            WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
+            outcome.AcceptResult(operation,arguments,result);
+            if(operation=="Attach") attachedProcessId=arguments["processId"]!.GetValue<int>();
+            if(operation=="Disconnect")
+                disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             return result;
         }
         catch(Exception ex) { outcome.Failed(sent,ex); throw; }

@@ -16,7 +16,7 @@ namespace TiaMcp.PlcFoundation
         internal void RequireUnbound()
         { if(!ProcessId.HasValue || ProjectFile!=null) throw new InvalidOperationException("An attached process with no bound project/session is required."); }
         internal void Bound(string file,bool owns,bool local)
-        { RequireUnbound(); ProjectFile=Path.GetFullPath(file); OwnsProject=owns; IsLocalSession=local; }
+        { RequireUnbound(); ProjectFile=MutationIdentityPolicy.AbsoluteFile(file); OwnsProject=owns; IsLocalSession=local; }
         internal void RequireBound()
         { if(!ProcessId.HasValue || ProjectFile==null) throw new InvalidOperationException("Bind or open an explicit project/session first."); }
         internal void RequireClose(bool isModified)
@@ -43,7 +43,7 @@ namespace TiaMcp.PlcFoundation
             throw new ArgumentException("Use this release's exact .ap"+major+" or supported .als"+major+" file; archive, upgrade and server-open operations are unavailable.");
         }
         internal static string CreationFile(string release,string directory,string name)
-        { PlcFoundationPolicy.RequireName(name); return Path.GetFullPath(Path.Combine(directory,name,name+".ap"+Major(release))); }
+        { PlcFoundationPolicy.RequireName(name); return MutationIdentityPolicy.Absolute(MutationIdentityPolicy.Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+Major(release)); }
     }
     public sealed class PlcConnectionResult
     {

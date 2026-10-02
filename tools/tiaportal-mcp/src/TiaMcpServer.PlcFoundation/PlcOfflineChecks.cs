@@ -20,19 +20,28 @@ namespace TiaMcp.PlcFoundation
         }
         private void RequireTargetOffline(PlcReadCandidate<PlcSoftware> selected)
         {
-            PlcOfflinePolicy.RequireReviewedExecution("offline-dependent operation");
             PlcOfflinePolicy.RequireDocumentedRelease(ReleaseKey);
-            var states=new List<string?>();
             if(!(selected.DeviceContext is Device device) || !(selected.Context is DeviceItem item))
                 throw new NotSupportedException("Exact device and device-item identity are required for offline checking.");
-            bool redundant=ReadRedundantStates(device,states);
-            var provider=((IEngineeringServiceProvider)item).GetService<OnlineProvider>();
-            if(provider!=null) states.Add(provider.State.ToString());
-            PlcOfflinePolicy.RequireStates(states,redundant || provider!=null,"selected PLC");
+            // Positive standard-provider evidence, never absence of R/H as proof.
+            // R/H exchange remains outside this bounded standard-target contract.
+            bool redundant=false;
+#if PLC_RH
+            redundant=((IEngineeringServiceProvider)device).GetService<RHOnlineProvider>()!=null;
+#endif
+            PlcOfflinePolicy.RequireStandardTarget(
+                device.DeviceItems, item, selected.Value,
+                current=>current.DeviceItems,
+                current=>((IEngineeringServiceProvider)current).GetService<SoftwareContainer>()?.Software as PlcSoftware,
+                current=>
+                {
+                    var provider=((IEngineeringServiceProvider)current).GetService<OnlineProvider>();
+                    return new PlcOfflineObservation(provider!=null,provider?.State.ToString());
+                }, redundant);
         }
         private void RequireProjectOffline()
         {
-            PlcOfflinePolicy.RequireReviewedExecution("offline-dependent operation");
+            PlcOfflinePolicy.RequireReviewedExecution("project-wide compile");
             PlcOfflinePolicy.RequireDocumentedRelease(ReleaseKey);
             var project=Project(); int count=0;
             foreach(var device in project.Devices) { RequireDeviceOffline(device); count++; }

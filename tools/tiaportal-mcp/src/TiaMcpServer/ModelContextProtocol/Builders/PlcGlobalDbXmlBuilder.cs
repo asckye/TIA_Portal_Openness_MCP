@@ -168,17 +168,17 @@ namespace TiaMcpServer.ModelContextProtocol
                         member.ExternalWritable == true ? "true" : "false")));
             }
 
+            if (!string.IsNullOrWhiteSpace(member.StartValue))
+            {
+                element.Add(new XElement(InterfaceNs + "StartValue", member.StartValue));
+            }
+
             if (!string.IsNullOrWhiteSpace(member.CommentZhCn))
             {
                 element.Add(new XElement(InterfaceNs + "Comment",
                     new XElement(InterfaceNs + "MultiLanguageText",
                         new XAttribute("Lang", "zh-CN"),
                         member.CommentZhCn)));
-            }
-
-            if (!string.IsNullOrWhiteSpace(member.StartValue))
-            {
-                element.Add(new XElement(InterfaceNs + "StartValue", member.StartValue));
             }
 
             return element;

@@ -382,13 +382,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks auto-ordered → ImportPlcProgramFromDirectory; a single XML file → ImportBlock.")]
+        [McpServerTool(Name = "ImportBlocksFromDirectory"), Description("[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportBlock.")]
         public static ResponseImportBatch ImportBlocksFromDirectory(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import blocks")] string groupPath,
             [Description("dir: directory that contains block .xml files")] string dir,
             [Description("regexName: optional regex filter applied to filename without extension")] string regexName = "",
-            [Description("overwrite: true=Override, false=Rename")] bool overwrite = true)
+            [Description("overwrite: true=Override, false=None (reject existing objects; no rename)")] bool overwrite = true)
         {
             try
             {
@@ -407,7 +407,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/Block, imports in correct dependency order (UDTs first, then tag tables, then blocks), and optionally compiles. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks.")]
+        [McpServerTool(Name = "ImportPlcProgramFromDirectory"), Description("[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks.")]
         public static ResponsePlcProgramImport ImportPlcProgramFromDirectory(
             [Description("softwarePath: PLC software path, e.g. 'PLC_1'")] string softwarePath,
             [Description("sourceDir: root directory containing exported PLC XML files")] string sourceDir,
@@ -441,7 +441,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     regex = new Regex(regexName, RegexOptions.IgnoreCase | RegexOptions.Compiled);
                 }
 
-                var files = Directory.GetFiles(sourceDir, "*.xml", SearchOption.AllDirectories)
+                var sourceRoot = Path.GetFullPath(sourceDir).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                var files = Directory.GetFiles(sourceRoot, "*.xml", SearchOption.AllDirectories)
                     .Where(f => regex == null || regex.IsMatch(Path.GetFileNameWithoutExtension(f)))
                     .Select(f =>
                     {
@@ -449,10 +450,8 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new { File = f, Kind = kind, SubKind = subKind, ObjectName = objectName };
                     })
                     .Where(x => x.Kind != "unknown")
-                    .GroupBy(x => $"{x.Kind}:{x.ObjectName}", StringComparer.OrdinalIgnoreCase)
-                    .Select(g => g.OrderBy(x => x.File.Count(c => c == Path.DirectorySeparatorChar || c == Path.AltDirectorySeparatorChar))
-                                  .ThenBy(x => x.File.Length)
-                                  .First())
+                    .OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(x => x.File, StringComparer.Ordinal)
                     .ToList();
 
                 var discoveredTypes = files.Where(x => x.Kind == "type").Select(x => x.ObjectName).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
@@ -460,12 +459,23 @@ namespace TiaMcpServer.ModelContextProtocol
                 var discoveredTechnologyObjects = files.Where(x => x.Kind == "technology").Select(x => x.ObjectName).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
                 var discoveredBlocks = files.Where(x => x.Kind == "block").Select(x => x.ObjectName).OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
 
+                // No native import or compile may run if the selected batch is ambiguous.
+                var conflicts = ImportSelectionPolicy.FindConflicts(files, x => x.Kind, x => x.ObjectName, x => x.File.Substring(sourceRoot.Length));
+                foreach (var conflict in conflicts.Take(16))
+                    failed.Add(new ImportFailure { Path = conflict.Paths[0], Error = conflict.Message });
+                if (conflicts.Count > 16)
+                    failed.Add(new ImportFailure { Path = ".", Error = $"Duplicate diagnostics truncated: conflictCount={conflicts.Count}, reportedConflicts=16, truncated=true. Entire selected batch rejected before import or compile." });
+                if (conflicts.Count > 0)
+                {
+                    return BuildPlcProgramImportResponse(sourceDir, dryRun, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
+                }
+
                 if (dryRun)
                 {
                     return BuildPlcProgramImportResponse(sourceDir, true, discoveredTypes, discoveredTagTables, discoveredTechnologyObjects, discoveredBlocks, importedTypes, importedTagTables, importedTechnologyObjects, importedBlocks, failed, compile);
                 }
 
-                foreach (var item in files.Where(x => x.Kind == "type").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
+                foreach (var item in files.Where(x => x.Kind == "type").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.File, StringComparer.Ordinal))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
                     try
@@ -479,7 +489,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                foreach (var item in files.Where(x => x.Kind == "tagtable").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
+                foreach (var item in files.Where(x => x.Kind == "tagtable").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.File, StringComparer.Ordinal))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
                     try
@@ -493,7 +503,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 }
 
-                foreach (var item in files.Where(x => x.Kind == "technology").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase))
+                foreach (var item in files.Where(x => x.Kind == "technology").OrderBy(x => x.File, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.File, StringComparer.Ordinal))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
                     try
@@ -509,7 +519,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 foreach (var item in files.Where(x => x.Kind == "block")
                                           .OrderBy(x => GetBlockImportOrder(x.SubKind))
-                                          .ThenBy(x => x.File, StringComparer.OrdinalIgnoreCase))
+                                          .ThenBy(x => x.File, StringComparer.OrdinalIgnoreCase).ThenBy(x => x.File, StringComparer.Ordinal))
                 {
                     if (stopOnImportFailure && failed.Any()) break;
                     try
@@ -694,7 +704,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ImportedBlocks = importedBlocks,
                 Failed = failed,
                 Compile = compile,
-                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = success }
+                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = success, ["importOrdering"] = ImportSelectionPolicy.OrderingDescription, ["dependencyResolution"] = false }
             };
         }
 

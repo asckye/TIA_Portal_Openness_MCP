@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""Static production wiring guards only; no SDK/native/transactional acceptance."""
+from pathlib import Path
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+SRC = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
+PORTAL = (SRC / 'Siemens/Portal/Portal.Blocks.cs').read_text()
+SINGLE = PORTAL.split('public bool ImportFromDocuments(', 1)[1].split('private static string DocumentImportedNamesSuffix', 1)[0]
+BATCH = PORTAL.split('public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(', 1)[1]
+MCP = (SRC / 'ModelContextProtocol/Tools/McpServer.Documents.cs').read_text().split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
+
+class DocumentImportSafetySources(unittest.TestCase):
+    def test_missing_group_rejected_before_native_call(self):
+        self.assertIn('string.IsNullOrWhiteSpace(groupPath) ? plcSoftware.BlockGroup', BATCH)
+        gate = BATCH.index('?? throw new PortalException(PortalErrorCode.NotFound')
+        self.assertLess(gate, BATCH.index('group.Blocks.ImportFromDocuments'))
+        self.assertNotIn('plcSoftware.BlockGroup.Blocks.ImportFromDocuments', BATCH)
+        self.assertNotIn('catch', BATCH[:gate])
+
+    def test_one_native_call_site_no_retry_and_stop_for_ambiguous_state(self):
+        self.assertEqual(BATCH.count('.Blocks.ImportFromDocuments('), 1)
+        self.assertIn('result == null || result.State != DocumentResultState.Success || result.ImportedPlcBlocks == null', BATCH)
+        self.assertEqual(BATCH.count('LastImportFromDocumentsStopped = true;\n                    break;'), 1)
+        self.assertEqual(BATCH.count('LastImportFromDocumentsStopped = true;\n                        break;'), 1)
+        self.assertNotIn('continue;', BATCH)
+
+    def test_counts_are_document_sets_not_blocks(self):
+        self.assertIn('LastImportFromDocumentsAttempted++;', BATCH)
+        self.assertIn('LastImportFromDocumentsSucceeded++;', BATCH)
+        self.assertLess(BATCH.index('imported.AddRange(blocks)'), BATCH.index('LastImportFromDocumentsSucceeded++;'))
+        self.assertIn('selected - attempted', MCP)
+        self.assertIn('!stopped && !responseReportingFailed && succeeded == selected', MCP)
+        for field in ('selectedFiles', 'attemptedFiles', 'succeededFiles', 'notAttemptedFiles', 'stopped', 'mayHaveChanged'):
+            self.assertIn(f'["{field}"]', MCP)
+
+    def test_partial_results_evidence_and_no_false_rollback(self):
+        self.assertIn('DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result)', BATCH)
+        self.assertIn('DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result)', SINGLE)
+        for text in (SINGLE, BATCH, MCP):
+            self.assertIn('may have changed', text)
+            self.assertNotIn('整份文档未导入', text)
+            self.assertNotIn('一个都没导进去', text)
+            self.assertNotIn('The document set was not imported', text)
+        self.assertIn('Materialize before adding', BATCH)
+
+    def test_deterministic_selection_before_attempt(self):
+        self.assertIn('.OrderBy(f => f.Name, StringComparer.OrdinalIgnoreCase).ThenBy(f => f.Name, StringComparer.Ordinal)', BATCH)
+        self.assertLess(BATCH.index('var selected ='), BATCH.index('LastImportFromDocumentsAttempted++;'))
+
+    def test_post_native_reporting_keeps_evidence(self):
+        self.assertLess(MCP.index('var failures = Portal.LastImportFromDocumentsFailures.ToList()'), MCP.index('Helper.GetAttributeList(block)'))
+        self.assertIn('Block metadata readback failed after import:', MCP)
+        self.assertIn('Progress notification failed after import:', MCP)
+        self.assertIn('["responseReportingFailed"] = responseReportingFailed', MCP)
+        self.assertIn('Post-import result or identity readback failed:', SINGLE)
+        self.assertNotIn('McpHints.Recovery(ex)', MCP.split('[McpServerTool(Name = "DescribeObject")', 1)[0])
+
+    def test_override_feature_preserved_but_not_none(self):
+        self.assertIn('(option & ImportDocumentOptions.Override) != 0 && existing != null', SINGLE)
+        self.assertIn('if (prevNumber.HasValue)', SINGLE)
+        self.assertIn('imported.Number = prevNumber.Value', SINGLE)
+        self.assertIn('imported.AutoNumber = prevAutoNumber', SINGLE)
+
+if __name__ == '__main__':
+    unittest.main()

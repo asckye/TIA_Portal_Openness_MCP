@@ -97,6 +97,59 @@ namespace TiaMcpServer.Siemens
             }
         }
 
+        // Technology imports require an explicit overwrite contract and complete returned identities.
+        // Keep the legacy overload above unchanged for unrelated import families.
+        private static bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, bool overwrite, List<string> importedNames, out string? error)
+        {
+            error = null;
+            var nativeEntered = false;
+            var firstNameIndex = importedNames.Count;
+            try
+            {
+                var file = new FileInfo(importPath);
+                if (!file.Exists)
+                {
+                    error = "File not found";
+                    return false;
+                }
+
+                var method = collection.GetType().GetMethod("Import", new[] { typeof(FileInfo), typeof(ImportOptions) });
+                if (method == null)
+                {
+                    error = "Import(FileInfo, ImportOptions) is unavailable; no import was attempted.";
+                    return false;
+                }
+
+                // Never fall back to an option-less overload, including after native entry.
+                nativeEntered = true;
+                var result = method.Invoke(collection, new object[] { file, overwrite ? ImportOptions.Override : ImportOptions.None });
+                if (result is not IEnumerable items || result is string)
+                    throw new InvalidOperationException("Import returned no enumerable object identities.");
+                foreach (var item in items)
+                {
+                    var name = item?.GetType().GetProperty("Name")?.GetValue(item)?.ToString();
+                    if (string.IsNullOrWhiteSpace(name))
+                        throw new InvalidOperationException("An imported object identity could not be read.");
+                    importedNames.Add(name);
+                }
+                if (importedNames.Count == firstNameIndex)
+                    throw new InvalidOperationException("Import returned no object identities.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                error = cause.GetType().FullName + ": " + cause.Message;
+                if (nativeEntered)
+                {
+                    error += " Import was entered; the project may have changed. No retry was attempted.";
+                    if (importedNames.Count > firstNameIndex)
+                        error += " Returned object identities read before failure: " + string.Join(", ", importedNames.Skip(firstNameIndex)) + ".";
+                }
+                return false;
+            }
+        }
+
         private static string? BestEffortExtractFirstName(object? importReturnValue)
         {
             try
