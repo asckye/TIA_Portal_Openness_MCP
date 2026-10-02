@@ -23,7 +23,7 @@ namespace TiaMcp.PlcFoundation
             // Use the existing bounded read traversal to collect genuine typed objects.
             var objects=new Dictionary<string,PlcWatchTable>(StringComparer.Ordinal);
             var groups=new Dictionary<PlcWatchAndForceTableGroup,string> { [root]="" };
-            PlcSupplementaryReadPolicy.WatchPaths(root,g=>g.WatchTables.Select(t=> {
+            PlcSupplementaryReadPolicy.WatchPaths<PlcWatchAndForceTableGroup>(root,g=>g.WatchTables.Select(t=> {
                 var folder=groups[g]; var path=folder+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(t.Name));
                 objects.Add(path,t); return t.Name;
             }),g=>g.Groups.Select(child=> { groups.Add(child,groups[g]+Uri.EscapeDataString(PlcSupplementaryReadPolicy.Name(child.Name))+"/"); return child; }),g=>g.Name);
