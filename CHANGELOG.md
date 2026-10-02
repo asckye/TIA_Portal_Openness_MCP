@@ -4,8 +4,12 @@
 
 ## [Unreleased]
 
+- Register all 30 MCP prompts explicitly so optional unavailable assemblies do not prevent prompt registration; source and fixture checks passed, with native acceptance pending.
+
+- Stop automatic HMI screen import replay and stop screen directory batches at the first failure; retain the original error and warn that the project may already have changed. Offline fake-import checks only; native acceptance remains pending.
+
 - Add precise release contracts for V14 SP1, V15.1 and V16-V21, with assembly identity checks and capability gates; original V14/V15 remain excluded.
-- Add compile-only PLC foundation modules and an incomplete, native-disabled legacy MCP source preview. Twenty-three of the V17 profile's 62 tools have implementation/offline verification: seven ordinary-PLC read contracts are closed within documented scope, sixteen remain manual-partial, and thirty-nine remain unimplemented. Three existing extra declaration readers also have scoped manual/API/result validation closure. Adapter diagnostics are woven and offline verified; IPC correlation and binding hooks remain incomplete. All legacy production entries remain disabled. See [migration status](docs/development/legacy-plc-host-preview.md). Offline compilation and tests do not establish native support.
+- Add compile-only PLC foundation modules and an incomplete, native-disabled legacy MCP source preview. Of the V17 profile's 62 tools, 55 have source candidates: 12 scoped closures and 43 partial candidates; seven remain pending. Exactly compatible migrations remain seven. The [migration ledger](docs/development/legacy-plc-migration-status.json) is authoritative for per-tool scope and gaps. Windows/native gates remain pending and all legacy production entries remain disabled. Offline compilation and tests do not establish native support.
 
 ## [3.1.0] - 2026-10-01
 

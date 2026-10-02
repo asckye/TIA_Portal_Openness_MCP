@@ -335,29 +335,10 @@ namespace TiaMcpServer.Siemens
                 if (TryImportEngineeringObjectIntoCollection(screens, importPath, out _, out var err))
                     return;
 
-                // 2.7.46: panel versions differ in the attributes their screen items accept (real project: a TP700 Comfort V17.0
-                // refused the builder's <Visible> on Button with "'set_Visible' is not supported by type '...Button'"). The named
-                // attribute is stripped for that item type from a temp copy and the import retried, up to five times; what was
-                // stripped is reported in the error text of a final failure and in LastImportNotes on success.
-                var stripped = new List<string>();
-                var currentPath = importPath;
-                for (int attempt = 0; attempt < 5 && err != null; attempt++)
-                {
-                    var match = Regex.Match(err, @"'set_(\w+)' is not supported by type '([\w.]+)'");
-                    if (!match.Success) break;
-                    var attribute = match.Groups[1].Value; var typeName = match.Groups[2].Value.Split('.').Last();
-                    var document = XDocument.Load(currentPath);
-                    var removed = document.Descendants().Where(e => e.Name.LocalName.EndsWith("." + typeName, StringComparison.Ordinal) || e.Name.LocalName == typeName)
-                        .SelectMany(e => e.Elements("AttributeList").Elements(attribute)).ToList();
-                    if (removed.Count == 0) break;
-                    removed.ForEach(e => e.Remove());
-                    currentPath = Path.Combine(Path.GetTempPath(), "tia_mcp_hmi_screen_" + Guid.NewGuid().ToString("N") + ".xml");
-                    document.Save(currentPath);
-                    stripped.Add(typeName + "." + attribute);
-                    if (TryImportEngineeringObjectIntoCollection(screens, currentPath, out _, out err)) { LastImportNotes = "Imported after stripping unsupported attributes: " + string.Join(", ", stripped); return; }
-                }
-
-                throw new PortalException(PortalErrorCode.ImportFailed, (err ?? "ImportHmiScreen failed") + (stripped.Count > 0 ? " (after stripping " + string.Join(", ", stripped) + ")" : ""));
+                // A failed native call can already have modified the project. Its error text is not
+                // proof of rollback: never strip attributes and replay an import after failure.
+                throw new PortalException(PortalErrorCode.ImportFailed, (err ?? "ImportHmiScreen failed")
+                    + " The project may have changed. No automatic retry was attempted; inspect the project before another import.");
             }
             catch (PortalException)
             {
@@ -369,7 +350,7 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // 2.7.46: notes of the last ImportHmiScreen (e.g. attributes stripped for the panel version), consumed by the tool wrapper.
+        // Notes of the last ImportHmiScreen, retained for compatibility with the tool wrapper.
         public string? LastImportNotes { get; private set; }
 
         // 2.7.48 (crash ⑩): importing a classic screen whose Width / Height differ from the panel's display made TIA Portal V21
@@ -568,7 +549,8 @@ namespace TiaMcpServer.Siemens
                     }
                     catch (Exception ex)
                     {
-                        failed.Add(new ImportFailure { Path = file, Error = ex.ToString() });
+                        failed.Add(new ImportFailure { Path = file, Error = ex.ToString() + " Batch stopped; later matching files were not attempted." });
+                        break;
                     }
                 }
 
