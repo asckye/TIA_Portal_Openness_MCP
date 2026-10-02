@@ -40,6 +40,7 @@ namespace TiaMcpServer.Siemens
         internal static List<(PropertyInfo Property, object? Value)> Prepare(Type type, JsonObject changes)
         {
             if (changes.Count > 50) throw new ArgumentException("At most 50 properties per request.");
+            LibraryDeepLogic.GuardKnownTypeWrites(Engineering.TiaMajorVersion, type, changes.Select(p => p.Key));
             var result = new List<(PropertyInfo, object?)>();
             foreach (var change in changes)
             {
@@ -89,6 +90,8 @@ namespace TiaMcpServer.Siemens
         internal static void Apply(object target, List<(PropertyInfo Property, object? Value)> changes, JsonObject meta)
         {
             var applied = new JsonArray(); meta["appliedProperties"] = applied;
+            // Check the entire batch, including externally prepared lists, before its first write.
+            LibraryDeepLogic.GuardKnownTypeWrites(Engineering.TiaMajorVersion, target.GetType(), changes.Select(p => p.Property.Name));
             foreach (var change in changes)
             {
                 meta["mayHaveChanged"] = true; meta["lastAttemptedProperty"] = change.Property.Name;

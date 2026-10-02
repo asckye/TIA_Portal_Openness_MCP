@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/Czarnak/simaticml-decoder",
+  "commit": "2f100023c2d6f4e7a4df02cbd04975de48f5d207",
+  "license": "MIT",
+  "scope": "Unmodified source; offline analysis only. Upstream test corpus is not redistributed. Not recompilable output or native-format qualification."
+}

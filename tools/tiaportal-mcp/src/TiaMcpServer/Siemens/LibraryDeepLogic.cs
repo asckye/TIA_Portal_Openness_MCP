@@ -29,6 +29,24 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] GlobalLibraryExtraActions = { "infos", "openInfo", "archive" };
         internal static readonly string[] TypeEditableProperties = { "Name", "DoNotUse", "SetForUpdate" };
 
+        // User-reported V21 crash: ScriptModuleType.Name -> SetAttribute -> NonRecoverableException
+        // and TIA process exit (2026-10-01, reported repeat of 2026-09-28). This is an incident
+        // guard, not an assertion that Siemens' general library-type rename API is unsupported.
+        internal static void GuardKnownTypeWrites(int major, Type type, IEnumerable<string> properties)
+        {
+            if (major != 21 || !properties.Contains("Name", StringComparer.Ordinal)) return;
+            for (Type? current = type; current != null; current = current.BaseType)
+                if (current.FullName == "Siemens.Engineering.HmiUnified.Library.ScriptModuleType")
+                    throw new PortalException(PortalErrorCode.NativeCrashRiskBlocked,
+                        "V21 Unified ScriptModuleType.Name write blocked before any property setter: a reported native channel failure terminated TIA during this operation. " +
+                        "No rename or automatic workaround was attempted. Retain the existing type name until the affected TIA build is diagnosed; do not retry via SetAttribute.");
+        }
+
+        internal static void ValidateTypeWriteProtection(bool isWriteProtected)
+        {
+            if (isWriteProtected) throw new NotSupportedException("Library type property writes require a non-write-protected global library. No property setter was called.");
+        }
+
         internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
 
         internal static Guid? ParseGuid(string guid, string parameter)
@@ -96,6 +114,8 @@ namespace TiaMcpServer.Siemens
             {
                 if (properties.Count == 0) throw new ArgumentException("update needs propertiesJson with Name, DoNotUse and/or SetForUpdate.");
                 foreach (var key in properties.Select(p => p.Key)) RequireOneOf(key, TypeEditableProperties, "propertiesJson");
+                if (properties.ContainsKey("SetForUpdate") && string.IsNullOrEmpty(libraryName))
+                    throw new NotSupportedException("SetForUpdate cannot be written on project-library types (even when setting true). No property setter was called.");
             }
             else if (properties.Count != 0) throw new ArgumentException("propertiesJson applies to action=update only.");
             if (action == "updateLibrary" && string.Equals(libraryName ?? "", targetLibraryName ?? "", StringComparison.Ordinal)) throw new ArgumentException("updateLibrary needs a target library different from the source.");

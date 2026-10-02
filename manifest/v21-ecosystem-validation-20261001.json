@@ -1,0 +1,352 @@
+{
+  "schemaVersion": 1,
+  "createdAtUtc": "2026-10-01T21:49:30.639014+00:00",
+  "status": "passed_local_only",
+  "candidate": "3.1.0",
+  "toolCount": 486,
+  "liteToolCount": 62,
+  "newTools": [
+    "ReadV21EcosystemCatalog",
+    "ValidatePlcXmlSchemas",
+    "DecodePlcSimaticMl",
+    "ManageUnifiedCwcPackage"
+  ],
+  "survey": {
+    "date": "2026-10-01",
+    "catalogEntries": 86,
+    "bySource": {
+      "thirdParty": 51,
+      "official": 35
+    },
+    "searchHits": 144,
+    "scope": "Public GitHub search plus Siemens official V21 manuals/products. Dated best-effort survey, not every tool in existence or a certified compatibility list. Search-only hits are not supported tools. No VM or native writes performed.",
+    "allCandidatesIntegrated": false
+  },
+  "sources": {
+    "decoder": {
+      "repository": "https://github.com/Czarnak/simaticml-decoder",
+      "commit": "2f100023c2d6f4e7a4df02cbd04975de48f5d207",
+      "license": "MIT",
+      "scope": "Unmodified source; offline analysis only. Upstream test corpus is not redistributed. Not recompilable output or native-format qualification."
+    },
+    "guidance": {
+      "repository": "https://github.com/siemens/tia-portal-ai-extensions",
+      "commit": "b5c7041648dc10f9225ef082306ade6c335b8771",
+      "license": "MIT",
+      "upstreamSkillsPath": "openness_development/skills",
+      "scope": "Reference material only; relocated skills to stable local skills path, not automatically installed or executed"
+    }
+  },
+  "validation": {
+    "offlineChecks": 2703,
+    "ecosystemProtocolByRuntime": {
+      "V20": {
+        "status": "passed",
+        "checks": 75,
+        "major": 20,
+        "nativeTiaExecuted": false,
+        "selfTestOnly": false,
+        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd",
+        "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
+        "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
+      },
+      "V21": {
+        "status": "passed",
+        "checks": 75,
+        "major": 21,
+        "nativeTiaExecuted": false,
+        "selfTestOnly": false,
+        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227",
+        "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
+        "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
+      }
+    },
+    "pressureRuns": [
+      {
+        "version": "V20",
+        "mode": "localStability",
+        "calls": 4484,
+        "status": "passed",
+        "unexpectedExits": 0,
+        "unexpectedFailures": 0,
+        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd"
+      },
+      {
+        "version": "V20",
+        "mode": "isolatedLocalStability",
+        "calls": 4484,
+        "status": "passed",
+        "unexpectedExits": 0,
+        "unexpectedFailures": 0,
+        "runtimeSha256": "15ae508c0ddb6f10da484e8b0a25e70066a1dce1f98cb44056d249b6a6d024fd"
+      },
+      {
+        "version": "V21",
+        "mode": "localStability",
+        "calls": 4484,
+        "status": "passed",
+        "unexpectedExits": 0,
+        "unexpectedFailures": 0,
+        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227"
+      },
+      {
+        "version": "V21",
+        "mode": "isolatedLocalStability",
+        "calls": 4484,
+        "status": "passed",
+        "unexpectedExits": 0,
+        "unexpectedFailures": 0,
+        "runtimeSha256": "fc002e699ca1b698a43decb9c454e709dce9cd4d6d10d75a0c52252c2503b227"
+      }
+    ],
+    "totalLocalToolCalls": 17936,
+    "decoderSelectedUpstreamTests": {
+      "passed": 107,
+      "skipped": 2,
+      "failed": 0,
+      "files": [
+        "test_parse.py",
+        "test_fold.py",
+        "test_emit.py",
+        "test_operand.py",
+        "test_input_policy.py"
+      ],
+      "skipReason": "Windows account cannot create symbolic links",
+      "logSha256": "cbe8545efa541c01b889f2766e184c2d21a3477cb030079aa2df9c77493a66ba",
+      "scope": "Selected upstream tests; no TIA and no general native-format qualification."
+    },
+    "catalogToolMappingsValid": true,
+    "sourceHashesMatchReleaseRecord": true,
+    "vendoredPythonMatchesPinnedArchive": true
+  },
+  "buildRecord": {
+    "path": "manifest/release-build.json",
+    "sha256": "828a5e64f035ca21dd32bb2f97530a15c46e4acc6fd1877d23ba9d0f3dff10af"
+  },
+  "inputFiles": [
+    {
+      "path": "reference/v21-ecosystem.json",
+      "sha256": "e2cf4a5e12704acd24eaf80fbc0505d3d9eb07b073f3a172bfe4e1c0de059220"
+    },
+    {
+      "path": "reference/siemens-openness/UPSTREAM.json",
+      "sha256": "4d4c5748485bab7d28086346daf2192371c4be3f2928b9ea4ff33fc67d32880c"
+    },
+    {
+      "path": "scripts/ecosystem/simaticml_decode_bridge.py",
+      "sha256": "b17c0a1cd03fc038627374343d3a43140e2e4520e7844759658aa1781c348305"
+    },
+    {
+      "path": "scripts/checks/Test-V21Ecosystem.py",
+      "sha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a"
+    },
+    {
+      "path": "scripts/build/Build-Release.ps1",
+      "sha256": "53baa3842b49018bbb0b23661d7870d2b488fdb72a574f014aa6e383876d698e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/CONTRIBUTING.md",
+      "sha256": "48c1fad55eaac242afa13e362319f39848b97d7a571f1360e6b751bb29780779"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/LICENSE",
+      "sha256": "128ae560e1c66d045bc43b005ce3e2ee3c94307cccb0530d440cd60b6502e370"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/README.md",
+      "sha256": "6124ef7cb092d6f37ae5adca68f02fdc2919b1bb289b86f9cc9af77ea00cd69d"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/ROADMAP.md",
+      "sha256": "f5628c366440aee9ffd1506266b384ec25ab7f579eadeb207ea2757d0c4bdb22"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/SECURITY.md",
+      "sha256": "efc68d2e31efe9cd8c1fc51f9a944361e7db9904750d55dae0cd79ac0b3eb888"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/UPSTREAM.json",
+      "sha256": "4f8cd3ecd4985f938f13b29b765013bc4054a8eacd6ccdf9ced6899b344967bb"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/ADVANCED_TRANSLATION_ACCEPTANCE_CRITERIA.md",
+      "sha256": "aaee6900ff533d91cef38df4136694ca51c4a4dcb577872c68332ac2dc31be30"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/ADVANCED_TRANSLATION_ROADMAP.md",
+      "sha256": "79266442c73bfaf1db265f7211784dd1d408e8f196bf7dde6558d1984971c6da"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/ARCHITECTURE.md",
+      "sha256": "128845d57d378e24c395fa777bf79c83ec53478039f6810875c3c991635db343"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/CAPABILITIES.md",
+      "sha256": "6280519f1f89ed4dc200e3c98e6f94c93a94dc71c64601cd572073863d1c3c81"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/IMPLEMENTATION_PLAN.md",
+      "sha256": "360f894353994f8cedaf9f50ede1732a4ec0379ee4c3c5ad7f63043a4e648b7e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/PROJECT_CAPABILITY_ASSESSMENT.md",
+      "sha256": "77908eb5ccb27c26d33c8ecaf8494daaa309d7e19029fb64331708766eadee18"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/PROJECT_INPUT_CONTRACT.md",
+      "sha256": "6d157231074ff55fc1f7d3b1435f69dd2c695dabd485907d27cf4fdefd931e34"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/README.md",
+      "sha256": "48b70fd15f7e4fb6b54ad3ec75879ffbfd867663c4c12d836a810d82d7d40294"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/SIMATICML_READING_GUIDE.md",
+      "sha256": "53b39cd83ba43c19b39ab93ff84bd9fba4cd622ebaa258f66a85b2b8ea3b5f46"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/roadmap/advanced-translation-acceptance.md",
+      "sha256": "a1f3c2378fa3d7d8b3a823480dc451466a2ad9ba13743196999ac1c6bfb97813"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/roadmap/advanced-translation.md",
+      "sha256": "5ed6ddc0097b7133cf260939b95816e547e8ad245bb9d09103110a48d71514a4"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/README.md",
+      "sha256": "385030f5b21cad28c6d988676d3bbd860defb322d1e56a3bc01c45dceea15f2e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/artifact-traversal-contract.md",
+      "sha256": "40216105760f7059fcef7f3163b3119b587b08a23d3dc2d2b15ab47cce4489ef"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/input-boundary-module-card.md",
+      "sha256": "1601b79d03e2edb9ea913fa0058162a5947c349e7f33fc1fb404bb6ceb2736f7"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/lessons/closures-over-open-handles-need-explicit-close.md",
+      "sha256": "1762083d53675e8173aa8d0b60d25acdb26fdbbb9c1ed4932029d7bbdb966d5e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/lessons/platform-gated-module-imported-unconditionally-in-tests.md",
+      "sha256": "f4f46f81d4b19b0c81fd0567bfa24f1f916986771f404fb2fedc365ae7b827aa"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/native-handle-traversal-decision.md",
+      "sha256": "bfbf54c8701e65b72e3284ddd40fa7e8e5b97360ee1ae91cda0868944253cc13"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/memory/reports/2026-07-13-native-windows-handle-traversal.md",
+      "sha256": "6198153b16593834b751008266a7d2e2cdcdd4750da6063b9babf27d64302724"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-fbd-and-advanced-flgnet-qualification.md",
+      "sha256": "3069886486250e26f7ea43ddb8a2ed3722ca2a7f67248a545f195ab56d66408e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-native-windows-handle-traversal.md",
+      "sha256": "3a641f0063241fc0ef5451652dbbb499cd5bf0f2da1311f584b0a919646b5b3a"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-project-scale-simaticml-ingestion.md",
+      "sha256": "bfe4ed61565381fd6d82aa80b8c8028cc19fda79f81626dacd75ed2cf242b9a6"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/plans/2026-07-13-v21-simatic-sd-adapter.md",
+      "sha256": "62761cb83220d39d0f4be859d73afe7b1db9a5ad9b43f6599ac6dbb021a116a5"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/docs/superpowers/specs/2026-08-08-documentation-reorganization-design.md",
+      "sha256": "990ae06dde4030eb7018a1f157d3c05f255782b805432a64f98146c198695481"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/pyproject.toml",
+      "sha256": "80499ff99d59941f3f76ec92226ed9f1ed872ad8aa7459e6376cda92706f3c8c"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/__init__.py",
+      "sha256": "5350bbcc25531fc449dba74ea0adc1024380eda01cdc2866c77fab09dcd007aa"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/cli.py",
+      "sha256": "2733216d925f6d8482c0f2b23f9897a36ea90fb98982cedf7ec2abcbd1293506"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/emit.py",
+      "sha256": "b927cd50570bed2be9296389d90405ce384158f5c0ec43688c5e2031f4108bda"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/fold.py",
+      "sha256": "da0b7d92f20c4f7f622bf3ebc36d1f1d3bc898da210279f40b096230c6febe6a"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/input_policy.py",
+      "sha256": "bba574ebbb3e578278eaab6dead921520a1841727f4e4190d2f9c592d7fe69ed"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/instructions.py",
+      "sha256": "d16002834b9a85f2666dfab84b66d40312c3bd00e5e2175686239ac2cd4189cd"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/ir.py",
+      "sha256": "be73fa31fae63a49a9ce353d3baf03fd17f88fcda6a9033586e03b9baeb5455a"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/model.py",
+      "sha256": "36e0dee7b3bfd54660c9a2cd192fbf2936b339dce2a5c16fb9002a93ba09d145"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/operand.py",
+      "sha256": "f84443f0f1c536111da99891bb3418ab4d4282d6d0b31b33d2cc2ebbb106e48b"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/parse.py",
+      "sha256": "9946dbb7eedc3146216b168c713785aa320e4282512b6f0a08fd0a59fc5c07a3"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project.py",
+      "sha256": "97ecd1e1f9fbd511865920d95996cb8d77f7660c92016e1d7bdaa071c66b7f17"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project_discovery.py",
+      "sha256": "1e65f9d74a5d902ac9e478daf7fc059e907c1a3a3b62dcdf73a6b1406ab8509e"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project_emit.py",
+      "sha256": "c6a6b2a9617c3002d2b8e0d937b77a9f2ad4e7286834206fa1081b4d8e351dad"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project_index.py",
+      "sha256": "1f70d17281659fb02bfa7ff9a5a679aa942cc5a5bcbfbe3fee9e4afab54ef513"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project_model.py",
+      "sha256": "a1faa435a6464b81dd6e5b2da3a049aba3944b571bfe203cdd9f26b97637e01a"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/project_xml.py",
+      "sha256": "7dac97029e1549dc8273f88970553682915cc330738225d35c6ac80cdb3e9e46"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/scl_reconstruct.py",
+      "sha256": "218e731e5436a1d514d1ded6b205e31331b3a1ee442b74c91ddf9ced4a89ea0d"
+    },
+    {
+      "path": "tools/third-party/simaticml-decoder/src/simaticml_decoder/windows_handles.py",
+      "sha256": "c10f01bbb6e65bdede7f424cfc3069b4d9ee15c4a001b057d460d53f5cc23deb"
+    }
+  ],
+  "nativeTiaExecuted": false,
+  "vmConnected": false,
+  "deployed": false,
+  "published": false,
+  "limits": [
+    "No exhaustive public ecosystem guarantee; unknown/unsupported entries retained as such.",
+    "Decoder output is analysis-only, not recompilable/reimportable.",
+    "XSD validation covers recognized fragments, not the full export or native import.",
+    "CWC helper checks basic package conventions, not full manifest/JavaScript/runtime behavior.",
+    "Official MAC and Project Check are not embedded; installed prerequisites and native acceptance remain.",
+    "Unified script-library rename crash and faceplate internals remain unresolved."
+  ]
+}

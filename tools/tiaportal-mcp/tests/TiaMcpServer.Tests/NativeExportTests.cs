@@ -171,6 +171,6 @@ namespace Siemens.Engineering.HmiUnified
 // process is loaded by these regression tests.
 namespace Siemens.Engineering.HmiUnified.Library
 {
-    internal sealed class ScriptModuleType : TiaMcpServer.Tests.NativeExportTests.LibraryType
+    internal partial class ScriptModuleType : TiaMcpServer.Tests.NativeExportTests.LibraryType
     { public ScriptModuleType() { Formats = new[] { "ScriptNative" }; } }
 }

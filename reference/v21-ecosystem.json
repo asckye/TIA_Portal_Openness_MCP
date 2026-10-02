@@ -1,0 +1,2483 @@
+{
+  "schemaVersion": 1,
+  "surveyDate": "2026-10-01",
+  "scope": "Public GitHub search plus Siemens official V21 manuals/products. Dated best-effort survey, not every tool in existence or a certified compatibility list. Search-only hits are not supported tools. No VM or native writes performed.",
+  "search": {
+    "query": "\"TIA Portal\" \"V21\" in:readme",
+    "totalReported": 144,
+    "pagesRead": 2,
+    "hits": [
+      {
+        "repository": "bulaofen0036-coder/TIA_Portal_Openness_MCP",
+        "url": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "heilingbrunner/tiaportal-mcp",
+        "url": "https://github.com/heilingbrunner/tiaportal-mcp",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Czarnak/totally-integrated-claude",
+        "url": "https://github.com/Czarnak/totally-integrated-claude",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Czarnak/tia-portal-mcp",
+        "url": "https://github.com/Czarnak/tia-portal-mcp",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "huahaizo/tia-portal-openness-ai",
+        "url": "https://github.com/huahaizo/tia-portal-openness-ai",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Czarnak/tia-git-addin",
+        "url": "https://github.com/Czarnak/tia-git-addin",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "cmariusz/TiaImportExport.VSExt",
+        "url": "https://github.com/cmariusz/TiaImportExport.VSExt",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "feelautom/tia-copilot-genai-bridge",
+        "url": "https://github.com/feelautom/tia-copilot-genai-bridge",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "StaniB88/TIAOpennessManager",
+        "url": "https://github.com/StaniB88/TIAOpennessManager",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+        "url": "https://github.com/tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "OPCFoundation/UA-EdgeTranslator",
+        "url": "https://github.com/OPCFoundation/UA-EdgeTranslator",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "industrial-edge/wincc-unified-on-IE",
+        "url": "https://github.com/industrial-edge/wincc-unified-on-IE",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "siemens/modular-application-creator-use-cases",
+        "url": "https://github.com/siemens/modular-application-creator-use-cases",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "rickgaiser/TiaMcp",
+        "url": "https://github.com/rickgaiser/TiaMcp",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "feelautom/tia-connect-vscode",
+        "url": "https://github.com/feelautom/tia-connect-vscode",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "industrix-com-br/tia-portal-code-agent",
+        "url": "https://github.com/industrix-com-br/tia-portal-code-agent",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "StaniB88/AnyAutomationStudio",
+        "url": "https://github.com/StaniB88/AnyAutomationStudio",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Vyenkor/TIA-Portal-SiemensLibrary",
+        "url": "https://github.com/Vyenkor/TIA-Portal-SiemensLibrary",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "renanlido/tia-openness",
+        "url": "https://github.com/renanlido/tia-openness",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Sawascwoolf/BlockParam",
+        "url": "https://github.com/Sawascwoolf/BlockParam",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "renanlido/tia-harness",
+        "url": "https://github.com/renanlido/tia-harness",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Czarnak/plc-block-scanner",
+        "url": "https://github.com/Czarnak/plc-block-scanner",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "felipebojorquem/sorting-cell-s7-1200",
+        "url": "https://github.com/felipebojorquem/sorting-cell-s7-1200",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Czarnak/simaticml-decoder",
+        "url": "https://github.com/Czarnak/simaticml-decoder",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "core-engineering/siemens-plc-tools",
+        "url": "https://github.com/core-engineering/siemens-plc-tools",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Fanqi-dev/tia-v20-unified-mcp",
+        "url": "https://github.com/Fanqi-dev/tia-v20-unified-mcp",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Strangehumaan/TIA-Portal-Openness-MCP",
+        "url": "https://github.com/Strangehumaan/TIA-Portal-Openness-MCP",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "MrFadiAi/TIA-Toolkit",
+        "url": "https://github.com/MrFadiAi/TIA-Toolkit",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "agentthink/tia-portal-mcp",
+        "url": "https://github.com/agentthink/tia-portal-mcp",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Czarnak/tia-todo",
+        "url": "https://github.com/Czarnak/tia-todo",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "agimx-ai/seedagent-tia-programming",
+        "url": "https://github.com/agimx-ai/seedagent-tia-programming",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "1748477582/tia-portal-openness-mcp",
+        "url": "https://github.com/1748477582/tia-portal-openness-mcp",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "JohannPx/TIA-Openness-Tool",
+        "url": "https://github.com/JohannPx/TIA-Openness-Tool",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "OHOClauger/TiaMcpServerV21",
+        "url": "https://github.com/OHOClauger/TiaMcpServerV21",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "PLC-Framework/TIA-Portal-Add-Ins",
+        "url": "https://github.com/PLC-Framework/TIA-Portal-Add-Ins",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Codyte/Tia-Portal-CLI",
+        "url": "https://github.com/Codyte/Tia-Portal-CLI",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "PLCMind/PLCMind",
+        "url": "https://github.com/PLCMind/PLCMind",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Gokulvjm/plc",
+        "url": "https://github.com/Gokulvjm/plc",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "857k96rgc2-ux/TIA_LiveReload",
+        "url": "https://github.com/857k96rgc2-ux/TIA_LiveReload",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "nikstefanopoulos12-byte/tia-portal-project-library-parser",
+        "url": "https://github.com/nikstefanopoulos12-byte/tia-portal-project-library-parser",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "WZAutomation/TIA_Portal_XRef_Exporter",
+        "url": "https://github.com/WZAutomation/TIA_Portal_XRef_Exporter",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "yihefeikong-rgb/ai-plc-integration-public",
+        "url": "https://github.com/yihefeikong-rgb/ai-plc-integration-public",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "zibitpnz/OpennessLLM",
+        "url": "https://github.com/zibitpnz/OpennessLLM",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "core-engineering/pnio-rs",
+        "url": "https://github.com/core-engineering/pnio-rs",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "mahdi-sheikhy/Siemens-S71200-ModbusRTU-MultiNode-Library",
+        "url": "https://github.com/mahdi-sheikhy/Siemens-S71200-ModbusRTU-MultiNode-Library",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "coobi7/TIA-Unified-Exporter",
+        "url": "https://github.com/coobi7/TIA-Unified-Exporter",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Dego-Dantas/tia-integration-ai",
+        "url": "https://github.com/Dego-Dantas/tia-integration-ai",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Lio-Jung/SPS-learning",
+        "url": "https://github.com/Lio-Jung/SPS-learning",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "HaiDangNguyen210/MiniSCADA-OPCUA",
+        "url": "https://github.com/HaiDangNguyen210/MiniSCADA-OPCUA",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "liferusher/claude-liferusher-tia",
+        "url": "https://github.com/liferusher/claude-liferusher-tia",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels",
+        "url": "https://github.com/SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "patriknike-dot/tia-portal-fbd-training-examples",
+        "url": "https://github.com/patriknike-dot/tia-portal-fbd-training-examples",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "allanmarum/tia-agent-console",
+        "url": "https://github.com/allanmarum/tia-agent-console",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "EidoAut/EidoTiaWorkbench",
+        "url": "https://github.com/EidoAut/EidoTiaWorkbench",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "al-gri/TIA-Automation-Factory",
+        "url": "https://github.com/al-gri/TIA-Automation-Factory",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "jchauxdev/todo_sobre_SIEMENS_Automation",
+        "url": "https://github.com/jchauxdev/todo_sobre_SIEMENS_Automation",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "lbl1988/tia-autocode",
+        "url": "https://github.com/lbl1988/tia-autocode",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "almq666/siemens-elevator-group-control",
+        "url": "https://github.com/almq666/siemens-elevator-group-control",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "luoyoung0922/codex-openness",
+        "url": "https://github.com/luoyoung0922/codex-openness",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "ecrrain/PLC-Forge",
+        "url": "https://github.com/ecrrain/PLC-Forge",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "UrMomTheBald/TiaOpenessExemple",
+        "url": "https://github.com/UrMomTheBald/TiaOpenessExemple",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "haoyuesheng88/tia-v21",
+        "url": "https://github.com/haoyuesheng88/tia-v21",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "D4-ST/CEM-2-SVA",
+        "url": "https://github.com/D4-ST/CEM-2-SVA",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "BooleanTron/IotWithPLC",
+        "url": "https://github.com/BooleanTron/IotWithPLC",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "javitc20010326/tia-portal-agentic-toolkit",
+        "url": "https://github.com/javitc20010326/tia-portal-agentic-toolkit",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "cyheng/tia-portal-mcp",
+        "url": "https://github.com/cyheng/tia-portal-mcp",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "m1rk0z/MCP-Server-TIA-Portal-V21",
+        "url": "https://github.com/m1rk0z/MCP-Server-TIA-Portal-V21",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Thomas-Schlangen/tia-linter",
+        "url": "https://github.com/Thomas-Schlangen/tia-linter",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "AlexisMMMM/Semaforo-Vehicular-PLC",
+        "url": "https://github.com/AlexisMMMM/Semaforo-Vehicular-PLC",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "robertmojzis/Librarery",
+        "url": "https://github.com/robertmojzis/Librarery",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "zy13027/tia-rag",
+        "url": "https://github.com/zy13027/tia-rag",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "eliasrhoden/TiaTools",
+        "url": "https://github.com/eliasrhoden/TiaTools",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "ypf2001/xiaweiji",
+        "url": "https://github.com/ypf2001/xiaweiji",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "spatenimgarten/mcp-server",
+        "url": "https://github.com/spatenimgarten/mcp-server",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Polebouncee/Polebouncee",
+        "url": "https://github.com/Polebouncee/Polebouncee",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "nianfuyinian/TIA-Portal-Axis-Simulation-HMI",
+        "url": "https://github.com/nianfuyinian/TIA-Portal-Axis-Simulation-HMI",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "round1topo/portal16-mcp",
+        "url": "https://github.com/round1topo/portal16-mcp",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "asckye/tia-openness-studio",
+        "url": "https://github.com/asckye/tia-openness-studio",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "AlexisMMMM/Conveyor-Belt-with-Product-Sorter",
+        "url": "https://github.com/AlexisMMMM/Conveyor-Belt-with-Product-Sorter",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "meetabdullah18/plc-conveyer-sorting-station",
+        "url": "https://github.com/meetabdullah18/plc-conveyer-sorting-station",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "chin9933/TIA_Portal_Openness_MCP",
+        "url": "https://github.com/chin9933/TIA_Portal_Openness_MCP",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "GabrielSRR/tia-mcp-v20-patch",
+        "url": "https://github.com/GabrielSRR/tia-mcp-v20-patch",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Minex101/PLC-box-sorting",
+        "url": "https://github.com/Minex101/PLC-box-sorting",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "shobert-rhs/TiaHelpFast",
+        "url": "https://github.com/shobert-rhs/TiaHelpFast",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Thomas-Schlangen/tia-tag-exporter",
+        "url": "https://github.com/Thomas-Schlangen/tia-tag-exporter",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "asckye/TIA_Portal_Openness_MCP",
+        "url": "https://github.com/asckye/TIA_Portal_Openness_MCP",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "sa1ntsinner/rung",
+        "url": "https://github.com/sa1ntsinner/rung",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "ratziel-l/projet-tia-portal",
+        "url": "https://github.com/ratziel-l/projet-tia-portal",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Polebouncee/TIA-portal",
+        "url": "https://github.com/Polebouncee/TIA-portal",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "HANG000001/HANG",
+        "url": "https://github.com/HANG000001/HANG",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "industrial-edge/notifier-api",
+        "url": "https://github.com/industrial-edge/notifier-api",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "kgpgit/genius-automation-community",
+        "url": "https://github.com/kgpgit/genius-automation-community",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "AlexisMMMM/Tank_Level_Control",
+        "url": "https://github.com/AlexisMMMM/Tank_Level_Control",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "AlexisMMMM/Star-Delta-Motor-Starter-PLC.",
+        "url": "https://github.com/AlexisMMMM/Star-Delta-Motor-Starter-PLC.",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "M-Galymzhan/wincc-log-architect",
+        "url": "https://github.com/M-Galymzhan/wincc-log-architect",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "almq666/almq666",
+        "url": "https://github.com/almq666/almq666",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Fulcrum-hss/Logicwright",
+        "url": "https://github.com/Fulcrum-hss/Logicwright",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "lucacalcabrini/TiaAddIns-dist",
+        "url": "https://github.com/lucacalcabrini/TiaAddIns-dist",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "deopmdecastro/compactador",
+        "url": "https://github.com/deopmdecastro/compactador",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Pi0033/-111",
+        "url": "https://github.com/Pi0033/-111",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "haoyuesheng1688/codex-3men",
+        "url": "https://github.com/haoyuesheng1688/codex-3men",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "vaveinn/TIA-HMI-MCP",
+        "url": "https://github.com/vaveinn/TIA-HMI-MCP",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "1348229771/Sorting-of-large-and-small-packages",
+        "url": "https://github.com/1348229771/Sorting-of-large-and-small-packages",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "iagorobo24-hub/T-IA-Portal-RocaRoibas",
+        "url": "https://github.com/iagorobo24-hub/T-IA-Portal-RocaRoibas",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "3412200869-max/PLC-Sorting-System",
+        "url": "https://github.com/3412200869-max/PLC-Sorting-System",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Bigcheese18/ai-botu",
+        "url": "https://github.com/Bigcheese18/ai-botu",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "x2124824695-stack/tia-agent-bridge",
+        "url": "https://github.com/x2124824695-stack/tia-agent-bridge",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "jianglongbojie/TiaArchiveGui",
+        "url": "https://github.com/jianglongbojie/TiaArchiveGui",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Abolfazlmirzaie2006/OPCUA-Water-Pressure-Simulator",
+        "url": "https://github.com/Abolfazlmirzaie2006/OPCUA-Water-Pressure-Simulator",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "xmb505/Event_Report_PLC",
+        "url": "https://github.com/xmb505/Event_Report_PLC",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "BlazejKojder/TIA-Portal-Final-Project",
+        "url": "https://github.com/BlazejKojder/TIA-Portal-Final-Project",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "yaaseenk10-hash/Siemens-Automated-Conveyor-Sorting",
+        "url": "https://github.com/yaaseenk10-hash/Siemens-Automated-Conveyor-Sorting",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "haoyuesheng1688/tia-v21",
+        "url": "https://github.com/haoyuesheng1688/tia-v21",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "biaobiao2233/tia-guard",
+        "url": "https://github.com/biaobiao2233/tia-guard",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Evil52/tia-scl-studio",
+        "url": "https://github.com/Evil52/tia-scl-studio",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Thomas-Schlangen/cwc-piechart",
+        "url": "https://github.com/Thomas-Schlangen/cwc-piechart",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "AibZamira/ReWater_Project-",
+        "url": "https://github.com/AibZamira/ReWater_Project-",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "yudiwansui/scl-chinese-commenter",
+        "url": "https://github.com/yudiwansui/scl-chinese-commenter",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "nusaqib/tia-autocode",
+        "url": "https://github.com/nusaqib/tia-autocode",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "TomPodlena/plc-studio",
+        "url": "https://github.com/TomPodlena/plc-studio",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "karimnono873-blip/TP-API-Preparation-By-Dahane-Ahmed-Lamine-Tabbi-Meriem-Anneni",
+        "url": "https://github.com/karimnono873-blip/TP-API-Preparation-By-Dahane-Ahmed-Lamine-Tabbi-Meriem-Anneni",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "nusaqib/SR-PPS",
+        "url": "https://github.com/nusaqib/SR-PPS",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "kcylp/laoyin-plc-ai",
+        "url": "https://github.com/kcylp/laoyin-plc-ai",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "arkbsz/siemens-tia-skill-suite",
+        "url": "https://github.com/arkbsz/siemens-tia-skill-suite",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "WouterDepo/WinCC-Unified_Extended-Controls",
+        "url": "https://github.com/WouterDepo/WinCC-Unified_Extended-Controls",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "faceniffN/tia-portal-mcp-v18",
+        "url": "https://github.com/faceniffN/tia-portal-mcp-v18",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Thomas-Schlangen/cwc-sankey",
+        "url": "https://github.com/Thomas-Schlangen/cwc-sankey",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "Kevin8bit/CIMC-PLC-Data-Collector",
+        "url": "https://github.com/Kevin8bit/CIMC-PLC-Data-Collector",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Thomas-Schlangen/pulldown-cwc",
+        "url": "https://github.com/Thomas-Schlangen/pulldown-cwc",
+        "screening": "catalogued"
+      },
+      {
+        "repository": "pathakashu/tia-portal-mcp-server",
+        "url": "https://github.com/pathakashu/tia-portal-mcp-server",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "JinbinWang416/STConversionTool8",
+        "url": "https://github.com/JinbinWang416/STConversionTool8",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "marekm256/Auto-PLCs-Devices-Collector",
+        "url": "https://github.com/marekm256/Auto-PLCs-Devices-Collector",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "1039319331wh-design/TIA_MCP",
+        "url": "https://github.com/1039319331wh-design/TIA_MCP",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Mehmet-Haydar/automation-factory",
+        "url": "https://github.com/Mehmet-Haydar/automation-factory",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Selsmeos/wyu-2026-electromech-practice-op8",
+        "url": "https://github.com/Selsmeos/wyu-2026-electromech-practice-op8",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "PP8910/Design-and-fabrication-of-a-non-stop-product-cutting-system-Flying-Punch-",
+        "url": "https://github.com/PP8910/Design-and-fabrication-of-a-non-stop-product-cutting-system-Flying-Punch-",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "nusaqib/LADDER",
+        "url": "https://github.com/nusaqib/LADDER",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "L261173157/Ai-PLC-coding",
+        "url": "https://github.com/L261173157/Ai-PLC-coding",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "ylicloud/checkPLC",
+        "url": "https://github.com/ylicloud/checkPLC",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "agentthink/eigen",
+        "url": "https://github.com/agentthink/eigen",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Zehebi29/engineering-skill-hub",
+        "url": "https://github.com/Zehebi29/engineering-skill-hub",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "chopinfeng/awesome-hardware-skills",
+        "url": "https://github.com/chopinfeng/awesome-hardware-skills",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "Rodert/awesome-mcp",
+        "url": "https://github.com/Rodert/awesome-mcp",
+        "screening": "search_hit_only_not_qualified"
+      },
+      {
+        "repository": "elaaisolution/SoftwareDownloads",
+        "url": "https://github.com/elaaisolution/SoftwareDownloads",
+        "screening": "search_hit_only_not_qualified"
+      }
+    ]
+  },
+  "evidenceLegend": {
+    "documented_v21": "Official documentation explicitly targets V21",
+    "upstream_targets_v21": "Upstream README targets/mentions V21; local native acceptance not performed",
+    "adaptation_required": "Older Openness/Add-In build needs V21 modular API adaptation",
+    "version_independent": "Complementary external tool; not a V21 Openness binary",
+    "not_confirmed": "V21 support not established",
+    "unsupported_v21": "Upstream documented support excludes V21"
+  },
+  "entries": [
+    {
+      "id": "1748477582/tia-portal-openness-mcp",
+      "name": "1748477582/tia-portal-openness-mcp",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/1748477582/tia-portal-openness-mcp",
+      "sourceUrl": "https://github.com/1748477582/tia-portal-openness-mcp/blob/master/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/1748477582/tia-portal-openness-mcp/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-09-30T02:11:58Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "InspectSimaticSdCompatibility"
+      ],
+      "assessment": "V18/V20/V21 fork; version-labelled folders alone are not behavior evidence.",
+      "readmeSha256": "92c3ec0ea1b2f651e263bb02f9325ff99b1fc172b2858a540e37b8ea32c1caa8",
+      "description": "TIA Portal Openness MCP — drive Siemens TIA Portal from any MCP client (stdio). Multi-version builds for V18/V20/V21; 231 tools (208 on V18): projects, hardware, PLC objects (Tag/UDT/DB/SCL/LAD), Classic/Comfort/Unified HMI, compile diagnostics, VCI version control, live PLC read/trend. MIT.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Codyte/Tia-Portal-CLI",
+      "name": "Codyte/Tia-Portal-CLI",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Codyte/Tia-Portal-CLI",
+      "sourceUrl": "https://github.com/Codyte/Tia-Portal-CLI/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/Codyte/Tia-Portal-CLI",
+      "upstreamPushedAt": "2026-09-18T12:40:12Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "720210fa1c8370edc8c7a9cd4e2dd9ab7432e68726d19b234563fd311ec033c8",
+      "description": "AI PLC programming and headless TIA Portal automation. Let an AI agent program for you — 303+ CLI verbs over the Siemens Openness API, JSON in and out, dry-run by default. Offline and on-premise, no cloud copilot. S7-1500, S7-1200, SCL, ladder logic, SimaticML, SINAMICS, WinCC. Claude Code, Codex, Cursor skill.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/plc-block-scanner",
+      "name": "Czarnak/plc-block-scanner",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/plc-block-scanner",
+      "sourceUrl": "https://github.com/Czarnak/plc-block-scanner/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/plc-block-scanner/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-04-16T06:24:35Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "AuditEngineeringExports",
+        "ExtractPlcBlockMetrics"
+      ],
+      "assessment": "Block inventory and metrics overlap; Add-In-specific reports are separate.",
+      "readmeSha256": "6db49e0ac351caecceb1773f6bb840a141f1dff5d7f041f01b7e8fa1d4b59c98",
+      "description": "Simple TIA Portal V21 Add-In, created with totally-integrated-claude plugin.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/simaticml-decoder",
+      "name": "Czarnak/simaticml-decoder",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/simaticml-decoder",
+      "sourceUrl": "https://github.com/Czarnak/simaticml-decoder/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/simaticml-decoder/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-08T22:49:09Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "implemented_local",
+      "ourTools": [
+        "DecodePlcSimaticMl"
+      ],
+      "assessment": "Pinned MIT offline decoder added. Analysis-only, not recompilable; upstream FBD/native corpus qualification incomplete.",
+      "readmeSha256": "6124ef7cb092d6f37ae5adca68f02fdc2919b1bb289b86f9cc9af77ea00cd69d",
+      "description": "Translate exported SimaticML LAD/FBD blocks (Siemens TIA Portal V21) into readability-first SCL plus a JSON metadata sidecar.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/tia-git-addin",
+      "name": "Czarnak/tia-git-addin",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/tia-git-addin",
+      "sourceUrl": "https://github.com/Czarnak/tia-git-addin/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/tia-git-addin/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-07-20T16:15:33Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ManagePlcGitRepository",
+        "RenderPlcVisualDiff"
+      ],
+      "assessment": "MIT parser/layout already integrated; desktop Add-In UI is separate.",
+      "readmeSha256": "aac6cfb4a3de4368360f6c92d4d97f9acc7ed379c3204ad0b8fb1a17067ebdf2",
+      "description": "TIA Portal V21 Add-In eabling comfortable work with TIA Portal Version Control.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/tia-portal-mcp",
+      "name": "Czarnak/tia-portal-mcp",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/tia-portal-mcp",
+      "sourceUrl": "https://github.com/Czarnak/tia-portal-mcp/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/tia-portal-mcp/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-10-01T16:59:08Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "PreviewToolBatch",
+        "ApplyToolBatch",
+        "ReadOpennessWorkerStatus"
+      ],
+      "assessment": "Observe further token/cancellation improvements; never copy automatic write replay or assume live stability from architecture.",
+      "readmeSha256": "3f3869894de27296a0cb21a42a9d8cf5d27ccda0381001d747a7054d8236d78a",
+      "description": "Specialized bridge designed to connect LLMs and AI agents directly to Siemens SIMATIC TIA Portal V21.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/tia-todo",
+      "name": "Czarnak/tia-todo",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/tia-todo",
+      "sourceUrl": "https://github.com/Czarnak/tia-todo/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/tia-todo/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-10T14:20:37Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ScanPlcSourceAnnotations"
+      ],
+      "assessment": "Existing source annotation scanning covers TODO discovery; UI workflow not copied.",
+      "readmeSha256": "dee349e31f5f545c1c61be43903856a1f02a88a0957a25777d3f45bf6a416011",
+      "description": "TIA Portal V21 Add-In that scans selected PLC project-tree items for configurable TODO-style patterns.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Czarnak/totally-integrated-claude",
+      "name": "Czarnak/totally-integrated-claude",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Czarnak/totally-integrated-claude",
+      "sourceUrl": "https://github.com/Czarnak/totally-integrated-claude/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Czarnak/totally-integrated-claude/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-30T21:44:14Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "reference_only",
+      "ourTools": [
+        "ReadOpennessGuidance"
+      ],
+      "assessment": "MIT domain skills and API evidence worth auditing. Not installed as instructions or executed; official guidance stays primary.",
+      "readmeSha256": "c7e7b2da632d742d04ab4af9ef5f8d86a6f4f99de8ff40cdb75aa5501226ce07",
+      "description": "A Claude Code plugin for Siemens TIA Portal engineering automation.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "D4-ST/CEM-2-SVA",
+      "name": "D4-ST/CEM-2-SVA",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/D4-ST/CEM-2-SVA",
+      "sourceUrl": "https://github.com/D4-ST/CEM-2-SVA/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/D4-ST/CEM-2-SVA/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-13T09:27:55Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Cause-and-effect Excel to Safety Validation Assistant XML. Requires safety-specific review; no automatic activation/test execution added.",
+      "readmeSha256": "4eb7bf1406e06ab02608b4960ebed95a353d1d9e212b61899af8b1abd055f816",
+      "description": "Generate TIA Portal V21 Safety Validation Assistant XML files from a Cause & Effect Matrix (CE-Matrix) Excel sheet.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "David-PLC/CWC-Table",
+      "name": "David-PLC/CWC-Table",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/David-PLC/CWC-Table",
+      "sourceUrl": "https://github.com/David-PLC/CWC-Table/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/David-PLC/CWC-Table",
+      "upstreamPushedAt": "2024-05-03T13:02:24Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "294693b783320b751e9947050bf2fab2459543e416b386aa8f113e8a5fe823ad",
+      "description": "A table view as custom web control for WinCC Unified",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "EidoAut/EidoTiaWorkbench",
+      "name": "EidoAut/EidoTiaWorkbench",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/EidoAut/EidoTiaWorkbench",
+      "sourceUrl": "https://github.com/EidoAut/EidoTiaWorkbench/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/EidoAut/EidoTiaWorkbench/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-13T20:19:52Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "be4e7d69c4941983f0c32474e6d62b91df9ba15797d7a060f39269fb1314b2b1",
+      "description": "WinForms desktop tool for TIA Portal Openness V21 to scan, export, import, and validate PLC and classic WinCC HMI artifacts in a Git-friendly engineering workspace.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "JohannPx/TIA-Openness-Tool",
+      "name": "JohannPx/TIA-Openness-Tool",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/JohannPx/TIA-Openness-Tool",
+      "sourceUrl": "https://github.com/JohannPx/TIA-Openness-Tool/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/JohannPx/TIA-Openness-Tool",
+      "upstreamPushedAt": "2026-07-27T11:57:17Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "b133311fc79979661a7b584fbed0e310c27b44611d2f545d87b16619ea0d139b",
+      "description": "Multi-version TIA Portal DataBlock Exporter — PowerShell + WPF desktop app with TIA Openness API",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "MrFadiAi/TIA-Toolkit",
+      "name": "MrFadiAi/TIA-Toolkit",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/MrFadiAi/TIA-Toolkit",
+      "sourceUrl": "https://github.com/MrFadiAi/TIA-Toolkit/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/MrFadiAi/TIA-Toolkit/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-05-31T22:22:57Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "8d77df9fdc4ecc388bb176e037fb24110fc79aee3d7679e65de3005aaac19628",
+      "description": "GUI toolkit for extracting PLC/HMI data from Siemens TIA Portal projects — desktop GUI + VS Code extension",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "PLC-Framework/TIA-Portal-Add-Ins",
+      "name": "PLC-Framework/TIA-Portal-Add-Ins",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/PLC-Framework/TIA-Portal-Add-Ins",
+      "sourceUrl": "https://github.com/PLC-Framework/TIA-Portal-Add-Ins/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/PLC-Framework/TIA-Portal-Add-Ins/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-10-01T19:11:44Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "d7a56fafc08dd9e6d0e7bd73dda405699a02f6e1042a5b15b6678f35bda167ee",
+      "description": "PLC-Framework for TIA Portal, Add-Ins and Satellite apps",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Parozzz/TiaUtilities",
+      "name": "Parozzz/TiaUtilities",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Parozzz/TiaUtilities",
+      "sourceUrl": "https://github.com/Parozzz/TiaUtilities/blob/main/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Parozzz/TiaUtilities/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-10-01T21:20:39Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "InstantiatePlcXmlTemplates",
+        "ComposePlcAliasAlarmLad"
+      ],
+      "assessment": "Independent equivalents for selected generation functions; GPL code and desktop UI not copied.",
+      "readmeSha256": "d1a86ff20e20e3f37a58b1d7785090e9fc97c450776b8f08894af250b137f13c",
+      "description": "AddIn to import/export XML files from TIA Portal. Multiple utilities for code generation and general QOL i use in my workplace (Spin-Automazioni, MO)",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Repsay/tia-openness-api-client",
+      "name": "Repsay/tia-openness-api-client",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Repsay/tia-openness-api-client",
+      "sourceUrl": "https://github.com/Repsay/tia-openness-api-client/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Repsay/tia-openness-api-client/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-01-08T22:06:54Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ManagePlcDocuments",
+        "ReadLibraryOverview"
+      ],
+      "assessment": "Core lifecycle/PLC/HMI operations overlap. Separate Python connection ownership would add contention.",
+      "readmeSha256": "4644b7a90208ea59c65b51526b108a1fff3491fbc09c0a1dd87d4e1db44a0c71",
+      "description": "Client for accessing the TIA Openness API in Python",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Sawascwoolf/BlockParam",
+      "name": "Sawascwoolf/BlockParam",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Sawascwoolf/BlockParam",
+      "sourceUrl": "https://github.com/Sawascwoolf/BlockParam/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Sawascwoolf/BlockParam/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-28T14:03:24Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ReadPlcBlockEditCapabilities",
+        "PatchPlcBlockDocument",
+        "ImportPlcBlockVerified"
+      ],
+      "assessment": "Existing scalar start-value patch/verified import cover a subset. UDT pattern matching, rule tiers and UI are not implemented; paid-tier licensing is not copied.",
+      "readmeSha256": "b5442d82c7c625939d4cfefaf43fa708e4c0d95610d467d465613dbe3a389c1c",
+      "description": "TIA Portal V20 & V21 Add-In for bulk editing Data Block start values. MIT-licensed addin; Pro tier requires a license key.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "SiemensIndustrialEdgeITA/edge-node-red-unified",
+      "name": "SiemensIndustrialEdgeITA/edge-node-red-unified",
+      "sourceKind": "official",
+      "url": "https://github.com/SiemensIndustrialEdgeITA/edge-node-red-unified",
+      "sourceUrl": "https://github.com/SiemensIndustrialEdgeITA/edge-node-red-unified/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/SiemensIndustrialEdgeITA/edge-node-red-unified/blob/main/LICENSE",
+      "upstreamPushedAt": "2023-01-29T21:29:50Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "defc21ecd1945f9076631644dcf3c02c1ef5c16cae38cc7cf9452e70c9ade927",
+      "description": "Node-RED Application for UNIFIED COMFORT PANELS with some of most used Node-RED Nodes preinstalled",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "SiemensIndustrialEdgeITA/report-unified",
+      "name": "SiemensIndustrialEdgeITA/report-unified",
+      "sourceKind": "official",
+      "url": "https://github.com/SiemensIndustrialEdgeITA/report-unified",
+      "sourceUrl": "https://github.com/SiemensIndustrialEdgeITA/report-unified/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/SiemensIndustrialEdgeITA/report-unified/blob/main/LICENSE",
+      "upstreamPushedAt": "2021-03-17T13:24:47Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "d644da1ce6e96942b76af6f3cc7fc8cfb0d8f660194a84099673d7b1feedd030",
+      "description": "The report-unified app allows you to generate dynamic time-based report documents containing data from the WinCC Unified supervisor system, only for Unified Comfort Panels devices with Industrial Edge functionality activated.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels",
+      "name": "SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels",
+      "sourceKind": "official",
+      "url": "https://github.com/SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels",
+      "sourceUrl": "https://github.com/SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels/blob/main/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/SiemensIndustryPL/-EDGE-VNC-Client-for-Unified-Panels/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-03-02T13:28:44Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Upstream says V21 image has Smart Client built in and this workaround is no longer developed; no reason to add obsolete workaround.",
+      "readmeSha256": "21e79fd87f47aec9d2f0aba1679f9780f2a24288d9ad0b677976014d01b8e9a8",
+      "description": "Simple Edge application working as VNC client for connecting with Sm@rt Server by means of Unified Comfort panels.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "StaniB88/AnyAutomationStudio",
+      "name": "StaniB88/AnyAutomationStudio",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/StaniB88/AnyAutomationStudio",
+      "sourceUrl": "https://github.com/StaniB88/AnyAutomationStudio/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/StaniB88/AnyAutomationStudio",
+      "upstreamPushedAt": "2026-09-27T18:03:04Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Commercial engineering IDE; upstream version claims are not local acceptance. No proprietary engine copied.",
+      "readmeSha256": "229848a4bbfee2e8eeb3c9c7eff3b89e1b4109f29e535b5c5fb6d8cfaa9e7457",
+      "description": "AI-powered engineering IDE for Siemens TIA Portal and CODESYS: SCL code generation with Claude, GPT, Gemini or local Ollama, unit tests on PLCSIM Advanced, OPC UA, Git and MCP tools. TIA Portal V15-V21.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "StaniB88/TIAOpennessManager",
+      "name": "StaniB88/TIAOpennessManager",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/StaniB88/TIAOpennessManager",
+      "sourceUrl": "https://github.com/StaniB88/TIAOpennessManager/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/StaniB88/TIAOpennessManager",
+      "upstreamPushedAt": "2026-08-11T20:50:30Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Product renamed AnyAutomation Studio; tracked as migration/reference entry, not a second independent engine.",
+      "readmeSha256": "115a03ad2accdbb3e11eb7d7586782259c50f370bba2a648b99f1d28830503c9",
+      "description": "TIA Openness Manager is now AnyAutomation Studio. Download: github.com/StaniB88/AnyAutomationStudio",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Thomas-Schlangen/cwc-piechart",
+      "name": "Thomas-Schlangen/cwc-piechart",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Thomas-Schlangen/cwc-piechart",
+      "sourceUrl": "https://github.com/Thomas-Schlangen/cwc-piechart/blob/main/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Thomas-Schlangen/cwc-piechart/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-13T13:19:56Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "453bebfc4f7e734f77399e6bc92c13ad40825f900bc158f7c96598b426d18598",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Thomas-Schlangen/cwc-sankey",
+      "name": "Thomas-Schlangen/cwc-sankey",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Thomas-Schlangen/cwc-sankey",
+      "sourceUrl": "https://github.com/Thomas-Schlangen/cwc-sankey/blob/main/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Thomas-Schlangen/cwc-sankey/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-05T15:28:24Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "c94fadcfc3ed6c0217445901c1c815bf5d63764fdfaf1bc3ca6b1a33162e34f0",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Thomas-Schlangen/pulldown-cwc",
+      "name": "Thomas-Schlangen/pulldown-cwc",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Thomas-Schlangen/pulldown-cwc",
+      "sourceUrl": "https://github.com/Thomas-Schlangen/pulldown-cwc/blob/master/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Thomas-Schlangen/pulldown-cwc/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-09-05T15:33:32Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "33ef096d1d9f97033bf97ea6bf0fbb30bd08cbdd29b3bbe1bde40fbf6fc723c1",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Thomas-Schlangen/tia-linter",
+      "name": "Thomas-Schlangen/tia-linter",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Thomas-Schlangen/tia-linter",
+      "sourceUrl": "https://github.com/Thomas-Schlangen/tia-linter/blob/main/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Thomas-Schlangen/tia-linter/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-17T05:20:51Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "AuditEngineeringExports",
+        "LintPlcSclSource"
+      ],
+      "assessment": "Current fetched README now claims a live V21 run; earlier cached search snippets were stale. GPL source not copied; independent audits remain partial.",
+      "readmeSha256": "d9aa6741891504fb1d89f531b959c49ab7225f0ddc18c47d8d774ad759de31e6",
+      "description": "TIA Portal Projekt Qualitätsprüfer — prüft TIA-Portal-Projekte auf Qualität und Konventionen über die Openness API und erstellt einen PDF-Report",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Thomas-Schlangen/tia-tag-exporter",
+      "name": "Thomas-Schlangen/tia-tag-exporter",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Thomas-Schlangen/tia-tag-exporter",
+      "sourceUrl": "https://github.com/Thomas-Schlangen/tia-tag-exporter/blob/master/README.md",
+      "license": "GPL-3.0",
+      "licenseUrl": "https://github.com/Thomas-Schlangen/tia-tag-exporter/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-08-10T13:38:47Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "bec806b2fbed56e1a287546d43e0d431e59efb278fc8f365928c900cad0310be",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "TomPodlena/plc-studio",
+      "name": "TomPodlena/plc-studio",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/TomPodlena/plc-studio",
+      "sourceUrl": "https://github.com/TomPodlena/plc-studio/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/TomPodlena/plc-studio",
+      "upstreamPushedAt": "2026-10-01T15:22:35Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "dc669caba8da596770412d8e51c22a602c71bd6c738c86f8b1586feb14e81c1a",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "Vyenkor/TIA-Portal-V21MCP",
+      "name": "Vyenkor/TIA-Portal-V21MCP",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/Vyenkor/TIA-Portal-V21MCP",
+      "sourceUrl": "https://github.com/Vyenkor/TIA-Portal-V21MCP/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/Vyenkor/TIA-Portal-V21MCP/blob/main/LICENSE.txt",
+      "upstreamPushedAt": "2026-07-11T13:47:43Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ReadPlcBlockEditCapabilities"
+      ],
+      "assessment": "V21 MCP fork; much overlaps existing PLC/tag tools. No second engine installed.",
+      "readmeSha256": "9a54c47b6c5c9254c53052fd03495100305164c24569386e5b3df72dc233a906",
+      "description": "Fork of heilingbrunner/tiaportal-mcp with Siemens TIA Portal V21 support and PLC tag table MCP tools.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "WZAutomation/TIA_Portal_XRef_Exporter",
+      "name": "WZAutomation/TIA_Portal_XRef_Exporter",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/WZAutomation/TIA_Portal_XRef_Exporter",
+      "sourceUrl": "https://github.com/WZAutomation/TIA_Portal_XRef_Exporter/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/WZAutomation/TIA_Portal_XRef_Exporter",
+      "upstreamPushedAt": "2026-08-22T16:03:51Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [
+        "AnalyzePlcReferences"
+      ],
+      "assessment": "Do not re-enable native cross-reference querying: repository presence does not resolve observed TIA crashes.",
+      "readmeSha256": "391e397105a35047e079ba54816ee97c96f237033c0f90726617a80e994cba54",
+      "description": "Do not re-enable native cross-reference querying: repository presence does not resolve observed TIA crashes.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "WouterDepo/WinCC-Unified_Extended-Controls",
+      "name": "WouterDepo/WinCC-Unified_Extended-Controls",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/WouterDepo/WinCC-Unified_Extended-Controls",
+      "sourceUrl": "https://github.com/WouterDepo/WinCC-Unified_Extended-Controls/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/WouterDepo/WinCC-Unified_Extended-Controls/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-04-02T10:40:13Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "39fd224abd5ce21c076f4fcf9f71874ea0c60fe1995919e752856ee3e3949798",
+      "description": "WinCC Unified CWC for funcionality extensions",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "a4webdev/tiacommander-mcp",
+      "name": "a4webdev/tiacommander-mcp",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/a4webdev/tiacommander-mcp",
+      "sourceUrl": "https://github.com/a4webdev/tiacommander-mcp/blob/master/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/a4webdev/tiacommander-mcp/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-09-07T12:38:50Z",
+      "versionEvidence": "unsupported_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "README supports V17-V20, fully tested on V19; V21 dropdown is not V21 project-work support. Proprietary engine not copied.",
+      "readmeSha256": "4c7c6734d39df48d16c185eda24a34a85eda97f9cd90fdffc7d5a6efd7b20d21",
+      "description": "Connects any MCP-compatible AI assistant to Siemens TIA Portal via the Openness API",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "biaobiao2233/tia-guard",
+      "name": "biaobiao2233/tia-guard",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/biaobiao2233/tia-guard",
+      "sourceUrl": "https://github.com/biaobiao2233/tia-guard/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/biaobiao2233/tia-guard/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-30T19:44:26Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "a219ed60030a6a4baff3e9b946910ba81f69f563b6676efb1edd470333ed0fe6",
+      "description": "AI-assisted engineering review and GitHub workflow tooling for Siemens TIA Portal via Openness",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "bulaofen0036-coder/TIA_Portal_Openness_MCP",
+      "name": "bulaofen0036-coder/TIA_Portal_Openness_MCP",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP",
+      "sourceUrl": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP/blob/master/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-09-27T05:10:16Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ReadOpennessWorkerStatus"
+      ],
+      "assessment": "Original upstream already incorporated; existing version branches preserved. Do not overwrite local safety fixes.",
+      "readmeSha256": "1e4ef5364f2e22eed84b31425fe79b6d3c532b2104257300b0da05fda1cde545",
+      "description": "Drive Siemens TIA Portal V20/V21 (STEP 7, WinCC Unified) from any MCP client — create projects, generate PLC & HMI, compile & diagnose. Prebuilt runtime, no Openness coding required.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "cmariusz/TiaImportExport.VSExt",
+      "name": "cmariusz/TiaImportExport.VSExt",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/cmariusz/TiaImportExport.VSExt",
+      "sourceUrl": "https://github.com/cmariusz/TiaImportExport.VSExt/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/cmariusz/TiaImportExport.VSExt/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-27T19:12:37Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "40fa3f60f5bcebb9f3b13fc9b43d2ea1b973e3d740bb14a9bacd85310662a13e",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "coobi7/TIA-Unified-Exporter",
+      "name": "coobi7/TIA-Unified-Exporter",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/coobi7/TIA-Unified-Exporter",
+      "sourceUrl": "https://github.com/coobi7/TIA-Unified-Exporter/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/coobi7/TIA-Unified-Exporter/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-07-25T03:54:40Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ExchangeUnifiedScriptModules"
+      ],
+      "assessment": "HMI export workflow candidate; inspect object coverage/version assembly references before adapting.",
+      "readmeSha256": "81243170ff8b7d773ba1077be2695503dea043260d8c54cb540e2f44c26968ca",
+      "description": "TIA Unified Exporter",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "core-engineering/siemens-plc-tools",
+      "name": "core-engineering/siemens-plc-tools",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/core-engineering/siemens-plc-tools",
+      "sourceUrl": "https://github.com/core-engineering/siemens-plc-tools/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/core-engineering/siemens-plc-tools/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-23T13:46:45Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "RunPlcCompanionTool"
+      ],
+      "assessment": "Pinned eight-package companion already integrated; individual CLI prerequisites still apply.",
+      "readmeSha256": "8a1f3d546d392ea98808d76531d3d17990f8d415b3416ea1b81fc87ce9c55b43",
+      "description": "PLC tools to help Siemens Tia-Portal development especially unit tests, integration tests and code linting",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "eliasrhoden/TiaTools",
+      "name": "eliasrhoden/TiaTools",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/eliasrhoden/TiaTools",
+      "sourceUrl": "https://github.com/eliasrhoden/TiaTools/blob/main/readme.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/eliasrhoden/TiaTools/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-07-23T09:00:17Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "c72ce80a4e3109e9d4159c81729e7931ebecbeae6cee4dc3b32b02440a966ca7",
+      "description": "Some simple Addins for Siemens TIA Portal",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "feelautom/tia-connect-vscode",
+      "name": "feelautom/tia-connect-vscode",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/feelautom/tia-connect-vscode",
+      "sourceUrl": "https://github.com/feelautom/tia-connect-vscode/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/feelautom/tia-connect-vscode/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-07-30T17:24:37Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "572c12a4307a5fb71bdca06962f6d7ebb4a645e8197642d1f62fa87efea29caa",
+      "description": "VS Code extension for Siemens TIA Portal  edit SCL/STL, compile, export/import, version control, AI assistant, and CI/CD pipelines via the  T-IA Connect REST API",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "feelautom/tia-copilot-genai-bridge",
+      "name": "feelautom/tia-copilot-genai-bridge",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/feelautom/tia-copilot-genai-bridge",
+      "sourceUrl": "https://github.com/feelautom/tia-copilot-genai-bridge/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/feelautom/tia-copilot-genai-bridge/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-03-16T19:49:45Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "92f6390857d01d2eb2a5cdcbc8fc2d2a950a9c660bcf69681c11ad369eb7ab82",
+      "description": "Industrial-grade MCP bridge for Siemens TIA Portal: Generate SCL, explore PLC   structures, and automate engineering with AI (Claude, Cursor, LobeChat).",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "heilingbrunner/tiaportal-mcp",
+      "name": "heilingbrunner/tiaportal-mcp",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/heilingbrunner/tiaportal-mcp",
+      "sourceUrl": "https://github.com/heilingbrunner/tiaportal-mcp/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/heilingbrunner/tiaportal-mcp/blob/main/LICENSE.txt",
+      "upstreamPushedAt": "2026-10-01T16:18:17Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ReadPlcBlockEditCapabilities",
+        "InspectSimaticSdCompatibility"
+      ],
+      "assessment": "Related MIT MCP upstream; current target/version capabilities must be checked per build, not blindly merged.",
+      "readmeSha256": "fc2e6cddccc50fa075593e18bc32c70cc1c5a7687253e8ac151b296dac058c0d",
+      "description": "A Visual Studio Code extension to connect to Siemens TIA Portal and interact with TIA Portal projects directly from VS Code with GitHub Copilot.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "huahaizo/tia-portal-openness-ai",
+      "name": "huahaizo/tia-portal-openness-ai",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/huahaizo/tia-portal-openness-ai",
+      "sourceUrl": "https://github.com/huahaizo/tia-portal-openness-ai/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/huahaizo/tia-portal-openness-ai",
+      "upstreamPushedAt": "2026-05-24T11:04:44Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "09978a19707af636d6114b1504dcf9876d19aaa128bf550589dc14e88d333c8c",
+      "description": "AI-ready skill and C# scaffold for Siemens TIA Portal Openness V15-V21 / 支持 V15-V21 的博途 Openness AI 自动化工具",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "industrial-edge/wincc-unified-on-IE",
+      "name": "industrial-edge/wincc-unified-on-IE",
+      "sourceKind": "official",
+      "url": "https://github.com/industrial-edge/wincc-unified-on-IE",
+      "sourceUrl": "https://github.com/industrial-edge/wincc-unified-on-IE/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/industrial-edge/wincc-unified-on-IE/blob/main/LICENSE.txt",
+      "upstreamPushedAt": "2026-07-27T08:48:10Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "f7abee9f2c71bd948c4c57eeb68fd478c043e5609cd74788e59e95b91b79a61f",
+      "description": "How to use the WinCC Unified on Industrial Edge app",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "industrix-com-br/tia-portal-code-agent",
+      "name": "industrix-com-br/tia-portal-code-agent",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/industrix-com-br/tia-portal-code-agent",
+      "sourceUrl": "https://github.com/industrix-com-br/tia-portal-code-agent/blob/main/README.md",
+      "license": "Apache-2.0",
+      "licenseUrl": "https://github.com/industrix-com-br/tia-portal-code-agent/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-02T18:24:12Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Apache-2.0 experimental read-only V21 Add-In/AI UI. Does not provide HMI mutation or library rename fix.",
+      "readmeSha256": "8f8eea826df6a2a9e0f6152a440e140b4924b4b0f46f4aa312f9199ea02a59d3",
+      "description": "TIA Portal V21 Add-In with AI agent integration via MCP for PLC engineering tasks",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "jfk-solutions/TiaProjectBrowser",
+      "name": "jfk-solutions/TiaProjectBrowser",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/jfk-solutions/TiaProjectBrowser",
+      "sourceUrl": "https://github.com/jfk-solutions/TiaProjectBrowser/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/jfk-solutions/TiaProjectBrowser/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-04-13T21:24:18Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "c01b9d70b0acb8d775b83b4f7ccca0dd687ed26959814a5f318d0c912478bfa4",
+      "description": "A Tool showing the usage of the TiaFileFormat Library",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "jianglongbojie/TiaArchiveGui",
+      "name": "jianglongbojie/TiaArchiveGui",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/jianglongbojie/TiaArchiveGui",
+      "sourceUrl": "https://github.com/jianglongbojie/TiaArchiveGui/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/jianglongbojie/TiaArchiveGui/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-28T17:14:58Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ArchiveSavedProject",
+        "RetrieveProjectArchive"
+      ],
+      "assessment": "Archive workflow overlap; upstream documents target-directory/version pitfalls. No new project opens or upgrades performed.",
+      "readmeSha256": "f0b85fd82fd538d1e4347d132a170047b0c594644d71d56b15f279134905f406",
+      "description": "Archive workflow overlap; upstream documents target-directory/version pitfalls. No new project opens or upgrades performed.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "kgpgit/genius-automation-community",
+      "name": "kgpgit/genius-automation-community",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/kgpgit/genius-automation-community",
+      "sourceUrl": "https://github.com/kgpgit/genius-automation-community/blob/master/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/kgpgit/genius-automation-community/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-08-03T01:55:25Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "9bf880de10535e01932a057b5269df15952f740cf2e31abff74ffe061ca7a2c5",
+      "description": "Genius Automation Community Edition — TIA Portal MCP Server (MIT, 5 read-only tools)",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "nikstefanopoulos12-byte/tia-portal-project-library-parser",
+      "name": "nikstefanopoulos12-byte/tia-portal-project-library-parser",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/nikstefanopoulos12-byte/tia-portal-project-library-parser",
+      "sourceUrl": "https://github.com/nikstefanopoulos12-byte/tia-portal-project-library-parser/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/nikstefanopoulos12-byte/tia-portal-project-library-parser/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-01T11:00:39Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "7a767c7bd9ce36e71744a27e28379d2b21499c7280d9480f350e05a04f354857",
+      "description": "Read-only C# utility for inspecting Siemens TIA Portal library metadata through TIA Openness.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "renanlido/tia-harness",
+      "name": "renanlido/tia-harness",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/renanlido/tia-harness",
+      "sourceUrl": "https://github.com/renanlido/tia-harness/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/renanlido/tia-harness/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-07-20T01:49:30Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "MIT client workflows depend on separately licensed tia-openness engine; not standalone native functionality.",
+      "readmeSha256": "f97ce2acd23b34338c243ad4c8a402b8742f9ae2b36228aedafd6d47f95beefb",
+      "description": "TIA Portal V21 automation harness — Claude Code plugin (skills + subagents + the tia MCP). Open client layer.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "renanlido/tia-openness",
+      "name": "renanlido/tia-openness",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/renanlido/tia-openness",
+      "sourceUrl": "https://github.com/renanlido/tia-openness/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/renanlido/tia-openness/blob/main/EULA.md",
+      "upstreamPushedAt": "2026-07-19T05:46:50Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Proprietary licensed V21 engine; public hub is not engine source. No binary or proprietary implementation incorporated.",
+      "readmeSha256": "34a6cfd15f4985874204532c40f8b137102bea5d886bc334a642a4c5147b7e36",
+      "description": "TIA Openness API for Siemens TIA Portal V21 - product hub: downloads, docs and issue tracker. Drive TIA Portal from a local HTTP/JSON API (and from AI via the tia MCP).",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "rickgaiser/TiaMcp",
+      "name": "rickgaiser/TiaMcp",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/rickgaiser/TiaMcp",
+      "sourceUrl": "https://github.com/rickgaiser/TiaMcp/blob/master/README.md",
+      "license": "AGPL-3.0",
+      "licenseUrl": "https://github.com/rickgaiser/TiaMcp/blob/master/LICENSE",
+      "upstreamPushedAt": "2026-10-01T18:57:35Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "f8aa84e288caa53633d8c461bf425ccb51ee6b71d42f06bb160c1faf2e46a333",
+      "description": "MCP server for Siemens TIA Portal",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "sa1ntsinner/rung",
+      "name": "sa1ntsinner/rung",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/sa1ntsinner/rung",
+      "sourceUrl": "https://github.com/sa1ntsinner/rung/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/sa1ntsinner/rung/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-10-01T18:59:19Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "BUSL-1.1 core plus MIT components; prerelease and measured native evidence is V20. No license bypass or wholesale vendoring.",
+      "readmeSha256": "d9dbfe1deabbb99b12b169effa180c92fd00004688d2b6ee731e37923698f95c",
+      "description": "TIA Portal projects as plain text: two-way sync, an SCL language server and tools for coding agents.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "shobert-rhs/TiaHelpFast",
+      "name": "shobert-rhs/TiaHelpFast",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/shobert-rhs/TiaHelpFast",
+      "sourceUrl": "https://github.com/shobert-rhs/TiaHelpFast/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/shobert-rhs/TiaHelpFast/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-24T14:10:24Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [
+        "ReadOpennessGuidance"
+      ],
+      "assessment": "Local help full-text retrieval candidate; requires installed help corpus. No Siemens manual corpus redistributed.",
+      "readmeSha256": "a71365e815f11bb96e82c6f355f85d015641ccae1218d64dff9fab89d1b9f180",
+      "description": "Fast local viewer for the Siemens TIA Portal help (V17-V21): instant full-text search, F1 redirect, Claude Desktop MCP server",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "siemens/modular-application-creator-use-cases",
+      "name": "siemens/modular-application-creator-use-cases",
+      "sourceKind": "official",
+      "url": "https://github.com/siemens/modular-application-creator-use-cases",
+      "sourceUrl": "https://github.com/siemens/modular-application-creator-use-cases/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/siemens/modular-application-creator-use-cases/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2026-09-30T15:50:27Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Official MIT equipment-module examples and documented MAC 21.0.5 CLI; requires installed MAC/Module Builder/templates. No new native project-generation runner claimed.",
+      "readmeSha256": "f9e5ce5c4a222c23e3af366fb3bb170e294988bdf39f8ec4a5209c337553f64c",
+      "description": "Official MIT equipment-module examples and documented MAC 21.0.5 CLI; requires installed MAC/Module Builder/templates. No new native project-generation runner claimed.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "siemens/tia-portal-ai-extensions",
+      "name": "siemens/tia-portal-ai-extensions",
+      "sourceKind": "official",
+      "url": "https://github.com/siemens/tia-portal-ai-extensions",
+      "sourceUrl": "https://github.com/siemens/tia-portal-ai-extensions/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/siemens/tia-portal-ai-extensions/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-09-30T09:31:29Z",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ReadOpennessGuidance"
+      ],
+      "assessment": "Official V21 guidance; refreshed pinned commit, guide bodies unchanged.",
+      "readmeSha256": "6ebad327bedbec6651712cf206a0e1595190263ca36ffb9febbbfd5faf30b672",
+      "description": "A growing collection of AI extensions that work with Siemens TIA Portal.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/CWC-in-WinCC-Unified",
+      "name": "tia-portal-applications/CWC-in-WinCC-Unified",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/CWC-in-WinCC-Unified",
+      "sourceUrl": "https://github.com/tia-portal-applications/CWC-in-WinCC-Unified/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/CWC-in-WinCC-Unified/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2025-01-21T11:59:59Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "implemented_local",
+      "ourTools": [
+        "ManageUnifiedCwcPackage"
+      ],
+      "assessment": "Repository example uses V19. New package helper is independently based on V21 official manifest/ZIP docs; no vendor control code copied.",
+      "readmeSha256": "bf15ed09250a0f3e12dcb7ba69d599fb563a93df0cf83445be3e2fe725f78941",
+      "description": "This is the guide on developing CWCs and how to import them to your project.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/ConsistentMessageTransporter",
+      "name": "tia-portal-applications/ConsistentMessageTransporter",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/ConsistentMessageTransporter",
+      "sourceUrl": "https://github.com/tia-portal-applications/ConsistentMessageTransporter/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/ConsistentMessageTransporter/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2023-01-02T10:04:13Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "53d8a0fc75a9c6d5a9f2d8acb548c5587ebeb080ea625192cb6cee1ae9f96dc6",
+      "description": "Forward Messages to IT applications like OpCenter or 3rd party MES systems",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/Custom-AlarmControl-Code",
+      "name": "tia-portal-applications/Custom-AlarmControl-Code",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/Custom-AlarmControl-Code",
+      "sourceUrl": "https://github.com/tia-portal-applications/Custom-AlarmControl-Code/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/Custom-AlarmControl-Code/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2024-04-15T05:46:55Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "aff9152896d422bf57191c88bbf684bb858e7d5148fbd607fd4346b38bfff1ca",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/CustomAutoLogin",
+      "name": "tia-portal-applications/CustomAutoLogin",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/CustomAutoLogin",
+      "sourceUrl": "https://github.com/tia-portal-applications/CustomAutoLogin/blob/main/Readme.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/CustomAutoLogin/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2024-01-19T01:41:11Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "16b74bb4498a96c1355e00f7eedbd5c7f0082e062b7a4c643ea63969f6bb38f7",
+      "description": "Automatically logs you into a Unified website (locally or remotely).",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/GaugeMeter",
+      "name": "tia-portal-applications/GaugeMeter",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/GaugeMeter",
+      "sourceUrl": "https://github.com/tia-portal-applications/GaugeMeter/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/GaugeMeter/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2022-09-27T19:12:26Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "4e6e2f163ab42435e3cab43500add578802e695c53fedd17643cfc0507dbba40",
+      "description": "The GaugeMeter CWC is also officially released in SIOS (https://support.industry.siemens.com/cs/ww/de/view/109779176)",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/Runtime-manager-cleaner",
+      "name": "tia-portal-applications/Runtime-manager-cleaner",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/Runtime-manager-cleaner",
+      "sourceUrl": "https://github.com/tia-portal-applications/Runtime-manager-cleaner/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/Runtime-manager-cleaner/blob/main/LICENSE",
+      "upstreamPushedAt": "2025-01-27T16:01:02Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "8346e49f496a6b3074e296cb77a8c9be11240b7e2077624cf818cf1bf9f5866b",
+      "description": "Clean entries of the Runtime Manager",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/SiOME-Base-Plugin",
+      "name": "tia-portal-applications/SiOME-Base-Plugin",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/SiOME-Base-Plugin",
+      "sourceUrl": "https://github.com/tia-portal-applications/SiOME-Base-Plugin/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/tia-portal-applications/SiOME-Base-Plugin/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-11T07:40:54Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [
+        "GenerateOpcUaModelledInterface"
+      ],
+      "assessment": "MIT plugin development sample, separate SiOME SDK/application required; not itself an Openness interface generator.",
+      "readmeSha256": "dc23ef00d4d20c910eaeaafc8032d3ff9e681c11d9a06821fd4fa6b08d861e9c",
+      "description": "Getting Started for Siemens OPC UA Modeling Editor (SiOME) Plugins. SIOS entry: https://support.industry.siemens.com/cs/ww/en/view/109755133",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/TIA-Add-In-ShowScripts",
+      "name": "tia-portal-applications/TIA-Add-In-ShowScripts",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/TIA-Add-In-ShowScripts",
+      "sourceUrl": "https://github.com/tia-portal-applications/TIA-Add-In-ShowScripts/blob/master/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/TIA-Add-In-ShowScripts/blob/master/LICENSE",
+      "upstreamPushedAt": "2024-12-17T03:25:31Z",
+      "versionEvidence": "adaptation_required",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "ExchangeUnifiedScriptModules",
+        "ReadUnifiedGlobalScript"
+      ],
+      "assessment": "Old Add-In needs V21 adaptation. Existing script export covers part; screen-wide Excel overview not ported.",
+      "readmeSha256": "04e26e487db480f3e3d7dfd5c7c5cba41109ac3fca5d45f8de1f552f1e4e31b8",
+      "description": "Export all JavaScripts of all screens to readable files in your project UserFiles' directory and get an additional Excel overview over all screens.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/TIA-Openness-Create-Synoptic-Unified",
+      "name": "tia-portal-applications/TIA-Openness-Create-Synoptic-Unified",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/TIA-Openness-Create-Synoptic-Unified",
+      "sourceUrl": "https://github.com/tia-portal-applications/TIA-Openness-Create-Synoptic-Unified/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/TIA-Openness-Create-Synoptic-Unified/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2023-11-20T16:41:50Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "AnalyzePlcReferences",
+        "ExtractPlcBlockMetrics"
+      ],
+      "assessment": "Existing offline structure analysis is partial; runtime synoptic generation not integrated.",
+      "readmeSha256": "59a36cb04e9d69ef8c6f12de6d932594d0f2ba0a391bbda985c6fea3c4a6d6da",
+      "description": "This code will export the PLC information of networks and converts it to JSON for perfect integration in Unified runtime",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/TableControl",
+      "name": "tia-portal-applications/TableControl",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/TableControl",
+      "sourceUrl": "https://github.com/tia-portal-applications/TableControl/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/TableControl/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2022-10-07T11:02:03Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "fa506eac061693b563feda8f2758f9dc301022d4a62246e4c66d02336cbf9eb5",
+      "description": "The TableControl CWC is also officially released in SIOS (https://support.industry.siemens.com/cs/ww/de/view/109779176)",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/UMC-config-scripts",
+      "name": "tia-portal-applications/UMC-config-scripts",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/UMC-config-scripts",
+      "sourceUrl": "https://github.com/tia-portal-applications/UMC-config-scripts/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/UMC-config-scripts/blob/main/LICENSE",
+      "upstreamPushedAt": "2026-08-11T06:38:39Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "67a943a60f0f06aed488936b42ab849f58e112beeb7056fa7069b14c34ac8f25",
+      "description": "scripts designed to streamline and automate the setup and configuration of User Management Component (UMC) environments",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/Unified-Project-Selector-and-Watcher-Service",
+      "name": "tia-portal-applications/Unified-Project-Selector-and-Watcher-Service",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/Unified-Project-Selector-and-Watcher-Service",
+      "sourceUrl": "https://github.com/tia-portal-applications/Unified-Project-Selector-and-Watcher-Service/blob/main/readme.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/Unified-Project-Selector-and-Watcher-Service/blob/main/LICENSE",
+      "upstreamPushedAt": "2025-01-27T16:02:20Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "534b47c301da5c1f787e9373f48a5c133989d5638ecbc8747ca278978347d417",
+      "description": "Unified Project Selector (UPS) and Watcher Service (UPS-WS) are tools that enhance Simatic Runtime Manager of WinCC Unified.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/Web-Toolbox_CWC",
+      "name": "tia-portal-applications/Web-Toolbox_CWC",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/Web-Toolbox_CWC",
+      "sourceUrl": "https://github.com/tia-portal-applications/Web-Toolbox_CWC/blob/master/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/Web-Toolbox_CWC/blob/master/LICENSE.md",
+      "upstreamPushedAt": "2024-12-05T09:45:36Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "63ae946a865fe1d2dacad115a1ba2a6be1fb219bdbce41f88024f2149bc7fd95",
+      "description": "A handy toolbox that provides a few browser features as global functions for the Unified user. This CWC is not meant to have a GUI.",
+      "archived": false,
+      "defaultBranch": "master",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/siemens-vsc-extensions-doc",
+      "name": "tia-portal-applications/siemens-vsc-extensions-doc",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/siemens-vsc-extensions-doc",
+      "sourceUrl": "https://github.com/tia-portal-applications/siemens-vsc-extensions-doc/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/tia-portal-applications/siemens-vsc-extensions-doc",
+      "upstreamPushedAt": "2023-11-29T09:54:06Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "886bbf0a3e0983f5da0cfc24f689e1b7ce518eda67932fc17f0a1abc99030a44",
+      "description": "This repository contains media and documentation to published Visual Studio Code extensions by Siemens",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/tia-addin-build-package",
+      "name": "tia-portal-applications/tia-addin-build-package",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/tia-addin-build-package",
+      "sourceUrl": "https://github.com/tia-portal-applications/tia-addin-build-package/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/tia-addin-build-package/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2022-06-29T08:02:00Z",
+      "versionEvidence": "adaptation_required",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "703abd419ef3c2dea8196b8ae41fc9871ac44b314566be923f4468d1a9b75146",
+      "description": "The TIA Add-In Build Package creates and manages all necessary files to develop and debug a TIA Add-In. After installing the build package, the project is ready for development and no further setup is required.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+      "name": "tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/tia-addin-opc-ua-modelled-interface",
+      "sourceUrl": "https://github.com/tia-portal-applications/tia-addin-opc-ua-modelled-interface/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/tia-addin-opc-ua-modelled-interface/blob/main/LICENSE.md",
+      "upstreamPushedAt": "2026-05-14T14:59:54Z",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "GenerateOpcUaModelledInterface",
+        "ImportOpcUaInterface"
+      ],
+      "assessment": "Official main is V21+, legacy branch is V17-V20. Generation already adapted; native import acceptance separate.",
+      "readmeSha256": "8c2a2af9ab647f5a6b071c2867b093cba0299dbe4a276b7d4ac07aae19803c10",
+      "description": "TIA Portal Add-In to replicate the “Default SIMATIC Server Interface” as a user modelled interface using Openness.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "tia-portal-applications/tia-portal-openness-unified-library",
+      "name": "tia-portal-applications/tia-portal-openness-unified-library",
+      "sourceKind": "official",
+      "url": "https://github.com/tia-portal-applications/tia-portal-openness-unified-library",
+      "sourceUrl": "https://github.com/tia-portal-applications/tia-portal-openness-unified-library/blob/main/README.md",
+      "license": "NOASSERTION",
+      "licenseUrl": "https://github.com/tia-portal-applications/tia-portal-openness-unified-library/blob/main/LICENSE",
+      "upstreamPushedAt": "2024-09-02T05:14:27Z",
+      "versionEvidence": "adaptation_required",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "8403b5289bfc4dab5021f22f1322d3f01686c9ae04ff515d4bd2066f46af04b5",
+      "description": "Use this library in case of creating a new TIA Openness tool. It will provide the basic functionality: analyzing command arguments, connecting to TIA, getting the HMI, etc.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "vaveinn/TIA-HMI-MCP",
+      "name": "vaveinn/TIA-HMI-MCP",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/vaveinn/TIA-HMI-MCP",
+      "sourceUrl": "https://github.com/vaveinn/TIA-HMI-MCP/blob/main/README.md",
+      "license": "Not established from metadata",
+      "licenseUrl": "https://github.com/vaveinn/TIA-HMI-MCP",
+      "upstreamPushedAt": "2026-09-29T13:23:55Z",
+      "versionEvidence": "upstream_targets_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "f2809ce4fc25623f721666f4910cc66c77b91b58693b64bcd32b1b6247fff2a1",
+      "description": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "vogler75/winccua-mqtt-cwc",
+      "name": "vogler75/winccua-mqtt-cwc",
+      "sourceKind": "thirdParty",
+      "url": "https://github.com/vogler75/winccua-mqtt-cwc",
+      "sourceUrl": "https://github.com/vogler75/winccua-mqtt-cwc/blob/main/README.md",
+      "license": "MIT",
+      "licenseUrl": "https://github.com/vogler75/winccua-mqtt-cwc/blob/main/LICENSE",
+      "upstreamPushedAt": "2024-05-11T06:14:00Z",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "not_integrated",
+      "ourTools": [],
+      "assessment": "Candidate only. API/build compatibility, exact feature gaps and licensing must be reviewed before integration.",
+      "readmeSha256": "6cc1256545ffb6ca6128c671e7f5549e34688dd8d72930d383dca31b0d1771bf",
+      "description": "MQTT Client Custom Web Control for SIEMENS WinCC Unified",
+      "archived": false,
+      "defaultBranch": "main",
+      "licenseNote": "Metadata only; NOASSERTION/unknown is not permission to reuse. Follow the linked license and separately licensed product tiers."
+    },
+    {
+      "id": "siemens-openness-v21",
+      "name": "TIA Portal Openness V21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/what-s-new-in-tia-portal-openness",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/what-s-new-in-tia-portal-openness",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ReadOpennessGuidance"
+      ],
+      "assessment": "Modular assemblies and API baseline; pre-V21 applications/Add-Ins need adaptation.",
+      "description": "Modular assemblies and API baseline; pre-V21 applications/Add-Ins need adaptation."
+    },
+    {
+      "id": "siemens-openness-explorer",
+      "name": "TIA Portal Openness Explorer 2.0",
+      "url": "https://cache.industry.siemens.com/dl/files/816/109760816/att_1351237/v1/109760816_TiaOpennessExplorer_DOC_V2_0_en.pdf",
+      "sourceUrl": "https://cache.industry.siemens.com/dl/files/816/109760816/att_1351237/v1/109760816_TiaOpennessExplorer_DOC_V2_0_en.pdf",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Official V21 object-model explorer; manual inspection aid, not an unrestricted Invoke endpoint.",
+      "description": "Official V21 object-model explorer; manual inspection aid, not an unrestricted Invoke endpoint."
+    },
+    {
+      "id": "siemens-project-check",
+      "name": "Project Check 3.2.0",
+      "url": "https://cache.industry.siemens.com/dl/files/418/109741418/att_1358048/v1/109741418_ProjectCheck_Intro_DOC_V3.2.0_en.pdf",
+      "sourceUrl": "https://cache.industry.siemens.com/dl/files/418/109741418/att_1358048/v1/109741418_ProjectCheck_Intro_DOC_V3.2.0_en.pdf",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "AuditEngineeringExports",
+        "RunTestSuiteCase"
+      ],
+      "assessment": "Official V21-tested quality workflow. Requires STEP7 and Test Suite Advanced; independent file audit is not an equivalent certification.",
+      "description": "Official V21-tested quality workflow. Requires STEP7 and Test Suite Advanced; independent file audit is not an equivalent certification."
+    },
+    {
+      "id": "siemens-test-suite",
+      "name": "TIA Portal Test Suite Advanced V21",
+      "url": "https://cache.industry.siemens.com/dl/files/057/109990057/att_1356678/v1/Readme_TestSuite_V21_Update_1.pdf",
+      "sourceUrl": "https://cache.industry.siemens.com/dl/files/057/109990057/att_1356678/v1/Readme_TestSuite_V21_Update_1.pdf",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "ReadTestSuiteCases",
+        "RunTestSuiteCase",
+        "ManageTestSuiteCase",
+        "ExchangeTestSuiteCase"
+      ],
+      "assessment": "Existing typed tools; application tests require matching PLCSIM Advanced and licensing.",
+      "description": "Existing typed tools; application tests require matching PLCSIM Advanced and licensing."
+    },
+    {
+      "id": "siemens-cwc-contract",
+      "name": "WinCC Unified V21 CWC manifest and packaging",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/programming-custom-web-controls-rt-unified/contract-based-interaction-and-the-manifest-file-rt-unified/manifest-structure-rt-unified",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/programming-custom-web-controls-rt-unified/contract-based-interaction-and-the-manifest-file-rt-unified/manifest-structure-rt-unified",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "implemented_local",
+      "ourTools": [
+        "ManageUnifiedCwcPackage"
+      ],
+      "assessment": "Basic identity/local-reference checks and new GUID ZIP creation; no complete JSON schema or runtime certification.",
+      "description": "Basic identity/local-reference checks and new GUID ZIP creation; no complete JSON schema or runtime certification."
+    },
+    {
+      "id": "siemens-xml-schemas",
+      "name": "PublicAPI XML fragment schemas",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/export/import-of-scl-blocks",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/export/import-of-scl-blocks",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "implemented_local",
+      "ourTools": [
+        "ValidatePlcXmlSchemas"
+      ],
+      "assessment": "Use exact supplied XSD versions, not an older filename guessed from prose. Local V21 Schemas checked; schemas are not redistributed.",
+      "description": "Use exact supplied XSD versions, not an older filename guessed from prose. Local V21 Schemas checked; schemas are not redistributed."
+    },
+    {
+      "id": "siemens-vci",
+      "name": "TIA Portal V21 Version Control Interface",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/what-s-new-in-tia-portal/what-s-new-in-v21/system-functions",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/what-s-new-in-tia-portal/what-s-new-in-v21/system-functions",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "GetVersionControlWorkspaces",
+        "GetVersionControlStatus",
+        "SyncVersionControlWorkspace",
+        "ManagePlcGitRepository"
+      ],
+      "assessment": "Project-library and SIMATIC SD workflows; existing tools, object-specific acceptance remains necessary.",
+      "description": "Project-library and SIMATIC SD workflows; existing tools, object-specific acceptance remains necessary."
+    },
+    {
+      "id": "siemens-siome",
+      "name": "Siemens OPC UA Modeling Editor 3.2.1",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v3.2.1/siome-manual/modeling-of-the-addressspace/handling-information-models-and-nodeset-files/import-of-opc-ua-models",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v3.2.1/siome-manual/modeling-of-the-addressspace/handling-information-models-and-nodeset-files/import-of-opc-ua-models",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "version_independent",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [
+        "GenerateOpcUaModelledInterface",
+        "ImportOpcUaInterface"
+      ],
+      "assessment": "Separate NodeSet editor/validator; complementary to Openness, not embedded in MCP.",
+      "description": "Separate NodeSet editor/validator; complementary to Openness, not embedded in MCP."
+    },
+    {
+      "id": "siemens-sat",
+      "name": "SIMATIC Automation Tool",
+      "url": "https://support.industry.siemens.com/cs/ww/en/view/98161300",
+      "sourceUrl": "https://support.industry.siemens.com/cs/ww/en/view/98161300",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "version_independent",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Device commissioning/maintenance independent of TIA. Installation/license and explicit device authorization required; no scan/download executed.",
+      "description": "Device commissioning/maintenance independent of TIA. Installation/license and explicit device authorization required; no scan/download executed."
+    },
+    {
+      "id": "siemens-sact",
+      "name": "SIMATIC Automation Compare Tool",
+      "url": "https://support.industry.siemens.com/cs/ww/en/view/109797235",
+      "sourceUrl": "https://support.industry.siemens.com/cs/ww/en/view/109797235",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "not_confirmed",
+      "localNativeValidated": false,
+      "integrationStatus": "partially_mapped",
+      "ourTools": [
+        "RenderPlcVisualDiff",
+        "ComparePlcBlockDocuments"
+      ],
+      "assessment": "Offline compare/view tool; exact installed version support must be checked. Existing native XML comparison does not depend on its internal UI APIs.",
+      "description": "Offline compare/view tool; exact installed version support must be checked. Existing native XML comparison does not depend on its internal UI APIs."
+    },
+    {
+      "id": "siemens-cax",
+      "name": "CAx / AutomationML / Publication Tools",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/what-s-new-in-tia-portal/what-s-new-in-v21/system-functions",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/what-s-new-in-tia-portal/what-s-new-in-v21/system-functions",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "integrated_existing",
+      "ourTools": [
+        "BuildDeviceAmlDocument",
+        "ImportDeviceAml",
+        "ExportDeviceAml"
+      ],
+      "assessment": "Hardware exchange and parameter publication complement the existing AML workflow.",
+      "description": "Hardware exchange and parameter publication complement the existing AML workflow."
+    },
+    {
+      "id": "siemens-dcc",
+      "name": "SINAMICS DCC Openness V21",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-dcc/dcc-openness",
+      "sourceUrl": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-dcc/dcc-openness",
+      "sourceKind": "official",
+      "license": "Siemens product/document terms; not redistributed",
+      "versionEvidence": "documented_v21",
+      "localNativeValidated": false,
+      "integrationStatus": "external_optional",
+      "ourTools": [],
+      "assessment": "Optional installed product; chart editing/parameters need dedicated target and license. Not inferred from core Openness availability.",
+      "description": "Optional installed product; chart editing/parameters need dedicated target and license. Not inferred from core Openness availability."
+    }
+  ]
+}

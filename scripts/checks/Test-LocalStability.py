@@ -273,7 +273,7 @@ def main():
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
-    parser.add_argument('--full-tool-count', type=int, default=478)
+    parser.add_argument('--full-tool-count', type=int, default=486)
     parser.add_argument('--lite-tool-count', type=int, default=62)
     parser.add_argument('--max-private-mib', type=int, default=512)
     parser.add_argument('--max-handle-growth', type=int, default=128)

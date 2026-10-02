@@ -41,9 +41,10 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 | 组件 | 固定来源 | 许可与本地文件 |
 |---|---|---|
 | TiaGitAddIn.Core：SimaticML、结构比较、LAD 布局 | Czarnak/tia-git-addin `01d0bca9f92da9052aeb8f3130d25edb1847a22b` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../tools/third-party/TiaGitAddIn.Core/LICENSE)、[来源](../../tools/third-party/TiaGitAddIn.Core/UPSTREAM.json)。构建新增 `TiaGitAddIn.Core.dll`。 |
-| Siemens 官方 Openness 指南 | siemens/tia-portal-ai-extensions `2119df978ffe26cf1436384b6d94549b28aa2264` | MIT，© 2026 Siemens AG；[许可证](../../reference/siemens-openness/LICENSE)、[来源](../../reference/siemens-openness/UPSTREAM.json)。作为可检索资料，不自动执行指南。 |
+| Siemens 官方 Openness 指南 | siemens/tia-portal-ai-extensions `b5c7041648dc10f9225ef082306ade6c335b8771` | MIT，© 2026 Siemens AG；[许可证](../../reference/siemens-openness/LICENSE)、[来源](../../reference/siemens-openness/UPSTREAM.json)。2026-10-01 核对更新，32 个指南正文未变化，本地保留稳定的 skills 路径；作为资料，不自动执行。 |
 | Siemens OPC UA 接口生成源码 | tia-portal-applications/tia-addin-opc-ua-modelled-interface `317dfd06dae840ff229e721b140de4b89829120e` | 保留[完整 Siemens 条款](../../tools/third-party/SiemensOpcUaModelled/LICENSE.md)；第 2 节对源代码及生成源代码授予 MIT，© 2022 Siemens AG；[改动记录](../../tools/third-party/SiemensOpcUaModelled/UPSTREAM.json)。未复制上游 Add-In 二进制。 |
 | PLC Tools 的八个 Python 包及根 CLI | core-engineering/siemens-plc-tools `887eea1ea3495832648f47e42759320141952717` | MIT；[许可证](../../tools/third-party/siemens-plc-tools/LICENSE)、[改动记录](../../tools/third-party/siemens-plc-tools/UPSTREAM.json)。以独立 Python 进程运行，安装环境和依赖不随源码入库。 |
+| SimaticML Decoder 0.2.3 | Czarnak/simaticml-decoder `2f100023c2d6f4e7a4df02cbd04975de48f5d207` | MIT，© 2026 Łukasz Czarnacki；[许可证](../../tools/third-party/simaticml-decoder/LICENSE)、[来源](../../tools/third-party/simaticml-decoder/UPSTREAM.json)。原样源码、独立 Python 进程、只读分析；输出不可回编译或导入。上游测试语料不随本项目分发。 |
 
 `TiaUtilities` 和 `tia-linter` 的 GPL 源码未复制。布尔别名/报警生成、XML 模板展开及通用工程质量规则为独立实现。Repsay 客户端和 Czarnak MCP 的功能需求通过本项目现有 API 与新批量协议实现，未复制其源代码。Python 依赖由安装脚本单独还原，包括可选 PDF 审计报告使用的 ReportLab；安装环境不打包进交付仓库。
 

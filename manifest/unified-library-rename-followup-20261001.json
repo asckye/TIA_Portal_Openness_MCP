@@ -1,0 +1,325 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-01",
+  "result": "document-rename-copy-persisted; original-GUID-rename-unresolved; independent-CSharp-native-run-pending",
+  "sourceObservedFieldsUnchanged": true,
+  "sourceReadbackCompleteProjectProof": false,
+  "isolatedInWorkNameWrite": {
+    "editReturned": true,
+    "nameWriteSucceeded": false,
+    "tiaProcessExited": true,
+    "pid": 904
+  },
+  "documentImport": {
+    "exportBaseName": "Type",
+    "exportedFiles": [
+      "Type.def.hmi.js",
+      "Type.def.hmi.yml"
+    ],
+    "workingImportBaseName": "Type.def.hmi",
+    "unchangedContentVersionImportSucceeded": true,
+    "changedNameExistingVersionImportReturnedSuccess": true,
+    "existingLibraryTypeNameChanged": false,
+    "createdCopy": {
+      "name": "MCP_GeneralScripts_DocumentRenamed",
+      "guid": "d9013b09-1684-411f-8b14-546c9a0d6ffc",
+      "typeClass": "ScriptModuleType",
+      "typeKind": "unifiedScriptModule",
+      "author": "SIEMENS",
+      "namespace": null,
+      "comment": {
+        "zh-CN": ""
+      },
+      "doNotUse": false,
+      "minimumTargetDeviceVersion": "21.0.0.0",
+      "setForUpdate": true,
+      "status": "Consistent",
+      "versionCount": 1,
+      "defaultVersion": "5.1.1"
+    },
+    "createdCopyVersions": [
+      {
+        "versionNumber": "5.1.1",
+        "guid": "caec19c4-e0f5-49c4-afe1-b45b3ae2f109",
+        "state": "Committed",
+        "isDefault": true,
+        "author": "MCP diagnostic",
+        "modifiedDate": "10/01/2026 19:09:45",
+        "comment": {
+          "zh-CN": "Native document rename-copy test"
+        },
+        "versionClass": "LibraryTypeVersion",
+        "originalLibrary": "MCP_UnifiedRename_20261001_1113",
+        "dependencies": [],
+        "dependents": [],
+        "masterCopiesContainingInstances": []
+      }
+    ],
+    "copyReleaseSaveCloseReopenVerified": true,
+    "originalTypeAndVersionGuidsPreservedInScratch": true,
+    "referencesMigrated": false,
+    "copyScriptBodyReexportHashVerifiedByMcp": false,
+    "minimumTargetVersionPreserved": false,
+    "limitation": "A newly named script type is not an identity-preserving rename; source 5.0.0 history and existing instance references were not migrated."
+  },
+  "finalState": {
+    "timestamp": "2026-10-01T12:14:22.181894-07:00",
+    "hmiReadHealth": {
+      "snapshotReadsBlocked": false,
+      "lastFailure": null,
+      "portalProcess": {
+        "boundProcessId": 5268,
+        "processAlive": true,
+        "processName": "Siemens.Automation.Portal"
+      },
+      "meaning": "Portal attachment and HMI software-handle health are separate. A successful GetState does not validate every software handle."
+    },
+    "binding": {
+      "identity": {
+        "tiaMajorVersion": 21,
+        "processId": 5268,
+        "processStartUtc": "2026-10-01T17:36:42.2320120Z",
+        "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\AutomaticDipCoatingMachine\\AutomaticDipCoatingMachine.ap21",
+        "projectName": "AutomaticDipCoatingMachine",
+        "generation": "59ab8bd1b4c04376a9167db7e56a11a9"
+      },
+      "fault": null,
+      "instanceReserved": true,
+      "verifiedLive": false,
+      "note": "Cached binding only. Project access verifies PID/start time/full path/name; no implicit rebind."
+    },
+    "journalHealth": {
+      "failedWrites": 0,
+      "lastFailure": null,
+      "durability": "best-effort; successful writes flushed to disk",
+      "nativeBoundaryCoverage": "build-instrumented"
+    },
+    "success": true
+  },
+  "independentProbe": {
+    "nativeRunExecuted": false,
+    "delivery": "VM one-click compiled net48/x64 V21 diagnostic; no remote shell available"
+  },
+  "evidence": [
+    {
+      "key": "sourceBefore",
+      "path": "bin-build/unified-rename-native-20261001/183307028247-ReadLibraryType.json",
+      "sha256": "abf3be0006079542b8ba0208cad24889c27ac821ca4f10fc72a5e0d0b76d107b"
+    },
+    {
+      "key": "sourceBeforeRequest",
+      "path": "bin-build/unified-rename-native-20261001/183307028247-ReadLibraryType-request.json",
+      "sha256": "f5f29fe5aea9434fb5172a63538b85fe94455aa3ee1ebff8f6d0a7d6bd2275f3"
+    },
+    {
+      "key": "sourceAfter",
+      "path": "bin-build/unified-rename-native-20261001/191249703973-ReadLibraryType.json",
+      "sha256": "fb3d8c0639addd8ce208cff75140631396ea2737ceb851aceb71ba902ec4dcca"
+    },
+    {
+      "key": "sourceAfterRequest",
+      "path": "bin-build/unified-rename-native-20261001/191249703973-ReadLibraryType-request.json",
+      "sha256": "f5f29fe5aea9434fb5172a63538b85fe94455aa3ee1ebff8f6d0a7d6bd2275f3"
+    },
+    {
+      "key": "nativeExport",
+      "path": "bin-build/unified-rename-native-20261001/185829396271-ReadUnifiedLibraryType.json",
+      "sha256": "f6922cc76900ce32e180c847c4ab6c87113804b4bacd5a8ef9aedf116e2fdacc"
+    },
+    {
+      "key": "nativeExportRequest",
+      "path": "bin-build/unified-rename-native-20261001/185829396271-ReadUnifiedLibraryType-request.json",
+      "sha256": "069d3e5f3c2c87c181e6dcf63775be529367c42aea19a874aecf1495ef50f034"
+    },
+    {
+      "key": "wrongShortStemCreate",
+      "path": "bin-build/unified-rename-native-20261001/190233816423-ImportLibraryTypeDocuments.json",
+      "sha256": "18d8730ab3dac364ea07f7a9f01d858985e287bdffb806c2025cf7d64f09aa16"
+    },
+    {
+      "key": "wrongShortStemCreateRequest",
+      "path": "bin-build/unified-rename-native-20261001/190233816423-ImportLibraryTypeDocuments-request.json",
+      "sha256": "40e54e17d0d343b6885da97f09f14eb5630e49f1a721ccf2ec9de81a6f0367c8"
+    },
+    {
+      "key": "wrongShortStemUpdate",
+      "path": "bin-build/unified-rename-native-20261001/190322885684-ImportLibraryTypeDocuments.json",
+      "sha256": "0f9fd41a869016f788273b5f0fd3388cd2c72ba6b56b0d6418dacfb181367a36"
+    },
+    {
+      "key": "wrongShortStemUpdateRequest",
+      "path": "bin-build/unified-rename-native-20261001/190322885684-ImportLibraryTypeDocuments-request.json",
+      "sha256": "900f0aea04cb168f0dd77ac2cb9bf5b1e071ea2456c2563557b9e3bf16ff67da"
+    },
+    {
+      "key": "edit",
+      "path": "bin-build/unified-rename-native-20261001/190326336422-ManageLibraryTypeVersion.json",
+      "sha256": "461a23213f74ecedc6b2446060b6b0cb642c836c569916eabf11f29ed7e1e9cf"
+    },
+    {
+      "key": "editRequest",
+      "path": "bin-build/unified-rename-native-20261001/190326336422-ManageLibraryTypeVersion-request.json",
+      "sha256": "dd758601df74fdd9b07f0ca208f03f8e8e3dbd96d602dfbffd82b893ed8edf2b"
+    },
+    {
+      "key": "inWorkRename",
+      "path": "bin-build/unified-rename-native-20261001/190404929986-ManageLibraryType.json",
+      "sha256": "cb0020cdddc22bd1accb2b2528cc2bb36926e7c9018ae766e2d40b65650c2a00"
+    },
+    {
+      "key": "inWorkRenameRequest",
+      "path": "bin-build/unified-rename-native-20261001/190404929986-ManageLibraryType-request.json",
+      "sha256": "1d9e82cfcc42bc4f8e644fdf7faf4b6468032aea4e3678f0a9a0c8f09a67d8ff"
+    },
+    {
+      "key": "journal",
+      "path": "bin-build/unified-rename-native-20261001/190445800089-ReadNativeInvocationLog.json",
+      "sha256": "1c4c6e3df8f153ade1233ea0c01216502567f7743e6670449394764f0cd62e25"
+    },
+    {
+      "key": "journalRequest",
+      "path": "bin-build/unified-rename-native-20261001/190445800089-ReadNativeInvocationLog-request.json",
+      "sha256": "f39beb9ac0db6c7ba4ada8534e4d25ebab3ed07bd4c9db4f908a025c4d35ec51"
+    },
+    {
+      "key": "existingTypeCreateRefusal",
+      "path": "bin-build/unified-rename-native-20261001/190651539122-ImportLibraryTypeDocuments.json",
+      "sha256": "244e3a0dbe9615e6ae0c2a65d12ac5bbbea7ef9583e1b7d2ae798a0f0d9f25cf"
+    },
+    {
+      "key": "existingTypeCreateRefusalRequest",
+      "path": "bin-build/unified-rename-native-20261001/190651539122-ImportLibraryTypeDocuments-request.json",
+      "sha256": "d96f9c4b0be2eb216c22e1d8f07d4fec44e96a96964487d5d239137c5ef5b311"
+    },
+    {
+      "key": "unchangedVersionImport",
+      "path": "bin-build/unified-rename-native-20261001/190719984381-ImportLibraryTypeDocuments.json",
+      "sha256": "9034d9a377457662f1e88a807b006bb789fe316d48265796cf0eeab4f3ba4e9a"
+    },
+    {
+      "key": "unchangedVersionImportRequest",
+      "path": "bin-build/unified-rename-native-20261001/190719984381-ImportLibraryTypeDocuments-request.json",
+      "sha256": "3b54fd5375165fa308521abb8b25f94d14678ac8b07b84dcb217a4a5740aa89f"
+    },
+    {
+      "key": "renamedTypeCreate",
+      "path": "bin-build/unified-rename-native-20261001/190854086320-ImportLibraryTypeDocuments.json",
+      "sha256": "277ca0faf7d678bd0399354ed21e0790a2a5657f8a51d4a0c57e6348181a7315"
+    },
+    {
+      "key": "renamedTypeCreateRequest",
+      "path": "bin-build/unified-rename-native-20261001/190854086320-ImportLibraryTypeDocuments-request.json",
+      "sha256": "253e30aef145dad2b79147708453c9a46bc8b357a316e19e2fdc10684edbda8a"
+    },
+    {
+      "key": "renamedTypeRelease",
+      "path": "bin-build/unified-rename-native-20261001/190944619779-ManageLibraryTypeVersion.json",
+      "sha256": "9f6a4fcedd4d59068ce82aa4feff399bed9bb09b51fd149024e6bb85ac321106"
+    },
+    {
+      "key": "renamedTypeReleaseRequest",
+      "path": "bin-build/unified-rename-native-20261001/190944619779-ManageLibraryTypeVersion-request.json",
+      "sha256": "5390472f2872bf1948f1a1b0324117f2496c4dfb78e54938e23e3a61adf4709e"
+    },
+    {
+      "key": "changedNameVersionImport",
+      "path": "bin-build/unified-rename-native-20261001/191004164877-ImportLibraryTypeDocuments.json",
+      "sha256": "0e622c185cd95fa169bd964d0e91833bbd96180ef4cd6b13dca039811d0e384d"
+    },
+    {
+      "key": "changedNameVersionImportRequest",
+      "path": "bin-build/unified-rename-native-20261001/191004164877-ImportLibraryTypeDocuments-request.json",
+      "sha256": "86c7a878eb1f5262c5e76d30c7b861f4feb8f981b374975613028dc7845a0cc5"
+    },
+    {
+      "key": "discardChangedNameVersion",
+      "path": "bin-build/unified-rename-native-20261001/191026321537-ManageLibraryTypeVersion.json",
+      "sha256": "2f802bb2d28060ac6b9d92eea445325f18e490da7df36849e7993148e829d9c4"
+    },
+    {
+      "key": "discardChangedNameVersionRequest",
+      "path": "bin-build/unified-rename-native-20261001/191026321537-ManageLibraryTypeVersion-request.json",
+      "sha256": "bacccbc097eb399e6cacf1b5f6d13cb8e7ca541ff191b07c681debfe8d7ff430"
+    },
+    {
+      "key": "save",
+      "path": "bin-build/unified-rename-native-20261001/191026788755-SaveProject.json",
+      "sha256": "023feddd9570ac5ca9cf4cc40bc26edf1e3ce0b1259e7d4c2372ddb1d3971000"
+    },
+    {
+      "key": "saveRequest",
+      "path": "bin-build/unified-rename-native-20261001/191026788755-SaveProject-request.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "key": "close",
+      "path": "bin-build/unified-rename-native-20261001/191027307913-CloseProject.json",
+      "sha256": "0d222e6a794add1c20b771cf168931f36210044e66a5412350b812973ab2a4a9"
+    },
+    {
+      "key": "closeRequest",
+      "path": "bin-build/unified-rename-native-20261001/191027307913-CloseProject-request.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "key": "reopen",
+      "path": "bin-build/unified-rename-native-20261001/191202875859-OpenProject.json",
+      "sha256": "4765f9dd9eaee78ab2b1d1269a34f77d7bb783e431bddf05def2cf4be8b54f2b"
+    },
+    {
+      "key": "reopenRequest",
+      "path": "bin-build/unified-rename-native-20261001/191202875859-OpenProject-request.json",
+      "sha256": "a86764136979dc2d6d31be9f5133a4f80b3155f7fc52579e56e8668c5034fb09"
+    },
+    {
+      "key": "cloneReadback",
+      "path": "bin-build/unified-rename-native-20261001/191203590237-ReadLibraryType.json",
+      "sha256": "3866839210a6e754ca8153a59ae6d7d5d324ded744e3aad5e2db1ddbba21a057"
+    },
+    {
+      "key": "cloneReadbackRequest",
+      "path": "bin-build/unified-rename-native-20261001/191203590237-ReadLibraryType-request.json",
+      "sha256": "15636501b88d8454c9114457c4f1e932d5b15594ae494e13541930397a4ab4ba"
+    },
+    {
+      "key": "scratchOriginalReadback",
+      "path": "bin-build/unified-rename-native-20261001/191204227948-ReadLibraryType.json",
+      "sha256": "c8a68568003232e920deb1144c0b1aa88fcba521008de27426b01b2caf367530"
+    },
+    {
+      "key": "scratchOriginalReadbackRequest",
+      "path": "bin-build/unified-rename-native-20261001/191204227948-ReadLibraryType-request.json",
+      "sha256": "f5f29fe5aea9434fb5172a63538b85fe94455aa3ee1ebff8f6d0a7d6bd2275f3"
+    },
+    {
+      "key": "sourceRebind",
+      "path": "bin-build/unified-rename-native-20261001/191249266039-ConnectToProject.json",
+      "sha256": "229fd211e376a8d9fc4e0bb2a24853fbcf407c05eb82659e74d1c6e252f6f6a2"
+    },
+    {
+      "key": "sourceRebindRequest",
+      "path": "bin-build/unified-rename-native-20261001/191249266039-ConnectToProject-request.json",
+      "sha256": "8c78707e8b6ebd40b0594fcc597e57cf907cc3dbb63bd3209a26a008f46ca5a3"
+    },
+    {
+      "key": "finalState",
+      "path": "bin-build/unified-rename-native-20261001/191422167934-GetState.json",
+      "sha256": "1238ca74c64f6c75846b3baf094db5113a4133248b07f587b1c595b6e70c6b97"
+    },
+    {
+      "key": "finalStateRequest",
+      "path": "bin-build/unified-rename-native-20261001/191422167934-GetState-request.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "key": "finalProcesses",
+      "path": "bin-build/unified-rename-native-20261001/191422384583-ListPortalProcessProjects.json",
+      "sha256": "5de155b91c7c554b33cafef2578dcd2151e607f963cc62dfbbae6c6f184b3b41"
+    },
+    {
+      "key": "finalProcessesRequest",
+      "path": "bin-build/unified-rename-native-20261001/191422384583-ListPortalProcessProjects-request.json",
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    }
+  ]
+}

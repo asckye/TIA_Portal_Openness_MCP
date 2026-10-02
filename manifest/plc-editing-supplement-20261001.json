@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "generatedAtUtc": "2026-10-01T21:16:43.7378296Z",
+  "release": "3.1.0 local candidate",
+  "status": "LOCAL_CHECKS_PASSED_NATIVE_PENDING",
+  "tools": [
+    "ReadPlcBlockEditCapabilities",
+    "AnalyzePlcReferences",
+    "PatchPlcBlockDocument",
+    "ImportPlcBlockVerified"
+  ],
+  "implementation": "Independent implementation from existing project and documented Siemens interfaces; no TiaCommander code or binaries incorporated",
+  "fullBuild": "scripts/build/Build-Release.ps1",
+  "fullBuildRecord": "manifest/release-build.json",
+  "fullBuildRecordSha256": "96865d735d290354a8e7de37deda52d7321f8dde691627d7ff268adfca7a4fc1",
+  "offlinePassed": 2682,
+  "catalogToolCount": 482,
+  "runtimes": [
+    {
+      "version": "V20",
+      "localCalls": 4484,
+      "isolatedCalls": 4484,
+      "localStatus": "passed",
+      "isolatedStatus": "passed",
+      "protocol": {
+        "status": "passed",
+        "major": 20,
+        "checks": 88,
+        "runs": [
+          {
+            "label": "v20-stdio-full-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-stdio-lite-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-http-full-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-http-lite-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-stdio-full-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-stdio-lite-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-http-full-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v20-http-lite-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          }
+        ],
+        "runtimeSha256": "a2fcd21987a6c7d1d6460348f487a9b943022b0ebdd51ffb228e4fd013e71b1a",
+        "scriptSha256": "8068ef789e71fbe8a5939261ad03300733209bac87f91319b5836c289d3451ae",
+        "nativeTiaExecuted": false,
+        "scope": "Real SDK dispatch, STDIO/HTTP, full/lite, direct/isolated offline hosts. Synthetic XML only; no native import or TIA connection."
+      }
+    },
+    {
+      "version": "V21",
+      "localCalls": 4484,
+      "isolatedCalls": 4484,
+      "localStatus": "passed",
+      "isolatedStatus": "passed",
+      "protocol": {
+        "status": "passed",
+        "major": 21,
+        "checks": 88,
+        "runs": [
+          {
+            "label": "v21-stdio-full-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-stdio-lite-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-http-full-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-http-lite-isolated-False",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-stdio-full-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-stdio-lite-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-http-full-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          },
+          {
+            "label": "v21-http-lite-isolated-True",
+            "checks": 11,
+            "status": "passed"
+          }
+        ],
+        "runtimeSha256": "cf1a53f2c1356a04d5bd03c81b0a2767b135349a29260007576206386fe3cd70",
+        "scriptSha256": "8068ef789e71fbe8a5939261ad03300733209bac87f91319b5836c289d3451ae",
+        "nativeTiaExecuted": false,
+        "scope": "Real SDK dispatch, STDIO/HTTP, full/lite, direct/isolated offline hosts. Synthetic XML only; no native import or TIA connection."
+      }
+    }
+  ],
+  "protocolEvidence": [
+    "bin-build/plc-editing-protocol/plc-editing-34497e6444db4bf5b805ae44325fcecd/result.json",
+    "bin-build/plc-editing-protocol/plc-editing-d42487d2015d410abb2b9ff474b5ad75/result.json"
+  ],
+  "nativeTiaExecuted": false,
+  "vmAccessed": false,
+  "deployed": false,
+  "published": false,
+  "limits": [
+    "Synthetic offline fixtures and MCP test hosts do not establish native TIA crash safety.",
+    "Verified overwrite must still be accepted on independent V20/V21 test projects.",
+    "Document patching covers existing titles/comments and scalar start values; no complete rung or SCL statement editor.",
+    "Offline reference coverage is partial and cannot justify deletion.",
+    "This PLC supplement does not resolve Unified script-library type renaming."
+  ]
+}

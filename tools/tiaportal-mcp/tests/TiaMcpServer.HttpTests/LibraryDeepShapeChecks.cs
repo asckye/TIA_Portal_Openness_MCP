@@ -117,6 +117,16 @@ internal static class LibraryDeepShapeChecks
         Enum(types+"LibraryTypeVersionState","InWork","Committed"); Enum(compare+"DetailCompareStatus","NotCompared","ObjectsDifferent","ObjectsIdentical"); Enum(lib+"TransferResultState","Success","Warning");
         // Engine surface
         var portal=server.GetType("TiaMcpServer.Siemens.Portal")!;
+        // Execute only our pure metadata guard against the real SDK Type, never a native setter.
+        var guard=server.GetType("TiaMcpServer.Siemens.LibraryDeepLogic")!.GetMethod("GuardKnownTypeWrites",BindingFlags.Static|BindingFlags.NonPublic)!;
+        var scriptModuleType=T("Siemens.Engineering.HmiUnified.Library.ScriptModuleType",unified);
+        bool renameBlocked=false;
+        try { guard.Invoke(null,new object[]{21,scriptModuleType,new[]{"Name"}}); }
+        catch(TargetInvocationException ex) { renameBlocked=ex.InnerException?.GetType().GetProperty("Code")?.GetValue(ex.InnerException)?.ToString()=="NativeCrashRiskBlocked"; }
+        check(renameBlocked,"V21 rename incident guard recognizes actual SDK ScriptModuleType metadata without native access");
+        guard.Invoke(null,new object[]{20,scriptModuleType,new[]{"Name"}});
+        guard.Invoke(null,new object[]{21,scriptModuleType,new[]{"DoNotUse"}});
+        check(true,"rename incident guard preserves V20 and unrelated property scope (not a native safety claim)");
         foreach(var tool in new[]{"ReadLibraryOverview","ReadLibraryType","ManageLibraryType","CheckLibraryUpdates","SynchronizeLibrary","CompareLibraryObjects"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" present");
         check(portal.GetMethod("ManageGlobalLibrary")?.GetParameters().Any(p=>p.Name=="archiveMode")==true,"Portal.ManageGlobalLibrary carries archiveMode (infos/openInfo/archive actions)");
         check(portal.GetMethod("ImportLibraryTypeDocuments")?.GetParameters().Any(p=>p.Name=="createOptions")==true,"Portal.ImportLibraryTypeDocuments carries createOptions (version import)");

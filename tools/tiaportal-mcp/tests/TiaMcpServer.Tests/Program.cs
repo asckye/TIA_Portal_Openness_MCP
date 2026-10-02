@@ -87,6 +87,8 @@ namespace TiaMcpServer.Tests
             UnifiedUiModelTests.Run(Check);
             MotionProDiagClassicHmiTests.Run(Check);
             OfflineAnalysisTests.Run(Check);
+            PlcEditingTests.Run(Check);
+            V21EcosystemTests.Run(Check);
 
             Console.WriteLine("== 运行时通道：S7 Web 服务器 API 与 Unified Open Pipe 的请求构造、响应解析与拒绝路径 ==");
             RuntimeChannelsTests.Run(Check);
@@ -114,6 +116,7 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== 库深层纯逻辑：选择/范围解析、模式目录、同步/类型/比较请求门控、GUID 与归档名；HmiReadSafety 释放对象分类 ==");
             LibraryDeepTests.Run(Check);
+            LibraryWriteSafetyTests.Run(Check);
 
             Console.WriteLine("== 安全/UMC 深层纯逻辑：syslog（工程/PLC）请求门控、密码策略目标与范围、UMC 用户/组/服务器请求与凭据规则、证书模板与 SAN、匿名用户动作 ==");
             SecurityDeepTests.Run(Check);

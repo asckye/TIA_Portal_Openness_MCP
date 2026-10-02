@@ -39,6 +39,8 @@ Call these host controls directly, or through `CallTool`. Do not place them insi
 
 After a fault:
 
+If `ReadOpennessWorkerStatus` reports `enabled=false`, there is no child to reset. When the cached TIA PID is confirmed dead, explicitly `Disconnect` and check that `GetState` reports no fault, snapshot block or instance reservation; if it cannot complete, restart that MCP host process. Then obtain a fresh PID/start time/full path with `ListPortalProcessProjects` and use `ConnectToProject`. Reopening TIA or reconnecting the HTTP client alone does not clear the old host binding. `AttachToOpenProject` can still reject its cached same-name binding after a fault. See the [V21 library rename incident and recovery procedure](../development/unified-library-rename-incident-20261001.md).
+
 1. Read worker status and the invocation journal. Treat any dispatched write without a trustworthy result as having an unknown outcome.
 2. Check the intended TIA process and project state independently. Do not retry the write automatically.
 3. Once active/queued requests have returned, explicitly call `RestartOpennessWorker(confirmRestart=true)`.

@@ -53,7 +53,7 @@ namespace TiaMcpServer.Tests
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateSyncRequest("sync", "", "GL", scopes, whole, "SetOnlyHigherUpdatedVersionAsDefault", "DoNotDelete", "RetainStructure", "DeleteUnusedTypes")), "libdeep: unknown sync action refused");
             // Type request gating.
             var props = System.Text.Json.Nodes.JsonNode.Parse("{\"DoNotUse\":true,\"SetForUpdate\":false}")!.AsObject(); var empty = new System.Text.Json.Nodes.JsonObject();
-            LibraryDeepLogic.ValidateTypeRequest("update", props, "", "", Array.Empty<string>());
+            LibraryDeepLogic.ValidateTypeRequest("update", props, "", "WritableGlobalLibrary", Array.Empty<string>());
             LibraryDeepLogic.ValidateTypeRequest("delete", empty, "", "", Array.Empty<string>());
             LibraryDeepLogic.ValidateTypeRequest("updateLibrary", empty, "GL_1", "", Array.Empty<string>());
             LibraryDeepLogic.ValidateTypeRequest("updateProject", empty, "", "", scopes);
@@ -63,6 +63,11 @@ namespace TiaMcpServer.Tests
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateTypeRequest("delete", props, "", "", Array.Empty<string>())), "libdeep: properties on delete refused");
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateTypeRequest("updateLibrary", empty, "", "", Array.Empty<string>())), "libdeep: type updateLibrary onto itself refused");
             check(Fails<ArgumentException>(() => LibraryDeepLogic.ValidateTypeRequest("updateProject", empty, "", "", Array.Empty<string>())), "libdeep: type updateProject without scope refused");
+            foreach (bool value in new[] { false, true })
+                check(Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateTypeRequest("update", new System.Text.Json.Nodes.JsonObject { ["DoNotUse"] = true, ["SetForUpdate"] = value }, "", "", Array.Empty<string>())), "libdeep: project SetForUpdate refused before the complete batch, value=" + value);
+            check(Fails<NotSupportedException>(() => LibraryDeepLogic.ValidateTypeWriteProtection(true)), "libdeep: protected global library properties refused before writing");
+            LibraryDeepLogic.ValidateTypeWriteProtection(false);
+            check(true, "libdeep: writable global library remains eligible");
             // Compare request gating.
             LibraryDeepLogic.ValidateCompareRequest("type", "A/FB_1", "FB_1", "", ""); LibraryDeepLogic.ValidateCompareRequest("version", "FB_1", "FB_1", "1.0.0", "1.0.1"); LibraryDeepLogic.ValidateCompareRequest("masterCopy", "MC_1", "MC_1", "", "");
             check(true, "libdeep: valid compare requests accepted");

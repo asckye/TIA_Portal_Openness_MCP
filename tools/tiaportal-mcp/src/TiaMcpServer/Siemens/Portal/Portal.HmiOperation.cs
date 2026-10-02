@@ -33,7 +33,7 @@ namespace TiaMcpServer.Siemens
         {
             InvalidateHmiSoftwareCache();
             _hmiReadFault = new JsonObject();
-            foreach (var key in new[] { "timestamp", "operationId", "softwarePath", "screenPath", "phase", "lastAttemptedPath", "error" })
+            foreach (var key in new[] { "timestamp", "operationId", "tool", "action", "libraryName", "typePath", "lastAttemptedProperty", "appliedProperties", "mayHaveChanged", "softwarePath", "screenPath", "phase", "lastAttemptedPath", "error" })
                 _hmiReadFault[key] = meta[key]?.DeepClone();
             meta["status"] = "HmiConnectionUnavailable";
             meta["connectionUnavailable"] = true; meta["remoteInspectionStopped"] = true;

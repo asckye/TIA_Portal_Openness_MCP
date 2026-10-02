@@ -1,6 +1,7 @@
 {
   "repository": "https://github.com/siemens/tia-portal-ai-extensions",
-  "commit": "2119df978ffe26cf1436384b6d94549b28aa2264",
+  "commit": "b5c7041648dc10f9225ef082306ade6c335b8771",
   "license": "MIT",
-  "scope": "Reference material only, not automatically installed or executed"
+  "upstreamSkillsPath": "openness_development/skills",
+  "scope": "Reference material only; relocated skills to stable local skills path, not automatically installed or executed"
 }

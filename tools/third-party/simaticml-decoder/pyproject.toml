@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "simaticml-decoder"
+version = "0.2.3"
+description = "Translate exported SimaticML LAD/FBD blocks (TIA V21) into readable SCL plus a JSON metadata sidecar."
+requires-python = ">=3.11"
+readme = "README.md"
+authors = [{ name = "Czarnak" }]
+keywords = ["simatic", "simaticml", "tia-portal", "scl", "plc"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Manufacturing",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Text Processing",
+    "Topic :: Utilities",
+]
+# stdlib-only runtime (xml.etree.ElementTree). Keeping zero runtime deps makes the
+# eventual PyInstaller/Nuitka freeze small and the PowerShell-subprocess call trivial.
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Czarnak/simaticml-decoder"
+Issues = "https://github.com/Czarnak/simaticml-decoder/issues"
+Repository = "https://github.com/Czarnak/simaticml-decoder"
+
+[project.optional-dependencies]
+dev = ["build", "pytest", "pytest-cov", "ruff", "twine"]
+
+[project.scripts]
+simaticml-decode = "simaticml_decoder.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/simaticml_decoder"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+# windows_handles.py is Windows-only ctypes/NTAPI glue: input_policy.py only
+# imports and calls it from behind _use_windows_native_discovery(), so on
+# Linux CI it never executes and would sit at ~0% coverage, dragging the
+# aggregate below the --cov-fail-under=80 gate for reasons unrelated to any
+# regression. It has its own platform-gated suite (test_windows_handles.py,
+# skipif'd to run only on windows-latest) that verifies it directly instead.
+omit = ["src/simaticml_decoder/windows_handles.py"]
+
+[tool.coverage.report]
+# Records, in pyproject.toml itself, the same 80% floor CI already passes
+# explicitly via `--cov-fail-under=80` -- so the gate is enforced even for a
+# bare `pytest --cov=...` run and isn't defined in CI alone.
+fail_under = 80

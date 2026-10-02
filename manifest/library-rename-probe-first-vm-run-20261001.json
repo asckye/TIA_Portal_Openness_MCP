@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "campaign": "20261001-122041-40b08e26",
+  "result": "preparation-failed-at-Projects.Create; no-rename-case-executed",
+  "returnedPackageMatchesDeliveredExecutable": true,
+  "attemptedStages": 1,
+  "executionStagesAttempted": 0,
+  "nameWritesAttempted": 0,
+  "sourceLibraryOpened": false,
+  "failureBoundary": "Projects.Create",
+  "projectDirectoryCharacters": 149,
+  "reportedMaximumCharacters": 143,
+  "tiaPid": 34856,
+  "tiaStartUtc": "2026-10-01T19:20:42.2678440Z",
+  "nativeChannelFaulted": false,
+  "disposeReturned": true,
+  "processSampleImmediatelyAfterDispose": {
+    "alive": true
+  },
+  "supervisorProceededPastOwnedProcessExitCheck": true,
+  "supervisorReason": "Preparation failed for control; remaining cases were not run.",
+  "note": "The immediate alive sample is not a final process state. The runner reached its preparation-failure branch only after its PID/start-time exit check and existing-process identity check.",
+  "exception": "Siemens.Engineering.EngineeringTargetInvocationException: Error when calling method 'Create' of type 'Siemens.Engineering.ProjectComposition'.\r\n\r\nProject cannot be created under the following path: 'C:\\Users\\SIEMENS\\Desktop\\LibraryRenameProbe-V21-20261001-121722\\LibraryRenameProbe-V21-20261001-121722\\results\\20261001-122041-40b08e26\\control\\Probe'.\r\n\r\nAn error occurred creating the project.\r\n指定的路径“C:\\Users\\SIEMENS\\Desktop\\LibraryRenameProbe-V21-20261001-121722\\LibraryRenameProbe-V21-20261001-121722\\results\\20261001-122041-40b08e26\\control\\Probe”（149 个字符）过长。最大允许 143 个字符。\r\n   在 Siemens.Engineering.Private.Session.Siemens.Engineering.Private.ICompositionSession.Create[T,TC](LifetimeContractHandle`1 lifetimeContractHandle, Type type, IEnumerable`1 parameters, String fullName)\r\n   在 Siemens.Engineering.Private.InternalCompositionAccess.Create[T](Type type, IEnumerable`1 parameters)\r\n   在 LibraryRenameProbe.Journal.Call[T](String api, Func`1 call) 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 257\r\n   在 LibraryRenameProbe.Native.Run(Options o) 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 60",
+  "apiSequence": [
+    "TiaPortal.new.WithoutUserInterface",
+    "TiaPortal.GetCurrentProcess",
+    "Projects.Create",
+    "TiaPortal.Dispose.owned"
+  ],
+  "evidence": [
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/summary.json",
+      "sha256": "5a38d19b985edecf8a8709fa5d908e94c585417c318f4bdd51aad90b788953b3"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/cases.json",
+      "sha256": "475074c793354159db19bb6005f1181e7b286841357959e3e9cc1a89db7c9bd3"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/control/prepare-result.json",
+      "sha256": "4818b5720c22431ed590eb82e3a58de8acc05dd27c7cd1124aa204bf1be82dc1"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/control/prepare-events.jsonl",
+      "sha256": "72cb026873b4bb6e8011ce6fbd33f33a7b86714bb34e7628975b08548b180deb"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/control/prepare-owned-process.json",
+      "sha256": "bf719aac4e28fd01922721cc4da69af70493be6a79122cd40e53f546db7b9b72"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/control-prepare.stdout.txt",
+      "sha256": "a55cd8069cfc676ac3cf5d9a7b0f46d6319876f7d2c6b6ddaa2acf2b59a4376d"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/control-prepare.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/existing-portals.json",
+      "sha256": "0294309fe4b4d7cd6bcdd279a49d19a2afadd07a29c1838f15dba81f3b78953a"
+    },
+    {
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-122041/event-collection-note.txt",
+      "sha256": "d5a7ed7013c6160ba72644e0e0d536ba9764af1cfe8035c572815cddd2b73b9d"
+    }
+  ],
+  "revision2": "Native projects and document exchange use short per-case LOCALAPPDATA/TRP paths; validate both project directory lengths before TIA startup; copy exports into results; explicit UTF-8 reads in PowerShell 5.1.",
+  "revision2NativeExecution": "pending VM rerun"
+}

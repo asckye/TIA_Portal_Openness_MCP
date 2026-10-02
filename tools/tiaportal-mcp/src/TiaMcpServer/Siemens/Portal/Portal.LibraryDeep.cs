@@ -292,6 +292,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManageLibraryType(string typePath, string action, string libraryName = "", string propertiesJson = "{}", string targetLibraryName = "", string scopeSoftwarePathsJson = "[]",
             string deleteUnusedVersionsMode = "DoNotDelete", string structureConflictResolutionMode = "RetainStructure", string forceUpdateMode = "SetOnlyHigherUpdatedVersionAsDefault", bool confirmDelete = false, bool dryRun = true)
             => RunHmiStepTool("ManageLibraryType", meta => {
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["typePath"] = typePath; meta["libraryName"] = libraryName;
                 var properties = HardwareNetworkLogic.ParseObject(propertiesJson, "propertiesJson"); var scopePaths = LibraryDeepLogic.ParseScopes(scopeSoftwarePathsJson);
                 LibraryDeepLogic.ValidateTypeRequest(action, properties, targetLibraryName, libraryName, scopePaths);
                 LibraryDeepLogic.RequireOneOf(deleteUnusedVersionsMode, LibraryDeepLogic.DeleteUnusedVersionsModes, "deleteUnusedVersionsMode");
@@ -300,14 +301,16 @@ namespace TiaMcpServer.Siemens
                 if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
                 using var access = dryRun ? null : AcquireHmiEditAccess();
                 var library = ExactOpenEngineeringLibrary(libraryName); var type = ExactLibraryType(library, typePath);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["typePath"] = typePath; meta["before"] = TypeRow(type, true);
+                var prepared = action == "update" ? EngineeringScalarProperties.Prepare(type.GetType(), properties) : null;
+                if (action == "update" && library is GlobalLibrary global) LibraryDeepLogic.ValidateTypeWriteProtection(global.IsWriteProtected);
+                meta["before"] = TypeRow(type, true);
                 switch (action)
                 {
                     case "update":
                     {
-                        var prepared = EngineeringScalarProperties.Prepare(type.GetType(), properties); meta["requestedProperties"] = properties.DeepClone();
-                        if (dryRun) return "Library type update preview; SetForUpdate is refused by TIA on project-library and write-protected types.";
-                        EngineeringScalarProperties.Apply(type, prepared, meta); meta["after"] = TypeRow(type, false);
+                        meta["requestedProperties"] = properties.DeepClone();
+                        if (dryRun) return "Library type update preview; known unsafe writes and library restrictions checked. Nothing changed.";
+                        EngineeringScalarProperties.Apply(type, prepared!, meta); meta["after"] = TypeRow(type, false);
                         return "Library type properties written and read back. No save.";
                     }
                     case "delete":

@@ -117,7 +117,7 @@ foreach($major in @(20,21)) {
     if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){3124}else{2838}
+    $expectedEngineeringChecks=if($major -eq 21){3126}else{2840}
     if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
@@ -129,6 +129,14 @@ foreach($major in @(20,21)) {
     Run $Python @((Join-Path $repo 'scripts/checks/Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "resources-v$major.log"
     $resources=[regex]::Match((Get-Content (Join-Path $out "resources-v$major.log") -Raw),'COMPLETE: (\d+) resource discovery checks passed')
     if(!$resources.Success){throw 'Resource discovery validation did not report complete success'}
+    # V21 document adapters are offline on both runtimes; use the supplied V21 schemas.
+    $v21Schemas=Join-Path (Split-Path (Resolve-Path -LiteralPath $V21ReferenceRoot).Path -Parent) 'Schemas'
+    $v21EcosystemOut=Join-Path $out ("v21-ecosystem-v$major-"+[Guid]::NewGuid().ToString('N'))
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-V21Ecosystem.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--schema-root',$v21Schemas,'--output',$v21EcosystemOut) "v21-ecosystem-v$major.log"
+    $v21EcosystemFiles=@(Get-ChildItem -LiteralPath $v21EcosystemOut -Filter result.json -Recurse -File)
+    if($v21EcosystemFiles.Count -ne 1){throw 'V21 ecosystem evidence missing or ambiguous'}
+    $v21Ecosystem=Get-Content -LiteralPath $v21EcosystemFiles[0].FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+    if($v21Ecosystem.status -ne 'passed' -or $v21Ecosystem.checks -lt 75 -or $v21Ecosystem.selfTestOnly -or $v21Ecosystem.nativeTiaExecuted -or $v21Ecosystem.runtimeSha256 -ne (Get-FileHash $exe).Hash.ToLowerInvariant()){throw 'V21 ecosystem adapter checks incomplete'}
     # Local-only release gate: mixed success/failure calls, full/lite, STDIO and
     # eight HTTP clients. This explicitly cannot certify native TIA stability.
     $stabilityOut=Join-Path $out ("stability-v$major-"+[Guid]::NewGuid().ToString('N'))
@@ -163,6 +171,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['engineeringApiShapePassed']=[int]$engineeringApi.Groups[1].Value
     $checks["V$major"]['nativeHarness']=[ordered]@{compiled=$true;safetyChecksPassed=[int]$nativeSafety.Groups[1].Value;supervisorChecksPassed=[int]$nativeSupervisor.Groups[1].Value;exeSha256=(Get-FileHash $nativeExe).Hash.ToLowerInvariant();supervisorSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py')).Hash.ToLowerInvariant();liveAcceptance='NOT RUN; explicit opt-in required'}
     $checks["V$major"]['localStability']=$stability
+    $checks["V$major"]['v21EcosystemAdapters']=$v21Ecosystem
     $checks["V$major"]['isolatedLocalStability']=$isolatedStability
     $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=2;nativeMcpSafetyChecksPassed=8;crashEvidenceChecksPassed=6;nativeMcpExecuted=$false}
     $categories=[ordered]@{}

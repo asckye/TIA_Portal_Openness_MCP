@@ -8,7 +8,7 @@ namespace TiaMcpServer.Siemens
         InvalidParams,
         InvalidState,
         OpennessError,
-        NotSupportedOnVersion
+        NotSupportedOnVersion,
+        NativeCrashRiskBlocked
     }
 }
-

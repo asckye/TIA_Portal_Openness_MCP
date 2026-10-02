@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "package": "bin-build/diagnostics/LibraryRenameProbe-V21-r3-20261001-124118.zip",
+  "sha256": "c5f9d333abe00b47745883dc0fff9dd11e005974b736bf3e9ccbbd9b8d1a9e98",
+  "bytes": 142795,
+  "compile": {
+    "target": "net48/x64/V21",
+    "errors": 0,
+    "warnings": 0
+  },
+  "offlineBootstrapChecksPassed": 64,
+  "extractedExecutableSelfTest": "64 offline checks passed; native tests NOT RUN.",
+  "supervisorSimulation": {
+    "nativeExecuted": false,
+    "fixture": "Independent .NET Framework child simulator; no Siemens API",
+    "scenarios": [
+      {
+        "scenario": "matrix",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 18,
+        "exitCode": 1,
+        "stopReason": null
+      },
+      {
+        "scenario": "prepare-failure",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Preparation failed for control; remaining cases were not run."
+      },
+      {
+        "scenario": "missing",
+        "passed": true,
+        "utf8Preserved": false,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Probe exited without a result. No additional cases will start."
+      },
+      {
+        "scenario": "alive",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Owned TIA PID 7872 is still alive. Campaign stopped; no automatic TIA termination."
+      }
+    ]
+  },
+  "supervisorValidation": {
+    "path": "bin-build/rename-supervisor-tests-c46bdba0f99343f4ad753a5bd5c59d33/supervisor-validation.json",
+    "sha256": "e282661b4a3691374f3f7a643b5cabbaeeee5c076b5820aadc4dee4a1f4a8a83"
+  },
+  "supervisorSource": {
+    "path": "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1",
+    "sha256": "b0facc5f6738d784f8dcbdb8420f4dc713c4db7f775f7a42c60a5fad7912d7ed"
+  },
+  "zipIntegrityAndFileHashesVerified": true,
+  "hashedFiles": 78,
+  "siemensBinariesBundled": false,
+  "revision3IndependentProbeNativeExecuted": false,
+  "previousProbeRuns": "r1 and r2 executed native preparation only; neither executed a rename case.",
+  "liveMcpEvidenceManifest": "manifest/unified-library-rename-followup-20261001.json",
+  "previousVmRunEvidenceManifest": "manifest/library-rename-probe-second-vm-run-20261001.json"
+}

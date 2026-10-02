@@ -17,6 +17,9 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcOfflineReferences.cs" Link="PlcOfflineReferences.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectBindingIdentity.cs" Link="ProjectBindingIdentity.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PortalProcessLease.cs" Link="PortalProcessLease.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
@@ -138,6 +141,8 @@
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVisualComparison.cs" Link="PlcVisualComparison.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EcosystemFiles.cs" Link="EcosystemFiles.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcSchemaValidation.cs" Link="PlcSchemaValidation.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\UnifiedCwcPackage.cs" Link="UnifiedCwcPackage.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EngineeringQualityAudit.cs" Link="EngineeringQualityAudit.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcTemplateExpansion.cs" Link="PlcTemplateExpansion.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcAliasAlarmBuilder.cs" Link="PlcAliasAlarmBuilder.cs" />

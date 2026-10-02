@@ -32,7 +32,8 @@ namespace TiaMcpServer.ModelContextProtocol
             // Use an enumerated identifier, not an arbitrary caller-controlled filesystem path.
             var files = Directory.GetFiles(folder, "*.md", SearchOption.AllDirectories)
                 .Select(p => new { Path = p, Id = p.Substring(folder.Length + 1).Replace('\\', '/') }).OrderBy(p => p.Id, StringComparer.Ordinal).ToList();
-            var result = new JsonObject { ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = "2119df978ffe26cf1436384b6d94549b28aa2264", ["referenceDataOnly"] = true };
+            var provenance = JsonNode.Parse(File.ReadAllText(Path.Combine(root, "reference", "siemens-openness", "UPSTREAM.json")))!.AsObject();
+            var result = new JsonObject { ["source"] = "siemens/tia-portal-ai-extensions", ["commit"] = provenance["commit"]!.DeepClone(), ["referenceDataOnly"] = true };
             if (!string.IsNullOrEmpty(document))
             {
                 var file = files.SingleOrDefault(p => p.Id == document) ?? throw new ArgumentException("Unknown document id. List first.");

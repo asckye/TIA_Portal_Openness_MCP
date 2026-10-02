@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "campaign": "20261001-123143-91878807",
+  "result": "preparation-failed-at-ExportAsDocuments; no-rename-case-executed",
+  "returnedExecutableVerification": "Not available: this return supplied results only, not the r2 executable.",
+  "attemptedStages": 1,
+  "executionStagesAttempted": 0,
+  "nameWritesAttempted": 0,
+  "sourceLibraryOpenedReadOnly": true,
+  "sourceTypeCopied": true,
+  "failureBoundary": "Version.ExportAsDocuments.5.1.1",
+  "workspace": "C:\\Users\\SIEMENS\\AppData\\Local\\TRP\\d825396e5e0b9dcc76ea",
+  "tiaPid": 18312,
+  "tiaStartUtc": "2026-10-01T19:31:43.6213915Z",
+  "nativeChannelFaulted": false,
+  "projectCloseAndDisposeReturned": true,
+  "processSampleImmediatelyAfterDispose": {
+    "alive": true
+  },
+  "supervisorOwnedProcessExitedVerified": true,
+  "supervisorExistingPortalsPreserved": true,
+  "supervisorReason": "Preparation failed for control; remaining cases were not run.",
+  "exception": "Siemens.Engineering.EngineeringTargetInvocationException: Error when calling method 'ExportAsDocuments' of type 'Siemens.Engineering.Library.Types.LibraryTypeVersion'.\r\n\r\nThe argument 'directoryInfo' cannot be a relative path.\r\n   在 Siemens.Engineering.Private.Session.Siemens.Engineering.Private.IInstanceSession.InvokeFunc[T,TC](LifetimeContractHandle`1 lifetimeContractHandle, String name, IEnumerable`1 parameters, String fullName)\r\n   在 Siemens.Engineering.Private.InternalInstanceAccess`2.InvokeFunc[T](String name, IEnumerable`1 parameters)\r\n   在 Siemens.Engineering.Library.Types.LibraryTypeVersion.ExportAsDocuments(DirectoryInfo directoryInfo, String fileNameWithoutExtenstion, String exportFormat, LibraryExportOptions libraryExportOptions)\r\n   在 LibraryRenameProbe.Native.<>c__DisplayClass6_2.<ExportScripts>b__2() 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 246\r\n   在 LibraryRenameProbe.Journal.Call[T](String api, Func`1 call) 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 287\r\n   在 LibraryRenameProbe.Native.ExportScripts(LibraryType type, String output, Journal log, Dictionary`2 hashes) 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 246\r\n   在 LibraryRenameProbe.Native.Run(Options o) 位置 D:\\Code\\TIA_Portal_Openness_MCP\\scripts\\diagnostics\\LibraryRenameProbe\\Native.cs:行号 84",
+  "apiSequence": [
+    "TiaPortal.new.WithoutUserInterface",
+    "TiaPortal.GetCurrentProcess",
+    "Projects.Create",
+    "GlobalLibraries.Open.ReadOnly",
+    "Library.Folder.Find.LGen",
+    "Library.Folder.Find.Types_HMI",
+    "Library.Folder.Find.Scripts",
+    "Library.Types.Find.LSicar_GeneralScripts",
+    "Source.Guid",
+    "Source.Name",
+    "LibraryType.UpdateLibrary",
+    "GlobalLibrary.Close",
+    "Library.Folder.Find.LGen",
+    "Library.Folder.Find.Types_HMI",
+    "Library.Folder.Find.Scripts",
+    "Library.Types.Find.LSicar_GeneralScripts",
+    "Source.Guid",
+    "Source.Name",
+    "Versions.Identities",
+    "Source.MinimumTargetDeviceVersion",
+    "Versions.Enumerate",
+    "Version.Number",
+    "Version.ExportAsDocuments.5.1.1",
+    "Project.Close.teardown",
+    "TiaPortal.Dispose.owned"
+  ],
+  "evidence": [
+    {
+      "key": "cases.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/cases.json",
+      "sha256": "6dab2cbe5149392bb55d834c2791a3b5c7f9eaa390adfd963c947aa9fcdbf22c"
+    },
+    {
+      "key": "control/prepare-events.jsonl",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control/prepare-events.jsonl",
+      "sha256": "7bcc0f90b083f4d840fb01ac53aacdbb769154f5a81ddd4c05f8e7b1df90d8b3"
+    },
+    {
+      "key": "control/prepare-owned-process.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control/prepare-owned-process.json",
+      "sha256": "ed114ef0132347f8dad92c55b4fb07c4d40011c946f6071c1f2f8fa042253850"
+    },
+    {
+      "key": "control/prepare-result.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control/prepare-result.json",
+      "sha256": "edd0ea1901159c1a898d4433057ae253f0439e2e1154c1844402a4a561864b58"
+    },
+    {
+      "key": "control/workspace-location.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control/workspace-location.json",
+      "sha256": "2f0d6c77c8ebf53c418d872f88e1fa42f1d712275e6876e3bf0c35962882c8bb"
+    },
+    {
+      "key": "control-prepare.stderr.txt",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control-prepare.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "key": "control-prepare.stdout.txt",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/control-prepare.stdout.txt",
+      "sha256": "a55cd8069cfc676ac3cf5d9a7b0f46d6319876f7d2c6b6ddaa2acf2b59a4376d"
+    },
+    {
+      "key": "existing-portals.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/existing-portals.json",
+      "sha256": "0294309fe4b4d7cd6bcdd279a49d19a2afadd07a29c1838f15dba81f3b78953a"
+    },
+    {
+      "key": "summary.json",
+      "path": "bin-build/diagnostics/returned-vm-run-20261001-123143/summary.json",
+      "sha256": "76bdf8f8ce8da61fde19c1a50a42dd09168ef2f53a1b98f8d01481eca17d7b0f"
+    }
+  ],
+  "localReproduction": "On .NET Framework 4.x, Directory.CreateDirectory(absolutePath).FullName is absolute but ToString() is the leaf. An explicit public DirectoryInfo(absolutePath) constructor preserves both absolute representations. Regression reproduced and covered in 64 probe self-checks.",
+  "revision3": "Use explicit validated absolute DirectoryInfo for all native directory arguments; journal representations; print full stage exceptions and bootstrap stderr in the launcher.",
+  "revision3NativeExecution": "pending VM rerun",
+  "officialReference": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/creating-a-directoryinfo/fileinfo-object"
+}

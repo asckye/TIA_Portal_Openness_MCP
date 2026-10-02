@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-01 10:26:43
+- 生成时间：2026-10-01 14:44:00
 - 引擎文件版本：3.1.0.0
-- 工具数量：478
+- 工具数量：486
 
 ## 读法
 
@@ -15,10 +15,10 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 18 |
-| `READ` | 读取已打开工程，不改动 | 141 |
-| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 191 |
-| `FILE` | 导出/导入文件或生成离线产物 | 50 |
-| `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 30 |
+| `READ` | 读取已打开工程，不改动 | 143 |
+| `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 192 |
+| `FILE` | 导出/导入文件或生成离线产物 | 52 |
+| `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 33 |
 | `ONLINE` | 联系 PLC/设备/运行时，只读 | 24 |
 | `ONLINE-WRITE` | 改变真实设备或运行时 | 11 |
 | `EXECUTE` | 执行编译/测试/自检 | 13 |
@@ -29,15 +29,15 @@
 
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
-| `session` | 会话与基础设施 / Session & infrastructure | 48 | `Bootstrap` (1)、`Guide` (3)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 64 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (10) |
-| `plc` | PLC 软件 / PLC software | 124 | `PLC-Software` (79)、`PLC-Builders` (11)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
+| `session` | 会话与基础设施 / Session & infrastructure | 49 | `Bootstrap` (1)、`Guide` (4)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
+| `project` | 工程与协作 / Project & collaboration | 68 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (14) |
+| `plc` | PLC 软件 / PLC software | 126 | `PLC-Software` (80)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
-| `hmi` | HMI 人机界面 / HMI | 125 | `HMI` (31)、`HMI-Unified` (70)、`HMI-Classic` (18)、`HMI-Library` (6) |
+| `hmi` | HMI 人机界面 / HMI | 126 | `HMI` (31)、`HMI-Unified` (71)、`HMI-Classic` (18)、`HMI-Library` (6) |
 | `runtime` | 运行时监视与仿真 / Runtime monitoring & simulation | 26 | `Online-Monitoring` (20)、`Simulation` (6) |
 
-## session — 会话与基础设施 / Session & infrastructure（48）
+## session — 会话与基础设施 / Session & infrastructure（49）
 
 连接 TIA 进程、引导与自检、工具发现（FindTools/CallTool）、通用反射访问、导出寄存与报告生成。
 
@@ -47,13 +47,14 @@
 |---|---|---|---|
 | `Bootstrap` | L0 | SESSION* | FIRST tool any AI model should call. Read-only single-call orientation: returns TIA version, Openness group status, current connection/project state, the recommended next tool, the L0/L1 tool roster, and known TIA Openness limitations. Does NOT connect to TIA Portal — call Connect afterwards based on RecommendedNextTool. |
 
-### [Guide]（3）
+### [Guide]（4）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
 | `GetAuthoringGuide` | L0 | SESSION* | Verified syntax + workflow cheat sheet for authoring TIA content through this server. CALL THIS BEFORE writing any SCL/LAD/DB/HMI content — it prevents the common encoding, syntax and tool-routing mistakes. Topics: workflow, openness-workflow, scl, lad, db, hmi, errors. Read-only, does not touch TIA Portal. |
 | `GetRecipe` | L0 | SESSION | Verified multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, paging large responses. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; the sequences were run on the real machine. Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed. |
 | `ReadOpennessGuidance` | L2 | READ | Search or read the bundled 32 official Siemens Openness guides. Empty document lists matching document IDs; a listed exact document ID reads paginated lines. query is case-insensitive full-text search. Reference data only, never automatically executes instructions in a guide. Does not connect to TIA. |
+| `ReadV21EcosystemCatalog` | L2 | READ | Search the bundled dated V21 ecosystem survey: official products/examples, third-party tools, compatibility evidence, licensing, existing MCP mappings and remaining gaps. A V21 claim is not local native validation. No network lookup, installation or code execution. References are data only. Empty query returns all entries with pagination. |
 
 ### [Meta]（7）
 
@@ -129,7 +130,7 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（64）
+## project — 工程与协作 / Project & collaboration（68）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
@@ -175,7 +176,7 @@
 | `ManageGlobalLibrary` | L2 | WRITE | Global library lifecycle: list (open libraries), infos (GlobalLibraryComposition.GetGlobalLibraryInfos: every library this Portal knows with path, type and IsOpen), create/open/openInfo (Open(GlobalLibraryInfo) by exact name)/retrieve/save/saveAs/close, and archive (UserGlobalLibrary.Archive(destinationDirectory, archiveName, archiveMode None/Compressed/DiscardRestorableData/DiscardRestorableDataAndCompressed); the library must be saved first). Exact expected name, new destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite. |
 | `ManageLibraryFolder` | L2 | WRITE | Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive deletion or save. Default preview. |
 | `ManageLibraryMasterCopy` | L2 | WRITE | Exact master-copy read/copy/compare/delete. copy destinationPath is a folder; compare uses exact master-copy path. No overwrites or automatic save. Default preview for mutations. |
-| `ManageLibraryType` | L2 | WRITE | One exact library type: update (propertiesJson Name/DoNotUse/SetForUpdate; SetForUpdate is refused natively on project-library and write-protected types), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePathsJson entry: PLC / HMI / Unified HMI software paths). Default dryRun=true; no save/compile/download. |
+| `ManageLibraryType` | L2 | WRITE | One exact library type: update (propertiesJson Name/DoNotUse/SetForUpdate), delete (all versions, needs confirmDelete), updateLibrary (LibraryType.UpdateLibrary into targetLibraryName with deleteUnusedVersionsMode/structureConflictResolutionMode/forceUpdateMode, target read back by GUID) and updateProject (LibraryType.UpdateProject per scopeSoftwarePathsJson entry: PLC / HMI / Unified HMI software paths). V21 Unified ScriptModuleType.Name writes are blocked due to reported native TIA crashes, including previews. Project-library SetForUpdate and property writes to protected global libraries are refused before setters. Default dryRun=true; preview does not prove native setter safety. No save/compile/download. |
 | `ManageLibraryTypeVersion` | L2 | WRITE | Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA. |
 | `ReadLibraryOverview` | L2 | READ | Official library overview: empty libraryName = project library, otherwise an exact already-open global library. Header (GlobalLibrary Author/Comment per culture/Copyright/Family/Version/Path/CreationTime/LastModified(By)/IsModified/IsWriteProtected/Size, HistoryEntries, UsedProducts), the Types folder tree (LibraryTypeFolder Status, each LibraryType with Guid/Namespace/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion/Status/version summary) and the master copy tree (MasterCopy Author/CreationDate/ContentDescriptions). Bounded by maxDepth/maxItems; no modification. |
 | `ReadLibraryType` | L2 | READ | One library type by exact typePath (relative to the Types folder) or by guid (type GUID via ILibrary.FindType, or version GUID via FindVersion): type scalars incl. Status/DoNotUse/SetForUpdate/MinimumTargetDeviceVersion, GetSupportedExportFormats, and every version with State/IsDefault/Author/ModifiedDate/OriginalLibrary/Dependencies/Dependents/MasterCopiesContainingInstances (per-field failures captured; TIA may throw on InWork versions). Paginated versions; no modification. |
@@ -207,26 +208,30 @@
 | `ReadProjectProtection` | L2 | READ | Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection. |
 | `ReadProjectUserManagement` | L2 | READ | Paginated UMAC listing of the bound project: category users/anonymousUser/systemRoles/customRoles/engineeringRights/customDeviceRights/umcUsers/umcUserGroups/passwordPolicy/deviceRights/roleDeviceRights. Optional exact name filter; deviceRights/roleDeviceRights need devicePathJson (+itemPathJson) JSON arrays of exact names. Requires the native UmacConfigurator service (protected project); passwords never readable. Nothing modified. |
 
-### [Validation]（10）
+### [Validation]（14）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
+| `AnalyzePlcReferences` | L2 | OFFLINE | Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. "Motor"."Run". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes. |
 | `AuditEngineeringExports` | L2 | FILE | Independent offline engineering quality checks: block names (optional regex policy), duplicate names, block/network comments, metadata, network count, plus configurable XML XPath rules for hardware, library or other export metadata. rulesJson=[{id,files?:regex,xpath:element-selector,minCount?:0,maxCount?:number,valuePattern?:regex,severity?:info\|warning\|error}]. Use local-name() in XPath for namespaced XML. Unmatched rules are explicitly notEvaluated. Bounded 1000 files/2000 findings; failures and truncation mark dataComplete=false. Optional NEW absolute .html or .pdf report; PDF requires the companion Python environment (ReportLab). success means the audit executed; qualityPassed is the policy verdict. Does not query native cross references, connect to TIA, certify hardware or compile. |
 | `ComparePlcBlockDocuments` | L2 | READ | Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded. |
+| `DecodePlcSimaticMl` | L2 | OFFLINE | Decode one V21 FC/FB SimaticML export with pinned MIT Czarnak/simaticml-decoder into readability-first SCL and metadata. Python >=3.11 via TIA_MCP_PLC_TOOLS_PYTHON or existing ecosystem environment. Does not execute project scripts, call TIA or write files. Output is analysis-only, NOT recompilable/reimportable; unknown instructions, warnings and native-format qualification gaps remain explicit. S7DCL/GRAPH/STL semantic translation is unsupported. V20 input is refused even when this tool runs in the V20 engine. |
 | `ExtractPlcBlockMetrics` | L2 | READ | Derive per-block metrics from exported PLC documents (path = absolute file or directory; recursive; extensionsJson default [".xml",".s7dcl",".scl"]): network count and titles/comments, interface members per section, block calls (CallInfo / quoted calls / #instance calls), instructions (LAD/FBD Parts, SCL functions), SCL source lines, comment lines and ratio, and max IF/CASE/FOR/WHILE/REPEAT nesting where SCL text is available (null otherwise). Graphical networks contribute no source lines. The numbers describe the export only; they are NOT a Siemens quality verdict and do not replace TIA compile diagnostics or the programming guidelines. Paginated rows. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 | `GeneratePlcDocumentation` | L2 | FILE | Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportBlocksAsDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded. |
 | `LintPlcSclSource` | L2 | OFFLINE | Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {"disable":["SCL007","SCL008"],"maxLineLength":120,"maxNesting":5,"markers":["TODO"]}. Returns findings {rule, severity error\|warning\|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompileSoftware) remains the verdict. Nothing is saved, compiled or downloaded. |
+| `ReadPlcBlockEditCapabilities` | L2 | READ | Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project. |
 | `RenderPlcBlockDocument` | L2 | OFFLINE | Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards). mermaidDirection LR (default) or TD. Returns the Markdown in Meta.markdown (truncated to maxChars, default 60000, full length in Meta.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. |
 | `RenderPlcVisualDiff` | L2 | FILE | Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download. |
 | `RunHmiTemplatePlcSyncPrecheckSuite` | L2 | EXECUTE* | Offline-only helper: verify Unified HMI template RequiredTags against real PLC tag/DB-member XML symbols before any HMI binding. It does not connect to TIA Portal or modify projects. |
 | `RunOfflineReleaseValidationSuite` | L2 | EXECUTE* | Offline-only helper: run the release smoke suite covering PLC Builder, Classic HMI, PLC symbol extraction, Unified HMI template layout, HMI action recipes, and online-monitoring safety guardrails. It does not connect to TIA Portal or modify projects. |
 | `ScanPlcSourceAnnotations` | L2 | FILE | Scan exported PLC documents in a directory (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]) for annotation markers in comments, block/network titles and network comments. markersJson default ["TODO","FIXME","HACK","XXX","NOTE","BUG"]; matching is case-sensitive on whole words. SimaticML text nodes (titles, comments, SCL LineComment, member comments) and text-source comments (// and (* *)) are scanned; .s7dcl MLC_* titles are resolved via the sibling .s7res. Returns paginated rows {file, blockName, network, line, marker, text, kind}. csvPath (optional) must be a NEW absolute file: all rows are written as CSV and hashed; an existing file is refused. No TIA Portal connection, nothing is saved, compiled or downloaded. |
+| `ValidatePlcXmlSchemas` | L2 | OFFLINE | Validate recognized SimaticML interface and LAD/FBD/SCL/STL/GRAPH fragments against the caller's local Siemens PublicAPI XSD files. Uses exact namespace schema versions; refuses DTDs and resolves schema includes only from the bounded supplied directory. No schema download or TIA connection. Read fragmentSchemasPassed, skippedFragments and issues; the whole Document, instruction semantics, CPU compatibility and native import are NOT validated. Siemens schemas are not redistributed. |
 
-## plc — PLC 软件 / PLC software（124）
+## plc — PLC 软件 / PLC software（126）
 
 块/UDT/标签表/外部源/软件单元、块构建器与 SCL/LAD 生成、PLC 报警文本、工艺对象、OPC UA 服务器配置、Safety 离线工程。
 
-### [PLC-Software]（79）
+### [PLC-Software]（80）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -276,6 +281,7 @@
 | `ImportBlocksFromDirectory` | L2 | WRITE* | Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks auto-ordered → ImportPlcProgramFromDirectory; a single XML file → ImportBlock. |
 | `ImportBlocksFromDocuments` | L2 | WRITE* | PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. |
 | `ImportFromDocuments` | L2 | WRITE* | PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (Meta.existsVerified / legacy verified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification. |
+| `ImportPlcBlockVerified` | L2 | WRITE | Overwrite one existing non-library PLC block in its exact current user group with a reviewed SimaticML file. Default dryRun=true exports a retained backup, preserves omitted scalar block attributes and returns planned.xml plus binding/content token. Execution requires SAME arguments and expectedToken; re-exports current block, rechecks binding/content before import, then re-exports for strict document verification preserving wiring and literal values. Requires Offline and consistent exports. Refuses library-bound blocks, InstanceDB, changed name/type/number/layout/language and empty replacement logic. Missing interface members/networks still mean deletion. compileAfterImport=false by default; true explicitly compiles the imported block before readback, rejecting compile errors. Without compile, inconsistent readback remains failed/unverified. No save/download/rollback/retry; failures may leave changes. Native V20/V21 execution not yet validated. |
 | `ImportPlcExternalSource` | L2 | WRITE* | Import one PLC external source file into a group (best-effort) |
 | `ImportPlcProgramFromDirectory` | L2 | WRITE* | HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/Block, imports in correct dependency order (UDTs first, then tag tables, then blocks), and optionally compiles. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks. |
 | `ImportPlcTagTablesFromDirectory` | L2 | WRITE* | Batch import PLC tag table .xml files from a directory (best-effort) |
@@ -310,7 +316,7 @@
 | `UpdatePlcProgram` | L2 | WRITE | Native PlcSoftware.UpdateProgram() (TIA 'Update program') for one exact PLC software path. Returns void natively; PLC scalars before/after are reported, program content changes are not enumerated. Default preview; real execution requires dryRun=false AND confirmUpdate=true and an Offline PLC. No save/compile/download. |
 | `UpgradeSivarcDefinitions` | L2 | WRITE | Upgrade the SiVArc definitions of one PLC (SivarcDefinitionsUpgrader.Upgrade on the PlcSoftware: legacy SIVARCCOND / SIVARCTEXT functions become tag / text definitions in the block plug-ins). Returns warningCount and the recursive feedback messages. Default preview; NotSupported without the SiVArc option; never saves. |
 
-### [PLC-Builders]（11）
+### [PLC-Builders]（12）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -325,6 +331,7 @@
 | `ComposePlcFcBlockXml` | L2 | OFFLINE | Compose a TIA V21 SCL FC block XML from interface JSON and StructuredText content. Input: {blockName,blockNumber,inputs:[{name,datatype}],outputs:[{name,datatype}],structuredTextInnerXml? or structuredText:{operations:[]}}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects. |
 | `ComposePlcLadFcBlockXml` | L2 | OFFLINE | NARROW SCOPE: every network must be an FC call; this cannot emit contacts/coils/SR/compare/Move/math. For general ladder, author S7DCL text (.s7dcl + .s7res) and import with ImportBlocksFromDocuments instead. Compose a TIA V21 LAD FC block XML containing one or more FlgNet/v5 FC-call networks. Each network is an FC call described as { callJson: { callName, parameters[] }, titleZhCn?, commentZhCn? }. Top-level: blockName, blockNumber, optional inputs/outputs members, optional commentZhCn / titleZhCn. Returns XML only; does not connect to TIA Portal or import. Pair with ImportBlock. |
 | `InstantiatePlcXmlTemplates` | L2 | FILE | Expand an exported XML template into repeated PLC blocks/aliases/alarms without executing customization scripts. Template tokens {{Name}} in XML attributes/text are replaced structurally with XML escaping. rowsJson=[{fileName:"FC_1.xml",values:{Name:"FC_1"}}], 1..100 rows. Reject missing/unused keys, unsafe/duplicate filenames, DTD and any existing output. Default dryRun validates ALL rows/outputs and returns hashes/sizes; execution writes new files only. No TIA import or compile. Tokens do not edit element names, UIDs, wiring topology or faceplate internals automatically. Partial files reported if writing fails. |
+| `PatchPlcBlockDocument` | L2 | FILE | Patch an exported single-block SimaticML file into a NEW file, preserving all unrelated XML. Requires expectedFingerprint from ReadPlcBlockEditCapabilities. changesJson array: setBlockText(field Title/Comment,culture,expectedValue,value), setNetworkText(same plus zero-based networkIndex), setMemberStartValue(section,memberPath slash-separated,expectedValue,value). Only existing scalar StartValue or existing multilingual entries; no guessed cultures/defaults, library-connected blocks or read-only members. Default dryRun=true previews; false writes outputPath. No native calls/import/compile; input remains unchanged. |
 
 ### [PLC-Alarms]（8）
 
@@ -489,7 +496,7 @@
 | `UpdateDeviceAddress` | L2 | WRITE | Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download. |
 | `UpdateDeviceItemChannel` | L2 | WRITE | SetAttribute on one exact channel (ChannelComposition.Find(channelType, channelIoType, channelNumber)) for the dynamic attributes in attributesJson; the CLR type is taken from the current value and every write is read back. Default dryRun=true; no save/compile/download. |
 
-## hmi — HMI 人机界面 / HMI（125）
+## hmi — HMI 人机界面 / HMI（126）
 
 WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI 画面/脚本/周期/列表，两者共用的读取与导入导出，库模板分析，SiVArc。
 
@@ -529,7 +536,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ReadSivarcRuleTree` | L2 | READ | Typed SiVArc rule hierarchy of one family: category screens / tags / advancedTags / alarms / copies / textLists (Sivarc.ScreenRules ... TextlistRules). Without tablePath: the folder subtree from folderPath (user folders and rule tables with isDefault, counts and the connected library type version). With tablePath (Folder/Table): the table's top-level rules paged as records plus nested rule groups up to maxDepth (200 rules per group). Rule rows are typed per family (condition, operator, enabled, layout field, loop count, tag table, folder structure, program block / library references). Answers NotSupported without the SiVArc option. Never generates. |
 | `ResolveSivarcExpression` | L2 | READ | Resolve a SiVArc expression (Block.DB.SymbolicName & HmiApplication.Type & LibraryObject.FolderPath ...) for every instance of one code block in the compiled PLC call structure: Sivarc.GetExpressionResolver(codeBlock, hmiDeviceItem, libraryItem).Resolve(expression). devicePathJson / itemPathJson name the HMI device item, libraryItemKind masterCopy \| libraryType with libraryItemPath (project library or open global library via libraryName). Rows: instanceName, callPath, result (paged by maxResults). Requires a compiled PLC and the SiVArc option; read-only. |
 
-### [HMI-Unified]（70）
+### [HMI-Unified]（71）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -568,6 +575,7 @@ WinCC Unified 画面/变量/报警/归档/脚本/事件/动态化，经典 HMI �
 | `ListUnifiedGlobalScripts` | L2 | READ | Page global script module names only. Names are NOT proof of body acquisition. Exact expectedProject and HMI path required. Resume with identical arguments and nextCursor. |
 | `ListUnifiedHmiApiTypes` | L2 | READ* | List loaded WinCC Unified HMI API types/enums by name filter, useful for discovering event and dynamization types. |
 | `ListUnifiedLibraryFolder` | L2 | READ | Page only direct type/folder names in ONE exact project-library folder, for locating a referenced script/faceplate. No recursive search or default-version substitution. / selects root. Inspect returned folders before choosing the next exact path. |
+| `ManageUnifiedCwcPackage` | L2 | FILE | Inspect or build a custom web control folder using V21 documented package conventions: root manifest.json, identity GUID, control start file and local icon. action inspect/build; default dryRun=true. Preview returns packageFingerprint and GUID ZIP filename. build with dryRun=false requires the same fingerprint and a NEW absolute outputPath outside source folder. Takes a bounded content snapshot; no overwrites, script execution, TIA import or faceplate/library rename. Full manifest schema, JS semantics, extensions and runtime support remain unvalidated. |
 | `ManageUnifiedDynamization` | L2 | WRITE | Read/create/update/delete the dynamization of one exact property (propertyName) on an exact Unified screen/item object path. dynamizationKind Tag/Script/ResourceList/Flashing/Expression/TagParameter maps to native Create<T>(propertyName). propertiesJson may nest ValueConverter{Formula,IsFormulaSelected,MappingTable{ConditionType}}, Trigger{Type,CustomDuration}, Flashing colors as #AARRGGBB. mappingEntriesJson appends [{kind:Simple\|Range\|Bitmask,...}] entries. delete needs confirmDelete=true. Default preview; readback verified; tag/formula semantics not validated; no save/compile/download. |
 | `ManageUnifiedEngineeringObject` | L2 | WRITE | Native create/update/delete for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API. Exact name. propertiesJson contains public writable scalar properties only, not references/complex text. Default dryRun=true. Preview validates API shape, not TIA semantics. No save/compile/download. Delete impact on references is not analyzed. Partial writes reported, no rollback. |
 | `ManageUnifiedEvent` | L2 | WRITE | Exact screen/control event or property event read/create/update/delete. Object JSON path. Updates preserve omitted script fields. Mutations need preview token. No Script SyntaxCheck, script execution, save/compile/download. |

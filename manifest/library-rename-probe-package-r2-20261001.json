@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "package": "bin-build/diagnostics/LibraryRenameProbe-V21-r2-20261001-122913.zip",
+  "sha256": "4156c4d5e2fafb7a02deab5041b098bae07ee379d71617ae25c1ce2270227f35",
+  "bytes": 131750,
+  "compile": {
+    "target": "net48/x64/V21",
+    "errors": 0,
+    "warnings": 0
+  },
+  "offlineBootstrapChecksPassed": 48,
+  "supervisorSimulation": {
+    "nativeExecuted": false,
+    "fixture": "Independent .NET Framework child simulator; no Siemens API",
+    "scenarios": [
+      {
+        "scenario": "matrix",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 18,
+        "exitCode": 1,
+        "stopReason": null
+      },
+      {
+        "scenario": "prepare-failure",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Preparation failed for control; remaining cases were not run."
+      },
+      {
+        "scenario": "missing",
+        "passed": true,
+        "utf8Preserved": false,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Probe exited without a result. No additional cases will start."
+      },
+      {
+        "scenario": "alive",
+        "passed": true,
+        "utf8Preserved": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Owned TIA PID 13840 is still alive. Campaign stopped; no automatic TIA termination."
+      }
+    ]
+  },
+  "zipIntegrityAndFileHashesVerified": true,
+  "hashedFiles": 67,
+  "siemensBinariesBundled": false,
+  "independentProbeNativeExecuted": false,
+  "liveMcpEvidenceManifest": "manifest/unified-library-rename-followup-20261001.json"
+}

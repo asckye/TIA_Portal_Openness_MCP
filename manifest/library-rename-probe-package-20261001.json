@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "package": "bin-build/diagnostics/LibraryRenameProbe-V21-20261001-121722.zip",
+  "sha256": "caae84fa8fb5766800f1ef2d82de64e497d615cd2ecd541742fe24aea2a06e7f",
+  "bytes": 117674,
+  "compile": {
+    "target": "net48/x64/V21",
+    "errors": 0,
+    "warnings": 0
+  },
+  "offlineBootstrapChecksPassed": 18,
+  "supervisorSimulation": {
+    "nativeExecuted": false,
+    "fixture": "Independent .NET Framework child simulator; no Siemens API",
+    "scenarios": [
+      {
+        "scenario": "matrix",
+        "passed": true,
+        "completedStages": 18,
+        "exitCode": 1,
+        "stopReason": null
+      },
+      {
+        "scenario": "prepare-failure",
+        "passed": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Preparation failed for control; remaining cases were not run."
+      },
+      {
+        "scenario": "missing",
+        "passed": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Probe exited without a result. No additional cases will start."
+      },
+      {
+        "scenario": "alive",
+        "passed": true,
+        "completedStages": 1,
+        "exitCode": 2,
+        "stopReason": "Owned TIA PID 23412 is still alive. Campaign stopped; no automatic TIA termination."
+      }
+    ]
+  },
+  "zipIntegrityAndFileHashesVerified": true,
+  "hashedFiles": 56,
+  "siemensBinariesBundled": false,
+  "independentProbeNativeExecuted": false,
+  "liveMcpEvidenceManifest": "manifest/unified-library-rename-followup-20261001.json"
+}

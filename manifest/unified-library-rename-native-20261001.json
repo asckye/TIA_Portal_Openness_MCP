@@ -1,0 +1,455 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-01",
+  "endpoint": "http://192.168.86.128:8765/mcp",
+  "result": "reproduced-in-two-isolated-contexts; rename-fix-not-validated",
+  "authorization": "User selected AutomaticDipCoatingMachine project-library LSicar_GeneralScripts for testing.",
+  "source": {
+    "typePath": "LGen/Types_HMI/Scripts/LSicar_GeneralScripts",
+    "type": {
+      "name": "LSicar_GeneralScripts",
+      "guid": "04254662-9034-496e-a436-109c945e1de2",
+      "typeClass": "ScriptModuleType",
+      "typeKind": "unifiedScriptModule",
+      "author": "Skender",
+      "namespace": null,
+      "comment": {
+        "en-US": "",
+        "zh-CN": ""
+      },
+      "doNotUse": false,
+      "minimumTargetDeviceVersion": "20.0.0.0",
+      "setForUpdate": true,
+      "status": "NonDefaultVersionInstantiation",
+      "versionCount": 2,
+      "defaultVersion": "5.1.1"
+    },
+    "versions": [
+      {
+        "versionNumber": "5.1.1",
+        "guid": "e74fcb6f-b658-4ac6-9ea7-e5647251dc72",
+        "state": "Committed",
+        "isDefault": true,
+        "author": "SICAR",
+        "modifiedDate": "01/20/2025 10:32:40",
+        "comment": {
+          "en-US": "",
+          "zh-CN": ""
+        },
+        "versionClass": "LibraryTypeVersion",
+        "originalLibrary": "AutomationFrameworkBasic_V2_2_2_V20",
+        "dependencies": [],
+        "dependents": [],
+        "masterCopiesContainingInstances": []
+      },
+      {
+        "versionNumber": "5.0.0",
+        "guid": "1dcd9356-4571-481b-8e81-cb011bd6e1ff",
+        "state": "Committed",
+        "isDefault": false,
+        "author": "SICAR",
+        "modifiedDate": "01/12/2024 12:55:41",
+        "comment": {
+          "en-US": "",
+          "zh-CN": ""
+        },
+        "versionClass": "LibraryTypeVersion",
+        "originalLibrary": "SiCar_StartUp_V50_V19_CN_V20",
+        "dependencies": [],
+        "dependents": [],
+        "masterCopiesContainingInstances": []
+      }
+    ],
+    "baselineEvidence": {
+      "path": "bin-build/unified-rename-native-20261001/183307028247-ReadLibraryType.json",
+      "sha256": "abf3be0006079542b8ba0208cad24889c27ac821ca4f10fc72a5e0d0b76d107b"
+    },
+    "readbackEvidence": {
+      "path": "bin-build/unified-rename-native-20261001/184406077271-ReadLibraryType.json",
+      "sha256": "fb4e7df4917d901ec02b89424d71556d944afea60adb710b40d68e49ead90e1e"
+    },
+    "observedTypeAndVersionFieldsEqualAfterTest": true,
+    "readbackDataComplete": false,
+    "limitation": "Readback compares observed type/version fields, not the entire project or all references."
+  },
+  "preparation": {
+    "copyApi": "LibraryType.UpdateLibrary",
+    "copyResponses": [
+      {
+        "path": "bin-build/unified-rename-native-20261001/183344854619-ManageLibraryType.json",
+        "sha256": "672a4d8106a0e74101b296f7ae0749589d5923d8bb13d241bd5932be6054ca99"
+      },
+      {
+        "path": "bin-build/unified-rename-native-20261001/183912639419-ManageLibraryType.json",
+        "sha256": "15634a0b4cabf5e7c089a963ab0adcc45f6068ed596f16be62f65a5c882c8741"
+      }
+    ],
+    "savedScratchProject": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\MCP_UnifiedRename_20261001_1113\\MCP_UnifiedRename_20261001_1113.ap21",
+    "savedDiagnosticLibrary": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\library-general-1133\\MCP_GeneralScripts_Rename_20261001_1133\\MCP_GeneralScripts_Rename_20261001_1133.al21",
+    "originalProjectSavedRenamedOrClosedByTest": false,
+    "guidAndVersionIdentityPreservedDuringCopy": true
+  },
+  "cases": [
+    {
+      "location": "isolated-project-library",
+      "request": {
+        "typePath": "LGen/Types_HMI/Scripts/LSicar_GeneralScripts",
+        "action": "update",
+        "propertiesJson": "{\"Name\":\"MCP_GeneralScripts_Renamed\"}",
+        "dryRun": false
+      },
+      "timestamp": "2026-10-01T11:39:37.6397722-07:00",
+      "success": false,
+      "status": "HmiConnectionUnavailable",
+      "mayHaveChanged": true,
+      "lastAttemptedProperty": "Name",
+      "appliedProperties": [],
+      "typeBefore": {
+        "name": "LSicar_GeneralScripts",
+        "guid": "04254662-9034-496e-a436-109c945e1de2",
+        "typeClass": "ScriptModuleType",
+        "typeKind": "unifiedScriptModule",
+        "author": "Skender",
+        "namespace": null,
+        "comment": {
+          "zh-CN": ""
+        },
+        "doNotUse": false,
+        "minimumTargetDeviceVersion": "20.0.0.0",
+        "setForUpdate": true,
+        "status": "Consistent",
+        "versionCount": 2,
+        "defaultVersion": "5.1.1",
+        "versions": [
+          {
+            "versionNumber": "5.1.1",
+            "guid": "e74fcb6f-b658-4ac6-9ea7-e5647251dc72",
+            "state": "Committed",
+            "isDefault": true,
+            "author": "SICAR",
+            "modifiedDate": "01/20/2025 10:32:40",
+            "comment": {
+              "zh-CN": ""
+            },
+            "versionClass": "LibraryTypeVersion",
+            "originalLibrary": "MCP_GeneralScripts_Rename_20261001_1133"
+          },
+          {
+            "versionNumber": "5.0.0",
+            "guid": "1dcd9356-4571-481b-8e81-cb011bd6e1ff",
+            "state": "Committed",
+            "isDefault": false,
+            "author": "SICAR",
+            "modifiedDate": "01/12/2024 12:55:41",
+            "comment": {
+              "zh-CN": ""
+            },
+            "versionClass": "LibraryTypeVersion",
+            "originalLibrary": "MCP_GeneralScripts_Rename_20261001_1133"
+          }
+        ]
+      },
+      "portalProcessAfter": {
+        "boundProcessId": 30552,
+        "processAlive": false,
+        "processName": "Siemens.Automation.Portal"
+      },
+      "exception": "System.Reflection.TargetInvocationException: 调用的目标发生了异常。 ---> Siemens.Engineering.NonRecoverableException: Unexpected exception - no exception message available.\r\n   在 Siemens.Engineering.Private.Session.Siemens.Engineering.Private.IObjectSession.SetAttribute[TC](LifetimeContractHandle`1 lifetimeContractHandle, String attributeName, Object attributeValue, String fullName)\r\n   在 Siemens.Engineering.Private.InternalObject_Access`2.SetAttribute(String name, Object value)\r\n   --- 内部异常堆栈跟踪的结尾 ---\r\n   在 System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)\r\n   在 System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)\r\n   在 System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\r\n   在 System.Reflection.RuntimePropertyInfo.SetValue(Object obj, Object value, Object[] index)\r\n   在 TiaMcpServer.Siemens.EngineeringScalarProperties.__TiaMcpNativeCall_6f22d25bdf3e1fe5a2d3.Call_6f22d25bdf3e1fe5a2d3(PropertyInfo receiver, Object , Object )\r\n   在 TiaMcpServer.Siemens.EngineeringScalarProperties.Apply(Object target, List`1 changes, JsonObject meta)\r\n   在 TiaMcpServer.Siemens.Portal.<>c__DisplayClass532_0.<ManageLibraryType>b__0(JsonObject meta)\r\n   在 TiaMcpServer.Siemens.Portal.RunHmiStepTool(String toolName, Func`2 action, Boolean requiresProject)",
+      "nativeBoundary": [
+        {
+          "utc": "2026-10-01T18:39:37.9991813Z",
+          "id": "ff9e7caa87124f7bb2165a35605cca81",
+          "tool": "native:Siemens.Engineering.Library.Types.LibraryType::Name",
+          "phase": "BEFORE",
+          "mcpProcessId": 19052,
+          "objectType": "Siemens.Engineering.HmiUnified.Library.ScriptModuleType",
+          "objectPath": "/Siemens.Engineering.TiaPortal/.ctor/get_Projects/OpenWithUpgrade/get_ProjectLibrary/TypeFolder/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Types/GetEnumerator/get_Current",
+          "binding": {
+            "tiaMajorVersion": 21,
+            "processId": 30552,
+            "processStartUtc": "2026-10-01T18:37:16.4500910Z",
+            "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\MCP_UnifiedRename_20261001_1113\\MCP_UnifiedRename_20261001_1113.ap21",
+            "projectName": "MCP_UnifiedRename_20261001_1113",
+            "generation": "5d3c8df65be142d887258623a06acba8"
+          },
+          "threadId": 8,
+          "apartment": "MTA",
+          "nativeCallId": "b9851a7de4cc42c5bd8a5e976e047771",
+          "parentNativeCallId": null,
+          "callSite": "6f22d25bdf3e1fe5a2d3 System.Void TiaMcpServer.Siemens.EngineeringScalarProperties::Apply(System.Object,System.Collections.Generic.List`1<System.ValueTuple`2<System.Reflection.PropertyInfo,System.Object>>,System.Text.Json.Nodes.JsonObject)@IL_0068",
+          "member": "Siemens.Engineering.Library.Types.LibraryType::Name",
+          "dispatch": "reflection",
+          "objectId": "75705151f339465ea50e24023e8e9b58",
+          "pathKind": "observed-access-lineage",
+          "exceptionType": null,
+          "hresult": null,
+          "exceptionChain": []
+        },
+        {
+          "utc": "2026-10-01T18:39:42.9232063Z",
+          "id": "ff9e7caa87124f7bb2165a35605cca81",
+          "tool": "native:Siemens.Engineering.Library.Types.LibraryType::Name",
+          "phase": "THREW",
+          "mcpProcessId": 19052,
+          "objectType": "Siemens.Engineering.HmiUnified.Library.ScriptModuleType",
+          "objectPath": "/Siemens.Engineering.TiaPortal/.ctor/get_Projects/OpenWithUpgrade/get_ProjectLibrary/TypeFolder/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Types/GetEnumerator/get_Current",
+          "binding": {
+            "tiaMajorVersion": 21,
+            "processId": 30552,
+            "processStartUtc": "2026-10-01T18:37:16.4500910Z",
+            "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\MCP_UnifiedRename_20261001_1113\\MCP_UnifiedRename_20261001_1113.ap21",
+            "projectName": "MCP_UnifiedRename_20261001_1113",
+            "generation": "5d3c8df65be142d887258623a06acba8"
+          },
+          "threadId": 8,
+          "apartment": "MTA",
+          "nativeCallId": "b9851a7de4cc42c5bd8a5e976e047771",
+          "parentNativeCallId": null,
+          "callSite": "6f22d25bdf3e1fe5a2d3 System.Void TiaMcpServer.Siemens.EngineeringScalarProperties::Apply(System.Object,System.Collections.Generic.List`1<System.ValueTuple`2<System.Reflection.PropertyInfo,System.Object>>,System.Text.Json.Nodes.JsonObject)@IL_0068",
+          "member": "Siemens.Engineering.Library.Types.LibraryType::Name",
+          "dispatch": "reflection",
+          "objectId": "75705151f339465ea50e24023e8e9b58",
+          "pathKind": "observed-access-lineage",
+          "exceptionType": "System.Reflection.TargetInvocationException",
+          "hresult": -2146232828,
+          "exceptionChain": [
+            {
+              "type": "System.Reflection.TargetInvocationException",
+              "hresult": -2146232828
+            },
+            {
+              "type": "Siemens.Engineering.NonRecoverableException",
+              "hresult": -2146233088
+            }
+          ]
+        }
+      ],
+      "rawRequest": {
+        "path": "bin-build/unified-rename-native-20261001/183937625324-ManageLibraryType-request.json",
+        "sha256": "25a87a6dfe05aaf19ae19df65b1fa0b607eff88f8a153d893d8d6ce65f66e602"
+      },
+      "rawResponse": {
+        "path": "bin-build/unified-rename-native-20261001/183937625324-ManageLibraryType.json",
+        "sha256": "16de45883bb701669b02e0f201ea6bea52e8e3dbca369d2eb601151100dc3d99"
+      }
+    },
+    {
+      "location": "isolated-global-library",
+      "request": {
+        "typePath": "LGen/Types_HMI/Scripts/LSicar_GeneralScripts",
+        "propertiesJson": "{\"Name\":\"MCP_GeneralScripts_Renamed\"}",
+        "libraryName": "MCP_GeneralScripts_Rename_20261001_1133",
+        "action": "update",
+        "dryRun": false
+      },
+      "timestamp": "2026-10-01T11:43:06.325836-07:00",
+      "success": false,
+      "status": "HmiConnectionUnavailable",
+      "mayHaveChanged": true,
+      "lastAttemptedProperty": "Name",
+      "appliedProperties": [],
+      "typeBefore": {
+        "name": "LSicar_GeneralScripts",
+        "guid": "04254662-9034-496e-a436-109c945e1de2",
+        "typeClass": "ScriptModuleType",
+        "typeKind": "unifiedScriptModule",
+        "author": "Skender",
+        "namespace": null,
+        "comment": {
+          "zh-CN": ""
+        },
+        "doNotUse": false,
+        "minimumTargetDeviceVersion": "20.0.0.0",
+        "setForUpdate": true,
+        "status": "Consistent",
+        "versionCount": 2,
+        "defaultVersion": "5.1.1",
+        "versions": [
+          {
+            "versionNumber": "5.1.1",
+            "guid": "e74fcb6f-b658-4ac6-9ea7-e5647251dc72",
+            "state": "Committed",
+            "isDefault": true,
+            "author": "SICAR",
+            "modifiedDate": "01/20/2025 10:32:40",
+            "comment": {
+              "zh-CN": ""
+            },
+            "versionClass": "LibraryTypeVersion",
+            "originalLibrary": "AutomaticDipCoatingMachine"
+          },
+          {
+            "versionNumber": "5.0.0",
+            "guid": "1dcd9356-4571-481b-8e81-cb011bd6e1ff",
+            "state": "Committed",
+            "isDefault": false,
+            "author": "SICAR",
+            "modifiedDate": "01/12/2024 12:55:41",
+            "comment": {
+              "zh-CN": ""
+            },
+            "versionClass": "LibraryTypeVersion",
+            "originalLibrary": "AutomaticDipCoatingMachine"
+          }
+        ]
+      },
+      "portalProcessAfter": {
+        "boundProcessId": 30076,
+        "processAlive": false,
+        "processName": "Siemens.Automation.Portal"
+      },
+      "exception": "System.Reflection.TargetInvocationException: 调用的目标发生了异常。 ---> Siemens.Engineering.NonRecoverableException: Unexpected exception - no exception message available.\r\n   在 Siemens.Engineering.Private.Session.Siemens.Engineering.Private.IObjectSession.SetAttribute[TC](LifetimeContractHandle`1 lifetimeContractHandle, String attributeName, Object attributeValue, String fullName)\r\n   在 Siemens.Engineering.Private.InternalObject_Access`2.SetAttribute(String name, Object value)\r\n   --- 内部异常堆栈跟踪的结尾 ---\r\n   在 System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)\r\n   在 System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)\r\n   在 System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\r\n   在 System.Reflection.RuntimePropertyInfo.SetValue(Object obj, Object value, Object[] index)\r\n   在 TiaMcpServer.Siemens.EngineeringScalarProperties.__TiaMcpNativeCall_6f22d25bdf3e1fe5a2d3.Call_6f22d25bdf3e1fe5a2d3(PropertyInfo receiver, Object , Object )\r\n   在 TiaMcpServer.Siemens.EngineeringScalarProperties.Apply(Object target, List`1 changes, JsonObject meta)\r\n   在 TiaMcpServer.Siemens.Portal.<>c__DisplayClass532_0.<ManageLibraryType>b__0(JsonObject meta)\r\n   在 TiaMcpServer.Siemens.Portal.RunHmiStepTool(String toolName, Func`2 action, Boolean requiresProject)",
+      "nativeBoundary": [
+        {
+          "utc": "2026-10-01T18:43:07.3801217Z",
+          "id": "f3ca750cd5be482d9386ea81fae9265a",
+          "tool": "native:Siemens.Engineering.Library.Types.LibraryType::Name",
+          "phase": "BEFORE",
+          "mcpProcessId": 19052,
+          "objectType": "Siemens.Engineering.HmiUnified.Library.ScriptModuleType",
+          "objectPath": "/Siemens.Engineering.TiaPortal/.ctor/get_GlobalLibraries/GetEnumerator/get_Current/TypeFolder/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Types/GetEnumerator/get_Current",
+          "binding": {
+            "tiaMajorVersion": 21,
+            "processId": 30076,
+            "processStartUtc": "2026-10-01T18:41:59.5330471Z",
+            "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\MCP_UnifiedRename_20261001_1113\\MCP_UnifiedRename_20261001_1113.ap21",
+            "projectName": "MCP_UnifiedRename_20261001_1113",
+            "generation": "1a30392cf20a41c798fb410852cc9096"
+          },
+          "threadId": 28,
+          "apartment": "MTA",
+          "nativeCallId": "181cd772693d49548205fd3df8cf8f07",
+          "parentNativeCallId": null,
+          "callSite": "6f22d25bdf3e1fe5a2d3 System.Void TiaMcpServer.Siemens.EngineeringScalarProperties::Apply(System.Object,System.Collections.Generic.List`1<System.ValueTuple`2<System.Reflection.PropertyInfo,System.Object>>,System.Text.Json.Nodes.JsonObject)@IL_0068",
+          "member": "Siemens.Engineering.Library.Types.LibraryType::Name",
+          "dispatch": "reflection",
+          "objectId": "b0960f54ac2e43bdbde21ce673797df9",
+          "pathKind": "observed-access-lineage",
+          "exceptionType": null,
+          "hresult": null,
+          "exceptionChain": []
+        },
+        {
+          "utc": "2026-10-01T18:43:12.2751912Z",
+          "id": "f3ca750cd5be482d9386ea81fae9265a",
+          "tool": "native:Siemens.Engineering.Library.Types.LibraryType::Name",
+          "phase": "THREW",
+          "mcpProcessId": 19052,
+          "objectType": "Siemens.Engineering.HmiUnified.Library.ScriptModuleType",
+          "objectPath": "/Siemens.Engineering.TiaPortal/.ctor/get_GlobalLibraries/GetEnumerator/get_Current/TypeFolder/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Folders/GetEnumerator/get_Current/Types/GetEnumerator/get_Current",
+          "binding": {
+            "tiaMajorVersion": 21,
+            "processId": 30076,
+            "processStartUtc": "2026-10-01T18:41:59.5330471Z",
+            "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\MCP_Rename_Diagnostics_20261001\\MCP_UnifiedRename_20261001_1113\\MCP_UnifiedRename_20261001_1113.ap21",
+            "projectName": "MCP_UnifiedRename_20261001_1113",
+            "generation": "1a30392cf20a41c798fb410852cc9096"
+          },
+          "threadId": 28,
+          "apartment": "MTA",
+          "nativeCallId": "181cd772693d49548205fd3df8cf8f07",
+          "parentNativeCallId": null,
+          "callSite": "6f22d25bdf3e1fe5a2d3 System.Void TiaMcpServer.Siemens.EngineeringScalarProperties::Apply(System.Object,System.Collections.Generic.List`1<System.ValueTuple`2<System.Reflection.PropertyInfo,System.Object>>,System.Text.Json.Nodes.JsonObject)@IL_0068",
+          "member": "Siemens.Engineering.Library.Types.LibraryType::Name",
+          "dispatch": "reflection",
+          "objectId": "b0960f54ac2e43bdbde21ce673797df9",
+          "pathKind": "observed-access-lineage",
+          "exceptionType": "System.Reflection.TargetInvocationException",
+          "hresult": -2146232828,
+          "exceptionChain": [
+            {
+              "type": "System.Reflection.TargetInvocationException",
+              "hresult": -2146232828
+            },
+            {
+              "type": "Siemens.Engineering.NonRecoverableException",
+              "hresult": -2146233088
+            }
+          ]
+        }
+      ],
+      "rawRequest": {
+        "path": "bin-build/unified-rename-native-20261001/184306292935-ManageLibraryType-request.json",
+        "sha256": "3690ca4c93e61d78bdd5b167ff1712541f2ca98fd43234b0da053c29ac9d2a2e"
+      },
+      "rawResponse": {
+        "path": "bin-build/unified-rename-native-20261001/184306292935-ManageLibraryType.json",
+        "sha256": "ad2e0ace486b13ac56a1bed7d966c4b4ce3d70eab0ce1de374570e1ca10d325f"
+      }
+    }
+  ],
+  "diagnostics": {
+    "rawJournal": {
+      "path": "bin-build/unified-rename-native-20261001/184346249156-ReadNativeInvocationLog.json",
+      "sha256": "f93e29aa3f312686134560db4eeb819260cdab486d7a202f5709985341aa2d89"
+    },
+    "malformedLines": 0,
+    "mcpProcessId": 19052,
+    "mcpExited": false,
+    "installedPatch": null,
+    "apiAssemblies": [
+      {
+        "name": "Siemens.Engineering.Base",
+        "assemblyVersion": "21.0.0.0",
+        "fileVersion": "2100.0.121.1",
+        "path": "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48\\Siemens.Engineering.Base.dll"
+      },
+      {
+        "name": "Siemens.Engineering.Step7",
+        "assemblyVersion": "21.0.0.0",
+        "fileVersion": "2100.0.121.1",
+        "path": "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48\\Siemens.Engineering.Step7.dll"
+      },
+      {
+        "name": "Siemens.Engineering.WinCCUnified",
+        "assemblyVersion": "21.0.0.0",
+        "fileVersion": "2100.0.121.1",
+        "path": "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48\\Siemens.Engineering.WinCCUnified.dll"
+      }
+    ],
+    "compatibilityEvidence": {
+      "path": "bin-build/unified-rename-native-20261001/184427399303-ReadOpennessCompatibility.json",
+      "sha256": "a28a480242f81e7588ea587e4fb27f83e5df48b870143ea47cdf7a44a6264c24"
+    }
+  },
+  "finalConnection": {
+    "project": "AutomaticDipCoatingMachine",
+    "timestamp": "2026-10-01T11:44:07.637972-07:00",
+    "binding": {
+      "identity": {
+        "tiaMajorVersion": 21,
+        "processId": 5268,
+        "processStartUtc": "2026-10-01T17:36:42.2320120Z",
+        "projectPath": "C:\\Users\\SIEMENS\\Documents\\Automation\\AutomaticDipCoatingMachine\\AutomaticDipCoatingMachine.ap21",
+        "projectName": "AutomaticDipCoatingMachine",
+        "generation": "3d4f68a51f254b73a085a1382ba75ecd"
+      },
+      "fault": null,
+      "instanceReserved": true,
+      "verifiedLive": false,
+      "note": "Cached binding only. Project access verifies PID/start time/full path/name; no implicit rebind."
+    },
+    "hmiReadHealth": {
+      "snapshotReadsBlocked": false,
+      "lastFailure": null,
+      "portalProcess": {
+        "boundProcessId": 5268,
+        "processAlive": true,
+        "processName": "Siemens.Automation.Portal"
+      },
+      "meaning": "Portal attachment and HMI software-handle health are separate. A successful GetState does not validate every software handle."
+    },
+    "evidence": {
+      "path": "bin-build/unified-rename-native-20261001/184407624079-GetState.json",
+      "sha256": "3fc9f11d3d40492bcc5383f8c4d8f635ec59c3df8c3c5451dcaa5d286b44aecd"
+    }
+  },
+  "limitations": [
+    "Both tests used the existing MCP read/snapshot/reflection call sequence; this is not a standalone C# reproduction.",
+    "Native Name setter failure is localized; TIA server-side root cause is not established without WER/ADIAG evidence.",
+    "Global-library rename failed before any renamed-type synchronization was attempted.",
+    "No bulk SetAttributes, type-version edit/release or document-rebuild alternative is verified.",
+    "Exact installed TIA Update/Hotfix is unknown; API file versions are not patch evidence.",
+    "The local quarantine candidate was not deployed or published and is not a functional rename repair."
+  ]
+}
