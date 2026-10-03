@@ -20,11 +20,10 @@ using McpProtocol = global::ModelContextProtocol.Protocol;
 
 namespace TiaMcpServer
 {
-    public partial class Program
+    public class Program
     {
         private static readonly string DiagLogPath = Path.Combine(Path.GetTempPath(), "TiaMcpServer.log");
         private static readonly string DiagLogPathLocal = Path.Combine(AppContext.BaseDirectory, "TiaMcpServer.startup.log");
-        private delegate void StructuredTextLine(StringBuilder st, params string[] parts);
 
         private static void ConfigureResourceDiscovery(IMcpServerBuilder builder)
         {
@@ -186,97 +185,97 @@ namespace TiaMcpServer
 
                 if (options.AnalyzeReferenceAssets)
                 {
-                    RunAnalyzeReferenceAssets(options);
+                    ReportBuilders.RunAnalyzeReferenceAssets(options);
                     return;
                 }
 
                 if (options.AnalyzeGlobalLibraryPackage)
                 {
-                    RunAnalyzeGlobalLibraryPackage(options);
+                    ReportBuilders.RunAnalyzeGlobalLibraryPackage(options);
                     return;
                 }
 
                 if (options.AnalyzeHmiTemplateReference)
                 {
-                    RunAnalyzeHmiTemplateReference(options);
+                    ReportBuilders.RunAnalyzeHmiTemplateReference(options);
                     return;
                 }
 
                 if (options.AnalyzeHmiComponentCatalog)
                 {
-                    RunAnalyzeHmiComponentCatalog(options);
+                    ReportBuilders.RunAnalyzeHmiComponentCatalog(options);
                     return;
                 }
 
                 if (options.RunHmiActionScriptRecipeProbe)
                 {
-                    RunHmiActionScriptRecipeProbe(options);
+                    ReportBuilders.RunHmiActionScriptRecipeProbe(options);
                     return;
                 }
 
                 if (options.RunHmiActionScriptRecipeSafetySelfTest)
                 {
-                    RunHmiActionScriptRecipeSafetySelfTest();
+                    ReportBuilders.RunHmiActionScriptRecipeSafetySelfTest();
                     return;
                 }
 
                 if (options.RunHmiTemplateLayoutProbe)
                 {
-                    RunHmiTemplateLayoutProbe(options);
+                    ReportBuilders.RunHmiTemplateLayoutProbe(options);
                     return;
                 }
 
                 if (options.RunClassicHmiMinimalPackageProbe)
                 {
-                    RunClassicHmiMinimalPackageProbe(options);
+                    ReportBuilders.RunClassicHmiMinimalPackageProbe(options);
                     return;
                 }
 
                 if (options.RunClassicHmiOfflineSuite)
                 {
-                    RunClassicHmiOfflineSuite(options);
+                    ReportBuilders.RunClassicHmiOfflineSuite(options);
                     return;
                 }
 
                 if (options.RunClassicHmiTemporaryImportPreflight)
                 {
-                    RunClassicHmiTemporaryImportPreflight(options);
+                    ReportBuilders.RunClassicHmiTemporaryImportPreflight(options);
                     return;
                 }
 
                 if (options.RunPlcSymbolManifestProbe)
                 {
-                    RunPlcSymbolManifestProbe(options);
+                    ReportBuilders.RunPlcSymbolManifestProbe(options);
                     return;
                 }
 
                 if (options.RunOfflineReleaseSuite)
                 {
-                    RunOfflineReleaseSuite(options);
+                    ReportBuilders.RunOfflineReleaseSuite(options);
                     return;
                 }
 
                 if (options.RebuildReleaseHandoff)
                 {
-                    RunRebuildReleaseHandoff(options);
+                    ReportBuilders.RunRebuildReleaseHandoff(options);
                     return;
                 }
 
                 if (options.RunHmiTemplatePlcSyncPrecheckSuite)
                 {
-                    RunHmiTemplatePlcSyncPrecheckSuite(options);
+                    ReportBuilders.RunHmiTemplatePlcSyncPrecheckSuite(options);
                     return;
                 }
 
                 if (options.AnalyzeHmiTemplatePlcMapping)
                 {
-                    RunAnalyzeHmiTemplatePlcMapping(options);
+                    ReportBuilders.RunAnalyzeHmiTemplatePlcMapping(options);
                     return;
                 }
 
                 if (options.GenerateHmiTemplateMappingSkeleton)
                 {
-                    RunGenerateHmiTemplateMappingSkeleton(options);
+                    ReportBuilders.RunGenerateHmiTemplateMappingSkeleton(options);
                     return;
                 }
 
@@ -284,68 +283,68 @@ namespace TiaMcpServer
                     string.IsNullOrWhiteSpace(options.PlcTagTableRegex) &&
                     Math.Max(0, options.MaxPlcTagTablesToExport ?? 0) == 0)
                 {
-                    RunGenerateHmiTemplateSyncPrecheck(options);
+                    ReportBuilders.RunGenerateHmiTemplateSyncPrecheck(options);
                     return;
                 }
 
                 if (options.GeneratePlcBuilderFixtureReadiness)
                 {
-                    RunGeneratePlcBuilderFixtureReadiness(options);
+                    ReportBuilders.RunGeneratePlcBuilderFixtureReadiness(options);
                     return;
                 }
 
                 if (options.RunPlcBuilderOfflineSuite)
                 {
-                    RunPlcBuilderOfflineSuite(options);
+                    ReportBuilders.RunPlcBuilderOfflineSuite(options);
                     return;
                 }
 
                 if (options.RunPlcTagTableBuilderProbe)
                 {
-                    RunPlcTagTableBuilderProbe(options);
+                    ReportBuilders.RunPlcTagTableBuilderProbe(options);
                     return;
                 }
 
                 if (options.RunPlcUdtBuilderProbe)
                 {
-                    RunPlcUdtBuilderProbe(options);
+                    ReportBuilders.RunPlcUdtBuilderProbe(options);
                     return;
                 }
 
                 if (options.RunStructuredTextBuilderProbe)
                 {
-                    RunStructuredTextBuilderProbe(options);
+                    ReportBuilders.RunStructuredTextBuilderProbe(options);
                     return;
                 }
 
                 if (options.RunPlcFcBlockComposerProbe)
                 {
-                    RunPlcFcBlockComposerProbe(options);
+                    ReportBuilders.RunPlcFcBlockComposerProbe(options);
                     return;
                 }
 
                 if (options.RunPlcGlobalDbBuilderProbe)
                 {
-                    RunPlcGlobalDbBuilderProbe(options);
+                    ReportBuilders.RunPlcGlobalDbBuilderProbe(options);
                     return;
                 }
 
                 if (options.RunFlgNetCallBuilderProbe)
                 {
-                    RunFlgNetCallBuilderProbe(options);
+                    ReportBuilders.RunFlgNetCallBuilderProbe(options);
                     return;
                 }
 
                 if (options.ValidateMappedHmiTemplateBindings &&
                     options.MappedHmiTemplateOfflineOnly)
                 {
-                    RunValidateMappedHmiTemplateBindings(options);
+                    HmiTemplateBuilder.RunValidateMappedHmiTemplateBindings(options);
                     return;
                 }
 
                 if (options.RunOnlineMonitoringSafetySelfTest)
                 {
-                    RunOnlineMonitoringSafetySelfTest();
+                    CliProbes.RunOnlineMonitoringSafetySelfTest();
                     return;
                 }
 
@@ -400,187 +399,187 @@ namespace TiaMcpServer
                 {
                     if (options.RunFlowLightTest)
                     {
-                        RunFlowLightTest(options);
+                        CliProbes.RunFlowLightTest(options);
                         return;
                     }
 
                     if (options.FixCurrentFlowBinding)
                     {
-                        RunFixCurrentFlowBinding(options);
+                        CliProbes.RunFixCurrentFlowBinding(options);
                         return;
                     }
 
                     if (options.ProbeS71200Device)
                     {
-                        RunProbeS71200Device(options);
+                        CliProbes.RunProbeS71200Device(options);
                         return;
                     }
 
                     if (options.Add1511CToCurrentProject)
                     {
-                        RunAdd1511CToCurrentProject(options);
+                        CliProbes.RunAdd1511CToCurrentProject(options);
                         return;
                     }
 
                     if (options.ValidatePlcSclSyntax)
                     {
-                        RunValidatePlcSclSyntax(options);
+                        CliProbes.RunValidatePlcSclSyntax(options);
                         return;
                     }
 
                     if (options.RunMotorMinimalTest)
                     {
-                        RunMotorMinimalTest(options);
+                        CliProbes.RunMotorMinimalTest(options);
                         return;
                     }
 
                     if (options.ValidateUnifiedHmiTemplates)
                     {
-                        RunValidateUnifiedHmiTemplates(options);
+                        HmiTemplateBuilder.RunValidateUnifiedHmiTemplates(options);
                         return;
                     }
 
                     if (options.ValidateUnifiedHmiActionSyntaxCheck)
                     {
-                        RunValidateUnifiedHmiActionSyntaxCheck(options);
+                        ReportBuilders.RunValidateUnifiedHmiActionSyntaxCheck(options);
                         return;
                     }
 
                     if (options.ValidateUnifiedHmiTemplateBindings)
                     {
-                        RunValidateUnifiedHmiTemplateBindings(options);
+                        HmiTemplateBuilder.RunValidateUnifiedHmiTemplateBindings(options);
                         return;
                     }
 
                     if (options.ValidateMappedHmiTemplateBindings)
                     {
-                        RunValidateMappedHmiTemplateBindings(options);
+                        HmiTemplateBuilder.RunValidateMappedHmiTemplateBindings(options);
                         return;
                     }
 
                     if (options.ValidatePlcHmiSyncMinimal)
                     {
-                        RunValidatePlcHmiSyncMinimal(options);
+                        PlcHmiSyncXml.RunValidatePlcHmiSyncMinimal(options);
                         return;
                     }
 
                     if (options.ValidatePlcChineseCommentsMinimal)
                     {
-                        RunValidatePlcChineseCommentsMinimal(options);
+                        PlcHmiSyncXml.RunValidatePlcChineseCommentsMinimal(options);
                         return;
                     }
 
                     if (options.ProbeKtp700Basic)
                     {
-                        RunProbeKtp700Basic(options);
+                        CliProbes.RunProbeKtp700Basic(options);
                         return;
                     }
 
                     if (options.ProbeKtp700BasicHmiImport)
                     {
-                        RunProbeKtp700BasicHmiImport(options);
+                        CliProbes.RunProbeKtp700BasicHmiImport(options);
                         return;
                     }
 
                     if (options.ProbeKtp700BasicHmiTags)
                     {
-                        RunProbeKtp700BasicHmiTags(options);
+                        CliProbes.RunProbeKtp700BasicHmiTags(options);
                         return;
                     }
 
                     if (options.ProbeKtp700BasicHmiConnection)
                     {
-                        RunProbeKtp700BasicHmiConnection(options);
+                        CliProbes.RunProbeKtp700BasicHmiConnection(options);
                         return;
                     }
 
                     if (options.ProbeKtp700BasicHmiSymbolicTags)
                     {
-                        RunProbeKtp700BasicHmiSymbolicTags(options);
+                        CliProbes.RunProbeKtp700BasicHmiSymbolicTags(options);
                         return;
                     }
 
                     if (options.ProbeKtp700BasicNetworking)
                     {
-                        RunProbeKtp700BasicNetworking(options);
+                        CliProbes.RunProbeKtp700BasicNetworking(options);
                         return;
                     }
 
                     if (options.ProbeCurrentKtp700HardwareHmiConnection)
                     {
-                        RunProbeCurrentKtp700HardwareHmiConnection(options);
+                        CliProbes.RunProbeCurrentKtp700HardwareHmiConnection(options);
                         return;
                     }
 
                     if (options.ListPortalProcessProjects)
                     {
-                        RunListPortalProcessProjects(options);
+                        CliProbes.RunListPortalProcessProjects(options);
                         return;
                     }
 
                     if (options.RunCapabilitySelfTest)
                     {
-                        await RunCapabilitySelfTest(options);
+                        await CliProbes.RunCapabilitySelfTest(options);
                         return;
                     }
 
                     if (options.GenerateAcceptanceReport)
                     {
-                        await RunGenerateAcceptanceReport(options);
+                        await CliProbes.RunGenerateAcceptanceReport(options);
                         return;
                     }
 
                     if (options.GenerateErrorReport)
                     {
-                        RunGenerateErrorReport(options);
+                        CliProbes.RunGenerateErrorReport(options);
                         return;
                     }
 
                     if (options.GenerateMonitoringReadOnlyReport)
                     {
-                        RunGenerateMonitoringReadOnlyReport(options);
+                        ReportBuilders.RunGenerateMonitoringReadOnlyReport(options);
                         return;
                     }
 
                     if (options.GenerateGlobalLibraryProbeReport)
                     {
-                        RunGenerateGlobalLibraryProbeReport(options);
+                        ReportBuilders.RunGenerateGlobalLibraryProbeReport(options);
                         return;
                     }
 
                     if (options.ValidateGlobalLibraryMasterCopyImport)
                     {
-                        RunValidateGlobalLibraryMasterCopyImport(options);
+                        ReportBuilders.RunValidateGlobalLibraryMasterCopyImport(options);
                         return;
                     }
 
                     if (options.GenerateHmiTemplateSyncPrecheck)
                     {
-                        RunGenerateHmiTemplateSyncPrecheck(options);
+                        ReportBuilders.RunGenerateHmiTemplateSyncPrecheck(options);
                         return;
                     }
 
                     if (options.ProbeHardwareHmiConnectionOwnerCandidates)
                     {
-                        RunProbeHardwareHmiConnectionOwnerCandidates(options);
+                        CliProbes.RunProbeHardwareHmiConnectionOwnerCandidates(options);
                         return;
                     }
 
                     if (options.ProbeHardwareHmiConnectionWhitelistedServices)
                     {
-                        RunProbeHardwareHmiConnectionWhitelistedServices(options);
+                        CliProbes.RunProbeHardwareHmiConnectionWhitelistedServices(options);
                         return;
                     }
 
                     if (!string.IsNullOrWhiteSpace(options.SearchGsdKeyword))
                     {
-                        RunSearchGsd(options);
+                        CliProbes.RunSearchGsd(options);
                         return;
                     }
 
                     if (!string.IsNullOrWhiteSpace(options.SearchHardwareCatalogKeyword))
                     {
-                        RunSearchHardwareCatalog(options);
+                        CliProbes.RunSearchHardwareCatalog(options);
                         return;
                     }
 
@@ -854,7 +853,7 @@ namespace TiaMcpServer
             try { if (exception is Exception ex && ex.InnerException != null) text += " <- " + (ex.InnerException.GetType().FullName ?? ""); } catch /* swallow(logging-failure): unavailable inner-exception details must not prevent reporting the outer exception */ { }
             return text;
         }
-        private static void LogDiag(string message)
+        internal static void LogDiag(string message)
         {
             // Console may be swallowed by host; always persist to %TEMP%.
             try { Console.Error.WriteLine(message); } catch /* swallow(logging-failure): a closed stderr stream must not interrupt diagnostic file writes */ { }

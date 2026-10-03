@@ -19,9 +19,9 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    public partial class Program
+    internal static class ReportBuilders
     {
-        private static void TryWriteText(string path, string content)
+        internal static void TryWriteText(string path, string content)
         {
             try
             {
@@ -36,7 +36,7 @@ namespace TiaMcpServer
             }
             catch (Exception ex)
             {
-                LogDiag("TryWriteText failed for " + path + ": " + ex.Message);
+                Program.LogDiag("TryWriteText failed for " + path + ": " + ex.Message);
             }
         }
 
@@ -79,7 +79,7 @@ namespace TiaMcpServer
             return Environment.CurrentDirectory;
         }
 
-        private static void RunAnalyzeReferenceAssets(CliOptions options)
+        internal static void RunAnalyzeReferenceAssets(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var referenceProject = string.IsNullOrWhiteSpace(options.ReferenceProjectPath)
@@ -118,12 +118,12 @@ namespace TiaMcpServer
             File.WriteAllText(jsonPath, root.ToJsonString(new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildReferenceAnalysisMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Reference analysis report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Reference analysis report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunAnalyzeGlobalLibraryPackage(CliOptions options)
+        internal static void RunAnalyzeGlobalLibraryPackage(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
@@ -158,12 +158,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, GlobalLibraryPackageAnalyzer.BuildMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Global library package analysis report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Global library package analysis report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunAnalyzeHmiTemplateReference(CliOptions options)
+        internal static void RunAnalyzeHmiTemplateReference(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -192,12 +192,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, HmiTemplateReferenceAnalyzer.BuildMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("HMI template reference analysis report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("HMI template reference analysis report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunAnalyzeHmiComponentCatalog(CliOptions options)
+        internal static void RunAnalyzeHmiComponentCatalog(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -213,11 +213,11 @@ namespace TiaMcpServer
             var root = HmiComponentCatalogAnalyzer.Analyze(probeJson, templateDir);
             HmiComponentCatalogAnalyzer.WriteReports(root, reportDir);
 
-            LogDiag("HMI component catalog report written to:");
-            LogDiag(reportDir);
+            Program.LogDiag("HMI component catalog report written to:");
+            Program.LogDiag(reportDir);
         }
 
-        private static void RunHmiActionScriptRecipeProbe(CliOptions options)
+        internal static void RunHmiActionScriptRecipeProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -228,29 +228,29 @@ namespace TiaMcpServer
                 : options.HmiTemplateReferenceReportDirectory!;
 
             var root = HmiActionScriptRecipeBuilder.RunProbe(templateDir, reportDir);
-            LogDiag("HMI action script recipe probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("HMI action script recipe probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunHmiActionScriptRecipeSafetySelfTest()
+        internal static void RunHmiActionScriptRecipeSafetySelfTest()
         {
             var root = HmiActionScriptRecipeBuilder.RunSafetySelfTest();
-            LogDiag("HMI action script recipe safety self-test:");
-            LogDiag("OK: " + root["ok"]);
-            LogDiag("Cases: " + root["caseCount"]);
+            Program.LogDiag("HMI action script recipe safety self-test:");
+            Program.LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("Cases: " + root["caseCount"]);
             foreach (var node in root["cases"] as JsonArray ?? new JsonArray())
             {
                 if (node is not JsonObject item) continue;
-                LogDiag("- " + item["id"] + ": pass=" + item["pass"] +
+                Program.LogDiag("- " + item["id"] + ": pass=" + item["pass"] +
                         ", kind=" + item["recipeKind"] +
                         ", blocked=" + item["actualApplyBlocked"] +
                         ", safeApply=" + item["actualSafeApplyCandidate"]);
             }
         }
 
-        private static void RunHmiTemplateLayoutProbe(CliOptions options)
+        internal static void RunHmiTemplateLayoutProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -305,10 +305,10 @@ namespace TiaMcpServer
             md.AppendLine("- 重叠、密度和文字溢出属于启发式警告；越界、重复名称、无效尺寸和执行 JSON 生成失败属于阻断错误。");
             File.WriteAllText(mdPath, md.ToString(), Encoding.UTF8);
 
-            LogDiag("HMI template layout probe report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("HMI template layout probe report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
+            Program.LogDiag("OK: " + root["ok"]);
             if (failed > 0)
             {
                 throw new InvalidOperationException("HMI template layout probe failed. Report: " + jsonPath);
@@ -328,7 +328,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunGeneratePlcBuilderFixtureReadiness(CliOptions options)
+        internal static void RunGeneratePlcBuilderFixtureReadiness(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -341,13 +341,13 @@ namespace TiaMcpServer
             var root = PlcBuilderFixtureReadinessAnalyzer.Analyze(fixtureDir);
             PlcBuilderFixtureReadinessAnalyzer.WriteReports(root, reportDir);
 
-            LogDiag("PLC builder fixture readiness report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC builder fixture readiness report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunClassicHmiMinimalPackageProbe(CliOptions options)
+        internal static void RunClassicHmiMinimalPackageProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiPackageReportDirectory)
@@ -462,56 +462,56 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildClassicHmiMinimalPackageProbeMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Classic HMI minimal package probe report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("Classic HMI minimal package probe report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunPlcSymbolManifestProbe(CliOptions options)
+        internal static void RunPlcSymbolManifestProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.PlcSymbolManifestReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "plc_symbol_manifest")
                 : options.PlcSymbolManifestReportDirectory!;
             var root = PlcSymbolManifestBuilder.RunProbe(reportDir);
-            LogDiag("PLC symbol manifest probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC symbol manifest probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunClassicHmiOfflineSuite(CliOptions options)
+        internal static void RunClassicHmiOfflineSuite(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiOfflineSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "classic_hmi_offline_suite")
                 : options.ClassicHmiOfflineSuiteReportDirectory!;
             var root = ClassicHmiOfflineValidationSuite.Run(reportDir);
-            LogDiag("Classic HMI offline validation suite report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("Classic HMI offline validation suite report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunOfflineReleaseSuite(CliOptions options)
+        internal static void RunOfflineReleaseSuite(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "offline_release_suite")
                 : options.OfflineReleaseSuiteReportDirectory!;
             var root = OfflineReleaseValidationSuite.Run(workspaceRoot, reportDir);
-            LogDiag("Offline release validation suite report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag(root["diagnosticMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["runbookMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["manifestMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["releaseReadinessGateMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("Offline release validation suite report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["diagnosticMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["runbookMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["manifestMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["releaseReadinessGateMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunRebuildReleaseHandoff(CliOptions options)
+        internal static void RunRebuildReleaseHandoff(CliOptions options)
         {
             if (string.IsNullOrWhiteSpace(options.OfflineReleaseSuiteJsonPath))
             {
@@ -523,16 +523,16 @@ namespace TiaMcpServer
                 ? Path.Combine(workspaceRoot, "reports", "offline_release_handoff_rebuilt")
                 : options.OfflineReleaseSuiteReportDirectory!;
             var root = ReleaseHandoffArtifactBuilder.RebuildFromSuiteJson(options.OfflineReleaseSuiteJsonPath!, reportDir);
-            LogDiag("Release handoff artifacts rebuilt:");
-            LogDiag(root["diagnosticMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["runbookMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["manifestMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["releaseReadinessGateMarkdownPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
-            LogDiag("ReleaseReady: " + root["releaseReady"]);
+            Program.LogDiag("Release handoff artifacts rebuilt:");
+            Program.LogDiag(root["diagnosticMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["runbookMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["manifestMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["releaseReadinessGateMarkdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("ReleaseReady: " + root["releaseReady"]);
         }
 
-        private static void RunHmiTemplatePlcSyncPrecheckSuite(CliOptions options)
+        internal static void RunHmiTemplatePlcSyncPrecheckSuite(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -545,23 +545,23 @@ namespace TiaMcpServer
                 ? Path.Combine(workspaceRoot, "reports", "hmi_template_plc_sync_precheck")
                 : options.HmiTemplatePlcSyncPrecheckReportDirectory!;
             var root = HmiTemplatePlcSyncPrecheckSuite.Run(templateDir, plcXmlPath, reportDir, options.HmiTemplateMappingPath ?? "");
-            LogDiag("HMI template PLC sync precheck suite report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("HMI template PLC sync precheck suite report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunClassicHmiTemporaryImportPreflight(CliOptions options)
+        internal static void RunClassicHmiTemporaryImportPreflight(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.ClassicHmiTemporaryImportPreflightReportDirectory)
                 ? Path.Combine(workspaceRoot, "reports", "classic_hmi_temporary_import_preflight")
                 : options.ClassicHmiTemporaryImportPreflightReportDirectory!;
             var root = ClassicHmiTemporaryImportPreflightSuite.Run(workspaceRoot, reportDir);
-            LogDiag("Classic HMI temporary import preflight report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("Classic HMI temporary import preflight report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
         private static string BuildClassicHmiMinimalPackageProbeJson() => ClassicHmiValidationFixture.BuildClassicHmiPackageJson("Classic_Motor_ValidateProbe");
@@ -615,7 +615,7 @@ namespace TiaMcpServer
             return md.ToString();
         }
 
-        private static void RunPlcBuilderOfflineSuite(CliOptions options)
+        internal static void RunPlcBuilderOfflineSuite(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -626,13 +626,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderSuiteReportDirectory!;
 
             var root = PlcBuilderOfflineValidationSuite.Run(fixtureDir, reportDir);
-            LogDiag("PLC builder offline validation suite report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC builder offline validation suite report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunPlcTagTableBuilderProbe(CliOptions options)
+        internal static void RunPlcTagTableBuilderProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -643,13 +643,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = PlcTagTableXmlBuilder.RunProbe(fixtureDir, reportDir);
-            LogDiag("PLC tag table builder probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC tag table builder probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunPlcUdtBuilderProbe(CliOptions options)
+        internal static void RunPlcUdtBuilderProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -660,13 +660,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = PlcUdtXmlBuilder.RunProbe(fixtureDir, reportDir);
-            LogDiag("PLC UDT builder probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC UDT builder probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunStructuredTextBuilderProbe(CliOptions options)
+        internal static void RunStructuredTextBuilderProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -677,13 +677,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = StructuredTextXmlBuilder.RunProbe(fixtureDir, reportDir);
-            LogDiag("StructuredText builder probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("StructuredText builder probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunPlcFcBlockComposerProbe(CliOptions options)
+        internal static void RunPlcFcBlockComposerProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -694,13 +694,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = PlcFcBlockXmlComposer.RunProbe(fixtureDir, reportDir);
-            LogDiag("PLC FC block composer probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC FC block composer probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunPlcGlobalDbBuilderProbe(CliOptions options)
+        internal static void RunPlcGlobalDbBuilderProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var fixtureDir = string.IsNullOrWhiteSpace(options.PlcExportDirectory)
@@ -711,13 +711,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = PlcGlobalDbXmlBuilder.RunProbe(fixtureDir, reportDir);
-            LogDiag("PLC Global DB builder probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("PLC Global DB builder probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunFlgNetCallBuilderProbe(CliOptions options)
+        internal static void RunFlgNetCallBuilderProbe(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var reportDir = string.IsNullOrWhiteSpace(options.PlcBuilderProbeReportDirectory)
@@ -725,13 +725,13 @@ namespace TiaMcpServer
                 : options.PlcBuilderProbeReportDirectory!;
 
             var root = FlgNetCallXmlBuilder.RunProbe(workspaceRoot, reportDir);
-            LogDiag("LAD FlgNet call builder probe report written:");
-            LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
-            LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
-            LogDiag("OK: " + root["ok"]);
+            Program.LogDiag("LAD FlgNet call builder probe report written:");
+            Program.LogDiag(root["markdownPath"]?.ToString() ?? reportDir);
+            Program.LogDiag(root["jsonPath"]?.ToString() ?? reportDir);
+            Program.LogDiag("OK: " + root["ok"]);
         }
 
-        private static void RunGenerateMonitoringReadOnlyReport(CliOptions options)
+        internal static void RunGenerateMonitoringReadOnlyReport(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var requestedSoftwarePath = string.IsNullOrWhiteSpace(options.PlcSoftwarePath) ? "PLC_1" : options.PlcSoftwarePath!;
@@ -946,12 +946,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildMonitoringReadOnlyMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Monitoring read-only report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Monitoring read-only report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunGenerateGlobalLibraryProbeReport(CliOptions options)
+        internal static void RunGenerateGlobalLibraryProbeReport(CliOptions options)
         {
             var workspaceRoot = GetWorkspaceRoot();
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
@@ -1022,12 +1022,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildGlobalLibraryProbeMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Global library probe report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Global library probe report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunValidateGlobalLibraryMasterCopyImport(CliOptions options)
+        internal static void RunValidateGlobalLibraryMasterCopyImport(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var libraryPath = string.IsNullOrWhiteSpace(options.GlobalLibraryPackagePath)
@@ -1078,7 +1078,7 @@ namespace TiaMcpServer
 
             try
             {
-                LogDiag($"Global library MasterCopy import validation: project={projectName}, library={libraryPath}, masterCopy={masterCopyName}");
+                Program.LogDiag($"Global library MasterCopy import validation: project={projectName}, library={libraryPath}, masterCopy={masterCopyName}");
                 var connect = McpServer.Connect();
                 root["connect"] = ResponseMessageToJson(connect);
 
@@ -1130,9 +1130,9 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildGlobalLibraryMasterCopyImportMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Global library MasterCopy import validation report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Global library MasterCopy import validation report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
 
             if (root["ok"]?.GetValue<bool>() != true)
             {
@@ -1140,7 +1140,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunValidateUnifiedHmiActionSyntaxCheck(CliOptions options)
+        internal static void RunValidateUnifiedHmiActionSyntaxCheck(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
@@ -1191,7 +1191,7 @@ namespace TiaMcpServer
 
             try
             {
-                LogDiag($"Unified HMI action SyntaxCheck validation: project={projectName}");
+                Program.LogDiag($"Unified HMI action SyntaxCheck validation: project={projectName}");
                 root["connect"] = ResponseMessageToJson(McpServer.Connect());
                 root["createProject"] = ResponseMessageToJson(McpServer.CreateProject(projectDirectory, projectName));
 
@@ -1254,15 +1254,15 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildUnifiedHmiActionSyntaxCheckMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("Unified HMI action SyntaxCheck validation report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("Unified HMI action SyntaxCheck validation report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
 
             if (root["ok"]?.GetValue<bool>() != true)
                 throw new InvalidOperationException("Unified HMI action SyntaxCheck validation failed. Report: " + mdPath);
         }
 
-        private static void RunGenerateHmiTemplateSyncPrecheck(CliOptions options)
+        internal static void RunGenerateHmiTemplateSyncPrecheck(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -1337,7 +1337,7 @@ namespace TiaMcpServer
                         Directory.CreateDirectory(tagExportDir);
                         foreach (var table in selectedTables)
                         {
-                            var outPath = Path.Combine(tagExportDir, MakeSafeReportFileName(table) + ".xml");
+                            var outPath = Path.Combine(tagExportDir, HmiTemplateBuilder.MakeSafeReportFileName(table) + ".xml");
                             try
                             {
                                 var export = McpServer.ExportPlcTagTable(softwarePath, table, outPath);
@@ -1402,12 +1402,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildHmiTemplateSyncPrecheckMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("HMI template sync precheck report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("HMI template sync precheck report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static void RunGenerateHmiTemplateMappingSkeleton(CliOptions options)
+        internal static void RunGenerateHmiTemplateMappingSkeleton(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -1433,8 +1433,8 @@ namespace TiaMcpServer
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             }), Encoding.UTF8);
 
-            LogDiag("HMI template mapping skeleton written:");
-            LogDiag(outputPath);
+            Program.LogDiag("HMI template mapping skeleton written:");
+            Program.LogDiag(outputPath);
         }
 
         private static JsonObject AnalyzeReferenceProject(string projectPath)
@@ -1728,18 +1728,18 @@ namespace TiaMcpServer
             {
                 md.AppendLine("- Files: total=" + counts["total"] + ", rdf=" + counts["rdf"] + ", screens=" + counts["screenRdf"] + ", faceplates=" + counts["faceplateRdf"]);
             }
-            AppendSectionSummary(md, project, "screens", "Screens");
-            AppendSectionSummary(md, project, "faceplates", "Faceplates");
-            AppendSectionSummary(md, project, "graphics", "Graphics");
+            HmiTemplateBuilder.AppendSectionSummary(md, project, "screens", "Screens");
+            HmiTemplateBuilder.AppendSectionSummary(md, project, "faceplates", "Faceplates");
+            HmiTemplateBuilder.AppendSectionSummary(md, project, "graphics", "Graphics");
             md.AppendLine();
 
             var library = root["referenceGlobalLibrary"] as JsonObject;
             md.AppendLine("## Reference Global Library");
             md.AppendLine("- Path: " + library?["path"]);
             md.AppendLine("- Exists: " + library?["exists"]);
-            AppendSectionSummary(md, library, "System", "System");
-            AppendSectionSummary(md, library, "XRef", "XRef");
-            AppendSectionSummary(md, library, "src", "src");
+            HmiTemplateBuilder.AppendSectionSummary(md, library, "System", "System");
+            HmiTemplateBuilder.AppendSectionSummary(md, library, "XRef", "XRef");
+            HmiTemplateBuilder.AppendSectionSummary(md, library, "src", "src");
             md.AppendLine();
 
             md.AppendLine("## Recommendations");
@@ -2031,9 +2031,9 @@ namespace TiaMcpServer
                 md.AppendLine("- Imported item: " + import["importedItemName"]);
                 md.AppendLine("- Error: " + import["error"]);
                 md.AppendLine();
-                AppendJsonArrayPreview(md, import["attempts"] as JsonArray, "Import Attempts", 80);
-                AppendJsonArrayPreview(md, import["readbackItems"] as JsonArray, "ScreenItems Readback", 80);
-                AppendJsonArrayPreview(md, import["warnings"] as JsonArray, "Warnings", 20);
+                HmiTemplateBuilder.AppendJsonArrayPreview(md, import["attempts"] as JsonArray, "Import Attempts", 80);
+                HmiTemplateBuilder.AppendJsonArrayPreview(md, import["readbackItems"] as JsonArray, "ScreenItems Readback", 80);
+                HmiTemplateBuilder.AppendJsonArrayPreview(md, import["warnings"] as JsonArray, "Warnings", 20);
             }
 
             return md.ToString();
@@ -2106,10 +2106,10 @@ namespace TiaMcpServer
             }
             md.AppendLine();
 
-            AppendJsonArrayPreview(md, probe?["masterCopies"] as JsonArray, "Master Copies", 40);
-            AppendJsonArrayPreview(md, probe?["types"] as JsonArray, "Types", 40);
-            AppendJsonArrayPreview(md, probe?["folders"] as JsonArray, "Folders", 40);
-            AppendJsonArrayPreview(md, probe?["warnings"] as JsonArray, "Warnings", 20);
+            HmiTemplateBuilder.AppendJsonArrayPreview(md, probe?["masterCopies"] as JsonArray, "Master Copies", 40);
+            HmiTemplateBuilder.AppendJsonArrayPreview(md, probe?["types"] as JsonArray, "Types", 40);
+            HmiTemplateBuilder.AppendJsonArrayPreview(md, probe?["folders"] as JsonArray, "Folders", 40);
+            HmiTemplateBuilder.AppendJsonArrayPreview(md, probe?["warnings"] as JsonArray, "Warnings", 20);
             return md.ToString();
         }
 
@@ -2164,7 +2164,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunAnalyzeHmiTemplatePlcMapping(CliOptions options)
+        internal static void RunAnalyzeHmiTemplatePlcMapping(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var templateDir = string.IsNullOrWhiteSpace(options.HmiTemplateDirectory)
@@ -2212,12 +2212,12 @@ namespace TiaMcpServer
             }), Encoding.UTF8);
             File.WriteAllText(mdPath, BuildHmiTemplatePlcMappingMarkdown(root, jsonPath), Encoding.UTF8);
 
-            LogDiag("HMI template PLC mapping report written:");
-            LogDiag(mdPath);
-            LogDiag(jsonPath);
+            Program.LogDiag("HMI template PLC mapping report written:");
+            Program.LogDiag(mdPath);
+            Program.LogDiag(jsonPath);
         }
 
-        private static JsonObject AnalyzePlcExportDirectory(string directory)
+        internal static JsonObject AnalyzePlcExportDirectory(string directory)
         {
             var root = new JsonObject
             {
@@ -2411,7 +2411,7 @@ namespace TiaMcpServer
             };
         }
 
-        private static List<PlcSymbolCandidate> BuildPlcSymbolCatalog(JsonObject plcExportCatalog)
+        internal static List<PlcSymbolCandidate> BuildPlcSymbolCatalog(JsonObject plcExportCatalog)
         {
             var list = new List<PlcSymbolCandidate>();
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -2856,7 +2856,7 @@ namespace TiaMcpServer
             return true;
         }
 
-        private static JsonObject LoadHmiTemplateMappingFile(string mappingPath)
+        internal static JsonObject LoadHmiTemplateMappingFile(string mappingPath)
         {
             var root = new JsonObject
             {
@@ -2914,7 +2914,7 @@ namespace TiaMcpServer
             return root;
         }
 
-        private static JsonArray ApplyHmiTemplateMapping(JsonArray templates, JsonObject mappingFile)
+        internal static JsonArray ApplyHmiTemplateMapping(JsonArray templates, JsonObject mappingFile)
         {
             var map = new Dictionary<string, JsonObject>(StringComparer.OrdinalIgnoreCase);
             foreach (var entryNode in mappingFile["entries"] as JsonArray ?? new JsonArray())
@@ -2953,7 +2953,7 @@ namespace TiaMcpServer
             return result;
         }
 
-        private static string EscapeMarkdownCell(string value)
+        internal static string EscapeMarkdownCell(string value)
         {
             return (value ?? "").Replace("|", "\\|").Replace("\r", " ").Replace("\n", " ");
         }
@@ -3048,7 +3048,7 @@ namespace TiaMcpServer
             return "";
         }
 
-        private static JsonArray BuildHmiTemplateSyncPrecheck(JsonArray templates, SortedSet<string> plcSymbols, List<PlcSymbolCandidate>? plcSymbolCatalog = null)
+        internal static JsonArray BuildHmiTemplateSyncPrecheck(JsonArray templates, SortedSet<string> plcSymbols, List<PlcSymbolCandidate>? plcSymbolCatalog = null)
         {
             var result = new JsonArray();
             var symbolByName = (plcSymbolCatalog ?? new List<PlcSymbolCandidate>())
@@ -3284,7 +3284,7 @@ namespace TiaMcpServer
             public string OwnerType { get; set; } = "";
         }
 
-        private sealed class PlcSymbolCandidate
+        internal sealed class PlcSymbolCandidate
         {
             public string Symbol { get; set; } = "";
             public string LeafName { get; set; } = "";

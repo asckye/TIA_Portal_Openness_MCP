@@ -19,9 +19,9 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    public partial class Program
+    internal static class HmiTemplateBuilder
     {
-        private static string MakeSafeReportFileName(string name)
+        internal static string MakeSafeReportFileName(string name)
         {
             var invalid = Path.GetInvalidFileNameChars();
             var sb = new StringBuilder(name.Length);
@@ -32,7 +32,7 @@ namespace TiaMcpServer
             return sb.ToString();
         }
 
-        private static void AppendJsonArrayPreview(StringBuilder md, JsonArray? array, string title, int limit)
+        internal static void AppendJsonArrayPreview(StringBuilder md, JsonArray? array, string title, int limit)
         {
             md.AppendLine("## " + title);
             if (array == null || array.Count == 0)
@@ -53,10 +53,10 @@ namespace TiaMcpServer
             md.AppendLine();
         }
 
-        private static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
+        internal static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
             => GlobalLibraryPackageAnalyzer.AppendSectionSummary(md, parent, key, title);
 
-        private static void SyncMotorMinimalArtifacts(string projectName, string projectDirectory, string importDir)
+        internal static void SyncMotorMinimalArtifacts(string projectName, string projectDirectory, string importDir)
         {
             try
             {
@@ -92,15 +92,15 @@ namespace TiaMcpServer
                 notes.AppendLine("- HMI connection CommunicationDriver/Partner/Station/Node readback is recorded.");
                 notes.AppendLine("- HMI tags try symbolic PLC binding first; if TIA V21 does not read back PlcTag, the generator applies and verifies real absolute PLC addresses.");
                 notes.AppendLine("- Buttons include pressed-state binding; STOP also attempts a click event script.");
-                TryWriteText(Path.Combine(refRoot, "README.md"), notes.ToString());
+                ReportBuilders.TryWriteText(Path.Combine(refRoot, "README.md"), notes.ToString());
             }
             catch (Exception ex)
             {
-                LogDiag("SyncMotorMinimalArtifacts failed: " + ex.Message);
+                Program.LogDiag("SyncMotorMinimalArtifacts failed: " + ex.Message);
             }
         }
 
-        private static void WritePlcSyntaxValidationXml(string dir)
+        internal static void WritePlcSyntaxValidationXml(string dir)
         {
             var uid = 21;
             string U() => (uid++).ToString();
@@ -225,7 +225,7 @@ namespace TiaMcpServer
 </Document>", Encoding.UTF8);
         }
 
-        private static void WritePlcSyntaxIecFbXml(string dir)
+        internal static void WritePlcSyntaxIecFbXml(string dir)
         {
             var uid = 21;
             string U() => (uid++).ToString();
@@ -296,7 +296,7 @@ namespace TiaMcpServer
 </Document>", Encoding.UTF8);
         }
 
-        private static void WritePlcSyntaxValidationScl(string path)
+        internal static void WritePlcSyntaxValidationScl(string path)
         {
             File.WriteAllText(path, @"TYPE ""MCP_Syntax_UDT""
 VERSION : 0.1
@@ -476,7 +476,7 @@ END_DATA_BLOCK
 ", Encoding.UTF8);
         }
 
-        private static void WriteFlowLightPlcXml(string dir)
+        internal static void WriteFlowLightPlcXml(string dir)
         {
             File.WriteAllText(Path.Combine(dir, "FlowLightTags.xml"), @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Document>
@@ -543,7 +543,7 @@ END_DATA_BLOCK
 </Document>");
         }
 
-        private static void WriteClassicHmiSymbolicTagTableProbeXml(string path, string tableName, string connectionName)
+        internal static void WriteClassicHmiSymbolicTagTableProbeXml(string path, string tableName, string connectionName)
         {
             File.WriteAllText(path, $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <Document>
@@ -599,7 +599,7 @@ END_DATA_BLOCK
       </Hmi.Tag.Tag>";
         }
 
-        private static void RunValidateUnifiedHmiTemplates(CliOptions options)
+        internal static void RunValidateUnifiedHmiTemplates(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -617,15 +617,15 @@ END_DATA_BLOCK
             var reportPath = Path.Combine(reportDir, "unified_hmi_template_validation.md");
             var jsonReportPath = Path.Combine(reportDir, "unified_hmi_template_validation.json");
 
-            LogDiag($"Unified HMI template validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
+            Program.LogDiag($"Unified HMI template validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
-            LogDiag($"HMI add for template validation: ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}, error={hmi.Error}");
+            Program.LogDiag($"HMI add for template validation: ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}, error={hmi.Error}");
             if (hmi.Ok != true)
             {
                 throw new InvalidOperationException("Failed to add Unified HMI for template validation. Last error: " + hmi.Error);
@@ -680,19 +680,19 @@ END_DATA_BLOCK
                     var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                     result["screenReadback"] = screens.Any(s => string.Equals(s, screenName, StringComparison.OrdinalIgnoreCase));
                     result["screenCount"] = screens.Length;
-                    LogDiag($"Template {Path.GetFileName(templateFile)}: readback={result["screenReadback"]}, screen={screenName}");
+                    Program.LogDiag($"Template {Path.GetFileName(templateFile)}: readback={result["screenReadback"]}, screen={screenName}");
                 }
                 catch (Exception ex)
                 {
                     result["error"] = ex.InnerException?.Message ?? ex.Message;
-                    LogDiag($"Template {Path.GetFileName(templateFile)} failed: {result["error"]}");
+                    Program.LogDiag($"Template {Path.GetFileName(templateFile)} failed: {result["error"]}");
                 }
 
                 results.Add(result);
             }
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag(save.Message ?? "Project saved");
 
             var failed = results.Where(r => !Equals(r["applied"], true) || !Equals(r["screenReadback"], true) || (r.TryGetValue("applyFailures", out var af) && Convert.ToInt32(af ?? 0) > 0) || !string.IsNullOrWhiteSpace(r["error"]?.ToString())).ToList();
             var markdown = new StringBuilder();
@@ -719,14 +719,14 @@ END_DATA_BLOCK
                 results
             }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
 
-            LogDiag("Unified HMI template validation report: " + reportPath);
+            Program.LogDiag("Unified HMI template validation report: " + reportPath);
             if (failed.Count > 0)
             {
                 throw new InvalidOperationException("Unified HMI template validation failed. Report: " + reportPath);
             }
         }
 
-        private static void RunValidateUnifiedHmiTemplateBindings(CliOptions options)
+        internal static void RunValidateUnifiedHmiTemplateBindings(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -743,7 +743,7 @@ END_DATA_BLOCK
             var reportPath = Path.Combine(reportDir, "unified_hmi_template_binding_validation.md");
             var jsonReportPath = Path.Combine(reportDir, "unified_hmi_template_binding_validation.json");
 
-            LogDiag($"Unified HMI template binding validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
+            Program.LogDiag($"Unified HMI template binding validation: directory={projectDirectory}, project={projectName}, templates={templateDirectory}");
             McpServer.Connect();
             McpServer.CreateProject(projectDirectory, projectName);
             var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
@@ -1056,7 +1056,7 @@ END_DATA_BLOCK
             return null;
         }
 
-        private static void RunValidateMappedHmiTemplateBindings(CliOptions options)
+        internal static void RunValidateMappedHmiTemplateBindings(CliOptions options)
         {
             var workspaceRoot = Directory.GetCurrentDirectory();
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
@@ -1087,16 +1087,16 @@ END_DATA_BLOCK
 
             var templates = HmiTemplateReferenceAnalyzer.Analyze(templateDirectory, "", "");
             var templateArray = templates["templates"] as JsonArray ?? new JsonArray();
-            var mappingFile = LoadHmiTemplateMappingFile(mappingPath);
-            var effectiveTemplates = ApplyHmiTemplateMapping(templateArray, mappingFile);
-            var plcExportCatalog = AnalyzePlcExportDirectory(plcExportDirectory);
-            var plcSymbolCatalog = BuildPlcSymbolCatalog(plcExportCatalog);
+            var mappingFile = ReportBuilders.LoadHmiTemplateMappingFile(mappingPath);
+            var effectiveTemplates = ReportBuilders.ApplyHmiTemplateMapping(templateArray, mappingFile);
+            var plcExportCatalog = ReportBuilders.AnalyzePlcExportDirectory(plcExportDirectory);
+            var plcSymbolCatalog = ReportBuilders.BuildPlcSymbolCatalog(plcExportCatalog);
             var plcSymbols = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var symbol in (plcExportCatalog["symbols"] as JsonArray ?? new JsonArray()).Select(x => x?.ToString() ?? "").Where(x => !string.IsNullOrWhiteSpace(x)))
             {
                 plcSymbols.Add(symbol);
             }
-            var precheck = BuildHmiTemplateSyncPrecheck(effectiveTemplates, plcSymbols, plcSymbolCatalog);
+            var precheck = ReportBuilders.BuildHmiTemplateSyncPrecheck(effectiveTemplates, plcSymbols, plcSymbolCatalog);
             var readyTemplateNames = new HashSet<string>(
                 precheck
                     .OfType<JsonObject>()
@@ -1201,7 +1201,7 @@ END_DATA_BLOCK
             }
 
             WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, false, "PLC export precheck passed for mapped templates; TIA temporary-project validation is about to start.", mappingFile, plcExportCatalog, precheck, results);
-            LogDiag($"Mapped HMI template binding validation: project={projectName}, mappedTemplates={mappedFiles.Count}");
+            Program.LogDiag($"Mapped HMI template binding validation: project={projectName}, mappedTemplates={mappedFiles.Count}");
             if (!TryRunMappedTiaStep("Connect", tiaStepTimeoutSeconds, () => McpServer.Connect(), results, reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, mappingFile, plcExportCatalog, precheck))
             {
                 throw new TimeoutException("Mapped HMI template binding validation timed out or failed at TIA Connect. Report: " + reportPath);
@@ -1220,7 +1220,7 @@ END_DATA_BLOCK
             {
                 throw new TimeoutException("Mapped HMI template binding validation timed out or failed at Add PLC. Report: " + reportPath);
             }
-            LogDiag($"Mapped HMI template binding validation: Add PLC completed ok={plc.Ok}, used={plc.MlfbUsed}/{plc.VersionUsed}");
+            Program.LogDiag($"Mapped HMI template binding validation: Add PLC completed ok={plc.Ok}, used={plc.MlfbUsed}/{plc.VersionUsed}");
             ResponseDeviceProbe hmi = null!;
             if (!TryRunMappedTiaStep("Add HMI", tiaStepTimeoutSeconds, () =>
                 {
@@ -1231,7 +1231,7 @@ END_DATA_BLOCK
             {
                 throw new TimeoutException("Mapped HMI template binding validation timed out or failed at Add HMI. Report: " + reportPath);
             }
-            LogDiag($"Mapped HMI template binding validation: Add HMI completed ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}");
+            Program.LogDiag($"Mapped HMI template binding validation: Add HMI completed ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}");
 
             var connectionName = "Mapped_HMI_Connection_1";
             if (!TryRunMappedTiaStep("Ensure HMI connection/tag table", tiaStepTimeoutSeconds, () =>
@@ -1289,9 +1289,9 @@ END_DATA_BLOCK
                 {
                     var root = JsonNode.Parse(File.ReadAllText(templateFile, Encoding.UTF8))?.AsObject() ?? new JsonObject();
                     currentTags = ReadHmiTemplateTags(root);
-                    LogDiag($"Mapped HMI template binding validation: Ensure screen start template={templateName}, screen={screenName}");
+                    Program.LogDiag($"Mapped HMI template binding validation: Ensure screen start template={templateName}, screen={screenName}");
                     McpServer.EnsureUnifiedHmiScreen("HMI_RT_1", screenName, 800, 480);
-                    LogDiag($"Mapped HMI template binding validation: Apply screen start template={templateName}, screen={screenName}");
+                    Program.LogDiag($"Mapped HMI template binding validation: Apply screen start template={templateName}, screen={screenName}");
                     var apply = McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", screenName, HmiTemplateDesignJsonBuilder.BuildApplyDesignJson(templateFile, 800, 480));
                     var applyFailures = CountHmiApplyFailures(apply.Meta);
                     result["applyFailures"] = applyFailures;
@@ -1302,11 +1302,11 @@ END_DATA_BLOCK
 
                     var screens = McpServer.GetHmiScreens("HMI_RT_1").Items?.ToArray() ?? Array.Empty<string>();
                     result["screenReadback"] = screens.Any(s => string.Equals(s, screenName, StringComparison.OrdinalIgnoreCase));
-                    LogDiag($"Mapped HMI template binding validation: Screen readback template={templateName}, readback={result["screenReadback"]}, applyFailures={applyFailures}");
+                    Program.LogDiag($"Mapped HMI template binding validation: Screen readback template={templateName}, readback={result["screenReadback"]}, applyFailures={applyFailures}");
 
                     foreach (var tag in currentTags)
                     {
-                        LogDiag($"Mapped HMI template binding validation: Ensure HMI tag {tag.Name}->{tag.PlcTag}");
+                        Program.LogDiag($"Mapped HMI template binding validation: Ensure HMI tag {tag.Name}->{tag.PlcTag}");
                         McpServer.EnsureUnifiedHmiTag("HMI_RT_1", "Mapped_Template_Tags", tag.Name, tag.DataType, "PLC_1", tag.PlcTag, connectionNameLocal, tag.Address);
                         result["hmiTagsCreated"] = (int)result["hmiTagsCreated"]! + 1;
                     }
@@ -1489,7 +1489,7 @@ END_DATA_BLOCK
             JsonArray precheck)
         {
             var timeout = TimeSpan.FromSeconds(Math.Max(15, timeoutSeconds));
-            LogDiag($"Mapped HMI template binding validation: {stepName} start, timeoutSeconds={timeout.TotalSeconds:0}");
+            Program.LogDiag($"Mapped HMI template binding validation: {stepName} start, timeoutSeconds={timeout.TotalSeconds:0}");
             try
             {
                 var task = Task.Run(action);
@@ -1497,7 +1497,7 @@ END_DATA_BLOCK
                 {
                     AddMappedTiaStepFailure(rows, stepName, "timeout", $"TIA step timed out after {timeout.TotalSeconds:0} seconds.");
                     WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, false, $"TIA temporary-project validation stopped at `{stepName}` because the step timed out.", mappingFile, plcExportCatalog, precheck, rows);
-                    LogDiag($"Mapped HMI template binding validation: {stepName} timeout after {timeout.TotalSeconds:0}s");
+                    Program.LogDiag($"Mapped HMI template binding validation: {stepName} timeout after {timeout.TotalSeconds:0}s");
                     return false;
                 }
 
@@ -1506,11 +1506,11 @@ END_DATA_BLOCK
                     var message = task.Exception?.GetBaseException().Message ?? "Unknown TIA step failure.";
                     AddMappedTiaStepFailure(rows, stepName, "failed", message);
                     WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, false, $"TIA temporary-project validation failed at `{stepName}`.", mappingFile, plcExportCatalog, precheck, rows);
-                    LogDiag($"Mapped HMI template binding validation: {stepName} failed: {message}");
+                    Program.LogDiag($"Mapped HMI template binding validation: {stepName} failed: {message}");
                     return false;
                 }
 
-                LogDiag($"Mapped HMI template binding validation: {stepName} completed");
+                Program.LogDiag($"Mapped HMI template binding validation: {stepName} completed");
                 return true;
             }
             catch (Exception ex)
@@ -1518,7 +1518,7 @@ END_DATA_BLOCK
                 var message = ex.InnerException?.Message ?? ex.Message;
                 AddMappedTiaStepFailure(rows, stepName, "failed", message);
                 WriteMappedBindingReport(reportPath, jsonReportPath, projectName, projectDirectory, templateDirectory, mappingPath, plcExportDirectory, mappedTemplateDir, false, $"TIA temporary-project validation failed at `{stepName}`.", mappingFile, plcExportCatalog, precheck, rows);
-                LogDiag($"Mapped HMI template binding validation: {stepName} failed: {message}");
+                Program.LogDiag($"Mapped HMI template binding validation: {stepName} failed: {message}");
                 return false;
             }
         }
@@ -1602,14 +1602,14 @@ END_DATA_BLOCK
                 var errs = r.TryGetValue("errors", out var errObj) && errObj is List<string> errList
                     ? string.Join("<br>", errList.Select(e => e.Replace("|", "\\|")))
                     : "";
-                md.AppendLine("| " + EscapeMarkdownCell(r["templateName"]?.ToString() ?? "") +
-                              " | " + EscapeMarkdownCell(r["status"]?.ToString() ?? "") +
-                              " | " + EscapeMarkdownCell(r["screen"]?.ToString() ?? "") +
+                md.AppendLine("| " + ReportBuilders.EscapeMarkdownCell(r["templateName"]?.ToString() ?? "") +
+                              " | " + ReportBuilders.EscapeMarkdownCell(r["status"]?.ToString() ?? "") +
+                              " | " + ReportBuilders.EscapeMarkdownCell(r["screen"]?.ToString() ?? "") +
                               " | " + r["hmiTagsCreated"] +
                               " | " + r["bindingsSucceeded"] + "/" + r["bindingsAttempted"] +
                               " | " + r["eventsSucceeded"] + "/" + r["eventsAttempted"] +
                               " | " + r["eventReadbacks"] +
-                              " | " + EscapeMarkdownCell(r["reason"]?.ToString() ?? "") +
+                              " | " + ReportBuilders.EscapeMarkdownCell(r["reason"]?.ToString() ?? "") +
                               " | " + errs + " |");
             }
             md.AppendLine();

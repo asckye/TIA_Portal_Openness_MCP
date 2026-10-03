@@ -11,7 +11,7 @@
   `T.ToolBridge` 和 `McpServer.cs` 以 `typeof(McpServer).GetMethods(Public|Static)` 扫描注册；
   `T.ArgDiagnostics` 的 `WrapTools` 叠加版本准入、参数诊断、串行化和响应保护，隔离模式用 `ProxyTool`。
 - `Portal`：87 个 partial、约 3.1 万行的有状态单例；工具约 440 处调用。工具文件与 Portal partial 基本一一对应。
-- `Program`：5 个 partial，约 8.8 千行 CLI、报告和 HMI 模板逻辑；CLI 静态调用 88 个工具方法。
+- `Program`：单文件 CLI 宿主；报告、探针和 HMI 模板逻辑分别位于 `Cli/` 下的四个内部静态类，仍在引擎程序集。CLI 静态调用 88 个工具方法，转发移除属于步骤 16 后续任务。
 - `#if TIA_V20` 共 62 处，全部位于 Portal 方法体内，V20/V21 方法签名一致。
 - 原生调用织入只插桩 `TiaMcpServer.exe` 自身（`@(IntermediateAssembly)`），所有调用西门子 API 的代码必须留在引擎程序集。
 
@@ -150,11 +150,13 @@ CFC 是第一个样板：[CfcService](../../tools/tiaportal-mcp/src/TiaMcpServer
 `EngineeringApiShapeTests` 保留原断言，并验证真实声明类型、共享会话、单例和工具到服务的 IL 调用。
 [Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 接收两份 `NativeCallWeaver verify`
 清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，并按同名方法自动匹配
-从 `Portal` / `McpServer` 消失、在服务或工具类型中出现的方法族。折入 lambda、局部函数及其迭代器后的
+从 `Portal` / `McpServer` / `Program` 消失、在服务、工具或具名 CLI 类型中出现的方法族。折入 lambda、局部函数及其迭代器后的
 各方法体按 IL offset 排序，保留局部编号和重载签名，忽略迁移造成的全局闭包编号。
 未匹配方法报错；有意保留的例外须逐项传入 `--allow-unmatched TYPE::METHOD`，过期例外同样报错。
 没有织入点的方法不在清单中，另由源码比较和工具归属检查覆盖。
+CLI 方法还逐一比较反射、接口调用、对象分派及枚举输入点的顺序；嵌套 DTO/委托只归一化外层 CLI 类名。
 它证明静态调用点顺序；方法体原样迁移的源码检查另保证参数、lambda 所在位置与线程调度不变，不能替代真机轨迹。
+
 [Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 用迁移前后各自的 HttpTests（`--baseline-harness` /
 `--host-harness`）和 EXE（`--baseline-exe` / `--exe`），以可重复的 `--domain <name>` 选择领域，在
 full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，并核对源码中的工具名单。
@@ -163,6 +165,24 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 
 [Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 和
 [Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 保留为兼容入口。
+
+### CLI 宿主与命令实现
+
+步骤 16 的 CLI 拆分保留 [Program.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Program.cs)
+中的参数分派、引擎路由、stdio/HTTP/隔离宿主启动及启动诊断。动词表与动词分派仍由
+[CliCommands.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs) 提供。
+原有四个 `Program` partial 的方法原样归入以下内部静态类，命名空间仍为 `TiaMcpServer`：
+
+| 实现 | 文件 |
+|---|---|
+| HMI 模板与绑定验证 | [HmiTemplateBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs) |
+| PLC/HMI 同步、XML 与结构化文本生成 | [PlcHmiSyncXml.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs) |
+| CLI 探针与工程验证命令 | [CliProbes.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs) |
+| 离线分析、预检查与报告构造 | [ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
+
+跨类调用显式限定声明类型，仅共享成员改为 `internal`；结构化文本委托随 XML 生成器迁移。
+这些类全部留在受原生调用织入的引擎程序集中。CLI 仍调用既有 `McpServer` 静态转发，
+服务生命周期、Openness 调用参数、顺序和线程调度保持不变；删除静态转发属于后续任务。
 
 ### PLC 块、编辑与用户组
 

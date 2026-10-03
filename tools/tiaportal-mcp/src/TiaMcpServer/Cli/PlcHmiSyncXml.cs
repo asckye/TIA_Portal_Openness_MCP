@@ -19,9 +19,10 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    public partial class Program
+    internal static class PlcHmiSyncXml
     {
-        private static void RunValidatePlcHmiSyncMinimal(CliOptions options)
+        private delegate void StructuredTextLine(StringBuilder st, params string[] parts);
+        internal static void RunValidatePlcHmiSyncMinimal(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -46,7 +47,7 @@ namespace TiaMcpServer
             };
 
             WritePlcHmiSyncMinimalPlcXml(importDir, expected);
-            LogDiag($"PLC/HMI sync minimal validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
+            Program.LogDiag($"PLC/HMI sync minimal validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
 
             McpServer.Connect();
             McpServer.CreateProject(projectDirectory, projectName);
@@ -79,7 +80,7 @@ namespace TiaMcpServer
             }
             catch (Exception ex)
             {
-                LogDiag("PLC sync tag table export failed: " + (ex.InnerException?.Message ?? ex.Message));
+                Program.LogDiag("PLC sync tag table export failed: " + (ex.InnerException?.Message ?? ex.Message));
             }
             var plcReadback = exportOk ? ReadPlcTagTableExport(exportedTagTable) : new Dictionary<string, (string DataType, string Address)>(StringComparer.OrdinalIgnoreCase);
             var plcTables = McpServer.GetPlcTagTables("PLC_1").Items?.ToArray() ?? Array.Empty<string>();
@@ -145,7 +146,7 @@ namespace TiaMcpServer
             var passed = exportOk && rowsOk && controlsOk;
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag(save.Message ?? "Project saved");
             WritePlcHmiSyncReport(reportPath, jsonReportPath, projectName, projectDirectory, importDir, passed, connectionReadback, expected, import, compile, rows, passed ? "" : "Readback mismatch in PLC tags, HMI tags, or screen controls.");
             if (!passed)
             {
@@ -283,7 +284,7 @@ namespace TiaMcpServer
             md.AppendLine("- ProjectDirectory: `" + projectDirectory + "`");
             md.AppendLine("- ImportDir: `" + importDir + "`");
             md.AppendLine("- Result: `" + (passed ? "PASS" : "FAIL") + "`");
-            md.AppendLine("- PLC Compile: `errors=" + CountText(compile.ErrorCount) + ", warnings=" + CountText(compile.WarningCount) + ", state=" + compile.State + "`");
+            md.AppendLine("- PLC Compile: `errors=" + CliProbes.CountText(compile.ErrorCount) + ", warnings=" + CliProbes.CountText(compile.WarningCount) + ", state=" + compile.State + "`");
             if (!string.IsNullOrWhiteSpace(connectionReadback)) md.AppendLine("- HMI Connection: `" + connectionReadback.Replace("`", "'") + "`");
             if (!string.IsNullOrWhiteSpace(error)) md.AppendLine("- Error: `" + error.Replace("`", "'") + "`");
             md.AppendLine();
@@ -316,7 +317,7 @@ namespace TiaMcpServer
             }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
         }
 
-        private static void RunValidatePlcChineseCommentsMinimal(CliOptions options)
+        internal static void RunValidatePlcChineseCommentsMinimal(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -335,7 +336,7 @@ namespace TiaMcpServer
             var reportPath = Path.Combine(reportDir, "plc_chinese_comments_minimal.md");
             var jsonReportPath = Path.Combine(reportDir, "plc_chinese_comments_minimal.json");
 
-            LogDiag($"PLC Chinese comments validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
+            Program.LogDiag($"PLC Chinese comments validation: directory={projectDirectory}, project={projectName}, importDir={importDir}");
             McpServer.Connect();
             McpServer.CreateProject(projectDirectory, projectName);
             var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
@@ -345,7 +346,7 @@ namespace TiaMcpServer
             var compile = McpServer.CompileAndDiagnosePlc("PLC_1");
 
             var blocks = McpServer.GetBlocks("PLC_1", "Motor").Items?.ToArray() ?? Array.Empty<ResponseBlockInfo>();
-            LogDiag("Chinese comments blocks readback: " + string.Join(",", blocks.Select(b => b.Name)));
+            Program.LogDiag("Chinese comments blocks readback: " + string.Join(",", blocks.Select(b => b.Name)));
 
             var exportDir = Path.Combine(reportDir, "exported_readback");
             Directory.CreateDirectory(exportDir);
@@ -464,7 +465,7 @@ namespace TiaMcpServer
             md.AppendLine();
             md.AppendLine("- Project: `" + projectName + "`");
             md.AppendLine("- Result: `" + (passed ? "PASS" : "FAIL") + "`");
-            md.AppendLine("- PLC Compile: `errors=" + CountText(compile.ErrorCount) + ", warnings=" + CountText(compile.WarningCount) + ", state=" + compile.State + "`");
+            md.AppendLine("- PLC Compile: `errors=" + CliProbes.CountText(compile.ErrorCount) + ", warnings=" + CliProbes.CountText(compile.WarningCount) + ", state=" + compile.State + "`");
             md.AppendLine("- ImportDir: `" + importDir + "`");
             md.AppendLine("- ExportDir: `" + exportDir + "`");
             md.AppendLine();
@@ -475,7 +476,7 @@ namespace TiaMcpServer
             File.WriteAllText(jsonPath, System.Text.Json.JsonSerializer.Serialize(new { projectName, projectDirectory, importDir, exportDir, passed, compile = new { compile.State, compile.ErrorCount, compile.WarningCount, compile.Errors, compile.Warnings }, import = new { import.ImportedTagTables, import.ImportedBlocks, import.ImportedTypes, import.Failed }, checks, exportedFiles }, new System.Text.Json.JsonSerializerOptions { WriteIndented = true }), Encoding.UTF8);
         }
 
-        private static void WriteMotorMinimalPlcXml(string dir)
+        internal static void WriteMotorMinimalPlcXml(string dir)
         {
             File.WriteAllText(Path.Combine(dir, "UDT_Motor.xml"), @"<?xml version=""1.0"" encoding=""utf-8""?>
 <Document>
@@ -546,7 +547,7 @@ namespace TiaMcpServer
             WriteMotorOb1SclXml(dir);
         }
 
-        private static void WriteMotorMinimalReport(string projectDirectory, string projectName, string importDir, string projectTree, ResponseCompileDiagnose compile, string[] plcAttempts, string[] hmiAttempts, string hmiReadbackSummary, string hmiDesignJson, string hardwareDeviation, string hmiConnectionSummary, string networkProbeSummary)
+        internal static void WriteMotorMinimalReport(string projectDirectory, string projectName, string importDir, string projectTree, ResponseCompileDiagnose compile, string[] plcAttempts, string[] hmiAttempts, string hmiReadbackSummary, string hmiDesignJson, string hardwareDeviation, string hmiConnectionSummary, string networkProbeSummary)
         {
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
             var sb = new StringBuilder();
@@ -558,8 +559,8 @@ namespace TiaMcpServer
             sb.AppendLine();
             sb.AppendLine("Compile:");
             sb.AppendLine("State=" + compile.State);
-            sb.AppendLine("Errors=" + CountText(compile.ErrorCount));
-            sb.AppendLine("Warnings=" + CountText(compile.WarningCount));
+            sb.AppendLine("Errors=" + CliProbes.CountText(compile.ErrorCount));
+            sb.AppendLine("Warnings=" + CliProbes.CountText(compile.WarningCount));
             var compileErrors = compile.Errors?.ToArray() ?? Array.Empty<string>();
             var compileWarnings = compile.Warnings?.ToArray() ?? Array.Empty<string>();
             if (compileErrors.Length > 0)

@@ -1,6 +1,6 @@
-"""Compare NativeCallWeaver verify inventories across Portal/McpServer domain moves.
+"""Compare NativeCallWeaver verify inventories across engine and CLI moves.
 
-Discover disappeared source method families and match newly appearing service/tool
+Discover disappeared source method families and match newly appearing service/tool/CLI
 families by name. Compare the global Siemens member multiset and each moved body's
 ordered direct sites, folding lambdas and local functions into their source method.
 Only compiler-wide closure ordinals and absolute IL offsets are ignored. This is
@@ -15,14 +15,27 @@ from pathlib import Path
 import re
 import unittest
 
-SOURCES = {'TiaMcpServer.Siemens.Portal', 'TiaMcpServer.ModelContextProtocol.McpServer'}
+SOURCES = {'TiaMcpServer.Siemens.Portal', 'TiaMcpServer.ModelContextProtocol.McpServer',
+           'TiaMcpServer.Program'}
+CLI_CLASSES = {'HmiTemplateBuilder', 'PlcHmiSyncXml', 'ReportBuilders', 'CliProbes'}
 PORTAL = 'TiaMcpServer.Siemens.Portal'
 SERVICE = 'TiaMcpServer.Siemens.Services.ExampleService'
+CLI_OWNERS = {'TiaMcpServer.Program'} | {
+    prefix + name for prefix in ('TiaMcpServer.', 'TiaMcpServer.Cli.') for name in CLI_CLASSES}
+
+
+def normalize_cli_types(value):
+    # Nested DTOs/delegates move with their CLI class. Preserve their names and
+    # generic signatures while ignoring only the enclosing class relocation.
+    return re.sub(r'\b(?:' + '|'.join(map(re.escape, sorted(CLI_OWNERS, key=len, reverse=True))) +
+                  r')(?=/|::|[>, )]|$)', '<cli>', value)
 
 
 def destination(owner):
     return (owner.startswith('TiaMcpServer.Siemens.Services.') or
-            owner.startswith('TiaMcpServer.ModelContextProtocol.') and owner.endswith('Tools'))
+            owner.startswith('TiaMcpServer.ModelContextProtocol.') and owner.endswith('Tools') or
+            any(owner == prefix + name for prefix in ('TiaMcpServer.', 'TiaMcpServer.Cli.')
+                for name in CLI_CLASSES))
 
 
 def family(caller):
@@ -37,6 +50,7 @@ def family(caller):
     local = re.fullmatch(r'<([^>]+)>g__(.+)\|(?:\d+_)?(\d+)', method)
     state = re.fullmatch(re.escape(owner) + r'/<([^>]+)>d__\d+', declared)
     local_state = re.search(r'/<<([^>]+)>g__(.+)\|(?:\d+_)?(\d+)>d(?:__\d+)?$', declared)
+    lambda_state = re.search(r'/<<([^>]+)>b__(?:\d+_)?(\d+)>d(?:__\d+)?$', declared)
     if generated:
         name, ordinal = generated.groups()
         body = 'lambda ' + ordinal
@@ -48,13 +62,16 @@ def family(caller):
     elif local_state:
         name, function, ordinal = local_state.groups()
         body = 'local ' + function + ' ' + ordinal + ' state ' + method
+    elif lambda_state:
+        name, ordinal = lambda_state.groups()
+        body = 'lambda ' + ordinal + ' state ' + method
     elif '/<' in declared or method.startswith('<'):
         raise ValueError('Unmapped generated native body: ' + caller)
     else:
         name = declared[len(owner) + 1:] + '.' + method if '/' in declared else method
         body = 'body'
     # Retain overload signatures and closure-local indices, not compilation-wide IDs.
-    parameters = parameters.replace(owner, '<owner>')
+    parameters = normalize_cli_types(parameters) if owner in CLI_OWNERS else parameters.replace(owner, '<owner>')
     parameters = re.sub(r'<>c__DisplayClass\d+_', '<>c__DisplayClass#_', parameters)
     return (owner, name), (body, parameters)
 
@@ -67,9 +84,12 @@ def sequences(sites):
             continue
         method, body = key
         bodies = families[method]  # Non-direct sites still establish method existence.
-        if site['category'] == 'direct':
+        # CLI parts enumerate and reflect over returned objects without direct
+        # Siemens calls. Their indirect sites must retain order as well.
+        if site['category'] == 'direct' or method[0] in CLI_OWNERS:
             bodies[body].append(site)
-    return {method: [(body, row['opcode'], row['member'])
+    return {method: [(body, row['category'] + ':' + row['opcode'] if method[0] in CLI_OWNERS else row['opcode'],
+                     normalize_cli_types(row['member']) if method[0] in CLI_OWNERS else row['member'])
                      for body, rows in sorted(bodies.items())
                      for row in sorted(rows, key=lambda item: item['offset'])]
             for method, bodies in families.items()}
@@ -180,6 +200,43 @@ class SelfTests(unittest.TestCase):
         before, _ = self.inventories()
         self.assertEqual([], compare(before, before)[1])
 
+    def test_program_moves_and_retained_host(self):
+        for prefix in ('TiaMcpServer.', 'TiaMcpServer.Cli.'):
+            for name in sorted(CLI_CLASSES):
+                with self.subTest(destination=prefix + name):
+                    before, after = self.inventories()
+                    for row in before:
+                        row['caller'] = row['caller'].replace(PORTAL, 'TiaMcpServer.Program')
+                    for row in after:
+                        row['caller'] = row['caller'].replace(SERVICE, prefix + name)
+                    host = dict(before[0], caller='void TiaMcpServer.Program::Main(System.String[])')
+                    errors, pairs, old, new = compare(before + [host], after + [host])
+                    self.assertEqual([], errors)
+                    self.assertEqual((1, 6, 6), (len(pairs), old, new))
+                    after[-1]['offset'], after[-2]['offset'] = after[-2]['offset'], after[-1]['offset']
+                    self.assertTrue(compare(before, after)[0])
+
+    def test_unrelated_root_type_is_not_a_cli_destination(self):
+        self.assertFalse(destination('TiaMcpServer.Unrelated'))
+        self.assertFalse(destination('TiaMcpServer.Cli.Unrelated'))
+
+    def test_cli_indirect_sites_and_nested_signatures(self):
+        before = [dict(caller='void TiaMcpServer.Program::Report(TiaMcpServer.Program/Row)',
+                       offset=offset, opcode='callvirt', member=member, category=category)
+                  for offset, member, category in (
+                      (10, 'void System.Collections.Generic.List`1<TiaMcpServer.Program/Row>::Add(!0)', 'interface'),
+                      (20, 'System.Object System.Reflection.PropertyInfo::GetValue(System.Object)', 'reflection'))]
+        after = copy.deepcopy(before)
+        for row in after:
+            row['caller'] = row['caller'].replace('TiaMcpServer.Program', 'TiaMcpServer.Cli.ReportBuilders')
+            row['member'] = row['member'].replace('TiaMcpServer.Program', 'TiaMcpServer.HmiTemplateBuilder')
+        errors, pairs, old, new = compare(before, after)
+        self.assertEqual([], errors)
+        self.assertEqual((1, 2, 0, 0), (len(pairs), len(pairs[0][2]), old, new))
+        after[0]['offset'], after[1]['offset'] = after[1]['offset'], after[0]['offset']
+        self.assertTrue(compare(before, after)[0])
+        self.assertTrue(compare(before, after[:1])[0])
+
     def test_unchanged_existing_service_is_not_a_destination(self):
         before, after = self.inventories()
         self.assertTrue(compare(before + after, after)[0])
@@ -194,6 +251,8 @@ class SelfTests(unittest.TestCase):
         for declared, method in (
                 ('/<>c__DisplayClass121_0', '<Read>g__Rows|1'),
                 ('/<>c__DisplayClass121_0/<<Read>g__Rows|1>d', 'MoveNext'),
+                ('/<>c__DisplayClass121_0/<<Read>b__1>d', 'MoveNext'),
+                ('/<>c/<<Read>b__121_1>d', 'MoveNext'),
                 ('/<Read>d__121', 'MoveNext'),
                 ('/Nested', 'Get')):
             before = [dict(caller=f'void {PORTAL}{declared}::{method}()', offset=10,

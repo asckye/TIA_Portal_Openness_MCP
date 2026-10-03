@@ -19,13 +19,13 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    public partial class Program
+    internal static class CliProbes
     {
         // ErrorCount/WarningCount 是 int?，null 专门表示「编译结果没读回来」，不是 0。
         // 文本输出统一将 null 显示为 (unreadable)，避免与零错误混淆。
-        private static string CountText(int? count) => count?.ToString() ?? "(unreadable)";
+        internal static string CountText(int? count) => count?.ToString() ?? "(unreadable)";
 
-        private static void RunOnlineMonitoringSafetySelfTest()
+        internal static void RunOnlineMonitoringSafetySelfTest()
         {
             var result = McpServer.RunOnlineMonitoringSafetySelfTest();
             var json = System.Text.Json.JsonSerializer.Serialize(result, new System.Text.Json.JsonSerializerOptions
@@ -34,7 +34,7 @@ namespace TiaMcpServer
                 Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             });
             Console.WriteLine(json);
-            LogDiag("Online monitoring safety self-test: " + (result.Ok == true ? "PASS" : "FAIL"));
+            Program.LogDiag("Online monitoring safety self-test: " + (result.Ok == true ? "PASS" : "FAIL"));
 
             if (result.Ok != true)
             {
@@ -42,7 +42,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunFlowLightTest(CliOptions options)
+        internal static void RunFlowLightTest(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -51,36 +51,36 @@ namespace TiaMcpServer
                 ? "MCP_FlowLight_Test_" + DateTime.Now.ToString("yyyyMMdd_HHmm")
                 : options.ProjectName!;
 
-            LogDiag($"FlowLight test: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"FlowLight test: directory={projectDirectory}, project={projectName}");
 
             var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_FlowLight_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
-            WriteFlowLightPlcXml(importDir);
+            HmiTemplateBuilder.WriteFlowLightPlcXml(importDir);
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "CreateProject completed");
+            Program.LogDiag(create.Message ?? "CreateProject completed");
 
             var plc = McpServer.AddDeviceWithFallback("OrderNumber:6ES7 513-1AM03-0AB0/V3.0", "", "PLC_1", "S7-1500");
-            LogDiag($"PLC add: ok={plc.Ok}, used={plc.MlfbUsed} {plc.VersionUsed}, error={plc.Error}");
+            Program.LogDiag($"PLC add: ok={plc.Ok}, used={plc.MlfbUsed} {plc.VersionUsed}, error={plc.Error}");
             if (plc.Ok != true)
                 throw new InvalidOperationException("PLC device add failed: " + plc.Error);
 
             var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/20.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
-            LogDiag($"HMI add: ok={hmi.Ok}, used={hmi.MlfbUsed} {hmi.VersionUsed}, error={hmi.Error}");
+            Program.LogDiag($"HMI add: ok={hmi.Ok}, used={hmi.MlfbUsed} {hmi.VersionUsed}, error={hmi.Error}");
 
             var import = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: false);
             var failures = import.Failed == null ? Array.Empty<ImportFailure>() : new System.Collections.Generic.List<ImportFailure>(import.Failed).ToArray();
-            LogDiag($"PLC import: importedTags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, importedBlocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={failures.Length}");
+            Program.LogDiag($"PLC import: importedTags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, importedBlocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={failures.Length}");
             if (import.Failed != null)
             {
                 foreach (var failure in import.Failed)
-                    LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
+                    Program.LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
             }
             if (import.Compile != null)
-                LogDiag($"PLC compile: {import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
+                Program.LogDiag($"PLC compile: {import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
 
             if (hmi.Ok == true)
             {
@@ -96,62 +96,62 @@ namespace TiaMcpServer
                     for (var i = 1; i <= 4; i++)
                         McpServer.EnsureUnifiedHmiScreenItem("HMI_RT_1", "Main", $"Lamp_{i}", "Rectangle", 240 + (i - 1) * 140, 110, 100, 100, $"灯{i}");
 
-                    LogDiag("HMI screen/tag/item best-effort creation completed.");
+                    Program.LogDiag("HMI screen/tag/item best-effort creation completed.");
                 }
                 catch (Exception ex)
                 {
-                    LogDiag("HMI best-effort failed: " + ex.Message);
+                    Program.LogDiag("HMI best-effort failed: " + ex.Message);
                 }
             }
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "SaveProject completed");
+            Program.LogDiag(save.Message ?? "SaveProject completed");
         }
 
-        private static void RunFixCurrentFlowBinding(CliOptions options)
+        internal static void RunFixCurrentFlowBinding(CliOptions options)
         {
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_FlowLight_Test_20260427_1605"
                 : options.ProjectName!;
 
-            LogDiag($"Fix current flow binding: project={projectName}");
+            Program.LogDiag($"Fix current flow binding: project={projectName}");
 
             var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_FixFlowBinding_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
-            WriteFlowLightPlcXml(importDir);
+            HmiTemplateBuilder.WriteFlowLightPlcXml(importDir);
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var attach = McpServer.AttachToOpenProject(projectName);
-            LogDiag(attach.Message ?? "Attach completed");
+            Program.LogDiag(attach.Message ?? "Attach completed");
 
             var import = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: false);
-            LogDiag($"PLC import: dryRun={import.DryRun}, importedTags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, importedBlocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
+            Program.LogDiag($"PLC import: dryRun={import.DryRun}, importedTags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, importedBlocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
             if (import.Failed != null)
             {
                 foreach (var f in import.Failed)
                 {
-                    LogDiag($"PLC import failure: {f.Path} :: {f.Error}");
+                    Program.LogDiag($"PLC import failure: {f.Path} :: {f.Error}");
                 }
             }
             if (import.Compile != null)
             {
-                LogDiag($"PLC compile: state={import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
+                Program.LogDiag($"PLC compile: state={import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
             }
 
             McpServer.EnsureUnifiedHmiTagTable("HMI_RT_1", "FlowLightTags");
             var hmiConnections = McpServer.ListObjectChildren("Software", "HMI_RT_1", "Connections", "", 20);
             var connectionName = (hmiConnections.Items ?? Array.Empty<string>()).FirstOrDefault() ?? "";
-            LogDiag("HMI connections: " + string.Join(",", hmiConnections.Items ?? Array.Empty<string>()));
+            Program.LogDiag("HMI connections: " + string.Join(",", hmiConnections.Items ?? Array.Empty<string>()));
             var connDescription = McpServer.DescribeObjectProperty("Software", "HMI_RT_1", "Connections", "", 160);
-            LogDiag("HMI Connections members: " + string.Join(" | ", (connDescription.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}")));
+            Program.LogDiag("HMI Connections members: " + string.Join(" | ", (connDescription.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}")));
             if (string.IsNullOrWhiteSpace(connectionName))
             {
                 connectionName = "HMI_Connection_1";
                 var createdConnection = McpServer.EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
-                LogDiag(createdConnection.Message ?? $"Ensured HMI connection {connectionName}");
-                LogDiag("HMI connection members: " + string.Join(" | ", (createdConnection.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}")));
+                Program.LogDiag(createdConnection.Message ?? $"Ensured HMI connection {connectionName}");
+                Program.LogDiag("HMI connection members: " + string.Join(" | ", (createdConnection.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}:{m.Signature}")));
             }
 
             EnsurePlcBackedHmiTag("Flow_Enable", "Bool", "%M0.0");
@@ -164,22 +164,22 @@ namespace TiaMcpServer
             McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", "Main", "IO_Step", "ProcessValue", "Flow_Step", "Int", "Flow_Step", "");
 
             var hmiStep = McpServer.DescribeHmiTag("HMI_RT_1", "FlowLightTags", "Flow_Step", 120);
-            LogDiag("HMI Flow_Step members: " + string.Join(" | ", (hmiStep.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}")));
+            Program.LogDiag("HMI Flow_Step members: " + string.Join(" | ", (hmiStep.Members ?? Array.Empty<ObjectMember>()).Select(m => $"{m.Kind}:{m.Name}:{m.Type}")));
             LogHmiTagAttributes("Flow_Step");
             LogHmiTagAttributes("Flow_Enable");
 
             var plcCompile = McpServer.CompileAndDiagnosePlc("PLC_1");
-            LogDiag($"Final PLC compile: state={plcCompile.State}, errors={CountText(plcCompile.ErrorCount)}, warnings={CountText(plcCompile.WarningCount)}");
-            foreach (var e in plcCompile.Errors ?? Array.Empty<string>()) LogDiag("Final PLC compile error: " + e);
-            foreach (var w in plcCompile.Warnings ?? Array.Empty<string>()) LogDiag("Final PLC compile warning: " + w);
+            Program.LogDiag($"Final PLC compile: state={plcCompile.State}, errors={CountText(plcCompile.ErrorCount)}, warnings={CountText(plcCompile.WarningCount)}");
+            foreach (var e in plcCompile.Errors ?? Array.Empty<string>()) Program.LogDiag("Final PLC compile error: " + e);
+            foreach (var w in plcCompile.Warnings ?? Array.Empty<string>()) Program.LogDiag("Final PLC compile warning: " + w);
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "SaveProject completed");
+            Program.LogDiag(save.Message ?? "SaveProject completed");
 
             void EnsurePlcBackedHmiTag(string tagName, string hmiDataType, string address)
             {
                 var res = McpServer.EnsureUnifiedHmiTag("HMI_RT_1", "FlowLightTags", tagName, hmiDataType, "PLC_1", tagName, connectionName, address);
-                LogDiag(res.Message ?? $"Ensured HMI tag {tagName}");
+                Program.LogDiag(res.Message ?? $"Ensured HMI tag {tagName}");
                 SetHmiTagAttribute(tagName, "Connection", connectionName);
                 SetHmiTagAttribute(tagName, "DataType", hmiDataType);
                 SetHmiTagAttribute(tagName, "AccessMode", "AbsoluteAccess");
@@ -194,7 +194,7 @@ namespace TiaMcpServer
                 }
                 catch (Exception ex)
                 {
-                    LogDiag($"Set HMI tag attribute failed: {tagName}.{attr}={value}: {ex.InnerException?.Message ?? ex.Message}");
+                    Program.LogDiag($"Set HMI tag attribute failed: {tagName}.{attr}={value}: {ex.InnerException?.Message ?? ex.Message}");
                 }
             }
 
@@ -213,11 +213,11 @@ namespace TiaMcpServer
                     }
                 }
 
-                LogDiag($"HMI tag {tagName}: Connection={Attr("Connection")}, PlcName={Attr("PlcName")}, PlcTag={Attr("PlcTag")}, Address={Attr("Address")}, AccessMode={Attr("AccessMode")}, DataType={Attr("DataType")}");
+                Program.LogDiag($"HMI tag {tagName}: Connection={Attr("Connection")}, PlcName={Attr("PlcName")}, PlcTag={Attr("PlcTag")}, Address={Attr("Address")}, AccessMode={Attr("AccessMode")}, DataType={Attr("DataType")}");
             }
         }
 
-        private static void RunProbeS71200Device(CliOptions options)
+        internal static void RunProbeS71200Device(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Path.GetTempPath(), "TiaMcpServer_DeviceProbe")
@@ -227,45 +227,45 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            LogDiag($"S7-1200 device probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"S7-1200 device probe: directory={projectDirectory}, project={projectName}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "CreateProject completed");
+            Program.LogDiag(create.Message ?? "CreateProject completed");
 
             var mlfb = "6ES7211-1BE40-0XB0";
             var versions = new[] { "V4.7", "4.7", "V4.6", "4.6", "V4.5", "4.5", "V4.4", "4.4", "" };
             foreach (var version in versions)
             {
                 var res = McpServer.AddDeviceWithFallback(mlfb, version, "PLC_1211C_AC_DC_RLY", "S7-1200");
-                LogDiag($"Probe {mlfb} {version}: ok={res.Ok}, used={res.MlfbUsed}, version={res.VersionUsed}, error={res.Error}");
+                Program.LogDiag($"Probe {mlfb} {version}: ok={res.Ok}, used={res.MlfbUsed}, version={res.VersionUsed}, error={res.Error}");
                 foreach (var attempt in res.Attempts ?? Array.Empty<string>())
                 {
-                    LogDiag("  attempt: " + attempt);
+                    Program.LogDiag("  attempt: " + attempt);
                 }
 
                 if (res.Ok == true) break;
             }
 
             var close = McpServer.CloseProject();
-            LogDiag(close.Message ?? "Closed probe project");
+            Program.LogDiag(close.Message ?? "Closed probe project");
         }
 
-        private static void RunAdd1511CToCurrentProject(CliOptions options)
+        internal static void RunAdd1511CToCurrentProject(CliOptions options)
         {
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_FlowLight_Test_20260427_1605"
                 : options.ProjectName!;
 
-            LogDiag($"Add 1511C to current project: project={projectName}");
+            Program.LogDiag($"Add 1511C to current project: project={projectName}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var attach = McpServer.AttachToOpenProject(projectName);
-            LogDiag(attach.Message ?? "Attach completed");
+            Program.LogDiag(attach.Message ?? "Attach completed");
 
             var candidates = new[]
             {
@@ -283,13 +283,13 @@ namespace TiaMcpServer
                 var existing = McpServer.GetDeviceInfo("PLC_1511C_1");
                 if (existing != null && !string.IsNullOrWhiteSpace(existing.Name))
                 {
-                    LogDiag("Deleting existing PLC_1511C_1 before exact 1511C insertion.");
+                    Program.LogDiag("Deleting existing PLC_1511C_1 before exact 1511C insertion.");
                     McpServer.InvokeObject("Device", "PLC_1511C_1", "Delete", new System.Text.Json.Nodes.JsonArray(), "", true);
                 }
             }
             catch (Exception ex)
             {
-                LogDiag("Existing PLC_1511C_1 delete skipped: " + (ex.InnerException?.Message ?? ex.Message));
+                Program.LogDiag("Existing PLC_1511C_1 delete skipped: " + (ex.InnerException?.Message ?? ex.Message));
             }
 
             ResponseMessage? success = null;
@@ -300,7 +300,7 @@ namespace TiaMcpServer
                 try
                 {
                     var res = McpServer.AddDevice(mlfb, version, "PLC_1511C_1");
-                    LogDiag($"Add exact 1511C attempt {mlfb} {version}: {res.Message}");
+                    Program.LogDiag($"Add exact 1511C attempt {mlfb} {version}: {res.Message}");
                     success = res;
                     successMlfb = mlfb;
                     successVersion = version;
@@ -308,7 +308,7 @@ namespace TiaMcpServer
                 }
                 catch (Exception ex)
                 {
-                    LogDiag($"Add exact 1511C attempt {mlfb} {version} failed: {ex.InnerException?.Message ?? ex.Message}");
+                    Program.LogDiag($"Add exact 1511C attempt {mlfb} {version} failed: {ex.InnerException?.Message ?? ex.Message}");
                 }
             }
 
@@ -317,52 +317,52 @@ namespace TiaMcpServer
                 throw new InvalidOperationException("Failed to add a 1511C device. See TiaMcpServer.log for attempted MLFB/version combinations.");
             }
 
-            LogDiag($"Added exact 1511C: {successMlfb}/{successVersion}");
+            Program.LogDiag($"Added exact 1511C: {successMlfb}/{successVersion}");
 
             var tree = McpServer.GetProjectTree();
-            LogDiag("Project tree after adding 1511C:");
-            LogDiag(tree.Tree ?? tree.Message ?? "");
+            Program.LogDiag("Project tree after adding 1511C:");
+            Program.LogDiag(tree.Tree ?? tree.Message ?? "");
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag(save.Message ?? "Project saved");
         }
 
-        private static void RunSearchGsd(CliOptions options)
+        internal static void RunSearchGsd(CliOptions options)
         {
             var keyword = options.SearchGsdKeyword ?? "";
-            LogDiag($"Search installed GSD/catalog devices: keyword={keyword}");
+            Program.LogDiag($"Search installed GSD/catalog devices: keyword={keyword}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var res = McpServer.SearchInstalledGsdDevices(keyword, 20);
-            LogDiag(res.Message ?? "");
+            Program.LogDiag(res.Message ?? "");
             foreach (var c in res.Items ?? Array.Empty<GsdDeviceCandidate>())
             {
-                LogDiag($"[{c.Source}] score={c.Score} typeId={c.TypeIdentifier} article={c.ArticleNumber} dap={c.DapId}/{c.DapName} desc={c.Description} path={c.GsdmlPath ?? c.CatalogPath}");
+                Program.LogDiag($"[{c.Source}] score={c.Score} typeId={c.TypeIdentifier} article={c.ArticleNumber} dap={c.DapId}/{c.DapName} desc={c.Description} path={c.GsdmlPath ?? c.CatalogPath}");
             }
         }
 
-        private static void RunSearchHardwareCatalog(CliOptions options)
+        internal static void RunSearchHardwareCatalog(CliOptions options)
         {
             var keyword = options.SearchHardwareCatalogKeyword ?? "";
-            LogDiag($"Search hardware catalog: keyword={keyword}");
+            Program.LogDiag($"Search hardware catalog: keyword={keyword}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var res = McpServer.SearchHardwareCatalog(keyword, 50);
-            LogDiag(res.Message ?? "");
+            Program.LogDiag(res.Message ?? "");
             if (!string.IsNullOrWhiteSpace(res.Error))
-                LogDiag("Search error: " + res.Error);
+                Program.LogDiag("Search error: " + res.Error);
 
             foreach (var c in res.Items ?? Array.Empty<HardwareCatalogCandidate>())
             {
-                LogDiag($"[{c.Source}] score={c.Score} insertable={c.Insertable} typeId={c.TypeIdentifier} normalized={c.TypeIdentifierNormalized} article={c.ArticleNumber} version={c.Version} type={c.TypeName} desc={c.Description} path={c.CatalogPath}");
+                Program.LogDiag($"[{c.Source}] score={c.Score} insertable={c.Insertable} typeId={c.TypeIdentifier} normalized={c.TypeIdentifierNormalized} article={c.ArticleNumber} version={c.Version} type={c.TypeName} desc={c.Description} path={c.CatalogPath}");
             }
         }
 
-        private static void RunProbeKtp700Basic(CliOptions options)
+        internal static void RunProbeKtp700Basic(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -372,30 +372,30 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            LogDiag($"KTP700 Basic probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"KTP700 Basic probe: directory={projectDirectory}, project={projectName}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var search = McpServer.SearchHardwareCatalog("KTP700 Basic PN", 20);
-            LogDiag(search.Message ?? "");
+            Program.LogDiag(search.Message ?? "");
             foreach (var c in search.Items ?? Array.Empty<HardwareCatalogCandidate>())
-                LogDiag($"candidate score={c.Score} typeId={c.TypeIdentifier} article={c.ArticleNumber} version={c.Version} type={c.TypeName} path={c.CatalogPath}");
+                Program.LogDiag($"candidate score={c.Score} typeId={c.TypeIdentifier} article={c.ArticleNumber} version={c.Version} type={c.TypeName} path={c.CatalogPath}");
 
             var add = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
+            Program.LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
             foreach (var attempt in add.Attempts ?? Array.Empty<string>())
-                LogDiag("  KTP700 attempt: " + attempt);
+                Program.LogDiag("  KTP700 attempt: " + attempt);
 
             var tree = McpServer.GetProjectTree();
-            LogDiag("Project tree after KTP700 probe:");
-            LogDiag(tree.Tree ?? tree.Message ?? "");
+            Program.LogDiag("Project tree after KTP700 probe:");
+            Program.LogDiag(tree.Tree ?? tree.Message ?? "");
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag(save.Message ?? "Project saved");
 
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
             var sb = new StringBuilder();
@@ -418,10 +418,10 @@ namespace TiaMcpServer
             sb.AppendLine("ProjectTree:");
             sb.AppendLine(tree.Tree ?? tree.Message ?? "");
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic probe report written: " + reportPath);
         }
 
-        private static void RunProbeKtp700BasicHmiImport(CliOptions options)
+        internal static void RunProbeKtp700BasicHmiImport(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -436,21 +436,21 @@ namespace TiaMcpServer
             var preparedScreenImportPath = PrepareClassicHmiScreenForKtp700(screenImportPath, probeDir);
 
             Directory.CreateDirectory(projectDirectory);
-            LogDiag($"KTP700 Basic HMI import probe: directory={projectDirectory}, project={projectName}, screen={preparedScreenImportPath}");
+            Program.LogDiag($"KTP700 Basic HMI import probe: directory={projectDirectory}, project={projectName}, screen={preparedScreenImportPath}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var add = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
+            Program.LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
             foreach (var attempt in add.Attempts ?? Array.Empty<string>())
-                LogDiag("  KTP700 attempt: " + attempt);
+                Program.LogDiag("  KTP700 attempt: " + attempt);
 
             var infoBefore = McpServer.GetHmiProgramInfo("HMI_RT_1");
-            LogDiag($"HMI info before import: name={infoBefore.Name}, type={infoBefore.ProgramType}, screens={string.Join(",", infoBefore.Screens ?? Array.Empty<string>())}");
+            Program.LogDiag($"HMI info before import: name={infoBefore.Name}, type={infoBefore.ProgramType}, screens={string.Join(",", infoBefore.Screens ?? Array.Empty<string>())}");
 
             string importMessage;
             bool screenImportOk;
@@ -460,7 +460,7 @@ namespace TiaMcpServer
                 var import = McpServer.ImportHmiScreen("HMI_RT_1", "", preparedScreenImportPath);
                 importMessage = import.Message ?? "";
                 screenImportOk = import.Meta?["success"]?.GetValue<bool>() == true;
-                LogDiag("Screen import response: " + importMessage);
+                Program.LogDiag("Screen import response: " + importMessage);
             }
             catch (Exception ex)
             {
@@ -468,7 +468,7 @@ namespace TiaMcpServer
                 importMessage = ex.InnerException?.Message ?? ex.Message;
                 projectUsable = !importMessage.Contains("NonRecoverableException", StringComparison.OrdinalIgnoreCase)
                     && !importMessage.Contains("disposed", StringComparison.OrdinalIgnoreCase);
-                LogDiag("Screen import exception: " + ex);
+                Program.LogDiag("Screen import exception: " + ex);
             }
 
             var infoAfter = projectUsable ? SafeHmiInfo("HMI_RT_1") : "Skipped because TIA project may be disposed after import failure.";
@@ -496,7 +496,7 @@ namespace TiaMcpServer
             if (projectUsable)
             {
                 var save = McpServer.SaveProject();
-                LogDiag(save.Message ?? "Project saved");
+                Program.LogDiag(save.Message ?? "Project saved");
             }
 
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
@@ -525,7 +525,7 @@ namespace TiaMcpServer
             sb.AppendLine("ProjectTree:");
             sb.AppendLine(treeText);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic HMI import probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic HMI import probe report written: " + reportPath);
 
             static string PrepareClassicHmiScreenForKtp700(string sourcePath, string outputDir)
             {
@@ -576,7 +576,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunProbeKtp700BasicHmiTags(CliOptions options)
+        internal static void RunProbeKtp700BasicHmiTags(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -586,19 +586,19 @@ namespace TiaMcpServer
                 : options.ProjectName!;
 
             Directory.CreateDirectory(projectDirectory);
-            LogDiag($"KTP700 Basic HMI tags probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"KTP700 Basic HMI tags probe: directory={projectDirectory}, project={projectName}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var add = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
+            Program.LogDiag($"KTP700 add: ok={add.Ok}, used={add.CandidateUsed?.TypeIdentifier}, error={add.Error}");
 
             var info = McpServer.GetHmiProgramInfo("HMI_RT_1");
-            LogDiag($"HMI info: name={info.Name}, type={info.ProgramType}, screens={string.Join(",", info.Screens ?? Array.Empty<string>())}");
+            Program.LogDiag($"HMI info: name={info.Name}, type={info.ProgramType}, screens={string.Join(",", info.Screens ?? Array.Empty<string>())}");
 
             var apiHints = SafeClassicTagApiHints();
             string? importProbeResult = null;
@@ -651,7 +651,7 @@ namespace TiaMcpServer
             var descTag = SafeDescribe(() => McpServer.DescribeHmiTag("HMI_RT_1", "Motor_HMI_Tags", "Motor_Start"));
             var tree = McpServer.GetProjectTree();
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag(save.Message ?? "Project saved");
 
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
             var sb = new StringBuilder();
@@ -687,7 +687,7 @@ namespace TiaMcpServer
             sb.AppendLine("ProjectTree:");
             sb.AppendLine(tree.Tree ?? tree.Message ?? "");
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic HMI tags probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic HMI tags probe report written: " + reportPath);
 
             void TryEnsureTagTable(string tableName)
             {
@@ -828,7 +828,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunProbeKtp700BasicHmiConnection(CliOptions options)
+        internal static void RunProbeKtp700BasicHmiConnection(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -845,30 +845,30 @@ namespace TiaMcpServer
             }
 
             Directory.CreateDirectory(projectDirectory);
-            LogDiag($"KTP700 Basic HMI connection probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"KTP700 Basic HMI connection probe: directory={projectDirectory}, project={projectName}");
             Report("Project: " + projectName);
             Report("Probe: KTP700 Basic Classic HMI connection discovery/import/export");
             Report("PLC: S7-1211C DC/DC/DC 6ES7211-1AE40-0XB0/V4.7");
             Report("HMI: KTP700 Basic PN 6AV2 123-2GB03-0AX0/17.0.0.0");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var addPlc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
-            LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
+            Program.LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
             foreach (var attempt in addPlc.Attempts ?? Array.Empty<string>())
-                LogDiag("  PLC attempt: " + attempt);
+                Program.LogDiag("  PLC attempt: " + attempt);
 
             var addHmi = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
+            Program.LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
             foreach (var attempt in addHmi.Attempts ?? Array.Empty<string>())
-                LogDiag("  KTP700 attempt: " + attempt);
+                Program.LogDiag("  KTP700 attempt: " + attempt);
 
             var hmiInfo = McpServer.GetHmiProgramInfo("HMI_RT_1");
-            LogDiag($"HMI info: name={hmiInfo.Name}, type={hmiInfo.ProgramType}, screens={string.Join(",", hmiInfo.Screens ?? Array.Empty<string>())}");
+            Program.LogDiag($"HMI info: name={hmiInfo.Name}, type={hmiInfo.ProgramType}, screens={string.Join(",", hmiInfo.Screens ?? Array.Empty<string>())}");
             Report($"HMI Info: Name={hmiInfo.Name}; Type={hmiInfo.ProgramType}");
 
             var projectTree = McpServer.GetProjectTree();
@@ -902,12 +902,12 @@ namespace TiaMcpServer
             {
                 var save = McpServer.SaveProject();
                 saveMessage = save.Message ?? "Project saved";
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
             catch (Exception ex)
             {
                 saveMessage = "SAVE_ERR :: " + (ex.InnerException?.Message ?? ex.Message);
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
 
             var sb = new StringBuilder();
@@ -938,7 +938,7 @@ namespace TiaMcpServer
             sb.AppendLine("ProjectTree:");
             sb.AppendLine(projectTree.Tree ?? projectTree.Message ?? "");
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic HMI connection probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic HMI connection probe report written: " + reportPath);
 
             static string[] SafeStringList(Func<ResponseStringList> fn)
             {
@@ -968,7 +968,7 @@ namespace TiaMcpServer
 
         }
 
-        private static void RunProbeKtp700BasicNetworking(CliOptions options)
+        internal static void RunProbeKtp700BasicNetworking(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -978,19 +978,19 @@ namespace TiaMcpServer
                 : options.ProjectName!;
             Directory.CreateDirectory(projectDirectory);
 
-            LogDiag($"KTP700 Basic networking probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"KTP700 Basic networking probe: directory={projectDirectory}, project={projectName}");
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var addPlc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
-            LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
-            foreach (var attempt in addPlc.Attempts ?? Array.Empty<string>()) LogDiag("  PLC attempt: " + attempt);
+            Program.LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
+            foreach (var attempt in addPlc.Attempts ?? Array.Empty<string>()) Program.LogDiag("  PLC attempt: " + attempt);
 
             var addHmi = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
-            foreach (var attempt in addHmi.Attempts ?? Array.Empty<string>()) LogDiag("  KTP700 attempt: " + attempt);
+            Program.LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
+            foreach (var attempt in addHmi.Attempts ?? Array.Empty<string>()) Program.LogDiag("  KTP700 attempt: " + attempt);
 
             var beforeConnections = SafeStringList(() => McpServer.GetHmiConnections("HMI_RT_1"));
             var networkProbe = ProbeKtp700NetworkBestEffort();
@@ -1005,12 +1005,12 @@ namespace TiaMcpServer
             {
                 var save = McpServer.SaveProject();
                 saveMessage = save.Message ?? "Project saved";
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
             catch (Exception ex)
             {
                 saveMessage = "SAVE_ERR :: " + (ex.InnerException?.Message ?? ex.Message);
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
 
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
@@ -1044,7 +1044,7 @@ namespace TiaMcpServer
             sb.AppendLine("ProjectTree:");
             sb.AppendLine(projectTree.Tree ?? projectTree.Message ?? "");
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic networking probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic networking probe report written: " + reportPath);
 
             static string[] SafeStringList(Func<ResponseStringList> fn)
             {
@@ -1076,7 +1076,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunProbeCurrentKtp700HardwareHmiConnection(CliOptions options)
+        internal static void RunProbeCurrentKtp700HardwareHmiConnection(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1086,20 +1086,20 @@ namespace TiaMcpServer
                 : options.ProjectName!;
             Directory.CreateDirectory(projectDirectory);
 
-            LogDiag($"Current KTP700 HW HMI connection probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"Current KTP700 HW HMI connection probe: directory={projectDirectory}, project={projectName}");
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             try
             {
                 var attach = McpServer.AttachToOpenProject(projectName);
-                LogDiag(attach.Message ?? "Attach completed");
+                Program.LogDiag(attach.Message ?? "Attach completed");
             }
             catch (Exception ex)
             {
-                LogDiag("Attach failed, trying to open project file: " + (ex.InnerException?.Message ?? ex.Message));
+                Program.LogDiag("Attach failed, trying to open project file: " + (ex.InnerException?.Message ?? ex.Message));
                 var projectPath = Path.Combine(projectDirectory, projectName, projectName + ".ap21");
                 var open = McpServer.OpenProject(projectPath);
-                LogDiag(open.Message ?? "Open completed");
+                Program.LogDiag(open.Message ?? "Open completed");
             }
 
             var hwConnectionProbe = McpServer.Portal.ProbeCreateHardwareHmiConnection(
@@ -1123,7 +1123,7 @@ namespace TiaMcpServer
             sb.AppendLine("Classic HMI Connections after probe:");
             foreach (var item in connectionsAfter) sb.AppendLine(item);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("Current KTP700 HW HMI connection probe report written: " + reportPath);
+            Program.LogDiag("Current KTP700 HW HMI connection probe report written: " + reportPath);
 
             static string[] SafeStringList(Func<ResponseStringList> fn)
             {
@@ -1132,16 +1132,16 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunListPortalProcessProjects(CliOptions options)
+        internal static void RunListPortalProcessProjects(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
                 : options.ProjectDirectory!;
             Directory.CreateDirectory(projectDirectory);
 
-            LogDiag("Listing TIA Portal processes/projects");
+            Program.LogDiag("Listing TIA Portal processes/projects");
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             var list = McpServer.ListPortalProcessProjects();
 
             var reportPath = Path.Combine(projectDirectory, "TIA_PORTAL_PROCESS_PROJECTS_REPORT.txt");
@@ -1149,10 +1149,10 @@ namespace TiaMcpServer
             sb.AppendLine("Probe: TIA Portal process/project listing");
             foreach (var item in list.Items ?? Array.Empty<string>()) sb.AppendLine(item);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("TIA Portal process/project report written: " + reportPath);
+            Program.LogDiag("TIA Portal process/project report written: " + reportPath);
         }
 
-        private static async Task RunCapabilitySelfTest(CliOptions options)
+        internal static async Task RunCapabilitySelfTest(CliOptions options)
         {
             var response = await McpServer.RunCapabilitySelfTest(
                 connectIfNeeded: options.CapabilitySelfTestConnect,
@@ -1165,7 +1165,7 @@ namespace TiaMcpServer
             Console.WriteLine(json);
         }
 
-        private static async Task RunGenerateAcceptanceReport(CliOptions options)
+        internal static async Task RunGenerateAcceptanceReport(CliOptions options)
         {
             var response = await McpServer.GenerateAcceptanceReport(
                 outputDirectory: options.AcceptanceReportDirectory ?? string.Empty,
@@ -1179,7 +1179,7 @@ namespace TiaMcpServer
             Console.WriteLine(json);
         }
 
-        private static void RunGenerateErrorReport(CliOptions options)
+        internal static void RunGenerateErrorReport(CliOptions options)
         {
             var response = McpServer.GenerateErrorReport(
                 errorCode: options.ErrorReportCode ?? "UnknownError",
@@ -1194,7 +1194,7 @@ namespace TiaMcpServer
             Console.WriteLine(json);
         }
 
-        private static void RunProbeHardwareHmiConnectionOwnerCandidates(CliOptions options)
+        internal static void RunProbeHardwareHmiConnectionOwnerCandidates(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1204,11 +1204,11 @@ namespace TiaMcpServer
                 : options.ProjectName!;
             Directory.CreateDirectory(projectDirectory);
 
-            LogDiag($"Hardware HMI connection owner candidate probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"Hardware HMI connection owner candidate probe: directory={projectDirectory}, project={projectName}");
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             var attach = McpServer.AttachToOpenProject(projectName);
-            LogDiag(attach.Message ?? "Attach completed");
+            Program.LogDiag(attach.Message ?? "Attach completed");
 
             var list = McpServer.ProbeHardwareHmiConnectionOwnerCandidates("PLC_1", "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1", options.DeepHardwareHmiConnectionScan);
             var reportPath = Path.Combine(projectDirectory, projectName + "_HW_CONNECTION_OWNER_CANDIDATES.txt");
@@ -1219,10 +1219,10 @@ namespace TiaMcpServer
             sb.AppendLine();
             foreach (var item in list.Items ?? Array.Empty<string>()) sb.AppendLine(item);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("Hardware HMI connection owner candidate report written: " + reportPath);
+            Program.LogDiag("Hardware HMI connection owner candidate report written: " + reportPath);
         }
 
-        private static void RunProbeHardwareHmiConnectionWhitelistedServices(CliOptions options)
+        internal static void RunProbeHardwareHmiConnectionWhitelistedServices(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1232,20 +1232,20 @@ namespace TiaMcpServer
                 : options.ProjectName!;
             Directory.CreateDirectory(projectDirectory);
 
-            LogDiag($"Hardware HMI connection whitelisted service probe: directory={projectDirectory}, project={projectName}");
+            Program.LogDiag($"Hardware HMI connection whitelisted service probe: directory={projectDirectory}, project={projectName}");
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             try
             {
                 var attach = McpServer.AttachToOpenProject(projectName);
-                LogDiag(attach.Message ?? "Attach completed");
+                Program.LogDiag(attach.Message ?? "Attach completed");
             }
             catch (Exception ex)
             {
-                LogDiag("Attach failed, trying to open project file: " + (ex.InnerException?.Message ?? ex.Message));
+                Program.LogDiag("Attach failed, trying to open project file: " + (ex.InnerException?.Message ?? ex.Message));
                 var projectPath = Path.Combine(projectDirectory, projectName, projectName + ".ap21");
                 var open = McpServer.OpenProject(projectPath);
-                LogDiag(open.Message ?? "Open completed");
+                Program.LogDiag(open.Message ?? "Open completed");
             }
 
             var list = McpServer.ProbeHardwareHmiConnectionWhitelistedServices("PLC_1", "HMI_KTP700_1/HMI_KTP700_1.IE_CP_1", options.DeepHardwareHmiConnectionScan);
@@ -1257,10 +1257,10 @@ namespace TiaMcpServer
             sb.AppendLine();
             foreach (var item in list.Items ?? Array.Empty<string>()) sb.AppendLine(item);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("Hardware HMI connection whitelisted service report written: " + reportPath);
+            Program.LogDiag("Hardware HMI connection whitelisted service report written: " + reportPath);
         }
 
-        private static void RunProbeKtp700BasicHmiSymbolicTags(CliOptions options)
+        internal static void RunProbeKtp700BasicHmiSymbolicTags(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1271,38 +1271,38 @@ namespace TiaMcpServer
             var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Ktp700SymbolicTags_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(projectDirectory);
             Directory.CreateDirectory(importDir);
-            WriteMotorMinimalPlcXml(importDir);
+            PlcHmiSyncXml.WriteMotorMinimalPlcXml(importDir);
 
-            LogDiag($"KTP700 Basic symbolic HMI tags probe: directory={projectDirectory}, project={projectName}, importDir={importDir}");
+            Program.LogDiag($"KTP700 Basic symbolic HMI tags probe: directory={projectDirectory}, project={projectName}, importDir={importDir}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
+            Program.LogDiag(create.Message ?? "Project created");
 
             var addPlc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
-            LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
+            Program.LogDiag($"PLC add: ok={addPlc.Ok}, used={addPlc.MlfbUsed}/{addPlc.VersionUsed}, error={addPlc.Error}");
             foreach (var attempt in addPlc.Attempts ?? Array.Empty<string>())
-                LogDiag("  PLC attempt: " + attempt);
+                Program.LogDiag("  PLC attempt: " + attempt);
 
             var addHmi = McpServer.AddHardwareCatalogDeviceWithProbe("KTP700 Basic PN", "HMI_KTP700_1", "6AV2 123-2GB03-0AX0 17.0.0.0 PN");
-            LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
+            Program.LogDiag($"KTP700 add: ok={addHmi.Ok}, used={addHmi.CandidateUsed?.TypeIdentifier}, error={addHmi.Error}");
             foreach (var attempt in addHmi.Attempts ?? Array.Empty<string>())
-                LogDiag("  KTP700 attempt: " + attempt);
+                Program.LogDiag("  KTP700 attempt: " + attempt);
 
             var hmiInfo = McpServer.GetHmiProgramInfo("HMI_RT_1");
-            LogDiag($"HMI info: name={hmiInfo.Name}, type={hmiInfo.ProgramType}, screens={string.Join(",", hmiInfo.Screens ?? Array.Empty<string>())}");
+            Program.LogDiag($"HMI info: name={hmiInfo.Name}, type={hmiInfo.ProgramType}, screens={string.Join(",", hmiInfo.Screens ?? Array.Empty<string>())}");
 
             var plcImport = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: false);
-            LogDiag($"PLC import: types={string.Join(",", plcImport.ImportedTypes ?? Array.Empty<string>())}, blocks={string.Join(",", plcImport.ImportedBlocks ?? Array.Empty<string>())}, failed={plcImport.Failed?.Count() ?? 0}");
+            Program.LogDiag($"PLC import: types={string.Join(",", plcImport.ImportedTypes ?? Array.Empty<string>())}, blocks={string.Join(",", plcImport.ImportedBlocks ?? Array.Empty<string>())}, failed={plcImport.Failed?.Count() ?? 0}");
             foreach (var failure in plcImport.Failed ?? Array.Empty<ImportFailure>())
-                LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
+                Program.LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
             if (plcImport.Compile != null)
-                LogDiag($"PLC import compile: {plcImport.Compile.State}, errors={CountText(plcImport.Compile.ErrorCount)}, warnings={CountText(plcImport.Compile.WarningCount)}");
+                Program.LogDiag($"PLC import compile: {plcImport.Compile.State}, errors={CountText(plcImport.Compile.ErrorCount)}, warnings={CountText(plcImport.Compile.WarningCount)}");
 
             var symbolicTagPath = Path.Combine(importDir, "ClassicHmiTagTable_Symbolic.xml");
-            WriteClassicHmiSymbolicTagTableProbeXml(symbolicTagPath, "Motor_HMI_Tags", "HMI_Connection_1");
+            HmiTemplateBuilder.WriteClassicHmiSymbolicTagTableProbeXml(symbolicTagPath, "Motor_HMI_Tags", "HMI_Connection_1");
 
             string importMessage;
             string roundtripPath = Path.Combine(projectDirectory, projectName + "_Motor_HMI_Tags_roundtrip.xml");
@@ -1331,12 +1331,12 @@ namespace TiaMcpServer
             {
                 var save = McpServer.SaveProject();
                 saveMessage = save.Message ?? "Project saved";
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
             catch (Exception ex)
             {
                 saveMessage = "SAVE_ERR :: " + (ex.InnerException?.Message ?? ex.Message);
-                LogDiag(saveMessage);
+                Program.LogDiag(saveMessage);
             }
 
             var reportPath = Path.Combine(projectDirectory, projectName + "_REPORT.txt");
@@ -1365,7 +1365,7 @@ namespace TiaMcpServer
             sb.AppendLine("Save:");
             sb.AppendLine(saveMessage);
             File.WriteAllText(reportPath, sb.ToString(), Encoding.UTF8);
-            LogDiag("KTP700 Basic symbolic HMI tags probe report written: " + reportPath);
+            Program.LogDiag("KTP700 Basic symbolic HMI tags probe report written: " + reportPath);
 
             static string[] SafeStringList(Func<ResponseStringList> fn)
             {
@@ -1374,7 +1374,7 @@ namespace TiaMcpServer
             }
         }
 
-        private static void RunValidatePlcSclSyntax(CliOptions options)
+        internal static void RunValidatePlcSclSyntax(CliOptions options)
         {
             var projectName = string.IsNullOrWhiteSpace(options.ProjectName)
                 ? "MCP_FlowLight_Test_20260427_1605"
@@ -1382,26 +1382,26 @@ namespace TiaMcpServer
             var softwarePath = "PLC_1";
             var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_SclSyntax_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
-            WritePlcSyntaxValidationXml(importDir);
-            WritePlcSyntaxIecFbXml(importDir);
+            HmiTemplateBuilder.WritePlcSyntaxValidationXml(importDir);
+            HmiTemplateBuilder.WritePlcSyntaxIecFbXml(importDir);
             var sclSourcePath = Path.Combine(importDir, "MCP_Syntax_Source.scl");
-            WritePlcSyntaxValidationScl(sclSourcePath);
+            HmiTemplateBuilder.WritePlcSyntaxValidationScl(sclSourcePath);
 
-            LogDiag($"PLC SCL syntax validation: project={projectName}, software={softwarePath}, importDir={importDir}");
+            Program.LogDiag($"PLC SCL syntax validation: project={projectName}, software={softwarePath}, importDir={importDir}");
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
 
             var attach = McpServer.AttachToOpenProject(projectName);
-            LogDiag(attach.Message ?? "Attach completed");
+            Program.LogDiag(attach.Message ?? "Attach completed");
 
             var import = McpServer.ImportPlcProgramFromDirectory(softwarePath, importDir, compileAfter: true, stopOnImportFailure: false);
-            LogDiag($"PLC syntax import: blocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
-            foreach (var f in import.Failed ?? Array.Empty<ImportFailure>()) LogDiag($"PLC syntax import failure: {f.Path} :: {f.Error}");
+            Program.LogDiag($"PLC syntax import: blocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
+            foreach (var f in import.Failed ?? Array.Empty<ImportFailure>()) Program.LogDiag($"PLC syntax import failure: {f.Path} :: {f.Error}");
 
             if (import.Compile != null)
             {
-                LogDiag($"PLC syntax import compile: state={import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
+                Program.LogDiag($"PLC syntax import compile: state={import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
             }
 
             var sourceImported = false;
@@ -1409,11 +1409,11 @@ namespace TiaMcpServer
             {
                 var sourceImport = McpServer.ImportPlcExternalSource(softwarePath, "", sclSourcePath);
                 sourceImported = sourceImport.Meta?["success"]?.GetValue<bool>() == true;
-                LogDiag($"PLC SCL source import: {sourceImport.Message}; success={sourceImported}");
+                Program.LogDiag($"PLC SCL source import: {sourceImport.Message}; success={sourceImported}");
             }
             catch (Exception ex)
             {
-                LogDiag("PLC SCL source import failed: " + ex.Message);
+                Program.LogDiag("PLC SCL source import failed: " + ex.Message);
             }
 
             if (sourceImported)
@@ -1423,26 +1423,26 @@ namespace TiaMcpServer
                 {
                     var sourceGenerate = McpServer.GenerateBlocksFromExternalSource(softwarePath, "MCP_Syntax_Source");
                     sourceGenerated = sourceGenerate.Meta?["success"]?.GetValue<bool>() == true;
-                    LogDiag($"PLC SCL source generate: {sourceGenerate.Message}; success={sourceGenerated}");
+                    Program.LogDiag($"PLC SCL source generate: {sourceGenerate.Message}; success={sourceGenerated}");
                 }
                 catch (Exception ex)
                 {
-                    LogDiag("PLC SCL source generate failed: " + ex.Message);
+                    Program.LogDiag("PLC SCL source generate failed: " + ex.Message);
                 }
 
                 if (sourceGenerated)
                 {
                     var sourceCompile = McpServer.CompileAndDiagnosePlc(softwarePath);
-                    LogDiag($"PLC SCL source compile: state={sourceCompile.State}, errors={CountText(sourceCompile.ErrorCount)}, warnings={CountText(sourceCompile.WarningCount)}");
-                    foreach (var e in sourceCompile.Errors ?? Array.Empty<string>()) LogDiag("PLC SCL source error: " + e);
-                    foreach (var w in sourceCompile.Warnings ?? Array.Empty<string>()) LogDiag("PLC SCL source warning: " + w);
+                    Program.LogDiag($"PLC SCL source compile: state={sourceCompile.State}, errors={CountText(sourceCompile.ErrorCount)}, warnings={CountText(sourceCompile.WarningCount)}");
+                    foreach (var e in sourceCompile.Errors ?? Array.Empty<string>()) Program.LogDiag("PLC SCL source error: " + e);
+                    foreach (var w in sourceCompile.Warnings ?? Array.Empty<string>()) Program.LogDiag("PLC SCL source warning: " + w);
                 }
             }
 
             var compile = McpServer.CompileAndDiagnosePlc(softwarePath);
-            LogDiag($"PLC syntax validation compile: state={compile.State}, errors={CountText(compile.ErrorCount)}, warnings={CountText(compile.WarningCount)}");
-            foreach (var e in compile.Errors ?? Array.Empty<string>()) LogDiag("PLC syntax validation error: " + e);
-            foreach (var w in compile.Warnings ?? Array.Empty<string>()) LogDiag("PLC syntax validation warning: " + w);
+            Program.LogDiag($"PLC syntax validation compile: state={compile.State}, errors={CountText(compile.ErrorCount)}, warnings={CountText(compile.WarningCount)}");
+            foreach (var e in compile.Errors ?? Array.Empty<string>()) Program.LogDiag("PLC syntax validation error: " + e);
+            foreach (var w in compile.Warnings ?? Array.Empty<string>()) Program.LogDiag("PLC syntax validation warning: " + w);
 
             // 三态：true=确实零错误，false=确实有错误，null=编译结果没读回来。
             // null 不能当成通过；先报告实际检查失败，其余检查通过时再单独报告编译结果不可读。
@@ -1457,11 +1457,11 @@ namespace TiaMcpServer
             }
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
-            LogDiag("PLC SCL syntax validation XML kept at: " + importDir);
+            Program.LogDiag(save.Message ?? "Project saved");
+            Program.LogDiag("PLC SCL syntax validation XML kept at: " + importDir);
         }
 
-        private static void RunMotorMinimalTest(CliOptions options)
+        internal static void RunMotorMinimalTest(CliOptions options)
         {
             var projectDirectory = string.IsNullOrWhiteSpace(options.ProjectDirectory)
                 ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Automation")
@@ -1473,9 +1473,9 @@ namespace TiaMcpServer
             Directory.CreateDirectory(projectDirectory);
             var importDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_MotorMinimal_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(importDir);
-            WriteMotorMinimalPlcXml(importDir);
+            PlcHmiSyncXml.WriteMotorMinimalPlcXml(importDir);
 
-            LogDiag($"Motor minimal test: directory={projectDirectory}, project={projectName}, importDir={importDir}");
+            Program.LogDiag($"Motor minimal test: directory={projectDirectory}, project={projectName}, importDir={importDir}");
             string[] plcAttempts = Array.Empty<string>();
             string[] hmiAttempts = Array.Empty<string>();
             string hmiReadbackSummary = "";
@@ -1486,46 +1486,46 @@ namespace TiaMcpServer
             string hmiDesignApplySummary = "";
 
             var connect = McpServer.Connect();
-            LogDiag(connect.Message ?? "Connect completed");
+            Program.LogDiag(connect.Message ?? "Connect completed");
             var state = McpServer.GetState();
-            LogDiag($"State before create: connected={state.IsConnected}, project={state.Project}, session={state.Session}");
+            Program.LogDiag($"State before create: connected={state.IsConnected}, project={state.Project}, session={state.Session}");
 
             var create = McpServer.CreateProject(projectDirectory, projectName);
-            LogDiag(create.Message ?? "Project created");
-            LogDiag("Project tree after create:");
-            LogDiag(McpServer.GetProjectTree().Tree ?? "");
+            Program.LogDiag(create.Message ?? "Project created");
+            Program.LogDiag("Project tree after create:");
+            Program.LogDiag(McpServer.GetProjectTree().Tree ?? "");
 
             var plc = McpServer.AddDeviceWithFallback("6ES7211-1AE40-0XB0", "V4.7", "PLC_1", "S7-1200");
-            LogDiag($"PLC add DC/DC/DC preferred: ok={plc.Ok}, used={plc.MlfbUsed}/{plc.VersionUsed}, error={plc.Error}");
+            Program.LogDiag($"PLC add DC/DC/DC preferred: ok={plc.Ok}, used={plc.MlfbUsed}/{plc.VersionUsed}, error={plc.Error}");
             plcAttempts = plc.Attempts?.ToArray() ?? Array.Empty<string>();
-            foreach (var attempt in plcAttempts) LogDiag("  PLC attempt: " + attempt);
+            foreach (var attempt in plcAttempts) Program.LogDiag("  PLC attempt: " + attempt);
             if (plc.Ok != true)
             {
                 throw new InvalidOperationException("Failed to add S7-1211C DC/DC/DC. Last error: " + plc.Error);
             }
 
             var hmi = McpServer.AddDeviceWithFallback("OrderNumber:6AV2 123-3GB32-0AW0/21.0.0.0", "", "HMI_RT_1", "WinCCUnifiedPC");
-            LogDiag($"HMI add Unified fallback: ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}, error={hmi.Error}");
+            Program.LogDiag($"HMI add Unified fallback: ok={hmi.Ok}, used={hmi.MlfbUsed}/{hmi.VersionUsed}, error={hmi.Error}");
             hmiAttempts = hmi.Attempts?.ToArray() ?? Array.Empty<string>();
-            foreach (var attempt in hmiAttempts) LogDiag("  HMI attempt: " + attempt);
+            foreach (var attempt in hmiAttempts) Program.LogDiag("  HMI attempt: " + attempt);
 
             networkProbeSummary = ProbeMotorNetworkBestEffort();
-            LogDiag("Motor minimal network probe:");
-            LogDiag(networkProbeSummary);
+            Program.LogDiag("Motor minimal network probe:");
+            Program.LogDiag(networkProbeSummary);
 
             var treeAfterHardware = McpServer.GetProjectTree();
-            LogDiag("Project tree after hardware:");
-            LogDiag(treeAfterHardware.Tree ?? treeAfterHardware.Message ?? "");
+            Program.LogDiag("Project tree after hardware:");
+            Program.LogDiag(treeAfterHardware.Tree ?? treeAfterHardware.Message ?? "");
 
             var import = McpServer.ImportPlcProgramFromDirectory("PLC_1", importDir, compileAfter: true, stopOnImportFailure: false);
-            LogDiag($"PLC import: types={string.Join(",", import.ImportedTypes ?? Array.Empty<string>())}, tags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, blocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
-            foreach (var failure in import.Failed ?? Array.Empty<ImportFailure>()) LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
-            if (import.Compile != null) LogDiag($"PLC import compile: {import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
+            Program.LogDiag($"PLC import: types={string.Join(",", import.ImportedTypes ?? Array.Empty<string>())}, tags={string.Join(",", import.ImportedTagTables ?? Array.Empty<string>())}, blocks={string.Join(",", import.ImportedBlocks ?? Array.Empty<string>())}, failed={import.Failed?.Count() ?? 0}");
+            foreach (var failure in import.Failed ?? Array.Empty<ImportFailure>()) Program.LogDiag($"PLC import failure: {failure.Path} :: {failure.Error}");
+            if (import.Compile != null) Program.LogDiag($"PLC import compile: {import.Compile.State}, errors={CountText(import.Compile.ErrorCount)}, warnings={CountText(import.Compile.WarningCount)}");
 
             var compile = McpServer.CompileAndDiagnosePlc("PLC_1");
-            LogDiag($"Final PLC compile: state={compile.State}, errors={CountText(compile.ErrorCount)}, warnings={CountText(compile.WarningCount)}");
-            foreach (var e in compile.Errors ?? Array.Empty<string>()) LogDiag("PLC compile error: " + e);
-            foreach (var w in compile.Warnings ?? Array.Empty<string>()) LogDiag("PLC compile warning: " + w);
+            Program.LogDiag($"Final PLC compile: state={compile.State}, errors={CountText(compile.ErrorCount)}, warnings={CountText(compile.WarningCount)}");
+            foreach (var e in compile.Errors ?? Array.Empty<string>()) Program.LogDiag("PLC compile error: " + e);
+            foreach (var w in compile.Warnings ?? Array.Empty<string>()) Program.LogDiag("PLC compile warning: " + w);
             // 同上三态：读不回编译结果同样不放行，但文案与"真有错误"分开。
             bool? compileClean = compile.ErrorCount == null ? (bool?)null : compile.ErrorCount.Value == 0;
             if (compileClean == false)
@@ -1547,11 +1547,11 @@ namespace TiaMcpServer
             }
 
             var save = McpServer.SaveProject();
-            LogDiag(save.Message ?? "Project saved");
-            TryWriteText(Path.Combine(importDir, "MotorUnifiedDesign.json"), hmiDesignJson);
-            WriteMotorMinimalReport(projectDirectory, projectName, importDir, treeAfterHardware.Tree ?? "", compile, plcAttempts, hmiAttempts, hmiReadbackSummary, hmiDesignJson, hardwareDeviation, hmiConnectionSummary, networkProbeSummary);
-            SyncMotorMinimalArtifacts(projectName, projectDirectory, importDir);
-            LogDiag("Motor minimal test report written.");
+            Program.LogDiag(save.Message ?? "Project saved");
+            ReportBuilders.TryWriteText(Path.Combine(importDir, "MotorUnifiedDesign.json"), hmiDesignJson);
+            PlcHmiSyncXml.WriteMotorMinimalReport(projectDirectory, projectName, importDir, treeAfterHardware.Tree ?? "", compile, plcAttempts, hmiAttempts, hmiReadbackSummary, hmiDesignJson, hardwareDeviation, hmiConnectionSummary, networkProbeSummary);
+            HmiTemplateBuilder.SyncMotorMinimalArtifacts(projectName, projectDirectory, importDir);
+            Program.LogDiag("Motor minimal test report written.");
 
             string ProbeMotorNetworkBestEffort()
             {
@@ -1591,13 +1591,13 @@ namespace TiaMcpServer
                 try
                 {
                     var info = McpServer.GetHmiProgramInfo("HMI_RT_1");
-                    LogDiag($"HMI info: name={info.Name}, type={info.ProgramType}, screens={string.Join(",", info.Screens ?? Array.Empty<string>())}");
+                    Program.LogDiag($"HMI info: name={info.Name}, type={info.ProgramType}, screens={string.Join(",", info.Screens ?? Array.Empty<string>())}");
 
                     var connectionName = "HMI_Connection_1";
                     var conn = McpServer.EnsureUnifiedHmiConnection("HMI_RT_1", connectionName, "PLC_1");
-                    LogDiag(conn.Message ?? "HMI connection ensured");
+                    Program.LogDiag(conn.Message ?? "HMI connection ensured");
                     hmiConnectionSummary = ReadHmiConnectionSummary(connectionName);
-                    LogDiag("HMI connection readback: " + hmiConnectionSummary);
+                    Program.LogDiag("HMI connection readback: " + hmiConnectionSummary);
 
                     McpServer.EnsureUnifiedHmiTagTable("HMI_RT_1", "Motor_HMI_Tags");
                     EnsureHmiTag("Motor_Start", "Bool", "DB1_MotorData.Motor.Start", "%M0.0");
@@ -1610,13 +1610,13 @@ namespace TiaMcpServer
                     var design = BuildMotorUnifiedHmiDesignJson();
                     hmiDesignJson = design;
                     var designApply = McpServer.ApplyUnifiedHmiScreenDesignJson("HMI_RT_1", "Main", design);
-                    LogDiag(designApply.Message ?? "Applied motor HMI design");
+                    Program.LogDiag(designApply.Message ?? "Applied motor HMI design");
                     if (designApply.Meta != null)
                     {
                         var changed = designApply.Meta["changed"]?.ToJsonString() ?? "";
                         var failed = designApply.Meta["failed"]?.ToJsonString() ?? "";
                         hmiDesignApplySummary = "Changed=" + changed + "; Failed=" + failed;
-                        LogDiag("HMI design apply meta: " + hmiDesignApplySummary);
+                        Program.LogDiag("HMI design apply meta: " + hmiDesignApplySummary);
                     }
 
                     TryBindButton("Btn_Start", "Motor_Start");
@@ -1628,7 +1628,7 @@ namespace TiaMcpServer
                     var screens = McpServer.GetHmiScreens("HMI_RT_1");
                     var tables = McpServer.GetHmiTagTables("HMI_RT_1");
                     var tags = McpServer.GetHmiTags("HMI_RT_1", "Motor_HMI_Tags");
-                    LogDiag($"HMI readback: screens={string.Join(",", screens.Items ?? Array.Empty<string>())}; tables={string.Join(",", tables.Items ?? Array.Empty<string>())}; tags={string.Join(",", tags.Items ?? Array.Empty<string>())}");
+                    Program.LogDiag($"HMI readback: screens={string.Join(",", screens.Items ?? Array.Empty<string>())}; tables={string.Join(",", tables.Items ?? Array.Empty<string>())}; tags={string.Join(",", tags.Items ?? Array.Empty<string>())}");
                     hmiReadbackSummary = "Screens=" + string.Join(",", screens.Items ?? Array.Empty<string>())
                         + "; TagTables=" + string.Join(",", tables.Items ?? Array.Empty<string>())
                         + "; Tags=" + string.Join(",", tags.Items ?? Array.Empty<string>())
@@ -1644,7 +1644,7 @@ namespace TiaMcpServer
                             tagSummary.IndexOf("PlcTag=" + plcTag, StringComparison.OrdinalIgnoreCase) >= 0;
                         if (!symbolicOk)
                         {
-                            LogDiag($"HMI tag {tagName} symbolic binding did not read back; applying verified absolute address {absoluteAddress}. Before={tagSummary}");
+                            Program.LogDiag($"HMI tag {tagName} symbolic binding did not read back; applying verified absolute address {absoluteAddress}. Before={tagSummary}");
                             SetHmiTagAttribute(tagName, "Connection", connectionName);
                             SetHmiTagAttribute(tagName, "DataType", dataType);
                             SetHmiTagAttribute(tagName, "AccessMode", "AbsoluteAccess");
@@ -1652,7 +1652,7 @@ namespace TiaMcpServer
                             tagSummary = ReadHmiTagSummary(tagName);
                         }
 
-                        LogDiag($"HMI tag {tagName}: {tagSummary}");
+                        Program.LogDiag($"HMI tag {tagName}: {tagSummary}");
                         if (tagSummary.IndexOf("Connection=HMI_Connection_1", StringComparison.OrdinalIgnoreCase) < 0 ||
                             tagSummary.IndexOf("Address=" + absoluteAddress, StringComparison.OrdinalIgnoreCase) < 0 && !symbolicOk)
                         {
@@ -1708,11 +1708,11 @@ namespace TiaMcpServer
                         var eventOk = TryEnsureButtonMomentaryEvents(buttonName, tagName);
                         try
                         {
-                            LogDiag(McpServer.BindUnifiedHmiButtonPressedTag("HMI_RT_1", "Main", buttonName, tagName).Message ?? $"Bound {buttonName}");
+                            Program.LogDiag(McpServer.BindUnifiedHmiButtonPressedTag("HMI_RT_1", "Main", buttonName, tagName).Message ?? $"Bound {buttonName}");
                         }
                         catch (Exception ex)
                         {
-                            LogDiag($"Pressed-state fallback skipped for {buttonName}: {ex.InnerException?.Message ?? ex.Message}");
+                            Program.LogDiag($"Pressed-state fallback skipped for {buttonName}: {ex.InnerException?.Message ?? ex.Message}");
                         }
 
                         if (!eventOk)
@@ -1734,7 +1734,7 @@ namespace TiaMcpServer
                             if (TryApplyButtonAction(buttonName, pair[0], "set-bit", tagName) &&
                                 TryApplyButtonAction(buttonName, pair[1], "reset-bit", tagName))
                             {
-                                LogDiag($"Button event pair success: {buttonName}.{pair[0]}=set-bit, {buttonName}.{pair[1]}=reset-bit -> {tagName}");
+                                Program.LogDiag($"Button event pair success: {buttonName}.{pair[0]}=set-bit, {buttonName}.{pair[1]}=reset-bit -> {tagName}");
                                 return true;
                             }
                         }
@@ -1742,11 +1742,11 @@ namespace TiaMcpServer
                         if (TryApplyButtonAction(buttonName, "Tapped", "set-bit", tagName) ||
                             TryApplyButtonAction(buttonName, "Click", "set-bit", tagName))
                         {
-                            LogDiag($"Button event fallback success: {buttonName}.Tapped/Click set-bit -> {tagName}");
+                            Program.LogDiag($"Button event fallback success: {buttonName}.Tapped/Click set-bit -> {tagName}");
                             return true;
                         }
 
-                        LogDiag($"Button event unresolved for {buttonName}.");
+                        Program.LogDiag($"Button event unresolved for {buttonName}.");
                         return false;
                     }
 
@@ -1756,19 +1756,19 @@ namespace TiaMcpServer
                         {
                             var action = McpServer.EnsureUnifiedHmiButtonAction("HMI_RT_1", "Main", buttonName, eventType, actionKind, tagName);
                             var ok = action.Meta?["applyStatus"]?.ToString()?.Equals("applied", StringComparison.OrdinalIgnoreCase) == true;
-                            LogDiag($"{buttonName}.{eventType} {actionKind}: {(ok ? "OK" : "FAIL")} :: {action.Message}");
+                            Program.LogDiag($"{buttonName}.{eventType} {actionKind}: {(ok ? "OK" : "FAIL")} :: {action.Message}");
                             return ok;
                         }
                         catch (Exception ex)
                         {
-                            LogDiag($"{buttonName}.{eventType} {actionKind}: ERR :: {ex.InnerException?.Message ?? ex.Message}");
+                            Program.LogDiag($"{buttonName}.{eventType} {actionKind}: ERR :: {ex.InnerException?.Message ?? ex.Message}");
                             return false;
                         }
                     }
 
                     void TryBindDyn(string itemName, string propertyName, string tagName, string dataType, string plcTag)
                     {
-                        LogDiag(McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", "Main", itemName, propertyName, tagName, dataType, plcTag, "").Message ?? $"Bound {itemName}.{propertyName}");
+                        Program.LogDiag(McpServer.BindUnifiedHmiTagDynamization("HMI_RT_1", "Main", itemName, propertyName, tagName, dataType, plcTag, "").Message ?? $"Bound {itemName}.{propertyName}");
                     }
 
                     string BuildMotorUnifiedHmiDesignJson()
@@ -1971,7 +1971,7 @@ namespace TiaMcpServer
                 }
                 catch (Exception ex)
                 {
-                    LogDiag("HMI best-effort failed: " + ex);
+                    Program.LogDiag("HMI best-effort failed: " + ex);
                     hmiReadbackSummary = "HMI best-effort failed: " + ex.Message;
                 }
             }

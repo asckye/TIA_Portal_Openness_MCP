@@ -3279,8 +3279,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "03eae4e51f2cbc174bc90d5f1d942a17769d2937b76b410fde9347f991153a15",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2770,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2769,
       "cjk": 32,
       "literal": "\"没有完整PLC符号精确匹配；候选项只能用于人工/确定性规则确认，不能自动绑定。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3325,8 +3325,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "04f79ad28ac0323f1d787b537708591bfabe954754c7bff689e3ae710db38dcc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 305,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 304,
       "cjk": 20,
       "literal": "\"- 该探针只做离线 JSON/布局质量检查，不连接 TIA，不写项目。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3334,8 +3334,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "04fb0d1fd747769f2e6ab97d4a23e639cdb6706ec7fd4f0ede5f146c81ff1c68",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 1563,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs",
+      "line": 1562,
       "cjk": 2,
       "literal": "\"PLC_1/PROFINET 接口_1\"",
       "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes."
@@ -3343,8 +3343,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "0589d302468d54fdb7e9eff2345ce31f9369716eb6ed8c49a59af8c6e206ecdb",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 602,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 601,
       "cjk": 21,
       "literal": "\"- 只写 reports 目录下的临时探针文件，不修改工程、reference 或交付包。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3370,7 +3370,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "07b62959c6c7b83df082bbb728f84d1d65f6d32795feb09482130dbcfcc4ad0b",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 455,
       "cjk": 5,
       "literal": "\"计数值限幅\"",
@@ -3433,8 +3433,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "0cec316d779683345b1fb86eeab04e6b94b74d00646528f57741d47f1fe0a586",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1696,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1695,
       "cjk": 32,
       "literal": "\"参考项目包含完整Unified runtime结构，可用于提取画面分类、faceplate数量、图形资源和字体/样式基线。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3496,8 +3496,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "11b8b8958ffdb3d837d41cdc6b6eee67525d064bc42c6fc57e213fa543bca343",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2823,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2822,
       "cjk": 5,
       "literal": "\"HMI_Data.总运行使能\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3585,7 +3585,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "16f0e7e1b09f5e60b9a4be369170c14d705f8327b15b7562250ab1973f028759",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 369,
       "cjk": 14,
       "literal": "\"LAD电机控制功能块，包含中文块注释\"",
@@ -3639,8 +3639,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "1aacaa026bf260b5decf85d1b9c5ef667453d28042321c2f3b75f828cc140f20",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2781,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2780,
       "cjk": 23,
       "literal": "\"确认该变量允许 HMI 读写；命令类变量还需要事件安全策略。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3666,8 +3666,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "1b80467a70ebf22a6f6d512577947e9877bb3de43756881de2e77b917f169d85",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 601,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 600,
       "cjk": 17,
       "literal": "\"- 离线探针，不连接 TIA Portal，不打开工程，不导入 HMI 文件。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3676,7 +3676,7 @@
       "kind": "other-literal",
       "fingerprint": "1be0f716885efa68614fb9213224bc1dee1320e57500df69291beb2119b5a477",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 600,
+      "line": 599,
       "cjk": 27,
       "literal": "\"修复：运行 tia.cmd doctor --fix，或手动把当前 Windows 用户加入本地组 'Siemens TIA Openness'（lusrmgr.msc），注销重登后重启 AI 客户端。\"",
       "reason": "Existing startup LogDiag repair hint on stderr; frozen diagnostic text outside MCP responses."
@@ -3702,8 +3702,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "1fa5cba74d6c4426c874a1775f0eb948b9c3e21979d5335ef31618fe3b748baf",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2611,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2610,
       "cjk": 4,
       "literal": "\"PID语义相关\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3810,7 +3810,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "2480ccda5f14d7b59b200b01737588eeae6caa02c69e4b5e13cad5d36ed8de0d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 372,
       "cjk": 12,
       "literal": "\"SCL计数功能块，包含中文块注释\"",
@@ -3909,8 +3909,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "264a3d0ae695e95c19ebf5d5660c51eb3a8306caec0c66eafe90ff1f0765e1e7",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2608,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2607,
       "cjk": 6,
       "literal": "\"PID|PV|SP|Kp|Ti|OUT|输出|给定|反馈\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -3945,7 +3945,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "28bdd687fd1a0da10efe1645fae06a236584323f9df85affc8e3f148f126b800",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 428,
       "cjk": 29,
       "literal": "\"LAD最小中文注释功能块：演示块注释、网络标题和网络注释可导入并读回。\"",
@@ -4108,7 +4108,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "31cfa6e70d041c5f4b2261d6b2d9171792048440ded594ce8279f75343d97ac4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 622,
       "cjk": 67,
       "literal": "@\"<?xml version=\"\"1.0\"\" encoding=\"\"utf-8\"\"?>\n<Document>\n  <Engineering version=\"\"V21\"\" />\n  <DocumentInfo><Created>2000-01-01T00:00:00.0000000Z</Created><ExportSetting>None</ExportSetting><InstalledProducts /></DocumentInfo>\n  <SW.Blocks.FB ID=\"\"0\"\">\n    <AttributeList>\n      <Interface>\n        <Sections xmlns=\"\"http://www.siemens.com/automation/Openness/SW/Interface/v5\"\">\n          <Section Name=\"\"Input\"\"><Member Name=\"\"ManualEnable\"\" Datatype=\"\"Bool\"\" /></Section>\n          <Section Name=\"\"Output\"\" />\n          <Section Name=\"\"InOut\"\"><Member Name=\"\"Motor\"\" Datatype=\"\"&quot;UDT_Motor&quot;\"\" /></Section>\n          <Section Name=\"\"Static\"\" />\n        </Sections>\n      </Interface>\n      <MemoryLayout>Optimized</MemoryLayout>\n      <Name>FB1_LAD_Motor</Name>\n      <Namespace />\n      <Number>1</Number>\n      <ProgrammingLanguage>LAD</ProgrammingLanguage>\n      <SetENOAutomatically>false</SetENOAutomatically>\n    </AttributeList>\n    <ObjectList>\n      <MultilingualText ID=\"\"A1\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A2\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>LAD电机控制功能块，包含中文块注释、网络标题和网络说明。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n      <SW.Blocks.CompileUnit ID=\"\"1\"\" CompositionName=\"\"CompileUnits\"\">\n        <AttributeList>\n          <NetworkSource>\n            <FlgNet xmlns=\"\"http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5\"\">\n              <Parts>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"21\"\"><Symbol><Component Name=\"\"ManualEnable\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"22\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Start\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"23\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Run\"\" /></Symbol></Access>\n                <Part Name=\"\"Contact\"\" UId=\"\"24\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"25\"\" />\n                <Part Name=\"\"SCoil\"\" UId=\"\"26\"\" />\n              </Parts>\n              <Wires>\n                <Wire UId=\"\"27\"\"><Powerrail /><NameCon UId=\"\"24\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"28\"\"><IdentCon UId=\"\"21\"\" /><NameCon UId=\"\"24\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"29\"\"><NameCon UId=\"\"24\"\" Name=\"\"out\"\" /><NameCon UId=\"\"25\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"30\"\"><IdentCon UId=\"\"22\"\" /><NameCon UId=\"\"25\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"31\"\"><NameCon UId=\"\"25\"\" Name=\"\"out\"\" /><NameCon UId=\"\"26\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"32\"\"><IdentCon UId=\"\"23\"\" /><NameCon UId=\"\"26\"\" Name=\"\"operand\"\" /></Wire>\n              </Wires>\n            </FlgNet>\n          </NetworkSource>\n          <ProgrammingLanguage>LAD</ProgrammingLanguage>\n        </AttributeList>\n        <ObjectList>\n          <MultilingualText ID=\"\"A3\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A4\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>启动条件成立时置位运行状态。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n          <MultilingualText ID=\"\"A5\"\" CompositionName=\"\"Title\"\"><ObjectList><MultilingualTextItem ID=\"\"A6\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>启动运行自保持</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n        </ObjectList>\n      </SW.Blocks.CompileUnit>\n      <SW.Blocks.CompileUnit ID=\"\"2\"\" CompositionName=\"\"CompileUnits\"\">\n        <AttributeList>\n          <NetworkSource>\n            <FlgNet xmlns=\"\"http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v5\"\">\n              <Parts>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"21\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Stop\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"22\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Fault\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"23\"\"><Symbol><Component Name=\"\"ManualEnable\"\" /></Symbol></Access>\n                <Access Scope=\"\"LocalVariable\"\" UId=\"\"24\"\"><Symbol><Component Name=\"\"Motor\"\" /><Component Name=\"\"Run\"\" /></Symbol></Access>\n                <Part Name=\"\"Contact\"\" UId=\"\"25\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"26\"\" />\n                <Part Name=\"\"Contact\"\" UId=\"\"27\"\"><Negated Name=\"\"operand\"\" /></Part>\n                <Part Name=\"\"O\"\" UId=\"\"28\"\"><TemplateValue Name=\"\"Card\"\" Type=\"\"Cardinality\"\">3</TemplateValue></Part>\n                <Part Name=\"\"RCoil\"\" UId=\"\"29\"\" />\n              </Parts>\n              <Wires>\n                <Wire UId=\"\"30\"\"><Powerrail /><NameCon UId=\"\"25\"\" Name=\"\"in\"\" /><NameCon UId=\"\"26\"\" Name=\"\"in\"\" /><NameCon UId=\"\"27\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"31\"\"><IdentCon UId=\"\"21\"\" /><NameCon UId=\"\"25\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"32\"\"><IdentCon UId=\"\"22\"\" /><NameCon UId=\"\"26\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"33\"\"><IdentCon UId=\"\"23\"\" /><NameCon UId=\"\"27\"\" Name=\"\"operand\"\" /></Wire>\n                <Wire UId=\"\"34\"\"><NameCon UId=\"\"25\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in1\"\" /></Wire>\n                <Wire UId=\"\"35\"\"><NameCon UId=\"\"26\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in2\"\" /></Wire>\n                <Wire UId=\"\"36\"\"><NameCon UId=\"\"27\"\" Name=\"\"out\"\" /><NameCon UId=\"\"28\"\" Name=\"\"in3\"\" /></Wire>\n                <Wire UId=\"\"37\"\"><NameCon UId=\"\"28\"\" Name=\"\"out\"\" /><NameCon UId=\"\"29\"\" Name=\"\"in\"\" /></Wire>\n                <Wire UId=\"\"38\"\"><IdentCon UId=\"\"24\"\" /><NameCon UId=\"\"29\"\" Name=\"\"operand\"\" /></Wire>\n              </Wires>\n            </FlgNet>\n          </NetworkSource>\n          <ProgrammingLanguage>LAD</ProgrammingLanguage>\n        </AttributeList>\n        <ObjectList>\n          <MultilingualText ID=\"\"A7\"\" CompositionName=\"\"Comment\"\"><ObjectList><MultilingualTextItem ID=\"\"A8\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>停止、故障或手动使能取消时复位运行状态。</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n          <MultilingualText ID=\"\"A9\"\" CompositionName=\"\"Title\"\"><ObjectList><MultilingualTextItem ID=\"\"AA\"\" CompositionName=\"\"Items\"\"><AttributeList><Culture>zh-CN</Culture><Text>停止故障复位</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText>\n        </ObjectList>\n      </SW.Blocks.CompileUnit>\n    </ObjectList>\n  </SW.Blocks.FB>\n</Document>\"",
@@ -4270,8 +4270,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "3fc0217394002fc74f361a692ef97f3a2ccdbdfdceba8f18f2c9f639ba998020",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2562,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2561,
       "cjk": 8,
       "literal": "\"完整PLC符号精确匹配\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4323,7 +4323,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "43908aef574e54015bb4bf73b5ea1950c35e82a9ec6f4956bc8a7fbf76171e4d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 434,
       "cjk": 6,
       "literal": "\"启动保持回路\"",
@@ -4395,8 +4395,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "46a8fc531bd1afa090770a0b12ae1bfd9f590700ddf05a97871eeaf1af67c452",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1702,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1701,
       "cjk": 25,
       "literal": "\"HMI Template Suite全局库目录存在，下一步应使用TIA Openness只读ProbeGlobalLibrary验证可见的库对象层级。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4440,8 +4440,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "47eb459b288d1c0b9da3fef649bd40cb7d6ef6419711c1890c2ad1ce63a9258a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2568,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2567,
       "cjk": 6,
       "literal": "\"叶子名称匹配\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4449,8 +4449,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "47edd97fa32756e460c8c355010cffcf76e48475f8c9ccdf29ad3f2444671b88",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 98,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs",
+      "line": 97,
       "cjk": 1,
       "literal": [
         "$",
@@ -4493,8 +4493,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "49c6061092c6252d624f19ee90f898fa4891ad4e668852eae3a60959a1428edc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2580,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2579,
       "cjk": 7,
       "literal": "\"名称关键词重合:\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4520,8 +4520,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "4a57cbb5bfca1c79251efa747febf388335215610fa93ae06468f4e0a3164c7a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.HmiTemplates.cs",
-      "line": 1466,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs",
+      "line": 1465,
       "cjk": 27,
       "literal": "\"中文说明：此变量来自显式映射文件，已先通过离线 PLC 导出符号预检。\"",
       "reason": "Existing Chinese explanation stored in an explicit HMI mapping artifact."
@@ -4529,8 +4529,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "4be13face7eb4e54494b7ede93dad66ec4a01b84a8121f013713378dd7264ace",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2722,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2721,
       "cjk": 34,
       "literal": "\"本文件是显式映射文件骨架。只有 MappedPlcTag 非空的项才允许进入后续同步预检和绑定验证。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4583,8 +4583,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "50ecd0e5b540eebcf38a25fdec6a2608b95aab517abd561856bfff6e5b8706de",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2818,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2817,
       "cjk": 4,
       "literal": "\"HMI_Data.大车向后\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4637,8 +4637,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "565b086f9c170b6717d715808ff93c58db107c0c94bc8cedba5f8de62d72202f",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2773,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2772,
       "cjk": 33,
       "literal": "\"中文说明：该映射由确定性项目规则写入，已确认完整 PLC 符号存在且数据类型兼容。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4646,7 +4646,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "569313528448230f801aebd0009e1a683a0ba682b38d92723ae39d15455889fb",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 537,
       "cjk": 12,
       "literal": "\"故障状态输入，触发运行复位\"",
@@ -4664,8 +4664,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "58ee483f4f1a91ea7340ca28285f07f86b4f3321502588b14a859d392213fcc5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2817,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2816,
       "cjk": 4,
       "literal": "\"HMI_Data.大车向前\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4673,8 +4673,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "58ee483f4f1a91ea7340ca28285f07f86b4f3321502588b14a859d392213fcc5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2824,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2823,
       "cjk": 4,
       "literal": "\"HMI_Data.大车向前\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4727,8 +4727,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1418,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1417,
       "cjk": 1,
       "literal": "\"5T车\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4736,8 +4736,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "5a0e71006abaa04a2be5cfc408ffb1c81772c901fa72cb6dc870cbb5ed74bbcd",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2175,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2174,
       "cjk": 1,
       "literal": "\"5T车\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4763,7 +4763,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "5b039cbd1bbfe85d9aedf9fa592a2cce640ccdd1f0af93058296df9ff00fbf83",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 412,
       "cjk": 12,
       "literal": "\"停止按钮，优先切断运行保持\"",
@@ -4772,7 +4772,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "5b039cbd1bbfe85d9aedf9fa592a2cce640ccdd1f0af93058296df9ff00fbf83",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 535,
       "cjk": 12,
       "literal": "\"停止按钮，优先切断运行保持\"",
@@ -4790,7 +4790,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "5bb3215fbb6b2303cf7fd1593b8bd30c7d80dfb67938532a4ee98daed07dba80",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 454,
       "cjk": 21,
       "literal": "\"SCL最小中文注释功能：演示SCL网络中文标题和中文注释。\"",
@@ -4808,8 +4808,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "5ccbf53071c51e88649ad2798327b5616192b2527d807601db8bd199cf611b90",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 306,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 305,
       "cjk": 39,
       "literal": "\"- 重叠、密度和文字溢出属于启发式警告；越界、重复名称、无效尺寸和执行 JSON 生成失败属于阻断错误。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4817,8 +4817,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "5d3b66cc29904afc669f356a5a2cffa501e03b05960cc79ec8813154226acb8e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2586,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2585,
       "cjk": 6,
       "literal": "\"数据类型兼容\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -4943,8 +4943,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "661592280b7c68e82f06470c3e07cc6cfe1c94ca65ca5282100868ca5bafad46",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 408,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 407,
       "cjk": 21,
       "literal": "\"只写 reports 目录下的临时探针文件，不修改工程、reference 或交付包。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5060,7 +5060,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "6c309a00087a9474b894a3fcc3acc102ee720681528c6bf812ac6eca42303fa5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 370,
       "cjk": 7,
       "literal": "\"启动运行自保持\"",
@@ -5286,7 +5286,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "7cfb5efc30a407ca5ee971e01c858481b4d42e1e4f87e8fa0dd1a949c86bb051",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 411,
       "cjk": 11,
       "literal": "\"启动按钮，HMI 或现场按钮写入\"",
@@ -5384,8 +5384,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "824347c1b76ddd170431371cfca10768d1dee3435357a4c9dc90affedc1256e0",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2723,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2722,
       "cjk": 23,
       "literal": "\"候选 Candidates 不能自动绑定，必须人工确认或由确定性规则写入 MappedPlcTag。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5428,8 +5428,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "85c0cd474be0aee8372a75a24aaea523ba2bf05bf5c95b54ba6683ff7a616937",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2774,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2773,
       "cjk": 25,
       "literal": "\"完整 PLC 符号已精确存在，可进入同步预检和临时项目绑定验证。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5464,8 +5464,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "894dc6606e553fddd305e2d3abf671a614147d7731e4e5eac36f16e34afe2809",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 407,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 406,
       "cjk": 17,
       "literal": "\"离线探针：不连接 TIA Portal，不打开工程，不导入 HMI 文件。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5473,8 +5473,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "897c7b9c950f05951d75efa3a3b3c057c601e8bf819b9d9dc1e730361f9a8ee1",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2780,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2779,
       "cjk": 13,
       "literal": "\"确认数据类型与 HMI 控件用途兼容。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5581,8 +5581,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "918faa89ec3909e53d313675615265a3dcae93f8d78b0be4916cbbbf4ca0d063",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1687,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1686,
       "cjk": 39,
       "literal": "\"全局库应通过ProbeGlobalLibrary只读打开并列出MasterCopies/Types后，再决定是否增加导入工具；未完成Openness读回前不要承诺批量导入。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5636,7 +5636,7 @@
       "kind": "other-literal",
       "fingerprint": "957b1190d5747e1c00003ea70373c62e8f957ee8a53b96379fc2378c2337aeab",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 378,
+      "line": 377,
       "cjk": 45,
       "literal": [
         "$",
@@ -5715,8 +5715,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "99c8b1b48b451913aba5cb0029c3a6dd118ce6ba1d0ebd32bccf59438d9a4d04",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 96,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs",
+      "line": 95,
       "cjk": 5,
       "literal": "\"启动流水灯\"",
       "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes."
@@ -5840,8 +5840,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "a3310a231f62154442bb3e710c98217bbcbf5d8bbcdb33e093e44fab8a304f5b",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 434,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs",
+      "line": 433,
       "cjk": 5,
       "literal": "\"主画面_优化.xml\"",
       "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes."
@@ -5902,7 +5902,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "a7e2cfe4cbe68197d27f85c394727145ba6e27ed79c06f547d04e8136caabd2e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 434,
       "cjk": 17,
       "literal": "\"按下启动并且没有停止时，置位运行状态。\"",
@@ -5956,7 +5956,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "ab8815054d8acc7fb9449d27b8d914c54d30a9dd2d37e7e76c7983c53409f8f0",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 538,
       "cjk": 13,
       "literal": "\"一秒节拍累计值，供HMI数值框显示\"",
@@ -5965,8 +5965,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "ac61e9e4c20ad9d51360dd7a242729610934e76b8a65bef4791b64d85fe1ce6e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2601,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2600,
       "cjk": 10,
       "literal": "\"Axis|Gantry|Crane|大车|小车|行走|速度|位置\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -5983,8 +5983,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "ad92297458e09af0b7810db49beda95e821b18e0a015f1d97753d00d66d9001e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1690,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1689,
       "cjk": 35,
       "literal": "\"HMI控件绑定必须同时检查HMI变量和PLC变量/DB成员存在，避免出现只绑定HMI侧、PLC侧无变量的假同步。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6019,7 +6019,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "b0998f13b0e2f3442535af55991c9e521e509a6e324d6611832293c5a07fb5c8",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 371,
       "cjk": 13,
       "literal": "\"启动条件成立时置位运行状态\"",
@@ -6163,8 +6163,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "b978c10a10eea4abff869ba48ffb4849391472b6f592f75524de9baddc7ffd7a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1686,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1685,
       "cjk": 41,
       "literal": "\"HMI画面优化应优先抽象为JSON设计模板，不直接复制runtime RDF二进制文件；RDF只作为命名、布局复杂度和控件类型参考。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6225,8 +6225,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "bea7a94caff7e2ba7a0e1dc50b2c00e6929cae6301717419647abe3fda3f4a30",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2591,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2590,
       "cjk": 7,
       "literal": "\"数据类型不匹配\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6234,8 +6234,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "c0715d716db1d8e91e640baedd375f28d7b91516674a59ff60287cb96b211fc0",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1688,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1687,
       "cjk": 31,
       "literal": "\"在线监控只允许读取当前变量状态；监控表对象不得在线新增、删除或修改。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6269,8 +6269,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "c389b038c40d6d63dc39d0266f225c63a2478300d3558ac2be1623c4d110244f",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2597,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2596,
       "cjk": 4,
       "literal": "\"HMI相关DB/变量\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6278,8 +6278,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "c7b029c4bf9d8c9d454292d0a3c141679355c3da661014c54dc0e849da4783e4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2816,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2815,
       "cjk": 4,
       "literal": "\"HMI_Data.大车复位\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6440,8 +6440,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "ceedefa9809b1cceb61773e4b8cb541502ee75a9255269da2bd37976711db193",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 615,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 614,
       "cjk": 22,
       "literal": "\"- 离线自检通过后，仍需导入临时 Classic/Basic HMI 工程，读回 tags/items/bindings/events 并编译诊断。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6458,7 +6458,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "d135d805b730cc720f0c4acbedb5768c02a5671ff5eff29e7be6f7bbcd1052e7",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 368,
       "cjk": 11,
       "literal": "\"启动按钮，HMI或现场按钮写入\"",
@@ -6467,7 +6467,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "d135d805b730cc720f0c4acbedb5768c02a5671ff5eff29e7be6f7bbcd1052e7",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 534,
       "cjk": 11,
       "literal": "\"启动按钮，HMI或现场按钮写入\"",
@@ -6494,8 +6494,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "d1edc529005b75b88b573067444fcdd977f487d3a796c337c1c60703a3240ecb",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2604,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2603,
       "cjk": 7,
       "literal": "\"轴/运动语义相关\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6521,8 +6521,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "d2bc149bbe73d83ebf66e4a4eb8981be781c77d33860a55461593b6eb50b2d18",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2775,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2774,
       "cjk": 18,
       "literal": "\"请确认候选后填写 MappedPlcTag；未填写时不会用于绑定。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6548,8 +6548,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "d47aec1fc5f9e81f24cea08b4b891811f6dc5250fd935b3faa0456b94ec6874c",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2573,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2572,
       "cjk": 6,
       "literal": "\"HMI名称叶子匹配\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6611,7 +6611,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "da69974e2fd678896978054317c89507bce8517659033a578e3638051a63c3df",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 374,
       "cjk": 10,
       "literal": "\"定时器到达后计数加一\"",
@@ -6665,8 +6665,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "ddbbd38bdfda37e40f8da2875d38d483b0d51d77e07e5d091ceb69b52861891a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2825,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2824,
       "cjk": 6,
       "literal": "\"HMI_Data.大车频率给定\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6692,7 +6692,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "df4655f09d12aac30c9993523301173ad07521a3080ea5a772bb154df65e5d4d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 413,
       "cjk": 12,
       "literal": "\"运行状态输出，供HMI指示灯显示\"",
@@ -6701,7 +6701,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "df4655f09d12aac30c9993523301173ad07521a3080ea5a772bb154df65e5d4d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 536,
       "cjk": 12,
       "literal": "\"运行状态输出，供HMI指示灯显示\"",
@@ -6755,8 +6755,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "e3cb8f336f1c3c3767ea57fdd913bd115abf29c7ca3f782c4689d44f2526793d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2724,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2723,
       "cjk": 22,
       "literal": "\"确定性规则必须命中完整 PLC 符号、数据类型兼容，并记录 MappingSource/DeterministicRule。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6764,7 +6764,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "e406d3b950ffee3b69fb08ec9e02952854aa9c2488a844075fc5981ef11991b5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 858,
       "cjk": 44,
       "literal": [
@@ -6816,8 +6816,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "e52d89dd7c59adc8d0e5d85d0780591c2c810964f4dd4881de800dfa68057ed9",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2779,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2778,
       "cjk": 19,
       "literal": "\"确认 PLC 符号完整路径存在，不能只确认根 DB 或块名。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6843,8 +6843,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "e8ccf9575a2a12e3c9228c78c0beddc6c5ca04cb9d2f7a658c37922d86d50af7",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2782,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 2781,
       "cjk": 29,
       "literal": "\"确认映射来源是人工确认或确定性项目规则，不是候选分数自动选择。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6870,8 +6870,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "eaee992da5d61ea5c8d58cc2a56e533aea6e68873637ca15b97c08d2ae9679ef",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1689,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 1688,
       "cjk": 27,
       "literal": "\"强制表和强制相关服务保持不可见、不可调用、不可通过反射绕过。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
@@ -6932,7 +6932,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "f2f28bfc7f594ca14b027cb1e890b0647718a3330b95921cef5c960f36143d84",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 373,
       "cjk": 6,
       "literal": "\"一秒节拍计数\"",
@@ -6977,8 +6977,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "f4f913a39e732e7ad630093774c2f6dcb3c3827b4ddd537ce3f7d9fb42697eb4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 95,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs",
+      "line": 94,
       "cjk": 5,
       "literal": "\"MCP 流水灯验证\"",
       "reason": "Existing TIA fixture names, interface paths and HMI label data for CLI probes."
@@ -7130,7 +7130,7 @@
     {
       "kind": "other-literal",
       "fingerprint": "fcf500d09a59fa523b4773616be593527cb48ccf00c7193cbf4cba3aa63c0407",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/PlcHmiSyncXml.cs",
       "line": 455,
       "cjk": 18,
       "literal": "\"将输入计数限制在0到100之间，避免HMI显示越界值。\"",
@@ -7139,8 +7139,8 @@
     {
       "kind": "other-literal",
       "fingerprint": "fd14f40d4e02d2b24e4ad70d431b761af9562227a64b0dc80d50cc494b4ef6f0",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 409,
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs",
+      "line": 408,
       "cjk": 25,
       "literal": "\"验证 HMI 控件动态绑定和按钮事件引用的 HMI tag 是否在变量表 XML 中声明。\"",
       "reason": "Existing generated report/mapping artifact text and TIA symbol/path data."
