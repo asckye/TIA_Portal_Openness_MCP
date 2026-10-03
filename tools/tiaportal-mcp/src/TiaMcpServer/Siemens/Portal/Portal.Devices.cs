@@ -346,7 +346,7 @@ namespace TiaMcpServer.Siemens
                     var it = tup.Item1;
                     string[] names;
                     try { names = it.GetAttributeInfos().Select(x => x.Name ?? string.Empty).ToArray(); }
-                    catch { continue; }
+                    catch { /* swallow(enumerate-optional): Skip device items whose attribute inventory is unavailable while locating PUT/GET support. */ continue; }
                     var match = names.FirstOrDefault(n => NormalizeAttrName(n).Contains("putget"));
                     if (!string.IsNullOrEmpty(match)) return (it, match);
                 }
@@ -377,7 +377,7 @@ namespace TiaMcpServer.Siemens
                 };
 
             object? val = null;
-            try { val = item.GetAttribute(attrName); } catch { }
+            try { val = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): An unavailable PUT/GET value leaves the existing null readback for this CPU. */ }
             return new JsonObject
             {
                 ["found"] = true,
@@ -408,13 +408,13 @@ namespace TiaMcpServer.Siemens
                                   "CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication', then download hardware."
                 };
 
-            object? before = null; try { before = item.GetAttribute(attrName); } catch { }
+            object? before = null; try { before = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
             try { item.SetAttribute(attrName, enable); }
             catch (Exception ex)
             {
                 return new JsonObject { ["ok"] = false, ["device"] = device.Name, ["attributeName"] = attrName, ["message"] = $"SetAttribute failed: {ex.Message}" };
             }
-            object? after = null; try { after = item.GetAttribute(attrName); } catch { }
+            object? after = null; try { after = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
 
             return new JsonObject
             {
@@ -440,7 +440,7 @@ namespace TiaMcpServer.Siemens
             var device = GetDevice(devicePath);
             if (device == null) return new JsonObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
 
-            // 2.7.46: several alternatives separated by '|' or ',' (real project: "Ip|Name|Cycle" matched nothing as one substring).
+            // Match alternatives separated by '|' or ',' independently instead of treating them as one substring.
             var filters = (nameFilter ?? string.Empty).Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(NormalizeAttrName).Where(f => f.Length > 0).ToArray();
             var hasFilter = filters.Length > 0;
 
@@ -456,7 +456,7 @@ namespace TiaMcpServer.Siemens
                     var it = tup.Item1;
 
                     System.Collections.Generic.IList<EngineeringAttributeInfo>? infos = null;
-                    try { infos = it.GetAttributeInfos(); } catch { }
+                    try { infos = it.GetAttributeInfos(); } catch { /* swallow(probe-optional): Unavailable attributes retain the existing skipped item or read-error evidence in the inventory. */ }
                     if (infos == null || infos.Count == 0) continue;
 
                     var attrsArr = new JsonArray();
@@ -468,7 +468,7 @@ namespace TiaMcpServer.Siemens
 
                         var access = TryGetAttributeInfoAccess(info!);
                         object? val = null; bool readErr = false;
-                        try { val = it.GetAttribute(name); } catch { readErr = true; }
+                        try { val = it.GetAttribute(name); } catch { /* swallow(probe-optional): Unavailable attributes retain the existing skipped item or read-error evidence in the inventory. */ readErr = true; }
 
                         var isWritable = access?.IndexOf("write", StringComparison.OrdinalIgnoreCase) >= 0
                                          || access?.IndexOf("readwrite", StringComparison.OrdinalIgnoreCase) >= 0;
@@ -523,7 +523,7 @@ namespace TiaMcpServer.Siemens
                         if (v != null) return pn + "=" + v;
                     }
                 }
-                catch { }
+                catch { /* swallow(probe-optional): Access metadata varies by SDK; continue with the next supported property name. */ }
             }
             return null;
         }
@@ -1160,7 +1160,7 @@ namespace TiaMcpServer.Siemens
                 var count = TryGetPropertyValue(service, "Count");
                 if (count != null) parts.Add("Count=" + count);
             }
-            catch { }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
 
             try
             {
@@ -1176,7 +1176,7 @@ namespace TiaMcpServer.Siemens
                     parts.Add("Nodes=[" + string.Join(", ", nodeInfos) + "]");
                 }
             }
-            catch { }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
 
             try
             {
@@ -1188,7 +1188,7 @@ namespace TiaMcpServer.Siemens
                     .ToList();
                 if (createMethods.Count > 0) parts.Add("CreateMethods=[" + string.Join(" | ", createMethods) + "]");
             }
-            catch { }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
 
             try
             {
@@ -1206,7 +1206,7 @@ namespace TiaMcpServer.Siemens
                     .ToList();
                 if (methods.Count > 0) parts.Add("NetworkMethods=[" + string.Join(" | ", methods) + "]");
             }
-            catch { }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
 
             return parts.Count == 0 ? "<no summary>" : string.Join("; ", parts);
         }

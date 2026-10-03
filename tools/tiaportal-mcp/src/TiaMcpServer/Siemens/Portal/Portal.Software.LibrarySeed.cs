@@ -94,8 +94,7 @@ namespace TiaMcpServer.Siemens
                     };
                 }
 
-                // 2.7.46: a library the user (or ManageGlobalLibrary) already opened is reused and NOT closed afterwards - the probe
-                // closed the maintainer's open library on the real project.
+                // Reuse a library already opened by the user or ManageGlobalLibrary and leave it open afterwards.
                 bool wasAlreadyOpen = false;
                 object? library = FindOpenGlobalLibraryByFile(globalLibraries, resolved!);
                 string? openError = null;
@@ -228,8 +227,7 @@ namespace TiaMcpServer.Siemens
                 var before = ListNamedChildren(screenItems, 200);
                 raw["screenItemsBefore"] = ToJsonArray(before);
 
-                // 2.7.46: a library the user (or ManageGlobalLibrary) already opened is reused and NOT closed afterwards - the probe
-                // closed the maintainer's open library on the real project.
+                // Reuse a library already opened by the user or ManageGlobalLibrary and leave it open afterwards.
                 bool wasAlreadyOpen = false;
                 object? library = FindOpenGlobalLibraryByFile(globalLibraries, resolved!);
                 string? openError = null;
@@ -369,7 +367,7 @@ namespace TiaMcpServer.Siemens
                     if (!string.IsNullOrEmpty(full) && string.Equals(Path.GetFullPath(full!), Path.GetFullPath(libraryFile), StringComparison.OrdinalIgnoreCase)) return candidate;
                 }
             }
-            catch { }
+            catch { /* swallow(probe-optional): If open-library enumeration is unavailable, retain the existing explicit open attempt. */ }
             return null;
         }
 
@@ -686,7 +684,7 @@ namespace TiaMcpServer.Siemens
                 return ex.Types.Where(t => t != null)!;
             }
             catch
-            {
+            { /* swallow(probe-optional): Assemblies without readable type metadata contribute no extension-method candidates. */
                 return Array.Empty<Type>();
             }
         }
@@ -980,13 +978,13 @@ namespace TiaMcpServer.Siemens
                 var close = obj.GetType().GetMethod("Close", BindingFlags.Public | BindingFlags.Instance, null, Type.EmptyTypes, null);
                 close?.Invoke(obj, null);
             }
-            catch { }
+            catch { /* swallow(cleanup): Library cleanup must not replace the completed probe or import result. */ }
 
             try
             {
                 if (obj is IDisposable d) d.Dispose();
             }
-            catch { }
+            catch { /* swallow(cleanup): Library cleanup must not replace the completed probe or import result. */ }
         }
 
         private static List<string> TryListNamesFromCollection(object root, string[] propertyHints, string finalCollectionNameHint)

@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - Library
@@ -211,8 +210,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                // 必须显式传检查委托：不传时 "execution JSON shape" 这项检查会退化成恒真的同义反复，
-                // 工具描述里承诺的检查等于空转，模板报错也照样返回 ok。
+                // 显式传入检查委托，确保 execution JSON shape 检查会验证模板并报告错误。
                 var data = HmiTemplateLayoutAnalyzer.AnalyzeDirectory(templateDirectory, HmiTemplateLayoutAnalyzer.ExecutionJsonBuilds);
                 var ok = data["ok"]?.GetValue<bool>() == true;
                 return new ResponseJsonReport

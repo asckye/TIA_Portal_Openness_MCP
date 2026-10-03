@@ -13,9 +13,10 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        // 2.7.53 (real machine, 项目1): TIA V21 refuses the first hardware download of an S7-1500 FW 2.9 CPU whose access level is above
-        // "Full access" without a full-access password, or whose confidential PLC configuration data has no password; nothing in the
-        // roster could change either. Official pages "Access level setting" and "Managing PLC Master Secret in PLCs": both live as
+        // Native observation: TIA V21, original date not recorded; see docs/reference/real-machine-ledger.md.
+        // TIA refuses the first hardware download of an S7-1500 FW 2.9 CPU whose access level is above
+        // "Full access" without a full-access password, or whose confidential PLC configuration data has no password. The
+        // CPU protection API controls both. Official pages "Access level setting" and "Managing PLC Master Secret in PLCs": both live as
         // HW features on the CPU DeviceItem (PlcAccessLevelProvider / PlcMasterSecretConfigurator). Passwords go in as SecureString and
         // are never echoed; the readable state (access level enum, MasterSecretConfiguration enum) is read back after every change.
         public ResponseMessage ManagePlcProtection(string devicePathJson, string itemPathJson = "[]", string action = "read", string accessLevel = "",
@@ -140,7 +141,7 @@ namespace TiaMcpServer.Siemens
             if (control != null)
             {
                 try { state["accessControl"] = control.PlcAccessControlConfiguration.ToString(); } catch (Exception ex) { state["accessControlError"] = ex.Message; }
-                try { state["umcServerAddress"] = control.UmcServerAddress; } catch (Exception) { /* not configured */ }
+                try { state["umcServerAddress"] = control.UmcServerAddress; } catch (Exception) { /* swallow(probe-optional): The UMC server address is absent when access control is not configured. */ /* not configured */ }
             }
             state["accessControlProviderPresent"] = control != null;
             state["meaning"] = "masterSecret: None = 'Protect confidential PLC configuration data' unchecked; WithoutPassword = checked without a password (TIA's hardware compile refuses the download); WithPassword / WithPasswordAllDataProtection = password configured.";
@@ -161,8 +162,8 @@ namespace TiaMcpServer.Siemens
             _ => "read only."
         };
 
-        // 2.7.53: the hardware compile TIA runs before a download ("硬件配置编译完成，但出现错误") had no tool of its own - CompileSoftware
-        // only compiles the program. ICompilable on the Device (or a given item) is what the TIA UI's "Compile > Hardware" does.
+        // Hardware compilation runs before a download; CompileSoftware only compiles the program.
+        // ICompilable on the Device (or a given item) is what the TIA UI's "Compile > Hardware" does.
         public ResponseMessage CompileDevice(string devicePathJson, string itemPathJson = "[]")
             => RunHmiStepTool("CompileDevice", meta => {
                 var owner = ExactEngineeringHardware(devicePathJson, itemPathJson);

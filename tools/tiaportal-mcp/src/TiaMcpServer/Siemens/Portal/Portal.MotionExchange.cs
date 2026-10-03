@@ -39,7 +39,7 @@ namespace TiaMcpServer.Siemens
                 if (!new[] { "read", "connect", "disconnect" }.Contains(action)) throw new ArgumentException("action must be one of: read/connect/disconnect (case-sensitive).");
                 bool write=action!="read"&&!dryRun;using var access=write ? AcquireHmiEditAccess() : null;
                 var target=ExactTechnology(softwarePath,objectPath,write);
-                // 2.7.36: typed AxisHardwareConnectionProvider (ActorInterface / SensorInterface[i] : AxisEncoderHardwareConnectionInterface, TorqueInterface : TorqueHardwareConnectionInterface).
+                // Typed AxisHardwareConnectionProvider (ActorInterface / SensorInterface[i] : AxisEncoderHardwareConnectionInterface, TorqueInterface : TorqueHardwareConnectionInterface).
                 global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider service=(target as global::Siemens.Engineering.IEngineeringServiceProvider)?.GetService<global::Siemens.Engineering.SW.TechnologicalObjects.Motion.AxisHardwareConnectionProvider>()
                     ?? throw new NotSupportedException("AxisHardwareConnectionProvider is not provided by "+target.GetType().Name+" (axis technology objects only).");
                 object selected;
