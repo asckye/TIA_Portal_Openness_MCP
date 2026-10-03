@@ -15,13 +15,13 @@ namespace TiaMcp.PlcFoundation
         {
             Check();
             try { return bindingSnapshots.Observe(()=>CaptureBindingObservation(bindingAttachmentAnchor)); }
-            catch(Exception) { return bindingSnapshots.Fail("BindingObservationFailed"); }
+            catch(Exception) /* swallow(native-fallback): failed binding observation faults the snapshot so v2 admission remains blocked */ { return bindingSnapshots.Fail("BindingObservationFailed"); }
         }
         public BindingObservation ReadBindingObservation()
         {
             Check();
             try { return bindingSnapshots.ReadObservation(()=>CaptureBindingObservation(bindingAttachmentAnchor)); }
-            catch(Exception) { return BindingObservation.Unknown("BindingObservationFailed"); }
+            catch(Exception) /* swallow(native-fallback): failed binding reads return Unknown instead of claiming a verified project identity */ { return BindingObservation.Unknown("BindingObservationFailed"); }
         }
         private BindingObservation CaptureBindingObservation(BindingProcessObservation? anchor) =>
             BindingObservationPolicy.Capture(new BoundProjectObservationSource(this),bindingProcesses,anchor);
@@ -58,7 +58,7 @@ namespace TiaMcp.PlcFoundation
                 bindingPendingAnchor=null; bindingPendingChange=null;
                 return result;
             }
-            catch(Exception) { return FailBindingSnapshotTransition(); }
+            catch(Exception) /* swallow(native-fallback): failed lifecycle observation clears pending anchors and faults the binding snapshot */ { return FailBindingSnapshotTransition(); }
         }
         public BindingSnapshotObservation FailBindingSnapshotTransition()
         {

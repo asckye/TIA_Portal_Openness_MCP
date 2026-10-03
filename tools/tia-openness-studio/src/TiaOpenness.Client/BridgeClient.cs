@@ -64,7 +64,7 @@ namespace TiaOpenness.Client
                 if (_disposed) return false;
                 if (_mock != null) return true;
                 try { return _process != null && !_process.HasExited; }
-                catch (InvalidOperationException) { return false; }
+                catch (InvalidOperationException) /* swallow(env-probe): a process object without an associated process means the bridge is not running */ { return false; }
             }
         }
 
@@ -300,7 +300,7 @@ namespace TiaOpenness.Client
                     if (!_process.WaitForExit(5000)) _process.Kill();
                 }
             }
-            catch (Exception)
+            catch (Exception) /* swallow(teardown): bridge exit can race stdin close or kill; the finally block still releases the process handle */
             {
                 // Nothing useful to do while tearing down.
             }

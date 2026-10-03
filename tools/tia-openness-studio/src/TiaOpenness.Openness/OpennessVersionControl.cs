@@ -68,7 +68,7 @@ namespace TiaOpenness.Openness
             {
                 return (project as IEngineeringServiceProvider)?.GetService<VersionControlInterface>() != null;
             }
-            catch (Exception)
+            catch (Exception) /* swallow(probe-optional): a project without an accessible VersionControlInterface service is reported as VCI unavailable */
             {
                 return false;
             }
@@ -585,7 +585,7 @@ namespace TiaOpenness.Openness
         {
             var count = 0;
             try { count = Mappings(workspace).Count(); }
-            catch (Exception) { count = 0; }
+            catch (Exception) /* swallow(enumerate-optional): unreadable workspace mappings leave the descriptive mapping count at zero */ { count = 0; }
 
             return new WorkspaceInfo
             {
@@ -609,7 +609,7 @@ namespace TiaOpenness.Openness
         private static string SafeLanguage(Workspace workspace)
         {
 #if STUDIO_VCI_MODERN
-            try { return workspace.WorkspaceLanguage?.ToString() ?? "-"; } catch (Exception) { return "-"; }
+            try { return workspace.WorkspaceLanguage?.ToString() ?? "-"; } catch (Exception) /* swallow(native-fallback): unreadable workspace language uses the existing dash placeholder in the workspace description */ { return "-"; }
 #else
             return "-";
 #endif
@@ -618,7 +618,7 @@ namespace TiaOpenness.Openness
         private static string SafeObjectName(MappedObject mapped)
         {
 #if STUDIO_VCI_MODERN
-            try { return mapped.FileNameWithoutExtension ?? "?"; } catch (Exception) { return "?"; }
+            try { return mapped.FileNameWithoutExtension ?? "?"; } catch (Exception) /* swallow(native-fallback): unreadable mapped-object names use the question-mark label in status and sync progress results */ { return "?"; }
 #else
             return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
 #endif
@@ -630,11 +630,11 @@ namespace TiaOpenness.Openness
             try
             {
                 var directory = string.Empty;
-                try { directory = mapped.DirectoryPath?.FullName ?? string.Empty; } catch (Exception) { }
+                try { directory = mapped.DirectoryPath?.FullName ?? string.Empty; } catch (Exception) /* swallow(native-fallback): unreadable mapping directory metadata leaves the filename-only status display available */ { }
                 var name = mapped.FileNameWithoutExtension ?? string.Empty;
                 return directory.Length == 0 ? name : Path.Combine(directory, name);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(native-fallback): unreadable mapping file metadata uses the question-mark placeholder in the status report */
             {
                 return "?";
             }
@@ -642,7 +642,7 @@ namespace TiaOpenness.Openness
 
         private static string SafeFormat(MappedObject mapped)
         {
-            try { return mapped.FileFormat?.ToString(); } catch (Exception) { return null; }
+            try { return mapped.FileFormat?.ToString(); } catch (Exception) /* swallow(native-fallback): unreadable mapping format is omitted from the status report */ { return null; }
         }
 
 #else

@@ -104,7 +104,7 @@ namespace TiaMcpConfigurator
                 string registry = UninstallEntry(RegistryKeywords(profile.Client));
                 if (registry != null) found.Add("已安装程序 " + registry);
             }
-            catch (Exception) { }
+            catch (Exception) /* swallow(env-probe): client detection is advisory; retain evidence collected before a local installation probe failed */ { }
             profile.Detected = found.Count > 0;
             profile.Evidence = found.Count > 0 ? String.Join("；", found) : "本机没有它的配置目录、可执行文件、安装目录或卸载项（仍可写入，安装后即生效）";
         }
@@ -167,7 +167,7 @@ namespace TiaMcpConfigurator
                 foreach (string ext in extensions)
                 {
                     try { string candidate = System.IO.Path.Combine(trimmed, name + ext); if (File.Exists(candidate)) return candidate; }
-                    catch (Exception) { }
+                    catch (Exception) /* swallow(env-probe): an invalid or inaccessible PATH candidate does not prevent checking the remaining executable locations */ { }
                 }
             }
             return null;
@@ -198,7 +198,7 @@ namespace TiaMcpConfigurator
                         }
                     }
                 }
-                catch (Exception) { }
+                catch (Exception) /* swallow(env-probe): an inaccessible uninstall registry root does not prevent checking the remaining roots */ { }
             }
             return null;
         }

@@ -112,7 +112,7 @@ namespace TiaMcp.PlcFoundation
                     if(!native.Success || native.Identities.Length!=1 || native.Identities[0]!=InventoryItem(r.Group,name,"GlobalDB","returned") || !native.ExistsVerified) throw new InvalidDataException("Native Success, one exact GlobalDB identity and exact target existence were not established.");
                     result.Status="imported";result.ExistsVerified=true;
                 }
-                catch(Exception) {result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.RequiresSessionReset=true;}
+                catch(Exception) /* swallow(native-fallback): an attempted import can have mutated the project, so failure returns unknown outcome and requires reset */ {result.Status="unknown";result.Error="native-outcome-uncertain-inspect-before-new-session";result.RequiresSessionReset=true;}
                 return result;
             }
             finally

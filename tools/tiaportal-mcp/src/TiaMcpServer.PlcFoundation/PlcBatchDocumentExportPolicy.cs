@@ -81,7 +81,7 @@ namespace TiaMcp.PlcFoundation
                 foreach(var item in result.Items) item.Status="exported";
                 result.Status="exported";
             }
-            catch(Exception)
+            catch(Exception) /* swallow(native-fallback): export or publication failure returns failed status, session reset and the retained staging path */
             {
                 result.Status="failed";result.RequiresSessionReset=true;result.RecoveryDirectory=stage.FullName;
             }

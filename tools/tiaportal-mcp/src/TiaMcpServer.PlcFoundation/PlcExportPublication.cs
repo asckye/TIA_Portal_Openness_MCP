@@ -61,8 +61,8 @@ namespace TiaMcp.PlcFoundation
             // Publication has succeeded. Never turn a best-effort empty-directory
             // cleanup failure into an ambiguous failed publication, or delete sidecars.
             try { stage.Delete(false); return null; }
-            catch(IOException) { return stage.FullName; }
-            catch(UnauthorizedAccessException) { return stage.FullName; }
+            catch(IOException) /* swallow(cleanup): publication already succeeded; return the retained staging path when empty-directory deletion fails */ { return stage.FullName; }
+            catch(UnauthorizedAccessException) /* swallow(cleanup): publication already succeeded; return the retained staging path when deletion is denied */ { return stage.FullName; }
         }
     }
 }

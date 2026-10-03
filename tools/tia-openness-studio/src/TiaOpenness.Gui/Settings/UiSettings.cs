@@ -58,7 +58,7 @@ public sealed class UiSettings
                 }
             }
         }
-        catch (Exception)
+        catch (Exception) /* swallow(ui): unreadable preferences leave defaults or already parsed values available so the workbench can start */
         {
             // A preference file that cannot be read is not a reason to refuse to start.
         }
@@ -81,7 +81,7 @@ public sealed class UiSettings
                 $"{ThemeKey}={Theme}",
             });
         }
-        catch (Exception)
+        catch (Exception) /* swallow(ui): failure to persist language and theme preferences must not prevent the window from closing */
         {
             // Losing a preference is a smaller failure than refusing to close the window.
         }

@@ -38,7 +38,7 @@ namespace TiaMcp.PlcFoundation
             if(!Path.IsPathRooted(path) || Path.GetFullPath(path)!=path || path.Length>240) throw new ArgumentException("Canonical absolute bounded output directory required.");
             var directory=new DirectoryInfo(path); Name(directory.Name);
             if(directory.Parent==null || !directory.Parent.Exists) throw new ArgumentException("Existing output parent required; preview creates nothing.");
-            try { File.GetAttributes(path); throw new ArgumentException("Output must be a new directory; overwrite and reuse refused."); } catch(FileNotFoundException) { } catch(DirectoryNotFoundException) { }
+            try { File.GetAttributes(path); throw new ArgumentException("Output must be a new directory; overwrite and reuse refused."); } catch(FileNotFoundException) /* swallow(env-probe): a missing output path is the required result of the new-directory existence probe */ { } catch(DirectoryNotFoundException) /* swallow(env-probe): a missing output path is the required result of the new-directory existence probe */ { }
             for(var parent=directory.Parent;parent!=null;parent=parent.Parent)
                 if((parent.Attributes & FileAttributes.ReparsePoint)!=0) throw new ArgumentException("Output ancestors cannot be links/reparse points.");
             return directory;
@@ -75,7 +75,7 @@ namespace TiaMcp.PlcFoundation
                 (move??((from,to)=>Directory.Move(from.FullName,to.FullName)))(stage,destination);
                 result.Files=published; result.Status="exported";
             }
-            catch(Exception)
+            catch(Exception) /* swallow(native-fallback): failed export or publication retains staging evidence and returns failed status with a session reset */
             {
                 result.Status="failed"; result.RequiresSessionReset=true; result.RecoveryDirectory=stage.FullName;
             }

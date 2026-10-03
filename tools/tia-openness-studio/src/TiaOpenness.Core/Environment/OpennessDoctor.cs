@@ -158,7 +158,7 @@ namespace TiaOpenness.Core.Environment
                     {
                         string name;
                         try { name = sid.Translate(typeof(NTAccount)).Value; }
-                        catch (Exception) { continue; }
+                        catch (Exception) /* swallow(env-probe): an unresolvable token SID is skipped while the remaining group names are checked */ { continue; }
 
                         if (name != null && name.EndsWith(OpennessGroupName, StringComparison.OrdinalIgnoreCase))
                         {
@@ -188,7 +188,7 @@ namespace TiaOpenness.Core.Environment
         {
             Process[] processes;
             try { processes = Process.GetProcessesByName("Siemens.Automation.Portal"); }
-            catch (Exception) { processes = new Process[0]; }
+            catch (Exception) /* swallow(env-probe): the advisory running-process check uses an empty list when local process enumeration is unavailable */ { processes = new Process[0]; }
 
             try
             {

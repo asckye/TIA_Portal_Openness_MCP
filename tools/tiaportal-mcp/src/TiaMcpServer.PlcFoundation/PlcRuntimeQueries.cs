@@ -43,7 +43,7 @@ namespace TiaMcp.PlcFoundation
                             { row.OsStartTimeUtc=before.ToString("O",CultureInfo.InvariantCulture); row.OsIdentityStatus="observed-not-bound"; }
                         }
                     }
-                    catch(Exception) { row.OsStartTimeUtc=null; row.OsIdentityStatus="unknown"; }
+                    catch(Exception) /* swallow(env-probe): OS process exit or access failure leaves start time and identity explicitly unknown */ { row.OsStartTimeUtc=null; row.OsIdentityStatus="unknown"; }
                     rows.Add(row);
                 }
                 return new PlcProcessQuery { ReleaseKey=ReleaseKey,Processes=rows.ToArray() };

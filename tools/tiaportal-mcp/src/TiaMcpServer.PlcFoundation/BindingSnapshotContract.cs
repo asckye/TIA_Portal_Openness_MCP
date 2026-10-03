@@ -56,7 +56,7 @@ namespace TiaMcp.PlcFoundation
                     attachmentAnchor==null ? BindingIdentityStrength.WeakPidOnly : BindingIdentityStrength.OsStartTimeAnchored,
                     pid,before.StartUtcTicks,digest,attachmentAnchor==null ? "ExistingPidOnlyAttachment" : "OsIdentityAndBindingObserved");
             }
-            catch(Exception) { return BindingObservation.Unknown("BindingObservationFailed"); }
+            catch(Exception) /* swallow(native-fallback): failed native or OS identity reads leave the binding Unknown and ineligible for v2 admission */ { return BindingObservation.Unknown("BindingObservationFailed"); }
         }
         // v1 tuple: length-prefixed UTF-8 fields, Int32 little-endian lengths, Windows path
         // case folded, exact project name, explicit project/local-session kind. Not file contents.
@@ -90,7 +90,7 @@ namespace TiaMcp.PlcFoundation
             if(!CanObserve) return Fail("BindingLifecycleUncertain");
             observing=true;
             try { var current=capture(); observing=false; return Observe(current); }
-            catch(Exception) { return Fail("BindingObservationFailed"); }
+            catch(Exception) /* swallow(native-fallback): a failed capture faults the tracker instead of accepting an unverified binding */ { return Fail("BindingObservationFailed"); }
             finally { observing=false; }
         }
         public BindingSnapshotObservation Complete(Func<BindingObservation> capture)
@@ -99,7 +99,7 @@ namespace TiaMcp.PlcFoundation
             if(faulted || !pending.HasValue || observing) return Fail("BindingLifecycleCompletionUnknown");
             observing=true;
             try { var current=capture(); observing=false; return Complete(current); }
-            catch(Exception) { return Fail("BindingObservationFailed"); }
+            catch(Exception) /* swallow(native-fallback): a failed completion capture faults the tracker instead of committing the lifecycle transition */ { return Fail("BindingObservationFailed"); }
             finally { observing=false; }
         }
         internal BindingObservation ReadObservation(Func<BindingObservation> capture)
@@ -114,7 +114,7 @@ namespace TiaMcp.PlcFoundation
                     return Fail("BindingObservationFailed").Binding;
                 return current;
             }
-            catch(Exception) { return Fail("BindingObservationFailed").Binding; }
+            catch(Exception) /* swallow(native-fallback): a failed read faults the tracker and returns an Unknown binding */ { return Fail("BindingObservationFailed").Binding; }
             finally { observing=false; }
         }
         public BindingSnapshotObservation Observe(BindingObservation current)

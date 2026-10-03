@@ -161,7 +161,7 @@ namespace TiaOpenness.Openness
                 var info = instance.GetType().GetProperty(property, BindingFlags.Public | BindingFlags.Instance);
                 return info?.GetValue(instance, null);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(probe-optional): unavailable reflected HMI members return null so the cross-version navigator can skip them */
             {
                 return null;
             }
@@ -177,7 +177,7 @@ namespace TiaOpenness.Openness
 
             IEnumerator enumerator;
             try { enumerator = sequence.GetEnumerator(); }
-            catch (Exception) { yield break; }
+            catch (Exception) /* swallow(enumerate-optional): an HMI composition that cannot supply an enumerator contributes no items to this traversal */ { yield break; }
 
             while (true)
             {
@@ -187,7 +187,7 @@ namespace TiaOpenness.Openness
                     if (!enumerator.MoveNext()) yield break;
                     current = enumerator.Current;
                 }
-                catch (Exception)
+                catch (Exception) /* swallow(enumerate-optional): an unreadable HMI enumerator ends this composition while retaining items already yielded */
                 {
                     yield break;
                 }

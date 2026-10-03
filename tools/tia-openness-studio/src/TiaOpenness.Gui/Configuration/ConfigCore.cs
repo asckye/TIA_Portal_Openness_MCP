@@ -99,7 +99,7 @@ namespace TiaMcpConfigurator
                 if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, releaseKey))
                     return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
             }
-            catch (Exception) { }
+            catch (Exception) /* swallow(env-probe): failed registry detection falls through to the default Siemens installation directories */ { }
             foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
             {
                 if (string.IsNullOrEmpty(root)) continue;
@@ -116,7 +116,7 @@ namespace TiaMcpConfigurator
 
         private static bool HasOpenness(string path, string version)
         {
-            try { ValidateTia(path, version); return true; } catch (Exception) { return false; }
+            try { ValidateTia(path, version); return true; } catch (Exception) /* swallow(env-probe): a candidate that fails Openness validation is rejected by automatic installation discovery */ { return false; }
         }
 
         public static void ValidateTia(string path, int version) { ValidateTia(path, version.ToString(CultureInfo.InvariantCulture)); }

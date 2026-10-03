@@ -87,7 +87,7 @@ namespace TiaMcp.PlcFoundation
                 {
                     var type = value.GetType();
                     if (!(type.IsPrimitive || type.IsEnum || value is string || value is decimal || value is DateTime || value is TimeSpan || value is Guid))
-                    { try { value = value.ToString(); } catch { value = "<" + type.Name + ">"; } }
+                    { try { value = value.ToString(); } catch /* swallow(native-fallback): an attribute value that cannot render as text is represented by its type name in the read result */ { value = "<" + type.Name + ">"; } }
                 }
                 return new PlcAttributeValue { Name = info.Name, Value = value, AccessMode = Enum.GetName(typeof(EngineeringAttributeAccessMode), info.AccessMode) };
             }).ToArray();

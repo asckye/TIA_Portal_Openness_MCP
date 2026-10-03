@@ -124,12 +124,12 @@ namespace TiaOpenness.Openness
         {
             IList<TiaPortalProcess> processes;
             try { processes = TiaPortal.GetProcesses(); }
-            catch (Exception) { return null; }
+            catch (Exception) /* swallow(native-fallback): failed running-Portal discovery leaves Connect to its existing new-Portal startup path */ { return null; }
 
             foreach (var process in processes)
             {
                 try { return process.Attach(); }
-                catch (Exception) { /* try the next instance */ }
+                catch (Exception) /* swallow(native-fallback): a shutting-down or inaccessible Portal instance leaves the next attachment candidate available */ { /* try the next instance */ }
             }
             return null;
         }
@@ -148,7 +148,7 @@ namespace TiaOpenness.Openness
 
             if (_portal == null) return;
             try { _portal.Dispose(); }
-            catch (Exception) { /* TIA may already be gone */ }
+            catch (Exception) /* swallow(teardown): the Portal may already have exited; disconnect still clears the local session reference */ { /* TIA may already be gone */ }
             _portal = null;
         }
 
@@ -499,7 +499,7 @@ namespace TiaOpenness.Openness
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception) /* swallow(parse-fallback): failed XML type sniffing uses the block import path, where an invalid guess surfaces as an import error */
             {
                 // Fall through to the block path; a wrong guess surfaces as a normal import error.
             }

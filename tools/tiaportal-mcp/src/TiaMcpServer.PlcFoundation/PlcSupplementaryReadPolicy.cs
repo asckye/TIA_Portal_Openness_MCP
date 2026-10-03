@@ -35,7 +35,7 @@ namespace TiaMcp.PlcFoundation
             {
                 T value;
                 try { value=getter(); }
-                catch(Exception) { unavailable.Add(attribute); return null; }
+                catch(Exception) /* swallow(probe-optional): a failed optional technology metadata getter is recorded in the unavailable attribute list */ { unavailable.Add(attribute); return null; }
                 var text=format(value);
                 if(text==null) { unavailable.Add(attribute); return null; }
                 return Name(text);

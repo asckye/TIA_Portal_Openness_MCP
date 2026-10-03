@@ -86,7 +86,7 @@ public partial class App : Application
             File.AppendAllText(CrashLogPath,
                 $"{DateTimeOffset.Now:O}{System.Environment.NewLine}{e.Exception}{System.Environment.NewLine}{System.Environment.NewLine}");
         }
-        catch (Exception)
+        catch (Exception) /* swallow(logging-failure): failure to append the crash log must not prevent the original exception dialog */
         {
             // Reporting the original failure matters more than logging it.
         }

@@ -326,7 +326,7 @@ namespace TiaOpenness.Core.Mock
                 var loaded = JsonConvert.DeserializeObject<MockVcState>(json);
                 if (loaded != null) _state = loaded;
             }
-            catch (Exception)
+            catch (Exception) /* swallow(parse-fallback): an unreadable or corrupt mock JSON sidecar starts the mock session with empty state */
             {
                 // A corrupt sidecar must not break the session; start from empty.
                 _state = new MockVcState();
@@ -341,7 +341,7 @@ namespace TiaOpenness.Core.Mock
                 File.WriteAllText(_statePath, JsonConvert.SerializeObject(_state, Formatting.Indented),
                     new UTF8Encoding(false));
             }
-            catch (Exception)
+            catch (Exception) /* swallow(fail-open-guard): failure to persist the mock sidecar must not invalidate the completed in-memory mock operation */
             {
                 // Losing mock state is not worth failing an operation over.
             }
@@ -359,7 +359,7 @@ namespace TiaOpenness.Core.Mock
 
             string onDisk;
             try { onDisk = File.ReadAllText(mapping.FilePath); }
-            catch (Exception) { return VcCompareState.Unknown; }
+            catch (Exception) /* swallow(parse-fallback): unreadable workspace text yields Unknown rather than an invented mock comparison result */ { return VcCompareState.Unknown; }
 
             return string.Equals(onDisk, candidate.Content, StringComparison.Ordinal)
                 ? VcCompareState.Equal

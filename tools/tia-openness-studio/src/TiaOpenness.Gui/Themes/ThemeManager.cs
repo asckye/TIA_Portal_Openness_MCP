@@ -102,7 +102,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
         {
             Microsoft.Win32.SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
         }
-        catch (Exception)
+        catch (Exception) /* swallow(ui): unavailable system events leave Auto using its startup appearance sample without blocking initialization */
         {
             // No system-event hookup means Auto simply stops updating; not worth failing startup.
         }
@@ -152,7 +152,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
 
             return key?.GetValue("AppsUseLightTheme") is int light && light == 0;
         }
-        catch (Exception)
+        catch (Exception) /* swallow(env-probe): an unreadable Windows appearance setting uses the light-theme fallback */
         {
             return false;
         }

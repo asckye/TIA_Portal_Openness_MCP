@@ -42,7 +42,7 @@ namespace TiaOpenness.Openness
                 if (value == null) return fallback;
                 return Coerce(value, fallback);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(probe-optional): a failed optional attribute read is cached as unsupported and returns the caller fallback */
             {
                 UnsupportedAttributes[key] = true;
                 return fallback;
@@ -63,7 +63,7 @@ namespace TiaOpenness.Openness
                 var value = property.GetValue(instance, null);
                 return value == null ? fallback : Coerce(value, fallback);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(probe-optional): an unavailable reflected metadata getter returns the caller fallback during project inspection */
             {
                 return fallback;
             }
@@ -80,7 +80,7 @@ namespace TiaOpenness.Openness
                 if (target.IsEnum) return (T)Enum.Parse(target, value.ToString(), true);
                 return (T)Convert.ChangeType(value, target);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(parse-fallback): optional metadata that cannot convert to the requested type uses the caller fallback */
             {
                 return fallback;
             }
@@ -105,7 +105,7 @@ namespace TiaOpenness.Openness
                 var value = preferred.Text;
                 return string.IsNullOrWhiteSpace(value) ? null : value;
             }
-            catch (Exception)
+            catch (Exception) /* swallow(enumerate-optional): unreadable multilingual entries omit descriptive text without aborting project inspection */
             {
                 return null;
             }

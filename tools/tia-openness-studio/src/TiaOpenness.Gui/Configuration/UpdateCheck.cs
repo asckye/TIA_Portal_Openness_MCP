@@ -47,7 +47,7 @@ namespace TiaMcpConfigurator
                 object value;
                 return json != null && json.TryGetValue(name, out value) && value != null ? Convert.ToString(value) : null;
             }
-            catch { return null; }
+            catch /* swallow(parse-fallback): an unreadable or malformed delivery manifest leaves the installed release or package unknown */ { return null; }
         }
         public static string UpdaterPath(string root) { return Path.Combine(root, UpdaterRelativePath); }
         // The source repository also carries manifest\delivery.json and the updater; updating there would overwrite
@@ -138,7 +138,7 @@ namespace TiaMcpConfigurator
             var list = new List<string>();
             foreach (var p in Process.GetProcessesByName("TiaMcpServer"))
             {
-                string path = ""; try { path = p.MainModule.FileName; } catch { }
+                string path = ""; try { path = p.MainModule.FileName; } catch /* swallow(env-probe): an unavailable process module path still leaves the engine PID visible in the updater check */ { }
                 list.Add("TiaMcpServer.exe PID " + p.Id + (path.Length > 0 ? "（" + path + "）" : ""));
             }
             return list;

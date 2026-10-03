@@ -390,7 +390,7 @@ namespace TiaMcp.PlcFoundation
             try { RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler.Compile(); }
             catch(Exception ex)
             {
-                if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch { ex.Data["safetyCleanup"]="Safety logoff also failed; inspect the session manually."; } }
+                if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch /* swallow(teardown): preserve the original compile failure and attach the safety logoff failure as cleanup evidence */ { ex.Data["safetyCleanup"]="Safety logoff also failed; inspect the session manually."; } }
                 throw;
             }
             if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch { throw new InvalidOperationException("Compile returned but safety logoff failed; session outcome is unknown."); } }

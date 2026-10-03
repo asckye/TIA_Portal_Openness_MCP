@@ -83,9 +83,9 @@ namespace TiaOpenness.Core.Environment
                 FillAssemblies(install);
                 found.Add(install.Version, install);
             }
-            catch (IOException) { }
-            catch (BadImageFormatException) { }
-            catch (UnauthorizedAccessException) { }
+            catch (IOException) /* swallow(env-probe): an unreadable SDK candidate is skipped while other registry and filesystem candidates are inspected */ { }
+            catch (BadImageFormatException) /* swallow(env-probe): a candidate without valid managed assembly metadata cannot identify an Openness installation */ { }
+            catch (UnauthorizedAccessException) /* swallow(env-probe): an access-denied SDK candidate is skipped without discarding other discovered installations */ { }
         }
 
         // ---- registry ------------------------------------------------------
@@ -97,7 +97,7 @@ namespace TiaOpenness.Core.Environment
             {
                 root = TiaOpenness.Shared.OpennessEnvironment.OpenLocalMachineKey(view, OpennessKey);
             }
-            catch (Exception)
+            catch (Exception) /* swallow(env-probe): an inaccessible registry view leaves the other registry view and filesystem discovery available */
             {
                 yield break;
             }
@@ -115,7 +115,7 @@ namespace TiaOpenness.Core.Environment
                             if (versionKey != null) installs = ReadVersionKey(versionKey, versionName);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception) /* swallow(env-probe): an unreadable version key contributes no candidates while the remaining registry versions are inspected */
                     {
                         installs = Array.Empty<OpennessInstallation>();
                     }
@@ -270,7 +270,7 @@ namespace TiaOpenness.Core.Environment
                     .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
                     .ToList();
             }
-            catch (Exception)
+            catch (Exception) /* swallow(env-probe): if sibling DLL enumeration fails, retain the known primary assembly for installation diagnostics */
             {
                 install.Assemblies = new List<string> { install.PrimaryAssembly };
             }
@@ -288,19 +288,19 @@ namespace TiaOpenness.Core.Environment
         private static bool SafeDirExists(string path)
         {
             try { return Directory.Exists(path); }
-            catch (Exception) { return false; }
+            catch (Exception) /* swallow(env-probe): an uninspectable candidate directory is treated as unavailable during SDK discovery */ { return false; }
         }
 
         private static IEnumerable<string> SafeDirs(string path, string pattern)
         {
             try { return Directory.GetDirectories(path, pattern); }
-            catch (Exception) { return Enumerable.Empty<string>(); }
+            catch (Exception) /* swallow(env-probe): an unenumerable SDK search directory contributes no candidates to installation discovery */ { return Enumerable.Empty<string>(); }
         }
 
         private static string Normalize(string version)
         {
             try { return TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(version).ApiVersion; }
-            catch (ArgumentException) { return version ?? string.Empty; }
+            catch (ArgumentException) /* swallow(parse-fallback): an unrecognized version keeps its original text for exact installation matching */ { return version ?? string.Empty; }
         }
 
         private static Version ParseVersion(string version)

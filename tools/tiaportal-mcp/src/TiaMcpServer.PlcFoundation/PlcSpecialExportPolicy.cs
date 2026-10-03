@@ -25,7 +25,7 @@ namespace TiaMcp.PlcFoundation
             if(stem=="CON" || stem=="PRN" || stem=="AUX" || stem=="NUL" || stem=="CONIN$" || stem=="CONOUT$" || ((stem.StartsWith("COM",StringComparison.Ordinal) || stem.StartsWith("LPT",StringComparison.Ordinal)) && stem.Length==4 && "123456789¹²³".IndexOf(stem[3])>=0)) throw new ArgumentException("Reserved Windows device filename is not an export target.");
             if(Directory.Exists(file.FullName)) throw new ArgumentException("Export destination is an existing directory.");
             try { File.GetAttributes(file.FullName); throw new ArgumentException("Export destination already exists, including a link."); }
-            catch(FileNotFoundException) { }
+            catch(FileNotFoundException) /* swallow(env-probe): a missing destination is the required result of the no-overwrite file existence probe */ { }
             for(var ancestor=file.Directory;ancestor!=null;ancestor=ancestor.Parent)
                 if((ancestor.Attributes & FileAttributes.ReparsePoint)!=0) throw new ArgumentException("Export directory ancestry cannot contain links or reparse points.");
             return file;

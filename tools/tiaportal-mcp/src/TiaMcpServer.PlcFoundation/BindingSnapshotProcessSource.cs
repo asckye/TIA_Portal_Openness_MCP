@@ -17,7 +17,7 @@ namespace TiaMcp.PlcFoundation
                     return new BindingProcessObservation(processId,before.Ticks);
                 }
             }
-            catch(Exception) { return null; }
+            catch(Exception) /* swallow(env-probe): an exited or inaccessible OS process yields no start-time identity for binding verification */ { return null; }
         }
     }
 }

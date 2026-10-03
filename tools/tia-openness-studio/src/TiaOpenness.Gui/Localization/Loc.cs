@@ -82,7 +82,7 @@ public sealed class Loc : INotifyPropertyChanged
         {
             return string.Format(CultureInfo.CurrentCulture, format, args);
         }
-        catch (FormatException)
+        catch (FormatException) /* swallow(ui): a malformed localization format falls back to its catalogue text without interrupting the reported operation */
         {
             // A malformed catalogue entry must not take down the operation being reported.
             return format;

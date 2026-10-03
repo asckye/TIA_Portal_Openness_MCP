@@ -120,7 +120,7 @@ public partial class MainWindow : Window
         {
             Clipboard.SetText(_model.Activity.Log);
         }
-        catch (System.Runtime.InteropServices.COMException)
+        catch (System.Runtime.InteropServices.COMException) /* swallow(ui): another process can hold the clipboard; an unsuccessful log copy does not interrupt the workbench */
         {
             // The clipboard is a shared OS resource and another process can hold it open.
             // Failing to copy a log is not worth an error dialog.

@@ -34,13 +34,13 @@ namespace TiaMcp.PlcFoundation
             // Keep readable identity evidence even if native number inspection fails after mutation.
             var result=new PlcBatchImportObject {Name=block.Name,Kind=block.GetType().Name,GroupPath=BatchReturnedGroup(block,expectedGroup,group)};
             try {var value=((IEngineeringObject)block).GetAttribute("Number");if(value!=null && int.TryParse(value.ToString(),out var number) && number>=0)result.Number=number;}
-            catch(Exception) { /* Missing number is an explicit verification failure in the policy. */ }
+            catch(Exception) /* swallow(native-fallback): an unreadable returned block number stays missing so the batch policy rejects verification */ { /* Missing number is an explicit verification failure in the policy. */ }
             return result;
         }
         private static string BatchReturnedGroup(IEngineeringObject item,object expected,string exactPath)
         {
             try {if(ReferenceEquals(item.Parent,expected)) return exactPath;}
-            catch(Exception) { /* Preserve a visible ownership-verification failure. */ }
+            catch(Exception) /* swallow(native-fallback): unreadable native ownership falls through to the sentinel rejected by the batch policy */ { /* Preserve a visible ownership-verification failure. */ }
             // A traversal segment is impossible in an accepted canonical destination.
             return "../<unverified-native-owner>";
         }

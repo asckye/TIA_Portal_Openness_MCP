@@ -78,7 +78,7 @@ namespace TiaMcp.PlcFoundation
                     outcome.ExistsVerified=found!=null && found.Name==fileNameWithoutExtension && found.GetType().Name=="GlobalDB" && object.Equals(found.Parent,target) && object.Equals(found,imported[0]);
                     outcome.Success=true;
                 }
-                catch(Exception) {outcome.Success=false;}
+                catch(Exception) /* swallow(native-fallback): failed inspection of the native import result leaves Success false for the policy to report uncertainty */ {outcome.Success=false;}
                 return outcome;
             }};
 #else

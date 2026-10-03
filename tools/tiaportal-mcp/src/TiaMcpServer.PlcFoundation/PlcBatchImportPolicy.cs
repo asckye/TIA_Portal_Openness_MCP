@@ -162,7 +162,7 @@ namespace TiaMcp.PlcFoundation
                         if(actual==null || actual.Length!=1 || actual.Any(x=>x==null || x.Name!=item.Planned.Name || x.Kind!=item.Planned.Kind || x.GroupPath!=item.Planned.GroupPath || (Namespace(x.Kind)=="block" && !x.Number.HasValue) || (item.Planned.Number.HasValue && x.Number!=item.Planned.Number))) throw new InvalidDataException("Native returned identities do not match the reviewed XML object.");
                         item.Status="imported";
                     }
-                    catch(Exception)
+                    catch(Exception) /* swallow(native-fallback): failed recheck or import stops the batch and reports uncertainty with a required session reset */
                     {
                         item.Status="failed";item.Failure=item.Attempted ? "native-outcome-uncertain" : "target-recheck-failed";
                         stopped=true;result.RequiresSessionReset=true;

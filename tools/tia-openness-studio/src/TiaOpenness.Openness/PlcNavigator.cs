@@ -148,7 +148,7 @@ namespace TiaOpenness.Openness
         private static Software SoftwareOf(DeviceItem item)
         {
             try { return item.GetService<SoftwareContainer>()?.Software; }
-            catch (Exception) { return null; }
+            catch (Exception) /* swallow(probe-optional): device items without an accessible SoftwareContainer contribute no software to device classification */ { return null; }
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace TiaOpenness.Openness
         public static TagTableInfo Describe(PlcTagTable table, string path)
         {
             var count = 0;
-            try { count = table.Tags.Count; } catch (Exception) { count = 0; }
+            try { count = table.Tags.Count; } catch (Exception) /* swallow(enumerate-optional): unreadable tag collection count leaves the descriptive tag-table count at zero */ { count = 0; }
 
             return new TagTableInfo
             {
