@@ -55,6 +55,7 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
             {
                 var count = Application.Current.Windows.Count;
                 window.ShowConfiguration(false);
+                AssertPage(window, true);
                 var page = window.Configuration!;
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
                 Assert.Equal(count, Application.Current.Windows.Count);
@@ -64,7 +65,9 @@ public sealed partial class UnifiedDesktopTests(WpfContext wpf)
                 var address = (TextBox)page.FindName("ServerAddress");
                 address.Text = "192.0.2.77";
                 window.ShowEngineering();
+                AssertPage(window, false);
                 window.ShowConfiguration(false);
+                AssertPage(window, true);
                 Assert.Same(page, window.Configuration);
                 Assert.Equal("192.0.2.77", address.Text);
                 Assert.Null(page.FindName("Close"));

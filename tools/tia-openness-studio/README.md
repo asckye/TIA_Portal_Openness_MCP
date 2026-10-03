@@ -56,7 +56,9 @@ The native WPF view uses the [Glass styles](src/TiaOpenness.Gui/Themes/Glass.xam
 window size is 1200 x 780; the center column expands with the window. One title-bar menu
 provides Project, View, Tools and Help. View selects English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
 project session, selection and commands. Ctrl+S saves the project; Ctrl+1 and Ctrl+2 switch
-between Engineering and Configuration. The release picker and page tabs remain in the title bar.
+between Engineering and MCP & clients, also available from View. The caption shows the current
+page beside the app title and updates with the language; the taskbar title remains the app name.
+The release picker and window buttons remain in the title bar, with free space for dragging.
 Help exposes updates, client instructions and About from either page. Save both configurations
 is a visible button in the AI clients card header on the configuration page.
 

@@ -6,7 +6,9 @@ Current local development merges the configurator and Studio into one WPF/.NET 1
 workbench. `TiaMcpConfigurator.exe` is now the compatibility launcher for that single
 main window. The embedded configuration module preserves existing settings and service
 ownership; the title bar keeps the release picker and one Project / View / Tools / Help
-menu. View owns language and theme choices; Help exposes updates from either page. The native
+menu. View switches between Engineering and MCP & clients (Ctrl+1 / Ctrl+2) and owns language
+and theme choices. The current page appears beside the app title in the caption; Help exposes
+updates from either page without switching pages. The native
 Framework bridge and per-release MCP engines remain separate backend processes.
 This local change is not part of the published v3.2.0 asset described below. Native TIA
 acceptance for the merge remains NOT RUN. Local verification completed with 622 WPF

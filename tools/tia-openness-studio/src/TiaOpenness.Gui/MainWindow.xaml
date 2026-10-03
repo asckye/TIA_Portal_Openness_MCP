@@ -9,8 +9,8 @@
     <KeyBinding Key="D2" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Configuration}"/>
   </Window.InputBindings>
   <Window.CommandBindings>
-    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnEngineering"/>
-    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnConfiguration"/>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnPageExecuted"/>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnPageExecuted"/>
   </Window.CommandBindings>
 
   <Grid x:Name="Root" Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource Ui.Label}">
@@ -21,10 +21,27 @@
         <RowDefinition Height="40"/>
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
-      <Grid Margin="18,0,8,0">
+      <Grid x:Name="CaptionBar" Margin="18,0,8,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
           <Border Width="16" Height="16" CornerRadius="5" Background="{DynamicResource Ui.Accent}" VerticalAlignment="Center"/>
           <TextBlock Text="{l:Tr App.Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+          <TextBlock x:Name="CaptionPage" Foreground="{DynamicResource Ui.SecondaryLabel}" VerticalAlignment="Center" Margin="6,0,0,0" IsHitTestVisible="False">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock">
+                <Setter Property="Text" Value="{l:Tr Desktop.Engineering, StringFormat='· {0}'}"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding IsConfigurationPage}" Value="True">
+                    <Setter Property="Text" Value="{l:Tr Desktop.Configuration, StringFormat='· {0}'}"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
           <Menu x:Name="MenuBar" Style="{StaticResource Glass.MenuBar}" Margin="18,0,0,0" shell:WindowChrome.IsHitTestVisibleInChrome="True">
             <MenuItem x:Name="ProjectMenu" Header="{l:Tr Menu.Project}">
               <MenuItem Header="{l:Tr Menu.Open}" Click="OnProjectOptions"/>
@@ -37,8 +54,8 @@
               <MenuItem Header="{l:Tr Menu.Exit}" Click="OnClose"/>
             </MenuItem>
             <MenuItem x:Name="ViewMenu" Header="{l:Tr Menu.View}">
-              <MenuItem x:Name="EngineeringMenu" Header="{l:Tr Menu.Engineering}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsChecked,ElementName=EngineeringTab,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Engineering}" InputGestureText="Ctrl+1"/>
-              <MenuItem x:Name="ConfigurationMenu" Header="{l:Tr Menu.Configuration}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsChecked,ElementName=ConfigurationTab,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Configuration}" InputGestureText="Ctrl+2"/>
+              <MenuItem x:Name="EngineeringMenu" Header="{l:Tr Menu.Engineering}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsEngineeringPage,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Engineering}" InputGestureText="Ctrl+1"/>
+              <MenuItem x:Name="ConfigurationMenu" Header="{l:Tr Menu.Configuration}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsConfigurationPage,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Configuration}" InputGestureText="Ctrl+2"/>
               <Separator Style="{StaticResource Glass.MenuSeparator}"/>
               <MenuItem x:Name="BlocksMenu" Header="{l:Tr Menu.Blocks}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsBlocksTab}" Click="OnEngineeringView"/>
               <MenuItem x:Name="VciMenu" Header="{l:Tr Menu.Vci}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsVcTab}" Click="OnEngineeringView"/>
@@ -74,9 +91,7 @@
             </MenuItem>
           </Menu>
         </StackPanel>
-        <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-          <RadioButton x:Name="EngineeringTab" Content="{l:Tr Desktop.Engineering}" GroupName="DesktopPage" IsChecked="True" Style="{StaticResource Desktop.Tab}" Click="OnEngineering" Margin="0,0,6,0"/>
-          <RadioButton x:Name="ConfigurationTab" Content="{l:Tr Desktop.Configuration}" GroupName="DesktopPage" Style="{StaticResource Desktop.Tab}" Click="OnConfiguration" Margin="0,0,8,0"/>
+        <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
           <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
                           SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMinimize"/>
@@ -84,8 +99,8 @@
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnClose"/>
         </StackPanel>
       </Grid>
-      <ContentControl x:Name="ConfigurationHost" Grid.Row="1" Visibility="Collapsed" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
-      <Grid x:Name="EngineeringWorkspace" Grid.Row="1" Margin="20,8,20,20">
+      <ContentControl x:Name="ConfigurationHost" Grid.Row="1" Visibility="{Binding IsConfigurationPage,Converter={StaticResource BoolToVisibility}}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+      <Grid x:Name="EngineeringWorkspace" Grid.Row="1" Margin="20,8,20,20" Visibility="{Binding IsEngineeringPage,Converter={StaticResource BoolToVisibility}}">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="210"/>
           <ColumnDefinition Width="16"/>

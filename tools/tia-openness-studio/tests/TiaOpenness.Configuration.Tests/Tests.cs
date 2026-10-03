@@ -287,6 +287,8 @@ namespace TiaMcpConfigurator
                     void AssertMenuLabels(bool chinese)
                     {
                         var labels = new[] {
+                            ("EngineeringMenu", "_Engineering", "工程操作(_E)"),
+                            ("ConfigurationMenu", "MCP & _clients", "MCP 与客户端(_C)"),
                             ("UpdateMenu", "_Update", "更新(_U)"),
                             ("UpdateStateItem", "Not checked yet", "尚未检查"),
                             ("CheckUpdate", "_Check for Updates", "检查更新(_C)"),
@@ -298,10 +300,16 @@ namespace TiaMcpConfigurator
                         };
                         Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
                             (chinese ? "Chinese" : "English") + " save both label");
+                        Assert(((System.Windows.Controls.TextBlock)window.FindName("CaptionPage")).Text == "· " + Loc.Current["Desktop.Configuration"]
+                            && ((System.Windows.Controls.MenuItem)window.FindName("ConfigurationMenu")).IsChecked
+                            && !((System.Windows.Controls.MenuItem)window.FindName("EngineeringMenu")).IsChecked,
+                            (chinese ? "Chinese" : "English") + " caption and page menu track the configuration page");
                         foreach (var (name, en, zh) in labels)
                             Assert(((System.Windows.Controls.MenuItem)window.FindName(name)).Header.ToString() == (chinese ? zh : en),
                                 (chinese ? "Chinese" : "English") + " menu label: " + name);
                     }
+                    // The window is never shown here, so bindings refresh only when the dispatcher runs.
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     AssertMenuLabels(false);
                     Assert(form.FindName("MenuBar") == null, "configuration has no second menu");
                     Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Visibility == System.Windows.Visibility.Visible,

@@ -14,6 +14,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly IStudioClient _client;
     private MainView _view = MainView.Blocks;
+    private bool _isConfigurationPage;
 
     public MainViewModel() : this(new StudioClient(), new WpfDialogService()) { }
 
@@ -42,6 +43,19 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public bool ServiceOwnsRelease { get => Session.ServiceOwnsRelease; set => Session.ServiceOwnsRelease = value; }
     public bool CanSelectRelease => Session.CanSelectRelease;
     public bool Busy => Activity.Busy;
+
+    public bool IsEngineeringPage => !_isConfigurationPage;
+    public bool IsConfigurationPage
+    {
+        get => _isConfigurationPage;
+        internal set
+        {
+            _isConfigurationPage = value;
+            // Re-selecting the current page also restores the menu's radio check after its click toggle.
+            Raise(nameof(IsEngineeringPage));
+            Raise(nameof(IsConfigurationPage));
+        }
+    }
 
     /// <summary>Shown at the foot of the sidebar, from the assembly the app was built as.</summary>
     public static string AppVersion { get; } =

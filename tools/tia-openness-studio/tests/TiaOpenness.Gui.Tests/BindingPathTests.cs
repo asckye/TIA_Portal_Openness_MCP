@@ -188,6 +188,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                 Layout(host);
 
                 window.ShowConfiguration(false);
+                UnifiedDesktopTests.AssertPage(window, true);
                 var configuration = window.Configuration!;
                 foreach (string mode in new[] { "RemoteNav", "LocalNav" })
                 {
@@ -203,6 +204,7 @@ public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
                     Layout(host);
                 }
                 window.ShowEngineering();
+                UnifiedDesktopTests.AssertPage(window, false);
                 model.IsBlocksTab = true;
                 model.Engineering.Blocks.Clear();
                 Layout(host);

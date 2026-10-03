@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.ViewModels;
@@ -34,11 +35,7 @@ public partial class MainWindow
     {
         EnsureConfiguration(loadExisting, bundleRoot);
         OptionsOverlay.Visibility = Visibility.Collapsed;
-        EngineeringWorkspace.Visibility = Visibility.Collapsed;
-        ConfigurationHost.Visibility = Visibility.Visible;
-        EngineeringTab.IsChecked = false;
-        ConfigurationTab.IsChecked = true;
-        ConfigurationMenu.GetBindingExpression(System.Windows.Controls.MenuItem.IsCheckedProperty)?.UpdateTarget();
+        _model.IsConfigurationPage = true;
     }
 
     internal void EnsureConfiguration(bool loadExisting = true, string? bundleRoot = null)
@@ -56,17 +53,11 @@ public partial class MainWindow
         }
     }
 
-    internal void ShowEngineering()
-    {
-        ConfigurationHost.Visibility = Visibility.Collapsed;
-        EngineeringWorkspace.Visibility = Visibility.Visible;
-        EngineeringTab.IsChecked = true;
-        ConfigurationTab.IsChecked = false;
-        EngineeringMenu.GetBindingExpression(System.Windows.Controls.MenuItem.IsCheckedProperty)?.UpdateTarget();
-    }
+    internal void ShowEngineering() => _model.IsConfigurationPage = false;
 
-    private void OnConfiguration(object sender, RoutedEventArgs e)
+    private void OnPageExecuted(object sender, ExecutedRoutedEventArgs e)
     {
+        if (e.Command == Controls.WorkbenchCommands.Engineering) { ShowEngineering(); return; }
         try { ShowConfiguration(); }
         catch (Exception ex)
         {
@@ -74,7 +65,6 @@ public partial class MainWindow
             TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
-    private void OnEngineering(object sender, RoutedEventArgs e) => ShowEngineering();
     private void OnHelpOpened(object sender, RoutedEventArgs e)
     {
         if (e.OriginalSource != HelpMenu) return;
