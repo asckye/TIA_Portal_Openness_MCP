@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 from urllib.parse import unquote
 
@@ -75,6 +76,10 @@ def check(root, no_binaries=False):
             errors.append('Replaced launcher returned: ' + name)
     for version in ('v20', 'v21'):
         required(f'runtime/{version}/TiaMcpServer.exe', 'runtime')
+    swallowed = Path(__file__).with_name('Check-SwallowedExceptions.py')
+    result = subprocess.run([sys.executable, str(swallowed), '--root', str(root)])
+    if result.returncode:
+        errors.append('Swallowed-exception baseline check failed (see diagnostics above)')
     return count, errors
 
 

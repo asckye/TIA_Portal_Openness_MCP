@@ -37,6 +37,36 @@ The full-engine offline suite is a console test program, invoked with `dotnet ru
 
 Use an imperative English commit message without AI attribution trailers. Preserve source style and `.gitattributes`; do not apply a blanket BOM rule to every language or export format. Programming examples document their specific encoding and target-version requirements, including the foundation external-source ASCII boundary.
 
+Retained empty or exception-discarding catches require `/* swallow(<category>): <reason> */`
+on the catch line or as the first item in its block. Give a concrete reason; the closed category list is
+`cleanup`, `teardown`, `logging-failure`, `probe-optional`, `enumerate-optional`, `native-fallback`,
+`parse-fallback`, `env-probe`, `ui`, `fail-open-guard`, `privacy`. For example:
+
+```csharp
+catch (IOException) /* swallow(cleanup): temporary file cleanup must not replace the operation result */
+{
+}
+```
+
+`Check-SwallowedExceptions.py` runs through the repository check and offline CI. Its baseline is a
+multiset of hashes of the try body, catch clause/filter and catch body, independent of file paths and
+line numbers. Comments and code whitespace do not affect hashes; literal content does. Moving a
+file therefore needs no new allowance, while copying or changing an unmarked catch fails. Run
+`python scripts/checks/Check-SwallowedExceptions.py --update-baseline` after resolving catches to
+remove old entries; routine updates must not use `--allow-growth` (reserved for reviewed initialization).
+The pending phase-4 `TiaMcp.WorkerProtocol*` sources are exempt.
+
+The [P2-03 logging policy](../docs/development/response-and-errors.md#日志与检查) specifies the planned
+`SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's
+full name and `HResult`, never `Message` or `ToString()`. Log the first occurrence per site per process
+and only count later occurrences; the helper must never throw or recursively log its own failures.
+Output is off by default: the engine uses `ILogger` Debug with category `TiaMcpServer.Swallowed`,
+while the Studio bridge and Foundation worker opt in with `TIA_MCP_LOG_SWALLOWED=1`.
+Do not write swallowed-exception diagnostics to `calls-*.jsonl`, `InvocationJournal` counters or
+response metadata. Keep privacy-related stderr discards and logging-failure catches; do not change
+native catches to rethrow before L5 acceptance. The helper and runtime wiring belong to P2-03b;
+this check does not introduce runtime logging.
+
 Do not commit TIA projects, SDKs, generated binaries, logs, local machine paths, scratch data or customer material. Keep real-machine evidence and unresolved limitations linked from the current [acceptance index](../docs/reference/real-machine-ledger.md).
 
 ## License
