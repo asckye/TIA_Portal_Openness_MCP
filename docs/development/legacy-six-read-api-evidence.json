@@ -1856,11 +1856,11 @@
   ],
   "sourceHashes": [
     {
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcReadContracts.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcReadContracts.cs",
       "sha256": "1e5742dc866cde787208be301fb4d53454b0cddf80b13642cde2863540812caa"
     },
     {
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs",
       "sha256": "b5d6ee4ba5ba3c3e1fed65fe528b521d82f418507a817687778d90a7ba81c6c5"
     },
     {

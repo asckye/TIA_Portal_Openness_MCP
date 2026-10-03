@@ -32,7 +32,7 @@ internal static class DisconnectTests
         }
         var unbound=new PlcLifecycleState();unbound.Attached(123);unbound.Bound("C:/Projects/Test.ap17",true,false);unbound.Unbound();
         check(new PlcDisconnectState().Execute(unbound.ProcessId,false,()=>{}).Detached,"Explicitly unbound attachment can disconnect");
-        var engine=File.ReadAllText(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!,"../../src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs")));
+        var engine=File.ReadAllText(Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceFile)!,"../../src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs")));
         var disconnectSource=engine.Split("public PlcDisconnectResult Disconnect()")[1].Split("public void Dispose()")[0];
         check(!disconnectSource.Contains("Project()") && !disconnectSource.Contains("IsModified") && !disconnectSource.Contains(".Save(") && !disconnectSource.Contains(".Close("),"Dirty/bound project is not inspected, saved or closed by Disconnect source");
         check(engine.Split("public void Dispose()")[1].Contains("if (!disconnect.Attempted) Disconnect();"),"Final Dispose source does not retry a failed explicit detach");

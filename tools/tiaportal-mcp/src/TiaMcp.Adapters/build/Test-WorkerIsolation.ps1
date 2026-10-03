@@ -15,13 +15,20 @@ $null=New-Item -ItemType Directory -Force -Path $EvidenceDirectory
 $out=(Resolve-Path -LiteralPath $EvidenceDirectory).Path
 $results=New-Object System.Collections.Generic.List[object]
 function Record($name,$pass,$code){$results.Add([ordered]@{name=$name;passed=$pass;exitCode=$code});Write-Output ($name+': '+$pass)}
+function HasSelectedReferences($value,$adapterSuffix){
+    $references=@($value.Items.ProjectReference)
+    # Step B added Contracts; still require exactly one selected native adapter and no others.
+    return $references.Count -eq 2 -and
+        @($references | Where-Object {$_.Identity.Replace('\','/').EndsWith($adapterSuffix)}).Count -eq 1 -and
+        @($references | Where-Object {$_.Identity.Replace('\','/').EndsWith('/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj')}).Count -eq 1
+}
 foreach($key in @('14sp1','15.1','16','17','18','19','20','21')){
     $log=Join-Path $out "selection-$key.json"
     & $Dotnet msbuild $worker -nologo -v:quiet -t:ValidateWorkerAdapter "-p:TiaReleaseKey=$key" -getItem:ProjectReference -getProperty:TargetFramework *> $log
     $code=$LASTEXITCODE
     $value=if($code -eq 0){Get-Content -LiteralPath $log -Raw|ConvertFrom-Json}else{$null}
     $tfm=if($key -in @('14sp1','15.1','16')){'net461'}else{'net48'}
-    Record "selection-$key" ($code -eq 0 -and @($value.Items.ProjectReference).Count -eq 1 -and $value.Items.ProjectReference[0].Identity.EndsWith("/Adapter.$key.csproj") -and $value.Properties.TargetFramework -eq $tfm) $code
+    Record "selection-$key" ($code -eq 0 -and (HasSelectedReferences $value "/Adapter.$key.csproj") -and $value.Properties.TargetFramework -eq $tfm) $code
     $binary=Join-Path (Split-Path $worker) "bin/$key/Release/$tfm/TiaMcp.Adapter.$key.dll"
     & $Dotnet $weaver verify $binary (Join-Path $out "coverage-$key.json") *> (Join-Path $out "verify-$key.log")
     Record "coverage-$key" ($LASTEXITCODE -eq 0) $LASTEXITCODE
@@ -49,7 +56,7 @@ $log=Join-Path $out 'identity-override.json'
 & $Dotnet msbuild $worker -nologo -v:quiet -t:ValidateWorkerAdapter -p:TiaReleaseKey=20 -p:SelectedAdapterDirectory=V21 -p:SelectedAdapterProject=invalid.csproj -getItem:ProjectReference *> $log
 $code=$LASTEXITCODE
 $value=if($code -eq 0){Get-Content -LiteralPath $log -Raw|ConvertFrom-Json}else{$null}
-Record 'identity-override-ignored' ($code -eq 0 -and @($value.Items.ProjectReference).Count -eq 1 -and $value.Items.ProjectReference[0].Identity.EndsWith('/V20/Adapter.20.csproj')) $code
+Record 'identity-override-ignored' ($code -eq 0 -and (HasSelectedReferences $value '/V20/Adapter.20.csproj')) $code
 # The obsolete blanket Publish/Pack refusal was removed when per-release packaging was enabled.
 # Build-MultiVersion verifies deployed adapter identities and exercises real host/worker IPC.
 $log=Join-Path $out 'missing-weaver.log'

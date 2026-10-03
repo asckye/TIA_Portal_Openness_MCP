@@ -3,25 +3,25 @@
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/BindingSnapshotContract.cs" Link="BindingSnapshotContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/BindingSnapshotProcessSource.cs" Link="BindingSnapshotProcessSource.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs" Link="PlcExternalSourceWorkflowPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Session/BindingSnapshotContract.cs" Link="BindingSnapshotContract.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Session/BindingSnapshotProcessSource.cs" Link="BindingSnapshotProcessSource.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs" Link="PlcExternalSourceWorkflowPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/ExternalSourceWorkflowContract.cs" Link="ExternalSourceWorkflowContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcDeviceAddPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/DeviceAddContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBatchDocumentExportPolicy.cs" Link="PlcBatchDocumentExportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcBatchDocumentExportPolicy.cs" Link="PlcBatchDocumentExportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/BatchDocumentExportContract.cs" Link="BatchDocumentExportContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExternalSourceDeletePolicy.cs" Link="PlcExternalSourceDeletePolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceDeletePolicy.cs" Link="PlcExternalSourceDeletePolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/ExternalSourceDeleteContract.cs" Link="ExternalSourceDeleteContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/HardwareCatalogContract.cs" Link="HardwareCatalogContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExternalSourceImportPolicy.cs" Link="PlcExternalSourceImportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceImportPolicy.cs" Link="PlcExternalSourceImportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/ExternalSourcePlanContract.cs" Link="ExternalSourcePlanContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcDocumentExportPolicy.cs" Link="PlcDocumentExportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcDocumentExportPolicy.cs" Link="PlcDocumentExportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/DocumentExportContract.cs" Link="DocumentExportContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcDisconnectPolicy.cs" Link="PlcDisconnectPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Session/PlcDisconnectPolicy.cs" Link="PlcDisconnectPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/DisconnectContract.cs" Link="DisconnectContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSpecialExportPolicy.cs" Link="PlcSpecialExportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcSpecialExportPolicy.cs" Link="PlcSpecialExportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/SpecialExportContract.cs" Link="SpecialExportContract.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs" Link="OfflineLadderBuilders.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineLadderTools.cs" Link="OfflineLadderTools.cs" />
@@ -30,19 +30,19 @@
     <Compile Include="../../src/TiaMcpServer.LegacyHost/LegacyHostPassiveDiagnosticTools.cs" Link="LegacyHostPassiveDiagnosticTools.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineSymbolManifest.cs" Link="OfflineSymbolManifest.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineSymbolManifestTools.cs" Link="OfflineSymbolManifestTools.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcBatchImportPolicy.cs" Link="PlcBatchImportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/BatchImportContract.cs" Link="BatchImportContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBatchExportPolicy.cs" Link="PlcBatchExportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcBatchExportPolicy.cs" Link="PlcBatchExportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/BatchExportContract.cs" Link="BatchExportContract.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs" Link="OfflineBlockCompositionBuilders.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineBlockCompositionTools.cs" Link="OfflineBlockCompositionTools.cs" />
 
     <Compile Include="../../src/TiaMcpServer.LegacyHost/RuntimeQueryContract.cs" Link="RuntimeQueryContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcRuntimeQueryPolicy.cs" Link="PlcRuntimeQueryPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Policy/PlcRuntimeQueryPolicy.cs" Link="PlcRuntimeQueryPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs" Link="OfflineCompositionBuilders.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineCompositionTools.cs" Link="OfflineCompositionTools.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/SupplementaryReadContract.cs" Link="SupplementaryReadContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/FoundationTools.cs" Link="FoundationTools.cs" />
@@ -51,25 +51,25 @@
     <Compile Include="../../src/TiaMcpServer.LegacyHost/DeclarationReadContract.cs" Link="DeclarationReadContract.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17ReadEnvelope.cs" Link="V17ReadEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/WorkerProtocol.cs" Link="WorkerProtocol.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExportPublication.cs" Link="PlcExportPublication.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs" Link="PlcBlockXmlPolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExchangePolicy.cs" Link="PlcExchangePolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcReadPathPolicy.cs" Link="PlcReadPathPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcExportPublication.cs" Link="PlcExportPublication.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Policy/PlcBlockXmlPolicy.cs" Link="PlcBlockXmlPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcExchangePolicy.cs" Link="PlcExchangePolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17MutationEnvelope.cs" Link="V17MutationEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17CompileEnvelope.cs" Link="V17CompileEnvelope.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs" Link="PlcOfflinePolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcOfflinePolicy.cs" Link="PlcOfflinePolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Policy/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs" Link="OfflineXmlBuilders.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineXmlTools.cs" Link="OfflineXmlTools.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcDocumentImportPolicy.cs" Link="PlcDocumentImportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcDocumentImportPolicy.cs" Link="PlcDocumentImportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/DocumentImportContract.cs" Link="DocumentImportContract.cs" />
-    <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBatchDocumentImportPolicy.cs" Link="PlcBatchDocumentImportPolicy.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Native/Plc/PlcBatchDocumentImportPolicy.cs" Link="PlcBatchDocumentImportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/BatchDocumentImportContract.cs" Link="BatchDocumentImportContract.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>

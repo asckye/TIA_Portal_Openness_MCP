@@ -10,9 +10,10 @@ props=ET.parse(src/'TiaMcp.Adapters/build/Adapter.Sources.props').getroot()
 files=[src / x.attrib['Include'].replace('$(AdapterSourceRoot)/','') for x in props.iter('AdapterSource')]
 assert len(files)==len(set(files)), 'Duplicate adapter source'
 for f in files: assert f.is_file(), f'Missing source: {f}'
-for f in (src/'TiaMcpServer.PlcFoundation').glob('*.cs'):
- assert f in files, f'Foundation source/policy omitted from explicit adapter source inventory: {f}'
-code='\n'.join(f.read_text(encoding='utf-8-sig') for f in files)
+for folder in ['Native','Policy']:
+ for f in (src/'TiaMcp.Adapters'/folder).rglob('*.cs'):
+  assert f in files, f'Native source/policy omitted from explicit adapter source inventory: {f}'
+code='\n'.join(f.read_text(encoding='utf-8-sig') for f in files if f.name!='OpennessAdapter.cs')
 ops=set(re.findall(r'"([A-Za-z]+)"',(src/'TiaMcpServer.PlcWorker/WorkerOperations.cs').read_text(encoding='utf-8-sig')))
 methods=set(re.findall(r'public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(',code))
 assert ops<=methods, f'Worker operations absent from adapter sources: {sorted(ops-methods)}'
@@ -24,7 +25,7 @@ for release in ['V14Sp1','V15_1','V16','V17','V18','V19','V20','V21']:
  constants=features.evaluate(root,project.relative_to(root).as_posix(),{},'dotnet')['DefineConstants'].split(';')
  assert ('PLC_WATCH_READ' in constants)==(release!='V14Sp1'),release
  assert ('PLC_TECH_GROUP_READ' in constants)==(release in ['V19','V20','V21']),release
-native=(src/'TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs').read_text(encoding='utf-8-sig')
+native=(src/'TiaMcp.Adapters/Native/Plc/PlcSupplementaryRead.cs').read_text(encoding='utf-8-sig')
 assert native.count('PlcSupplementaryReadPolicy.RequireRelease(ReleaseKey')==2
 assert native.count('PlcSupplementaryReadPolicy.ReadSnapshot(')==2
 assert '.ForceTables' not in native and 'GetType().Get' not in native

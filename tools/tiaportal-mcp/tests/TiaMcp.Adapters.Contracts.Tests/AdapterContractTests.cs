@@ -43,14 +43,27 @@ public sealed class AdapterContractTests
     }
 
     [Fact]
-    public void FacetsRemainMarkersAndCapabilitiesCanBeCombined()
+    public void FacetsUseOnlyContractValuesAndCapabilitiesCanBeCombined()
     {
+        bool ContractValue(Type type) => type == typeof(void) || type.IsPrimitive || type == typeof(string)
+            || (type.IsArray && ContractValue(type.GetElementType()!))
+            || type.Assembly == typeof(IOpennessAdapter).Assembly;
         foreach(var facet in new[] { typeof(IPortalSession), typeof(IPlcProgram), typeof(IPlcData),
             typeof(IHardware), typeof(IVersionControl), typeof(IHmiExport) })
         {
             Assert.True(facet.IsInterface);
-            Assert.Empty(facet.GetMembers());
+            foreach(var method in facet.GetMethods())
+            {
+                Assert.True(ContractValue(method.ReturnType));
+                Assert.All(method.GetParameters(), p => Assert.True(ContractValue(p.ParameterType)));
+            }
         }
+        Assert.Equal(14, typeof(IPortalSession).GetMethods().Length);
+        Assert.Equal(26, typeof(IPlcProgram).GetMethods().Length);
+        Assert.Equal(16, typeof(IPlcData).GetMethods().Length);
+        Assert.Empty(typeof(IHardware).GetMembers());
+        Assert.Empty(typeof(IVersionControl).GetMembers());
+        Assert.Empty(typeof(IHmiExport).GetMembers());
         var capabilities = AdapterCapabilities.PortalSession | AdapterCapabilities.PlcProgram;
         Assert.True(capabilities.HasFlag(AdapterCapabilities.PlcProgram));
         Assert.False(capabilities.HasFlag(AdapterCapabilities.HmiExport));

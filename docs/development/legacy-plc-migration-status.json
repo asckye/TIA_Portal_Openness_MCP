@@ -2901,8 +2901,8 @@
       "manualChecklist": "legacy-plc-manual-checklist.json",
       "typedApiCompilation": "current-batch eight typed adapters/workers built; final aggregate evidence is recorded in current build manifests",
       "implementationFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs"
       ]
     },
     {
@@ -3028,8 +3028,8 @@
       "manualChecklist": "legacy-plc-manual-checklist.json",
       "typedApiCompilation": "current-batch eight typed adapters/workers built; final aggregate evidence is recorded in current build manifests",
       "implementationFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs"
       ]
     },
     {

@@ -21,7 +21,7 @@
     <Compile Include="../../src/TiaMcpServer/EngineServices.cs" Link="EngineServices.cs" />
     <Compile Include="../../src/TiaMcpServer/EngineRegistration.cs" Link="EngineRegistration.cs" />
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
-    <Compile Include="..\..\src\TiaMcpServer.PlcFoundation\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
+    <Compile Include="..\..\src\TiaMcp.Adapters\Native\Plc\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />

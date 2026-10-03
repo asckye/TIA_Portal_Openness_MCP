@@ -33,7 +33,7 @@
   },
   "foundation": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 6593,
+    "minimumPassed": 6604,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -48,7 +48,7 @@
   },
   "software-read": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj",
-    "minimumPassed": 39,
+    "minimumPassed": 257,
     "maximumSkipped": 0,
     "arguments": []
   },

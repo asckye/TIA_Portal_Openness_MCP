@@ -5,7 +5,7 @@
     <ProjectReference Include="../TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
-    <Compile Include="../TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
+    <Compile Include="../TiaMcp.Adapters/Native/Session/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
 
     <Compile Include="../TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
 

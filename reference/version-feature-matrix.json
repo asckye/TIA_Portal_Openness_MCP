@@ -135,8 +135,8 @@
         "T:Siemens.Engineering.SW.PlcSoftware"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSoftwareRead.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcSoftwareRead.cs"
       ],
       "nextStep": "Use these readers to verify generated/imported identities in each version test project.",
       "sdkEvidence": {
@@ -284,9 +284,9 @@
         "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBatchImport.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Policy/PlcBlockXmlPolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcBatchImport.cs"
       ],
       "nextStep": "Roundtrip a version-native fixture and compare blocks, types and tags; do not rewrite XML version markers.",
       "sdkEvidence": {
@@ -445,8 +445,8 @@
         "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflowPolicy.cs",
         "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs"
       ],
       "nextStep": "Run native source creation/readback on each selected test project. Chinese and other non-ASCII source encodings remain outside the foundation contract until version-specific validation.",
@@ -558,7 +558,7 @@
       ],
       "sourceFiles": [
         "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcExternalSourceWorkflow.cs",
         "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs"
       ],
       "nextStep": "Test generation followed by explicit compilation/readback. Preview reviews source identity and block/type metadata, not source contents. A normal native EngineeringException returns failed and retains the session; interruption or post-generation readback uncertainty requires reset. Generation does not compile/save/download.",
@@ -665,9 +665,9 @@
         "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcOfflineChecks.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcOfflineChecks.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcOfflinePolicy.cs"
       ],
       "nextStep": "Compile valid/invalid sources on each release and compare native counts/diagnostics. Siemens still requires all devices Offline; independently confirm devices whose state is not exposed. No native acceptance is claimed.",
       "sdkEvidence": {
@@ -1078,7 +1078,7 @@
         "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcSupplementaryRead.cs",
         "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs"
       ],
       "nextStep": "Use exact identities to check technology-object imports.",
@@ -1275,7 +1275,7 @@
         "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcSupplementaryRead.cs",
         "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs"
       ],
       "nextStep": "Preserve the version boundary when importing, exporting or resolving object paths.",
@@ -1384,7 +1384,7 @@
       ],
       "sourceFiles": [
         "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSpecialExportPolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcSpecialExportPolicy.cs"
       ],
       "nextStep": "Review old-release export semantics and test root-object roundtrip independently of the unavailable collection import API.",
       "sdkEvidence": {
@@ -1487,7 +1487,7 @@
       ],
       "sourceFiles": [
         "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSpecialExport.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcSpecialExport.cs"
       ],
       "nextStep": "Add offline XML import using the per-release collection API; leave online watch/force behavior as a separate feature.",
       "sdkEvidence": {
@@ -1603,8 +1603,8 @@
         "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcHardwareCatalog.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcHardwareCatalogPolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Hardware/PlcHardwareCatalog.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Hardware/PlcHardwareCatalogPolicy.cs"
       ],
       "nextStep": "Compare V18 search/provider signatures with V19 and expose only the supported search contract.",
       "sdkEvidence": {
@@ -1699,8 +1699,8 @@
         "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDeviceAdd.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDeviceAddPolicy.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Hardware/PlcDeviceAdd.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Hardware/PlcDeviceAddPolicy.cs"
       ],
       "nextStep": "Separate the common exact-identifier creation API from newer catalog-search helpers before porting older releases.",
       "sdkEvidence": {
@@ -2480,8 +2480,8 @@
         "T:Siemens.Engineering.Safety.SafetyAdministration"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs",
-        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs"
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcCompilePolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs"
       ],
       "nextStep": "Verify the compiled path and native test target separately from ordinary PLC compilation.",
       "sdkEvidence": {
