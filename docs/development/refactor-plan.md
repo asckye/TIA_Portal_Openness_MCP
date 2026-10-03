@@ -106,8 +106,9 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-06 | 步骤 6：第一个 Portal 领域 CFC 迁为服务类 + 工具类，作为后续领域的样板；逐方法比对西门子调用序列（6 个方法 V20/V21 一致），`Siemens/Services/CfcService` + `CfcTools`，样板写入引擎拆分设计 | done |
 | P3-07 | 步骤 7：可选包领域（P3-07a：TestSuite、V20Options、OptionalEngineering、SpecializedExchange、SoftwareUnitDeep；P3-07b：DCC、Teamcenter、Startdrive），比对脚本通用化。P3-07a 完成：5 个服务类 + 工具类，逐方法西门子调用序列 V20 31 个、V21 26 个一致，`Compare-NativeCallOrder.py` 与 `Test-DomainTools.py`（228 项，错误文本按 D1 只比首行）通用化P3-07b 完成：DCC、Teamcenter、Startdrive 3 个服务 + 工具类（22 个工具），Teamcenter 连接状态迁入服务；`ConnectionRow` 两个重载分属 DCC 与 Teamcenter，另行核对调用顺序 | done |
 | P3-08 | 步骤 8：P3-08a 安全与 Safety（5 个服务、20 个工具）；P3-08b 库、VCI（静态状态迁入服务实例）、SiVArc（26 个工具）。与 P3-07b、P3-09a 叠加验证：逐方法西门子调用顺序 V21 224、V20 200 一致，同名歧义 3 族另行核对；领域工具 1356 项逐字节一致；契约与返回快照 0 差异 | done |
-| P3-09 | 步骤 9：P3-09a PLC 变量表与监控表（17 个工具）完成；P3-09b 报警、OPC UA、工艺对象进行中 | doing |
-| P3-10… | 步骤 10 Classic HMI、Motion/ProDiag 进行中；步骤 11 硬件（P3-11a 设备、P3-11b 网络与硬件服务）与步骤 12 在线与下载（P3-12）进行中；其后按设计文档的迁移顺序继续。每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | doing |
+| P3-09 | 步骤 9：P3-09a PLC 变量表与监控表（17 个工具）；P3-09b 报警、OPC UA、工艺对象（23 个工具，`TechnologyMapping` 共享成员留在内核） | done |
+| P3-10 | 步骤 10：Classic HMI、Motion/ProDiag（14 个工具）。与 P3-09b 叠加验证：逐方法西门子调用顺序 V21 280、V20 255 一致，同名歧义 6 族另行核对；领域工具 380 项逐字节一致；契约与返回快照 0 差异 | done |
+| P3-11… | 步骤 11 硬件（P3-11a 设备、模块、地址进行中；P3-11b 网络与硬件服务待合并）与步骤 12 在线、下载与设备传输（P3-12 待合并）；其后按设计文档的迁移顺序继续。每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | doing |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
 | P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构。设计见[运行时布局与清理](runtime-layout.md)（G7-1…7，原有探测保留为兼容回退到 4.0）。G7-1、G7-2 完成：P0-06 加入参考资料工具，`BundleLayout.cs` 与 `Check-BundleLayout.py`；G7-3 完成：引擎查找伴随与参考文件改用解析器（布局矩阵 37 项，仓库外交付包原始响应 0 差异；质量 PDF 一项因本机缺少 reportlab 未验证）；G7-4 完成：安装根、CLI 交付包根与同级引擎查找改用解析器，原探测保留为回退（布局矩阵 56 项，仓库外交付包 9 项比对仅时间字段不同） | doing |
