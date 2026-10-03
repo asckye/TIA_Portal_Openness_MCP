@@ -13,12 +13,16 @@
     Source checkout without build outputs (CI, or a fresh clone before Build-Release.ps1): since 2.8.1 runtime\v20,
     runtime\v21 and TiaMcpConfigurator.exe are not tracked in Git, so their presence, versions and hashes are skipped;
     manifests, versions, launchers' syntax and the recorded source hashes are still checked.
+.PARAMETER SkipSourceHashes
+    Skip recorded source-file existence and hash comparisons in build manifests for push/PR CI.
+    Source hashes are regenerated and fully verified at release time.
 #>
 param(
     [Parameter(Mandatory = $false)]
     [string]$BundleRoot = "",
     [switch]$Strict,
-    [switch]$NoBinaries
+    [switch]$NoBinaries,
+    [switch]$SkipSourceHashes
 )
 
 $ErrorActionPreference = "Stop"
@@ -50,6 +54,8 @@ function FileHash([string]$path) {
 }
 
 Write-Host "Bundle root: $root"
+
+if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at release time; recorded source-file checks skipped" -ForegroundColor Cyan }
 
 if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
 foreach ($guiFile in @('TiaMcpConfigurator.exe', 'docs\getting-started\configuration.md', 'scripts\build\Build-Configurator.ps1')) {
@@ -278,15 +284,17 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             elseif ((Get-Item -LiteralPath $studio).VersionInfo.FileVersion -ne $build.fileVersion) { Fail 'Studio version is stale' }
         }
     }
-    foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles)) {
-        if ($null -eq $row) { continue }
-        $file = Join-Path $root $row.path
-        if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
-        $bytes = if ([IO.Path]::GetExtension($file) -eq ".ttf") { [IO.File]::ReadAllBytes($file) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
-        $algorithm = [Security.Cryptography.SHA256]::Create()
-        try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','') }
-        finally { $algorithm.Dispose() }
-        if ($digest -ne $row.sha256) { Fail "Source changed after validation: $($row.path)" }
+    if (-not $SkipSourceHashes) {
+        foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles)) {
+            if ($null -eq $row) { continue }
+            $file = Join-Path $root $row.path
+            if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
+            $bytes = if ([IO.Path]::GetExtension($file) -eq ".ttf") { [IO.File]::ReadAllBytes($file) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
+            $algorithm = [Security.Cryptography.SHA256]::Create()
+            try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','') }
+            finally { $algorithm.Dispose() }
+            if ($digest -ne $row.sha256) { Fail "Source changed after validation: $($row.path)" }
+        }
     }
     foreach ($major in @(20,21)) {
         $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.V21.csproj' }
@@ -310,7 +318,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             if ($digest -ne $row.sha256) { Fail "Runtime hash differs: $($row.path)" }
         }
     }
-    if ($failures.Count -eq 0) { Ok $(if ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
+    if ($failures.Count -eq 0) { Ok $(if ($NoBinaries -and $SkipSourceHashes) { 'Build records and versions match (binaries and source hashes not checked)' } elseif ($NoBinaries) { 'Build records, versions and source hashes match (binaries not checked)' } elseif ($SkipSourceHashes) { 'Both runtime versions and build manifest hashes match (source hashes not checked)' } else { 'Both runtime versions and all build manifest hashes match' }) }
 }
 
 if ($failures.Count -gt 0) {

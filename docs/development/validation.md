@@ -30,8 +30,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 控制台用例必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块同时在原 Framework 测试宿主和实际 .NET 10 桌面宿主执行。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
 合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。
 
-GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。托管 runner 没有 Siemens
-PublicAPI，不能替代本机完整构建。修改编译输入后必须重新构建，不能手填 manifest 哈希。
+GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR CI 不比对构建记录中的源码哈希；
+交付检查使用 `-Strict -NoBinaries -SkipSourceHashes`，仍核对必需文件、JSON、版本及 delivery.json 绑定的构建记录哈希。
+发布流程重新生成构建记录，再由 `Validate-Bundle.ps1 -Strict`、`Package-Release.py` 和发布后验包完整验证源码哈希。
+托管 runner 没有 Siemens PublicAPI，不能替代本机完整构建。修改编译输入后必须在发布前重新构建，不能手填 manifest 哈希。
 
 ## 完整八版本构建
 
