@@ -73,7 +73,7 @@ if($Test) {
 $files=@(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File | Where-Object {$_.Extension -in '.exe','.dll','.config','.json','.txt' -and $_.Name -ne 'README.md'} | Sort-Object FullName | ForEach-Object {
     @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
 })
-$sourceRoots=@('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/openness-shared','tools/tia-openness-studio/src','tools/tia-openness-studio/tests','tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate') | ForEach-Object {Join-Path $repo $_}
+$sourceRoots=@('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/openness-shared','tools/tia-openness-studio','tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate') | ForEach-Object {Join-Path $repo $_}
 $algorithm=[Security.Cryptography.SHA256]::Create()
 try {
     $sources=@(Get-ChildItem $sourceRoots -Recurse -File | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xaml','.ps1','.py','.json' -and $_.FullName -notmatch '[\\/](obj|bin|obj-v20|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
@@ -81,6 +81,11 @@ try {
         @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=[BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','').ToLowerInvariant()}
     })
 } finally {$algorithm.Dispose()}
-$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources}
+$record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$engineRecord.release;fileVersion=$engineRecord.fileVersion;releases=$records;studioReleaseKeys=@('14sp1','15.1','16','17','18','19','20','21');nativeAcceptance='NOT RUN';validation=$validation;files=$files;sourceFiles=$sources}
 [IO.File]::WriteAllText((Join-Path $repo 'manifest/multi-version-build.json'),($record | ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
+$deliveryPath=Join-Path $repo 'manifest/delivery.json'
+$delivery=Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json
+$delivery | Add-Member -Force NoteProperty multiVersionBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/multi-version-build.json')).Hash.ToLowerInvariant()
+$delivery | Add-Member -Force NoteProperty releaseKeys $record.studioReleaseKeys
+[IO.File]::WriteAllText($deliveryPath,($delivery | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
 Write-Output 'Eight release adapters, six foundation runtimes and direct-Openness Studio deployed to runtime/. Native TIA acceptance NOT RUN.'

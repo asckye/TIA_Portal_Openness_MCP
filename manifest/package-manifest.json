@@ -1,25 +1,41 @@
 {
     "schemaVersion":  "2026-05-25",
-    "bundleVersion":  "3.1.0",
-    "packageName":  "TIA_MCP_Delivery_v3.1.0_20261003",
+    "bundleVersion":  "3.2.0",
+    "packageName":  "TIA_MCP_Delivery_v3.2.0_20261003",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-10-03T10:35:40.0211264+00:00",
+    "refreshedAt":  "2026-10-03T11:07:17.9508580+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
+                                                 14,
+                                                 15,
+                                                 16,
+                                                 17,
+                                                 18,
+                                                 19,
                                                  20,
                                                  21
                                              ],
                    "publicApiPathExample":  "C:\\Program Files\\Siemens\\Automation\\Portal V21\\PublicAPI\\V21\\net48",
-                   "runtimeRequirement":  ".NET Framework 4.8",
+                   "runtimeRequirement":  "Full engines: .NET Framework 4.8; foundation hosts: .NET 8 and ASP.NET Core 8 plus matching Framework worker; Studio: .NET 10 Desktop Runtime",
                    "windowsGroupRequirement":  "Siemens TIA Openness",
                    "newCliFlags":  [
                                        "--tia-portal-location \u003cpath\u003e",
                                        "--tia-major-version {20|21}"
+                                   ],
+                   "releaseKeys":  [
+                                       "14sp1",
+                                       "15.1",
+                                       "16",
+                                       "17",
+                                       "18",
+                                       "19",
+                                       "20",
+                                       "21"
                                    ]
                },
     "selfContainedScope":  {
-                               "description":  "The bundle contains runtime, skill, manuals, templates and blueprints required for PLC + WinCC Unified project generation.",
+                               "description":  "Eight version-specific MCP catalogs, direct Openness Studio, configurator, examples, documentation, templates and licenses. Foundation and full-engine capabilities differ by release.",
                                "bundled":  [
                                                "TiaMcpServer runtime and dependent DLLs",
                                                "Skill and MCP operation rules",
@@ -54,6 +70,9 @@
                         "mcpIdeNeutral":  "docs/getting-started/configuration.md",
                         "optionalReferenceReadme":  "templates/README.md",
                         "bundleValidationScript":  "scripts/checks/Validate-Bundle.ps1",
+                        "studio":  "runtime/studio/TiaOpenness.exe",
+                        "versionToolMatrix":  "manifest/version-tools.json",
+                        "beginnerGuide":  "docs/getting-started/beginners.zh-CN.md",
                         "configurator":  "TiaMcpConfigurator.exe"
                     },
     "cli":  {
@@ -115,8 +134,8 @@
                                              "note":  "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
                                          }
                      },
-    "fileVersion":  "3.1.0.0",
-    "validationStatus":  "Delivery 3.1.0; engine 3.1.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
+    "fileVersion":  "3.2.0.0",
+    "validationStatus":  "Delivery 3.2.0; engine 3.2.0 validation retained with exact source/runtime hashes; configurator tested separately; real TIA acceptance pending",
     "validationRecords":  {
                               "engine":  "manifest/release-build.json",
                               "configurator":  "manifest/configurator-build.json",

@@ -23,6 +23,6 @@ they do not implement the full engine's `doctor`, `gen`, `--profile` or `CallToo
 the worker starts on demand when a native tool is called.
 
 [Version tools](../docs/reference/version-tools.md) and
-[build hashes](../manifest/multi-version-build.json) describe the development bundle.
-Native acceptance for the new version routes is still pending. Existing published
-release archives keep their historical V20/V21 scope until a new release is made.
+[build hashes](../manifest/multi-version-build.json) describe the built package.
+Native acceptance for the new version routes is still pending.
+v3.2.0 and later complete release archives include all eight runtimes and Studio; older archives retain their original scope.

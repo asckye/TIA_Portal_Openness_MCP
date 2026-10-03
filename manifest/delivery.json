@@ -1,10 +1,21 @@
 {
-    "release":  "3.1.0",
-    "releaseDate":  "20261003",
-    "package":  "TIA_MCP_Delivery_v3.1.0_20261003",
-    "engineRelease":  "3.1.0",
-    "fileVersion":  "3.1.0.0",
-    "engineBuildSha256":  "00914fd2145db2c922b235031f6c2c13f157a8512472af1757be82f88525430a",
-    "configuratorBuildSha256":  "bf4287840ad492e7265e52f05b357c6834e16a1caceaac712afba45bd4f7ef82",
-    "generatedAt":  "2026-10-03T10:35:40.0211264+00:00"
+  "release": "3.2.0",
+  "releaseDate": "20261003",
+  "package": "TIA_MCP_Delivery_v3.2.0_20261003",
+  "engineRelease": "3.2.0",
+  "fileVersion": "3.2.0.0",
+  "engineBuildSha256": "b0c9443cba3f48f55c4d8ab4322393c752cc20fdd715753b8121fc930a8b70e7",
+  "configuratorBuildSha256": "17956352c59cd2e96d3f0dc19a363fc2b0cdca70066073ab92ddc5549c2c47a7",
+  "generatedAt": "2026-10-03T04:07:17.950858-07:00",
+  "multiVersionBuildSha256": "7e6f7a01972add955b6bc66f7361ffaeaf15965903930404528dc20470967762",
+  "releaseKeys": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ]
 }

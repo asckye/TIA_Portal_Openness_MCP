@@ -1,5 +1,7 @@
 # 工程能力与验收边界
 
+> v3.2.0 发布八版 MCP、直接调用 Openness 的 Studio 和统一示例；各版范围及未完成项见[版本矩阵](version-tools.md)，真实工程验收状态见[发布说明](../releases/v3.2.0.md)。
+
 > Current multi-version development: [release tools, API audit and build instructions](version-tools.md). Historical release/VM records below describe their original dates and do not authorize new native operations.
 
 

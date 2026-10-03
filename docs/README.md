@@ -3,7 +3,7 @@
 > Current multi-version development: [release tools, API audit and build instructions](reference/version-tools.md). Historical release/VM records below describe their original dates and do not authorize new native operations.
 
 
-v3.1.0：[V20/V21 补充工具](reference/v20-v21-audit-tools.md) · [PLC 与生态工具](reference/ecosystem-tools.md) · [发布说明](releases/v3.1.0.md)。真实 TIA 验收边界见发布说明。
+v3.2.0：[八版本工具](reference/version-tools.md) · [统一示例](development/official-tool-usage.md) · [发布说明](releases/v3.2.0.md)。真实 TIA 验收边界见发布说明。
 
 稳定性重点：[本地压力测试、原生验收边界及 GitHub 接入优先级](development/stability-and-integrations-20260930.md)。
 
@@ -17,7 +17,9 @@ v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [
 
 ## 入门
 
-- [配置 TIA 服务与 AI 客户端](getting-started/configuration.md)：虚拟机、宿主机、本机连接，8 种客户端。
+- [新手使用指南](getting-started/beginners.zh-CN.md)：从下载安装开始，完成 AI 连接或 Studio 操作，以及第一次 SCL 导入、编译和保存。
+
+- [配置 TIA 服务与 AI 客户端](getting-started/configuration.md)：虚拟机、宿主机、本机连接及客户端卡片。
 - [CLI 与 AI spec 提示词](getting-started/cli.md)：生成、增量修改、编译、预热和离线校验。
 
 ## 操作指南
@@ -44,7 +46,7 @@ v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [
 - [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)、[贡献指南](../.github/CONTRIBUTING.md)、[支持](../.github/SUPPORT.md)、[安全策略](../.github/SECURITY.md)、[接续工作交接](development/handoff.md)（现状、下一步、每阶段固定动作、闸门、真机约定）、[交接历史](development/handoff-history.md)（逐版本记录、阶段收口清单）、[换机器交接单](development/handoff-checklist.md)（新机器准备、虚拟机现状、部署后按序要做的事、真机批跑工具）
 - [路线图与待办](development/roadmap.md)：官方 API 全量对齐分阶段计划（阶段 1–5 Safety / WinCC Unified / Base / Step7 / 经典 WinCC 已于 2.7.25–2.7.37 收口，阶段 6 选件包进行中：⑥-① SiVArc 2.7.38、⑥-② Startdrive + DCC 2.7.39、⑥-③ SafetyValidation / Test Suite / Teamcenter / CFC 2.7.42 完成——阶段 6 收口，功能类型缺口全部归零）、引擎待重建项、第三方集成候选、合规事项（2026-09-17 审计，2026-09-19 更新）
 - [第三方组件许可证清单](licenses/THIRD-PARTY-NOTICES.md)：随包分发的每个程序集的许可证与原文
-- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v3.1.0.md)；历史发布说明按版本在 [releases/](releases/)（v2.7.16 起每版一篇，v2.7.2–v2.7.15 见下面的归档）
+- [变更记录](../CHANGELOG.md)、[当前发布说明](releases/v3.2.0.md)；历史发布说明按版本在 [releases/](releases/)（v2.7.16 起每版一篇，v2.7.2–v2.7.15 见下面的归档）
 - 历史：[v2.7.2–v2.7.15 发布记录](archive/release-notes.md)（更早的多语言修复报告、v2.7.14 覆盖审计与配置器界面检查记录已删除，需要时看 Git 历史；覆盖审计的现行版本是[官方 API 覆盖清单](reference/openness-coverage.md)）
 
 - [PLC 交叉引用退出调查（2026-09-30）](development/cross-reference-investigation-20260930.md)：官方重建流程、GitHub 查询修复、部署核对与证据缺口。

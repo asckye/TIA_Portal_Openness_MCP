@@ -258,7 +258,28 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         Fail 'Original MIT copyright notice must be preserved'
     }
     $build = Get-Content -LiteralPath (Join-Path $root 'manifest/release-build.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-    foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles)) {
+    $multi = $null
+    if ($delivery.multiVersionBuildSha256) {
+        $multiPath = Join-Path $root 'manifest/multi-version-build.json'
+        if ((FileHash $multiPath) -ne $delivery.multiVersionBuildSha256) { Fail 'Multi-version build record changed' }
+        $multi = Get-Content -LiteralPath $multiPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($multi.release -ne $delivery.release -or $multi.fileVersion -ne $build.fileVersion) { Fail 'Multi-version release/version mismatch' }
+        if (-not $multi.validation.foundationTransportExecuted -or -not $multi.validation.studioFunctionalTestsExecuted -or -not $multi.validation.toolUsageCoverageExecuted) { Fail 'Multi-version functional validation incomplete' }
+        if (($multi.studioReleaseKeys -join ',') -ne '14sp1,15.1,16,17,18,19,20,21') { Fail 'Eight Studio/MCP release keys required' }
+        if (-not $NoBinaries) {
+            foreach ($key in $multi.studioReleaseKeys) {
+                $engine = Join-Path $root "runtime/v$key/TiaMcpServer.exe"
+                if (-not (Test-Path -LiteralPath $engine)) { Fail "V$key runtime missing" }
+                elseif ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$key runtime version is stale" }
+                if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/studio/bridge/adapters/v$key/TiaOpenness.Openness.dll"))) { Fail "Studio V$key adapter missing" }
+            }
+            $studio = Join-Path $root 'runtime/studio/TiaOpenness.exe'
+            if (-not (Test-Path -LiteralPath $studio)) { Fail 'Studio executable missing' }
+            elseif ((Get-Item -LiteralPath $studio).VersionInfo.FileVersion -ne $build.fileVersion) { Fail 'Studio version is stale' }
+        }
+    }
+    foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles) + @($multi.sourceFiles)) {
+        if ($null -eq $row) { continue }
         $file = Join-Path $root $row.path
         if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
         $bytes = if ([IO.Path]::GetExtension($file) -eq ".ttf") { [IO.File]::ReadAllBytes($file) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
@@ -276,7 +297,8 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
         if ((Get-Item -LiteralPath $engine).VersionInfo.FileVersion -ne $build.fileVersion) { Fail "V$major runtime is stale" }
     }
-    foreach ($row in $build.runtimeFiles) {
+    foreach ($row in @($build.runtimeFiles) + @($multi.files)) {
+        if ($null -eq $row) { continue }
         if ($NoBinaries) { break }
         $file = Join-Path $root $row.path
         if (!(Test-Path -LiteralPath $file)) { Fail "Runtime dependency missing: $($row.path)" }

@@ -85,8 +85,17 @@ def main():
     # 3. binaries against the committed build records
     build = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))
     gui = json.loads((root / 'manifest/configurator-build.json').read_text(encoding='utf-8-sig'))
-    runtime_in_zip = {n for n in content if n.startswith(('runtime/v20/', 'runtime/v21/'))}
+    delivery_record = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
+    runtime_in_zip = {n for n in content if n.startswith('runtime/') and n not in tracked_set}
     recorded = {row['path']: row['sha256'] for row in build['runtimeFiles']}
+    if delivery_record.get('multiVersionBuildSha256'):
+        multi_bytes = (root / 'manifest/multi-version-build.json').read_bytes()
+        check(sha(multi_bytes) == delivery_record['multiVersionBuildSha256'], 'Multi-version build record differs from delivery record')
+        multi = json.loads(multi_bytes.decode('utf-8-sig'))
+        check(multi['release'] == delivery_record['release'], 'Multi-version release mismatch')
+        for row in multi['files']:
+            check(row['path'] not in recorded or recorded[row['path']] == row['sha256'], 'Conflicting recorded runtime: ' + row['path'])
+            recorded[row['path']] = row['sha256']
     check(runtime_in_zip == set(recorded), 'runtime inventory in ZIP differs from manifest/release-build.json: '
           + ', '.join(sorted(runtime_in_zip ^ set(recorded))[:10]))
     for path, expected in recorded.items():
@@ -95,7 +104,7 @@ def main():
     exe = gui['executable']['path']
     if check(exe in content, f'{exe} missing from ZIP'):
         check(sha(content[exe]) == gui['executable']['sha256'], f'{exe} differs from manifest/configurator-build.json')
-    check(not any(n.startswith(('runtime/v20/', 'runtime/v21/')) or n == 'TiaMcpConfigurator.exe' for n in tracked_set),
+    check(not any((n.startswith('runtime/') and n != 'runtime/README.md') or n == 'TiaMcpConfigurator.exe' for n in tracked_set),
           'binaries are tracked in Git although the 2.8.1 policy keeps them out')
 
     # 4. extras

@@ -2,16 +2,18 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
-## [Unreleased]
+## [3.2.0] - 2026-10-03
 
-- Record [per-commit Windows compile-only evidence](docs/development/windows-compile-evidence-aaa9e0d-20261003.md) for `aaa9e0d`: all eight exact Adapter/Worker targets and full V20/V21 engines compiled with zero errors. This does not establish weaving, native acceptance, release-build completion or production enablement; detailed logs remain on the validation machine.
+八版本运行包、直接调用 Openness 的 Studio 与统一工具示例。正式交付包含 V14 SP1、V15.1、V16–V21，配置器与 Studio 应用版本统一为 3.2.0。详见 [v3.2.0](docs/releases/v3.2.0.md)。
 
-- Register all 30 MCP prompts explicitly so optional unavailable assemblies do not prevent prompt registration; source and fixture checks passed, with native acceptance pending.
-
-- Stop automatic HMI screen import replay and stop screen directory batches at the first failure; retain the original error and warn that the project may already have changed. Offline fake-import checks only; native acceptance remains pending.
-
-- Add precise release contracts for V14 SP1, V15.1 and V16-V21, with assembly identity checks and capability gates; original V14/V15 remain excluded.
-- Add compile-only PLC foundation modules and an incomplete, native-disabled legacy MCP source preview. Of the V17 profile's 62 tools, 55 have source candidates: 12 scoped closures and 43 partial candidates; seven remain pending. Exactly compatible migrations remain seven. The [migration ledger](docs/development/legacy-plc-migration-status.json) is authoritative for per-tool scope and gaps. Windows/native gates remain pending and all legacy production entries remain disabled. Offline compilation and tests do not establish native support.
+- 增加[新手使用指南](docs/getting-started/beginners.zh-CN.md)，串联环境准备、本机/虚拟机配置、AI 提示词、Studio 操作和首次 SCL 导入编译练习。
+- 按版本提供 57 / 58 / 60 / 60 / 60 / 62 / 477 / 488 个工具；旧版为 PLC 基础引擎，V20/V21 为完整引擎，不能视为全部官方 API 已对齐。
+- 整合 Studio 中英双语 Glass Layers 界面和八版原生适配器；Studio 完全通过 Openness Bridge 操作，共用独立逻辑，取消 MCP 依赖。
+- `GetToolUsage` 统一提供全部 1,322 个版本/工具组合、1,038 个操作分支的调用示例，以及编程语言示例、结果解释、参数来源和官方资料；保留官方模式与项目实现的区别。
+- 接通基础引擎外部源导入、生成块、编译与读回，修正编译无条件拒绝；普通生成错误保留会话以便修正源码后重试。UDT/GlobalDB XML 按八版输出正确的接口格式和版本属性。
+- 所有 30 个 MCP prompts 显式注册，避免可选程序集缺失影响注册；HMI 导入失败不再自动重放；驱动参数读取减少不必要的详细遍历。
+- 正式发布流程纳入八版本运行文件和 Studio，验证完整包的源码、运行文件与哈希；嵌入 JSON 示例纳入编译输入校验。只维护 master，旧版本分支历史已归档。
+- 全部版本重新构建，执行官方 SDK/XSD、真实 MCP 协议、离线功能、Studio/WPF 与本地稳定性检查；新功能真实 TIA 工程验收仍为 NOT RUN，未部署虚拟机或下载 PLC。
 
 ## [3.1.0] - 2026-10-01
 

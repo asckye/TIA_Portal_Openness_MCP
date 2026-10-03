@@ -42,13 +42,29 @@ def main():
     commit = git('rev-parse', 'HEAD').decode().strip()
     files = {}
     tracked = [name for name in git('ls-files', '-z').decode('utf-8').split('\0') if name]
-    require(not any(name.startswith(('runtime/v20/', 'runtime/v21/')) or name == 'TiaMcpConfigurator.exe' for name in tracked),
+    require(not any((name.startswith('runtime/') and name != 'runtime/README.md') or name == 'TiaMcpConfigurator.exe' for name in tracked),
             'Binaries must not be tracked in Git (2.8.1 policy): git rm --cached runtime/v20 runtime/v21 TiaMcpConfigurator.exe')
     # Local build outputs (ignored by Git): exactly the runtime inventory that Build-Release recorded plus the
     # configurator - never "whatever is on disk" (an engine started locally leaves TiaMcpServer.startup.log there).
-    inventory = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))['runtimeFiles']
+    metadata = json.loads((root / 'manifest/release-build.json').read_text(encoding='utf-8-sig'))
+    delivery = json.loads((root / 'manifest/delivery.json').read_text(encoding='utf-8-sig'))
+    multi_path = root / 'manifest/multi-version-build.json'
+    multi = json.loads(multi_path.read_text('utf-8-sig')) if delivery.get('multiVersionBuildSha256') else None
+    inventory = metadata['runtimeFiles'].copy()
+    if multi is not None:
+        require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
+        require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
+        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run Build-MultiVersion.ps1 -Test before publication')
+        require(multi['studioReleaseKeys'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], 'Eight release adapters are required')
+        existing = {row['path']: row['sha256'] for row in inventory}
+        for row in multi['files']:
+            require(row['path'].startswith('runtime/'), 'Unexpected multi-version runtime path: ' + row['path'])
+            require(row['path'] not in existing or existing[row['path']] == row['sha256'], 'Conflicting runtime inventories: ' + row['path'])
+            if row['path'] not in existing:
+                inventory.append(row)
+                existing[row['path']] = row['sha256']
     binaries = ['TiaMcpConfigurator.exe'] + sorted(row['path'] for row in inventory)
-    on_disk = {p.relative_to(root).as_posix() for folder in ('runtime/v20', 'runtime/v21') for p in (root / folder).rglob('*') if p.is_file()}
+    on_disk = {p.relative_to(root).as_posix() for p in (root / 'runtime').rglob('*') if p.is_file() and p.name != 'README.md'}
     for extra in sorted(on_disk - set(binaries)):
         print(f'note: {extra} is on disk but not in the validated runtime inventory; left out of the package')
     for name in tracked + binaries:
@@ -59,8 +75,13 @@ def main():
                 f'Unexpected release file: {name}')
         require(not path.name.startswith('Siemens.Engineering'), f'PublicAPI must not be redistributed: {name}')
         files[name] = path.read_bytes()
-    require(sorted(n for n in files if n.endswith('.exe')) ==
-            ['TiaMcpConfigurator.exe', 'runtime/v20/TiaMcpServer.exe', 'runtime/v21/TiaMcpServer.exe'], 'Configurator and both runtime EXEs are required')
+    required_exes = ['TiaMcpConfigurator.exe', 'runtime/v20/TiaMcpServer.exe', 'runtime/v21/TiaMcpServer.exe']
+    if multi is not None:
+        required_exes += [f'runtime/v{key}/TiaMcpServer.exe' for key in multi['studioReleaseKeys'][:6]]
+        required_exes += ['runtime/studio/TiaOpenness.exe']
+        for key in multi['studioReleaseKeys']:
+            require(f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files, 'Studio adapter missing: ' + key)
+    require(all(name in files for name in required_exes), 'A required runtime executable is missing')
 
     metadata = json.loads(files['manifest/release-build.json'].decode('utf-8-sig'))
     delivery = json.loads(files['manifest/delivery.json'].decode('utf-8-sig'))
@@ -72,19 +93,23 @@ def main():
     date = delivery['releaseDate']
     require(re.fullmatch(r'\d{8}', date) is not None, 'Release date must be YYYYMMDD')
     datetime.strptime(date, '%Y%m%d')
-    require(package == f'TIA_MCP_Delivery_v{release}_{date}', 'Use TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD for the complete V20/V21 delivery')
+    require(package == f'TIA_MCP_Delivery_v{release}_{date}', 'Use TIA_MCP_Delivery_vX.Y.Z_YYYYMMDD for the complete delivery')
     for project in ('TiaMcpServer.V21.csproj', 'TiaMcpServer.V20.csproj'):
         xml = ET.fromstring(files[f'tools/tiaportal-mcp/src/TiaMcpServer/{project}'])
         require(xml.findtext('.//FileVersion') == version and xml.findtext('.//InformationalVersion') == metadata['release'], 'Source version differs from validated build')
-    runtime_names = {n for n in files if n.startswith(('runtime/v20/', 'runtime/v21/'))}
-    require(runtime_names == {r['path'] for r in metadata['runtimeFiles']}, 'Runtime file inventory changed after validation')
-    for row in metadata['runtimeFiles']:
+    runtime_names = {n for n in files if n.startswith('runtime/') and n != 'runtime/README.md'}
+    require(runtime_names == {r['path'] for r in inventory}, 'Runtime file inventory changed after validation')
+    for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/openness-shared/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml')}
+    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/openness-shared/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')}
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Source changed after validation: {row['path']}")
+    if multi is not None:
+        for row in multi['sourceFiles']:
+            data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
+            require(sha(data) == row['sha256'], f"Multi-version source changed after validation: {row['path']}")
     require(metadata['validation']['offlinePassed'] > 0, 'No offline suite result')
     for major in ('V20', 'V21'):
         proof = metadata['validation']['runtimes'][major].get('nativeDiagnostics', {})
@@ -157,12 +182,13 @@ def main():
     require(all(n in files for n in required), 'Full delivery entries or documentation missing')
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     files['RELEASE_STATUS.txt'] = (
-        f'Complete V20/V21 delivery: {release}; engine FileVersion {version}.\r\n'
+        f'Complete delivery: {release}; engine FileVersion {version}.\r\n'
+        f'Release keys: {", ".join(delivery.get("releaseKeys", ["20", "21"]))}.\r\n'
         f'Engine build validation date: {metadata["generatedAt"]}; unchanged inputs verified by hashes.\r\n'
         f'Configurator isolated tests passed: {gui["testsPassed"]}; see manifest/configurator-build.json.\r\n'
         f'Source commit: {commit}\r\n'
-        'Use runtime/v20 or runtime/v21; duplicate legacy bin paths are no longer shipped.\r\n'
-        'Use the matching locally installed TIA/Openness and .NET Framework 4.8.\r\n'
+        'Choose runtime/v<release-key>/TiaMcpServer.exe; Studio is runtime/studio/TiaOpenness.exe when included.\r\n'
+        'Install matching TIA/Openness and the documented .NET runtimes separately.\r\n'
         'Preserve existing connection configuration and secret. No user secret is bundled.\r\n'
         'Local validation results: manifest/release-build.json. Real-project acceptance remains separate.\r\n'
         'Migration gaps and acceptance procedure: docs/guides/hmi/read-only-migration.md.\r\n'

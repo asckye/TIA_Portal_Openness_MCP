@@ -20,8 +20,8 @@ using TiaMcp.Versioning;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
 [assembly: AssemblyDescription("TIA Portal V14 SP1-V21 service and AI client configuration")]
-[assembly: AssemblyVersion("3.1.0.0")]
-[assembly: AssemblyFileVersion("3.1.0.0")]
+[assembly: AssemblyVersion("3.2.0.0")]
+[assembly: AssemblyFileVersion("3.2.0.0")]
 
 namespace TiaMcpConfigurator
 {

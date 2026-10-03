@@ -8,9 +8,11 @@ Connect AI clients to Siemens TIA Portal V14 SP1, V15.1 and V16–V21 through ve
 
 ![TIA Portal MCP architecture](docs/assets/architecture.svg)
 
-Published V20/V21 release archives retain their original scope. To build the new eight-version development bundle, run `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Test`. Install Siemens TIA Portal, Openness and licenses separately. Full engines require .NET Framework 4.8; foundation hosts also require .NET 8 and ASP.NET Core 8; Studio requires .NET 10 Desktop Runtime. Native TIA acceptance for the newly enabled targets remains pending.
+The [v3.2.0 release](docs/releases/v3.2.0.md) includes all eight MCP runtimes and Studio. To rebuild the complete bundle, run `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Test`. Install Siemens TIA Portal, Openness and licenses separately. Full engines require .NET Framework 4.8; foundation hosts also require .NET 8 and ASP.NET Core 8; Studio requires .NET 10 Desktop Runtime. Native TIA acceptance for the newly enabled targets remains pending.
 
 ## Start here
+
+Follow the [beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) for installation, version selection, AI client setup, Studio operations and a first SCL import/compile exercise.
 
 Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place from the configurator's **Update → Update engine** menu (the configurator supports Chinese and English; stop the engine first; the configurator closes itself, `scripts\operations\Update-Engine.ps1` downloads and verifies the latest release in its own window, backs up to `.previous\`, replaces the files with robocopy and reopens the configurator; the TIA machine needs access to github.com; `-Rollback` goes back). The same script can be run by hand; the engine's `CheckForUpdate` tool only reports versions.
 
@@ -58,7 +60,7 @@ Delivery and engine versions are independent. [Delivery metadata](manifest/deliv
 | Directory | Contents |
 |---|---|
 | [docs](docs/README.md) | Setup, guides, references, troubleshooting, development and history |
-| [runtime](runtime/README.md) | Canonical V20/V21 executables and dependencies |
+| [runtime](runtime/README.md) | Eight version-specific MCP runtimes, Studio and dependencies |
 | [tools](tools/README.md) | Engine source/tests, AI skill and WPF source |
 | [scripts](scripts/README.md) | Build, checks, generators, diagnostics and operations |
 | [templates](templates/README.md) | PLC/HMI assets and project specifications |
@@ -72,4 +74,4 @@ Independently maintained by asckye. Provenance and third-party notices remain in
 
 ### Integrated desktop (unreleased)
 
-[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows call V20/V21 Openness through a local native bridge, independently of MCP; the original Studio source and history are preserved. Native acceptance and release packaging remain pending.
+[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows select one of eight Openness adapters through a local native bridge, independently of MCP; the original Studio source and history are preserved. Studio is included in the release ZIP; new native acceptance remains pending.

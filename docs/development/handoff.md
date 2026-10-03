@@ -2,6 +2,10 @@
 
 ## 1. Current state
 
+Release v3.2.0 includes the eight MCP runtimes, configurator and direct Openness Studio.
+The public package is built from the reviewed master release commit with runtime/source
+hashes and independent GitHub asset verification; new native acceptance remains NOT RUN.
+
 The only maintained branch is `master`. The current development target is V14 SP1,
 V15.1 and V16–V21. The configurator selects exact release keys. V14 SP1–V19 use
 the PLC foundation host and one typed worker per release; V20/V21 retain their

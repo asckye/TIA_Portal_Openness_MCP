@@ -63,6 +63,8 @@ param(
     [ValidatePattern('^\d{8}$')][string]$ReleaseDate = (Get-Date -Format 'yyyyMMdd'),
     [string]$V20ReferenceRoot = '',
     [string]$V21ReferenceRoot = '',
+    [string]$PublicApiRoot = '',
+    [string]$PowerShell7 = 'pwsh',
     [string]$Python = '',
     [string]$Git = 'git',
     [string]$Token = '',
@@ -127,6 +129,9 @@ if (-not $V20ReferenceRoot) { $V20ReferenceRoot = FirstExisting @((Join-Path $re
 if (-not $V21ReferenceRoot) { $V21ReferenceRoot = FirstExisting @((Join-Path $repo 'TIA_V21_PublicAPI\V21\net48'), (Join-Path (Split-Path $repo -Parent) 'TIA_V21_PublicAPI\V21\net48')) }
 if (-not $V20ReferenceRoot -or -not (Test-Path (Join-Path $V20ReferenceRoot 'Siemens.Engineering.dll'))) { Fail 'V20 PublicAPI not found (needs Siemens.Engineering.dll); pass -V20ReferenceRoot' }
 if (-not $V21ReferenceRoot -or -not (Test-Path (Join-Path $V21ReferenceRoot 'Siemens.Engineering.Base.dll'))) { Fail 'V21 PublicAPI net48 not found (needs Siemens.Engineering.Base.dll); pass -V21ReferenceRoot' }
+if (-not $PublicApiRoot) { $PublicApiRoot = Split-Path (Split-Path $V20ReferenceRoot -Parent) -Parent }
+$PublicApiRoot = (Resolve-Path -LiteralPath $PublicApiRoot).Path
+$null = Get-Command $PowerShell7 -ErrorAction Stop
 if (-not $Python) {
     $cmd = Get-Command python -ErrorAction SilentlyContinue
     if ($cmd -and $cmd.Source -notlike '*WindowsApps*') { $Python = $cmd.Source } else { $Python = Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe' }
@@ -187,7 +192,10 @@ else {
         ReplaceOnce $p ('<InformationalVersion>' + $previous + '</InformationalVersion>') ('<InformationalVersion>' + $Version + '</InformationalVersion>') ($proj + ' InformationalVersion')
     }
     ReplaceOnce (Join-Path $repo 'docs\README.md') ('[当前发布说明](releases/v' + $previous + '.md)') ('[当前发布说明](releases/v' + $Version + '.md)') 'docs/README.md current release link'
-    ReplaceOnce (Join-Path $repo 'docs\reference\capabilities.md') ('本文说明 ' + $previous + ' 引擎的能力与缺口') ('本文说明 ' + $Version + ' 引擎的能力与缺口') 'capabilities.md intro'
+    # Capability prose is maintained with the release note; do not rewrite historical entries.
+    $studioProps = Join-Path $repo 'tools\tia-openness-studio\Directory.Build.props'
+    $studioVersion = [regex]::Match((ReadText $studioProps), '<Version>([^<]+)</Version>').Groups[1].Value
+    ReplaceOnce $studioProps ('<Version>' + $studioVersion + '</Version>') ('<Version>' + $Version + '</Version>') 'Studio version'
     $roadmap = Join-Path $repo 'docs\development\roadmap.md'
     $rm = ReadText $roadmap
     $title = [regex]::Match($rm, '(?m)^# 路线图与待办（[^）]*，' + [regex]::Escape($previous) + ' 更新）')
@@ -207,18 +215,29 @@ else {
     Say 'Build-Release.ps1 (both engines, offline suite, shape checks, configurator, manifests) ...'
     $buildArgs = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts\build\Build-Release.ps1'),
         '-V20ReferenceRoot', $V20ReferenceRoot, '-V21ReferenceRoot', $V21ReferenceRoot, '-Python', $Python, '-ReleaseDate', $ReleaseDate)
-    $proc = Start-Process -FilePath 'powershell' -ArgumentList $buildArgs -NoNewWindow -Wait -PassThru -RedirectStandardOutput $buildLog -RedirectStandardError (Join-Path $repo 'build.err.log')
+    # Direct invocation applies PowerShell's Windows PowerShell module-path handling
+    # and waits for this script, rather than long-lived compiler server descendants.
+    $savedBuildPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & powershell.exe @buildArgs > $buildLog 2> (Join-Path $repo 'build.err.log')
+        $buildExitCode = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $savedBuildPreference }
     $built = $false
     if (Test-Path -LiteralPath $buildLog) { $built = (Get-Content -LiteralPath $buildLog -Raw) -match 'Built and checked both runtimes' }
-    if (-not $built) {
+    if ($buildExitCode -ne 0 -or -not $built) {
         $err = ''
         if (Test-Path (Join-Path $repo 'build.err.log')) { $err = (Get-Content (Join-Path $repo 'build.err.log') -Raw) }
-        Fail ('Build-Release did not report "Built and checked both runtimes" (exit ' + $proc.ExitCode + '). Tail of build.err.log: ' + ($err.Substring([Math]::Max(0, $err.Length - 1500))))
+        Fail ('Build-Release did not report "Built and checked both runtimes" (exit ' + $buildExitCode + '). Tail of build.err.log: ' + ($err.Substring([Math]::Max(0, $err.Length - 1500))))
     }
     Say 'Build-Release OK'
+    Run $PowerShell7 @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts\build\Build-MultiVersion.ps1'),
+        '-PublicApiRoot', $PublicApiRoot, '-Python', $Python, '-SkipFullEngines', '-Test') 'Build-MultiVersion.ps1 (eight releases and Studio)'
 }
 
 # ---------------------------------------------------------------- 4. local gates
+$deliveryRecord = Get-Content -LiteralPath (Join-Path $repo 'manifest/delivery.json') -Raw | ConvertFrom-Json
+if (-not $deliveryRecord.multiVersionBuildSha256) { Fail 'A tested eight-version build is required for publication; run Build-MultiVersion.ps1 -Test' }
 Run $Python @((Join-Path $repo 'scripts\checks\Check-Repository.py')) 'Check-Repository.py'
 Run $Python @((Join-Path $repo 'scripts\checks\Check-DeadToolReferences.py')) 'Check-DeadToolReferences.py'
 Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Path $repo 'scripts\checks\Validate-Bundle.ps1'), '-Strict') 'Validate-Bundle.ps1 -Strict'
@@ -226,10 +245,10 @@ Run 'powershell' @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', (Join-Pa
 # ---------------------------------------------------------------- 5. commit + package
 # stage tracked changes plus new files under the known source/doc roots only - never "git add -A" at the repo root;
 # the binaries are ignored by .gitignore since 2.8.1, so they can never end up in the commit
-& $Git add -u
-& $Git add -- docs tools scripts templates hooks manifest reference .claude-plugin .github CHANGELOG.md CLAUDE.md README.md README.zh-CN.md NOTICE.md
+$changedPaths = @(& $Git diff --name-only) + @(& $Git ls-files --others --exclude-standard -- docs tools scripts templates hooks manifest reference .claude-plugin .github)
+if ($changedPaths.Count) { & $Git add -- @changedPaths }
 $staged = @(& $Git diff --cached --name-only)
-$binariesStaged = @($staged | Where-Object { $_ -like 'runtime/v2*' -or $_ -eq 'TiaMcpConfigurator.exe' })
+$binariesStaged = @($staged | Where-Object { ($_ -like 'runtime/*' -and $_ -ne 'runtime/README.md') -or $_ -eq 'TiaMcpConfigurator.exe' })
 if ($binariesStaged) { & $Git reset -q; Fail ('binaries must not be committed (2.8.1 policy): ' + ($binariesStaged -join ', ')) }
 $others = (& $Git status --porcelain) | Where-Object { $_ -match '^\?\?' }
 if ($others) { Say ("untracked files left out (add them by hand if they belong to the release): " + (($others | ForEach-Object { $_.Substring(3) }) -join ', ')) }
@@ -257,7 +276,7 @@ if ($resumed -and (Test-Path -LiteralPath $resultPath)) { $packaged = (Get-Conte
 if ($packaged -eq $head -and (Test-Path -LiteralPath (Join-Path $pkgDir ($pkgName + '.zip')))) { Say ('package from ' + $head.Substring(0, 12) + ' already exists') }
 else {
     foreach ($leftover in @((Join-Path $pkgDir $pkgName), (Join-Path $pkgDir ($pkgName + '.zip')), (Join-Path $pkgDir ($pkgName + '.sha256')), $resultPath)) {
-        if (Test-Path -LiteralPath $leftover) { Remove-Item -LiteralPath $leftover -Recurse -Force; Say ('removed earlier output ' + $leftover) }
+        if (Test-Path -LiteralPath $leftover) { Fail ('Earlier package output exists; preserve and inspect before repackaging: ' + $leftover) }
     }
     Run $Python @((Join-Path $repo 'scripts\build\Package-Release.py'), '--git', $gitExe) 'Package-Release.py'
 }

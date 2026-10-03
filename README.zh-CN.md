@@ -8,9 +8,11 @@
 
 ![TIA Portal MCP 架构图](docs/assets/architecture.svg)
 
-已发布 ZIP 仍按其发布时的 V20/V21 范围提供。八版本开发包使用 `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK根目录> -Test` 构建。TIA Portal、Openness 和许可证需自行安装。完整引擎需要 .NET Framework 4.8；旧版本宿主还需 .NET 8 和 ASP.NET Core 8；Studio 需 .NET 10 Desktop Runtime。新增版本尚待真实 TIA 工程验收。
+[v3.2.0 正式包](docs/releases/v3.2.0.md) 已包含八版 MCP 运行文件和 Studio。完整八版本包使用 `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK根目录> -Test` 构建。TIA Portal、Openness 和许可证需自行安装。完整引擎需要 .NET Framework 4.8；旧版本宿主还需 .NET 8 和 ASP.NET Core 8；Studio 需 .NET 10 Desktop Runtime。新增版本尚待真实 TIA 工程验收。
 
 ## 从这里开始
+
+第一次使用请按[新手使用指南](docs/getting-started/beginners.zh-CN.md)操作：下载与环境准备、选择版本、连接 AI、Studio 手动操作，以及第一个 SCL 导入和编译练习。
 
 从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。以后升级不必重新解压：先停掉引擎，用配置器菜单 **更新 → 更新引擎…**（配置器自己关闭，`scripts\operations\Update-Engine.ps1` 在新窗口里在线取最新版、校验、备份到 `.previous\`、用 robocopy 替换文件，然后自动重开配置器；TIA 机器要能访问 github.com；`-Rollback` 换回上一版）；脚本也可以手动运行，引擎内的 `CheckForUpdate` 工具只报版本、不改文件。
 
@@ -55,13 +57,13 @@ V21 完整引擎静态清单共 **488 个工具**（V20 可用 477 个），分 
 | 目录 | 用途 |
 |---|---|
 | [docs](docs/README.md) | 入门、操作、参考、排错、开发及历史记录 |
-| [runtime](runtime/README.md) | V20 / V21 固定运行路径及依赖 |
+| [runtime](runtime/README.md) | 八版本 MCP、Studio 运行路径及依赖 |
 | [tools](tools/README.md) | 引擎源码/测试、AI skill、WPF 源码 |
 | [scripts](scripts/README.md) | 构建、检查、生成、诊断和可选操作 |
 | [templates](templates/README.md) | PLC/HMI 模板与工程 spec |
 | [manifest](manifest/README.md) | 文件清单、版本、验证记录及哈希 |
 
-原根目录配置及启动 CMD/BAT 已由 GUI 替代。交付包不再附带 `bin/Release` 引擎副本，统一使用 `runtime/v20`、`runtime/v21`。调整对照见 [仓库结构说明](docs/development/repository-layout.md)。
+原根目录配置及启动 CMD/BAT 已由 GUI 替代。交付包不再附带 `bin/Release` 引擎副本，各版本使用 `runtime/v<版本标识>`，Studio 使用 `runtime/studio`。调整对照见 [仓库结构说明](docs/development/repository-layout.md)。
 
 开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。提问看 [支持说明](.github/SUPPORT.md)；安全问题按 [安全策略](.github/SECURITY.md) 私下报告，不要开公开 issue。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
 
@@ -69,4 +71,4 @@ V21 完整引擎静态清单共 **488 个工具**（V20 可用 477 个），分 
 
 ### 融合版桌面（尚未发布）
 
-[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作通过本地原生 Bridge 直接调用 V20/V21 Openness，Studio 不再依赖 MCP；原 Studio 的完整源码与历史已保留。原生验收和发布打包仍待完成。
+[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作通过本地原生 Bridge 选择八版 Openness 适配器，Studio 不再依赖 MCP；原 Studio 的完整源码与历史已保留。Studio 已纳入正式交付包，新功能的原生验收仍待完成。

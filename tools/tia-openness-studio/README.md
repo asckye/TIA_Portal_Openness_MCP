@@ -8,6 +8,8 @@ Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe
 copyright 2026 asckye. See [LICENSE](LICENSE) and [file provenance](upstream.json).
 The complete original tree and Git history remain under `upstream/` as reference archives.
 
+For a first installation and a step-by-step desktop walkthrough, see the [beginner guide (Chinese)](../../docs/getting-started/beginners.zh-CN.md).
+
 ## Build and run
 
 Build on Windows with .NET 10 SDK, .NET Framework 4.8 and the authorized PublicAPI directories:
@@ -96,5 +98,5 @@ progress and error recovery. It also runs Doctor through the ordinary bridge wit
 session. WPF tests render and inspect the actual controls. Native adapters compile against the
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Live TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; `Package-MultiVersion.py` creates a validated local development archive. Full audit findings are in
+Live TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; the v3.2.0 formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
 [the duplicate-code review](../../docs/development/studio-native-and-duplicates-20261002.md).

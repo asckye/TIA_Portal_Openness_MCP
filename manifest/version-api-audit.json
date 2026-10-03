@@ -48,7 +48,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "67892ad36b697bd0919c6b4ac0f4b6fe65b3128235c90333f5f509f4a389b6e6"
       },
-      "compiledCallInventorySha256": "0ee5e84877477bcef1f436ff31794acb0c876163ffa92e67714984b9af63c91a"
+      "compiledCallInventorySha256": "3262ec69c8cea4ac154d88b843b7d904e59b34e561c79f1012fbff8da98612ca"
     },
     {
       "releaseKey": "15.1",
@@ -88,7 +88,7 @@
           44
         ],
         [
-          "Siemens.Engineering.MC.Drives",
+          "Siemens.Engineering.Library.Types",
           39
         ]
       ],
@@ -96,7 +96,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "e6864dad4478bffac958e1d2ce72328d3b5218ccf1447557fa1da6d3469991b6"
       },
-      "compiledCallInventorySha256": "8cdb5ade0f38469d7ee6afba8d38933501ace47c455d25e2145c9b2e25f8b9f2"
+      "compiledCallInventorySha256": "5c5eaf280d078c2602f9a02b145992492a37c7eaee174840305a7e26d331394e"
     },
     {
       "releaseKey": "16",
@@ -112,11 +112,11 @@
           146
         ],
         [
-          "Siemens.Engineering.SiVArc",
+          "Siemens.Engineering",
           136
         ],
         [
-          "Siemens.Engineering",
+          "Siemens.Engineering.SiVArc",
           136
         ],
         [
@@ -136,7 +136,7 @@
           45
         ],
         [
-          "Siemens.Engineering.MC.Drives",
+          "Siemens.Engineering.Library.Types",
           39
         ]
       ],
@@ -144,7 +144,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "b2b6542acc3ad33270193487eae57f896e11acd281038377f1bdce1cb478413a"
       },
-      "compiledCallInventorySha256": "6ad39327ffbee4267b50867819988e10109192c0f70a88bd0fd65a323f5fa109"
+      "compiledCallInventorySha256": "be98668c73245456c36e6b7b5abd8200f464886e71512c189e0a1378bbf27c06"
     },
     {
       "releaseKey": "17",
@@ -192,7 +192,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "5ab7b2e24b129ede6daa7e28d53dc6e9e724f6ee7f86c13c20625d35190f53fa"
       },
-      "compiledCallInventorySha256": "44c6c027ff58a8f968018effb58c8d63b12d5270d9979e9ef0291931cb1b57d2"
+      "compiledCallInventorySha256": "73f44155470a576c02dc24c05cecc08d83d4d9a034745b70c5224549dc3ec7e3"
     },
     {
       "releaseKey": "18",
@@ -240,7 +240,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "4ee727da5077757f28081197cb26d222df9bb90329ab2176400fc39c163b5245"
       },
-      "compiledCallInventorySha256": "44c6c027ff58a8f968018effb58c8d63b12d5270d9979e9ef0291931cb1b57d2"
+      "compiledCallInventorySha256": "73f44155470a576c02dc24c05cecc08d83d4d9a034745b70c5224549dc3ec7e3"
     },
     {
       "releaseKey": "19",
@@ -288,7 +288,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "a6bf56b1adb638e6b4b7ff9a52e7d89021323ee3b46e52967c95eb3764dae684"
       },
-      "compiledCallInventorySha256": "324ecd41ad80ba699192b4b6835813650a69286bda94988984dd8a5a8beeb23b"
+      "compiledCallInventorySha256": "a0ab72ffc750003d03d6ed7a2e441ad87c2eca3ce177b68cd8c3c8045e45ea81"
     },
     {
       "releaseKey": "20",
@@ -336,7 +336,7 @@
         "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
         "Siemens.Engineering.xml": "154d83b9cf013c2428b514bbafdb4802946661b177c6323e53e037f05a297cd8"
       },
-      "compiledCallInventorySha256": "dcb7b317bda1c62219a35bbe8b1350c5ba602ece3512f88179e61495448839c1"
+      "compiledCallInventorySha256": "1b580d7e229d20c4effb11030d9516b1b6d1996ca6a94e7b0d6a00a43a86a0f7"
     },
     {
       "releaseKey": "21",
@@ -395,7 +395,7 @@
         "Siemens.Engineering.WinCC.xml": "2d1c7e1816b43ab10ead3036d37e007d15540ddbddc6a1a239635f71e43e7615",
         "Siemens.Engineering.WinCCUnified.xml": "894afc507742b3498a3be4273e6818b05677103ecdd4687af1c6d1caa4a5f73b"
       },
-      "compiledCallInventorySha256": "21300f1d358a2a513133c4c3dd29c8dba3c85fc4ed78b13dbf40eed276589dfd"
+      "compiledCallInventorySha256": "952afafe6e20b7fc8ab1a4e49280c468e03219845ca1d8a6f1775193ccc8be5f"
     }
   ]
 }

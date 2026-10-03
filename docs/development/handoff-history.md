@@ -1,5 +1,10 @@
 # 接续交接历史（逐版本记录与阶段收口清单）
 
+
+## 2026-10-03 — v3.2.0
+
+The complete release now packages V14 SP1, V15.1 and V16–V21 MCP runtimes, the configurator and eight-adapter direct Openness Studio. Tool counts are 57/58/60/60/60/62/477/488; examples cover 1,322 release/tool pairs. Foundation source import/generation and compile execution, versioned flat declarations, shared algorithms and English/Chinese Glass views are included. Release notes and build manifests record scope and verification; new native TIA acceptance remains NOT RUN. See [v3.2.0](../releases/v3.2.0.md).
+
 [交接总页](handoff.md) · [换机器交接单](handoff-checklist.md) · [文档目录](../README.md) · [覆盖清单](../reference/openness-coverage.md)
 
 这一页只存历史：从 `handoff.md` §1 移出来的逐版本条目（每版做了什么、部署后真机结果）、2.7.42 覆盖审计与阶段 1–6 的收口清单（含当时用过的官方页面 id）、阶段 6 的旧类型清单。当前状态与下一步在 [handoff.md](handoff.md)；各版详情在 `../releases/`，变更摘要在 `../../CHANGELOG.md`。新发布后在本页 §1 顶部加一条，`handoff.md` §1 只改现状表。

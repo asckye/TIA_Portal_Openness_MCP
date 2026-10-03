@@ -1,6 +1,8 @@
 # WPF 图形配置指南
 
-本地 3.1.0 候选的可选工作进程隔离需在服务端命令或 MCP 条目中添加 `--isolate-openness`；配置器暂没有对应勾选项。启用前阅读[隔离模式及故障恢复](../guides/openness-worker-isolation.md)。
+第一次使用请先阅读[新手使用指南](beginners.zh-CN.md)，完成环境准备、连接和第一个工程练习。
+
+可选工作进程隔离需在服务端命令或 MCP 条目中添加 `--isolate-openness`；配置器暂没有对应勾选项。启用前阅读[隔离模式及故障恢复](../guides/openness-worker-isolation.md)。
 
 双击 `TiaMcpConfigurator.exe` 打开连接中心。Glass Layers 界面左侧依次为连接模式、TIA 安装、HTTP 服务和 AI 客户端卡片；右侧为连接摘要与活动日志。顶部模式卡片切换 **虚拟机 ↔ 宿主机** 与 **同一台电脑**。右上角 **•••** 菜单可切换中文 / English、浅色 / 深色 / 跟随系统，并保存两端配置；中文 Windows 默认使用中文。切换语言和主题会保留当前输入与选择。日常配置与启动无需 CMD/BAT。需要 Windows .NET Framework 4.8。服务端把此 EXE 放在完整 Release 包根目录（与 `runtime` 文件夹同级）；宿主机配置客户端时只需此 EXE，不用安装 TIA。
 
@@ -92,7 +94,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 ## 工具显示与手动 HTTP 启动
 
-默认 lite 档显示 52 个常用工具，其余通过 `FindTools` / `CallTool` 使用；静态完整清单为 486 个，实际以服务的 `tools/list` 为准。需要全量直接显示时给服务传 `--profile full`。修改档位后重启服务与客户端并新建会话，避免读取旧缓存。
+V20/V21 默认 lite 档显示 63 个常用工具，其余通过 `FindTools` / `CallTool` 使用；完整清单分别为 477 / 488 个，实际以服务的 `tools/list` 为准。需要全量直接显示时给完整引擎传 `--profile full`。V14 SP1–V19 直接注册各自的 57–62 个基础工具，不使用完整引擎的档位和发现入口。修改配置后重启服务与客户端并新建会话，避免读取旧缓存。
 
 如需排查，可在安装 TIA 的电脑上从完整包根目录直接启动（示例 IP/密钥须替换）：
 
