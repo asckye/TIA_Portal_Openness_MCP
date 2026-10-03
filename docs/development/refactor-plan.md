@@ -1,6 +1,6 @@
 # 重构计划
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md)
 
 本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
 worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
@@ -68,6 +68,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | done |
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（维护者决定暂不进行真机实测） | deferred |
 | P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | todo |
+| P0-06 | 离线返回结构快照：不连接 TIA 即可调用的工具（FindTools、ListToolCategories、PreflightToolCall、断开时的 GetState、离线构造器等）的返回结构基线与对比 | todo |
 | P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
 
 ### 阶段 1：构建与验证
@@ -96,8 +97,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P3-01 | 设计：`Portal` 按领域拆为服务接口（会话/工程、程序块、设备与网络、PLC 表、HMI、库、VCI、编译）；工具改为非静态类型并通过依赖注入取服务；写入设计文档后再执行 | todo |
-| P3-02… | 按领域逐个迁移，每个领域一个任务，每次兼容快照无差异 | todo |
+| P3-01 | 设计：见[完整引擎拆分设计](engine-decomposition.md)（12 个领域、内核接口、`ToolCatalog`/依赖注入、17 步迁移顺序与验收） | done |
+| P3-02… | 按设计文档的迁移顺序逐步执行；每步兼容快照 0 差异（含描述），织入覆盖的西门子成员集合不变 | todo |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复（行为变更，需维护者确认是否在兼容阶段做） | blocked |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
 | P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构 | todo |
