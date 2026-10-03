@@ -28,20 +28,24 @@ $results=New-Object System.Collections.Generic.List[object]
 function Check([string]$name,[object[]]$case,[string]$api,[string[]]$extra,[string]$expectedError=''){
     $project=Join-Path $root ($case[0]+'/Adapter.'+$case[1]+'.csproj')
     $log=Join-Path $out ($name+'.log')
+    $buildOutput=Join-Path $out ($name+'-'+[Guid]::NewGuid().ToString('N'))
     # This target only checks source existence and PE identity; no restore,
     # compilation, worker process, Siemens assembly load, or native invocation.
-    & $Dotnet msbuild $project -nologo -v:minimal -t:ValidateAdapterInputs "-p:AdapterSourceRoot=$source" "-p:SiemensEngineeringDirectory=$api" @extra *> $log
+    & $Dotnet msbuild $project -nologo -v:minimal -t:ValidateAdapterInputs "-p:AdapterSourceRoot=$source" "-p:SiemensEngineeringDirectory=$api" "-p:BaseIntermediateOutputPath=$buildOutput/obj/" "-p:BaseOutputPath=$buildOutput/bin/" @extra *> $log
     $code=$LASTEXITCODE
     $text=[IO.File]::ReadAllText($log)
+    $noCompileOutput=!(Test-Path -LiteralPath $buildOutput) -or @(Get-ChildItem -LiteralPath $buildOutput -Recurse -File).Count -eq 0
     $passed=if(!$expectedError){$code -eq 0}else{$code -ne 0 -and $text.Contains($expectedError)}
-    $results.Add([ordered]@{name=$name;passed=$passed;exitCode=$code;expectedError=$expectedError;log=$log})
+    $passed=$passed -and $noCompileOutput
+    $results.Add([ordered]@{name=$name;passed=$passed;exitCode=$code;expectedError=$expectedError;noCompileOutput=$noCompileOutput;log=$log})
     Write-Output ($name+': '+$passed)
 }
 foreach($c in $cases){Check ('valid-'+$c[1]) $c (Join-Path $apiRoot $c[2]) @()}
 $v20=$cases[6]; $api20=Join-Path $apiRoot $v20[2]
 Check 'wrong-api-version' $v20 (Join-Path $apiRoot $cases[5][2]) @() 'Wrong adapter API identity'
-Check 'missing-api-directory' $v20 (Join-Path $out 'absent-sdk') @() 'An explicit real PublicAPI directory is required'
-Check 'missing-api-module' $cases[7] $api20 @() 'Missing exact adapter API module'
+# TiaPublicApi.props rejects a missing core module before ValidateAdapterInputs runs.
+Check 'missing-api-directory' $v20 (Join-Path $out 'absent-sdk') @() 'PublicAPI 20 requires Siemens.Engineering.dll'
+Check 'missing-api-module' $cases[7] $api20 @() 'PublicAPI 21 requires Siemens.Engineering.Base.dll'
 Check 'wrong-release' $v20 $api20 @('-p:TiaReleaseKey=21') 'Adapter release mismatch'
 Check 'override-project-identity' $v20 $api20 @('-p:AdapterReleaseKey=19','-p:TiaReleaseKey=19') 'Adapter release mismatch'
 Check 'excluded-v14' $cases[0] (Join-Path $apiRoot $cases[0][2]) @('-p:TiaReleaseKey=14') 'Adapter release mismatch'

@@ -149,6 +149,17 @@ GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR
 发布流程重新生成构建记录，再由 `Validate-Bundle.ps1 -Strict`、`Package-Release.py` 和发布后验包完整验证源码哈希。
 托管 runner 没有 Siemens PublicAPI，不能替代本机完整构建。修改编译输入后必须在发布前重新构建，不能手填 manifest 哈希。
 
+### 适配器输入检查
+
+```powershell
+pwsh -NoProfile -File tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Test-AdapterInputs.ps1 -SourceRoot tools/tiaportal-mcp/src -PublicApiRoot <SDK-root> -EvidenceDirectory bin-build/adapter-inputs
+```
+
+需要八版 PublicAPI；预期 20 项通过、0 项失败（8 个有效 SDK 选择、12 个无效配置）。
+脚本只执行 `ValidateAdapterInputs`，不还原、不编译、不启动 worker 或 TIA，并检查每个用例的独立输出路径没有生成文件。
+缺少 SDK 目录或核心程序集时，先由 `TiaPublicApi.props` 拒绝；其余配置继续由适配器目标校验。
+逐项日志和 `input-results.json` 写入证据目录。本检查手动运行，未接入 CI。
+
 ## 完整八版本构建
 
 ```powershell
