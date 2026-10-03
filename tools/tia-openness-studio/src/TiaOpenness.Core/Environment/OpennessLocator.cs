@@ -38,10 +38,28 @@ namespace TiaOpenness.Core.Environment
         private const string ModularAssembly = "Siemens.Engineering.Base.dll";
         private const string ModularSubfolder = "net48";
 
+        /// <summary>Explicit local SDK directory for an offline bridge invocation.</summary>
+        public static string PublicApiDirectory { get; set; }
+
         /// <summary>All installations found, newest version first.</summary>
         public static IReadOnlyList<OpennessInstallation> FindAll()
         {
             var found = new Dictionary<string, OpennessInstallation>(StringComparer.OrdinalIgnoreCase);
+
+            if (!string.IsNullOrWhiteSpace(PublicApiDirectory))
+            {
+                var directory = Path.GetFullPath(PublicApiDirectory);
+                bool modular = File.Exists(Path.Combine(directory, ModularAssembly));
+                AddInstallation(found, new OpennessInstallation
+                {
+                    EngineeringDllPath = Path.Combine(directory, modular ? ModularAssembly : MonolithicAssembly),
+                    PublicApiDirectory = directory,
+                    PrimaryAssembly = modular ? ModularAssembly : MonolithicAssembly,
+                    IsModular = modular,
+                    DiscoveredBy = "Explicit SDK",
+                });
+                return found.Values.Where(i => TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.ApiVersion == i.Version)).ToList();
+            }
 
             foreach (var view in new[] { RegistryView.Registry64, RegistryView.Registry32 })
             {

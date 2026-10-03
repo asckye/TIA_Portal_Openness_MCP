@@ -12,6 +12,7 @@ namespace TiaMcp.WorkerChannel
         private readonly ChannelIdentity identity;
         private readonly Func<ChannelBinding> observe;
         private readonly Func<ChannelRequest, ChannelResponse> dispatch;
+        private readonly ChannelProfile profile;
         private long lastId;
         private bool hello;
         private volatile bool active;
@@ -20,8 +21,8 @@ namespace TiaMcp.WorkerChannel
         public bool Poisoned => Volatile.Read(ref faulted) != 0;
 
         public ChannelServer(Stream input, Stream output, ChannelIdentity identity, Func<ChannelBinding> observe,
-            Func<ChannelRequest, ChannelResponse> dispatch)
-        { this.input = input; this.output = output; this.identity = identity; this.observe = observe; this.dispatch = dispatch; }
+            Func<ChannelRequest, ChannelResponse> dispatch, ChannelProfile profile = ChannelProfile.Foundation)
+        { this.input = input; this.output = output; this.identity = identity; this.observe = observe; this.dispatch = dispatch; this.profile = profile; }
 
         public void Run()
         {
@@ -63,7 +64,7 @@ namespace TiaMcp.WorkerChannel
                     long id = ChannelCodec.Number(root, "id");
                     if (id <= lastId) throw new IOException("Duplicate or stale worker request id.");
                     var method = ChannelCodec.Text(root, "method");
-                    if (!method.StartsWith("adapter.", StringComparison.Ordinal) || method.Length == 8) throw new IOException("Unknown worker method namespace.");
+                    if (!ChannelCodec.ValidMethod(method, profile)) throw new IOException("Unknown worker method namespace.");
                     var args = root.GetProperty("params");
                     if (args.ValueKind != System.Text.Json.JsonValueKind.Object) throw new IOException("Worker parameters must be an object.");
                     var before = observe();
@@ -72,14 +73,15 @@ namespace TiaMcp.WorkerChannel
                     lastId = id;
                     int owner = Thread.CurrentThread.ManagedThreadId, progress = 0;
                     active = true;
-                    var request = new ChannelRequest(id, method, args.GetRawText(), percent =>
+                    var request = new ChannelRequest(id, method, args.GetRawText(), (percent, payload) =>
                     {
                         try
                         {
                             RequireUsable();
                             if (!active || lastId != id || owner != Thread.CurrentThread.ManagedThreadId || percent < 0 || percent > 100 || ++progress > ChannelCodec.ProgressLimit)
                                 throw new IOException("Late, invalid or cross-thread worker progress.");
-                            Emit(ChannelCodec.Progress(id, progress, percent));
+                            if (payload != null && profile != ChannelProfile.Studio) throw new IOException("Unexpected worker progress payload.");
+                            Emit(ChannelCodec.Progress(id, progress, percent, payload));
                         }
                         catch (Exception ex) { throw Fault(ex); }
                     });
@@ -90,8 +92,8 @@ namespace TiaMcp.WorkerChannel
                     RequireUsable();
                     var after = observe();
                     RequireUsable();
-                    Emit(ChannelCodec.Reply(id, before.Epoch, after.Epoch, response));
-                    if (response.Failure?.Outcome == ChannelOutcome.Unknown) throw new IOException("Worker native outcome is unknown; session stopped.");
+                    Emit(ChannelCodec.Reply(id, before.Epoch, after.Epoch, response, profile));
+                    if (profile == ChannelProfile.Foundation && response.Failure?.Outcome == ChannelOutcome.Unknown) throw new IOException("Worker native outcome is unknown; session stopped.");
                 }
             }
             catch (Exception ex) { throw Fault(ex); }

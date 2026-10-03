@@ -116,6 +116,10 @@ foreach ($name in @('ChannelMessage.cs','LineFraming.cs','ChannelCodec.cs','Chan
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing worker channel source: $path" }
 }
 if (!$NoBinaries) {
+    if (!(Test-Path -LiteralPath (Join-Path $root 'runtime/studio/TiaMcp.WorkerChannel.dll'))) { Fail 'Missing Studio client worker channel' }
+    foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
+        if (!(Test-Path -LiteralPath (Join-Path $root "runtime/studio/bridge/$name"))) { Fail "Missing Studio bridge channel dependency: $name" }
+    }
     foreach ($key in @('14sp1','15.1','16','17','18','19')) {
         foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll')) {
             if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$key/$name"))) { Fail "Missing worker channel host dependency: v$key/$name" }
@@ -125,6 +129,7 @@ if (!$NoBinaries) {
         }
     }
 }
+if (!(Test-Path -LiteralPath (Join-Path $root 'tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs'))) { Fail 'Missing Studio channel codec source' }
 
 # The checkout and delivery use the same canonical runtime paths.
 $exe = Join-Path $root 'runtime/v21/TiaMcpServer.exe'

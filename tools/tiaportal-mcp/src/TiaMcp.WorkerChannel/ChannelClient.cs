@@ -10,6 +10,8 @@ namespace TiaMcp.WorkerChannel
         private readonly object gate = new object();
         private readonly Stream input, output;
         private readonly ChannelIdentity identity;
+        private readonly ChannelProfile profile;
+        private readonly Action<string>? progress;
         private readonly TaskCompletionSource<bool> hello = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationTokenSource lifetime = new CancellationTokenSource();
         private readonly Task receiver;
@@ -19,11 +21,14 @@ namespace TiaMcp.WorkerChannel
         public bool Poisoned { get { lock (gate) return poisoned; } }
         public bool OutcomeUnknown { get { lock (gate) return unknown; } }
         public long BindingEpoch { get { lock (gate) return epoch; } }
+        public long LastRequestId { get { lock (gate) return sequence; } }
         public void Invalidate(Exception cause) { Poison(cause); }
 
-        public ChannelClient(Stream workerOutput, Stream workerInput, ChannelIdentity expected)
+        public ChannelClient(Stream workerOutput, Stream workerInput, ChannelIdentity expected,
+            ChannelProfile profile = ChannelProfile.Foundation, Action<string>? progress = null)
         {
             input = workerOutput; output = workerInput; identity = expected;
+            this.profile = profile; this.progress = progress;
             receiver = Task.Run(Receive);
         }
 
@@ -51,7 +56,8 @@ namespace TiaMcp.WorkerChannel
                 RequireUsable();
                 if (!verified) throw Poison(new IOException("Worker hello has not been verified."));
                 if (pending != null) throw Poison(new IOException("Concurrent worker call; session stopped."));
-                if (!method.StartsWith("adapter.", StringComparison.Ordinal) || method.Length == 8) throw new ArgumentException("Worker method must use adapter.<operation>.");
+                if (!ChannelCodec.ValidMethod(method, profile)) throw new ArgumentException(profile == ChannelProfile.Foundation
+                    ? "Worker method must use adapter.<operation>." : "Invalid Studio method.");
                 try { bytes = ChannelCodec.Request(checked(sequence + 1), method, argumentsJson, epoch); }
                 catch (Exception ex) { throw Poison(ex); }
                 // Cancellation here is still an unsent call. No id or epoch is consumed.
@@ -67,13 +73,13 @@ namespace TiaMcp.WorkerChannel
                 var response = await Bounded(exchange, timeout, token).ConfigureAwait(false);
                 lock (gate)
                 {
-                    if (response.Failure?.Outcome != ChannelOutcome.Unknown) RequireUsable();
+                    if (profile == ChannelProfile.Studio || response.Failure?.Outcome != ChannelOutcome.Unknown) RequireUsable();
                 }
                 if (response.Failure != null) throw response.Failure;
                 return response.ResultJson;
             }
             catch (ChannelFailure ex) when (ex.Outcome != ChannelOutcome.Unknown) { throw; }
-            catch (ChannelFailure) { throw; } // The receiver already poisoned an Unknown reply.
+            catch (ChannelFailure) { throw; } // Only Foundation treats an Unknown reply as terminal.
             catch (Exception ex) { throw Poison(ex); }
             finally { lock (gate) if (ReferenceEquals(pending, call)) pending = null; }
         }
@@ -97,6 +103,7 @@ namespace TiaMcp.WorkerChannel
                     using (var document = ChannelCodec.Parse(bytes, ChannelCodec.ResponseLimit))
                     {
                         var root = document.RootElement;
+                        string? progressPayload = null;
                         lock (gate)
                         {
                             RequireUsable();
@@ -113,33 +120,42 @@ namespace TiaMcp.WorkerChannel
                                 ChannelCodec.Fields(root, "jsonrpc", "method", "params");
                                 if (ChannelCodec.Text(root, "method") != "progress") throw new IOException("Duplicate or late worker hello/notification.");
                                 var progress = root.GetProperty("params");
-                                ChannelCodec.Fields(progress, "requestId", "sequence", "percent");
+                                ChannelCodec.Fields(progress, profile == ChannelProfile.Studio ? new[] { "requestId", "sequence", "percent", "payload" } : new[] { "requestId", "sequence", "percent" });
                                 if (pending == null || pending.Replied || ChannelCodec.Number(progress, "requestId") != pending.Id ||
                                     ChannelCodec.Number(progress, "sequence") != pending.Progress + 1 ||
                                     ChannelCodec.Number(progress, "percent") > 100 || ++pending.Progress > ChannelCodec.ProgressLimit)
                                     throw new IOException("Late, duplicate or unrelated worker progress.");
-                                continue;
+                                if (progress.TryGetProperty("payload", out var payload))
+                                {
+                                    if (payload.ValueKind != System.Text.Json.JsonValueKind.Object) throw new IOException("Invalid worker progress payload.");
+                                    progressPayload = payload.GetRawText();
+                                }
                             }
-                            ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
-                            if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id) throw new IOException("Unknown, old or duplicate worker reply id.");
-                            var response = ChannelCodec.Response(root);
-                            long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
-                            var change = response.Failure == null ? pending.Change : BindingChange.None;
-                            if (before != pending.Before || after < before ||
-                                (change == BindingChange.None && after != before) ||
-                                (change == BindingChange.Advance && after != checked(before + 1)) ||
-                                (change == BindingChange.MayAdvance && after != before && after != checked(before + 1)))
-                                throw new IOException("Unexpected worker binding epoch change.");
-                            if (response.Failure?.Outcome == ChannelOutcome.ReadFailed && !pending.ReadOnly) throw new IOException("A write cannot report ReadFailed.");
-                            pending.Replied = true;
-                            epoch = after;
-                            pending.Completion.TrySetResult(response);
-                            if (response.Failure?.Outcome == ChannelOutcome.Unknown)
+                            else
                             {
-                                Poison(new IOException("Worker reported an unknown native outcome."));
-                                return;
+                                ChannelCodec.Fields(root, "jsonrpc", "id", "bindingEpochBefore", "bindingEpochAfter", "result", "error");
+                                if (pending == null || pending.Replied || ChannelCodec.Number(root, "id") != pending.Id) throw new IOException("Unknown, old or duplicate worker reply id.");
+                                var response = ChannelCodec.Response(root, profile);
+                                long before = ChannelCodec.Number(root, "bindingEpochBefore"), after = ChannelCodec.Number(root, "bindingEpochAfter");
+                                var change = response.Failure == null ? pending.Change : BindingChange.None;
+                                if (before != pending.Before || after < before ||
+                                    (change == BindingChange.None && after != before) ||
+                                    (change == BindingChange.Advance && after != checked(before + 1)) ||
+                                    (change == BindingChange.MayAdvance && after != before && after != checked(before + 1)))
+                                    throw new IOException("Unexpected worker binding epoch change.");
+                                if (response.Failure?.Outcome == ChannelOutcome.ReadFailed && !pending.ReadOnly) throw new IOException("A write cannot report ReadFailed.");
+                                pending.Replied = true;
+                                epoch = after;
+                                pending.Completion.TrySetResult(response);
+                                if (profile == ChannelProfile.Foundation && response.Failure?.Outcome == ChannelOutcome.Unknown)
+                                {
+                                    Poison(new IOException("Worker reported an unknown native outcome."));
+                                    return;
+                                }
                             }
                         }
+                        // Consumer callbacks must not hold the state lock or block timeout/cancel.
+                        if (progressPayload != null) progress?.Invoke(progressPayload);
                     }
                 }
             }

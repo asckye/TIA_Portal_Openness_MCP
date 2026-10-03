@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Globalization;
+using System.Security.Cryptography;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -9,7 +10,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Rpc;
-using TiaOpenness.Core.Mock;
+using TiaMcp.WorkerChannel;
+using TiaOpenness.Core.Environment;
 
 namespace TiaOpenness.Client
 {
@@ -26,27 +28,20 @@ namespace TiaOpenness.Client
     }
 
     /// <summary>
-    /// Owns the bridge child process and multiplexes JSON-RPC calls over its stdio.
+    /// Owns the bridge child process and sends one verified channel request at a time.
     /// One instance per TIA Portal session; create a second one to drive a second
     /// Openness version, since a bridge process can only ever bind one.
     /// </summary>
     public sealed class BridgeClient : IDisposable
     {
-        private readonly ConcurrentDictionary<string, TaskCompletionSource<RpcResponse>> _pending =
-            new ConcurrentDictionary<string, TaskCompletionSource<RpcResponse>>();
-
         private readonly JsonSerializerSettings _json = BridgeJson.Settings;
-
-        private readonly object _writeGate = new object();
         private Process _process;
-        private Thread _readerThread;
-        private int _nextId;
+        private ChannelClient _channel;
         private volatile bool _disposed;
         private volatile bool _faulted;
-        private RpcDispatcher _mock;
         private readonly string[] _args;
         private bool _nativeMock;
-        public bool IsMock => _mock != null || _nativeMock;
+        public bool IsMock => _nativeMock;
         public BridgeClient() : this(System.Environment.GetCommandLineArgs()) { }
         public BridgeClient(string[] args) { _args = args ?? Array.Empty<string>(); }
 
@@ -62,7 +57,6 @@ namespace TiaOpenness.Client
             get
             {
                 if (_disposed) return false;
-                if (_mock != null) return true;
                 try { return _process != null && !_process.HasExited; }
                 catch (InvalidOperationException) /* swallow(env-probe): a process object without an associated process means the bridge is not running */ { return false; }
             }
@@ -80,13 +74,6 @@ namespace TiaOpenness.Client
                 if (IsMock != forceMock) throw new InvalidOperationException("Restart Studio to change backend mode.");
                 return;
             }
-            if (forceMock && bridgeExePath == null)
-            {
-                _mock = new RpcDispatcher(() => new MockTiaSessionFactory(), n => DispatchNotification(JObject.FromObject(n)));
-                Log?.Invoke(this, new BridgeLogEventArgs { Line = "Explicit in-process mock; no Siemens API loaded." });
-                return;
-            }
-
             var exe = bridgeExePath ?? LocateBridge();
             if (exe == null || !File.Exists(exe))
             {
@@ -95,10 +82,15 @@ namespace TiaOpenness.Client
                     exe ?? "TiaOpenness.Bridge.exe");
             }
 
+            var arguments = NativeArguments(opennessVersion);
+            var version = arguments.Length == 0 ? (OpennessLocator.Resolve(null)?.Version ?? "21") : arguments.Substring("--openness-version ".Length);
+            var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(version);
+            var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
+            var bridgeHash = BridgeChannel.Hash(exe);
+            var adapterHash = BridgeChannel.Hash(BridgeChannel.AdapterPath(Path.GetDirectoryName(exe), release.Key, forceMock));
             var startInfo = new ProcessStartInfo
             {
                 FileName = exe,
-                Arguments = forceMock ? "--mock" : NativeArguments(opennessVersion),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
@@ -110,12 +102,24 @@ namespace TiaOpenness.Client
                 WorkingDirectory = Path.GetDirectoryName(exe),
             };
 
+            if (forceMock) startInfo.ArgumentList.Add("--mock");
+            startInfo.ArgumentList.Add("--openness-version");
+            startInfo.ArgumentList.Add(release.ApiVersion);
+            startInfo.ArgumentList.Add("--nonce");
+            startInfo.ArgumentList.Add(nonce);
+            int publicApi = Array.IndexOf(_args, "--public-api");
+            if (publicApi >= 0)
+            {
+                if (publicApi + 1 >= _args.Length) throw new ArgumentException("--public-api requires a local SDK directory.");
+                startInfo.ArgumentList.Add("--public-api");
+                startInfo.ArgumentList.Add(Path.GetFullPath(_args[publicApi + 1]));
+            }
+
             _nativeMock = forceMock;
             _process = new Process { StartInfo = startInfo, EnableRaisingEvents = true };
             _process.Exited += (s, e) =>
             {
                 _faulted = true;
-                FailAllPending(new IOException("The native bridge exited; an in-flight operation may have changed the project."));
                 Exited?.Invoke(this, EventArgs.Empty);
             };
             _process.ErrorDataReceived += (s, e) =>
@@ -123,11 +127,24 @@ namespace TiaOpenness.Client
                 if (e.Data != null) Log?.Invoke(this, new BridgeLogEventArgs { Line = e.Data });
             };
 
-            _process.Start();
-            _process.BeginErrorReadLine();
-
-            _readerThread = new Thread(ReadLoop) { IsBackground = true, Name = "tia-bridge-reader" };
-            _readerThread.Start();
+            try
+            {
+                _process.Start();
+                _process.BeginErrorReadLine();
+                _channel = new ChannelClient(_process.StandardOutput.BaseStream, _process.StandardInput.BaseStream,
+                    new ChannelIdentity(release.Key, bridgeHash, adapterHash, _process.Id, nonce), ChannelProfile.Studio,
+                    payload => Progress?.Invoke(this, new ProgressEventArgs
+                    {
+                        Progress = JObject.Parse(payload).ToObject<ProgressPayload>(JsonSerializer.Create(_json)),
+                    }));
+                _channel.ConnectAsync(DefaultTimeout).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                _faulted = true;
+                Dispose();
+                throw;
+            }
         }
 
         /// <summary>Looks for the bridge next to the caller, then in the usual build output folders.</summary>
@@ -179,125 +196,51 @@ namespace TiaOpenness.Client
             if (_faulted) throw new InvalidOperationException("The previous native call has no reliable outcome. Restart Studio and inspect the project before retrying.");
             if (!IsRunning) throw new InvalidOperationException("The bridge is not running. Call Start first.");
 
-            var id = Interlocked.Increment(ref _nextId).ToString();
-            var request = new RpcRequest
-            {
-                Id = id,
-                Method = method,
-                Params = parameters == null ? new JObject() : JObject.FromObject(parameters, JsonSerializer.Create(_json)),
-            };
-
-            if (_mock != null) return _mock.Handle(request);
-
-            var completion = new TaskCompletionSource<RpcResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pending[id] = completion;
-
+            var payload = parameters == null ? new JObject() : JObject.FromObject(parameters, JsonSerializer.Create(_json));
+            var id = checked(_channel.LastRequestId + 1).ToString(CultureInfo.InvariantCulture);
             try
             {
-                var payload = JsonConvert.SerializeObject(request, _json);
-                lock (_writeGate)
-                {
-                    _process.StandardInput.Write(payload);
-                    _process.StandardInput.Write('\n');
-                    _process.StandardInput.Flush();
-                }
-
-                using (var timeout = new CancellationTokenSource(DefaultTimeout))
-                using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellation, timeout.Token))
-                {
-                    var finished = await Task.WhenAny(
-                        completion.Task,
-                        Task.Delay(Timeout.Infinite, linked.Token)).ConfigureAwait(false);
-
-                    if (finished != completion.Task)
-                    {
-                        _faulted = true;
-                        throw timeout.IsCancellationRequested
-                            ? new TimeoutException("The bridge did not answer '" + method + "' within " + DefaultTimeout + ".")
-                            : (Exception)new OperationCanceledException(cancellation);
-                    }
-                    return await completion.Task.ConfigureAwait(false);
-                }
+                var json = await _channel.CallAsync(method, JsonConvert.SerializeObject(payload, _json),
+                    BridgeChannel.BindingChangeFor(method), BridgeChannel.IsReadOnly(method), DefaultTimeout, cancellation).ConfigureAwait(false);
+                return RpcResponse.Ok(id,
+                    JToken.Parse(json));
             }
-            finally
+            catch (ChannelFailure ex)
             {
-                TaskCompletionSource<RpcResponse> ignored;
-                _pending.TryRemove(id, out ignored);
-            }
-        }
-
-        private void ReadLoop()
-        {
-            try
-            {
-                string line;
-                while ((line = _process.StandardOutput.ReadLine()) != null)
+                return new RpcResponse
                 {
-                    if (line.Length == 0) continue;
-
-                    JObject frame;
-                    try { frame = JObject.Parse(line); }
-                    catch (JsonException) { throw new IOException("Invalid native bridge response."); }
-
-                    var id = frame.Value<string>("id");
-                    if (string.IsNullOrEmpty(id))
-                    {
-                        DispatchNotification(frame);
-                        continue;
-                    }
-
-                    TaskCompletionSource<RpcResponse> completion;
-                    if (_pending.TryGetValue(id, out completion))
-                    {
-                        completion.TrySetResult(frame.ToObject<RpcResponse>(JsonSerializer.Create(_json)));
-                    }
-                }
+                    Id = id,
+                    Error = JObject.Parse(ex.RpcErrorJson).ToObject<RpcError>(JsonSerializer.Create(_json)),
+                };
             }
-            catch (Exception ex)
+            catch (ChannelFault ex)
             {
-                if (!_disposed)
-                {
-                    _faulted = true;
-                    FailAllPending(ex);
-                }
-            }
-        }
-
-        private void DispatchNotification(JObject frame)
-        {
-            if (!string.Equals(frame.Value<string>("method"), "progress", StringComparison.Ordinal)) return;
-
-            var payload = frame["params"];
-            if (payload == null) return;
-
-            Progress?.Invoke(this, new ProgressEventArgs
-            {
-                Progress = payload.ToObject<ProgressPayload>(JsonSerializer.Create(_json)),
-            });
-        }
-
-        private void FailAllPending(Exception error)
-        {
-            foreach (var key in _pending.Keys)
-            {
-                TaskCompletionSource<RpcResponse> completion;
-                if (_pending.TryRemove(key, out completion)) completion.TrySetException(error);
+                _faulted = true;
+                if (ex.InnerException is TimeoutException)
+                    throw new TimeoutException("The bridge did not answer '" + method + "' within " + DefaultTimeout + ".");
+                if (ex.InnerException is OperationCanceledException && cancellation.IsCancellationRequested)
+                    throw new OperationCanceledException(cancellation);
+                if (_process?.HasExited == true)
+                    throw new IOException("The native bridge exited; an in-flight operation may have changed the project.", ex);
+                throw;
             }
         }
 
         public void Dispose()
         {
             if (_disposed) return;
-            _mock?.Dispose();
-            _mock = null;
 
             try
             {
-                if (IsRunning)
+                try { _channel?.Dispose(); }
+                finally
                 {
-                    // Closing stdin makes the bridge's read loop end and the session dispose cleanly.
-                    _process.StandardInput.Close();
-                    if (!_process.WaitForExit(5000)) _process.Kill();
+                    if (IsRunning)
+                    {
+                        // Closing stdin lets the STA loop dispose the session; retain
+                        // the existing five-second grace period before killing it.
+                        if (!_process.WaitForExit(5000)) _process.Kill();
+                    }
                 }
             }
             catch (Exception) /* swallow(teardown): bridge exit can race stdin close or kill; the finally block still releases the process handle */

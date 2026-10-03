@@ -24,6 +24,10 @@ function RunDotnet([string[]]$Arguments,[string]$Log) {
 }
 RunDotnet @('build',(Join-Path $studio 'src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'),'-c','Release','--nologo') 'gui.log'
 $app=Join-Path $studio 'src/TiaOpenness.Gui/bin/Release/net10.0-windows'
+if (!(Test-Path -LiteralPath (Join-Path $app 'TiaMcp.WorkerChannel.dll'))) { throw 'Studio client worker channel is missing' }
+foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
+    if (!(Test-Path -LiteralPath (Join-Path $app "bridge/$name"))) { throw "Studio bridge channel dependency is missing: $name" }
+}
 $native=@()
 if(!$ReleaseKeys){$ReleaseKeys=if($PublicApiRoot){@('14sp1','15.1','16','17','18','19','20','21')}else{@('20','21')}}
 foreach($key in $ReleaseKeys) {

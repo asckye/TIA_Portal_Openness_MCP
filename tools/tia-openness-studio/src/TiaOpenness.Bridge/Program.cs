@@ -1,33 +1,23 @@
 using System;
-using System.IO;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using TiaOpenness.Contracts.Rpc;
+using System.Diagnostics;
+using System.Reflection;
+using TiaMcp.WorkerChannel;
 using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Environment;
 using TiaOpenness.Core.Rpc;
 
 namespace TiaOpenness.Bridge
 {
-    /// <summary>
-    /// The only process that ever touches Siemens.Engineering.
-    ///
-    /// It speaks newline-delimited JSON-RPC 2.0: requests on stdin, responses and
-    /// <c>progress</c> notifications on stdout, diagnostics on stderr. Keeping it in its own
-    /// .NET Framework 4.8 x64 process is what lets the desktop UI targets
-    /// modern .NET, and lets a hung TIA Portal be killed without taking the UI with it.
-    /// </summary>
+    /// <summary>The native session and every dispatch stay on this process's STA main thread.</summary>
     public static class Program
     {
-        private static readonly object StdoutGate = new object();
-
         [STAThread]
         public static int Main(string[] args)
         {
             if (System.Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
                 TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
             var forceMock = HasFlag(args, "--mock");
+            OpennessLocator.PublicApiDirectory = GetValue(args, "--public-api");
 
             if (HasFlag(args, "--doctor"))
             {
@@ -36,86 +26,53 @@ namespace TiaOpenness.Bridge
                 return report.CanRunOpenness ? 0 : 1;
             }
 
-            // stdout carries protocol only; anything else would corrupt the stream.
-            var stdout = new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = false };
-            var stdin = new StreamReader(Console.OpenStandardInput(), new UTF8Encoding(false));
-
-            var opennessVersion = GetValue(args, "--openness-version");
-            Func<ITiaSessionFactory> resolveFactory = () => SessionFactoryLoader.Resolve(forceMock, opennessVersion);
-
-            Console.Error.WriteLine("[bridge] local native protocol ready; no TIA connection yet");
-
-            using (var dispatcher = new RpcDispatcher(resolveFactory, n => WriteLine(stdout, n)))
+            try
             {
-                string line;
-                while ((line = stdin.ReadLine()) != null)
+                var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(GetValue(args, "--openness-version"));
+                var adapterPath = BridgeChannel.AdapterPath(AppDomain.CurrentDomain.BaseDirectory, release.Key, forceMock);
+                // Load the adapter before hello without constructing a session. Factory
+                // configuration remains at its original first RPC dispatch on this thread.
+                var adapter = Assembly.LoadFrom(adapterPath);
+                var identity = new ChannelIdentity(release.Key, BridgeChannel.Hash(Assembly.GetExecutingAssembly().Location),
+                    BridgeChannel.Hash(adapter.Location), Process.GetCurrentProcess().Id, GetValue(args, "--nonce"));
+                Console.Error.WriteLine("[bridge] local native protocol ready; no TIA connection yet");
+                using (var dispatcher = new BridgeChannelDispatcher(() => SessionFactoryLoader.Resolve(forceMock, release.ApiVersion)))
                 {
-                    if (line.Length == 0) continue;
-
-                    RpcRequest request;
-                    try
-                    {
-                        request = JsonConvert.DeserializeObject<RpcRequest>(line, BridgeJson.Settings);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteLine(stdout, RpcResponse.Fail(null, RpcErrorCodes.ParseError, ex.Message));
-                        continue;
-                    }
-
-                    if (request == null || string.IsNullOrWhiteSpace(request.Method))
-                    {
-                        WriteLine(stdout, RpcResponse.Fail(request?.Id, RpcErrorCodes.InvalidRequest,
-                            "Request must carry a 'method'."));
-                        continue;
-                    }
-
-                    var response = dispatcher.Handle(request);
-                    WriteLine(stdout, response);
-
-                    if (response.Error != null)
-                    {
-                        Console.Error.WriteLine("[bridge] " + request.Method + " -> " +
-                                                response.Error.Code + " " + response.Error.Message);
-                        Console.Error.Flush();
-                    }
+                    var server = new ChannelServer(Console.OpenStandardInput(), Console.OpenStandardOutput(), identity,
+                        dispatcher.Observe, request =>
+                        {
+                            var response = dispatcher.Handle(request);
+                            if (response.Failure != null)
+                            {
+                                var error = Newtonsoft.Json.JsonConvert.DeserializeObject<TiaOpenness.Contracts.Rpc.RpcError>(
+                                    response.Failure.RpcErrorJson, BridgeJson.Settings);
+                                Console.Error.WriteLine("[bridge] " + request.Method + " -> " + error.Code + " " + error.Message);
+                                Console.Error.Flush();
+                            }
+                            return response;
+                        }, ChannelProfile.Studio);
+                    server.Run();
                 }
+                return 0;
             }
-
-            return 0;
-        }
-
-        /// <summary>
-        /// Writes one protocol frame. Serialised on a lock because progress notifications are
-        /// raised from inside a call, interleaved with the response for that same call.
-        /// </summary>
-        private static void WriteLine(TextWriter stdout, object payload)
-        {
-            var json = JsonConvert.SerializeObject(payload, BridgeJson.Settings);
-            lock (StdoutGate)
+            catch (Exception ex)
             {
-                stdout.Write(json);
-                stdout.Write('\n');
-                stdout.Flush();
+                Console.Error.WriteLine("[bridge] " + ex.Message);
+                return 1;
             }
         }
 
         private static bool HasFlag(string[] args, string flag)
         {
             foreach (var a in args)
-            {
                 if (string.Equals(a, flag, StringComparison.OrdinalIgnoreCase)) return true;
-            }
             return false;
         }
 
-        /// <summary>Reads <c>--name value</c> from the command line.</summary>
         private static string GetValue(string[] args, string name)
         {
             for (var i = 0; i < args.Length - 1; i++)
-            {
                 if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase)) return args[i + 1];
-            }
             return null;
         }
     }

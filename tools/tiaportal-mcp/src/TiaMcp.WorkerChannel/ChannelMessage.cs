@@ -28,6 +28,7 @@ namespace TiaMcp.WorkerChannel
 
     public enum ChannelOutcome { RejectedBeforeNative, ReadFailed, Unknown }
     public enum BindingChange { None, Advance, MayAdvance }
+    public enum ChannelProfile { Foundation, Studio }
 
     public sealed class ChannelBinding
     {
@@ -45,10 +46,11 @@ namespace TiaMcp.WorkerChannel
         public int Code { get; }
         public ChannelOutcome Outcome { get; }
         public string EvidenceJson { get; }
-        public ChannelFailure(string message, int code, ChannelOutcome outcome, string evidenceJson = "null") : base(message)
+        public string? RpcErrorJson { get; }
+        public ChannelFailure(string message, int code, ChannelOutcome outcome, string evidenceJson = "null", string? rpcErrorJson = null) : base(message)
         {
             if (code != -32602 && code != -32603) throw new ArgumentOutOfRangeException(nameof(code));
-            Code = code; Outcome = outcome; EvidenceJson = evidenceJson;
+            Code = code; Outcome = outcome; EvidenceJson = evidenceJson; RpcErrorJson = rpcErrorJson;
         }
     }
 
@@ -64,8 +66,9 @@ namespace TiaMcp.WorkerChannel
         public string Method { get; }
         public string ArgumentsJson { get; }
         public Action<int> Progress { get; }
-        internal ChannelRequest(long id, string method, string argumentsJson, Action<int> progress)
-        { Id = id; Method = method; ArgumentsJson = argumentsJson; Progress = progress; }
+        public Action<int, string?> ReportProgress { get; }
+        internal ChannelRequest(long id, string method, string argumentsJson, Action<int, string?> progress)
+        { Id = id; Method = method; ArgumentsJson = argumentsJson; ReportProgress = progress; Progress = percent => progress(percent, null); }
     }
 
     public sealed class ChannelResponse

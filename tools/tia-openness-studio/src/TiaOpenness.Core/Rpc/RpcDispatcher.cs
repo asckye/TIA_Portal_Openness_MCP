@@ -19,6 +19,7 @@ namespace TiaOpenness.Core.Rpc
         private readonly Action<RpcNotification> _notify;
         private readonly JsonSerializer _serializer;
         private ITiaSession _session;
+        internal bool BackendEntered { get; private set; }
 
         /// <param name="resolveFactory">
         /// Called once when the first operation needs a backend; the bridge keeps that factory.
@@ -36,11 +37,13 @@ namespace TiaOpenness.Core.Rpc
             return _factory;
         }
 
-        public RpcResponse Handle(RpcRequest request)
+        public RpcResponse Handle(RpcRequest request, Action<RpcNotification> notify = null)
         {
+            BackendEntered = false;
             try
             {
-                var result = Invoke(request.Method, request.Params ?? new JObject());
+                var result = Invoke(request.Method, request.Params ?? new JObject(),
+                    (operation, current, total, message) => Progress(notify ?? _notify, operation, current, total, message));
                 return RpcResponse.Ok(request.Id, result == null ? JValue.CreateNull() : JToken.FromObject(result, _serializer));
             }
             catch (OpennessNotInstalledException ex)
@@ -84,7 +87,7 @@ namespace TiaOpenness.Core.Rpc
             }
         }
 
-        private object Invoke(string method, JObject p)
+        private object Invoke(string method, JObject p, ProgressCallback progress)
         {
             switch (method)
             {
@@ -102,13 +105,13 @@ namespace TiaOpenness.Core.Rpc
                         Str(p, "version", null));
 
                 case RpcMethods.SessionDisconnect:
-                    if (_session != null) { _session.Dispose(); _session = null; }
+                    if (_session != null) { BackendEntered = true; _session.Dispose(); _session = null; }
                     return new SessionState { Connected = false, Mode = Factory().Mode };
 
                 case RpcMethods.SessionState:
                     return _session == null
                         ? new SessionState { Connected = false, Mode = Factory().Mode }
-                        : _session.GetState();
+                        : Session().GetState();
 
                 case RpcMethods.ProjectOpen:
                     return Session().OpenProject(Required(p, "path"));
@@ -137,14 +140,14 @@ namespace TiaOpenness.Core.Rpc
                         Required(p, "outputDirectory"),
                         Enum(p, "format", ExportFormat.SimaticMl),
                         Bool(p, "preserveFolders", true),
-                        Progress);
+                        progress);
 
                 case RpcMethods.BlockImport:
                     return Session().ImportBlocks(
                         Required(p, "deviceId"),
                         StrList(p, "files"),
                         Bool(p, "overwrite", false),
-                        Progress);
+                        progress);
 
                 case RpcMethods.TagTableList:
                     return Session().ListTagTables(Required(p, "deviceId"));
@@ -169,7 +172,7 @@ namespace TiaOpenness.Core.Rpc
                         Str(p, "workspaceName", null),
                         Str(p, "deviceId", null),
                         Bool(p, "dryRun", true),
-                        Progress);
+                        progress);
 
                 case RpcMethods.VcDiff:
                     return Diff(Str(p, "workspaceName", null), Str(p, "file", null));
@@ -182,7 +185,7 @@ namespace TiaOpenness.Core.Rpc
                         Str(p, "workspaceName", null),
                         Enum(p, "direction", SyncDirection.ProjectToWorkspace),
                         Bool(p, "dryRun", true),
-                        Progress);
+                        progress);
 
                 case RpcMethods.InspectProject:
                     return Session().Inspect(Required(p, "deviceId"), new InspectionOptions
@@ -199,10 +202,10 @@ namespace TiaOpenness.Core.Rpc
             }
         }
 
-        private void Progress(string operation, int current, int total, string message)
+        private static void Progress(Action<RpcNotification> notify, string operation, int current, int total, string message)
         {
-            if (_notify == null) return;
-            _notify(new RpcNotification
+            if (notify == null) return;
+            notify(new RpcNotification
             {
                 Method = "progress",
                 Params = JObject.FromObject(new ProgressPayload
@@ -211,18 +214,25 @@ namespace TiaOpenness.Core.Rpc
                     Current = current,
                     Total = total,
                     Message = message,
-                }, _serializer),
+                }, JsonSerializer.Create(BridgeJson.Settings)),
             });
         }
 
         private void EnsureSession()
         {
-            if (_session == null) _session = Factory().Create();
+            if (_session == null)
+            {
+                var factory = Factory();
+                BackendEntered = !(factory is UnavailableSessionFactory);
+                _session = factory.Create();
+            }
+            BackendEntered = true;
         }
 
         private ITiaSession Session()
         {
             if (_session == null) throw new InvalidOperationException("Not connected. Call session.connect first.");
+            BackendEntered = true;
             return _session;
         }
 

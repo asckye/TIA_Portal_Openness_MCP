@@ -78,20 +78,23 @@
 | | 引擎隔离 | Foundation 协议 2 | Studio 桥接 | 预览 v2（`TiaMcp.WorkerProtocol.*`） |
 |---|---|---|---|---|
 | 分帧 | 换行 | 换行 | 换行 | 4 字节长度前缀 + 终止符；nonce/PID 前导 |
-| 信封 | MCP JSON-RPC（`initialize`、`tools/list`、`tools/call`），id 为 `worker_N` | JSON-RPC 2.0，`adapter.*` | JSON-RPC 2.0，点号方法名 | 类型化 v2 帧 |
-| 握手 | hello（协议 1、引擎 SHA、pid）+ 目录比对 | hello：版本、worker/adapter SHA-256、PID、nonce、初始纪元 | 无 | hello：版本、哈希、令牌、绑定纪元 |
-| 失败模型 | nativeOutcomeUnknown、代次 | `error.data` 的 outcome + 证据、失效后不重放 | 代码 + 堆栈 | ReadFailed / 失效 |
-| JSON 库 | STJ | 信封 STJ；DTO worker Newtonsoft / 宿主 STJ | Newtonsoft | 两套编解码 |
-| 状态 | 已发布（可选） | P4-E2 已实现，真机验收前不发布 | 已发布 | 第 A 步已删除 |
+| 信封 | MCP JSON-RPC（`initialize`、`tools/list`、`tools/call`），id 为 `worker_N` | JSON-RPC 2.0，`adapter.*` | 协议 2 Studio profile，保留原方法名（含 `ping`） | 类型化 v2 帧 |
+| 握手 | hello（协议 1、引擎 SHA、pid）+ 目录比对 | hello：版本、worker/adapter SHA-256、PID、nonce、初始纪元 | hello：版本、桥接/adapter SHA-256、PID、nonce、初始纪元 | hello：版本、哈希、令牌、绑定纪元 |
+| 失败模型 | nativeOutcomeUnknown、代次 | `error.data` 的 outcome + 证据、失效后不重放 | 记录 outcome，`rpc` 保留原错误；已处理错误继续会话，通道故障使其失效 | ReadFailed / 失效 |
+| JSON 库 | STJ | 信封 STJ；DTO worker Newtonsoft / 宿主 STJ | 信封 STJ；参数/DTO/原错误仍用 Newtonsoft | 两套编解码 |
+| 状态 | 已发布（可选） | P4-E2 已实现，真机验收前不发布 | P4-F 已接入共享通道，真机验收前不发布 | 第 A 步已删除 |
 
-**协议 2（P4-E2 实现）**：
+**协议 2（P4-E2 / P4-F 实现）**：
 
 - 换行分隔的 JSON-RPC 2.0。三套已发布协议中两套已在用，并在 Windows 上验证过。
 - 必须先发 hello 行：版本键、worker 与适配器 SHA-256、pid、宿主提供的启动 nonce。
-- 同时只有一个请求，id 严格递增。`error.data = {outcome, evidence}`，沿用 Foundation 的 outcome 语义。支持进度通知。
+- 同时只有一个请求，id 严格递增。Foundation 的 `error.data = {outcome, evidence}`，Studio 另带原始 `rpc`。支持进度通知。
 - 大小上限：请求 1 MiB，响应 16 MiB。
-- Foundation worker 和 Studio 桥接进程通过共享库 `TiaMcp.WorkerChannel`（net48;net8.0，无 Siemens 引用）使用
-  `adapter.*` 方法，取代 `WorkerClient`、`BridgeClient` 和 PlcWorker 的读取循环。
+- Foundation worker 和 Studio 桥接进程通过共享库 `TiaMcp.WorkerChannel`（net48;net8.0，无 Siemens 引用）取代
+  `WorkerClient`、`BridgeClient` 和 PlcWorker 的读取循环；Foundation 使用 `adapter.*`，Studio 保留原方法名。
+- Studio 如实记录 `RejectedBeforeNative` / `ReadFailed` / `Unknown`；桥接已捕获并返回的合法错误保持会话可用，
+  不改变绑定纪元或设置 `_faulted`，UI 仍收到原错误。Foundation 的 `Unknown` 仍使会话失效。
+  Studio 的通道故障、超时和分派后取消终止会话，不重放、不自动重启；未发送的取消不影响后续调用。
 - 引擎隔离子进程代理全部 488 个工具，继续使用 MCP 方法，但采用同样的 hello、上限和 outcome 规则。
 
 Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）：

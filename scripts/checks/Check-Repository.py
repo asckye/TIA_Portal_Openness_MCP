@@ -70,6 +70,10 @@ def check(root, no_binaries=False):
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
         required(name, 'blueprint')
     studio = 'tools/tia-openness-studio/src/'
+    required(studio + 'TiaOpenness.Core/Rpc/BridgeChannel.cs', 'Studio channel codec')
+    required('runtime/studio/TiaMcp.WorkerChannel.dll', 'Studio client channel')
+    for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
+        required('runtime/studio/bridge/' + name, 'Studio bridge channel dependency')
     required(studio + 'TiaOpenness.Launcher/Launcher.cs', 'GUI entry')
     for name in ('Themes/Glass.xaml', 'Controls/GlassLogView.cs',
                  'Fonts/Manrope-Regular.ttf', 'Fonts/Manrope-Medium.ttf',
