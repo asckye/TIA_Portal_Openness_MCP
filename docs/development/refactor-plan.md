@@ -1,6 +1,6 @@
 # 重构计划
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [工具开发](tool-development.md)
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md) · [适配器合并设计](adapter-merge.md) · [响应与异常设计](response-and-errors.md) · [运行时布局与清理](runtime-layout.md) · [工具开发](tool-development.md)
 
 本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
 worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
@@ -91,7 +91,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics`（日志与诊断两份分支随 P2-04 一并决定） | done |
 | P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛。设计见[响应信封与吞异常治理](response-and-errors.md)（218 个空 catch、类别、标注与只减不增检查、P2-03a–z）；L5 之前原生路径不改为上抛。P2-03a 完成：`Check-SwallowedExceptions.py` 与基线（205 个空、194 个丢弃型，只减不增）；P2-03c 完成：引擎拆分领域外 88 处补写原因（只改注释，产物逐字节相同），基线 399 → 311；P2-03d 完成：Studio 与 Foundation 74 处，基线 → 237；P2-03b 完成：`SwallowedExceptions.Note` 与三个进程统一的 `TIA_MCP_LOG_SWALLOWED=1` 开关（默认不输出） | doing |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界 | todo |
-| P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略 | todo |
+| P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略。设计见[运行时布局与清理](runtime-layout.md)：新增 MCP 文本一律英文（维护者 2026-10-03 决定），现有文本冻结到 4.0；`*Leftovers` 随领域迁移消解 | todo |
 | P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`openness-shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与 `Test-EcosystemAssembly.ps1` 已同步引擎启动设置 | done |
 
 ### 阶段 3：拆分完整引擎（兼容）
@@ -107,7 +107,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-07… | 按设计文档的迁移顺序继续；每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | todo |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
-| P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构 | todo |
+| P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构。设计见[运行时布局与清理](runtime-layout.md)（G7-1…7，原有探测保留为兼容回退到 4.0） | todo |
 
 ### 阶段 4：合并三套实现（兼容，需要真机）
 
