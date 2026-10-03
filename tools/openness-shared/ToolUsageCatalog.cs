@@ -48,6 +48,29 @@ namespace TiaOpenness.Shared
         public static JsonArray Sequences() => (JsonArray)Data.Value["sequences"]!.DeepClone();
         public static JsonObject Notes(string name) => (JsonObject)(Data.Value["toolNotes"]?[name]?.DeepClone() ?? new JsonObject());
 
+        private static JsonObject? CallExample(string name, string release, string profile)
+        {
+            var row = Data.Value["calls"]?["profiles"]?[profile]?[name];
+            if (row == null) return null;
+            var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
+            // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
+            return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension)
+                .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
+        }
+
+        public static JsonArray InlineCalls(string release)
+        {
+            var result = new JsonArray();
+            foreach (var pair in Data.Value["calls"]!["profiles"]!["full-engine"]!.AsObject())
+                if ((bool?)pair.Value?["inline"] == true)
+                {
+                    var row = CallExample(pair.Key, release, "full-engine")!;
+                    result.Add(new JsonObject { ["tool"] = pair.Key, ["arguments"] = row["arguments"]!.DeepClone(),
+                        ["note"] = "Sample targets require binding; GetToolUsage explains this release's parameters and results." });
+                }
+            return result;
+        }
+
         public static JsonObject Examples(string release, string profile, IEnumerable<string> roster,
             string language = "", string exampleId = "", string toolName = "")
         {
@@ -117,7 +140,17 @@ namespace TiaOpenness.Shared
             if (operation.Length > 0) operation = (string)choices.First(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase))!;
             var curated = curatedArguments == null ? null : (JsonObject)JsonNode.Parse(curatedArguments)!;
             bool matches = curated != null && (operation.Length == 0 || (string?)(curated[selector] ?? properties[selector]?["default"]) == operation);
-            var args = matches ? (JsonObject)curated!.DeepClone() : new JsonObject();
+            var call = CallExample(name, release, profile);
+            JsonNode? callArguments = call?["arguments"]?.DeepClone();
+            if (operation.Length > 0)
+            {
+                if (call?["operations"]?[operation]?["arguments"] is JsonObject overrides)
+                    foreach (var pair in overrides) callArguments![pair.Key] = pair.Value?.DeepClone();
+                else callArguments = null;
+            }
+            var args = callArguments is JsonObject concrete ? (JsonObject)concrete.DeepClone()
+                : matches ? (JsonObject)curated!.DeepClone() : new JsonObject();
+            foreach (var key in args.Select(p => p.Key).Where(k => !properties.ContainsKey(k)).ToArray()) args.Remove(key);
             var replacements = new JsonArray();
             foreach (var required in schema["required"] as JsonArray ?? new JsonArray())
             {
@@ -137,8 +170,16 @@ namespace TiaOpenness.Shared
             foreach (var property in properties)
             {
                 var source = Data.Value["parameterSources"]?[property.Key] as JsonObject;
-                origins[property.Key] = source?.DeepClone() ?? new JsonObject { ["meaning"] = property.Value?["description"]?.DeepClone() ?? JsonValue.Create("Supply the value required by this parameter's schema.") };
-                origins[property.Key]!["exampleValue"] = ExampleValue(property.Key, property.Value!.AsObject());
+                origins[property.Key] = call?["parameters"]?[property.Key]?.DeepClone() ?? source?.DeepClone()
+                    ?? new JsonObject { ["meaning"] = property.Value?["description"]?.DeepClone() ?? JsonValue.Create("Supply the value required by this parameter's schema.") };
+                origins[property.Key]!["exampleValue"] = args[property.Key]?.DeepClone()
+                    ?? origins[property.Key]!["exampleValue"]?.DeepClone() ?? ExampleValue(property.Key, property.Value!.AsObject());
+                origins[property.Key]!["schemaDescription"] = property.Value?["description"]?.DeepClone();
+                if (origins[property.Key]!["meaning"] == null)
+                    origins[property.Key]!["meaning"] = property.Value?["description"]?.DeepClone() ?? source?["meaning"]?.DeepClone();
+                if (origins[property.Key]!["tools"] == null && source?["tools"] != null) origins[property.Key]!["tools"] = source["tools"]!.DeepClone();
+                if (property.Key.EndsWith("Json", StringComparison.Ordinal) || property.Key == "json" || property.Key == "spec")
+                    origins[property.Key]!["encoding"] = "Serialize the inner value once as a JSON string unless inputSchema accepts an object/array.";
                 if (origins[property.Key]!["tools"] is JsonArray originTools)
                     origins[property.Key]!["tools"] = new JsonArray(originTools.Where(t => available.Contains((string)t!)).Select(t => t!.DeepClone()).ToArray());
             }
@@ -168,18 +209,25 @@ namespace TiaOpenness.Shared
                 ["toolName"] = name, ["releaseKey"] = release, ["profile"] = profile, ["available"] = true,
                 ["description"] = description, ["inputSchema"] = schema.DeepClone(),
                 ["example"] = new JsonObject { ["origin"] = "project MCP mapping, not Siemens MCP code",
-                    ["kind"] = matches ? "curated-project-example" : "schema-template",
+                    ["kind"] = callArguments != null ? "parameterized-call-example" : matches ? "curated-project-example" : "schema-template",
                     ["request"] = new JsonObject { ["method"] = "tools/call", ["params"] = new JsonObject { ["name"] = name, ["arguments"] = args } },
                     ["replaceOrReview"] = replacements,
-                    ["note"] = matches ? curatedNote : "Required arguments and the selected operation are shown. Add the optional parameters required by this operation using inputSchema and parameterSources. Placeholders are not engineering target values.",
-                    ["validation"] = "Schema/contract checked; native execution of this example NOT RUN.",
+                    ["note"] = call != null ? (string?)call["note"] ?? "Example names and paths describe a sample project. Resolve every target against this session; angle-bracket values are bindings, including those inside JSON strings. Operation-specific optional inputs are included; parameterSources also shows individual alternatives and their encoding. Native availability still depends on this device and installed options."
+                        : matches ? curatedNote : "Required arguments and the selected operation are shown. Add the optional parameters required by this operation using inputSchema and parameterSources. Placeholders are not engineering target values.",
+                    ["validation"] = call?["validation"]?.DeepClone() ?? JsonValue.Create("Schema/contract checked; native execution of this example NOT RUN."),
                     ["releaseProblem"] = selectedProblem.Length == 0 ? null : selectedProblem },
                 ["officialReference"] = mapping,
                 ["operations"] = operations, ["parameterSources"] = origins,
-                ["resultContract"] = resultContract?.DeepClone() ?? new JsonObject { ["description"] = "Result structure and operation-specific fields are described in the exact tool description above." },
-                ["resultReading"] = (Data.Value["resultReading"]?[(string?)resultContract?["type"] ?? "default"] ?? Data.Value["resultReading"]!["default"])!.DeepClone(),
+                ["resultContract"] = resultContract?.DeepClone() ?? call?["resultContract"]?.DeepClone() ?? new JsonObject { ["description"] = "Result structure and operation-specific fields are described in the exact tool description above." },
+                ["resultReading"] = call?["resultReading"]?.DeepClone() ?? (Data.Value["resultReading"]?[(string?)resultContract?["type"] ?? "default"] ?? Data.Value["resultReading"]!["default"])!.DeepClone(),
                 ["examples"] = Examples(release, profile, available, toolName: name)["examples"]!.DeepClone()
             };
+            if (call?["execution"] != null) response["example"]!["execution"] = call["execution"]!.DeepClone();
+            if (call?["executionTest"] != null) response["example"]!["executionTest"] = call["executionTest"]!.DeepClone();
+            response["example"]!["bindings"] = new JsonArray(args.Where(p => p.Value?.ToJsonString().Contains("<") == true || p.Value?.ToJsonString().Contains("\\u003C") == true)
+                .Select(p => (JsonNode)JsonValue.Create(p.Key)!).ToArray());
+            response["example"]!["bindingMeaning"] = "Resolve angle-bracket bindings (also inside JSON) from this operation's target read/self-description before calling. Sample names and paths must also be replaced with the intended target.";
+            if (call?["releaseNotes"]?[release] != null) response["example"]!["releaseNote"] = call["releaseNotes"]![release]!.DeepClone();
             if (Data.Value["toolNotes"]?[name] is JsonNode notes && (notes["profile"] == null || (string?)notes["profile"] == profile)) response["interpretation"] = notes.DeepClone();
             return response;
         }

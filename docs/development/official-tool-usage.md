@@ -18,13 +18,17 @@ response returns an export ID, assemble its `GetExport` pages before parsing JSO
 
 ## Contents
 
-- Each tool has its exact input schema, input origins, representative values and
-  discovery tools filtered to this engine. A matching curated call is retained;
-  other operations receive an explicitly labeled schema template. Optional inputs
-  remain visible in `parameterSources` and `inputSchema`.
+- Each tool has a profile-specific parameterized call, its exact live input schema,
+  input origins and discovery tools filtered to this engine. Operation records
+  supply conditional inputs (for example a source file for `createFromFile`).
+  `bindings` identifies unresolved target-dependent values, including JSON members;
+  sample names and paths must also be resolved against the intended project.
+  Optional input examples remain visible in `parameterSources`. The inline examples
+  in discovery and errors now read the same data.
 - Full-engine return fields come from its actual return type. Result interpretation
-  and expected outcomes use the same library. Foundation envelopes use their own
-  tool contract descriptions. Existing version policy supplies operation variants
+  and expected outcomes use the same library. Foundation envelopes have separate
+  field/interpretation records, including PascalCase raw results and preview versus
+  executed compilation. Existing version policy supplies operation variants
   for different service families or object kinds; the selected target, license,
   firmware and installed update still determine native support.
 - Programming examples include source files, encoding, release/update requirements,
@@ -47,7 +51,10 @@ compiler diagnostics and other tool details use the same data and retrieval path
 ## Sources and maintenance
 
 The editable library is `reference/tool-examples`: `languages/catalog.json` and
-its assets, `sequences.json`, and `metadata.json`. Run
+its assets, `calls.json`, `sequences.json`, and `metadata.json`. Call records are
+separate for `plc-foundation` and `full-engine`; operation entries are argument
+overrides on the tool's base example. Release format tokens expand at retrieval
+(`.ap15_1` for V15.1, `.ap20` for V20, etc.). Run
 `scripts/generate/Generate-ToolUsage.py` to embed it; `--check` detects drift.
 Retrieval needs no checkout/network and executes no example.
 
@@ -66,14 +73,25 @@ blocks/methods, including setup and dependency context:
 The corpus is not every example ever published by Siemens. Related API patterns,
 project examples and missing direct official examples remain distinct. Templates
 cover the registered surface; they are not all completed target-specific scenarios
-or native-verified calls.
+or native-verified calls. Dynamic property bags deliberately require the object's
+read/self-description: an invented property name cannot be made valid by an example.
+
+The eight registered release profiles are V14 SP1, V15.1, V16, V17, V18, V19, V20
+and V21. Coverage refers to their actual registered tools; it does not add modern
+tools to older APIs. Some shared offline XML generators still emit V21 candidate
+XML on older hosts; those examples say so explicitly. Changing a file extension or
+an XML version header is not a format conversion.
 
 ## Verification
 
 Actual MCP checks retrieve every tool/operation, compare schemas and example keys,
 check input origins/results, reconstruct source pages and verify file hashes.
-They validate sequence signatures and compatibility entry points, and execute the
-DB/UDT example inputs through the real offline XML builders. A .NET Framework
+They require a call record for every registered tool/operation, validate sequence
+signatures and compatibility entry points, and execute the exact returned call
+examples for eight XML/logic builders and dependency planning on every release.
+Full engines additionally execute the Unified button-action example. Tests inspect
+generated declarations, assignment tokens, call targets and dependency order.
+Language-file DB/UDT examples are checked separately. A .NET Framework
 harness retrieves all languages to catch differences from the .NET 8 unit suite.
 
 Full/lite and STDIO/HTTP are checked. Foundation fake-worker tests verify retrieval

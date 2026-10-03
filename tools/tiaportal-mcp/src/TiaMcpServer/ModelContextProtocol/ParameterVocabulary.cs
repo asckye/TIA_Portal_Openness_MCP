@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
             ["partnerItemPathJson"] = "partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson.",
             ["localInterfaceItemPathJson"] = "localInterfaceItemPathJson: JSON array path to the local interface item, e.g. [\"PLC_1\",\"PROFINET interface_1\"].",
             ["partnerInterfaceItemPathJson"] = "partnerInterfaceItemPathJson: JSON array path to the partner's interface item.",
-            ["objectPathJson"] = "objectPathJson: JSON array path of the object inside the software, e.g. [\"Group\",\"Name\"].",
+            ["objectPathJson"] = "objectPathJson: JSON string containing property steps [{\"property\":\"TagTables\",\"name\":\"Table\"},{\"property\":\"Tags\",\"name\":\"Tag\"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks.",
             ["groupPathJson"] = "groupPathJson: JSON array path of the group, e.g. [\"Folder\",\"Subfolder\"]; [] = the root.",
             ["propertiesJson"] = "propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names).",
             ["attributesJson"] = "attributesJson: JSON object attribute name -> value to write.",

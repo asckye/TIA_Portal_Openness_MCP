@@ -27,8 +27,15 @@ sequences, programming assets, input origins and result interpretation together 
 `reference/tool-examples`; do not create separate issue-specific guide systems.
 The older `GetAuthoringGuide` and `GetRecipe` entries reuse this data. Initialization
 points to examples instead of imposing a repeated guide/preflight workflow. Preserve
-functional tool checks. Coverage distinguishes schema templates, curated calls,
+functional tool checks. `calls.json` now holds separate foundation/full-engine
+calls for the entire registered surface and action overrides; the old inline C#
+example table reads this same data. Keep dynamic target bindings explicit and do
+not claim native acceptance from schema validation. Coverage distinguishes parameterized calls,
 complete sources, fragments and exported-module edits; native acceptance is separate.
+The transport audit executes allowlisted in-memory examples on all eight releases.
+Object property paths use `{property,name?}` steps; device/item name paths are a
+different grammar. Shared builders can emit V21 XML on older hosts; preserve their
+output-format notes and exact project extensions such as `.ap15_1`.
 
 Shared release identities, environment facts and dependency planning live under
 `tools/openness-shared` and the linked version catalog. Native API-bound assemblies

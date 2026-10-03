@@ -22,110 +22,14 @@ namespace TiaMcpServer.ModelContextProtocol
             public Example(string tool, string argumentsJson, string note) { Tool = tool; ArgumentsJson = argumentsJson; Note = note; }
         }
 
-        // Single quotes become double quotes so the JSON stays readable in source; a JSON string that itself carries
-        // JSON (the string-typed *Json / json / spec parameters of directly callable tools) keeps its escaped quotes.
-        private static Example E(string tool, string json, string note = "") => new Example(tool, json.Replace('\'', '"'), note);
-
-        private static readonly Example[] Rows =
-        {
-            // ---- session / meta
-            E("FindTools", @"{'query':'watch table','limit':8}", "capability words, not exact names"),
-            E("CallTool", @"{'name':'ExportPlcWatchTable','argumentsJson':{'softwarePath':'PLC_1','watchTableName':'WT1','exportPath':'C:\\Temp\\WT1.xml'}}", "argumentsJson may be the object itself or that object as a JSON string"),
-            E("PreflightToolCall", @"{'name':'DownloadToPlc','argumentsJson':{'softwarePath':'PLC_1','pgPcInterface':'PLCSIM','targetIpAddress':'192.168.0.3'}}", "nothing is executed"),
-            E("Doctor", @"{'fix':false}", "fix=false is a read-only diagnosis"),
-            E("GetAuthoringGuide", @"{'topic':'scl'}", "topics: workflow | openness-workflow | startdrive-bico | scl | lad | db | hmi | errors"),
-            E("GenerateAcceptanceReport", @"{'outputDirectory':'C:\\Temp\\mcp-report','includeProjectTree':true}"),
-            E("GenerateErrorReport", @"{'errorCode':'CompileError','summary':'FB_Pump: 2 errors','detail':'<compiler output>','severity':'error'}"),
-            E("RunCapabilitySelfTest", @"{'expectedPlcSoftwarePath':'PLC_1','expectedHmiSoftwarePath':'HMI_RT_1'}"),
-            E("Connect", @"{'projectName':'项目1'}", "attaches to the TIA process holding that project; never starts a new instance while one runs"),
-            E("OpenProject", @"{'path':'C:\\Projects\\Demo\\Demo.ap21'}"),
-            E("AttachToOpenProject", @"{'projectName':'项目1'}"),
-            E("CreateProject", @"{'directoryPath':'C:\\Projects','projectName':'Demo'}"),
-            E("ValidateAutomationContext", @"{'expectedPlcSoftwarePath':'PLC_1','expectedHmiSoftwarePath':''}", "empty HMI path skips the HMI check"),
-            E("ReadPortalInfo", @"{'includeProcesses':true,'includeSessions':true,'includeProducts':false}"),
-            E("CheckForUpdate", @"{}", "read-only; the update itself is scripts/operations/Update-Engine.ps1 with the engine stopped"),
-            // ---- project / software reading
-            E("GetSoftwareInfo", @"{'softwarePath':'PLC_1'}"),
-            E("GetSoftwareTree", @"{'softwarePath':'PLC_1'}"),
-            E("GetPlcTagTables", @"{'softwarePath':'PLC_1'}"),
-            E("GetBlocksWithHierarchy", @"{'softwarePath':'PLC_1'}"),
-            E("GetBlocks", @"{'softwarePath':'PLC_1','regexName':'FB_.*'}", "empty regexName lists every block"),
-            E("GetBlockInfo", @"{'softwarePath':'PLC_1','blockPath':'Main'}", "blockPath is Group/Subgroup/Name from GetSoftwareTree"),
-            E("DescribeBlockLogic", @"{'softwarePath':'PLC_1','blockPath':'Main'}"),
-            E("GetCrossReferences", @"{'softwarePath':'PLC_1','objectPath':'Main','objectKind':'Block','filter':'AllObjects'}"),
-            E("GetPlcExternalSources", @"{'softwarePath':'PLC_1'}"),
-            E("GetPlcWatchTables", @"{'softwarePath':'PLC_1'}"),
-            E("GetHmiTagTables", @"{'softwarePath':'HMI_RT_1'}"),
-            // ---- PLC authoring / import / export
-            E("WritePlcSclSourceFile", @"{'sclContent':'FUNCTION \""FC_Add\"" : INT\nVAR_INPUT\n  a : INT;\n  b : INT;\nEND_VAR\nBEGIN\n  #FC_Add := #a + #b;\nEND_FUNCTION','outputPath':'C:\\Temp\\FC_Add.scl'}", "then ManagePlcExternalSources createFromFile + GenerateBlocksFromExternalSource"),
-            E("ManagePlcExternalSources", @"{'softwarePath':'PLC_1','action':'createFromFile','name':'FC_Add','filePath':'C:\\Temp\\FC_Add.scl','dryRun':true}", "dryRun=false to create; generateBlocks afterwards"),
-            E("GenerateBlocksFromExternalSource", @"{'softwarePath':'PLC_1','externalSourceName':'FC_Add'}"),
-            E("ImportFromDocuments", @"{'softwarePath':'PLC_1','groupPath':'','importPath':'C:\\Temp\\docs','fileNameWithoutExtension':'FB_Pump','importOption':'Override'}", "importPath is the folder holding FB_Pump.s7dcl (+ .s7res)"),
-            E("ImportBlocksFromDocuments", @"{'softwarePath':'PLC_1','groupPath':'','importPath':'C:\\Temp\\docs','regexName':''}"),
-            E("ExportBlocksAsDocuments", @"{'softwarePath':'PLC_1','exportPath':'C:\\Temp\\docs','regexName':'FB_.*'}"),
-            E("ExportAsDocuments", @"{'softwarePath':'PLC_1','blockPath':'Main','exportPath':'C:\\Temp\\docs'}"),
-            E("ImportBlock", @"{'softwarePath':'PLC_1','groupPath':'','importPath':'C:\\Temp\\FB_Pump.xml'}", "SimaticML from ExportBlock; groupPath '' = program root"),
-            E("ReadPlcBlockEditCapabilities", @"{'filePath':'C:\\Temp\\FB_Pump.xml'}", "Per-network language, existing culture/member targets and fingerprint; no native write"),
-            E("AnalyzePlcReferences", @"{'directory':'C:\\Temp\\exports','action':'callers','target':'FB_Pump'}", "Partial offline references only; empty result does not justify deletion"),
-            E("ImportPlcBlockVerified", @"{'softwarePath':'PLC_1','blockPath':'Pumps/FB_Pump','importPath':'C:\\Temp\\FB_Pump.edited.xml','evidenceDirectory':'C:\\Temp\\plc-backups','dryRun':true,'compileAfterImport':true}", "Preview exports a backup but does not compile; inspect planned.xml before applying its token"),
-            E("ImportType", @"{'softwarePath':'PLC_1','groupPath':'','importPath':'C:\\Temp\\UDT_Motor.xml'}"),
-            E("ImportPlcTagTable", @"{'softwarePath':'PLC_1','folderPath':'','importPath':'C:\\Temp\\Tags.xml'}"),
-            E("ExportBlock", @"{'softwarePath':'PLC_1','blockPath':'Main','exportPath':'C:\\Temp'}", "Meta.exportedFile names the XML written"),
-            E("ExportBlocks", @"{'softwarePath':'PLC_1','exportPath':'C:\\Temp\\blocks','regexName':''}"),
-            E("ExportType", @"{'softwarePath':'PLC_1','typePath':'UDT_Motor','exportPath':'C:\\Temp'}"),
-            E("ExportPlcTagTable", @"{'softwarePath':'PLC_1','tagTableName':'Default tag table','exportPath':'C:\\Temp\\tags.xml'}"),
-            E("ManagePlcTagDefinition", @"{'softwarePath':'PLC_1','tablePath':'Default tag table','name':'Start','kind':'tag','action':'create','dataType':'Bool','addressOrValue':'%M0.0','dryRun':true}", "kind: tag | constant"),
-            E("PlcBuildAndImport", @"{'softwarePath':'PLC_1','kind':'fc','json':'{\""blockName\"":\""FC_DryRun\"",\""blockNumber\"":12,\""inputs\"":[{\""name\"":\""Start\"",\""datatype\"":\""Bool\""}],\""outputs\"":[{\""name\"":\""Run\"",\""datatype\"":\""Bool\""}],\""structuredText\"":{\""operations\"":[{\""op\"":\""if\"",\""condition\"":\""Start\""},{\""op\"":\""assignment\"",\""target\"":\""Run\"",\""value\"":\""TRUE\"",\""indent\"":2},{\""op\"":\""endif\""}]}}','dryRun':true}", "kind: udt | tagtable | globaldb | fc | fb; json is the BuildPlc* structure as a JSON string"),
-            E("ScaffoldProject", @"{'spec':'{\""projectName\"":\""Demo\"",\""directoryPath\"":\""C:\\\\Projects\"",\""plcName\"":\""PLC_1\"",\""plcFamily\"":\""S7-1500\""}','dryRun':true}", "full spec: templates/project-blueprints/scaffold_spec_start_stop.json; dryRun=false creates"),
-            E("CompileSoftware", @"{'softwarePath':'PLC_1'}"),
-            E("CompileAndDiagnosePlc", @"{'softwarePath':'PLC_1'}"),
-            E("CompileAndDiagnoseHmi", @"{'softwarePath':'HMI_RT_1'}"),
-            // ---- watch tables
-            E("ManagePlcTableEntries", @"{'softwarePath':'PLC_1','tableKind':'watch','tablePath':'MCP_W/MCP_WT','action':'read'}", "tableKind: watch | force; tablePath is Group/Table"),
-            E("SetWatchTableModifyValue", @"{'softwarePath':'PLC_1','tableName':'MCP_W/MCP_WT','address':'%M0.0','modifyValue':'TRUE','trigger':'OnceOnlyAtStart'}"),
-            E("ExportPlcWatchTable", @"{'softwarePath':'PLC_1','watchTableName':'WT1','exportPath':'C:\\Temp\\WT1.xml'}"),
-            // ---- Startdrive: exact calls mapped from official BICO examples
-            new Example("ManageStartdriveParameter", @"{""devicePathJson"": ""[\""<exact drive device>\""]"", ""itemPathJson"": ""[\""<exact drive/control unit item>\""]"", ""driveObjectNumber"": 0, ""driveObjectIndex"": 0, ""parameter"": ""p1070[0]"", ""action"": ""read"", ""dryRun"": true}", @"Replace paths and parameter; GetToolUsage explains the returned value forms. dryRun=true still reads native Value. Do not automatically retry reported failing p2051[0]."),
-            new Example("ReadDriveObjects", @"{""devicePathJson"": ""[\""<exact drive device>\""]"", ""itemPathJson"": ""[\""<exact drive/control unit item>\""]"", ""includeTelegrams"": false, ""includeFunctions"": false, ""includeTechnologyExtensions"": false, ""includeDcc"": false}", @"Replace exact drive/control-unit paths; optional expansions are disabled. This still queries TIA."),
-            new Example("ReadDriveParameters", @"{""devicePathJson"": ""[\""<exact drive device>\""]"", ""itemPathJson"": ""[\""<exact drive/control unit item>\""]"", ""driveObjectNumber"": 0, ""driveObjectIndex"": 0, ""source"": ""write"", ""namesJson"": ""[\""p1070[0]\""]"", ""includeValue"": false, ""includeBits"": false, ""includeEnumValues"": false}", @"Explicit metadata request: Value, bits and enums omitted. Metadata calls still use TIA. See GetAuthoringGuide('startdrive-bico')."),
-            new Example("ReadNativeInvocationLog", @"{""take"": 100}", @"Collect BEFORE/RETURNED/THREW after an interrupted call; do not reconnect/replay to obtain diagnostics."),
-            // ---- hardware
-            E("SearchHardwareCatalog", @"{'keyword':'1515-2 PN','limit':10}"),
-            E("AddDeviceWithFallback", @"{'preferredMlfb':'6ES7 515-2AM02-0AB0','preferredVersion':'V2.9','deviceName':'PLC_2','family':'S7-1500'}"),
-            E("AddDevice", @"{'orderNumber':'6ES7 515-2AM02-0AB0','version':'V2.9','deviceName':'PLC_2'}"),
-            E("PlugDeviceItem", @"{'deviceItemPath':'PLC_1/导轨_0','orderNumber':'6ES7 521-1BH00-0AB0','version':'V2.2','positionNumber':2,'dryRun':true}", "S7-1500 modules plug into the rail item; dryRun=true only checks CanPlugNew"),
-            E("ManageHardwareObject", @"{""devicePathJson"":""[\""PLC_2\""]"",""action"":""deleteDevice"",""dryRun"":true}", "action: deleteDevice | deleteItem | moveItem | copyItem"),
-            E("ConnectDeviceNodesToProfinetSubnet", @"{'firstRootPath':'PLC_1','secondRootPath':'HMI_KTP700_1/HMI_KTP700_1.IE_CP_1','subnetName':'PN_IE_1'}"),
-            E("ManagePlcProtection", @"{""devicePathJson"":""[\""PLC_1\""]"",""action"":""read""}", "actions: read | setAccessLevel | setAccessPassword | resetAccessPassword | protectMasterSecret | changeMasterSecret | unprotectMasterSecret | resetMasterSecret | protectAllConfiguration | unprotectAllConfiguration; changes need dryRun=false + confirmChange=true"),
-            E("CompileDevice", @"{""devicePathJson"":""[\""PLC_1\""]""}", "hardware compile of one station (ICompilable)"),
-            E("ManageOpcUaInterface", @"{'softwarePath':'PLC_1','interfaceName':'Server interface_1','action':'read'}"),
-            // ---- online / transfer (PLCSIM Advanced only in the maintainer's environment)
-            E("ReadTransferRoutes", @"{'softwarePath':'PLC_1'}", "pick pgPcInterface / targetIpAddress from the route tree"),
-            E("ScanAccessibleDevices", @"{'pgPcInterface':'PLCSIM','limit':20}"),
-            E("CheckDownloadReadiness", @"{'softwarePath':'PLC_1'}"),
-            E("DownloadToPlc", @"{'softwarePath':'PLC_1','pgPcInterface':'PLCSIM','targetIpAddress':'192.168.0.3'}", "CPU protection (ManagePlcProtection) and a hardware compile must pass first; F-CPUs are refused by Openness"),
-            E("GoOnline", @"{'softwarePath':'PLC_1','ipAddress':'192.168.0.3','pgPcInterface':'PLCSIM'}"),
-            E("GetOnlineState", @"{'softwarePath':'PLC_1'}"),
-            E("CompareSoftwareToOnline", @"{'softwarePath':'PLC_1','maxDepth':4}"),
-            E("GoOffline", @"{'softwarePath':'PLC_1'}"),
-            E("UploadStationFromPlc", @"{'targetIpAddress':'192.168.0.3','pgPcInterface':'PLCSIM','dryRun':true}", "execution needs confirmUpload=true; PLCSIM Advanced instances cannot be uploaded from (TIA)"),
-            // ---- PLCSIM Advanced
-            E("ReadPlcSimAdvancedInstances", @"{'includeState':true}"),
-            E("ManagePlcSimAdvancedInstance", @"{'instanceName':'MCP_SIM','action':'register','cpuType':'CPU1500_Unspecified','communicationInterface':'Softbus'}", "action: register | powerOn | run | stop | powerOff | memoryReset | unregister; execution needs dryRun=false + confirmInstanceChange=true"),
-            E("ReadPlcSimAdvancedTags", @"{""instanceName"":""MCP_SIM"",""namesJson"":""[\""MCP_SimDB.Cycles\"",\""MCP_SimDB.Running\""]""}", "empty namesJson lists the tags"),
-            E("WritePlcSimAdvancedTags", @"{""instanceName"":""MCP_SIM"",""valuesJson"":""{\""MCP_SimDB.Start\"":true}"",""dryRun"":true,""confirmWrite"":false}"),
-            E("RunPlcSimAdvancedTestScenario", @"{""scenarioJson"":""{\""instance\"":\""MCP_SIM\"",\""mode\"":\""default\"",\""steps\"":[{\""write\"":{\""MCP_SimDB.Start\"":true}},{\""waitMs\"":300},{\""assert\"":{\""MCP_SimDB.Running\"":true}}]}"",""dryRun"":true}", "steps: write | waitMs | cycles (singleStep mode) | assert; execution needs dryRun=false + confirmRun=true"),
-            // ---- HMI
-            E("ExportHmiScreen", @"{'softwarePath':'HMI_RT_1','screenName':'Screen_1','exportPath':'C:\\Temp\\Screen_1.xml'}"),
-            E("ImportHmiScreen", @"{'softwarePath':'HMI_RT_1','folderPath':'','importPath':'C:\\Temp\\Screen_1.xml'}"),
-            E("ImportHmiTagTable", @"{'softwarePath':'HMI_RT_1','folderPath':'','importPath':'C:\\Temp\\HmiTags.xml'}"),
-            // ---- export store (large responses)
-            E("GetExport", @"{'exportId':'<exportId from response>','offset':0}", "copy the exact exportId; offset = the previous page's nextOffset"),
-            E("ListExports", @"{'tool':'GetBlocks','limit':10}"),
-            E("SaveExport", @"{'exportId':'<exportId from response>','outputPath':'C:\\Temp\\blocks.json'}", "overwrite=true only after the user agreed"),
-            E("DeleteExport", @"{'exportId':'<exportId from response>'}"),
-            E("ClearExports", @"{'olderThanHours':0}", "0 drops every handle"),
-        };
+        // Inline discovery and GetToolUsage read the same version-aware data.
+#if TIA_V20
+        private const string ExampleRelease = "20";
+#else
+        private const string ExampleRelease = "21";
+#endif
+        private static readonly Example[] Rows = TiaOpenness.Shared.ToolUsageCatalog.InlineCalls(ExampleRelease)
+            .Select(r => new Example((string)r!["tool"]!, r["arguments"]!.ToJsonString(), (string)r["note"]!)).ToArray();
 
         private static readonly Dictionary<string, Example> Index = Rows.ToDictionary(r => r.Tool, r => r, StringComparer.OrdinalIgnoreCase);
 

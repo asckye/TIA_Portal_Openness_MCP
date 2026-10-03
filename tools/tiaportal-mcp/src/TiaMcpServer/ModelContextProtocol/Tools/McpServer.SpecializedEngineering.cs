@@ -16,10 +16,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ExchangeMotionCamData(
             string softwarePath,
             string objectPath,
-            [Description("export | import. ")] string action,
+            [Description("export | import | exportBinary | importBinary | exportPoints. Text, native binary or point-list exchange.")] string action,
             string filePath,
-            [Description("format: file format name (see the tool description).")] string format="",
-            [Description("separator: column separator character for CSV.")] string separator="",
+            [Description("MCD | Scout | PointList. Native CamDataFormat for text export.")] string format="",
+            [Description("Comma | Tab. Native CamDataFormatSeparator name for text import/export and point lists; do not pass a literal separator character.")] string separator="",
             [Description("pointCount: number of points to export.")] int pointCount=0,
             bool dryRun=true)
             => Portal.ExchangeMotionCamData(softwarePath,objectPath,action,filePath,format,separator,pointCount,dryRun);
@@ -29,8 +29,8 @@ namespace TiaMcpServer.ModelContextProtocol
             string objectPath,
             [Description("interfaceKind: actor | sensor | torque.")] string interfaceKind,
             [Description("action: the operation to perform - read | connect | disconnect.")] string action,
-            [Description("inputBitAddress: input bit address, e.g. '%I0.0'.")] int inputBitAddress=0,
-            [Description("outputBitAddress: output bit address, e.g. '%Q0.0'.")] int outputBitAddress=0,
+            [Description("Nonnegative integer input BIT address; e.g. byte 10 bit 0 is 80.")] int inputBitAddress=0,
+            [Description("Nonnegative integer output BIT address; e.g. byte 10 bit 0 is 80.")] int outputBitAddress=0,
             [Description("connectOption: connect option name (Default or AllowAllModules).")] string connectOption="Default",
             int sensorIndex=0,
             bool dryRun=true)

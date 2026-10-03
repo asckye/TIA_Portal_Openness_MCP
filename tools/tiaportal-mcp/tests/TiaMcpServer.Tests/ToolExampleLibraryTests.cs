@@ -8,23 +8,41 @@ internal static class ToolExampleLibraryTests
     internal static void Run(Action<bool, string> check)
     {
         var schema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath""],""properties"":{
-            ""softwarePath"":{""type"":""string""},""action"":{""type"":""string"",""enum"":[""read"",""import""],""default"":""read""},
-            ""dryRun"":{""type"":""boolean"",""default"":true},""filePath"":{""type"":""string"",""default"":""""}}}")!.AsObject();
+            ""softwarePath"":{""type"":""string""},""action"":{""type"":""string"",""enum"":[""list"",""read"",""createFromFile""],""default"":""list""},
+            ""dryRun"":{""type"":""boolean"",""default"":true},""name"":{""type"":""string""},""filePath"":{""type"":""string"",""default"":""""}}}")!.AsObject();
         var roster = new[] { "GetProjectTree", "ManagePlcExternalSources" };
         JsonObject Describe(string action) => ToolUsageCatalog.Describe("ManagePlcExternalSources", "21", "full-engine", "test contract", schema,
             "{\"softwarePath\":\"PLC_Example\",\"action\":\"read\"}", "read example", action, roster);
         var read = Describe("read");
-        var import = Describe("IMPORT");
-        check((string?)read["example"]!["kind"] == "curated-project-example", "library preserves a matching curated call");
-        check((string?)import["example"]!["kind"] == "schema-template", "library does not reuse read arguments for import");
-        check((string?)import["example"]!["request"]!["params"]!["arguments"]!["action"] == "import", "operation selection resolves canonical case");
+        var import = Describe("CREATEFROMFILE");
+        check((string?)read["example"]!["kind"] == "parameterized-call-example", "library uses the shared call record");
+        check(((string)import["example"]!["request"]!["params"]!["arguments"]!["filePath"]!).EndsWith("FC_Add.scl"), "source creation supplies its conditional file input");
+        check((string?)import["example"]!["request"]!["params"]!["arguments"]!["action"] == "createFromFile", "operation selection resolves canonical case");
         check(import["parameterSources"]!["filePath"] != null, "optional operation inputs remain discoverable");
         check(import["parameterSources"]!["softwarePath"]!["tools"]!.AsArray().Select(n => (string)n!).SequenceEqual(new[] { "GetProjectTree" }), "input origins use the exact roster");
         bool refused = false;
         try { Describe("invented"); } catch (ArgumentException) { refused = true; }
         check(refused, "unknown operation cannot masquerade as an example");
         read["example"]!["request"]!["params"]!["arguments"]!["softwarePath"] = "modified";
-        check((string?)Describe("read")["example"]!["request"]!["params"]!["arguments"]!["softwarePath"] == "PLC_Example", "example retrieval does not mutate cached data");
+        check((string?)Describe("read")["example"]!["request"]!["params"]!["arguments"]!["softwarePath"] == "PLC_1", "example retrieval does not mutate cached data");
+
+        var pathSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""path""],""properties"":{""path"":{""type"":""string""}}}")!.AsObject();
+        var oldPath = ToolUsageCatalog.Describe("OpenProject", "15.1", "plc-foundation", "", pathSchema);
+        check(((string)oldPath["example"]!["request"]!["params"]!["arguments"]!["path"]!).EndsWith(".ap15_1"), "V15.1 project example uses its exact extension");
+        var modernPath = ToolUsageCatalog.InlineCalls("20").First(r => (string?)r!["tool"] == "OpenProject")!;
+        check(((string)modernPath["arguments"]!["path"]!).EndsWith(".ap20"), "inline discovery uses the same V20 example");
+        var objectSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""softwarePath"",""objectPathJson"",""propertiesJson""],""properties"":{""softwarePath"":{""type"":""string""},""objectPathJson"":{""type"":""string""},""propertiesJson"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
+        var objectUsage = ToolUsageCatalog.Describe("UpdateUnifiedObjectProperties", "21", "full-engine", "", objectSchema);
+        var objectArgs = objectUsage["example"]!["request"]!["params"]!["arguments"]!;
+        var steps = TiaMcpServer.Siemens.EngineeringObjectAddress.Parse((string)objectArgs["objectPathJson"]!);
+        check(steps.Count == 3 && (string?)steps[2]!["property"] == "ScreenItems", "Unified example uses the actual property-step address grammar");
+        check(objectUsage["example"]!["bindings"]!.AsArray().Any(p => (string?)p == "propertiesJson"), "unresolved native property values are explicit bindings");
+        var patchSchema = JsonNode.Parse(@"{""type"":""object"",""required"":[""filePath"",""changesJson"",""expectedFingerprint""],""properties"":{""filePath"":{""type"":""string""},""changesJson"":{""type"":""string""},""expectedFingerprint"":{""type"":""string""},""dryRun"":{""type"":""boolean""}}}")!.AsObject();
+        var patchCall = ToolUsageCatalog.Describe("PatchPlcBlockDocument", "21", "full-engine", "", patchSchema)["example"]!["request"]!["params"]!["arguments"]!;
+        const string fixture = "<Document><Engineering version='V21'/><SW.Blocks.FC ID='0'><AttributeList><Name>FC_Example</Name><Number>1</Number><ProgrammingLanguage>SCL</ProgrammingLanguage></AttributeList><ObjectList><MultilingualText ID='1' CompositionName='Title'><ObjectList><MultilingualTextItem ID='2' CompositionName='Items'><AttributeList><Culture>en-US</Culture><Text>Old title</Text></AttributeList></MultilingualTextItem></ObjectList></MultilingualText></ObjectList></SW.Blocks.FC></Document>";
+        var fingerprint = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.HashText(TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Canonical(TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Parse(fixture)));
+        var edited = TiaMcpServer.ModelContextProtocol.PlcDocumentEditing.Patch(fixture, (string)patchCall["changesJson"]!, fingerprint);
+        check(edited.Contains("<Text>Example</Text>") && edited.Contains("<Name>FC_Example</Name>"), "example patch payload edits the intended text while preserving the block identity");
 
         var full = ToolUsageCatalog.Examples("21", "full-engine", roster, language: "scl");
         var source = ToolUsageCatalog.Examples("21", "full-engine", roster, exampleId: "scl-add")["examples"]![0]!;

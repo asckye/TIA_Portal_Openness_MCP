@@ -1,18 +1,18 @@
 {
     "package":  "TIA_MCP_Delivery_v3.1.0_20261003",
-    "generatedAt":  "2026-10-03T09:14:08.9407774+00:00",
+    "generatedAt":  "2026-10-03T10:01:48.0381971+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.1.0.0",
-    "exeSha256":  "1f4ad60063e9124955182cd6ad82524b677236bde0ed3b806a04e9d1c14a7dc4",
+    "exeSha256":  "703d6daee4be6d990d698ea75f834a90635aa25a3266559f02dd0cfc77598a7f",
     "toolCount":  488,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
                            "parameters":  2347,
-                           "parametersUndocumented":  871,
-                           "parametersFromVocabulary":  871,
+                           "parametersUndocumented":  868,
+                           "parametersFromVocabulary":  868,
                            "toolsWithUndocumentedParameters":  198,
-                           "toolsWithEnumHints":  144,
-                           "enumHints":  221,
+                           "toolsWithEnumHints":  145,
+                           "enumHints":  227,
                            "defaultHints":  1417,
                            "examplesCurated":  87,
                            "recipes":  13
@@ -119,7 +119,7 @@
                                          "overwrite"
                                      ],
                       "description":  "[L1][Exports] Write a parked response to a file in one step, instead of paging it through the conversation. Prefer this whenever the user wants the whole thing (a full cross-reference dump, a whole block list, a whole block export): it costs one call and no context. By default the tool\u0027s PAYLOAD is written (e.g. the CSV itself), not the JSON envelope around it — so saving a truncated table to \u0027IO.csv\u0027 really gives you a CSV you can open in Excel. Pass raw=true to write the untouched response text instead. Written as UTF-8 with BOM so Chinese opens correctly in Notepad and Excel.",
-                      "example":  "{\"exportId\":\"\u003cexportId from response\u003e\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"}"
+                      "example":  "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"outputPath\":\"C:\\\\Temp\\\\blocks.json\"}"
                   },
                   {
                       "name":  "DeleteExport",
@@ -134,7 +134,7 @@
                                          "exportId"
                                      ],
                       "description":  "[L1][Exports] Drop one export handle once you are done with it. Optional — handles expire on their own after 24 hours and the oldest are evicted automatically when the store fills up.",
-                      "example":  "{\"exportId\":\"\u003cexportId from response\u003e\"}"
+                      "example":  "{\"exportId\":\"\\u003CexportId from response\\u003E\"}"
                   },
                   {
                       "name":  "ClearExports",
@@ -230,7 +230,7 @@
                                          "length"
                                      ],
                       "description":  "[L1][Exports] Read one page of a large response that was parked under an export handle. When a tool\u0027s response exceeds the size limit the engine stores the full text and returns only its head plus an \u0027exportId\u0027; call this with that id to read the rest. Page forward by passing the \u0027nextOffset\u0027 from the previous page until \u0027eof\u0027 is true. Each page is a raw CHARACTER SLICE of the original text — it can cut a line or a JSON value in half. Concatenate every page first, THEN parse; never parse a single page on its own. Handles live for 24 hours and only inside the current engine session.",
-                      "example":  "{\"exportId\":\"\u003cexportId from response\u003e\",\"offset\":0}"
+                      "example":  "{\"exportId\":\"\\u003CexportId from response\\u003E\",\"offset\":0}"
                   },
                   {
                       "name":  "ManagePlcGitRepository",
@@ -506,7 +506,7 @@
                                          "take"
                                      ],
                       "description":  "[L2][Diagnostics][READ] Read recent BEFORE/RETURNED/THREW records, including rotated .previous files, from this MCP\u0027s configured diagnostics directory. Release builds instrument engine-owned Openness methods, properties, reflection and enumeration boundaries. nativeCallId pairs each call; callSite, object identity/access lineage, thread/apartment, cached binding and exception type chain locate interruption. Object/attribute selectors may appear; no passwords, scripts or variable values. No native calls or arbitrary file access. Missing completion in this bounded window does not prove crash causality. take 1..500.",
-                      "example":  "{\"take\": 100}"
+                      "example":  "{\"take\":100}"
                   },
                   {
                       "name":  "ManageSafetyGlobalSettings",
@@ -564,7 +564,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][Hardware][WRITE] Native deleteDevice/deleteItem/moveItem/copyItem. devicePathJson=[group,...,station] or [unique exact station name]; itemPathJson lists exact child names, preserving slashes in names. Move/copy require destinationDevicePathJson,destinationItemPathJson,position and pass native CanPlug check. dryRun=true default. Deletes may remove contained software. No save/download/online control.",
-                      "example":  "{\"devicePathJson\":\"[\\\"PLC_2\\\"]\",\"action\":\"deleteDevice\",\"dryRun\":true}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022PLC_2\\u0022]\",\"action\":\"deleteDevice\",\"dryRun\":true}"
                   },
                   {
                       "name":  "ImportPlcWatchTableOffline",
@@ -752,7 +752,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][Hardware][WRITE] Access level and confidential-configuration-data password of ONE CPU (PlcAccessLevelProvider / PlcMasterSecretConfigurator on the CPU device item; itemPathJson [] resolves the station\u0027s CPU). read reports accessLevel (FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe), masterSecret (None = \u0027Protect confidential PLC configuration data\u0027 unchecked, WithoutPassword = checked without password, WithPassword, WithPasswordAllDataProtection) and the access-control mode. setAccessLevel accessLevel; setAccessPassword / resetAccessPassword accessLevel [+ password] (TIA only accepts passwords for levels less strict than the selected one); protectMasterSecret password; changeMasterSecret password newPassword; unprotectMasterSecret [password]; resetMasterSecret (certificates encrypted with it are lost); protectAllConfiguration [password]; unprotectAllConfiguration. Why: TIA V21 refuses the hardware download of an S7-1500 FW \u003e= 2.9 CPU whose level is above FullAccess without a FullAccess password or whose confidential data has no password (\u0027硬件配置编译完成，但出现错误\u0027 - see CompileDevice). Passwords go in as SecureString and are never echoed; state read back (meta.before / after). Default preview; real change needs dryRun=false AND confirmChange=true; no compile / save / download.",
-                      "example":  "{\"devicePathJson\":\"[\\\"PLC_1\\\"]\",\"action\":\"read\"}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022PLC_1\\u0022]\",\"action\":\"read\",\"confirmChange\":false,\"dryRun\":true}"
                   },
                   {
                       "name":  "ReadOpcUaAccessControl",
@@ -856,7 +856,7 @@
                                          "itemPathJson"
                                      ],
                       "description":  "[L2][Hardware][EXECUTE] Hardware compile of one device (or device item) through ICompilable - what the TIA UI\u0027s \u0027Compile \u003e Hardware (rebuild all)\u0027 does and what DownloadToPlc runs first; CompileSoftware / CompileAndDiagnosePlc only compile the program. Returns the compiler state, error / warning counts and the flattened diagnostics (errors[] / warnings[] / nodes) - e.g. the security errors of an S7-1500 FW \u003e= 2.9 CPU that ManagePlcProtection fixes. No save / download.",
-                      "example":  "{\"devicePathJson\":\"[\\\"PLC_1\\\"]\"}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022PLC_1\\u0022]\"}"
                   },
                   {
                       "name":  "ReadUnifiedHmiDynamization",
@@ -1376,7 +1376,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][Category:PLC-OpcUA][WRITE] Read or delete ONE OPC UA server interface, SIMATIC interface or reference namespace of a PLC (ServerInterfaceGroup.ServerInterfaces / SimaticInterfaces / ReferenceNamespaces, native Delete with readback). Use it to remove an interface that blocks compilation (an empty server interface makes the whole PLC fail with \u0027The OPC UA server interface ... is empty or does not contain unique nodes\u0027). Default preview; dryRun=false deletes; no save/compile/download.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"action\":\"read\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"interfaceName\":\"Server interface_1\",\"action\":\"read\",\"dryRun\":true}"
                   },
                   {
                       "name":  "CheckDownloadReadiness",
@@ -1483,7 +1483,7 @@
                                          "exportPath"
                                      ],
                       "description":  "[L2][PLC-Software]Export one PLC tag table (PlcTagTable) to XML file",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"exportPath\":\"C:\\\\Temp\\\\tags.xml\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"tagTableName\":\"Default tag table\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportPlcTagTable.xml\"}"
                   },
                   {
                       "name":  "ImportPlcTagTable",
@@ -1907,7 +1907,7 @@
                                          "importOption"
                                      ],
                       "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\docs\",\"regexName\":\"\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"regexName\":\"\"}"
                   },
                   {
                       "name":  "ExportAsDocuments",
@@ -1925,7 +1925,7 @@
                                          "preservePath"
                                      ],
                       "description":  "[L2][PLC-Software] PREFERRED on V21+ for exporting one block. Exports a single program block to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML (ExportBlock). Requires TIA Portal V20 or newer.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Temp\\\\docs\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Examples\\\\exports\"}"
                   },
                   {
                       "name":  "ExportBlocksAsDocuments",
@@ -1945,7 +1945,7 @@
                                          "preservePath"
                                      ],
                       "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch export. Exports multiple program blocks to SIMATIC SD textual / SCL document format (.s7dcl + .s7res) — far more readable/diff-friendly than SimaticML XML. Requires TIA Portal V20 or newer.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Temp\\\\docs\",\"regexName\":\"FB_.*\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"regexName\":\"FB_.*\"}"
                   },
                   {
                       "name":  "ImportFromDocuments",
@@ -1964,7 +1964,7 @@
                                          "importOption"
                                      ],
                       "description":  "[L2][PLC-Software] PREFERRED on V21+ for importing one block. Imports a single program block from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. After import it checks exact native imported names in the target group (Meta.existsVerified / legacy verified); contentVerified remains unknown. Use InspectSimaticSdCompatibility before import and compare exported documents for content verification.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\docs\",\"fileNameWithoutExtension\":\"FB_Pump\",\"importOption\":\"Override\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\documents\",\"fileNameWithoutExtension\":\"FC_Add\",\"importOption\":\"Override\"}"
                   },
                   {
                       "name":  "InvokeObject",
@@ -2185,7 +2185,7 @@
                                          "exportPath"
                                      ],
                       "description":  "[L2][PLC-Software]Export one PLC watch/monitor table (PlcWatchTable) to XML file. Read-only against the TIA project.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\",\"exportPath\":\"C:\\\\Temp\\\\WT1.xml\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportPlcWatchTable.xml\"}"
                   },
                   {
                       "name":  "GetPlcWatchTables",
@@ -2392,7 +2392,7 @@
                                          "expectedHmiSoftwarePath"
                                      ],
                       "description":  "[L0][Diagnostics]Run a read-only MCP/TIA readiness self-test. It checks Openness group membership, connection state, visible portal processes, optional automation context, and optional project tree readback without writing to the project.",
-                      "example":  "{\"expectedPlcSoftwarePath\":\"PLC_1\",\"expectedHmiSoftwarePath\":\"HMI_RT_1\"}"
+                      "example":  "{\"expectedPlcSoftwarePath\":\"PLC_1\",\"expectedHmiSoftwarePath\":\"HMI_RT_1\",\"connectIfNeeded\":false,\"includeProjectTree\":false,\"inspectPortalProcesses\":false}"
                   },
                   {
                       "name":  "RunOnlineMonitoringSafetySelfTest",
@@ -2506,7 +2506,7 @@
                                          "outputDirectory"
                                      ],
                       "description":  "[L0][Reports]Generate a standardized Markdown/JSON error report. This is file/report generation only; it does not touch TIA Portal or modify projects.",
-                      "example":  "{\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\u003ccompiler output\u003e\",\"severity\":\"error\"}"
+                      "example":  "{\"errorCode\":\"CompileError\",\"summary\":\"FB_Pump: 2 errors\",\"detail\":\"\\u003Ccompiler output\\u003E\",\"severity\":\"error\"}"
                   },
                   {
                       "name":  "ManageDccChartInterface",
@@ -2719,7 +2719,7 @@
                                          "preservePath"
                                      ],
                       "description":  "[L2][PLC-Software] Export all (or regexName-filtered) blocks to a directory as SimaticML XML. Pick the right tool: readable SCL/.s7dcl text → ExportBlocksAsDocuments; a single block → ExportBlock.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Temp\\\\blocks\",\"regexName\":\"\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"regexName\":\"\"}"
                   },
                   {
                       "name":  "ExchangeCfcCharts",
@@ -2857,7 +2857,7 @@
                                          "allowStart"
                                      ],
                       "description":  "[L1][Portal][SESSION] Explicit connection by optional exact project filename stem. Uses running-process metadata before Attach, refuses multiple matching instances, reserves the chosen TIA instance against other same-user MCP processes, and captures PID/start time/full project path. Prefer ConnectToProject for exact identity from ListPortalProcessProjects. Without a name, exactly one existing process is required; with none running a new instance starts. No fallback to another project or automatic retry. Use ConnectIsolated to start a separate headless instance. Meta contains boundProcessId, startedNew and binding.",
-                      "example":  "{\"projectName\":\"项目1\"}"
+                      "example":  "{\"projectName\":\"\\u9879\\u76EE1\"}"
                   },
                   {
                       "name":  "ConnectIsolated",
@@ -3202,7 +3202,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][PLC-Online][ONLINE-WRITE] Upload a station from a live PLC into the project as a NEW device (StationUploadProvider.StationUpload). targetIpAddress must exactly match an IP address seen by ScanAccessibleDevices on the same PG/PC interface (ConfigurationAddressComposition.Create accepts IP addresses only - a device listed by MAC alone, such as a PLCSIM Advanced instance before its first download, cannot be uploaded from). Default preview; execution needs confirmUpload=true, takes exclusive access, answers upload prompts (missing products: TryUpload; password prompts from password) and verifies the uploaded device exists. No save/compile/download.",
-                      "example":  "{\"targetIpAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\",\"dryRun\":true}"
+                      "example":  "{\"targetIpAddress\":\"192.168.0.3\",\"pgPcInterface\":\"PLCSIM\",\"dryRun\":true,\"confirmUpload\":false}"
                   },
                   {
                       "name":  "AddGsdDeviceWithProbe",
@@ -3521,7 +3521,7 @@
                                          "plugOnDevice"
                                      ],
                       "description":  "[L2][Hardware][WRITE] Insert a SUBMODULE into an existing device: signal board (SB, e.g. SB 1221 6ES7221-3BD30-0XB0), signal module (SM), or communication module (CM). This is the \u0027InsertDeviceItem\u0027 / \u0027AddSignalBoard\u0027 operation — AddDevice only creates whole stations and cannot plug boards into a CPU. Defaults to dryRun=true, which runs a REAL TIA feasibility check (CanPlugNew) without writing. Pass positionNumber=-1 to let the server pick a free slot reported by TIA; slot numbers are never hardcoded — use GetDevicePlugLocations to see them. After a successful plug the module is read back and verified (IsPlugged / name / slot). This tool does NOT set addresses: to make the inputs start at %I2.0, call SetDeviceItemIoAddress afterwards with startAddress=2, then CompileSoftware and SaveProject. Failures are reported by category: SlotOccupied, SlotNotAvailable, OrderNumberNotFound, NotSupportedByDevice, PlugFailed, VerifyFailed. Startdrive drive components are plugged on the Device itself: plugOnDevice=true with the station name, orderNumber \u00276SL3xxx-xxxxx-xxxx\u0027 (unspecified Motor Module) or a concrete MLFB, positionNumber 65535 (official \u0027Creating a drive component\u0027); motors / encoders then plug below the Motor Module item (\u0027OrderNumber:1PH2092-4WG4x-xxxx\u0027, \u0027OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202\u0027).",
-                      "example":  "{\"deviceItemPath\":\"PLC_1/导轨_0\",\"orderNumber\":\"6ES7 521-1BH00-0AB0\",\"version\":\"V2.2\",\"positionNumber\":2,\"dryRun\":true}"
+                      "example":  "{\"deviceItemPath\":\"PLC_1/\\u5BFC\\u8F68_0\",\"orderNumber\":\"6ES7 521-1BH00-0AB0\",\"version\":\"V2.2\",\"positionNumber\":2,\"dryRun\":true}"
                   },
                   {
                       "name":  "ReadMotionAxisConfiguration",
@@ -4326,7 +4326,7 @@
                                          "preservePath"
                                      ],
                       "description":  "[L2][PLC-Software] Export one block to an XML file. Requires: Connect + OpenProject + block must be consistent (compile first if IsConsistent=false). blockPath must be fully qualified \u0027Group/Subgroup/Name\u0027 from GetSoftwareTree — bare names return InvalidParams with suggestions. Pick the right tool: batch → ExportBlocks; readable SCL/.s7dcl text → ExportAsDocuments.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Temp\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"blockPath\":\"Main\",\"exportPath\":\"C:\\\\Examples\\\\exports\"}"
                   },
                   {
                       "name":  "GetBlockInfo",
@@ -4551,7 +4551,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][PLC-Software][WRITE] Native tag/constant read/create/update/delete in exact table path. Creation requires dataType and logical address or constant value. Public scalar edits (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value); Comment is a MultilingualText and is written per culture - propertiesJson {\"Comment\":\"text\"} goes to the project editing language, {\"Comment\":{\"zh-CN\":\"文本\",\"en-US\":\"text\"}} per active culture (inactive culture = NotFound, activate with ManageProjectLanguage); commentBefore / commentAfter report every culture. Default preview, execution requires Offline. No runtime value write, save/compile/download.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"tablePath\":\"Default tag table\",\"name\":\"Start\",\"kind\":\"tag\",\"action\":\"create\",\"dataType\":\"Bool\",\"addressOrValue\":\"%M0.0\",\"dryRun\":true}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"tablePath\":\"Default tag table\",\"name\":\"Ready\",\"kind\":\"tag\",\"action\":\"read\",\"dataType\":\"Bool\",\"addressOrValue\":\"%M0.0\",\"dryRun\":true}"
                   },
                   {
                       "name":  "SetDeviceItemIoAddress",
@@ -5307,7 +5307,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L1][PLC-Software] MAIN tool for creating new PLC blocks from natural language. Build one PLC artifact (UDT/tag table/GlobalDB/FC/FB) from structured JSON, then optionally import and compile. Use dryRun=true first to validate. Workflow: describe block in JSON → dryRun → review → dryRun=false to import. Replaces the multi-step Build*Xml + ImportBlock sequence.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"kind\":\"fc\",\"json\":\"{\\\"blockName\\\":\\\"FC_DryRun\\\",\\\"blockNumber\\\":12,\\\"inputs\\\":[{\\\"name\\\":\\\"Start\\\",\\\"datatype\\\":\\\"Bool\\\"}],\\\"outputs\\\":[{\\\"name\\\":\\\"Run\\\",\\\"datatype\\\":\\\"Bool\\\"}],\\\"structuredText\\\":{\\\"operations\\\":[{\\\"op\\\":\\\"if\\\",\\\"condition\\\":\\\"Start\\\"},{\\\"op\\\":\\\"assignment\\\",\\\"target\\\":\\\"Run\\\",\\\"value\\\":\\\"TRUE\\\",\\\"indent\\\":2},{\\\"op\\\":\\\"endif\\\"}]}}\",\"dryRun\":true}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"kind\":\"fc\",\"json\":\"{\\u0022blockName\\u0022:\\u0022FC_DryRun\\u0022,\\u0022blockNumber\\u0022:12,\\u0022inputs\\u0022:[{\\u0022name\\u0022:\\u0022Start\\u0022,\\u0022datatype\\u0022:\\u0022Bool\\u0022}],\\u0022outputs\\u0022:[{\\u0022name\\u0022:\\u0022Run\\u0022,\\u0022datatype\\u0022:\\u0022Bool\\u0022}],\\u0022structuredText\\u0022:{\\u0022operations\\u0022:[{\\u0022op\\u0022:\\u0022if\\u0022,\\u0022condition\\u0022:\\u0022Start\\u0022},{\\u0022op\\u0022:\\u0022assignment\\u0022,\\u0022target\\u0022:\\u0022Run\\u0022,\\u0022value\\u0022:\\u0022TRUE\\u0022,\\u0022indent\\u0022:2},{\\u0022op\\u0022:\\u0022endif\\u0022}]}}\",\"dryRun\":true}"
                   },
                   {
                       "name":  "ComposePlcFcBlockXml",
@@ -5429,7 +5429,7 @@
                                          "umacUserType"
                                      ],
                       "description":  "[L1][Project] Open a local TIA Portal project (.apXX) or multi-user session (.alsXX) file, where XX is the TIA version number (e.g. .ap21, .als21). Requires: Connect. Closes any currently open project first. After success, call GetProjectTree to explore its structure.",
-                      "example":  "{\"path\":\"C:\\\\Projects\\\\Demo\\\\Demo.ap21\"}"
+                      "example":  "{\"path\":\"C:\\\\Examples\\\\Example.ap21\"}"
                   },
                   {
                       "name":  "CompareProjects",
@@ -5889,7 +5889,7 @@
                                          "limit"
                                      ],
                       "description":  "[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/MCP_WT\",\"action\":\"read\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"tableKind\":\"watch\",\"tablePath\":\"MCP_W/MCP_WT\",\"action\":\"read\",\"confirmDelete\":false,\"dryRun\":true}"
                   },
                   {
                       "name":  "ExportPlcProDiagInfo",
@@ -5971,7 +5971,7 @@
                                          "argumentsJson"
                                      ],
                       "description":  "[L0][Meta] Invoke any available tool for this engine version by name, including non-lite tools. Use FindTools first to get the exact name and parameter signature. Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. Example: name=\u0027ExportPlcWatchTable\u0027, argumentsJson=\u0027{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}\u0027.",
-                      "example":  "{\"name\":\"ExportPlcWatchTable\",\"argumentsJson\":{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\",\"exportPath\":\"C:\\\\Temp\\\\WT1.xml\"}}"
+                      "example":  "{\"name\":\"GetState\",\"argumentsJson\":{}}"
                   },
                   {
                       "name":  "PreflightToolCall",
@@ -5987,7 +5987,7 @@
                                          "argumentsJson"
                                      ],
                       "description":  "[L0][Meta][SESSION] Check a planned tool call WITHOUT executing it. Resolves the tool name (suggests the right one on a typo), validates argumentsJson against the real signature (missing required parameters, unknown or mis-cased names, type mismatches, values outside the documented alternatives, what CallTool would coerce), reports what the call would do (operation class, dryRun / confirm flags, precautions), whether the session prerequisites hold (connected, project bound) and one worked example. Use it before an unfamiliar call and after a correction from the user: fix the plan from this report, then call the tool (directly or through CallTool). Nothing touches TIA Portal or the project.",
-                      "example":  "{\"name\":\"DownloadToPlc\",\"argumentsJson\":{\"softwarePath\":\"PLC_1\",\"pgPcInterface\":\"PLCSIM\",\"targetIpAddress\":\"192.168.0.3\"}}"
+                      "example":  "{\"name\":\"GetBlocks\",\"argumentsJson\":{\"softwarePath\":\"PLC_1\"}}"
                   },
                   {
                       "name":  "GetRecipe",
@@ -6205,7 +6205,7 @@
                                          "includeDcc"
                                      ],
                       "description":  "[L2][Hardware][READ] Typed Startdrive drive objects of one device item (DriveObjectContainer.DriveObjects): per object the index, DriveObjectNumber (null when TIA cannot retrieve it), telegrams (Telegram type / number / input-output words and bytes / addresses / hardware identifiers / PKW), the DriveFunctionInterface view (current and possible drive object types, activation state, availability of function-in-use / commissioning / safety commissioning / hardware projection), technology extensions and the DCC chart container summary; plus the device item\u0027s ModuleAccessPoint hardware identifiers, V21 DriveItemHardwareModule and online-container availability. Read-only, offline.",
-                      "example":  "{\"devicePathJson\": \"[\\\"\u003cexact drive device\u003e\\\"]\", \"itemPathJson\": \"[\\\"\u003cexact drive/control unit item\u003e\\\"]\", \"includeTelegrams\": false, \"includeFunctions\": false, \"includeTechnologyExtensions\": false, \"includeDcc\": false}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022\\u003Cexact drive device\\u003E\\u0022]\",\"itemPathJson\":\"[\\u0022\\u003Cexact drive/control unit item\\u003E\\u0022]\",\"includeTelegrams\":false,\"includeFunctions\":false,\"includeTechnologyExtensions\":false,\"includeDcc\":false}"
                   },
                   {
                       "name":  "ReadDriveParameters",
@@ -6231,7 +6231,7 @@
                                          "includeValue"
                                      ],
                       "description":  "[L2][Hardware][READ] For one BICO connection prefer ManageStartdriveParameter action=read; a reported p2051[0] crash awaits native retest, so do not automatically replay it. Typed offline drive parameters of one drive object: source read (ReadDriveParameter view) or write (DriveParameter view); namesJson [\"p1000[0]\",\"r47\"] uses Find(name), numbersJson [{number, arrayIndex}] uses Find(number, arrayIndex) (arrayIndex -1 for array-less parameters); without both the composition is enumerated in native order with offset / limit. Rows: name, number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value list and bit parameters (Bits); bit names such as r722.0 resolve through the parent\u0027s Bits. includeValue=false reads the metadata without touching Value - do that first for BICO sinks and status words on a freshly added drive: on a G120C, TIA Portal V21 itself went down while reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline; ReadOnlineDriveParameters reads the connected drive.",
-                      "example":  "{\"devicePathJson\": \"[\\\"\u003cexact drive device\u003e\\\"]\", \"itemPathJson\": \"[\\\"\u003cexact drive/control unit item\u003e\\\"]\", \"driveObjectNumber\": 0, \"driveObjectIndex\": 0, \"source\": \"write\", \"namesJson\": \"[\\\"p1070[0]\\\"]\", \"includeValue\": false, \"includeBits\": false, \"includeEnumValues\": false}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022\\u003Cexact drive device\\u003E\\u0022]\",\"itemPathJson\":\"[\\u0022\\u003Cexact drive/control unit item\\u003E\\u0022]\",\"driveObjectNumber\":0,\"driveObjectIndex\":0,\"source\":\"write\",\"namesJson\":\"[\\u0022p1070[0]\\u0022]\",\"includeValue\":false,\"includeBits\":false,\"includeEnumValues\":false}"
                   },
                   {
                       "name":  "ManageStartdriveParameter",
@@ -6253,7 +6253,7 @@
                                          "driveObjectIndex"
                                      ],
                       "description":  "[L2][Hardware][WRITE] dryRun=true still performs native reads; never replay a known failing parameter after TIA/channel loss. Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read follows Parameters.Find(name).Value for BICO, using ReadParameters only when absent in Parameters; returns name, parameterClass and value (including BICO source). Reads the selected Value once without expanding bits, limits or enum tables; use ReadDriveParameters for an explicitly requested detailed view. A reported p2051[0] TIA crash remains pending native retest; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {\"bicoSource\":\"r2050[1]\"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent\u0027s Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -\u003e 11 -\u003e 10 and p1070[0] \u003c- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive.",
-                      "example":  "{\"devicePathJson\": \"[\\\"\u003cexact drive device\u003e\\\"]\", \"itemPathJson\": \"[\\\"\u003cexact drive/control unit item\u003e\\\"]\", \"driveObjectNumber\": 0, \"driveObjectIndex\": 0, \"parameter\": \"p1070[0]\", \"action\": \"read\", \"dryRun\": true}"
+                      "example":  "{\"devicePathJson\":\"[\\u0022\\u003Cexact drive device\\u003E\\u0022]\",\"itemPathJson\":\"[\\u0022\\u003Cexact drive/control unit item\\u003E\\u0022]\",\"driveObjectNumber\":0,\"parameter\":\"p1070[0]\",\"driveObjectIndex\":0,\"action\":\"read\",\"dryRun\":true}"
                   },
                   {
                       "name":  "ManageDriveHardwareModule",
@@ -6367,7 +6367,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L2][PLC-Software][WRITE] Native external source files of the exact PLC (PlcSoftware.ExternalSourceGroup) or of a unit (unitName + unitKind), in the root system group or a user group at groupPath: list (PlcExternalSourceGroup Name / ExternalSources / Groups), read, createFromFile (PlcExternalSourceComposition.CreateFromFile(name, filePath): an existing ASCII .scl/.awl/.stl/.db/.udt file on the TIA Portal machine), createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, generateBlocks (PlcExternalSource.GenerateBlocksFromSource with generateOption None/KeepOnError, optionally into an exact block or type user group via targetKind + targetGroupPath; existing objects are overwritten natively, returns the generated names), createGroup / renameGroup / deleteGroup (PlcExternalSourceUserGroup; deletion only when empty). Every write is read back. Default dryRun=true; delete needs confirmDelete=true; real writes require an Offline PLC. No save/compile/download. Source generation from blocks stays GeneratePlcSourceFromBlocks.",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"action\":\"createFromFile\",\"name\":\"FC_Add\",\"filePath\":\"C:\\\\Temp\\\\FC_Add.scl\",\"dryRun\":true}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"action\":\"list\",\"name\":\"FC_Add\",\"filePath\":\"C:\\\\Temp\\\\FC_Add.scl\",\"dryRun\":true,\"confirmDelete\":false}"
                   },
                   {
                       "name":  "ManageDriveSafetyAcceptanceTest",
@@ -6831,7 +6831,7 @@
                                          "importPath"
                                      ],
                       "description":  "[L1][PLC-Software]Import a type from file into the plc software",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\UDT_Motor.xml\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Examples\\\\exports\\\\UDT_Status.xml\"}"
                   },
                   {
                       "name":  "GetTypeInfo",
@@ -6881,7 +6881,7 @@
                                          "preservePath"
                                      ],
                       "description":  "[L2][PLC-Software]Export a type from the plc software",
-                      "example":  "{\"softwarePath\":\"PLC_1\",\"typePath\":\"UDT_Motor\",\"exportPath\":\"C:\\\\Temp\"}"
+                      "example":  "{\"softwarePath\":\"PLC_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\",\"typePath\":\"UDT_Status\"}"
                   },
                   {
                       "name":  "ReadUnifiedEngineeringObjects",
@@ -7067,7 +7067,7 @@
                                          "outputPath"
                                      ],
                       "description":  "[L1][PLC-Software][OFFLINE] Write SCL source text to a local .scl external-source file (UTF-8 WITH BOM, so Chinese comments are not imported as mojibake/乱码). This tool does NOT connect to TIA Portal and does NOT import anything — it only writes the file to disk and returns the path plus manual-import instructions. Use it as the robust fallback when XML block import is rejected (e.g. a TIA V20 portal rejecting V21 SimaticML tokens: \u0027Cannot create SW.Blocks.CompileUnit... token not supported\u0027): the user imports the .scl manually in TIA via project tree → \u0027External source files\u0027 → \u0027Add new external file\u0027, then right-clicks the source → \u0027Generate blocks from source\u0027. The sclContent must be a complete source, e.g. FUNCTION_BLOCK \"Name\" ... END_FUNCTION_BLOCK.",
-                      "example":  "{\"sclContent\":\"FUNCTION \\\"FC_Add\\\" : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a + #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"}"
+                      "example":  "{\"sclContent\":\"FUNCTION \\u0022FC_Add\\u0022 : INT\\nVAR_INPUT\\n  a : INT;\\n  b : INT;\\nEND_VAR\\nBEGIN\\n  #FC_Add := #a \\u002B #b;\\nEND_FUNCTION\",\"outputPath\":\"C:\\\\Temp\\\\FC_Add.scl\"}"
                   },
                   {
                       "name":  "ImportPlcExternalSource",
@@ -7319,7 +7319,7 @@
                                          "blockPath"
                                      ],
                       "description":  "[L2][Validation][READ] Inspect one SimaticML PLC block file, or export an exact live block, to report each network\u0027s own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project.",
-                      "example":  "{\"filePath\":\"C:\\\\Temp\\\\FB_Pump.xml\"}"
+                      "example":  "{\"filePath\":\"C:\\\\Examples\\\\exports\\\\Main.xml\"}"
                   },
                   {
                       "name":  "AnalyzePlcReferences",
@@ -7459,7 +7459,7 @@
                                          "apiPath"
                                      ],
                       "description":  "[L2][Simulation][ONLINE-WRITE] Write values into ONE S7-PLCSIM Advanced instance (inputs, markers, DB elements) by symbolic name: valuesJson is {\"\\\"Start\\\"\":true,\"\\\"DB_Motor\\\".Speed\":50} or [{name,value}]. Each tag is read first to learn its primitive type; values are converted (Bool/Int8..Int64/UInt8..UInt64/Float/Double/Char/WChar; 16#hex accepted; structs must be written per element). Default dryRun=true reports current values and the conversion plan; writing needs dryRun=false AND confirmWrite=true. Per-tag errors in items[].error; readBack shows the value after the write. Virtual CPU only, no physical PLC, no TIA project.",
-                      "example":  "{\"instanceName\":\"MCP_SIM\",\"valuesJson\":\"{\\\"MCP_SimDB.Start\\\":true}\",\"dryRun\":true,\"confirmWrite\":false}"
+                      "example":  "{\"instanceName\":\"MCP_SIM\",\"valuesJson\":\"{\\u0022MCP_SimDB.Start\\u0022:true}\",\"dryRun\":true,\"confirmWrite\":false}"
                   },
                   {
                       "name":  "RunPlcSimAdvancedTestScenario",
@@ -7477,7 +7477,7 @@
                                          "apiPath"
                                      ],
                       "description":  "[L2][Simulation][EXECUTE] Run a closed-loop test scenario against ONE S7-PLCSIM Advanced instance (the PLCSIM.UnitTest idea without a separate runner): scenarioJson = {\"instance\":\"PLC_1\",\"mode\":\"singleStep\"|\"default\",\"stopOnFailure\":true,\"steps\":[{\"write\":{\"\\\"Start\\\"\":true}},{\"cycles\":5},{\"waitMs\":200},{\"assert\":{\"\\\"Running\\\"\":true},\"tolerance\":0.001,\"note\":\"motor starts\"},{\"run\":true},{\"stop\":true},{\"powerOn\":true}]}. mode singleStep sets the instance to SingleStep and advances exactly N cycles per {cycles} step via RunToNextSyncPoint (deterministic); mode default keeps free running and {cycles} becomes a wait of N*10 ms. Default dryRun=true validates and returns the plan; execution needs dryRun=false AND confirmRun=true. Result: per-step outcome, failed assertions with expected/actual, passed/failed counts; the instance is left in the operating mode it had before. Virtual CPU only — no physical PLC and no TIA project is touched.",
-                      "example":  "{\"scenarioJson\":\"{\\\"instance\\\":\\\"MCP_SIM\\\",\\\"mode\\\":\\\"default\\\",\\\"steps\\\":[{\\\"write\\\":{\\\"MCP_SimDB.Start\\\":true}},{\\\"waitMs\\\":300},{\\\"assert\\\":{\\\"MCP_SimDB.Running\\\":true}}]}\",\"dryRun\":true}"
+                      "example":  "{\"scenarioJson\":\"{\\u0022instance\\u0022:\\u0022MCP_SIM\\u0022,\\u0022mode\\u0022:\\u0022default\\u0022,\\u0022steps\\u0022:[{\\u0022write\\u0022:{\\u0022MCP_SimDB.Start\\u0022:true}},{\\u0022waitMs\\u0022:300},{\\u0022assert\\u0022:{\\u0022MCP_SimDB.Running\\u0022:true}}]}\",\"dryRun\":true,\"confirmRun\":false}"
                   },
                   {
                       "name":  "GetSoftwareInfo",
@@ -7513,7 +7513,7 @@
                                          "apiPath"
                                      ],
                       "description":  "[L2][Simulation][ONLINE] Read from ONE S7-PLCSIM Advanced instance: with namesJson (JSON array or comma list of PLCSIM tag names, e.g. [\"\\\"Start\\\"\", \"\\\"DB_Motor\\\".Speed\", \"%I0.0\" is NOT supported — use symbolic names as PLCSIM lists them]) the current value and primitive type of each tag; without namesJson the tag list of the instance (UpdateTagList + TagInfos) filtered by areaFilter (Input/Output/Marker/DataBlock/... or empty) and nameContains, paginated with offset/limit (max 500). Read-only; requires the instance to be powered on with a loaded program. Per-tag errors are reported in items[].error.",
-                      "example":  "{\"instanceName\":\"MCP_SIM\",\"namesJson\":\"[\\\"MCP_SimDB.Cycles\\\",\\\"MCP_SimDB.Running\\\"]\"}"
+                      "example":  "{\"instanceName\":\"MCP_SIM\",\"namesJson\":\"[\\u0022MCP_SimDB.Cycles\\u0022,\\u0022MCP_SimDB.Running\\u0022]\"}"
                   },
                   {
                       "name":  "ImportPlcBlockVerified",
@@ -7573,7 +7573,7 @@
                                          "communicationInterface"
                                      ],
                       "description":  "[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the \u0027Siemens PLCSIM Virtual Ethernet Adapter\u0027 (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.",
-                      "example":  "{\"instanceName\":\"MCP_SIM\",\"action\":\"register\",\"cpuType\":\"CPU1500_Unspecified\",\"communicationInterface\":\"Softbus\"}"
+                      "example":  "{\"instanceName\":\"MCP_SIM\",\"action\":\"register\",\"cpuType\":\"\\u003CCPU type supported by the installed PLCSIM API\\u003E\",\"communicationInterface\":\"Softbus\",\"confirmInstanceChange\":false,\"dryRun\":true}"
                   },
                   {
                       "name":  "DescribeHmiScreenItem",
@@ -7839,7 +7839,7 @@
                                          "exportPath"
                                      ],
                       "description":  "[L2][HMI]Export one HMI screen to a file (best-effort; requires Openness export support)",
-                      "example":  "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Screen_1\",\"exportPath\":\"C:\\\\Temp\\\\Screen_1.xml\"}"
+                      "example":  "{\"softwarePath\":\"HMI_RT_1\",\"screenName\":\"Screen_1\",\"exportPath\":\"C:\\\\Examples\\\\exports\\\\ExportHmiScreen.xml\"}"
                   },
                   {
                       "name":  "ExportHmiTagTable",
@@ -8470,7 +8470,7 @@
                                          "projectName"
                                      ],
                       "description":  "[L1][Project]Attach MCP to an already-open TIA Portal project by name (avoids disposed project handles).",
-                      "example":  "{\"projectName\":\"项目1\"}"
+                      "example":  "{\"projectName\":\"\\u9879\\u76EE1\"}"
                   },
                   {
                       "name":  "CreateProject",
@@ -8503,7 +8503,7 @@
                                          "dryRun"
                                      ],
                       "description":  "[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects PlcBuildAndImport accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.",
-                      "example":  "{\"spec\":\"{\\\"projectName\\\":\\\"Demo\\\",\\\"directoryPath\\\":\\\"C:\\\\\\\\Projects\\\",\\\"plcName\\\":\\\"PLC_1\\\",\\\"plcFamily\\\":\\\"S7-1500\\\"}\",\"dryRun\":true}"
+                      "example":  "{\"spec\":\"{\\u0022projectName\\u0022:\\u0022Demo\\u0022,\\u0022directoryPath\\u0022:\\u0022C:\\\\\\\\Projects\\u0022,\\u0022plcName\\u0022:\\u0022PLC_1\\u0022,\\u0022plcFamily\\u0022:\\u0022S7-1500\\u0022}\",\"dryRun\":true}"
                   },
                   {
                       "name":  "ProbeS7CpuIdentity",

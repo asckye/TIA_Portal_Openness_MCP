@@ -149,10 +149,12 @@ def generate():
             asset['content'] = path.read_text('utf-8-sig').replace('\r\n', '\n')
             asset['contentSha256'] = hashlib.sha256(asset['content'].encode()).hexdigest()
     meta = read(base / 'metadata.json')
+    calls = read(base / 'calls.json')
+    assert set(calls['profiles']['full-engine']) | set(calls['profiles']['plc-foundation']) == names, 'Call example coverage differs from tool roster'
     return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
             'sources': sources, 'documents': documents, 'tools': mappings,
             'languages': library['languages'], 'examples': library['examples'],
-            'sequences': read(base / 'sequences.json'), **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
+            'calls': calls, 'sequences': read(base / 'sequences.json'), **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 
 if __name__ == '__main__':

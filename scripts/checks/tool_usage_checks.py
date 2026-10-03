@@ -1,4 +1,4 @@
-"""Contract/transport checks for AI-facing usage, without executing example calls."""
+"""Usage retrieval and allowlisted in-memory example execution; no native TIA calls."""
 import hashlib
 import json
 import xml.etree.ElementTree as ET
@@ -29,6 +29,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
     records = []
     problems = []
     builder_examples = 0
+    offline_calls = []
     selected = names if exhaustive else ['GetToolUsage', 'ManageStartdriveParameter']
     for name in selected:
         usage = unwrap_usage(call('GetToolUsage', {'toolName': name}))
@@ -37,6 +38,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
         if name in schemas:
             assert schema == schemas[name], name + ': differs from tools/list'
         example = usage['example']
+        assert example['kind'] == 'parameterized-call-example', (release, name, 'missing call record')
         request = example['request']
         assert request['method'] == 'tools/call' and request['params']['name'] == name
         args = request['params']['arguments']
@@ -78,11 +80,40 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
                 for choice in choices:
                     selected_usage = unwrap_usage(call('GetToolUsage', {'toolName': name, 'operation': choice}))
                     selected_args = selected_usage['example']['request']['params']['arguments']
+                    assert selected_usage['example']['kind'] == 'parameterized-call-example', (release, name, choice, 'missing operation example')
                     assert selected_args[selector] == choice, (name, choice)
                     assert set(schema.get('required', [])) <= set(selected_args) <= set(props), (name, choice)
                     operation_records.append({'operation': choice, 'exampleKind': selected_usage['example']['kind'],
                         'releaseProblem': selected_usage['example']['releaseProblem']})
         records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
+        # Consume the SAME example returned to AI callers, with exact source args.
+        # Nothing outside this literal allowlist can execute during this audit.
+        offline_xml = {'BuildPlcUdtXml', 'BuildPlcTagTableXml', 'BuildPlcGlobalDbXml',
+                       'BuildStructuredTextXml', 'BuildFlgNetCallXml', 'ComposePlcFcBlockXml',
+                       'ComposePlcFbBlockXml', 'ComposePlcLadFcBlockXml'}
+        if exhaustive and name in offline_xml:
+            built = call(name, args)
+            assert built.get('ok', True) and built.get('meta', {}).get('success', True), (name, built)
+            root = ET.fromstring(built['xml'])
+            assert len(list(root.iter())) > 3, name + ': empty XML'
+            if name == 'BuildPlcUdtXml':
+                assert any(e.tag.endswith('Member') and e.attrib.get('Name') == 'Ready' and e.attrib.get('Datatype') == 'Bool' for e in root.iter())
+            if name == 'BuildPlcTagTableXml':
+                assert any(e.tag.endswith('LogicalAddress') and e.text == '%M0.0' for e in root.iter())
+            if name in ('BuildStructuredTextXml', 'ComposePlcFcBlockXml', 'ComposePlcFbBlockXml'):
+                assert any(e.tag.endswith('Token') and e.attrib.get('Text') == ':=' for e in root.iter())
+            if name in ('BuildFlgNetCallXml', 'ComposePlcLadFcBlockXml'):
+                assert any(e.tag.endswith('CallInfo') and e.attrib.get('Name') == 'FC_Ready' for e in root.iter())
+            offline_calls.append(name)
+        if exhaustive and name == 'PlanArtifactImportOrder':
+            built = call(name, args)
+            plan = built.get('meta', {}).get('plan', built)
+            assert plan['Valid'] and plan['Order'] == ['UDT_Status', 'FB_Motor'], built
+            offline_calls.append(name)
+        if exhaustive and name == 'BuildUnifiedHmiButtonActionScript':
+            built = call(name, args)['meta']
+            assert built['ok'] and built['event'] == 'Down' and 'SetBitInTag' in built['script'] and 'Ready' in built['script'], built
+            offline_calls.append(name)
     assert not problems, problems
     if verify_documents:
         docs, offset = [], 0
@@ -138,4 +169,5 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             'programmingExampleCount': sum(not e['id'].startswith('sequence/') for e in first['exampleLibrary']['examples']),
             'callSequenceCount': sum(e['id'].startswith('sequence/') for e in first['exampleLibrary']['examples']),
             'offlineBuilderExamplesExecuted': builder_examples,
+            'offlineCallExamplesExecuted': offline_calls,
             'exampleCallsExecuted': False, 'tools': records}

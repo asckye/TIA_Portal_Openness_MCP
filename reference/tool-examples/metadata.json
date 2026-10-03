@@ -398,6 +398,23 @@
         "20"
       ],
       "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ExchangeMotionCamData": {
+      "profile": "full-engine",
+      "officialSources": [
+        {
+          "releaseKey": "20",
+          "url": "https://docs.tia.siemens.cloud/r/en-us/v20/technology-objects/s7-1500-motion-control/exporting-and-importing-technology-object-cam-s7-1500t"
+        },
+        {
+          "releaseKey": "21",
+          "url": "https://docs.tia.siemens.cloud/r/zh-cn/v21/工艺对象/s7-1500-motion-control/导出和导入凸轮工艺对象-s7-1500t"
+        }
+      ],
+      "notes": [
+        "Text export needs the exact SDK enum names MCD/Scout/PointList and Comma/Tab. Text import needs the separator; binary methods take the file only. Point-list export requires a positive pointCount.",
+        "The selected PLC must contain a supported cam technology object. Inspect native operation state and the output file evidence; preview is not exported/imported data."
+      ]
     }
   }
 }

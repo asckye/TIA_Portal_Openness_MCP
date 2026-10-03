@@ -30,9 +30,11 @@ def main():
     assert set(by_release) == set(matrix)
     union = set().union(*(set(r['tools']) for r in matrix.values()))
     assert union == set(catalog['tools']), 'Missing or obsolete usage mapping'
-    result = {'basis': 'Actual MCP tools/list and GetToolUsage responses for every tool/operation. Schemas, input origins, result contracts, language files, sequence calls and source hashes checked. The two JSON builder examples execute offline on each full engine. Native example operations NOT executed.',
+    result = {'basis': 'Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.',
               'catalogSha256': hashlib.sha256(source.read_text('utf-8').replace('\r\n', '\n').encode()).hexdigest(),
               'uniqueTools': len(union), 'documents': len(catalog['documents']),
+              'versionToolPairs': sum(r['toolCount'] for r in matrix.values()),
+              'offlineCallExecutions': sum(len(r['offlineCallExamplesExecuted']) for r in by_release.values()),
               'indexedExampleBlocksOrMethods': sum(len(d['examples']) for d in catalog['documents']),
               'programmingExamples': len(catalog['examples']), 'callSequences': len(catalog['sequences']),
               'languages': [l['id'] for l in catalog['languages']],

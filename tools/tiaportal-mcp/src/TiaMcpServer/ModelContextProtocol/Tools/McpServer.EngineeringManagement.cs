@@ -8,9 +8,9 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage SetPlcUnitObjectAccess(
             string softwarePath,
             string unitName,
-            string objectKind,
+            [Description("block | type. Object family inside the exact software unit.")] string objectKind,
             string objectPath,
-            [Description("access: access level to set (Read, Write or None).")] string access,
+            [Description("Published | Unpublished. Native software-unit object publication state.")] string access,
             bool dryRun=true)
             => Portal.SetPlcUnitObjectAccess(softwarePath,unitName,objectKind,objectPath,access,dryRun);
         [McpServerTool(Name="ManagePlcSafety"), Description("[L2][Safety][WRITE] Official Siemens.Engineering.Safety administration of one exact F-PLC. read: password/login state, SafetySettings incl. AssignmentOfBlockNumbers (ManagementMode, From/To FB/FC/DB), SafetySystemVersion + applicable versions, EnableConsistentUploadFromFCpu/EnableFCommunicationIdTag attributes, runtime groups incl. FOBNumber/FOBCycleTime/FOBPhaseShift/FOBPriority, collective/software/hardware/communication-address F-signatures (V21), portal GlobalSettings and CPU Failsafe_FCapabilityActivated. Writes: createRuntimeGroup (optional mainSafetyBlockPath FC, or FB + mainSafetyInstanceDbPath), deleteRuntimeGroup, updateRuntimeGroup/updateSettings (propertiesJson: scalar properties, AssignmentOfBlockNumbers.*, SafetySystemVersion exact string, documented attributes), generateGlobalFIOStatusBlock, cleanSystemGeneratedObjects, generateBaseId (V21, F-BaseID CPUs), login/logoff/setPassword/revokePassword (password passed straight to TIA, never stored or logged). dryRun=true default; program edits require Offline and F-login when protected; delete/generate/clean/password actions and SafetyModeCanBeDisabled require confirmSafetyChange=true. No F-compile, save or download; API access is not functional safety acceptance.")]
