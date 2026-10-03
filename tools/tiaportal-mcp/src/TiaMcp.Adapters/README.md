@@ -92,7 +92,17 @@ After eight builds, `build/Test-WorkerIsolation.ps1 -EvidenceDirectory <output>
 five deliberate coverage corruptions per release, invalid worker configurations,
 missing instrumentation tooling.
 
-`Diagnostics.Tests` builds only the API-independent runtime against net8.0. Run
-its DLL with `<worker-bin-root> <new-writable-journal-directory>` to exercise
-diagnostic behavior and inspect eight worker/adapter PE files without loading
-them. It contains no Siemens references, replacement SDK, or native tests.
+`tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
+builds only the API-independent runtime against net8.0, keeping the assembly name
+`Diagnostics.Tests` for `InternalsVisibleTo`. From the repository root, run:
+
+```powershell
+dotnet run --project tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj -c Release -- <worker-bin-root> <new-writable-journal-directory>
+```
+
+The worker bin root is `tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/bin` after
+building all eight workers; it contains `<release-key>/Release/<framework>/`
+subdirectories. The journal directory must not already exist. These checks
+exercise diagnostic behavior and inspect eight worker/adapter PE files without
+loading them. The project contains no Siemens references, replacement SDK, or
+native tests.

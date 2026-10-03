@@ -10,7 +10,7 @@
 | 类别 | 工程 | 运行方式 |
 |---|---|---|
 | 单元测试，迁移到 xunit | `TiaMcpServer.Tests`（66 个套件，3086 项）、`TiaMcpServer.VersionPolicyTests`（10 项） | CI 与 `Build-Release.ps1` 解析控制台合计 |
-| 单元测试与模式混合 | `TiaMcpServer.LegacyHostTests`（约 6322 项；带 PublicAPI 时 7367 项、1 项跳过）、`src/TiaMcp.Adapters/Diagnostics.Tests` | CI 与 `Build-MultiVersion.ps1` 只看退出码；后者仅手动运行 |
+| 单元测试与模式混合 | `TiaMcpServer.LegacyHostTests`（约 6322 项；带 PublicAPI 时 7367 项、1 项跳过）、`tests/TiaMcp.Adapters.DiagnosticsTests` | CI 与 `Build-MultiVersion.ps1` 只看退出码；后者仅手动运行 |
 | 从未运行 | BindingSnapshot、ImportSelection、ExternalSourceDelete、ExternalSourcePlan、PromptRegistration（含两个夹具）、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership | 无 |
 | 测试框架，保持控制台 | `TiaMcpServer.HttpTests`（加载织入后的 V20/V21 程序，13 种模式由构建脚本解析 `COMPLETE: N`）、`NativeTests`、`DiagnosticsTests`+`FakeApi`、`ApiCompileChecks`、三个传输/端点夹具 | 构建脚本与检查脚本 |
 | 留待 P4-01 | `TiaMcp.WorkerProtocol.*` 及其测试 | CI 只跑 JsonLegacy/JsonV2 |
@@ -30,7 +30,7 @@
   要求 `tests` 下每个工程都已分类，每个 xunit 工程都在最低数量表中。
 - **两个 TransportFixture 不合并、不改名**：`TiaMcpServer.TransportFixture` 是基础版 worker 的行 JSON 替身
   （CI 与 `Build-MultiVersion` 使用）；`TiaMcp.TransportFixture` 是预览帧协议夹具（P4-01 决定去留）。
-- **`Diagnostics.Tests` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests/`**，保留程序集名以沿用 `InternalsVisibleTo`。
+- **适配器诊断测试位于 `tests/TiaMcp.Adapters.DiagnosticsTests/`**，保留程序集名 `Diagnostics.Tests` 以沿用 `InternalsVisibleTo`。
 - **名称必须与西门子类型一致的测试替身保留**（生产代码按完整类型名识别），集中到一个文件并加允许名单检查。
 
 ## 任务顺序
@@ -43,7 +43,7 @@ M 可机械执行，J 需要设计判断。每步保持 L0/L1 通过且最低数
 3. **M** LegacyHostTests 同样处理（foundation、foundation-api），CI 与 `Build-MultiVersion` 切换。
 4. **M** 恢复从未运行的工程：纯逻辑的并入已有门禁工程，其余原地改为 xunit 并加入最低数量表；先报告失败，不顺手改生产代码。
 5. **M** 合并按西门子名称命名的替身，增加允许名单检查。
-6. **M** 移动 `Diagnostics.Tests`。
+6. **M** 将适配器诊断测试移入 `tests/TiaMcp.Adapters.DiagnosticsTests/`。
 7. **M** VersionPolicy 包装函数改为接收两个策略参数，去掉测试中的 `partial class McpServer`。
 8. **J** `Responses.cs` 移入 `TiaMcp.Logic`，测试引用 MCP SDK，删除伪造的 DTO 与属性（与 P2-01 衔接）。
 9. **J** 脚手架操作的 `IScaffoldBoundary` 接缝。

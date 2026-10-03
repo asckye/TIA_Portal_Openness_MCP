@@ -34,6 +34,24 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 具体命令见[验证分层](validation.md)。SDK 不随仓库或公开交付包分发。
 `bin-build`、本机输出、用户工程、客户端配置及设计交接素材不属于版本化源码。
 
+## 测试工程
+
+`tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
+是适配器的 net8.0 离线诊断控制台测试，程序集名保留为 `Diagnostics.Tests`，沿用逻辑库的
+`InternalsVisibleTo`。运行时需要 worker bin 根目录和一个尚不存在的日志目录；命令见
+[适配器说明](../../tools/tiaportal-mcp/src/TiaMcp.Adapters/README.md#input-regression-checks)。
+
+以下夹具均位于 `tools/tiaportal-mcp/tests/`，不连接 TIA；两个 TransportFixture 的协议不同，保留名称，
+不合并：
+
+| 工程目录 | 协议与用途 |
+|---|---|
+| `TiaMcpServer.TransportFixture` | 生产 Foundation worker 的行 JSON 替身，由 `scripts/checks/Test-FoundationTransport.py` 使用，并由 `.github/workflows/offline-checks.yml` 和 `scripts/build/Build-MultiVersion.ps1` 构建、调用检查 |
+| `TiaMcp.TransportFixture` | `TiaMcp.WorkerProtocol.*` 的预览帧协议传输夹具，用于测试带长度前缀的帧及传输故障 |
+| `TiaMcp.EndpointFixture` | 同一预览帧协议的端点夹具，用于测试端点状态、请求分派与绑定检查 |
+
+`TiaMcp.WorkerProtocol.*` 尚未接入生产 worker；是否采用或删除由[重构计划](refactor-plan.md) P4-01 决定。
+
 ## 文档入口
 
 | 路径 | 维护内容 |

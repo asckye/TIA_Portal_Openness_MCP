@@ -34,7 +34,7 @@
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/Diagnostics.Tests/Diagnostics.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/BindingSnapshot.Tests/BindingSnapshot.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">

@@ -51,6 +51,7 @@ TIA_V21_PublicAPI/
 
 # Per-release compile-only foundation outputs; never distribute Siemens references.
 /tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/bin/
+/tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/bin/
 /tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/bin/
 /tools/tiaportal-mcp/src/TiaMcp.Adapters/*/bin/
 

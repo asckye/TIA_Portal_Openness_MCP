@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>Diagnostics.Tests</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Compile Include="Program.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />
+    <Compile Include="../../src/TiaMcp.Adapters/Diagnostics/NativeCallDiagnostics.cs" Link="NativeCallDiagnostics.cs" />
+  </ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
+</Project>
