@@ -1640,7 +1640,7 @@ namespace TiaMcpServer.Siemens
                         var sc = GetSoftwareContainer(objectPath);
                         if (sc?.Software is { } software && software is not PlcSoftware) return sc.Software;
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): the HMI fallback is optional; a failed probe keeps the PLC not-found result and its path hint */ { }
                     _plcLookupPathsSuffix = plcPaths;
                     return null;
                 }
