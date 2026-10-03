@@ -357,7 +357,7 @@
       "path": "scripts/generate/Generate-ToolsListFromAssembly.ps1"
     },
     {
-      "sha256": "416be02d83240621a5f79ec16426c9cfd2a909ad958cae09ea375901ae140e86",
+      "sha256": "e7e97cfb04261d5cad9c56ccbd419d855ab244d2bf7b239ccd57fa0ba64efe78",
       "path": "scripts/generate/Generate-ToolUsage.py"
     },
     {
@@ -3661,43 +3661,75 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj"
     }
   ],
-  "validation": {
-    "toolUsageCoverageExecuted": true,
-    "nativeTiaExecuted": false,
-    "foundationTransportExecuted": true,
-    "studioFunctionalTestsExecuted": true
-  },
+  "releases": [
+    {
+      "toolCount": 55,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "14sp1"
+    },
+    {
+      "toolCount": 56,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "15.1"
+    },
+    {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "16"
+    },
+    {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "17"
+    },
+    {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "18"
+    },
+    {
+      "toolCount": 60,
+      "nativeAcceptance": "NOT RUN",
+      "profile": "plc-foundation",
+      "releaseKey": "19"
+    }
+  ],
   "files": [
     {
-      "sha256": "95d5e963f0d0be467116b35f337839f9fa3ee02d3dfe2e25b938f883eda93534",
+      "sha256": "f20475e6fe5ea4342aa42ff21da1ebbabc439e16ce247c9013da766f984d6645",
       "path": "runtime/studio/bridge/adapters/v14sp1/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "f5836998bd9f94d5dc9e3dd4f7e63819f6fc2cfb20e21b78f89003d7db1f9b80",
+      "sha256": "a95b9ce73469c88564b5a58b52d75b5ba042cf3403be97981942acf5661cb983",
       "path": "runtime/studio/bridge/adapters/v15.1/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "27ad3657bca708c1d34766c7f2932b52096082a94fea4fdfec2d3dd2d5c3c108",
+      "sha256": "44d4ee7769003b48c3c726c8ee424afb3fd41688fa739bdcbb0f40bef7bd999e",
       "path": "runtime/studio/bridge/adapters/v16/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "7f76e94eed76ffe59a94b09f09a08816e9594762d5c5db973eef22504c711aa6",
+      "sha256": "da136f474f9367d9930e12663929b5563ec1f7da7d73e7eebeb2007a5376fd34",
       "path": "runtime/studio/bridge/adapters/v17/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "9106f28ef730504464d4aa8d2c945ecabef45ad69914aab243f926b3f32cbb48",
+      "sha256": "2db7e1d84860bc18b147309973ecc97fc849508ea293ca7757a92eae0e8b0a21",
       "path": "runtime/studio/bridge/adapters/v18/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "046075d35ca9b6fb1e680cbbbf795d9f0789d6771b3990b5d345abe102e260b9",
+      "sha256": "93bd887b3275db0f90a7ed12553a612d8060f1ee3421eccc60ce52a5d8f2e72d",
       "path": "runtime/studio/bridge/adapters/v19/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "2b42e5c022eb93fc6ea183727eea488ededbc25254e6f8488e97366a0a6d2554",
+      "sha256": "847317d03a0317658af6e63551e09af1ddae3c8647483db6bb5350658f78c0e2",
       "path": "runtime/studio/bridge/adapters/v20/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "f9895dca2004ecb125ffb49b0093d16f0fb7c3e45f1568a5a15ef7ad626ba808",
+      "sha256": "221f8af5e935b924859f193b56b4ba507b0c0ea710ae283f0d1350444b4cda74",
       "path": "runtime/studio/bridge/adapters/v21/TiaOpenness.Openness.dll"
     },
     {
@@ -3705,7 +3737,7 @@
       "path": "runtime/studio/bridge/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "166fd0443dad13e56ca9d83d8478debf1d2ce5cea99397505b0486e036b21cf9",
+      "sha256": "072d7a95fd46d16b3a79540bb20be76c90d9cd07bff72ba7567c1778a2b9bff5",
       "path": "runtime/studio/bridge/TiaOpenness.Bridge.exe"
     },
     {
@@ -3713,11 +3745,11 @@
       "path": "runtime/studio/bridge/TiaOpenness.Bridge.exe.config"
     },
     {
-      "sha256": "95d69111281cfaacfaf9d24cb43746cbe7618f083b78f3b9869f2366c6ce1fce",
+      "sha256": "9161578ed83b83b76a268f27f8b84171aa3d58ba6674974c7c08ba9f96bc662b",
       "path": "runtime/studio/bridge/TiaOpenness.Contracts.dll"
     },
     {
-      "sha256": "847ce19cb0c8b1f51cfdb9cec67ef162a2f825fba1fdf8ad74305abf4b5c1536",
+      "sha256": "a5e090350c64c0d77f112612591b26b6dbd436885eacb8295e0e08747dbefcd2",
       "path": "runtime/studio/bridge/TiaOpenness.Core.dll"
     },
     {
@@ -3733,15 +3765,15 @@
       "path": "runtime/studio/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "6932685c39cf297907591425a43a81fbc0915fd34ed0c0b4f9f9a65a8ad620ec",
+      "sha256": "37a261acb119ad48a109d324f5364d138af671e319c484dba0e705778254b8a5",
       "path": "runtime/studio/TiaOpenness.Client.dll"
     },
     {
-      "sha256": "95d69111281cfaacfaf9d24cb43746cbe7618f083b78f3b9869f2366c6ce1fce",
+      "sha256": "9161578ed83b83b76a268f27f8b84171aa3d58ba6674974c7c08ba9f96bc662b",
       "path": "runtime/studio/TiaOpenness.Contracts.dll"
     },
     {
-      "sha256": "ffb7d2b607cc134726cbb6c89e52dd8289996bb928e4b09325ad9d3be1277382",
+      "sha256": "ceb1b26bfce22eb2cde4bd9911001b8547edfa029983461819c71fa987c375b1",
       "path": "runtime/studio/TiaOpenness.Core.dll"
     },
     {
@@ -3749,11 +3781,11 @@
       "path": "runtime/studio/TiaOpenness.deps.json"
     },
     {
-      "sha256": "a718b09e1dea87ae5c91057a8bd635ac115b950111f277948f5485a361ca22ee",
+      "sha256": "d56c10873af8c128165cc48302a2de3721c66a4a31d83e0ed2ce5aef19ed6a42",
       "path": "runtime/studio/TiaOpenness.dll"
     },
     {
-      "sha256": "6091f82f12cf9b94ad089736fdd0b724202b0c9b29b92386572b17be92e2787d",
+      "sha256": "2786902d5ca49b131c13da7d86aff84e52b9a7bfea0e8b0d54a1ed7b17a43efa",
       "path": "runtime/studio/TiaOpenness.exe"
     },
     {
@@ -3917,11 +3949,11 @@
       "path": "runtime/v14sp1/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v14sp1/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v14sp1/TiaMcpServer.exe"
     },
     {
@@ -3933,11 +3965,11 @@
       "path": "runtime/v14sp1/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "e5276aa990b195a01966d62a08d3fd4d16f68f0768124b2a6167bcb7a7ce297a",
+      "sha256": "8955cd41ba664f5e34cf44ef1defaceff9a76db2d32d7fae2b1a2942fd1834b2",
       "path": "runtime/v14sp1/worker/TiaMcp.Adapter.14sp1.dll"
     },
     {
-      "sha256": "7a757957e8e80a6a07390d25c847a8de8cc2c30c4302e8fa283210f61797d433",
+      "sha256": "9e05cb2949b31ef56d5fb37d536174d9c562a0e7da070666a86de51b0fd6ad5a",
       "path": "runtime/v14sp1/worker/TiaMcp.PlcWorker.14sp1.exe"
     },
     {
@@ -4101,11 +4133,11 @@
       "path": "runtime/v15.1/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v15.1/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v15.1/TiaMcpServer.exe"
     },
     {
@@ -4117,11 +4149,11 @@
       "path": "runtime/v15.1/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "1e2629b9d9f38b49d24f3c9c86a7d3766d5ef31cd580739fd8c52372e5c33f11",
+      "sha256": "ad2bbd91c55b2a3c31fee5b11628a0b5639ac78006d5ebc6ebf011d1c9d8ee88",
       "path": "runtime/v15.1/worker/TiaMcp.Adapter.15.1.dll"
     },
     {
-      "sha256": "633c43938122207c02f229a3a15318cbaed4d8b3418d4cacc37bf8a9cff19133",
+      "sha256": "86d24ea16f56254dbf2cdc8f2117ed617ec6b513bfd615f818c4fc407b9c5234",
       "path": "runtime/v15.1/worker/TiaMcp.PlcWorker.15.1.exe"
     },
     {
@@ -4285,11 +4317,11 @@
       "path": "runtime/v16/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v16/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v16/TiaMcpServer.exe"
     },
     {
@@ -4301,11 +4333,11 @@
       "path": "runtime/v16/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "6f1751b84743ec376916f05e35ad40754de58ba3153a3720c7485d6d1d5b1d48",
+      "sha256": "d362b97819896566a7a7adb599f072b9e05e5f548012f0cac54237574bd7ad9e",
       "path": "runtime/v16/worker/TiaMcp.Adapter.16.dll"
     },
     {
-      "sha256": "2092fbcb8323aa98ede3c9d5e1654fcbf465fbe6af922213469468fab7d272ba",
+      "sha256": "fd13a7894f8c577f54f0b18418e0eaabc95c7e93f9496cc583f619ceb6b3bfe5",
       "path": "runtime/v16/worker/TiaMcp.PlcWorker.16.exe"
     },
     {
@@ -4469,11 +4501,11 @@
       "path": "runtime/v17/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v17/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v17/TiaMcpServer.exe"
     },
     {
@@ -4485,11 +4517,11 @@
       "path": "runtime/v17/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "ec56b008bdf87ef101a1e6a49f4c0d53dcb3dd7fb1508fadb69086368cecfe12",
+      "sha256": "d7f03bea43f8f2ad0070bcf338d3b823eb85a86891171cf9e62441681e5c8206",
       "path": "runtime/v17/worker/TiaMcp.Adapter.17.dll"
     },
     {
-      "sha256": "780d654f733fa4eafb479706a275c99b851eb38b9139fb5ad4f2c6739e1d90f3",
+      "sha256": "c770a1c3d2767c3ca2b04467052fc5404e7dcf0c24879fdb62b47bcd5c572699",
       "path": "runtime/v17/worker/TiaMcp.PlcWorker.17.exe"
     },
     {
@@ -4653,11 +4685,11 @@
       "path": "runtime/v18/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v18/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v18/TiaMcpServer.exe"
     },
     {
@@ -4669,11 +4701,11 @@
       "path": "runtime/v18/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "e19572af8d3a6594da2a78f5ce5155bd4811f752665e3b145063c047e55c0d2c",
+      "sha256": "e96d02f29db13bab4b324b3c4b74df146ceeaed208467068ee7fc8669c5395a1",
       "path": "runtime/v18/worker/TiaMcp.Adapter.18.dll"
     },
     {
-      "sha256": "0ce0c6c3649936070f6e156311c5a25238486e3be59ed0dea2b640c7685dba1b",
+      "sha256": "1adbc904828611a121fea44dfe15faf7ad78d165aee2eb041be79ccd4d4c0ce2",
       "path": "runtime/v18/worker/TiaMcp.PlcWorker.18.exe"
     },
     {
@@ -4837,11 +4869,11 @@
       "path": "runtime/v19/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
+      "sha256": "bb6ec02515df7cac1ab951864e2a9c01a0a36b2fa965b3f39f2021efd20b4888",
       "path": "runtime/v19/TiaMcpServer.dll"
     },
     {
-      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
+      "sha256": "8bf892d07fe2d288d43b228be965bc3fb674296e9f7ae44e857fdff6f7cfdd64",
       "path": "runtime/v19/TiaMcpServer.exe"
     },
     {
@@ -4853,11 +4885,11 @@
       "path": "runtime/v19/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "f0612ff6da20ae3c94880e54078965d40f70bf03f41d1f0b8cb801479bc5ac99",
+      "sha256": "615a0cb53d24fbc61915066c868382b6c3c8ea8f53bef53a7739565a40ce86a0",
       "path": "runtime/v19/worker/TiaMcp.Adapter.19.dll"
     },
     {
-      "sha256": "c9e276d4c180923b6fe04d8bd6313c1f48d1086cd35ebb4266b015ec31502e17",
+      "sha256": "bf0cb951746abed2371585224aa6602684eb54028e94231a530dc43e5bd11347",
       "path": "runtime/v19/worker/TiaMcp.PlcWorker.19.exe"
     },
     {
@@ -5401,6 +5433,13 @@
       "path": "runtime/v21/YamlDotNet.dll"
     }
   ],
+  "validation": {
+    "nativeTiaExecuted": false,
+    "foundationTransportExecuted": true,
+    "toolUsageCoverageExecuted": true,
+    "studioFunctionalTestsExecuted": true
+  },
+  "createdAt": "2026-10-03T07:54:29.2646031+00:00",
   "studioReleaseKeys": [
     "14sp1",
     "15.1",
@@ -5411,44 +5450,5 @@
     "20",
     "21"
   ],
-  "createdAt": "2026-10-03T07:47:05.6806852+00:00",
-  "nativeAcceptance": "NOT RUN",
-  "releases": [
-    {
-      "toolCount": 55,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "14sp1",
-      "profile": "plc-foundation"
-    },
-    {
-      "toolCount": 56,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "15.1",
-      "profile": "plc-foundation"
-    },
-    {
-      "toolCount": 58,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "16",
-      "profile": "plc-foundation"
-    },
-    {
-      "toolCount": 58,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "17",
-      "profile": "plc-foundation"
-    },
-    {
-      "toolCount": 58,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "18",
-      "profile": "plc-foundation"
-    },
-    {
-      "toolCount": 60,
-      "nativeAcceptance": "NOT RUN",
-      "releaseKey": "19",
-      "profile": "plc-foundation"
-    }
-  ]
+  "nativeAcceptance": "NOT RUN"
 }

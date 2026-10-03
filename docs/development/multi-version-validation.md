@@ -47,3 +47,9 @@ path canonicalization, while preserving the exact release and argument count.
 All six STDIO releases and both isolated HTTP sessions passed the local rerun;
 the supplementary result is recorded in the multi-version manifest. Runtime
 sources and binaries were unchanged by this test-only correction.
+
+The official reference generator now explicitly orders path components without case
+sensitivity. Python pathlib otherwise sorts differently on Windows and Linux; five
+document positions differed in the first CI check. Source-only regeneration now
+matches the shipped catalog byte-for-byte. Embedded references and engine source
+were unchanged by this generator correction.

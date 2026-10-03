@@ -19,7 +19,10 @@ def generate():
         base = ROOT / 'reference' / folder
         upstream = read(base / 'UPSTREAM.json')
         sources.append(dict(upstream, id=prefix))
-        files = sorted((base / 'skills').rglob('*')) if prefix == 'guides' else sorted(base.rglob('*'))
+        candidates = (base / 'skills').rglob('*') if prefix == 'guides' else base.rglob('*')
+        # pathlib ordering folds case on Windows, but not on Linux. Keep the
+        # shipped order explicitly so CI and local regeneration are identical.
+        files = sorted(candidates, key=lambda p: tuple(part.lower() for part in p.relative_to(base).parts))
         for path in files:
             if not path.is_file() or path.suffix not in ('.md', '.cs', '.csproj', '.props', '.targets'):
                 continue
