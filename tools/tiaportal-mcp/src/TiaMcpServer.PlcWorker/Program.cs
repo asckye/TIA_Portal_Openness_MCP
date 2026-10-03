@@ -13,6 +13,8 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
+            TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
         Console.InputEncoding = new System.Text.UTF8Encoding(false);
         Console.OutputEncoding = new System.Text.UTF8Encoding(false);
         // A worker is launched lazily by its exact-release host.

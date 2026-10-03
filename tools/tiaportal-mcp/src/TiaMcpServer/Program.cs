@@ -707,6 +707,11 @@ namespace TiaMcpServer
 
                 // Set the logger for the MCP server
                 McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
+                var swallowedLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("TiaMcpServer.Swallowed");
+                // TIA_MCP_LOG_SWALLOWED=1 writes to stderr like the bridge and the workers; otherwise only Debug logging shows it.
+                TiaMcp.Shared.SwallowedExceptions.Sink = Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1"
+                    ? message => Console.Error.WriteLine(message)
+                    : message => swallowedLogger.LogDebug("{SwallowedException}", message);
 
                 // log a bit of information about the server start
                 if (options != null && options.Logging != null && options.Logging > 0)
@@ -784,6 +789,11 @@ namespace TiaMcpServer
                     using var host = builder.Build();
                     McpServer.SetServiceProvider(host.Services);
                     McpServer.Logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("McpServer");
+                    var swallowedLogger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger("TiaMcpServer.Swallowed");
+                    // TIA_MCP_LOG_SWALLOWED=1 writes to stderr like the bridge and the workers; otherwise only Debug logging shows it.
+                    TiaMcp.Shared.SwallowedExceptions.Sink = Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1"
+                        ? message => Console.Error.WriteLine(message)
+                        : message => swallowedLogger.LogDebug("{SwallowedException}", message);
                     host.Services.GetRequiredService<IHostApplicationLifetime>().ApplicationStarted.Register(() => McpHostReadiness.Set("Ready"));
                     await host.RunAsync(transportLifetime.Token);
                 }

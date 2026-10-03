@@ -25,6 +25,8 @@ namespace TiaOpenness.Bridge
         [STAThread]
         public static int Main(string[] args)
         {
+            if (System.Environment.GetEnvironmentVariable("TIA_MCP_LOG_SWALLOWED") == "1")
+                TiaMcp.Shared.SwallowedExceptions.Sink = message => Console.Error.WriteLine(message);
             var forceMock = HasFlag(args, "--mock");
 
             if (HasFlag(args, "--doctor"))

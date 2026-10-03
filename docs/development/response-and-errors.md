@@ -114,8 +114,8 @@ T0–T3 应在阶段 3 第 5 步之前完成（第 4 步的内核接口已保留
 
 - 辅助方法 `openness-shared/SwallowedExceptions.cs`：`Note(string site, Exception ex)` 只记录位置、异常类型全名和 `HResult`，
   不读取 `ex.Message`（可能是原生 getter 或含工程数据），不调用 `ex.ToString()`；每个位置每进程首次记录、之后只计数；自身绝不抛出。
-- 输出默认关闭；引擎宿主接到 `ILogger` Debug 级别（类别 `TiaMcpServer.Swallowed`）；Studio 桥接进程和 Foundation worker 用
-  `TIA_MCP_LOG_SWALLOWED=1` 开启。永远不写入 `calls-*.jsonl`、`InvocationJournal` 计数器或任何 meta 字段。
+- 输出默认关闭；引擎、Studio 桥接进程和 Foundation worker 统一用 `TIA_MCP_LOG_SWALLOWED=1` 开启，每个位置写一行 stderr；
+  未开启时引擎只在 `ILogger` Debug 级别（类别 `TiaMcpServer.Swallowed`）记录，已开启调试日志时可见。永远不写入 `calls-*.jsonl`、`InvocationJournal` 计数器或任何 meta 字段。
 - 每个保留的 `catch` 在同一行标注 `/* swallow(<类别>): <原因> */`，类别取自封闭清单：cleanup / teardown / logging-failure /
   probe-optional / enumerate-optional / native-fallback / parse-fallback / env-probe / ui / fail-open-guard / privacy。
 - `scripts/checks/Check-SwallowedExceptions.py` 检查标注，基线 `scripts/checks/swallowed-exceptions-baseline.json` 只许减少，

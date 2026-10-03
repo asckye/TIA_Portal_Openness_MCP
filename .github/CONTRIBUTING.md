@@ -61,8 +61,9 @@ The [P2-03 logging policy](../docs/development/response-and-errors.md#日志与�
 `SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's
 full name and `HResult`, never `Message` or `ToString()`. Log the first occurrence per site per process
 and only count later occurrences; the helper must never throw or recursively log its own failures.
-Output is off by default: the engine uses `ILogger` Debug with category `TiaMcpServer.Swallowed`,
-while the Studio bridge and Foundation worker opt in with `TIA_MCP_LOG_SWALLOWED=1`.
+Output is off by default. `TIA_MCP_LOG_SWALLOWED=1` makes the engine, the Studio bridge and the Foundation
+worker write one stderr line per site; without it the engine only logs at `ILogger` Debug (category
+`TiaMcpServer.Swallowed`), which shows when Debug logging is already enabled.
 Do not write swallowed-exception diagnostics to `calls-*.jsonl`, `InvocationJournal` counters or
 response metadata. Keep privacy-related stderr discards and logging-failure catches; do not change
 native catches to rethrow before L5 acceptance. The helper and runtime wiring belong to P2-03b;

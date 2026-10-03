@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="../TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
+    <Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"

@@ -88,6 +88,7 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs" Link="Shared/McpServer.ScaffoldOperations.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
