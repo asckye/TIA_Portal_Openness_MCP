@@ -67,7 +67,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P0-01 | 提交现有统一工作台改动，作为重构起点 | done |
 | P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | done |
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（维护者决定暂不进行真机实测） | deferred |
-| P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | doing |
+| P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | done |
 | P0-06 | 离线返回结构快照：离线可执行工具的规范化返回，加上全部工具在直接调用与 CallTool 桥接两条路径上的调用前拒绝（`manifest/contracts/responses`） | done |
 | P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
 
