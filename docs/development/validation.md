@@ -34,11 +34,10 @@ dotnet build TiaPortalOpenness.Offline.slnx -c Release -p:TiaPublicApiRoot=Z:/no
 
 Offline 指不需要 Siemens 程序集；NuGet 依赖仍须已缓存或可还原，桌面工程仍须 Windows。
 它包含 offline-checks CI 的全部工程及其依赖，也收录其他不依赖 Siemens 的工具、协议和测试。
-`dotnet test` **只执行** `TiaOpenness.Core.Tests` 和 `TiaOpenness.Gui.Tests` 的 xunit 用例。
-`TiaMcpServer.Tests`、`TiaMcpServer.LegacyHostTests`、WorkerProtocol 系列及其他控制台测试
-（包括 `TiaOpenness.Configuration.Tests`）必须用 `dotnet run --project <csproj> -c Release`；
-成功的 `dotnet test` 不表示这些断言已执行。HttpTests、DiagnosticsTests 和 transport/endpoint/提示注册
-fixture 需由对应验证脚本提供参数，不能把这些辅助程序当成自动发现的测试。
+`dotnet test` 执行 Studio xunit 及已迁移的 MCP 回归工程；正式验收使用下面的 TRX 门禁核对最低数量。
+WorkerProtocol 系列及其他控制台测试（包括 `TiaOpenness.Configuration.Tests`）仍须用
+`dotnet run --project <csproj> -c Release`。HttpTests、DiagnosticsTests 和 transport/endpoint 夹具
+需由对应验证脚本提供参数；PromptRegistration 的两个依赖夹具不执行测试，直接 `dotnet test` 会明确拒绝。
 
 完整方案默认使用仓库根目录下 `TIA_V14SP1_PublicAPI/V14 SP1`、
 `TIA_V15.1_PublicAPI/V15.1`、`TIA_V16_PublicAPI/V16` 至 `TIA_V20_PublicAPI/V20`、
@@ -61,19 +60,27 @@ python scripts/checks/Check-DeadToolReferences.py
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
 python scripts/checks/Test-DotnetSuites.py --self-test
 python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
+python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership
 dotnet run --project tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
-已迁移的 offline、offline-v20、version-policy 使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tools/tiaportal-mcp/tests/test-suites.json)分别要求至少 3086、3086、10 项通过，均不允许跳过。
+已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
+[最低数量表](../../tools/tiaportal-mcp/tests/test-suites.json)要求 offline、offline-v20、version-policy 至少 3096、3096、10 项通过，均不允许跳过。
+ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
+foundation 至少 6521 项通过、最多 1 项跳过；foundation-api 至少 7566 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 134、39、11、124、56、4 项通过，均不允许跳过。
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
 每次清除同名旧结果，在 `test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
 可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
 开发时可直接运行 `dotnet test <csproj> -c Release`（V20 加 `-p:DefineConstants=TIA_V20`），正式门禁仍用脚本核对数量。
-普通 `dotnet run` 对这两个已迁移工程返回 2；离线工程保留 `--local-process-fixture` 子进程入口。
-共享 [Harness.props](../../tools/tiaportal-mcp/tests/Shared/Harness.props)供后续控制台框架显式导入，直接 `dotnet test` 时明确报错；本步尚未应用到其他工程。
+普通 `dotnet run` 对已迁移工程返回 2；离线工程保留 `--local-process-fixture` 子进程入口。
+共享 [Harness.props](../../tools/tiaportal-mcp/tests/Shared/Harness.props)已用于 PromptRegistration 的两个依赖夹具；其他未迁移框架保持原运行方式。
+PromptRegistration 的既有 Windows 清理失败已仅在测试中修复：释放夹具引用、卸载上下文并通过有界 GC 等待确认，再删除临时目录；卸载或删除失败均记录为失败检查。
+
+ApiMetadata 是独立 theory；未设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 时在发现阶段跳过，foundation 门禁通过过滤器排除它，从而保持原有 1 项跳过预算。
+运行 foundation-api 前设置该变量为八版 PublicAPI 的父目录，并先构建当前仓库的八版 adapter/worker；适配器根目录由测试源码所在的仓库布局推导，无需命令行路径。
+`Build-MultiVersion.ps1 -Test` 运行 foundation-api 和上述六个独立套件，将通过、失败、跳过、总数及门禁阈值写入 `multi-version-build.json` 的 `validation.dotnetSuites`。
 
 未迁移的控制台用例仍必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块在实际 .NET 10 桌面宿主执行，保留至少 157 项检查。`Build-Configurator.ps1 -Test` 需要 .NET 10 SDK；Framework csc 仅编译兼容启动器，配置测试通过后生成同格式的 `configurator-build.json`。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
 合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。

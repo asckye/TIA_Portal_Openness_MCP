@@ -53,8 +53,16 @@ Get-ChildItem -LiteralPath $studioBuild | ForEach-Object {Copy-Item -LiteralPath
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
 $validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
 if($Test) {
-    & $Dotnet run --project (Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj') -c Release -- $api (Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcp.Adapters') *> (Join-Path $logs 'foundation-tests.log')
-    if($LASTEXITCODE){throw 'Foundation functional tests failed'}
+    $suiteResults=Join-Path $logs 'dotnet-suites'
+    $validation.dotnetSuites=@{}
+    foreach($suite in @('foundation-api','prompt-registration','software-read','special-export-shape','device-add','hardware-catalog','diagnostic-membership')) {
+        $suiteArgs=@((Join-Path $repo 'scripts/checks/Test-DotnetSuites.py'),'--suite',$suite,'--dotnet',$Dotnet,'--results-directory',$suiteResults)
+        if($NuGetConfig){$suiteArgs+=('--dotnet-arg=-p:RestoreConfigFile='+(Resolve-Path -LiteralPath $NuGetConfig).Path)}
+        & $Python @suiteArgs *> (Join-Path $logs "$suite-tests.log")
+        if($LASTEXITCODE){throw "TRX suite gate failed: $suite"}
+        $summary=Get-Content -LiteralPath (Join-Path $suiteResults "$suite.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+        $validation.dotnetSuites[$suite]=@{passed=[int]$summary.passed;failed=[int]$summary.failed;skipped=[int]$summary.skipped;total=[int]$summary.total;minimumPassed=[int]$summary.minimumPassed;maximumSkipped=[int]$summary.maximumSkipped}
+    }
     $fixture=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj'
     & $Dotnet build $fixture -c Release -v:q *> (Join-Path $logs 'fixture-build.log')
     if($LASTEXITCODE){throw 'Transport fixture build failed'}

@@ -1,26 +1,26 @@
 {
   "offline": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-    "minimumPassed": 3086,
+    "minimumPassed": 3096,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 3085,
+        "minimumPassed": 3095,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
   },
   "offline-v20": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-    "minimumPassed": 3086,
+    "minimumPassed": 3096,
     "maximumSkipped": 0,
     "arguments": [
       "-p:DefineConstants=TIA_V20"
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 3085,
+        "minimumPassed": 3095,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
@@ -28,6 +28,57 @@
   "version-policy": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj",
     "minimumPassed": 10,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "foundation": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
+    "minimumPassed": 6521,
+    "maximumSkipped": 1,
+    "arguments": [
+      "--filter",
+      "FullyQualifiedName!~ApiMetadataChecks"
+    ]
+  },
+  "foundation-api": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
+    "minimumPassed": 7566,
+    "maximumSkipped": 1,
+    "arguments": []
+  },
+  "software-read": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj",
+    "minimumPassed": 39,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "special-export-shape": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj",
+    "minimumPassed": 11,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "device-add": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj",
+    "minimumPassed": 124,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "hardware-catalog": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj",
+    "minimumPassed": 56,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "diagnostic-membership": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj",
+    "minimumPassed": 4,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "prompt-registration": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj",
+    "minimumPassed": 134,
     "maximumSkipped": 0,
     "arguments": []
   }

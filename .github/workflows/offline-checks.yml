@@ -68,7 +68,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Foundation contracts and functional tests
-        run: dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj -c Release
+        run: python scripts/checks/Test-DotnetSuites.py --suite foundation --suite prompt-registration --suite software-read --suite special-export-shape --suite device-add --suite hardware-catalog --suite diagnostic-membership
       - name: Build host and synthetic worker without Siemens SDKs
         shell: pwsh
         run: |
