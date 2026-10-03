@@ -247,6 +247,32 @@ ProjectSession 和 ScaffoldOperations 调用。共享工具辅助 `MakeSafeFileN
 `InvokeOnInstance` 通过服务实例访问共享内核辅助，HttpTests 的反射调用改由 `EngineSurface.Invoke` 解析目标，
 原有断言全部保留。`EngineSurface.InvokeUninitialized` 给迁出的服务注入未初始化的 Portal，保持原有 guard
 测试的空内核条件；两者均不执行构造函数，也不获取原生资源。
+### HMI 离线替身边界
+
+需要离线替身的领域服务接收不含 Siemens 类型的窄会话接口，不因此为每个服务增加接口。
+[IHmiToolSession](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/IHmiToolSession.cs) 由 `Portal` 显式转发，
+与 `IEngineeringSession` 解析为同一个会话单例；五个服务和工具类仍按 `EngineRegistration` 约定注册，均不实现 `IDisposable`。
+
+| 成员 | 用途 |
+|---|---|
+| `CurrentProject`（`object?`） | 工程身份、归档和库读取；保持原有空工程检查及反射访问 |
+| `RunHmiStepTool` | 复用响应信封、工程前置检查和故障后的阻断 |
+| `AcquireHmiEditAccess` | 复用原写访问租约及释放顺序 |
+| `ResolveHmiSoftwareOrThrow`（返回 `object`） | 复用 HMI 路径解析及原错误语义 |
+| `RecordHmiReadFault` | 记录连接故障并通过原内核实现失效软件缓存 |
+| `HmiReadFault`（只读属性） | 图形选择续页读取共享故障标记 |
+| `MigrationPages`（只读属性） | 共享分页和释放游标；实例仍由 `Portal` 持有，在原关闭流程中释放 |
+
+`HmiInspection`（8）、`MigrationRead`（8）、`RuntimeSettings`（2）、`GraphicSelection`（2）、`GlobalScriptEdit`（1）
+各自对应 `Siemens/Services/<Domain>Service.cs` 和 `ModelContextProtocol/Tools/<Domain>Tools.cs`。
+`GraphicSelectionService` 复用 `MigrationReadService.MigrationPage`；两个写操作锁分别随设置和脚本服务迁移。
+读取健康重置、空工程消息和缓存失效留在内核，不为服务未直接调用的操作扩展接口。
+
+离线套件直接构造服务并注入 `FakeHmiToolSession`，不再链接这五个 `Portal` 文件及 `Portal.HmiOperation.cs`。
+替身模拟会话响应和故障状态，生产信封继续由 HttpTests 的黄金字节检查覆盖。
+`ToolBridgeFixtures` 中仅保留非 partial 的注册用 `Portal` 占位类和 `IEngineeringSession`，
+用于链接真实 `EngineRegistration` 及维护工具的根目录检查；HMI 行为测试不使用此占位类。
+`EngineBundleLayoutTests` 不再声明 `Portal`。既有断言、输入和预期文本保留，offline 最低数量不变。
 
 ### 库、VCI 与 SiVArc
 

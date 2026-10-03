@@ -21,6 +21,7 @@ namespace TiaMcpServer
             {
                 services.TryAddSingleton<Portal>();
                 services.TryAddSingleton<IEngineeringSession>(provider => provider.GetRequiredService<Portal>());
+                services.TryAddSingleton<IHmiToolSession>(provider => provider.GetRequiredService<Portal>());
                 foreach (var type in typeof(Portal).Assembly.GetTypes())
                 {
                     if (!type.IsClass || type.IsAbstract || type.Namespace != "TiaMcpServer.Siemens.Services"

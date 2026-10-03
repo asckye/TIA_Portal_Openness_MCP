@@ -1,3 +1,4 @@
+using TiaMcpServer.Siemens.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -129,7 +130,8 @@ namespace TiaMcpServer.Tests
         private static void ContinuationTests(Action<bool, string> check)
         {
             var root = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
-            var portal = new Portal { FixtureRoot = root };
+            var session = new FakeHmiToolSession { FixtureRoot = root };
+            var portal = new MigrationReadService(session);
             var first = portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", pageSize: 2).Meta!;
             check(first["records"]!.AsArray().Any(r => r!["kind"]!.ToString() == "nativeExportStatus"), "native result is captured before export file pagination starts");
             string cursor = first["nextCursor"]!.ToString();
@@ -141,7 +143,7 @@ namespace TiaMcpServer.Tests
             do { last = portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", cursor, 2).Meta!; bodies += last["records"]!.AsArray().Count(r => r!["kind"]?.ToString() == "nativeFile"); cursor = last["nextCursor"]?.ToString() ?? ""; } while (cursor != "");
             check(bodies == 2 && last["dataComplete"]!.GetValue<bool>(), "captured export finishes from local files after project handle disposal without another Openness access");
             check(!portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation").Meta!["apiCallSuccess"]!.GetValue<bool>(), "new collection still validates the live project handle");
-            portal.FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
+            session.FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
             check(!portal.ReadUnifiedGlobalScript("HMI_1", "Project_A", "Navigation", last["pageCursor"]!.ToString()).Meta!["apiCallSuccess"]!.GetValue<bool>(), "rebind to same named project still invalidates the old collection");
         }
         private static IEnumerable<FileInfo> ScriptFiles(DirectoryInfo directory)

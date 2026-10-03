@@ -49,10 +49,10 @@ namespace TiaMcpServer.Tests
                 check(other.Name == "new", "library safety: unrelated object rename remains available");
                 Engineering.TiaMajorVersion = 20;
                 check(EngineeringScalarProperties.Prepare(type, changes).Count == 2, "library safety: V21 incident guard is not generalized to V20");
-                var portal = McpServer.Portal;
+                var portal = HmiToolFixture.Session;
                 portal.FixtureResetReadHealth();
                 var failure = new JsonObject { ["tool"] = "ManageLibraryType", ["action"] = "update", ["typePath"] = "LGen/Types_HMI/Scripts/LSicar_LibraryScripts", ["libraryName"] = "", ["lastAttemptedProperty"] = "Name", ["appliedProperties"] = new JsonArray(), ["mayHaveChanged"] = true };
-                typeof(Portal).GetMethod("RecordHmiReadFault", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(portal, new object[] { failure });
+                portal.RecordHmiReadFault(failure);
                 var retained = portal.GetHmiReadHealth()["lastFailure"]!;
                 check(retained["tool"]!.ToString() == "ManageLibraryType" && retained["lastAttemptedProperty"]!.ToString() == "Name" && retained["appliedProperties"]!.AsArray().Count == 0 && retained["mayHaveChanged"]!.GetValue<bool>(), "library safety: fault health retains property, tool and uncertainty evidence");
                 portal.FixtureResetReadHealth();

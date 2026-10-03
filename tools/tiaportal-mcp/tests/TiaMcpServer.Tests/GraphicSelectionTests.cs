@@ -1,3 +1,4 @@
+using TiaMcpServer.Siemens.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,7 +58,7 @@ namespace TiaMcpServer.Tests
                 return name == "GroupId" ? "native-raw-id" : (object)1;
             }
         }
-        private static JsonArray Pages(Portal portal, string names = NamesJson, int size = 2)
+        private static JsonArray Pages(GraphicSelectionService portal, string names = NamesJson, int size = 2)
         {
             var pages = new JsonArray(); string cursor = "";
             do
@@ -70,13 +71,19 @@ namespace TiaMcpServer.Tests
             return pages;
         }
         private static JsonObject[] Rows(JsonArray pages) => pages.SelectMany(p => (JsonArray)p!["records"]!).OfType<JsonObject>().ToArray();
-        private static bool Refused(JsonArray before, JsonArray after) => new Portal().CompareUnifiedGraphicSelections(before.ToJsonString(), after.ToJsonString()).Meta!["success"]!.GetValue<bool>() == false;
+        private static bool Refused(JsonArray before, JsonArray after)
+        {
+            var session = new FakeHmiToolSession();
+            return new GraphicSelectionService(session, new MigrationReadService(session)).CompareUnifiedGraphicSelections(before.ToJsonString(), after.ToJsonString()).Meta!["success"]!.GetValue<bool>() == false;
+        }
         internal static void Run(Action<bool, string> check)
         {
             Console.WriteLine("== Exact graphical selections and offline coordinate comparison ==");
             var hmi = new global::Siemens.Engineering.HmiUnified.HmiSoftware(); var screen = new Screen(); hmi.Screens.Add(screen);
             foreach (var name in UnifiedGraphicSelection.Names(NamesJson)) screen.ScreenItems.Add(new Item { Name = name, Parent = screen, Left = name.StartsWith("txt") ? -22 : 4 });
-            var portal = new Portal { FixtureRoot = hmi };
+            var session = new FakeHmiToolSession { FixtureRoot = hmi };
+            var migration = new MigrationReadService(session);
+            var portal = new GraphicSelectionService(session, migration);
             var before = Pages(portal); var rows = Rows(before);
             check(rows.Length == 5 && rows.Take(4).All(r => r["geometryComplete"]!.GetValue<bool>()), "four exact names and complete geometry, no deep property traversal");
             check(rows[0]["owner"]!["name"]!["value"]!.ToString() == "Main", "one-hop owner identity stops before owner's Parent");
@@ -105,8 +112,8 @@ namespace TiaMcpServer.Tests
             var near = Rows(Pages(portal, "[\"gfxTop\",\"fgxTop\"]"));
             check(near[0]["type"] == null && near[1]["name"]!.ToString() == "fgxTop", "fgx spelling is not guessed or corrected to gfx");
             check(portal.ReadUnifiedGraphicSelection("HMI", "Project_A", "/Main", "[\"x\",\"x\"]").Meta!["success"]!.GetValue<bool>() == false, "duplicate selection rejected");
-            int resolves = portal.FixtureResolveCalls;
-            check(!portal.ReadUnifiedGraphicSelection("HMI", "Wrong", "/Main", NamesJson).Meta!["success"]!.GetValue<bool>() && portal.FixtureResolveCalls == resolves, "project mismatch refuses HMI access");
+            int resolves = session.FixtureResolveCalls;
+            check(!portal.ReadUnifiedGraphicSelection("HMI", "Wrong", "/Main", NamesJson).Meta!["success"]!.GetValue<bool>() && session.FixtureResolveCalls == resolves, "project mismatch refuses HMI access");
             screen.ScreenItems.Add(new PrivateGeometry());
             check(!Rows(Pages(portal, "[\"Private\"]"))[0]["geometryComplete"]!.GetValue<bool>(), "private getter not invoked");
             var attr = new AttributeGeometry(); screen.ScreenItems.Add(attr);
@@ -123,15 +130,15 @@ namespace TiaMcpServer.Tests
             int readCount = counted.Reads;
             var replay = portal.ReadUnifiedGraphicSelection("HMI", "Project_A", "/Main", "[\"Counted\"]", first["pageCursor"]!.ToString(), 1).Meta!;
             check(counted.Reads == readCount && JsonNode.DeepEquals(first["records"], replay["records"]), "page replay does not reread remote geometry");
-            portal.ReleaseUnifiedReadCursor(first["releaseCursor"]!.ToString());
+            migration.ReleaseUnifiedReadCursor(first["releaseCursor"]!.ToString());
             screen.ScreenItems.Add(new Broken { Name = "Broken" });
             var failure = Pages(portal, "[\"fgxTop\",\"Broken\",\"Counted\"]", 1);
             check(!failure.Last()!["apiCallSuccess"]!.GetValue<bool>() && failure.Last()!["remoteInspectionStopped"]!.GetValue<bool>() && counted.Reads == readCount, "IPC/disposal in continuation stops before sibling and marks failure");
-            int stopped = portal.FixtureResolveCalls;
+            int stopped = session.FixtureResolveCalls;
             var blocked = portal.ReadUnifiedGraphicSelection("HMI", "Project_A", "/Main", NamesJson).Meta!;
-            check(blocked["status"]!.ToString() == "HmiReadSessionBlocked" && portal.FixtureResolveCalls == stopped, "future selection blocked until explicit rebind");
+            check(blocked["status"]!.ToString() == "HmiReadSessionBlocked" && session.FixtureResolveCalls == stopped, "future selection blocked until explicit rebind");
             check(portal.CompareUnifiedGraphicSelections(original, original).Meta!["success"]!.GetValue<bool>(), "offline comparison still works with unavailable TIA");
-            McpServer.Portal = new Portal { FixtureRoot = hmi };
+            HmiToolFixture.Configure(new FakeHmiToolSession { FixtureRoot = hmi });
             var bridge = McpServer.CallTool("ReadUnifiedGraphicSelection", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"screenPath\":\"/Main\",\"itemNamesJson\":\"[\\\"fgxTop\\\"]\"}");
             check(bridge.Meta!["success"]!.GetValue<bool>(), "selection tool discoverable through CallTool bridge");
             var badCompare = McpServer.CallTool("CompareUnifiedGraphicSelections", "{\"beforePagesJson\":\"[]\",\"afterPagesJson\":\"[]\"}");

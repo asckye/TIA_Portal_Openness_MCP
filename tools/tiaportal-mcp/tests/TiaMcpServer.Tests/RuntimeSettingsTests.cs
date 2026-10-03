@@ -1,3 +1,4 @@
+using TiaMcpServer.Siemens.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -97,10 +98,11 @@ namespace TiaMcpServer.Tests
             failing.RuntimeSettings.WriteError = new ObjectDisposedException("Portal");
             check(Fails(() => Update(failing, "{\"StartScreen\":\"/New\"}", false, failingPreview["token"]!.ToString())) && failing.RuntimeSettings.Writes == 1, "fatal setter error is propagated without retry");
             var native = new global::Siemens.Engineering.HmiUnified.HmiSoftware();
-            var portal = new Portal { FixtureRoot = native };
+            var session = new FakeHmiToolSession { FixtureRoot = native };
+            var portal = new RuntimeSettingsService(session);
             check(portal.ReadUnifiedRuntimeSettings("HMI", "Project_A").Meta!["success"]!.GetValue<bool>(), "dedicated read tool handles explicit Unified project scope");
-            int resolutions = portal.FixtureResolveCalls;
-            check(!portal.UpdateUnifiedRuntimeSettings("HMI", "Wrong", "{\"BitSelection\":true}").Meta!["success"]!.GetValue<bool>() && portal.FixtureResolveCalls == resolutions, "project mismatch stops before resolving HMI");
+            int resolutions = session.FixtureResolveCalls;
+            check(!portal.UpdateUnifiedRuntimeSettings("HMI", "Wrong", "{\"BitSelection\":true}").Meta!["success"]!.GetValue<bool>() && session.FixtureResolveCalls == resolutions, "project mismatch stops before resolving HMI");
             var setting = (Settings)native.RuntimeSettings;
             var guarded = portal.UpdateUnifiedRuntimeSettings("HMI", "Project_A", "{\"BitSelection\":true}");
             check(guarded.Meta!["dryRun"]!.GetValue<bool>() && !setting.BitSelection, "Portal write tool defaults to preview");
@@ -110,7 +112,7 @@ namespace TiaMcpServer.Tests
             var fatal = portal.UpdateUnifiedRuntimeSettings("HMI", "Project_A", "{\"StartScreen\":\"/Main\"}", false, fatalPreview.Meta!["token"]!.ToString()).Meta!;
             check(fatal["connectionUnavailable"]!.GetValue<bool>() && fatal["exclusiveReleaseSkipped"]!.GetValue<bool>() && fatal["mayHaveChanged"]!.GetValue<bool>(), "fatal readback blocks future HMI operations and skips remote lease disposal");
             check(portal.ReadUnifiedRuntimeSettings("HMI", "Project_A").Meta!["status"]!.ToString() == "HmiReadSessionBlocked", "runtime reads respect shared HMI health block");
-            McpServer.Portal = new Portal { FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware() };
+            HmiToolFixture.Configure(new FakeHmiToolSession { FixtureRoot = new global::Siemens.Engineering.HmiUnified.HmiSoftware() });
             check(McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changesJson\":\"{\\\"BitSelection\\\":true}\"}").Meta!["success"]!.GetValue<bool>(), "write preview exposed through CallTool");
             check(!McpServer.CallTool("UpdateUnifiedRuntimeSettings", "{\"softwarePath\":\"HMI\",\"expectedProject\":\"Project_A\",\"changesJson\":\"{\\\"BitSelection\\\":true}\",\"dryRun\":false}").Meta!["success"]!.GetValue<bool>(), "CallTool propagates missing-token business failure");
         }

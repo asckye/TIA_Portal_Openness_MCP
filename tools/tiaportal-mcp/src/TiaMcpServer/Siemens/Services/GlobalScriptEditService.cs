@@ -1,16 +1,20 @@
 using System;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class GlobalScriptEditService
     {
+        private readonly IHmiToolSession _session;
+
+        public GlobalScriptEditService(IHmiToolSession session) => _session = session;
+
         private readonly object _globalScriptEditGate = new object();
         public ResponseMessage UpdateUnifiedGlobalScript(string softwarePath, string expectedProject, string moduleName,
             string scriptCode, bool dryRun = true, string expectedToken = "")
         {
             lock (_globalScriptEditGate)
-                return RunHmiStepTool("UpdateUnifiedGlobalScript", meta =>
+                return _session.RunHmiStepTool("UpdateUnifiedGlobalScript", meta =>
                 {
                     meta["softwarePath"] = softwarePath; meta["moduleName"] = moduleName;
                     if (string.IsNullOrWhiteSpace(expectedProject) || string.IsNullOrWhiteSpace(softwarePath))
@@ -18,12 +22,12 @@ namespace TiaMcpServer.Siemens
                     IDisposable? exclusive = null;
                     try
                     {
-                        if (!dryRun) exclusive = AcquireHmiEditAccess();
-                        if (!string.Equals(MigrationRead.Get(CurrentProject!, "Name")?.ToString(), expectedProject, StringComparison.Ordinal))
+                        if (!dryRun) exclusive = _session.AcquireHmiEditAccess();
+                        if (!string.Equals(MigrationRead.Get(_session.CurrentProject!, "Name")?.ToString(), expectedProject, StringComparison.Ordinal))
                             throw new InvalidOperationException("Exact expectedProject mismatch; no script operation attempted.");
-                        var message = UnifiedGlobalScriptEdit.Execute(() => ResolveHmiSoftwareOrThrow(softwarePath), expectedProject,
+                        var message = UnifiedGlobalScriptEdit.Execute(() => _session.ResolveHmiSoftwareOrThrow(softwarePath), expectedProject,
                             softwarePath, moduleName, scriptCode, dryRun, expectedToken, meta);
-                        if (meta["connectionUnavailable"]?.GetValue<bool>() == true) RecordHmiReadFault(meta);
+                        if (meta["connectionUnavailable"]?.GetValue<bool>() == true) _session.RecordHmiReadFault(meta);
                         return message;
                     }
                     catch (Exception ex)

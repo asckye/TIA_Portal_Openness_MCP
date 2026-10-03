@@ -41,14 +41,14 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.MigrationRead.cs" Link="Portal.MigrationRead.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Services\MigrationReadService.cs" Link="MigrationReadService.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedGraphicSelection.cs" Link="UnifiedGraphicSelection.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedRuntimeSettingsAccess.cs" Link="UnifiedRuntimeSettingsAccess.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.RuntimeSettings.cs" Link="Portal.RuntimeSettings.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.RuntimeSettings.cs" Link="McpServer.RuntimeSettings.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.GraphicSelection.cs" Link="Portal.GraphicSelection.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.GraphicSelection.cs" Link="McpServer.GraphicSelection.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.MigrationRead.cs" Link="McpServer.MigrationRead.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Services\RuntimeSettingsService.cs" Link="RuntimeSettingsService.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\RuntimeSettingsTools.cs" Link="RuntimeSettingsTools.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Services\GraphicSelectionService.cs" Link="GraphicSelectionService.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\GraphicSelectionTools.cs" Link="GraphicSelectionTools.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\MigrationReadTools.cs" Link="MigrationReadTools.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationPages.cs" Link="MigrationPages.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationRead.cs" Link="MigrationRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedTagDefinitions.cs" Link="UnifiedTagDefinitions.cs" />
@@ -56,14 +56,14 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScriptAccess.cs" Link="UnifiedScriptAccess.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedGlobalScriptEdit.cs" Link="UnifiedGlobalScriptEdit.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.GlobalScriptEdit.cs" Link="Portal.GlobalScriptEdit.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.GlobalScriptEdit.cs" Link="McpServer.GlobalScriptEdit.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Services\GlobalScriptEditService.cs" Link="GlobalScriptEditService.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\GlobalScriptEditTools.cs" Link="GlobalScriptEditTools.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiSnapshot.cs" Link="HmiSnapshot.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.HmiInspection.cs" Link="Portal.HmiInspection.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.HmiOperation.cs" Link="Portal.HmiOperation.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.HmiInspection.cs" Link="McpServer.HmiInspection.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\Siemens\Services\HmiInspectionService.cs" Link="HmiInspectionService.cs" />
+    <Compile Include="../../src/TiaMcpServer/Siemens/IHmiToolSession.cs" Link="IHmiToolSession.cs" />
+    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\HmiInspectionTools.cs" Link="HmiInspectionTools.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiEventAccess.cs" Link="HmiEventAccess.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PropertyPathReader.cs" Link="PropertyPathReader.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringExport.cs" Link="EngineeringExport.cs" />

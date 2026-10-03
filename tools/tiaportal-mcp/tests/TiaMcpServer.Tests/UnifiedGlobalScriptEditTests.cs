@@ -68,12 +68,12 @@ namespace TiaMcpServer.Tests
             Root root = null!;
             void Reset()
             {
-                root = new Root(); McpServer.Portal.FixtureRoot = root;
-                McpServer.Portal.FixtureResolutionError = null; McpServer.Portal.FixtureResetReadHealth();
+                root = new Root(); HmiToolFixture.Session.FixtureRoot = root;
+                HmiToolFixture.Session.FixtureResolutionError = null; HmiToolFixture.Session.FixtureResetReadHealth();
             }
             JsonObject Edit(bool dry = true, string token = "", string text = New, string module = "Navigation", string project = "Project_A")
             {
-                var meta = McpServer.UpdateUnifiedGlobalScript("HMI_RT_2", project, module, text, dry, token).Meta!;
+                var meta = HmiToolFixture.GlobalScriptEdit.UpdateUnifiedGlobalScript("HMI_RT_2", project, module, text, dry, token).Meta!;
                 if (meta["backupDirectory"] is JsonNode path) directories.Add(Path.GetDirectoryName(path.ToString())!);
                 return meta;
             }
@@ -153,7 +153,7 @@ namespace TiaMcpServer.Tests
             }
             finally
             {
-                McpServer.Portal.FixtureResetReadHealth();
+                HmiToolFixture.Session.FixtureResetReadHealth();
                 foreach (var directory in directories)
                 {
                     var allowed = Path.GetFullPath(Path.Combine(Path.GetTempPath(), "TiaMcpServer", "GlobalScriptEdits")) + Path.DirectorySeparatorChar;

@@ -7,16 +7,6 @@ using TiaMcpServer.ModelContextProtocol;
 using TiaMcpServer.Siemens;
 using Xunit;
 
-namespace TiaMcpServer.Siemens
-{
-    public partial class Portal
-    {
-        // Root lookup never needs a session; reject accidental use of the linked maintenance body.
-        internal (bool IsConnected, string? Project)? GetState()
-            => throw new InvalidOperationException("The layout fixture must not read a session.");
-    }
-}
-
 namespace TiaMcpServer.Tests
 {
     public sealed class EngineBundleLayoutTests : IDisposable

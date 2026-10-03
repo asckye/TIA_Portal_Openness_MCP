@@ -3,20 +3,23 @@ using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class MigrationReadService
     {
-        private readonly MigrationPages migrationPages = new MigrationPages();
-        private ResponseMessage MigrationPage(string tool, string softwarePath, string expectedProject, JsonObject scope, string cursor, int pageSize, int budgetMs,
+        private readonly IHmiToolSession _session;
+
+        public MigrationReadService(IHmiToolSession session) => _session = session;
+
+        internal ResponseMessage MigrationPage(string tool, string softwarePath, string expectedProject, JsonObject scope, string cursor, int pageSize, int budgetMs,
             Func<object, IEnumerable<JsonObject>> read, Action<Exception>? onError = null, int? expectedCount = null)
         {
             scope["tool"] = tool; scope["softwarePath"] = softwarePath; scope["expectedProject"] = expectedProject;
             JsonObject result;
             try
             {
-                if (CurrentProject == null) throw new InvalidOperationException("No open project.");
-                var project = CurrentProject;
+                if (_session.CurrentProject == null) throw new InvalidOperationException("No open project.");
+                var project = _session.CurrentProject;
                 if (string.IsNullOrWhiteSpace(expectedProject)) throw new InvalidOperationException("An exact expectedProject is required.");
                 if (string.IsNullOrWhiteSpace(softwarePath)) throw new ArgumentException("An explicit HMI software path is required.");
                 scope["project"] = expectedProject;
@@ -26,16 +29,16 @@ namespace TiaMcpServer.Siemens
                     // store. Do not touch a remote Name/HMI handle just to replay
                     // a page or read an already captured native export from disk.
                     // A live traversal still reports its own handle failure.
-                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs,
+                    result = _session.MigrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs,
                         () => throw new InvalidOperationException("A continuation cannot start a new collection."), expectedCount);
                 }
                 else
                 {
                     var projectName = MigrationRead.Get(project, "Name")?.ToString();
                     if (projectName != expectedProject) throw new InvalidOperationException("Exact expectedProject mismatch; collection was not started.");
-                    var hmi = ResolveHmiSoftwareOrThrow(softwarePath);
+                    var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                     if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware") throw new NotSupportedException("Resolved software is not WinCC Unified HmiSoftware: " + hmi.GetType().FullName);
-                    result = migrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi), expectedCount);
+                    result = _session.MigrationPages.Read(project, scope.ToJsonString(), cursor, pageSize, budgetMs, () => read(hmi), expectedCount);
                 }
             }
             catch (Exception ex)
@@ -71,10 +74,10 @@ namespace TiaMcpServer.Siemens
         }
         public ResponseMessage ReadUnifiedLibraryType(string softwarePath, string expectedProject, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => MigrationPage("ReadUnifiedLibraryType", softwarePath, expectedProject, new JsonObject { ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
-                hmi => UnifiedNativeRead.LibraryType(MigrationRead.Get(CurrentProject!, "ProjectLibrary")!, typePath, version));
+                hmi => UnifiedNativeRead.LibraryType(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, typePath, version));
         public ResponseMessage ListUnifiedLibraryFolder(string softwarePath, string expectedProject, string folderPath = "/", string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => MigrationPage("ListUnifiedLibraryFolder", softwarePath, expectedProject, new JsonObject { ["folderPath"] = folderPath }, cursor, pageSize, budgetMs,
-                hmi => LibraryFolder(MigrationRead.Get(CurrentProject!, "ProjectLibrary")!, folderPath));
+                hmi => LibraryFolder(MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, folderPath));
         private static IEnumerable<JsonObject> LibraryFolder(object library, string path)
         {
             if (!path.StartsWith("/") || (path != "/" && path.EndsWith("/"))) throw new ArgumentException("Use / or an exact URI-escaped library folder path.");
@@ -97,7 +100,7 @@ namespace TiaMcpServer.Siemens
         }
         public ResponseMessage ReadUnifiedFaceplateInstance(string softwarePath, string expectedProject, string screenPath, string itemName, string typePath, string version, string cursor = "", int pageSize = 100, int budgetMs = 5000)
             => MigrationPage("ReadUnifiedFaceplateInstance", softwarePath, expectedProject, new JsonObject { ["screenPath"] = screenPath, ["itemName"] = itemName, ["typePath"] = typePath, ["version"] = version }, cursor, pageSize, budgetMs,
-                hmi => FaceplateInstance(hmi, MigrationRead.Get(CurrentProject!, "ProjectLibrary")!, screenPath, itemName, typePath, version));
+                hmi => FaceplateInstance(hmi, MigrationRead.Get(_session.CurrentProject!, "ProjectLibrary")!, screenPath, itemName, typePath, version));
         private static IEnumerable<JsonObject> FaceplateInstance(object hmi, object library, string screenPath, string itemName, string typePath, string version)
         {
             var item = MigrationRead.Named(MigrationRead.Get(MigrationRead.Screen(hmi, screenPath), "ScreenItems")!, itemName);
@@ -117,6 +120,6 @@ namespace TiaMcpServer.Siemens
             foreach (var row in UnifiedNativeRead.LibraryType(library, typePath, version)) yield return row;
         }
         public ResponseMessage ReleaseUnifiedReadCursor(string cursor)
-            => new ResponseMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = new JsonObject { ["success"] = true, ["readOnly"] = true, ["released"] = migrationPages.Cancel(cursor) } };
+            => new ResponseMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = new JsonObject { ["success"] = true, ["readOnly"] = true, ["released"] = _session.MigrationPages.Cancel(cursor) } };
     }
 }

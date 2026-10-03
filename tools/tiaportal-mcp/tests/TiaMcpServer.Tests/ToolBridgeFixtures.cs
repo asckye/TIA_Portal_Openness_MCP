@@ -17,11 +17,19 @@ namespace TiaMcpServer.Siemens
 {
     // Registration-only session boundary; no Siemens SDK types enter the offline suite.
     internal interface IEngineeringSession { }
-    public partial class Portal : IEngineeringSession { }
+    // Kept only for the linked EngineRegistration and maintenance root-lookup checks.
+    // No Portal implementation files are compiled into this suite.
+    internal sealed class Portal : TiaMcpServer.Tests.FakeHmiToolSession, IEngineeringSession
+    {
+        internal (bool IsConnected, string? Project)? GetState()
+            => throw new InvalidOperationException("The layout fixture must not read a session.");
+    }
 }
 
 namespace TiaMcpServer.ModelContextProtocol
 {
+    public static partial class McpServer { internal static readonly Siemens.Portal Portal = new Siemens.Portal(); }
+
     public class ResponseMessage { public string? Message { get; set; } public JsonObject? Meta { get; set; } }
     public class ResponseStringList : ResponseMessage { public IEnumerable<string>? Items { get; set; } }
     [McpServerToolType]
@@ -49,13 +57,18 @@ namespace TiaMcpServer.Tests
 {
     internal static class ToolBridgeFixture
     {
-        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(InstanceProbeTools) });
+        internal static readonly ToolCatalog Catalog = new ToolCatalog(new[] { typeof(McpServer), typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools) });
 
         internal static void Configure(bool lite = false)
         {
             McpServer.ConfigureToolBridge(Catalog, () => lite, new HashSet<string>(StringComparer.Ordinal) { "ProbeResult" });
             EngineServices.SetServiceProvider(new ServiceCollection()
                 .AddSingleton(new ProbeDependency("root"))
+                .AddSingleton(HmiToolFixture.HmiInspection)
+                .AddSingleton(HmiToolFixture.MigrationRead)
+                .AddSingleton(HmiToolFixture.RuntimeSettings)
+                .AddSingleton(HmiToolFixture.GraphicSelection)
+                .AddSingleton(HmiToolFixture.GlobalScriptEdit)
                 .AddEngine(includeSession: false, Catalog).BuildServiceProvider());
         }
     }
@@ -114,7 +127,7 @@ namespace TiaMcpServer.Tests
         [Fact]
         public void AssemblyDiscoveryIncludesEveryAttributedTypeOnly()
         {
-            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools) }).Methods, ToolCatalog.Engine.Methods);
+            Assert.Equal(new ToolCatalog(new[] { typeof(ToolBridgeProbes), typeof(InstanceProbeTools), typeof(HmiInspectionTools), typeof(MigrationReadTools), typeof(RuntimeSettingsTools), typeof(GraphicSelectionTools), typeof(GlobalScriptEditTools) }).Methods, ToolCatalog.Engine.Methods);
         }
 
         [Fact]

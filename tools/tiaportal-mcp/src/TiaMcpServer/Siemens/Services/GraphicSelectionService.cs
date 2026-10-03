@@ -3,13 +3,22 @@ using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class GraphicSelectionService
     {
+        private readonly IHmiToolSession _session;
+        private readonly MigrationReadService _migrationRead;
+
+        public GraphicSelectionService(IHmiToolSession session, MigrationReadService migrationRead)
+        {
+            _session = session;
+            _migrationRead = migrationRead;
+        }
+
         public ResponseMessage ReadUnifiedGraphicSelection(string softwarePath, string expectedProject, string screenPath,
             string itemNamesJson, string cursor = "", int pageSize = 20, int budgetMs = 5000)
-            => RunHmiStepTool("ReadUnifiedGraphicSelection", meta =>
+            => _session.RunHmiStepTool("ReadUnifiedGraphicSelection", meta =>
             {
                 meta["readOnly"] = true; meta["softwarePath"] = softwarePath; meta["screenPath"] = screenPath;
                 var names = UnifiedGraphicSelection.Names(itemNamesJson);
@@ -19,18 +28,18 @@ namespace TiaMcpServer.Siemens
                 {
                     if (!HmiReadSafety.ConnectionUnavailable(ex)) return;
                     fault = new JsonObject { ["softwarePath"] = softwarePath, ["screenPath"] = screenPath, ["error"] = ex.ToString(), ["timestamp"] = DateTimeOffset.UtcNow.ToString("o") };
-                    trace.AddTo(fault); RecordHmiReadFault(fault);
+                    trace.AddTo(fault); _session.RecordHmiReadFault(fault);
                 }
                 var scope = new JsonObject { ["screenPath"] = screenPath, ["itemNames"] = JsonNode.Parse(itemNamesJson) };
-                var page = MigrationPage("ReadUnifiedGraphicSelection", softwarePath, expectedProject, scope, cursor, pageSize, budgetMs,
+                var page = _migrationRead.MigrationPage("ReadUnifiedGraphicSelection", softwarePath, expectedProject, scope, cursor, pageSize, budgetMs,
                     hmi => GuardGraphicSelection(UnifiedGraphicSelection.Capture(hmi, screenPath, names, trace), Error), Error, names.Length + 1);
                 foreach (var entry in page.Meta!) meta[entry.Key] = entry.Value?.DeepClone();
                 // A resumed iterator holds its original trace; its callback records
                 // the session fault, which is also reflected on the current response.
-                if (_hmiReadFault != null)
+                if (_session.HmiReadFault != null)
                 {
                     if (fault != null) foreach (var entry in fault) meta[entry.Key] = entry.Value?.DeepClone();
-                    meta["lastFailure"] = _hmiReadFault.DeepClone(); meta["connectionUnavailable"] = true;
+                    meta["lastFailure"] = _session.HmiReadFault.DeepClone(); meta["connectionUnavailable"] = true;
                     meta["remoteInspectionStopped"] = true; meta["requiresExplicitRebind"] = true;
                 }
                 meta["expectedObjectCount"] = names.Length;

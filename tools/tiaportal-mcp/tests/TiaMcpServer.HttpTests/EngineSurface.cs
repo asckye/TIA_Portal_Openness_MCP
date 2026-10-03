@@ -54,7 +54,12 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.TypesService",
         "TiaMcpServer.Siemens.Services.DocumentsService",
         "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
-        "TiaMcpServer.Siemens.Services.NativeExchangeService"
+        "TiaMcpServer.Siemens.Services.NativeExchangeService",
+        "TiaMcpServer.Siemens.Services.HmiInspectionService",
+        "TiaMcpServer.Siemens.Services.MigrationReadService",
+        "TiaMcpServer.Siemens.Services.RuntimeSettingsService",
+        "TiaMcpServer.Siemens.Services.GraphicSelectionService",
+        "TiaMcpServer.Siemens.Services.GlobalScriptEditService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

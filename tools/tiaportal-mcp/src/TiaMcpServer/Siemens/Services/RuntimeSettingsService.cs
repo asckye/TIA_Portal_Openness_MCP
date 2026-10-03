@@ -2,16 +2,20 @@ using System;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class RuntimeSettingsService
     {
+        private readonly IHmiToolSession _session;
+
+        public RuntimeSettingsService(IHmiToolSession session) => _session = session;
+
         private readonly object _runtimeSettingsGate = new object();
         private ResponseMessage RuntimeSettingsOperation(string tool, string softwarePath, string expectedProject, bool write,
             Action validateInput, Func<object, JsonObject, HmiReadTrace, string> action)
         {
             lock (_runtimeSettingsGate)
-                return RunHmiStepTool(tool, meta =>
+                return _session.RunHmiStepTool(tool, meta =>
                 {
                     // envelope: legacy-runtime-settings: append to the HMI envelope; Failed would add operationSuccess before the action.
                     meta["softwarePath"] = softwarePath; meta["expectedProject"] = expectedProject; meta["readOnly"] = !write;
@@ -25,12 +29,12 @@ namespace TiaMcpServer.Siemens
                         if (string.IsNullOrWhiteSpace(softwarePath) || string.IsNullOrWhiteSpace(expectedProject))
                             throw new ArgumentException("Exact expectedProject and explicit HMI softwarePath are required.");
                         trace.Step("before", "expectedProject");
-                        if (!string.Equals(MigrationRead.Get(CurrentProject!, "Name") as string, expectedProject, StringComparison.Ordinal))
+                        if (!string.Equals(MigrationRead.Get(_session.CurrentProject!, "Name") as string, expectedProject, StringComparison.Ordinal))
                             throw new InvalidOperationException("Exact expectedProject mismatch; runtime settings were not accessed.");
                         trace.Step("after", "expectedProject");
-                        if (write) exclusive = AcquireHmiEditAccess();
+                        if (write) exclusive = _session.AcquireHmiEditAccess();
                         trace.Step("before", "resolveSoftware:" + softwarePath);
-                        var hmi = ResolveHmiSoftwareOrThrow(softwarePath);
+                        var hmi = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                         if (hmi.GetType().FullName != "Siemens.Engineering.HmiUnified.HmiSoftware")
                             throw new NotSupportedException("Unified HmiSoftware required; this HMI/API version is unsupported: " + hmi.GetType().FullName);
                         trace.Step("after", "resolveSoftware:" + softwarePath);

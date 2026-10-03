@@ -110,6 +110,32 @@ def actions(tool, values, **arguments):
 PLC = 'DomainOfflineFixture'
 HARDWARE = {'devicePathJson': '["DomainOfflineFixture"]', 'itemPathJson': '["CPU"]'}
 CASES = {
+    'HmiInspection': [
+        ('ArchiveSavedProject', 'preview', {'archivePath': 'C:/domain-offline.zap21'}),
+        ('ReadUnifiedHmiButtonEvent', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
+        ('DeleteUnifiedHmiButtonEvent', 'preview', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
+        ('ReadUnifiedHmiDynamization', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'itemName': 'Button1', 'propertyName': 'Left'}),
+        ('DeleteUnifiedHmiDynamization', 'preview', {'softwarePath': 'HMI', 'screenPath': '/Main', 'itemName': 'Button1', 'propertyName': 'Left'}),
+        ('DeleteEmptyUnifiedHmiScreenGroup', 'preview', {'softwarePath': 'HMI', 'groupPath': '/Group'}),
+        ('ReadHmiScreenSnapshot', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main'}),
+        ('ListHmiScreenPaths', 'read', {'softwarePath': 'HMI'})],
+    'MigrationRead': [
+        ('ListUnifiedGlobalScripts', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('ReadUnifiedGlobalScript', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation'}),
+        ('ReadUnifiedTagDefinitions', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('ReadUnifiedScreenBranch', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main'}),
+        ('ReadUnifiedLibraryType', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'typePath': '/Type1', 'version': '1.0.0'}),
+        ('ReadUnifiedFaceplateInstance', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemName': 'Faceplate1', 'typePath': '/Type1', 'version': '1.0.0'}),
+        ('ListUnifiedLibraryFolder', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('ReleaseUnifiedReadCursor', 'release-missing', {'cursor': 'domain-offline'})],
+    'RuntimeSettings': [
+        ('ReadUnifiedRuntimeSettings', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A'}),
+        ('UpdateUnifiedRuntimeSettings', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'changesJson': '{"StartScreen":"/Main"}'})],
+    'GraphicSelection': [
+        ('ReadUnifiedGraphicSelection', 'read', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'screenPath': '/Main', 'itemNamesJson': '["Button1"]'}),
+        ('CompareUnifiedGraphicSelections', 'incomplete', {'beforePagesJson': '[]', 'afterPagesJson': '[]'})],
+    'GlobalScriptEdit': [
+        ('UpdateUnifiedGlobalScript', 'preview', {'softwarePath': 'HMI', 'expectedProject': 'Project_A', 'moduleName': 'Navigation', 'scriptCode': 'export function Navigate() {}'})],
     'Cfc': actions('ExchangeCfcCharts', 'export selectiveExport import exportInstructionData',
         softwarePath=PLC, filePath='C:/cfc-offline-fixture.xml.zip', modelVersion='V2.0', chartNamesJson='["Chart1"]')
         + actions('ManageCfcChartProtection', 'read add change remove', softwarePath=PLC,
@@ -796,6 +822,24 @@ def capture(args, exe, harness, profile, isolated):
                         expected = ('commercial-tier operation' if case == 'import-refusal' else 'No project is open.')
                         resources.require(meta.get('success') is False and expected in message,
                                           f'{name}/{case}: missing disconnected/refused VCI response: {raw}')
+                        reached_child = True
+                    elif name == 'ReleaseUnifiedReadCursor':
+                        resources.require(meta.get('success') is True and meta.get('released') is False
+                            and meta.get('readOnly') is True,
+                            f'{name}: missing cursor release result: {raw}')
+                        reached_child = True
+                    elif domain == 'MigrationRead':
+                        resources.require(meta.get('success') is False and meta.get('operationSuccess') is False
+                            and meta.get('apiCallSuccess') is False and meta.get('dataComplete') is False
+                            and meta.get('scope', {}).get('tool') == name and meta.get('records') == []
+                            and meta.get('failures', [{}])[0].get('reason') == 'InvalidOperationException: No open project.',
+                            f'{name}: missing disconnected collection result: {raw}')
+                        reached_child = True
+                    elif name == 'CompareUnifiedGraphicSelections':
+                        resources.require(meta.get('success') is False and meta.get('offline') is True
+                            and meta.get('failureCount') == 1
+                            and meta.get('failures', [{}])[0].get('code') == 'InvalidSnapshot',
+                            f'{name}: missing incomplete snapshot refusal: {raw}')
                         reached_child = True
                     elif name in ('ReadLibraryOverview', 'ReadLibraryType', 'CompareLibraryObjects', 'ManageGlobalLibrary'):
                         error_type = ('System.InvalidOperationException' if name == 'ManageGlobalLibrary'

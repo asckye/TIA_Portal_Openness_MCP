@@ -103,18 +103,18 @@ namespace TiaMcpServer.Tests
             var classic = new Classic(); var folder = new ClassicFolder { Name = "Folder" }; classic.ScreenFolder.Folders.Add(folder); folder.Screens.Add(screen);
             check(ReferenceEquals(HmiExactAccess.Screen(classic, "/Folder/page%2Fname"), screen), "classic folder exact lookup retained");
 
-            var portal = McpServer.Portal; portal.FixtureRoot = root; portal.FixtureResetReadHealth();
+            var portal = HmiToolFixture.Session; portal.FixtureRoot = root; portal.FixtureResetReadHealth();
             portal.FixtureResolutionError = new EngineeringObjectDisposedException();
-            var failed = McpServer.ReadHmiScreenSnapshot("HMI", exact);
+            var failed = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
             int calls = portal.FixtureResolveCalls;
             check(failed.Meta!["status"]!.ToString() == "HmiConnectionUnavailable" && failed.Meta["requiresExplicitRebind"]!.GetValue<bool>(), "software-resolution failure invalidates read session");
             portal.FixtureResolutionError = null;
-            var blocked = McpServer.ReadHmiScreenSnapshot("HMI", exact);
+            var blocked = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
             check(blocked.Meta!["status"]!.ToString() == "HmiReadSessionBlocked" && portal.FixtureResolveCalls == calls, "next request blocked before software resolution");
             check(portal.GetHmiReadHealth()["snapshotReadsBlocked"]!.GetValue<bool>() && portal.FixtureCacheClears > 0, "health records fault and clears software cache");
             portal.FixtureResetReadHealth();
             screen.ScreenItems.Add(new FaultingItem());
-            var partial = McpServer.ReadHmiScreenSnapshot("HMI", exact);
+            var partial = HmiToolFixture.HmiInspection.ReadHmiScreenSnapshot("HMI", exact);
             check(!partial.Meta!["success"]!.GetValue<bool>() && partial.Meta["snapshot"] != null && partial.Meta["requiresExplicitRebind"]!.GetValue<bool>(), "nested failure propagates to tool success with partial snapshot");
             check(partial.Meta["operationId"] != null && partial.Meta["lastAttemptedPath"] != null, "operation trace returned for log correlation");
             portal.FixtureResetReadHealth(); portal.FixtureRoot = null;

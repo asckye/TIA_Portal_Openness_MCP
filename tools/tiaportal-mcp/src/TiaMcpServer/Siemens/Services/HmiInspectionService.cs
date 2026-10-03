@@ -3,26 +3,30 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class HmiInspectionService
     {
+        private readonly IHmiToolSession _session;
+
+        public HmiInspectionService(IHmiToolSession session) => _session = session;
+
         public ResponseMessage ArchiveSavedProject(string archivePath,bool dryRun=true)
-            => RunHmiStepTool("ArchiveSavedProject",meta=>{
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
-                var result=ProjectArchive.Create(CurrentProject!,archivePath,dryRun);
+            => _session.RunHmiStepTool("ArchiveSavedProject",meta=>{
+                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
+                var result=ProjectArchive.Create(_session.CurrentProject!,archivePath,dryRun);
                 foreach(var item in result)meta[item.Key]=item.Value?.DeepClone();
                 meta["operationSuccess"]=result["success"]?.DeepClone();
                 return dryRun ? "Native project archive preview; no file written." : "Native archive operation completed; inspect success and validation. Retrieval is not tested.";
             });
         private object ExactHmiItem(string softwarePath,string screenPath,string itemName)
         {
-            var screen=HmiExactAccess.Screen(ResolveHmiSoftwareOrThrow(softwarePath),screenPath);
+            var screen=HmiExactAccess.Screen(_session.ResolveHmiSoftwareOrThrow(softwarePath),screenPath);
             return HmiExactAccess.Named(HmiExactAccess.Get(screen,"ScreenItems")
                 ?? throw new PortalException(PortalErrorCode.NotFound,"ScreenItems unavailable."),itemName);
         }
         public ResponseMessage ReadUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType)
-            => RunHmiStepTool("ReadUnifiedHmiButtonEvent",meta=>{
+            => _session.RunHmiStepTool("ReadUnifiedHmiButtonEvent",meta=>{
                 var handler=HmiExactAccess.Event(ExactHmiItem(softwarePath,screenPath,buttonName),eventType);
                 var data=HmiExactAccess.EventDto(handler);
                 meta["event"]=data;
@@ -32,8 +36,8 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage DeleteUnifiedHmiButtonEvent(string softwarePath,string screenPath,string buttonName,string eventType,bool dryRun=true,string expectedToken="",bool onlyIfEmpty=true)
-            => RunHmiStepTool("DeleteUnifiedHmiButtonEvent",meta=>{
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
+            => _session.RunHmiStepTool("DeleteUnifiedHmiButtonEvent",meta=>{
+                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
                 var button=ExactHmiItem(softwarePath,screenPath,buttonName);
                 var handler=HmiExactAccess.Event(button,eventType);
                 var data=HmiExactAccess.EventDto(handler);
@@ -62,7 +66,7 @@ namespace TiaMcpServer.Siemens
             return matches[0];
         }
         public ResponseMessage ReadUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName)
-            => RunHmiStepTool("ReadUnifiedHmiDynamization",meta=>{
+            => _session.RunHmiStepTool("ReadUnifiedHmiDynamization",meta=>{
                 var dyn=ExactDynamization(ExactHmiItem(softwarePath,screenPath,itemName),propertyName);
                 var data=HmiSnapshot.Capture(dyn,8,2000);
                 meta["dynamization"]=data;
@@ -70,8 +74,8 @@ namespace TiaMcpServer.Siemens
                 return "Selected property dynamization read; coverage is recorded in the snapshot.";
             });
         public ResponseMessage DeleteUnifiedHmiDynamization(string softwarePath,string screenPath,string itemName,string propertyName,bool dryRun=true,string expectedToken="")
-            => RunHmiStepTool("DeleteUnifiedHmiDynamization",meta=>{
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
+            => _session.RunHmiStepTool("DeleteUnifiedHmiDynamization",meta=>{
+                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
                 var item=ExactHmiItem(softwarePath,screenPath,itemName);
                 var dyn=ExactDynamization(item,propertyName);
                 var data=HmiSnapshot.Capture(dyn,8,2000);
@@ -87,9 +91,9 @@ namespace TiaMcpServer.Siemens
                 return "Selected property dynamization deleted and absence verified.";
             });
         public ResponseMessage DeleteEmptyUnifiedHmiScreenGroup(string softwarePath,string groupPath,bool dryRun=true)
-            => RunHmiStepTool("DeleteEmptyUnifiedHmiScreenGroup",meta=>{
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
-                var group=HmiExactAccess.Group(ResolveHmiSoftwareOrThrow(softwarePath),groupPath);
+            => _session.RunHmiStepTool("DeleteEmptyUnifiedHmiScreenGroup",meta=>{
+                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
+                var group=HmiExactAccess.Group(_session.ResolveHmiSoftwareOrThrow(softwarePath),groupPath);
                 var screens=HmiExactAccess.Items(HmiExactAccess.Get(group,"Screens"));
                 var groups=HmiExactAccess.Items(HmiExactAccess.Get(group,"Groups"));
                 meta["screens"]=new JsonArray(screens.Select(x=>JsonValue.Create(HmiExactAccess.Get(x,"Name")?.ToString())).ToArray());
@@ -98,12 +102,12 @@ namespace TiaMcpServer.Siemens
                 if(screens.Count!=0||groups.Count!=0)throw new PortalException(PortalErrorCode.InvalidState,"Group is not empty; recursive deletion is not supported.");
                 if(dryRun)return "Empty group preview; nothing deleted.";
                 meta["mayHaveChanged"]=true;HmiExactAccess.Delete(group);
-                try {HmiExactAccess.Group(ResolveHmiSoftwareOrThrow(softwarePath),groupPath);throw new InvalidOperationException("Group still exists after Delete.");}
+                try {HmiExactAccess.Group(_session.ResolveHmiSoftwareOrThrow(softwarePath),groupPath);throw new InvalidOperationException("Group still exists after Delete.");}
                 catch(PortalException ex) when(ex.Code==PortalErrorCode.NotFound) {meta["exists"]=false;}
                 meta["persistence"]="Not saved.";return "Empty group deleted and absence verified.";
             });
         public ResponseMessage ReadHmiScreenSnapshot(string softwarePath,string screenPath,int maxDepth=6,int maxNodes=2000)
-            => RunHmiStepTool("ReadHmiScreenSnapshot",meta=>{
+            => _session.RunHmiStepTool("ReadHmiScreenSnapshot",meta=>{
                 meta["softwarePath"]=softwarePath;meta["screenPath"]=screenPath;
                 meta["readOnly"] = true;
                 var trace = new HmiReadTrace();
@@ -111,7 +115,7 @@ namespace TiaMcpServer.Siemens
                 try
                 {
                     trace.Step("before", "resolveSoftware:" + softwarePath);
-                    var software = ResolveHmiSoftwareOrThrow(softwarePath);
+                    var software = _session.ResolveHmiSoftwareOrThrow(softwarePath);
                     trace.Step("after", "resolveSoftware:" + softwarePath);
                     trace.Step("before", "resolveScreen:" + screenPath);
                     var screen = HmiExactAccess.Screen(software, screenPath);
@@ -126,7 +130,7 @@ namespace TiaMcpServer.Siemens
                     {
                         meta["failurePhase"] = trace.Phase;
                         meta["failurePath"] = snapshot["failurePath"]?.DeepClone();
-                        RecordHmiReadFault(meta);
+                        _session.RecordHmiReadFault(meta);
                     }
                     trace.Step("complete", "apiCallSuccess=" + snapshot["apiCallSuccess"] + ";dataComplete=" + snapshot["dataComplete"]);
                     return snapshot["connectionUnavailable"]!.GetValue<bool>()
@@ -137,9 +141,9 @@ namespace TiaMcpServer.Siemens
                 finally { trace.AddTo(meta); }
             });
         public ResponseMessage ListHmiScreenPaths(string softwarePath,int offset=0,int limit=100)
-            => RunHmiStepTool("ListHmiScreenPaths",meta=>{
+            => _session.RunHmiStepTool("ListHmiScreenPaths",meta=>{
                 if(offset<0||limit<1||limit>500)throw new PortalException(PortalErrorCode.InvalidParams,"offset >= 0 and limit 1..500 required.");
-                var screens=HmiExactAccess.Screens(ResolveHmiSoftwareOrThrow(softwarePath));
+                var screens=HmiExactAccess.Screens(_session.ResolveHmiSoftwareOrThrow(softwarePath));
                 meta["total"]=screens.Count;meta["offset"]=offset;
                 meta["paths"]=new JsonArray(screens.Skip(offset).Take(limit).Select(x=>JsonValue.Create(x.Path)).ToArray());
                 meta["nextOffset"]=offset+limit<screens.Count?(JsonNode?)JsonValue.Create(offset+limit):null;
