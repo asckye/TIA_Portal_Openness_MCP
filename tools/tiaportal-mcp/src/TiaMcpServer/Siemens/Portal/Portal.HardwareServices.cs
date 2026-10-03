@@ -23,9 +23,10 @@ namespace TiaMcpServer.Siemens
         private static Type RequireHardwareApiType(string typeName)
             => typeof(HardwareObject).Assembly.GetType(typeName) ?? typeof(PlcSoftware).Assembly.GetType(typeName)
                ?? throw new NotSupportedException(typeName + " is not exposed by the connected TIA Portal Openness version (requires V21 or newer).");
-        // 2.7.46: the HW connection composition is NOT a service - it is the Connections property of the V21 feature service
+        // The HW connection composition is NOT a service - it is the Connections property of the V21 feature service
         // Siemens.Engineering.HW.Features.CommunicationManagement on the CPU device item (real project: GetService<ConnectionComposition>
-        // answered "Official service unavailable in installed API" on 1515F-2 PN V2.9 although the API has the type).
+        // answered "Official service unavailable in installed API" on 1515F-2 PN V2.9 although the API has the type;
+        // TIA Portal V21, 2026-09-20, docs/reference/real-machine-ledger.md).
         private static object RequireConnectionComposition(HardwareObject owner)
         {
             var management = OfficialServiceAccess.Require(owner, "Siemens.Engineering.HW.Features.CommunicationManagement", typeof(HardwareObject).Assembly.GetName().Name!);
@@ -130,7 +131,7 @@ namespace TiaMcpServer.Siemens
                 return "Connection created and read back; project not saved, compiled or downloaded.";
             });
 
-        // 2.7.35: typed rows (WatchTableAccessRule.WatchTable / ForceTableAccessRule.ForceTable carry the table; Access is writable natively).
+        // Typed rows (WatchTableAccessRule.WatchTable / ForceTableAccessRule.ForceTable carry the table; Access is writable natively).
         private static JsonObject ReadAccessRule(object rule, string tableProperty)
         {
             var row = EngineeringScalarProperties.Read(rule);
@@ -193,7 +194,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ExchangeSystemDiagnosticsSettings(string action, string filePath, string devicePathJson = "[]", string itemPathJson = "[]", bool confirmImport = false, bool dryRun = true)
             => RunHmiStepTool("ExchangeSystemDiagnosticsSettings", meta => {
                 HardwareServicesLogic.RequireOneOf(action, new[] { "export", "import" }, "action");
-                // 2.7.46 real project: TIA answers "Filename suffix must be .dat" for anything else.
+                // TIA Portal V21, 2026-09-20 (docs/reference/real-machine-ledger.md): TIA answers "Filename suffix must be .dat" for anything else.
                 if (!(filePath ?? "").EndsWith(".dat", StringComparison.OrdinalIgnoreCase)) throw new ArgumentException("filePath must end in .dat (SystemdiagnosticsSettingsDataProvider format).");
                 bool writing = !dryRun;
                 if (action == "import") HardwareServicesLogic.RequireConfirmation(confirmImport, "confirmImport", dryRun);

@@ -50,7 +50,7 @@ namespace TiaMcpServer.Siemens
             return new JsonObject { ["values"] = values, ["failures"] = failures };
         }
         // Dynamic attribute writes: the CLR type is taken from the current value (enum names, numbers, booleans), then read back.
-        // 2.7.33: two or more attributes go through SetAttributes(pairs, AttributeDelegate) - the official error handler reports
+        // Two or more attributes go through SetAttributes(pairs, AttributeDelegate) - the official error handler reports
         // AttributeNameUnsupported / AttributeReadOnly / AttributeTypeUnsupported / AttributeValueUnsupported per attribute
         // (Name, Message) and answers Ignore so the remaining attributes are still written; each value is then read back.
         private static void SetDynamicAttributes(IEngineeringObject target, JsonObject attributes, JsonObject meta)
@@ -61,7 +61,7 @@ namespace TiaMcpServer.Siemens
                 var pairs = new List<KeyValuePair<string, object>>(); var refused = new JsonArray(); meta["refusedAttributes"] = refused;
                 foreach (var pair in attributes)
                 {
-                    object? current = null; try { current = target.GetAttribute(pair.Key); } catch { }
+                    object? current = null; try { current = target.GetAttribute(pair.Key); } catch { /* swallow(probe-optional): An unreadable current value leaves conversion untyped; the native write and readback still validate the requested value. */ }
                     pairs.Add(new KeyValuePair<string, object>(pair.Key, EngineeringScalarProperties.ConvertValue(pair.Value, current?.GetType() ?? typeof(object))!));
                 }
                 AttributeDelegate handler = configuration => { AttributeConfiguration problem = configuration; refused.Add(new JsonObject { ["attribute"] = problem.Name, ["kind"] = problem.GetType().Name, ["message"] = problem.Message }); problem.CurrentSelection = AttributeChoiceSelection.Ignore; };
@@ -79,7 +79,7 @@ namespace TiaMcpServer.Siemens
             }
             foreach (var pair in attributes)
             {
-                object? current = null; try { current = target.GetAttribute(pair.Key); } catch { }
+                object? current = null; try { current = target.GetAttribute(pair.Key); } catch { /* swallow(probe-optional): An unreadable current value leaves conversion untyped; the native write and readback still validate the requested value. */ }
                 var value = EngineeringScalarProperties.ConvertValue(pair.Value, current?.GetType() ?? typeof(object));
                 meta["mayHaveChanged"] = true; meta["lastAttemptedAttribute"] = pair.Key;
                 target.SetAttribute(pair.Key, value);
@@ -96,7 +96,7 @@ namespace TiaMcpServer.Siemens
             if (prepared.Count > 0) EngineeringScalarProperties.Apply(target, prepared, meta);
             if (attributes.Count > 0) SetDynamicAttributes((IEngineeringObject)target, attributes, meta);
         }
-        // 2.7.30 real project: a composition proxy fetched before Create/Delete is stale (the new MrpDomain was not found
+        // TIA Portal V21, 2026-09-18 (docs/reference/real-machine-ledger.md): a composition proxy fetched before Create/Delete is stale (the new MrpDomain was not found
         // on it; enumerating it after Delete raised EngineeringObjectDisposedException). Verification therefore always
         // re-navigates to a fresh composition, and a disposed-proxy error while looking for a deleted object counts as
         // evidence of its absence rather than as a session failure.
@@ -142,7 +142,7 @@ namespace TiaMcpServer.Siemens
         };
         private static JsonObject IoConnectorRow(IoConnector connector)
         {
-            IoController? remote = null; try { remote = connector.GetIoController(); } catch { }
+            IoController? remote = null; try { remote = connector.GetIoController(); } catch { /* swallow(probe-optional): A connector without a readable remote controller still reports its local attributes and a null controller path. */ }
             return new JsonObject
             {
                 ["ownerPath"] = HardwareOwnerPath(connector), ["connectedToIoSystem"] = connector.ConnectedToIoSystem?.Name,
@@ -190,12 +190,12 @@ namespace TiaMcpServer.Siemens
                 .Select(p => (JsonNode)new JsonObject { ["name"] = p.Name, ["ownerPath"] = HardwareOwnerPath(p) }).ToArray()),
             ["attributes"] = DynamicAttributes(area, HardwareNetworkLogic.MulticastTransferAreaAttributes)
         };
-        // GetAttributeInfos carries the access mode; the 2.7.30 real project showed ChannelActivated / InputDelay read-only
+        // GetAttributeInfos carries the access mode; TIA Portal V21, 2026-09-18 (docs/reference/real-machine-ledger.md) showed ChannelActivated / InputDelay read-only
         // on ET 200SP DI modules, so the mode is reported and checked before any SetAttribute.
         private static Dictionary<string, string> ChannelAttributeModes(Channel channel)
         {
             var modes = new Dictionary<string, string>(StringComparer.Ordinal);
-            try { foreach (var info in channel.GetAttributeInfos()) modes[info.Name] = info.AccessMode.ToString(); } catch { }
+            try { foreach (var info in channel.GetAttributeInfos()) modes[info.Name] = info.AccessMode.ToString(); } catch { /* swallow(enumerate-optional): Retain any reported access modes; unavailable entries remain unlisted and native writes retain their own validation. */ }
             return modes;
         }
         private static JsonObject ChannelRow(Channel channel, string[] extraAttributes)
