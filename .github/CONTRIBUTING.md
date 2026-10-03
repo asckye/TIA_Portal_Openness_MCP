@@ -48,7 +48,8 @@ catch (IOException) /* swallow(cleanup): temporary file cleanup must not replace
 }
 ```
 
-`Check-SwallowedExceptions.py` runs through the repository check and offline CI. Its baseline is a
+`Check-SwallowedExceptions.py` runs through the repository check (validate workflow); offline CI runs its
+self-tests. Its baseline is a
 multiset of hashes of the try body, catch clause/filter and catch body, independent of file paths and
 line numbers. Comments and code whitespace do not affect hashes; literal content does. Moving a
 file therefore needs no new allowance, while copying or changing an unmarked catch fails. Run
