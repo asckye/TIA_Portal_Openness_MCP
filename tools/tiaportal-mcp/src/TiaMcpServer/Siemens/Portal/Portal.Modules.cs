@@ -108,9 +108,9 @@ namespace TiaMcpServer.Siemens
             return (ReadFreeSlots(item), ReadOccupiedSlots(item));
         }
 
-        // 2.7.45: Startdrive drive components (Motor Modules, and below them motors / encoders) are plugged on the Device itself -
+        // Startdrive drive components (Motor Modules, and below them motors / encoders) are plugged on the Device itself -
         // official "Creating a drive component": sdrDevice.PlugNew(@"OrderNumber:6SL3xxx-xxxxx-xxxx", "MotorModul", 65535). On the
-        // 2.7.44 real project CanPlugNew on the CU device item and on the rack item answered false for every motor-module identifier;
+        // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md): CanPlugNew on the CU device item and on the rack item answered false for every motor-module identifier;
         // a bare device name resolves to the head device item by default, so the Device host has to be asked for explicitly.
         private HardwareObject? ResolvePlugHost(string path, bool plugOnDevice)
             => plugOnDevice ? (HardwareObject?)GetDeviceByPath(path) : GetDeviceItemByPath(path);
@@ -161,9 +161,9 @@ namespace TiaMcpServer.Siemens
             }
             var children = host.DeviceItems;
             if (children != null) foreach (DeviceItem child in children) Add(child);
-            // 2.7.46: on an S7-1500 rail the plugged modules are Device-level DeviceItems; the rail itself lists them only as hardware
+            // TIA V21 (2026-09-20; docs/reference/real-machine-ledger.md): on an S7-1500 rail the plugged modules are Device-level DeviceItems; the rail itself lists them only as hardware
             // components (HardwareObject.Items) - without this the readback after PlugNew found "no module in slot 2" (real project).
-            try { foreach (var item in host.Items) Add(item as DeviceItem); } catch { }
+            try { foreach (var item in host.Items) Add(item as DeviceItem); } catch /* swallow(enumerate-optional): 保留已发现的槽位；无法枚举的硬件集合不提供额外条目。 */ { }
 
             return list.OrderBy(x => x.PositionNumber).ToList();
         }
@@ -172,11 +172,11 @@ namespace TiaMcpServer.Siemens
         {
             if (depth < 0) return null;
             var children = new List<DeviceItem>();
-            try { foreach (DeviceItem child in host.DeviceItems) if (child != null) children.Add(child); } catch { }
-            try { foreach (var item in host.Items) if (item is DeviceItem child && !children.Contains(child)) children.Add(child); } catch { }
+            try { foreach (DeviceItem child in host.DeviceItems) if (child != null) children.Add(child); } catch /* swallow(enumerate-optional): 跳过无法读取的子项或名称，继续在其余可用子项中查找。 */ { }
+            try { foreach (var item in host.Items) if (item is DeviceItem child && !children.Contains(child)) children.Add(child); } catch /* swallow(enumerate-optional): 跳过无法读取的子项或名称，继续在其余可用子项中查找。 */ { }
             foreach (var child in children)
             {
-                string? childName = null; try { childName = child.Name; } catch { }
+                string? childName = null; try { childName = child.Name; } catch /* swallow(enumerate-optional): 跳过无法读取的子项或名称，继续在其余可用子项中查找。 */ { }
                 if (string.Equals(childName, name, StringComparison.Ordinal)) return child;
             }
             foreach (var child in children)
@@ -192,10 +192,10 @@ namespace TiaMcpServer.Siemens
             var info = new PluggedItemInfo { Name = item.Name ?? "" };
 
             // 这些属性个别对象会抛（未插的代理/特殊类型），逐个兜底，别让一个属性毁掉整条描述。
-            try { info.PositionNumber = item.PositionNumber; } catch { info.PositionNumber = -1; }
-            try { info.IsPlugged = item.IsPlugged; } catch { info.IsPlugged = false; }
-            try { info.IsBuiltIn = item.IsBuiltIn; } catch { info.IsBuiltIn = false; }
-            try { info.TypeIdentifier = item.TypeIdentifier ?? ""; } catch { info.TypeIdentifier = ""; }
+            try { info.PositionNumber = item.PositionNumber; } catch /* swallow(probe-optional): 不支持的槽位属性保留既有默认值，仍返回其余模块信息。 */ { info.PositionNumber = -1; }
+            try { info.IsPlugged = item.IsPlugged; } catch /* swallow(probe-optional): 不支持的槽位属性保留既有默认值，仍返回其余模块信息。 */ { info.IsPlugged = false; }
+            try { info.IsBuiltIn = item.IsBuiltIn; } catch /* swallow(probe-optional): 不支持的槽位属性保留既有默认值，仍返回其余模块信息。 */ { info.IsBuiltIn = false; }
+            try { info.TypeIdentifier = item.TypeIdentifier ?? ""; } catch /* swallow(probe-optional): 不支持的槽位属性保留既有默认值，仍返回其余模块信息。 */ { info.TypeIdentifier = ""; }
 
             return info;
         }
@@ -416,13 +416,13 @@ namespace TiaMcpServer.Siemens
                 return result;
             }
 
-            // 2.7.45 real project (S120 drive components at position 65535 = "any"): TIA assigns the real position on insert (200 for the
+            // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md; S120 drive components at position 65535 = "any"): TIA assigns the real position on insert (200 for the
             // Motor Module, 1000 for the motor), so the readback matches by the created item's name first and by slot second.
-            string? createdName = null; try { createdName = created.Name; } catch { }
+            string? createdName = null; try { createdName = created.Name; } catch /* swallow(probe-optional): 无法读取名称或位置时保留既有模块验证回退路径。 */ { }
             var occupiedAfter = ReadOccupiedSlots(verifyHost);
             var after = (createdName != null ? occupiedAfter.FirstOrDefault(x => string.Equals(x.Name, createdName, StringComparison.Ordinal)) : null)
                         ?? occupiedAfter.FirstOrDefault(x => x.PositionNumber == acceptedSlot);
-            // 2.7.46: a Device-level PlugNew of a Startdrive Motor Module creates the rack item (驱动轴_n) AND the module below it - the
+            // TIA V21 (2026-09-20; docs/reference/real-machine-ledger.md): a Device-level PlugNew of a Startdrive Motor Module creates the rack item (驱动轴_n) AND the module below it - the
             // created object sits one level deeper than the host (real project: "no module in slot 65535" although MCP_MM existed).
             if (after == null && createdName != null)
             {
@@ -451,7 +451,7 @@ namespace TiaMcpServer.Siemens
             // 地址一并读回：issue #26 的另一半就是要改这个，直接把现值摆出来，省一次往返。
             var verifyItem = verifyHost.DeviceItems?.FirstOrDefault(d =>
             {
-                try { return d.PositionNumber == acceptedSlot; } catch { return false; }
+                try { return d.PositionNumber == acceptedSlot; } catch /* swallow(probe-optional): 无法读取名称或位置时保留既有模块验证回退路径。 */ { return false; }
             });
             if (verifyItem != null)
             {
@@ -548,7 +548,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(enumerate-optional): 读不到兄弟项时由 TIA 原生插入操作检查重名。 */
             {
                 // 读不到兄弟就不做去重，交给 TIA 自己报重名。
             }

@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: devices. Extracted from Portal.cs (god-file split); behavior unchanged.
     public partial class Portal
     {
         #region devices
@@ -114,10 +113,6 @@ namespace TiaMcpServer.Siemens
                     GetDevicesRecursive(group, list, regexName);
                 }
 
-                //foreach (var group in _project.UngroupedDevicesGroup)
-                //{
-                //    GetDevicesRecursive(_project.UngroupedDevicesGroup, list, regexName);
-                //}
             }
 
             return list;
@@ -193,7 +188,7 @@ namespace TiaMcpServer.Siemens
                         versionVariants.Add("V21.0.0.0");
                     }
                 }
-                catch { }
+                catch /* swallow(probe-optional): Version expansion is optional; retain the explicit variants when it cannot be computed. */ { }
 
                 versionVariants = versionVariants
                     .Where(x => x != null) // keep empty-string variant
@@ -222,7 +217,7 @@ namespace TiaMcpServer.Siemens
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
-                // 2.7.45: keep one line per variant - the real project (TP700 Comfort, catalog TypeIdentifier
+                // Keep one line per variant - the TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md, TP700 Comfort, catalog TypeIdentifier
                 // "OrderNumber:6AV2 124-0GC01-0AX0/14.0.1.0") only ever showed the LAST variant's error (".../V14.0.1.0.0.0"), so the
                 // reason the exact catalog identifier was refused stayed invisible.
                 var attempts = new List<string>();
@@ -499,7 +494,7 @@ namespace TiaMcpServer.Siemens
                 var typeIdentifier = candidate.TypeIdentifier!.Trim();
                 try
                 {
-                    GuardUnifiedPanelVersion(typeIdentifier, "");        // 2.7.46 crash ⑧ guard also for catalog candidates
+                    GuardUnifiedPanelVersion(typeIdentifier, "");        // The Unified panel version guard also applies to catalog candidates.
                     var itemName = MakeEngineeringName(deviceName);
                     var dev = project.Devices.CreateWithItem(typeIdentifier, itemName, deviceName);
                     if (dev is Device d)
@@ -645,7 +640,7 @@ namespace TiaMcpServer.Siemens
 
         private static HardwareCatalogCandidate? CatalogEntryToHardwareCandidate(object entry, string keyword)
         {
-            // 2.7.33: the official HardwareCatalog.Find rows are typed CatalogEntry objects; the reflective read stays as fallback.
+            // The official HardwareCatalog.Find rows are typed CatalogEntry objects; the reflective read stays as fallback.
             var c = entry is global::Siemens.Engineering.HW.HardwareCatalog.CatalogEntry typed
                 ? new HardwareCatalogCandidate
                 {
@@ -700,7 +695,7 @@ namespace TiaMcpServer.Siemens
                         var raw = File.ReadAllText(path, Encoding.UTF8);
                         if (!ContainsAnyKeywordToken(raw, keyword)) continue;
                     }
-                    catch
+                    catch /* swallow(parse-fallback): Unreadable or malformed GSDML files cannot provide catalog candidates; continue with the remaining files. */
                     {
                         continue;
                     }
@@ -708,7 +703,7 @@ namespace TiaMcpServer.Siemens
 
                 XDocument doc;
                 try { doc = XDocument.Load(path); }
-                catch { continue; }
+                catch /* swallow(parse-fallback): Unreadable or malformed GSDML files cannot provide catalog candidates; continue with the remaining files. */ { continue; }
 
                 var vendor = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "ProfileHeader")?.Attribute("VendorName")?.Value;
                 var family = doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "Family");
@@ -882,7 +877,7 @@ namespace TiaMcpServer.Siemens
 #else
         private const int PortalMajorVersion = 21;
 #endif
-        // 2.7.46 real project (crash ⑧): Devices.CreateWithItem("OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0", ...) - a WinCC Unified
+        // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md, crash ⑧): Devices.CreateWithItem("OrderNumber:6AV2 128-3GB06-0AXx/20.0.0.0", ...) - a WinCC Unified
         // Comfort panel of the PREVIOUS device version - made TIA Portal V21 exit; the same panel with /21.0.0.0 was created normally.
         // The device version of a Unified panel has to match the Portal major version.
         private static void GuardUnifiedPanelVersion(string orderNumber, string version)
@@ -914,7 +909,6 @@ namespace TiaMcpServer.Siemens
 
             return n;
         }
-        // NOTE: Demo orchestration helpers removed.
         // In V21, the stable path is: generate/import standard block XML -> ImportBlock/ImportBlocksFromDirectory -> CompileSoftware.
 
         public DeviceItem? GetDeviceItem(string deviceItemPath)
@@ -1064,7 +1058,7 @@ namespace TiaMcpServer.Siemens
                 {
                     if (m == null) continue;
                     lines.Add($"[{m.State}] {m.Message}");
-                    try { Walk(m.Messages); } catch { }
+                    try { Walk(m.Messages); } catch /* swallow(enumerate-optional): Unavailable nested CAx messages must not discard the parent transfer result. */ { }
                 }
             }
             Walk(messages);
@@ -1105,7 +1099,7 @@ namespace TiaMcpServer.Siemens
                 }
 
                 object? oldValue = null;
-                try { oldValue = di.GetAttribute(info.Name); } catch { }
+                try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["oldValue"] = oldValue?.ToString() ?? string.Empty;
                 meta["attributeDataType"] = TryGetPropertyValue(info, "DataType", "Type")?.ToString() ?? string.Empty;
                 meta["attributeWritable"] = IsAttributeWritable(info);
@@ -1114,7 +1108,7 @@ namespace TiaMcpServer.Siemens
                 di.SetAttribute(info.Name, typedValue);
 
                 object? newValue = null;
-                try { newValue = di.GetAttribute(info.Name); } catch { }
+                try { newValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["newValue"] = newValue?.ToString() ?? string.Empty;
                 meta["success"] = true;
                 return new ResponseMessage { Message = $"Device item attribute '{attributeName}' set", Meta = meta };
@@ -1732,11 +1726,11 @@ namespace TiaMcpServer.Siemens
                     try
                     {
                         object? oldValue = null;
-                        try { oldValue = di.GetAttribute(info.Name); } catch { }
+                        try { oldValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
                         var typedValue = CoerceAttributeValue(value, oldValue, info);
                         di.SetAttribute(info.Name, typedValue);
                         object? newValue = null;
-                        try { newValue = di.GetAttribute(info.Name); } catch { }
+                        try { newValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Optional attribute readback must not interrupt the per-attribute settings report. */ { }
                         applied.Add(new JsonObject
                         {
                             ["attribute"] = info.Name,
@@ -2716,7 +2710,7 @@ namespace TiaMcpServer.Siemens
                         });
                     }
                 }
-                catch { }
+                catch /* swallow(enumerate-optional): Unavailable software services or children are skipped while retaining the remaining preflight inventory. */ { }
 
                 try
                 {
@@ -2725,7 +2719,7 @@ namespace TiaMcpServer.Siemens
                         TryAddSoftwareInfo(child, target);
                     }
                 }
-                catch { }
+                catch /* swallow(enumerate-optional): Unavailable software services or children are skipped while retaining the remaining preflight inventory. */ { }
             }
         }
 

@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: devices. Extracted from McpServer.cs (god-file split); behavior unchanged.
     public static partial class McpServer
     {
         #region devices
