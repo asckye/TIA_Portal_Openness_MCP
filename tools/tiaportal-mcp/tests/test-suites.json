@@ -1,26 +1,26 @@
 {
   "offline": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-    "minimumPassed": 4211,
+    "minimumPassed": 4218,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 4210,
+        "minimumPassed": 4217,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
   },
   "offline-v20": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-    "minimumPassed": 4211,
+    "minimumPassed": 4218,
     "maximumSkipped": 0,
     "arguments": [
       "-p:DefineConstants=TIA_V20"
     ],
     "platforms": {
       "linux": {
-        "minimumPassed": 4210,
+        "minimumPassed": 4217,
         "reason": "OfficialWorkflowTests checks the MTA apartment of the attach worker only on Windows"
       }
     }
