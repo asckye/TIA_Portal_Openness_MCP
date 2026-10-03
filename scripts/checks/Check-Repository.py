@@ -84,6 +84,11 @@ def check(root, no_binaries=False):
     result = subprocess.run([sys.executable, str(envelopes), '--root', str(root)])
     if result.returncode:
         errors.append('Response-envelope baseline check failed (see diagnostics above)')
+    for name in ('Check-CommentHygiene.py', 'Check-McpText.py'):
+        checker = Path(__file__).with_name(name)
+        result = subprocess.run([sys.executable, str(checker), '--root', str(root)])
+        if result.returncode:
+            errors.append(f'{name} baseline check failed (see diagnostics above)')
     return count, errors
 
 

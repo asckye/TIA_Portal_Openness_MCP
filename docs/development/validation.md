@@ -60,6 +60,10 @@ python scripts/checks/Check-Repository.py
 python scripts/checks/Check-DeadToolReferences.py
 python scripts/checks/Check-SwallowedExceptions.py --self-test
 python scripts/checks/Check-SwallowedExceptions.py
+python scripts/checks/Check-CommentHygiene.py --self-test
+python scripts/checks/Check-CommentHygiene.py
+python scripts/checks/Check-McpText.py --self-test
+python scripts/checks/Check-McpText.py
 python scripts/checks/Inventory-ResponseEnvelopes.py --self-test
 python scripts/checks/Inventory-ResponseEnvelopes.py
 python scripts/checks/Check-TiaFeatures.py
@@ -148,6 +152,75 @@ GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR
 交付检查使用 `-Strict -NoBinaries -SkipSourceHashes`，仍核对必需文件、JSON、版本及 delivery.json 绑定的构建记录哈希。
 发布流程重新生成构建记录，再由 `Validate-Bundle.ps1 -Strict`、`Package-Release.py` 和发布后验包完整验证源码哈希。
 托管 runner 没有 Siemens PublicAPI，不能替代本机完整构建。修改编译输入后必须在发布前重新构建，不能手填 manifest 哈希。
+
+### 注释与 MCP 中文门禁
+
+`Check-Repository.py` 同时运行纯 Python 的 [Check-CommentHygiene.py](../../scripts/checks/Check-CommentHygiene.py)
+和 [Check-McpText.py](../../scripts/checks/Check-McpText.py)，无需构建、TIA 或网络。两者导入吞异常检查器的 C# 词法器，
+扫描全部条件分支，沿用生成文件、构建目录和 WorkerProtocol 的排除规则；各自的 `--self-test` 覆盖词法边界、
+计数、搬文件、重复新增、替换与只减不增更新。注释检查也收集插值表达式和预处理指令尾部的实际注释。
+
+注释类别可重叠，以“物理注释行 × 类别”为单位；同一行多个注释合并指纹。产品版本覆盖 `2.x`/`3.x` 数字和通配写法，
+排除可识别的原生固件/模型版本、手册章节和编号步骤；未识别的版本语义仍需人工判断。
+`maintainer`/维护者提及保守计为归属候选；`moved to` 等明确迁移措辞计为墓碑。
+注释代码只计能识别为完整语句的行（调用、赋值、声明、return/throw 等），不把孤立括号、循环头和含代码示例的叙述计入。
+工具数识别静态 roster 候选，排除可识别的第三方客户端上限；它不能自动证明数字已过时。
+`*Leftovers*` 是文件数预算，其余类别按规范化注释内容比较 SHA-256 多重集合。
+
+P2-05a 初始清点为 **564 个文件、348 个类别条目**。与[设计统计](runtime-layout.md#注释与-leftovers)的对照：
+
+| 类别 | 检查器 | 设计 | 口径说明 |
+|---|---:|---:|---|
+| 产品版本注释 | 266 | 引擎 221、Logic 33 | 引擎 224、Logic 33、Studio 9；引擎比数字三段版本的 221 多 4 行 `2.7.x`，排除 1 行原生 `V3.0.0` 示例 |
+| 旧 Phase/sub-batch | 33 | 32 | 包含大小写不敏感的行内引用；设计未提供逐行基线，当前词法口径为准 |
+| 维护者归属 | 13 | 13 | 所有归属/提及候选，未推断语义 |
+| 迁移墓碑 | 19 | 20 | 只计明确迁移措辞；不计原生 API 的迁移说明或单纯 removed 注释，设计无逐条名单可作一一对应 |
+| 注释代码 | 5 | 约 9 | 完整语句启发式；例如已注释 foreach 的头与花括号不计，块中的调用计 1 行 |
+| 工具数 | 6 | 4 | 引擎 4、Logic 2；包括 CliOptions 的 lite 数和 ParameterVocabulary 的描述数 |
+| Leftovers 文件 | 6 | 6 | 引擎 5、Logic 1；按文件而非行数比较 |
+
+设计另列的 48 处“中文修复叙事”是人工改写范围，不是本任务要求的独立机器类别。
+
+中文门禁扫描上述源码根中的引擎、Logic、LegacyHost、worker、共享层及适配器，排除 Studio 的 Gui/Client/Launcher。
+优先标记 `Description` 属性、异常构造参数、`Message`/`error` 赋值及 `meta`/`ResponseMeta` 值；
+其余中文字符串作为 `other-literal` 保守守护，包含局部变量、常量、辅助调用参数和间接返回文本。
+这不是跨方法数据流分析，不能把 `other-literal` 数解释为已证明可达的消息数。
+字符串里的伪注释仍是字符串；真正注释、字符常量不计；普通、逐字、raw、插值字符串均支持，插值内的字符串单独计一次。
+计数解码 `\u`/`\U`/`\x`，包括补充平面的汉字，不把中文标点算作汉字。
+
+P2-05a 为 **526 个文件、316 个受约束字面量、3,909 个 CJK 字符**：
+
+| 类别 | 字面量 | CJK 字符 |
+|---|---:|---:|
+| description | 17 | 75 |
+| exception | 79 | 775 |
+| message | 85 | 1,109 |
+| meta | 15 | 201 |
+| other-literal | 120 | 1,749 |
+
+描述的 17 个字面量对应设计的 6 条工具描述和 11 条参数描述。设计“约 100 条消息”按整条消息估算；
+本检查按拼接片段、插值内部字面量分别计数，并包含异常、meta 和间接文本，因此其余 299 个字面量不是 299 条消息。
+另有 **416 个数据字面量、6,201 个 CJK 字符**列入
+[mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) 的 `allowlist`：每项保留文本、类别、定位和审查理由，
+包括 ToolTaxonomy 双语表、EnvironmentDoctor Zh 字段、既有报告/脚本/XML 数据、TIA 输入匹配值与 CLI 输出。
+该名单只匹配既有字面量及重复次数，不整文件豁免，也不豁免 description/exception/message/meta。
+新增同文副本、新中文或把数据直接放进异常/消息仍会失败。现有中文描述中的示例仍保留在冻结基线中。
+
+两份基线都不把路径/行号纳入指纹；删除允许，内容替换或重复次数增加失败，即使总数减少。
+`--update-baseline` 只收缩当前集合，中文 allowlist 同时去掉消失项；`--allow-growth` 必须配合更新，且只允许创建不存在的初始文件。
+新增中文数据的豁免需审查具体字面量和理由，不能通过更新命令自动获得。
+
+```powershell
+python scripts/checks/Check-CommentHygiene.py --update-baseline
+python scripts/checks/Check-McpText.py --update-baseline
+# 临时源码副本验证；默认基线来自 <scratch-copy>/scripts/checks：
+python scripts/checks/Check-CommentHygiene.py --root <scratch-copy> --baseline scripts/checks/comment-hygiene-baseline.json
+python scripts/checks/Check-McpText.py --root <scratch-copy> --baseline scripts/checks/mcp-text-baseline.json
+```
+
+在临时副本新增 `// 3.9.99: temporary regression` 或 `throw new InvalidOperationException("新增中文错误");`
+应分别报告新 product-version / Chinese exception 并返回 1；只在 worktree 的 `bin-build` 建立及清理此类夹具。
+语言和改写规则见[工具开发](tool-development.md#mcp-文案语言)。
 
 ### 适配器输入检查
 

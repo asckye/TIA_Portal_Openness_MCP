@@ -6,6 +6,36 @@
 新增工具时同时检查所属文件、类型化调用、版本策略和注册目录；示例、参数来源及结果解释统一维护在
 `reference/tool-examples`，按验证分层执行受影响版本的构建、离线测试和契约快照。
 
+## MCP 文案语言
+
+按[运行时布局与清理设计](runtime-layout.md#用户可见文案语言)的维护者决定（2026-10-03）：
+阶段 0–5 冻结全部既有 MCP 可见文本，包括描述、参数说明、消息、异常、meta、中文与错别字；
+重构不能顺便翻译或润色。**新增 MCP 可见文本一律英文；中文只作为数据出现**，例如 TIA 原文、
+工程对象名与示例名称。阶段 6（4.0）统一为英文、增加稳定机器错误码，并提供旧→新对照表。
+
+MCP 响应不引入本地化层，以保持快照和确定性；本地化仅用于 Studio 的 `Loc` 和 CLI doctor 输出。
+`TryCanonicalizeEnumArgument` 解析的拒绝文本、快照标记、`Test-LocalStability` 使用的 stderr 和
+FindTools 检索关键词具有功能意义，在阶段 6 引入错误码之前不得改动。
+
+[Check-McpText.py](../../scripts/checks/Check-McpText.py)约束中文字面量只减不增；
+[基线中的 allowlist](../../scripts/checks/mcp-text-baseline.json)逐条保存双语表、报告、TIA 数据及 CLI 输出的理由。
+豁免是既有字面量及其出现次数，不是对文件的豁免；新增中文数据须单独审查并记录理由。
+XML/报告构造器里的异常和消息仍受检查。只减不增门禁不授权修改已有响应字节，兼容快照仍须通过。
+
+## 注释改写
+
+按[清理设计](runtime-layout.md#注释与-leftovers)执行；本阶段先建立门禁，注释修改随后续领域任务进行：
+
+- 删除产品版本号、维护者归属和旧 `Phase N` / `sub-batch` 叙事，把修复经过改写为当前必须保持的不变量。
+- 原生行为证据保留，写明 TIA/PLCSIM 版本、日期和[真机验收清单](../reference/real-machine-ledger.md)链接。
+- 删除迁移墓碑、注释掉的代码和过时工具数；改写时保留原注释的语言。
+- 生成脚本字符串中的 `TODO`、注释及中文属于响应数据，不能当作 C# 注释清理。
+- `*Leftovers*` 随阶段 3 的领域迁移逐步消解，不先单独改名；步骤 15 结束时文件数应为 0。
+
+[Check-CommentHygiene.py](../../scripts/checks/Check-CommentHygiene.py)按工程和类别报告候选，
+[注释基线](../../scripts/checks/comment-hygiene-baseline.json)按内容及重复次数守护，文件移动不会增加额度。
+具体计数口径、自检及基线收缩命令见[验证分层](validation.md#注释与-mcp-中文门禁)。
+
 ## 抛异常与返回失败
 
 阶段 0–5 按工具所属的族决定错误行为，不按异常种类统一转换。**新代码沿用所在文件的族，直到阶段 6**；
