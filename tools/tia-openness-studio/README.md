@@ -93,9 +93,15 @@ and retain their partial results. An interrupted bridge call is not automaticall
 These operations do not provide rollback. An unsuccessful source generation retains its uniquely
 named source for inspection. The legacy `RequireBlockComment` inspection rule checks HeaderAuthor.
 
+The configuration page is the compiled `src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml`
+UserControl. Its code-behind retains the configuration/service logic and loads the Studio palettes
+and its own compiled English/Chinese dictionaries. `tools/mcp-configurator` contains only the
+Framework compatibility launcher; configuration tests run in the .NET 10 desktop host.
+
 ## Validation
 
 ```powershell
+dotnet run --project tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release
 dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release
 ```

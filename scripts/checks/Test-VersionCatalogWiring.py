@@ -84,19 +84,21 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('Opt(args', source)
 
     def test_configurator_uses_keys_not_indices(self):
-        source = read(ROOT / 'tools/mcp-configurator/Configurator.cs')
-        selected = source.split('private string Version', 1)[1].split('private string StatePath', 1)[0]
+        source = read(ROOT / 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs')
+        selected = source.split('private string SelectedVersion', 1)[1].split('private string StatePath', 1)[0]
         self.assertIn('selected.Key', selected)
         self.assertNotIn('SelectedIndex', selected)
         self.assertIn('versions.ItemsSource = TiaVersionCatalog.Runnable', source)
-        tree = ET.parse(ROOT / 'tools/mcp-configurator/MainWindow.xaml')
+        tree = ET.parse(ROOT / 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml')
         version = next(e for e in tree.iter() if e.get('{http://schemas.microsoft.com/winfx/2006/xaml}Name') == 'Version')
         self.assertEqual(version.get('SelectedValuePath'), 'Key')
         self.assertFalse(list(version))
 
     def test_shared_source_build_and_package_inputs(self):
         build = read(ROOT / 'scripts/build/Build-Configurator.ps1')
-        self.assertIn('$sources += $versionCatalog', build)
+        self.assertIn('dotnet run --project $configurationTests -c Release', build)
+        self.assertNotIn('/main:TiaMcpConfigurator.Tests', build)
+        self.assertIn('TiaOpenness.Configuration.Tests.csproj', build)
         self.assertIn('@(Get-Item $versionCatalog)', build)
         package = read(ROOT / 'scripts/build/Package-Release.py')
         self.assertIn('Siemens/TiaVersionCatalog.cs', package)

@@ -6,7 +6,9 @@
 |---|---|
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
-| `tools/mcp-configurator` | 嵌入工作台的 WPF 配置模块、兼容入口与配置功能测试 |
+| `tools/mcp-configurator` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
+| `tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
+| `tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests` | .NET 10 配置控制台测试 |
 | `tools/tia-openness-studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |
 | `tools/openness-shared` | 无 Siemens 版本依赖的环境信息、参数、诊断、导入依赖规划和统一示例库 |
 | `tools/third-party` | 固定版本的第三方组件及其许可证 |

@@ -1,99 +1,102 @@
-<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework" Title="TIA Portal · MCP Bridge" Width="1200" Height="780" MinWidth="1200" MinHeight="780" WindowStartupLocation="CenterScreen" WindowStyle="None" ResizeMode="CanResize" Background="{DynamicResource Ui.WindowBackground}" Foreground="{DynamicResource Ui.Label}" FontFamily="{DynamicResource Ui.Font}" FontSize="12" UseLayoutRounding="True" TextOptions.TextFormattingMode="Ideal" xmlns:glass="clr-namespace:TiaDesktop.Glass;assembly=__VIEW_ASSEMBLY__">
-  <shell:WindowChrome.WindowChrome>
-    <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="12" UseAeroCaptionButtons="False"/>
-  </shell:WindowChrome.WindowChrome>
-  <Window.Resources>
-    <!-- GLASS RESOURCES -->
-    <Style TargetType="Button" BasedOn="{StaticResource Glass.Button}"/>
-    <Style TargetType="TextBox" BasedOn="{StaticResource Glass.Field}"/>
-    <Style TargetType="ComboBox" BasedOn="{StaticResource Glass.Combo}"/>
-    <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}"/>
-    <Style x:Key="ModeCard" TargetType="RadioButton">
-      <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-      <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="RadioButton">
-            <Border x:Name="Panel" Background="{DynamicResource Ui.CardBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Padding="20,17">
-              <ContentPresenter/>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsChecked" Value="True">
-                <Setter TargetName="Panel" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
-                <Setter TargetName="Panel" Property="BorderThickness" Value="2"/>
-                <Setter TargetName="Panel" Property="Padding" Value="19,16"/>
-              </Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-    <Style x:Key="ClientChoice" TargetType="ListBoxItem">
-      <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-      <Setter Property="Margin" Value="0,0,8,8"/>
-      <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-      <Setter Property="Cursor" Value="Hand"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="ListBoxItem">
-            <Border x:Name="Tile" CornerRadius="12" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1" Padding="13,11" Height="80">
-              <Grid>
+<UserControl x:Class="TiaMcpConfigurator.ConfigurationView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:glass="clr-namespace:TiaDesktop.Glass" Background="{DynamicResource Ui.WindowBackground}" Foreground="{DynamicResource Ui.Label}" FontFamily="{DynamicResource Ui.Font}" FontSize="12" UseLayoutRounding="True">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="../Themes/Palette.Light.xaml"/>
+        <ResourceDictionary Source="Glass.Strings.en.xaml"/>
+        <ResourceDictionary Source="../Themes/Glass.xaml"/>
+      </ResourceDictionary.MergedDictionaries>
+      <Style TargetType="Button" BasedOn="{StaticResource Glass.Button}"/>
+      <Style TargetType="TextBox" BasedOn="{StaticResource Glass.Field}"/>
+      <Style TargetType="ComboBox" BasedOn="{StaticResource Glass.Combo}"/>
+      <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}"/>
+      <Style x:Key="ModeCard" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="RadioButton">
+              <Border x:Name="Panel" Background="{DynamicResource Ui.CardBackground}" BorderBrush="{DynamicResource Ui.HairLine}" BorderThickness="1" CornerRadius="16" Padding="20,17">
                 <ContentPresenter/>
-                <Border x:Name="Check" Width="15" Height="15" CornerRadius="8" BorderBrush="{DynamicResource Ui.DashedBorder}" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
-                  <TextBlock x:Name="Tick" Text="" FontFamily="Segoe Fluent Icons" FontSize="9" Visibility="Collapsed" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </Border>
-              </Grid>
-            </Border>
-            <ControlTemplate.Triggers>
-              <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
-                <Setter TargetName="Tile" Property="BorderThickness" Value="2"/>
-                <Setter TargetName="Tile" Property="Padding" Value="12,10"/>
-                <Setter TargetName="Check" Property="Background" Value="{DynamicResource Ui.Accent}"/>
-                <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
-                <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
-              </Trigger>
-            </ControlTemplate.Triggers>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-    <DataTemplate x:Key="ClientTile">
-      <StackPanel ToolTip="{Binding Tooltip}">
-        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="13" Margin="0,0,18,3"/>
-        <TextBlock FontSize="11">
-          <TextBlock.Style>
-            <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}">
-              <Setter Property="Text" Value="{DynamicResource Text.NotDetected}"/>
-              <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}"/>
-              <Style.Triggers>
-                <DataTrigger Binding="{Binding Detected}" Value="True">
-                  <Setter Property="Text" Value="{DynamicResource Text.Detected}"/>
-                  <Setter Property="Foreground" Value="{DynamicResource Ui.Accent}"/>
-                </DataTrigger>
-              </Style.Triggers>
-            </Style>
-          </TextBlock.Style>
-        </TextBlock>
-        <TextBlock Text="{Binding Path}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,3,0,0"/>
-      </StackPanel>
-    </DataTemplate>
-    <Style TargetType="PasswordBox">
-      <Setter Property="Height" Value="38"/>
-      <Setter Property="Padding" Value="12,8"/>
-      <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
-      <Setter Property="FontFamily" Value="{DynamicResource Ui.FontMono}"/>
-      <Setter Property="Template">
-        <Setter.Value>
-          <ControlTemplate TargetType="PasswordBox">
-            <Border CornerRadius="10" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
-              <ScrollViewer x:Name="PART_ContentHost"/>
-            </Border>
-          </ControlTemplate>
-        </Setter.Value>
-      </Setter>
-    </Style>
-  </Window.Resources>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                  <Setter TargetName="Panel" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
+                  <Setter TargetName="Panel" Property="BorderThickness" Value="2"/>
+                  <Setter TargetName="Panel" Property="Padding" Value="19,16"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <Style x:Key="ClientChoice" TargetType="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
+        <Setter Property="Margin" Value="0,0,8,8"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ListBoxItem">
+              <Border x:Name="Tile" CornerRadius="12" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1" Padding="13,11" Height="80">
+                <Grid>
+                  <ContentPresenter/>
+                  <Border x:Name="Check" Width="15" Height="15" CornerRadius="8" BorderBrush="{DynamicResource Ui.DashedBorder}" BorderThickness="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <TextBlock x:Name="Tick" Text="" FontFamily="Segoe Fluent Icons" FontSize="9" Visibility="Collapsed" Foreground="{DynamicResource Ui.OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                </Grid>
+              </Border>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                  <Setter TargetName="Tile" Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}"/>
+                  <Setter TargetName="Tile" Property="BorderThickness" Value="2"/>
+                  <Setter TargetName="Tile" Property="Padding" Value="12,10"/>
+                  <Setter TargetName="Check" Property="Background" Value="{DynamicResource Ui.Accent}"/>
+                  <Setter TargetName="Check" Property="BorderBrush" Value="{DynamicResource Ui.Accent}"/>
+                  <Setter TargetName="Tick" Property="Visibility" Value="Visible"/>
+                </Trigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <DataTemplate x:Key="ClientTile">
+        <StackPanel ToolTip="{Binding Tooltip}">
+          <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="13" Margin="0,0,18,3"/>
+          <TextBlock FontSize="11">
+            <TextBlock.Style>
+              <Style TargetType="TextBlock" BasedOn="{StaticResource Glass.Text}">
+                <Setter Property="Text" Value="{DynamicResource Text.NotDetected}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}"/>
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding Detected}" Value="True">
+                    <Setter Property="Text" Value="{DynamicResource Text.Detected}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Ui.Accent}"/>
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </TextBlock.Style>
+          </TextBlock>
+          <TextBlock Text="{Binding Path}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10" Foreground="{DynamicResource Ui.TertiaryLabel}" Margin="0,3,0,0"/>
+        </StackPanel>
+      </DataTemplate>
+      <Style TargetType="PasswordBox">
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource Ui.FontMono}"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="PasswordBox">
+              <Border CornerRadius="10" Background="{DynamicResource Ui.FieldBackground}" BorderBrush="{DynamicResource Ui.FieldBorder}" BorderThickness="1">
+                <ScrollViewer x:Name="PART_ContentHost"/>
+              </Border>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+    </ResourceDictionary>
+  </UserControl.Resources>
   <Grid Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True">
     <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-420,-322,0,0" IsHitTestVisible="False"/>
     <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-380,-302" IsHitTestVisible="False"/>
@@ -103,11 +106,7 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid Margin="18,0,8,0">
-        <StackPanel x:Name="CaptionTitle" Orientation="Horizontal">
-          <Border Width="16" Height="16" Background="{DynamicResource Ui.Accent}" CornerRadius="5" VerticalAlignment="Center"/>
-          <TextBlock Text="TIA Portal · MCP Bridge" FontWeight="SemiBold" Margin="10,0,0,0"/>
-        </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <Menu x:Name="MenuBar" Background="Transparent" Foreground="{DynamicResource Ui.SecondaryLabel}" FontSize="11" VerticalAlignment="Center">
             <MenuItem Header="•••" Padding="10,4">
               <MenuItem x:Name="UpdateMenu" Header="{DynamicResource Text.Update}">
@@ -122,13 +121,6 @@
               <MenuItem x:Name="OpenProjectPage" Header="{DynamicResource Text.ProjectPage}"/>
               <MenuItem x:Name="AboutItem" Header="{DynamicResource Text.About}"/>
               <Separator/>
-              <MenuItem x:Name="LanguageEnglish" Header="English" IsCheckable="True"/>
-              <MenuItem x:Name="LanguageChinese" Header="中文" IsCheckable="True"/>
-              <Separator/>
-              <MenuItem x:Name="ThemeLight" Header="{DynamicResource Text.Light}" IsCheckable="True"/>
-              <MenuItem x:Name="ThemeDark" Header="{DynamicResource Text.Dark}" IsCheckable="True"/>
-              <MenuItem x:Name="ThemeAuto" Header="{DynamicResource Text.Auto}" IsCheckable="True"/>
-              <Separator/>
               <MenuItem StaysOpenOnClick="True">
                 <MenuItem.Header>
                   <Button x:Name="SaveBoth" Content="{DynamicResource Text.SaveBoth}"/>
@@ -136,9 +128,6 @@
               </MenuItem>
             </MenuItem>
           </Menu>
-          <Button x:Name="Minimize" Content="" Style="{StaticResource Glass.CaptionButton}" ToolTip="{DynamicResource Text.Minimize}"/>
-          <Button x:Name="Maximize" Content="" Style="{StaticResource Glass.CaptionButton}" ToolTip="{DynamicResource Text.Maximize}"/>
-          <Button x:Name="Close" Content="" Style="{StaticResource Glass.CaptionButton}" ToolTip="{DynamicResource Text.Close}"/>
         </StackPanel>
       </Grid>
       <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Padding="24,12,24,24">
@@ -447,4 +436,4 @@
       </ScrollViewer>
     </Grid>
   </Grid>
-</Window>
+</UserControl>

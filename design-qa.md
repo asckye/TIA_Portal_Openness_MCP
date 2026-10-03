@@ -82,5 +82,7 @@ Native TIA/project/PLC acceptance is separate from the UI and offline checks. Re
 is recorded in the release notes, not inferred from this visual review.
 
 Reproduce the captures by setting `TIA_GLASS_SCREENSHOTS` to an output directory and running
-`scripts/build/Build-Configurator.ps1 -Test` plus the Studio WPF test project in Release mode.
+`scripts/build/Build-Configurator.ps1 -Test` (requires the .NET 10 SDK) plus the Studio WPF test
+project in Release mode. Configuration is rendered from the compiled
+`tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml` control.
 The shared styles, log presentation and embedded font files live under `tools/ui-glass`.

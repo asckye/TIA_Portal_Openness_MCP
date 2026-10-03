@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.ViewModels;
@@ -37,14 +38,15 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
                 Assert.Equal(count, Application.Current.Windows.Count);
                 Assert.Same(window, page.Window);
-                Assert.IsType<UserControl>(page.View);
-                var address = (TextBox)page.View.FindName("ServerAddress");
+                Assert.IsType<ConfigurationView>(page);
+                Assert.Same(page, ((ContentControl)window.FindName("ConfigurationHost")).Content);
+                var address = (TextBox)page.FindName("ServerAddress");
                 address.Text = "192.0.2.77";
                 window.ShowEngineering();
                 window.ShowConfiguration(false);
                 Assert.Same(page, window.Configuration);
                 Assert.Equal("192.0.2.77", address.Text);
-                Assert.Equal(Visibility.Collapsed, ((Button)page.View.FindName("Close")).Visibility);
+                Assert.Null(page.FindName("Close"));
 
                 var model = (MainViewModel)window.DataContext;
                 model.SelectedReleaseKey = "15.1";
@@ -57,10 +59,11 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
 
                 host.Measure(new Size(1200, 780)); host.Arrange(new Rect(0, 0, 1200, 780)); host.UpdateLayout();
-                Assert.True(page.View.ActualWidth > 1000);
+                Assert.True(page.ActualWidth > 1000);
                 var bitmap = new RenderTargetBitmap(1200, 780, 96, 96, PixelFormats.Pbgra32);
                 bitmap.Render(host);
-                var output = Path.Combine(MainWindow.FindBundleRoot(AppContext.BaseDirectory), "bin-build", "unified-desktop");
+                var output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS") ??
+                    Path.Combine(MainWindow.FindBundleRoot(AppContext.BaseDirectory), "bin-build", "unified-desktop");
                 Directory.CreateDirectory(output);
                 var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
                 using var stream = File.Create(Path.Combine(output, $"configuration-{language}-{theme}.png"));
@@ -83,13 +86,13 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 Loc.Current.Language = AppLanguage.Chinese;
                 ThemeManager.Current.Theme = AppTheme.Dark;
                 var page = window.Configuration!;
-                Assert.Equal("zh-cn", page.View.Language.IetfLanguageTag);
+                Assert.Equal("zh-cn", page.Language.IetfLanguageTag);
                 var expected = (SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground");
-                var actual = (SolidColorBrush)page.View.Resources["Ui.WindowBackground"];
+                var actual = (SolidColorBrush)page.Resources["Ui.WindowBackground"];
                 Assert.Equal(expected.Color, actual.Color);
                 window.Close();
                 Loc.Current.Language = AppLanguage.English;
-                Assert.Equal("zh-cn", page.View.Language.IetfLanguageTag);
+                Assert.Equal("zh-cn", page.Language.IetfLanguageTag);
             }
             finally { window.Close(); ThemeManager.Current.Theme = previousTheme; }
         });
@@ -139,7 +142,7 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 Assert.False(closed);
                 typeof(MainViewModel).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model, false);
                 page.GetType().GetMethod("Append", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(page, new object[] { "operation completed after cancelled close" });
-                Assert.Contains("operation completed after cancelled close", ((TextBox)page.View.FindName("Log")).Text);
+                Assert.Contains("operation completed after cancelled close", ((TextBox)page.FindName("Log")).Text);
                 window.Close();
                 Assert.True(closed);
             }

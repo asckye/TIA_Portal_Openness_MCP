@@ -3,38 +3,24 @@ param([switch]$Test)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-$sources = @('Configurator.cs', 'ConfigCore.cs', 'ClientProfiles.cs', 'UpdateCheck.cs') | ForEach-Object { Join-Path $root "tools\mcp-configurator\$_" }
-$versionCatalog = Join-Path $root 'tools\tiaportal-mcp\src\TiaMcpServer\Siemens\TiaVersionCatalog.cs'
-$sources += $versionCatalog
-$processArguments = Join-Path $root "tools/openness-shared/ProcessArguments.cs"
-$sources += $processArguments
-$opennessEnvironment = Join-Path $root "tools/openness-shared/OpennessEnvironment.cs"
-$sources += $opennessEnvironment
-$sources += Join-Path $root "tools/ui-glass/GlassLogView.cs"
+$studio = Join-Path $root 'tools/tia-openness-studio'
+$configurationTests = Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'
+$versionCatalog = Join-Path $root 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs'
+$processArguments = Join-Path $root 'tools/openness-shared/ProcessArguments.cs'
+$opennessEnvironment = Join-Path $root 'tools/openness-shared/OpennessEnvironment.cs'
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
 $glass = Join-Path $root 'tools\ui-glass'
 $resourceOutput = Join-Path $root 'bin-build\configurator-resources'
 New-Item -ItemType Directory -Force -Path $resourceOutput | Out-Null
-foreach ($assemblyName in @('TiaMcpConfigurator', 'Tests')) {
-    $writer = New-Object System.Resources.ResourceWriter (Join-Path $resourceOutput "$assemblyName.g.resources")
-    $streams = @()
-    try {
-        foreach ($font in Get-ChildItem (Join-Path $glass 'Fonts') -Filter '*.ttf') {
-            $stream = [IO.File]::OpenRead($font.FullName); $streams += $stream
-            $writer.AddResource(('fonts/' + $font.Name.ToLowerInvariant()), $stream)
-        }
-        $writer.Generate()
-    } finally { $writer.Dispose(); foreach ($stream in $streams) { $stream.Dispose() } }
-}
-$viewResources = @("/resource:$glass\Glass.xaml,Glass.xaml", "/resource:$root\tools\mcp-configurator\Glass.Light.xaml,Glass.Light.xaml", "/resource:$root\tools\mcp-configurator\Glass.Dark.xaml,Glass.Dark.xaml")
-foreach ($language in @('en', 'zh')) { $viewResources += "/resource:$root\tools\mcp-configurator\Glass.Strings.$language.xaml,Glass.Strings.$language.xaml" }
-$resource = "/resource:$root\tools\mcp-configurator\MainWindow.xaml,MainWindow.xaml"
 $metadata = Join-Path $resourceOutput 'DesktopVersion.cs'
 [xml]$versionXml = Get-Content (Join-Path $root 'Version.props') -Raw
 $release = [string]$versionXml.Project.PropertyGroup.TiaMcpRelease
 if ($release -notmatch '^\d+\.\d+\.\d+$') { throw 'Release version must be X.Y.Z' }
-$attributes = [regex]::Matches([IO.File]::ReadAllText((Join-Path $root 'tools/mcp-configurator/Configurator.cs')), '(?m)^\[assembly:.*\]$') | ForEach-Object { $_.Value }
+$attributes = @(
+    '[assembly: AssemblyTitle("TIA Portal Workbench")]',
+    '[assembly: AssemblyDescription("Unified TIA Portal engineering, MCP service and AI client desktop")]'
+)
 $attributes += '[assembly: AssemblyVersion("' + $release + '")]'
 $attributes += '[assembly: AssemblyFileVersion("' + $release + '.0")]'
 $attributes += '[assembly: AssemblyInformationalVersion("' + $release + '")]'
@@ -45,14 +31,26 @@ if ($LASTEXITCODE -ne 0) { throw 'Configurator build failed.' }
 if ($Test) {
     $output = Join-Path $root 'bin-build\configurator-tests'
     New-Item -ItemType Directory -Force -Path $output | Out-Null
-    & $compiler /nologo /target:exe /utf8output /main:TiaMcpConfigurator.Tests "/out:$output\Tests.exe" @references $resource @viewResources "/resource:$resourceOutput\Tests.g.resources,Tests.g.resources" @sources (Join-Path $root 'tools\mcp-configurator\Tests.cs')
-    if ($LASTEXITCODE -ne 0) { throw 'Test build failed.' }
-    $results = & "$output\Tests.exe" $output
+    $results = & dotnet run --project $configurationTests -c Release -- $output
     $results | Write-Output
     if ($LASTEXITCODE -ne 0) { throw 'Configurator tests failed.' }
     $match = [regex]::Match(($results -join "`n"), '(?m)^Passed: (\d+)\s*$')
     if (!$match.Success) { throw 'Missing configurator test result.' }
-    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item (Join-Path $root 'Version.props')) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $glass -Recurse -File)
+    if ([int]$match.Groups[1].Value -lt 157) { throw 'Expected at least 157 configurator checks.' }
+    # Record the .NET 10 test host and its desktop/bridge project inputs as well as the launcher.
+    $projectInputs = foreach ($project in @('Gui', 'Client', 'Core', 'Contracts', 'Bridge')) {
+        Get-ChildItem (Join-Path $studio "src/TiaOpenness.$project") -Recurse -File |
+            Where-Object { $_.Extension -in '.cs','.xaml','.csproj' -and $_.FullName -notmatch '[\\/](bin|obj)[\\/]' }
+    }
+    $testInputs = Get-ChildItem (Split-Path -Parent $configurationTests) -File | Where-Object { $_.Extension -in '.cs','.csproj' }
+    $inputs = @($projectInputs) + @($testInputs) + @(
+        Get-Item (Join-Path $root 'tools/mcp-configurator/Launcher.cs')
+        Get-Item $PSCommandPath
+        Get-Item (Join-Path $root 'Version.props')
+        Get-Item (Join-Path $studio 'Directory.Build.props')
+        Get-Item (Join-Path $studio 'tests/Directory.Build.props')
+        Get-Item (Join-Path $root 'tools/openness-shared/LocalProcess.cs')
+    ) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $glass -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()

@@ -28,6 +28,9 @@ jobs:
       - name: Offline bundle validation
         shell: pwsh
         run: ./scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
-      - name: Build and test WPF configurator
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build launcher and test .NET 10 configuration page
         shell: powershell
         run: ./scripts/build/Build-Configurator.ps1 -Test

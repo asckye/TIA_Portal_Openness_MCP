@@ -1,4 +1,3 @@
-#if UNIFIED_DESKTOP
 #nullable disable
 using System;
 using System.Collections.Generic;
@@ -51,4 +50,3 @@ public sealed class JavaScriptSerializer
             => JsonSerializer.Serialize(writer, value, value.GetType(), options);
     }
 }
-#endif

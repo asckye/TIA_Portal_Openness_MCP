@@ -160,11 +160,18 @@ def main():
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     require(gui['testsPassed'] > 0, 'Missing configurator test result')
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
-    gui_inputs = {n for n in files if n.startswith('tools/ui-glass/') or (n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml'))} | {
-        'scripts/build/Build-Configurator.ps1',
+    studio = 'tools/tia-openness-studio/'
+    desktop_projects = tuple(studio + 'src/TiaOpenness.' + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
+    gui_inputs = {n for n in files if n.startswith('tools/ui-glass/') or
+                  (n.startswith(desktop_projects) and Path(n).suffix in ('.cs', '.xaml', '.csproj')) or
+                  (n.startswith(studio + 'tests/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj'))} | {
+        'scripts/build/Build-Configurator.ps1', 'Version.props',
+        'tools/mcp-configurator/Launcher.cs',
+        studio + 'Directory.Build.props', studio + 'tests/Directory.Build.props',
         'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs',
         'tools/openness-shared/OpennessEnvironment.cs',
         'tools/openness-shared/ProcessArguments.cs',
+        'tools/openness-shared/LocalProcess.cs',
     }
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:
@@ -175,6 +182,20 @@ def main():
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = ('docs/README.md',
                 'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
+                'tools/mcp-configurator/Launcher.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/Glass.Strings.en.xaml',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/Glass.Strings.zh.xaml',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Light.xaml',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Dark.xaml',
+                'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
+                'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs',
                 'scripts/operations/预热.bat', 'scripts/operations/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json')

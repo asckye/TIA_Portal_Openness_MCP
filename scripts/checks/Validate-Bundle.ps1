@@ -58,7 +58,23 @@ Write-Host "Bundle root: $root"
 if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at release time; recorded source-file checks skipped" -ForegroundColor Cyan }
 
 if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
-foreach ($guiFile in @('TiaMcpConfigurator.exe', 'docs\getting-started\configuration.md', 'scripts\build\Build-Configurator.ps1')) {
+foreach ($guiFile in @(
+    'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
+    'tools/mcp-configurator/Launcher.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/Glass.Strings.en.xaml',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/Glass.Strings.zh.xaml',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Light.xaml',
+    'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Palette.Dark.xaml',
+    'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj',
+    'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs'
+)) {
     if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
     if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
     else { Fail "Missing GUI entry: $guiFile" }

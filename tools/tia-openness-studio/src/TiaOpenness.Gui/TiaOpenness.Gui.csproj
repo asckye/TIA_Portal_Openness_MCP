@@ -4,17 +4,13 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
-    <DefineConstants>$(DefineConstants);UNIFIED_DESKTOP</DefineConstants>
     <AssemblyName>TiaOpenness</AssemblyName>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../TiaOpenness.Client/TiaOpenness.Client.csproj" /></ItemGroup>
   <ItemGroup><ProjectReference Include="../TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../mcp-configurator/Configurator.cs;../../../mcp-configurator/ConfigCore.cs;../../../mcp-configurator/ClientProfiles.cs;../../../mcp-configurator/UpdateCheck.cs;../../../mcp-configurator/ModernJson.cs" Link="Configuration/%(Filename)%(Extension)" />
     <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Configuration/OpennessEnvironment.cs" />
-    <EmbeddedResource Include="../../../mcp-configurator/*.xaml" LogicalName="%(Filename)%(Extension)" WithCulture="false" />
-    <EmbeddedResource Include="../../../ui-glass/Glass.xaml" LogicalName="Glass.xaml" />
     <Compile Include="../../../ui-glass/GlassLogView.cs" Link="Controls/GlassLogView.cs"/>
     <Page Include="../../../ui-glass/Glass.xaml" Link="Themes/Glass.xaml"/>
     <Resource Include="../../../ui-glass/Fonts/*.ttf" Link="Fonts/%(Filename)%(Extension)"/>

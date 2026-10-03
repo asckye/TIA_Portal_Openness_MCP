@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
 using Xunit;
 
@@ -97,7 +98,7 @@ public class SourceConsistencyTests(WpfContext wpf)
 
     /// <summary>
     /// Every brush, style, template and geometry the markup names has to be reachable from the
-    /// application's resources - which is where the running app looks for it.
+    /// application's resources, or the configuration control's local dictionaries.
     /// </summary>
     [Fact]
     public void Every_resource_the_markup_names_can_be_found()
@@ -106,18 +107,22 @@ public class SourceConsistencyTests(WpfContext wpf)
         {
             var missing = new SortedSet<string>(StringComparer.Ordinal);
 
+            using var configuration = new ConfigurationView(new Window(), AppContext.BaseDirectory, false);
             foreach (var file in SourceScan.Markup)
             {
                 foreach (Match match in ResourceKey.Matches(file.Text))
                 {
                     var key = match.Groups[1].Value;
-                    if (Application.Current.TryFindResource(key) is null)
+                    var resource = file.Name.Contains(".Configuration.", StringComparison.Ordinal)
+                        ? configuration.TryFindResource(key) : Application.Current.TryFindResource(key);
+                    if (resource is null)
                     {
                         missing.Add(file.Name + ": " + key);
                     }
                 }
             }
 
+            configuration.Window.Close();
             Assert.Empty(missing);
         });
     }

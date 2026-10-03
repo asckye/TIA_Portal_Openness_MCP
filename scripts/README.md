@@ -4,7 +4,7 @@
 
 | 分类 | 入口 | 用途 |
 |---|---|---|
-| 构建 | [Build-Configurator.ps1](build/Build-Configurator.ps1) | 编译 WPF；`-Test` 执行隔离测试并更新记录 |
+| 构建 | [Build-Configurator.ps1](build/Build-Configurator.ps1) | 以 Framework csc 编译兼容启动器；`-Test` 需要 .NET 10 SDK，执行工作台配置测试并更新记录 |
 | 构建 | [Build-Release.ps1](build/Build-Release.ps1) | 使用 Siemens PublicAPI 构建/验证两版引擎 |
 | 构建 | [Prepare-Delivery.ps1](build/Prepare-Delivery.ps1) | 沿用已验证引擎，更新交付与 GUI 记录 |
 | 发布 | [Release.ps1](build/Release.ps1) | 一键发布：前置检查 → 组件版本 → Build-Release / Build-MultiVersion → 本地闸门 → 一次提交 → Package-Release → Verify-ReleaseAsset → 推送 → CI（API）→ tag → Publish-Release 上传 → 等验证工作流检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |

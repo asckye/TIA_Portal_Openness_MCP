@@ -12,34 +12,26 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TiaMcp.Versioning;
 
-#if !UNIFIED_DESKTOP
-[assembly: AssemblyTitle("TIA Portal Workbench")]
-[assembly: AssemblyDescription("Unified TIA Portal engineering, MCP service and AI client desktop")]
-#endif
-
 namespace TiaMcpConfigurator
 {
-    public sealed class ConfigWindow : IDisposable
+    public sealed partial class ConfigurationView : UserControl, IDisposable
     {
         public Window Window { get; private set; }
-        public FrameworkElement View { get; private set; }
         private readonly string root;
-        private readonly bool embedded;
         public event EventHandler ServiceStateChanged;
         public bool HasRunningServer { get { return server != null && !server.HasExited; } }
         public bool LocksRelease { get { return busy || HasRunningServer; } }
         public string SelectedReleaseKey
         {
-            get { return Version; }
+            get { return SelectedVersion; }
             set { Find<ComboBox>("Version").SelectedValue = TiaVersionCatalog.RequireRunnable(value).Key; }
         }
-        public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = !embedded && enabled && !HasRunningServer; }
+        public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = false; }
         public Func<bool> CanUpdate { get; set; }
         private Process server;
         private UpdateInfo latest;   // 2.8.0: last successful update check
@@ -49,9 +41,9 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
-        private T Find<T>(string name) where T : FrameworkElement { return (T)View.FindName(name); }
+        private T Find<T>(string name) where T : FrameworkElement { return (T)FindName(name); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
-        private string Version
+        private string SelectedVersion
         {
             get
             {
@@ -60,40 +52,26 @@ namespace TiaMcpConfigurator
                 return TiaVersionCatalog.RequireRunnable(selected.Key).Key;
             }
         }
-        private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + Version + ".json"); } }
+        private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + SelectedVersion + ".json"); } }
         // Both transports use the same configuration page.
         private bool Remote { get { return Find<RadioButton>("RemoteNav").IsChecked == true; } }
         private string Secret() { return Find<CheckBox>("ShowKey").IsChecked == true ? Text("KeyVisible") : Find<PasswordBox>("Key").Password; }
         private void SetSecret(string value) { Find<TextBox>("KeyVisible").Text = value; Find<PasswordBox>("Key").Password = value; }
 
-        public ConfigWindow(bool loadExisting = true) : this(null, AppDomain.CurrentDomain.BaseDirectory, loadExisting) { }
-
-        public ConfigWindow(Window owner, string bundleRoot, bool loadExisting = true)
+        public ConfigurationView(Window owner, string bundleRoot, bool loadExisting = true)
         {
-            embedded = owner != null;
+            Window = owner;
             root = bundleRoot;
-            string markup = ReadViewResource("MainWindow.xaml").Replace("__VIEW_ASSEMBLY__", Assembly.GetExecutingAssembly().GetName().Name);
-            string resources = DictionaryBody(ReadViewResource("Glass.Light.xaml")) + DictionaryBody(ReadViewResource("Glass.Strings.en.xaml")) + DictionaryBody(ReadViewResource("Glass.xaml"));
-            markup = markup.Replace("<!-- GLASS RESOURCES -->", resources);
-            View = (FrameworkElement)XamlReader.Parse(embedded ? EmbeddedMarkup(markup) : markup);
-            Window = owner ?? (Window)View;
+            InitializeComponent();
             string assembly = Assembly.GetExecutingAssembly().GetName().Name;
-            View.Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
-            View.Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
-            Click("Minimize", delegate { Window.WindowState = WindowState.Minimized; });
-            Click("Maximize", delegate { Window.WindowState = Window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; });
-            Click("Close", delegate { Window.Close(); });
-            MenuClick("ThemeLight", delegate { ApplyTheme("Light"); });
-            MenuClick("ThemeDark", delegate { ApplyTheme("Dark"); });
-            MenuClick("ThemeAuto", delegate { ApplyTheme("Auto"); });
-            MenuClick("LanguageEnglish", delegate { ApplyLanguage("en"); });
-            MenuClick("LanguageChinese", delegate { ApplyLanguage("zh"); });
+            Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
+            Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
             ApplyTheme("Auto");
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = "21";
-            View.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
-            View.SizeChanged += delegate { View.Resources["ClientColumns"] = View.ActualWidth < 1180 ? 2 : 4; };
+            Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
+            SizeChanged += delegate { Resources["ClientColumns"] = ActualWidth < 1180 ? 2 : 4; };
             var choices = Find<ListBox>("ClientChoices");
             var cards = ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
@@ -115,19 +93,19 @@ namespace TiaMcpConfigurator
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
             Find<TextBox>("ServerPort").TextChanged += delegate { UpdateLink(); };
             Click("BrowseTia", delegate {
-                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V" + Version + " 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V" + SelectedVersion + " 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { DetectTiaPath(true); });
             Click("GenerateKey", delegate { byte[] bytes = new byte[24]; using (var rng = RandomNumberGenerator.Create()) rng.GetBytes(bytes); SetSecret(Convert.ToBase64String(bytes)); });
-            Click("SaveBoth", SaveBoth);
-            Click("StartServer", StartServer);
-            Click("StopServer", StopServer);
-            Click("Network", async delegate { await Network(); });
-            Click("TestClient", async delegate { await TestClient(); });
+            Click("SaveBoth", OnSaveBoth);
+            Click("StartServer", OnStartServer);
+            Click("StopServer", OnStopServer);
+            Click("Network", async delegate { await OnNetwork(); });
+            Click("TestClient", async delegate { await OnTestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
-            MenuClick("CheckUpdate", async delegate { await CheckUpdate(true); });
-            MenuClick("RunUpdate", RunUpdate);
+            MenuClick("CheckUpdate", async delegate { await OnCheckUpdate(true); });
+            MenuClick("RunUpdate", OnRunUpdate);
             MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
             MenuClick("ShowClientHelp", delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, "客户端使用说明", MessageBoxButton.OK, MessageBoxImage.Information); });
             MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
@@ -140,51 +118,23 @@ namespace TiaMcpConfigurator
                 Window.Height = Math.Max(Window.MinHeight, Math.Min(Window.Height, SystemParameters.WorkArea.Height - 32));
                 Guard(delegate { LoadServer(true); });
                 if (Text("ServerAddress").Length == 0) Guard(LoadClient);
-                var ignored = CheckUpdate(false);   // background; the band reports the outcome, nothing blocks
+                var ignored = OnCheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
             else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
             ApplyLanguage(loadExisting && System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh" : "en");
             Append("就绪。服务与客户端配置在同一页完成，两端使用同一密钥。");
             Window.Closing += OnClosing;
-            if (embedded)
-            {
-                foreach (string name in new[] { "CaptionTitle", "Minimize", "Maximize", "Close", "LanguageEnglish", "LanguageChinese", "ThemeLight", "ThemeDark", "ThemeAuto" })
-                    Find<FrameworkElement>(name).Visibility = Visibility.Collapsed;
-                // The desktop owns the version selector; this field only mirrors its state.
-                Find<ComboBox>("Version").IsHitTestVisible = false;
-                Find<ComboBox>("Version").Focusable = false;
-                Find<ComboBox>("Version").IsEnabled = false;
-            }
+            // The desktop owns the version selector; this field only mirrors its state.
+            Find<ComboBox>("Version").IsHitTestVisible = false;
+            Find<ComboBox>("Version").Focusable = false;
+            Find<ComboBox>("Version").IsEnabled = false;
         }
 
-        private static string EmbeddedMarkup(string markup)
+        private static ResourceDictionary LoadDictionary(string path)
         {
-            var document = new System.Xml.XmlDocument(); document.LoadXml(markup);
-            var oldRoot = document.DocumentElement;
-            var view = document.CreateElement("UserControl", oldRoot.NamespaceURI);
-            foreach (System.Xml.XmlAttribute attribute in oldRoot.Attributes)
-                if (attribute.Prefix == "xmlns" || attribute.Name == "xmlns" || new[] { "Background", "Foreground", "FontFamily", "FontSize", "UseLayoutRounding" }.Contains(attribute.Name))
-                    view.Attributes.Append((System.Xml.XmlAttribute)attribute.CloneNode(true));
-            foreach (System.Xml.XmlNode child in oldRoot.ChildNodes)
-            {
-                if (child.LocalName == "WindowChrome.WindowChrome") continue;
-                if (child.LocalName == "Window.Resources")
-                {
-                    var resourceNode = document.CreateElement("UserControl.Resources", oldRoot.NamespaceURI);
-                    resourceNode.InnerXml = child.InnerXml; view.AppendChild(resourceNode);
-                }
-                else view.AppendChild(child.CloneNode(true));
-            }
-            return view.OuterXml;
+            return new ResourceDictionary { Source = new Uri("/TiaOpenness;component/" + path, UriKind.Relative) };
         }
 
-        private static string ReadViewResource(string name)
-        {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
-            using (var reader = new StreamReader(stream)) return reader.ReadToEnd();
-        }
-        private static string DictionaryBody(string markup)
-        { return markup.Substring(markup.IndexOf('>') + 1).Replace("</ResourceDictionary>", ""); }
         public void ApplyTheme(string theme)
         {
             string resolved = theme;
@@ -193,20 +143,17 @@ namespace TiaMcpConfigurator
                 using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
                     resolved = key != null && Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) == 0 ? "Dark" : "Light";
             }
-            var palette = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass." + resolved + ".xaml"));
-            foreach (object key in palette.Keys) View.Resources[key] = palette[key];
-            foreach (string choice in new[] { "Light", "Dark", "Auto" }) Find<MenuItem>("Theme" + choice).IsChecked = choice == theme;
+            var palette = LoadDictionary("Themes/Palette." + resolved + ".xaml");
+            foreach (object key in palette.Keys) Resources[key] = palette[key];
         }
 
-        private string T(string key) { return (string)View.Resources["Text." + key]; }
+        private string T(string key) { return (string)Resources["Text." + key]; }
         private string F(string key, object value) { return String.Format(T(key), value); }
         public void ApplyLanguage(string language)
         {
-            var strings = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass.Strings." + language + ".xaml"));
-            foreach (object key in strings.Keys) View.Resources[key] = strings[key];
-            Find<MenuItem>("LanguageEnglish").IsChecked = language == "en";
-            Find<MenuItem>("LanguageChinese").IsChecked = language == "zh";
-            View.Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
+            var strings = LoadDictionary("Configuration/Glass.Strings." + language + ".xaml");
+            foreach (object key in strings.Keys) Resources[key] = strings[key];
+            Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
             Mode(Remote); UpdateInstructions(); UpdateDetectionLabel(); UpdateLastTest(); UpdateLogCount();
         }
         private void UpdateDetectionLabel()
@@ -222,7 +169,7 @@ namespace TiaMcpConfigurator
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
         private void MenuClick(string name, Action action) { Find<MenuItem>(name).Click += delegate { Guard(action); }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
-        private void Status(string status) { Find<TextBlock>("Status").Text = status; }
+        private void SetStatus(string status) { Find<TextBlock>("Status").Text = status; }
         private void ServiceStatus(bool active)
         {
             Find<System.Windows.Shapes.Ellipse>("StatusDot").SetResourceReference(System.Windows.Shapes.Shape.FillProperty, active ? "Ui.Accent" : "Ui.StatusIdle");
@@ -260,7 +207,7 @@ namespace TiaMcpConfigurator
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? T("NoSelection") : selected.Count == 1 ? selected[0].DisplayName : F("Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = String.Join("、", selected.Select(x => x.DisplayName));
-            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(Version).DisplayName;
+            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
             bool running = server != null && !server.HasExited;
             string address = Text("ServerAddress");
             Find<TextBlock>("LinkEndpoint").Text = !remote ? T("LocalAddress") : address.Length == 0 ? T("NoAddress") : address + ":" + Text("ServerPort");
@@ -298,27 +245,27 @@ namespace TiaMcpConfigurator
                 if (response != null) response.Close();
             }
             string secret = Secret(); if (!String.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]");
-            Status("需要处理"); Append(message); MessageBox.Show(Window, message, "需要处理", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetStatus("需要处理"); Append(message); MessageBox.Show(Window, message, "需要处理", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
         {
-            var found = ConfigCore.DetectTia(Version);
+            var found = ConfigCore.DetectTia(SelectedVersion);
             tiaDetected = found.Key != null; UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
-            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + Version + " 安装目录（" + found.Value + "）：" + found.Key); }
-            else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + Version + " 安装根目录。");
+            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + SelectedVersion + " 安装目录（" + found.Value + "）：" + found.Key); }
+            else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + SelectedVersion + " 安装根目录。");
         }
         private void LoadServer(bool loadExisting)
         {
-            Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(Version).InstallFolder);
+            Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(SelectedVersion).InstallFolder);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("");
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
-            if (settings.EffectiveReleaseKey != Version) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");
+            if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");
             Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
-            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append("已载入 V" + Version + " 服务配置。");
+            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append("已载入 V" + SelectedVersion + " 服务配置。");
         }
         // 宿主机上没有服务端配置，用上次填写的连接信息补齐同一组字段。
         private void LoadClient()
@@ -332,12 +279,12 @@ namespace TiaMcpConfigurator
         private ServerSettings Settings()
         {
             int port = Int32.Parse(Text("ServerPort")); ConfigCore.Prefix(Text("ServerAddress"), port);
-            ConfigCore.Engine(root, Version); ConfigCore.ValidateTia(Text("TiaPath"), Version);
-            return new ServerSettings { Version = TiaVersionCatalog.Get(Version).MajorVersion, ReleaseKey = Version, Address = Text("ServerAddress"), Port = port, TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret()) };
+            ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion);
+            return new ServerSettings { Version = TiaVersionCatalog.Get(SelectedVersion).MajorVersion, ReleaseKey = SelectedVersion, Address = Text("ServerAddress"), Port = port, TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret()) };
         }
         // 一页两侧，所以保存也是两侧：客户端侧的连接信息总能保存；服务端配置只在本机确实装了
         // TIA 和引擎时才写，宿主机上校验失败不算错误，只记一行说明。
-        private void SaveBoth()
+        private void OnSaveBoth()
         {
             int port = Int32.Parse(Text("ServerPort")); string ip = Text("ServerAddress"), secret = Secret();
             ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
@@ -345,7 +292,7 @@ namespace TiaMcpConfigurator
             Append("客户端侧连接信息已按当前 Windows 用户加密保存。");
             try { ConfigCore.AtomicJson(StatePath, Settings()); Append("服务端配置已保存。下一步：网络权限 → 启动服务。"); }
             catch (Exception ex) { Append("本机未通过服务端校验，只保存了客户端侧信息：" + ex.GetBaseException().Message); }
-            Status("已保存");
+            SetStatus("已保存");
         }
 
         private void SaveClients(bool remote)
@@ -354,7 +301,7 @@ namespace TiaMcpConfigurator
             if (selected.Count == 0) throw new InvalidOperationException("请先选择一个或多个 AI 客户端。");
             string engine = null, ip = null, secret = null; int port = 0;
             if (remote) { ip = Text("ServerAddress"); port = Int32.Parse(Text("ServerPort")); secret = Secret(); ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); }
-            else { engine = ConfigCore.Engine(root, Version); ConfigCore.ValidateTia(Text("TiaPath"), Version); }
+            else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)) }).ToList();
@@ -364,11 +311,11 @@ namespace TiaMcpConfigurator
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {
-                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, Version, Text("TiaPath")); saved++; Append(target.Names + " 已保存：" + target.Profile.Path); }
+                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")); saved++; Append(target.Names + " 已保存：" + target.Profile.Path); }
                 catch (Exception ex) { errors.Add(target.Names + "：" + ex.Message); }
             }
             if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
-            Status("已配置 " + saved + " 个客户端");
+            SetStatus("已配置 " + saved + " 个客户端");
             Append("重启已配置的客户端，使用 " + (remote ? "tia-portal-vm" : "tia-portal") + " 读取工程树。不要让多个 AI 同时修改同一工程。");
             if (errors.Count > 0) throw new InvalidOperationException("部分客户端未保存，其它成功项已保留：\n" + String.Join("\n", errors));
         }
@@ -387,7 +334,7 @@ namespace TiaMcpConfigurator
             item.Header = "引擎 " + installed + "（" + UpdateCheck.InstalledPackage(root) + "）";
             if (UpdateCheck.IsSourceRepository(root)) Find<MenuItem>("UpdateStateItem").Header = "源码仓库（有 .git）：不在这里更新，发布走 scripts\\build\\Release.ps1";
         }
-        private async Task CheckUpdate(bool explicitRequest)
+        private async Task OnCheckUpdate(bool explicitRequest)
         {
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
@@ -419,7 +366,7 @@ namespace TiaMcpConfigurator
             }
             finally { check.IsEnabled = true; }
         }
-        private void RunUpdate()
+        private void OnRunUpdate()
         {
             if (CanUpdate != null && !CanUpdate()) throw new InvalidOperationException("请先完成工程操作并断开 TIA 会话，再更新软件。");
             if (busy) return;
@@ -435,21 +382,21 @@ namespace TiaMcpConfigurator
             Append("更新器已在新窗口启动，本程序即将关闭。");
             Window.Close();
         }
-        private async Task TestClient()
+        private async Task OnTestClient()
         {
             if (busy) return;
             try
             {
                 string ip = Text("ServerAddress"), secret = Secret(); int port = Int32.Parse(Text("ServerPort"));
-                SetBusy(true); Status("正在测试…");
+                SetBusy(true); SetStatus("正在测试…");
                 string result = await Task.Run(() => ConfigCore.TestRemote(ip, port, secret));
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
-                Append(result); Status("连接正常");
+                Append(result); SetStatus("连接正常");
             }
             catch (Exception ex) { lastTestResult = null; lastTestFailed = true; UpdateLastTest(); Report(ex); }
             finally { SetBusy(false); }
         }
-        private async Task Network()
+        private async Task OnNetwork()
         {
             if (busy) return;
             try
@@ -458,23 +405,23 @@ namespace TiaMcpConfigurator
                 if (MessageBox.Show(Window, "为当前用户授权此 HTTP 地址，并放行本地子网到此端口。\n接下来会出现 Windows 管理员权限提示，继续？", "网络权限", MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
                 var args = new[] { "--network", ip, port.ToString(), WindowsIdentity.GetCurrent().User.Value };
                 var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName, String.Join(" ", args.Select(ConfigCore.Quote))) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden };
-                SetBusy(true); Status("配置网络…");
+                SetBusy(true); SetStatus("配置网络…");
                 using (var process = Process.Start(info))
                 {
                     await Task.Run(() => process.WaitForExit());
                     if (process.ExitCode != 0) throw new InvalidOperationException("网络配置未完成，请查看管理员窗口中的错误信息。");
                 }
-                Status("网络已配置"); Append("网络权限配置完成。现在可以启动服务。");
+                SetStatus("网络已配置"); Append("网络权限配置完成。现在可以启动服务。");
             }
             catch (Exception ex) { Report(ex); }
             finally { SetBusy(false); }
         }
-        private void StartServer()
+        private void OnStartServer()
         {
             if (server != null && !server.HasExited) throw new InvalidOperationException("此窗口已经启动 MCP。");
             var settings = Settings(); ConfigCore.CheckListener(ConfigCore.Prefix(settings.Address, settings.Port));
             ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret();
-            var info = new ProcessStartInfo(ConfigCore.Engine(root, Version), ConfigCore.Arguments(settings, runningKey)) {
+            var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey)) {
                 WorkingDirectory = root, UseShellExecute = false, CreateNoWindow = true,
                 RedirectStandardOutput = true, RedirectStandardError = true, RedirectStandardInput = true,
                 StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8 };
@@ -483,17 +430,17 @@ namespace TiaMcpConfigurator
             process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.Exited += delegate {
                 Append("MCP 已退出，退出码：" + process.ExitCode);
-                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; Status("服务已停止"); ServiceStatus(false); }));
+                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("服务已停止"); ServiceStatus(false); }));
             };
             try { if (!process.Start()) throw new InvalidOperationException("MCP 进程未启动。"); }
             catch { process.Dispose(); throw; }
             server = process;
             Find<Button>("StartServer").IsEnabled = false; Find<Button>("StopServer").IsEnabled = true; Find<ComboBox>("Version").IsEnabled = false;
-            process.BeginOutputReadLine(); process.BeginErrorReadLine(); Status("服务进程运行中");
+            process.BeginOutputReadLine(); process.BeginErrorReadLine(); SetStatus("服务进程运行中");
             ServiceStatus(true);
             Append("请检查日志中的 listening 提示，并在宿主机测试连接。保持此窗口打开。");
         }
-        private void StopServer()
+        private void OnStopServer()
         {
             if (server == null || server.HasExited) return;
             if (MessageBox.Show(Window, "将停止本窗口启动的 MCP，中断客户端连接。\n请确认没有正在执行的工程操作。继续？", "停止 MCP", MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
@@ -503,7 +450,7 @@ namespace TiaMcpConfigurator
         {
             if (e.Cancel) return;
             if (busy) { e.Cancel = true; Append("正在处理配置，请稍候再关闭。"); return; }
-            try { StopServer(); if (server != null && !server.HasExited) { e.Cancel = true; return; } }
+            try { OnStopServer(); if (server != null && !server.HasExited) { e.Cancel = true; return; } }
             catch (Exception ex) { e.Cancel = true; Report(ex); return; }
             closing = true;
         }
@@ -523,26 +470,10 @@ namespace TiaMcpConfigurator
         }
         public void Dispose()
         {
-            if (!embedded) Window.Close();
             Window.Closing -= OnClosing;
             closing = true;
             if (server != null && server.HasExited) server.Dispose();
         }
     }
 
-#if !UNIFIED_DESKTOP
-    public static class Program
-    {
-        [STAThread]
-        public static int Main(string[] args)
-        {
-            try
-            {
-                if (args.Length == 4 && args[0] == "--network") { ConfigCore.ConfigureNetwork(args[1], Int32.Parse(args[2]), args[3]); return 0; }
-                var app = new Application(); using (var ui = new ConfigWindow()) return app.Run(ui.Window);
-            }
-            catch (Exception ex) { MessageBox.Show(ex.Message, "TIA MCP 配置失败", MessageBoxButton.OK, MessageBoxImage.Error); return 1; }
-        }
-    }
-#endif
 }

@@ -9,6 +9,5 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TiaOpenness.Gui/TiaOpenness.Gui.csproj" />
-    <Compile Include="../../../mcp-configurator/Tests.cs" Link="Tests.cs" />
   </ItemGroup>
 </Project>

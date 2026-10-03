@@ -12,7 +12,7 @@ namespace TiaOpenness.Gui;
 
 public partial class MainWindow
 {
-    internal ConfigWindow? Configuration { get; private set; }
+    internal ConfigurationView? Configuration { get; private set; }
 
     internal static string InitialReleaseKey(string[] args)
     {
@@ -35,13 +35,13 @@ public partial class MainWindow
     {
         if (Configuration == null)
         {
-            var page = new ConfigWindow(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting);
+            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting);
             Configuration = page;
             page.SelectedReleaseKey = _model.SelectedReleaseKey;
             page.SetReleaseEnabled(_model.CanSelectRelease);
             page.CanUpdate = () => _model.CanSelectRelease;
             page.ServiceStateChanged += OnServiceStateChanged;
-            ConfigurationHost.Content = page.View;
+            ConfigurationHost.Content = page;
             Loc.Current.LanguageChanged += OnDesktopLanguageChanged;
             ThemeManager.Current.PropertyChanged += OnDesktopThemeChanged;
             _model.PropertyChanged += OnDesktopModelChanged;
