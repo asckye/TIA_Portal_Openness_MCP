@@ -104,8 +104,8 @@
 
 - 适配器和契约不使用 JSON 库。适配器日志目前用 Newtonsoft `JObject`，改为扁平行写入器；`BindingSnapshot` 改为 `Func<string?>`。
 - 只在进程边界序列化，每侧一个编解码文件：宿主侧（引擎、LegacyHost、Studio 桌面端）用 System.Text.Json；worker 侧（PlcWorker、
-  Studio 桥接）在 14sp1–16 仍为 net461 期间用 Newtonsoft 13.0.4（STJ 7 起不再支持 net461）。若 D4 把所有 worker 改为 net48，
-  则全部用 STJ 8.x 并删除 Newtonsoft。
+  Studio 桥接）在 14sp1–16 仍为 net461 期间用 Newtonsoft 13.0.4（STJ 7 起不再支持 net461）。D4 已决定把所有 worker 改为 net48，
+  改完后全部用 STJ 8.x 并删除 Newtonsoft。
 - Studio 的 Contracts、RpcDispatcher 和 BridgeClient 改用 STJ，显式配置 PascalCase 和字符串枚举。
 - 每个 DTO 有 worker 编解码 ↔ 宿主编解码的黄金样本测试，保护 P0-06 响应快照。
 
@@ -119,7 +119,7 @@
 
 | 步骤 | 内容 | 原生风险 | L5 前可发布 | 与阶段 3 的关系 |
 |---|---|---|---|---|
-| A | 删除 WorkerProtocol 项目、夹具和测试；删除 `offline-checks.yml` 中对应两行；更新 slnx、文档和必需文件清单 | 无 | 是 | 独立 |
+| A | 删除 WorkerProtocol 项目、夹具和测试；删除 `offline-checks.yml` 中对应两行；更新 slnx、文档和必需文件清单 | 无 | 是 | 在第 E 步移植规则和测试之后（D7） |
 | B | 新建 `TiaMcp.Adapters.Contracts`：原样移动 DTO，增加错误类型和黄金 JSON 测试；适配器源码链接的公开 `TiaMcp.Versioning.TiaVersionCatalog` 改为 internal | 无（各版本织入清单不变） | 是 | 独立 |
 | C | `build/TiaFeatures.props`，并用评估测试证明各项目 DefineConstants 不变 | 无（IL 相同） | 是 | 只动引擎 props |
 | D（P4-02） | F 移到 `Native/` 与 `Policy/`，扩展面以委托实现；更新 `Adapter.Sources.props`、`AdapterSourceClosureTests`、5 个假 SDK 测试项目和 `Test-WorkerIsolation.ps1` | 无 | 是 | 独立 |
@@ -142,10 +142,16 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 - **D2 只维护 master 与 L5 暂缓**：使用构建开关（建议），或阶段 4 期间冻结发布。
 - **D3 线程**：引擎保持 MTA、worker 保持 STA；有 L5 证据后再考虑统一。
 - **D4 worker 框架**：所有 worker 和适配器是否改为 net48？Studio 已对所有版本要求 4.8。改后只需一个 JSON 库（STJ）。
+  维护者已决定（2026-10-03）：确认原版 API 支持 4.8 后改为 net48。核对结果：V14 SP1、V15.1、V16 的
+  `Siemens.Engineering.dll` 都以 .NET Framework 4.6.1 为目标、运行时为 CLR v4.0.30319（V17 起以 4.8 为目标）；.NET
+  Framework 4.x 是原位升级，三者都能在本机 4.8.1 运行时中完整加载（导出类型 348/606/1198 个，`TiaPortal.GetProcesses`
+  可解析）；西门子说明 V16 环境同时提供 V14 SP1、V15、V15.1 的 Openness DLL，旧应用可以不加修改地运行；Studio 桥接进程
+  已对这三个版本按 net48 构建，README 也已要求 4.8。尚缺真机验证，作为第 E 步发布前的 L5 项目（V14 SP1–V16 各连接一次真实 TIA）。
 - **D5 合并 worker 可执行文件**：Studio 桥接进程和 PlcWorker 是否合并为每版本一个 worker（`--profile studio|foundation`）？
   这会改变 Studio 的 `bridge/adapters/v<key>` 部署结构。
 - **D6 Studio 日志**：织入后的 Studio 适配器会在 `%LOCALAPPDATA%\TiaMcp\diagnostics` 写日志，默认开启还是可选？
-- **D7 批准删除 WorkerProtocol**（约 6,600 个断言）。
+- **D7 批准删除 WorkerProtocol**（约 6,600 个断言）。维护者已批准（2026-10-03）。顺序调整为先在第 E 步把启动 nonce、
+  绑定纪元、拒绝重放、只读失败类别和迟到进度失效等规则连同测试移植到协议 2，再执行第 A 步删除。
 
 ## 风险
 
