@@ -157,6 +157,20 @@ namespace TiaMcpServer.Siemens
         System.Collections.Generic.List<object?> IEngineeringSession.EnumerateReflectedProperty(object? owner, string propertyName)
             => EnumerateReflectedProperty(owner, propertyName);
 
+        object? IEngineeringSession.FindExistingByName(object compositionOrEnumerable, string name) => FindExistingByName(compositionOrEnumerable, name);
+        object? IEngineeringSession.TryGetEngineeringAttribute(object target, string attributeName) => TryGetEngineeringAttribute(target, attributeName);
+        string IEngineeringSession.SummarizeHmiObjectReadback(object target, params string[] names) => SummarizeHmiObjectReadback(target, names);
+        object? IEngineeringSession.CoerceReflectionValue(object? value, Type targetType) => CoerceReflectionValue(value, targetType);
+        object IEngineeringSession.ExactUnifiedRoot(string softwarePath) => ExactUnifiedRoot(softwarePath);
+        string IEngineeringSession.UnifiedCollection(string category) => UnifiedCollection(category);
+        void IEngineeringSession.FillUnifiedHmiPartnerNetworkInfo(DeviceItem root, Portal.UnifiedHmiPlcPartnerInfo info) => FillUnifiedHmiPartnerNetworkInfo(root, info);
+
+        object IEngineeringSession.TryGetHmiTagRoot(object hmiSoftware) => TryGetHmiTagRoot(hmiSoftware);
+        object? IEngineeringSession.TryGetHmiTagTablesCollection(object hmiSoftware) => TryGetHmiTagTablesCollection(hmiSoftware);
+        object? IEngineeringSession.TryFindHmiTagTable(object hmiSoftware, string tagTableName) => TryFindHmiTagTable(hmiSoftware, tagTableName);
+
+        System.Reflection.Assembly IEngineeringSession.UnifiedAssembly => UnifiedAssembly;
+
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();
 
@@ -202,7 +216,6 @@ namespace TiaMcpServer.Siemens
         string IEngineeringSession.GetTreePrefix(List<bool> ancestorStates, bool isLast) => GetTreePrefix(ancestorStates, isLast);
         object? IEngineeringSession.ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access) => ResolveObject(objectKind, objectPath, softwarePath, access);
         void IEngineeringSession.DenyCrossReferenceReflection(string? service, string? method) => DenyCrossReferenceReflection(service, method);
-        object? IEngineeringSession.CoerceReflectionValue(object? value, Type targetType) => CoerceReflectionValue(value, targetType);
         void IEngineeringSession.ValidateUnitKind(string kind) => ValidateUnitKind(kind);
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> IEngineeringSession.PlcScopes(PlcSoftware plc) => PlcScopes(plc);
         IEnumerable<(string Path, object Value)> IEngineeringSession.ScopedObjects(object group, string collection, string prefix, int depth) => ScopedObjects(group, collection, prefix, depth);
@@ -229,6 +242,5 @@ namespace TiaMcpServer.Siemens
         JsonObject IEngineeringSession.GetPutGetAccess(string devicePath) => GetPutGetAccess(devicePath);
         (DeviceItem? item, string? attrName) IEngineeringSession.FindPutGetAttribute(Device device) => FindPutGetAttribute(device);
         bool IEngineeringSession.AttrValueIsEnabled(object? value) => AttrValueIsEnabled(value);
-        object? IEngineeringSession.FindExistingByName(object compositionOrEnumerable, string name) => FindExistingByName(compositionOrEnumerable, name);
     }
 }

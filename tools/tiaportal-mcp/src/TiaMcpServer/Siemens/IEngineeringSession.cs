@@ -186,6 +186,19 @@ namespace TiaMcpServer.Siemens
         ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade = false, bool dryRun = true);
         ResponseMessage ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun = true);
         ResponseMessage ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun = true);
+        object? FindExistingByName(object compositionOrEnumerable, string name);
+        object? TryGetEngineeringAttribute(object target, string attributeName);
+        string SummarizeHmiObjectReadback(object target, params string[] names);
+        object? CoerceReflectionValue(object? value, Type targetType);
+        object ExactUnifiedRoot(string softwarePath);
+        string UnifiedCollection(string category);
+        void FillUnifiedHmiPartnerNetworkInfo(DeviceItem root, Portal.UnifiedHmiPlcPartnerInfo info);
+
+        object TryGetHmiTagRoot(object hmiSoftware);
+        object? TryGetHmiTagTablesCollection(object hmiSoftware);
+        object? TryFindHmiTagTable(object hmiSoftware, string tagTableName);
+
+        System.Reflection.Assembly UnifiedAssembly { get; }
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);
@@ -197,7 +210,6 @@ namespace TiaMcpServer.Siemens
         string GetTreePrefix(List<bool> ancestorStates, bool isLast);
         object? ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access = PlcAccess.Read);
         void DenyCrossReferenceReflection(string? service, string? method);
-        object? CoerceReflectionValue(object? value, Type targetType);
         void ValidateUnitKind(string kind);
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> PlcScopes(PlcSoftware plc);
         IEnumerable<(string Path, object Value)> ScopedObjects(object group, string collection, string prefix = "", int depth = 0);
@@ -215,6 +227,5 @@ namespace TiaMcpServer.Siemens
         JsonObject GetPutGetAccess(string devicePath);
         (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device);
         bool AttrValueIsEnabled(object? value);
-        object? FindExistingByName(object compositionOrEnumerable, string name);
     }
 }

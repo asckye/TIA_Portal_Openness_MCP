@@ -1,17 +1,23 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
-namespace TiaMcpServer.Siemens
+
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class UnifiedEventsService
     {
+        private readonly IEngineeringSession _session;
+
+        public UnifiedEventsService(IEngineeringSession session) => _session = session;
+
         public ResponseMessage ManageUnifiedEvent(string softwarePath,string objectPathJson,string eventType,string action="read",string propertyName="",string scriptPropertiesJson="{}",string expectedToken="",bool dryRun=true)
-            =>RunHmiStepTool("ManageUnifiedEvent",meta=>{
+            =>_session.RunHmiStepTool("ManageUnifiedEvent",meta=>{
                 if(!new[]{"read","create","update","delete"}.Contains(action))throw new ArgumentException("action must be read/create/update/delete.");
                 if(string.IsNullOrWhiteSpace(eventType))throw new ArgumentException("Exact event type required.");
-                bool write=action!="read"&&!dryRun;using var access=write ? AcquireHmiEditAccess() : null;
-                var target=EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath),objectPathJson);
+                bool write=action!="read"&&!dryRun;using var access=write ? _session.AcquireHmiEditAccess() : null;
+                var target=EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath),objectPathJson);
                 var handlers=EngineeringGroupOperations.Get(target,propertyName=="" ? "EventHandlers" : "PropertyEventHandlers");
                 var handler=UnifiedEventOperations.Find(handlers,eventType,propertyName);
                 var changes=JsonNode.Parse(scriptPropertiesJson) as JsonObject ?? throw new ArgumentException("Script properties must be an object.");

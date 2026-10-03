@@ -1,16 +1,21 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class UnifiedUiModelService
     {
+        private readonly IEngineeringSession _session;
+
+        public UnifiedUiModelService(IEngineeringSession session) => _session = session;
+
         public ResponseMessage ReadUnifiedObjectEvents(string softwarePath, string objectPathJson, int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadUnifiedObjectEvents", meta => {
+            => _session.RunHmiStepTool("ReadUnifiedObjectEvents", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
-                var target = EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath), objectPathJson);
+                var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var capabilities = UnifiedUiModelLogic.EventCapabilities(target);
                 if (capabilities["EventHandlers"] == null && capabilities["PropertyEventHandlers"] == null) throw new NotSupportedException("Selected object exposes neither EventHandlers nor PropertyEventHandlers: " + target.GetType().FullName);
                 var rows = UnifiedUiModelLogic.EventRows(target);
@@ -22,13 +27,13 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageUnifiedObjectParts(string softwarePath, string objectPathJson, string action = "read", string collectionProperty = "", string partName = "", int partIndex = -1, string partKind = "", string propertiesJson = "{}", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageUnifiedObjectParts", meta => {
+            => _session.RunHmiStepTool("ManageUnifiedObjectParts", meta => {
                 if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
                 var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (action != "update" && changes.Count != 0) throw new ArgumentException("propertiesJson is only accepted by update.");
                 if (action == "update" && changes.Count == 0) throw new ArgumentException("update requires nonempty propertiesJson.");
-                bool write = action != "read" && !dryRun; using var access = write ? AcquireHmiEditAccess() : null;
-                var owner = EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath), objectPathJson);
+                bool write = action != "read" && !dryRun; using var access = write ? _session.AcquireHmiEditAccess() : null;
+                var owner = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson); meta["objectType"] = owner.GetType().FullName;
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (action == "read" && collectionProperty == "")
@@ -82,12 +87,12 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageUnifiedDynamization(string softwarePath, string objectPathJson, string propertyName, string action = "read", string dynamizationKind = "", string propertiesJson = "{}", string mappingEntriesJson = "[]", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageUnifiedDynamization", meta => {
+            => _session.RunHmiStepTool("ManageUnifiedDynamization", meta => {
                 if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
                 var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if ((action == "read" || action == "delete") && (changes.Count != 0 || mappingEntriesJson.Trim() != "[]")) throw new ArgumentException("Properties and mapping entries are only accepted by create/update.");
-                bool write = action != "read" && !dryRun; using var access = write ? AcquireHmiEditAccess() : null;
-                var target = EngineeringObjectAddress.Resolve(ExactUnifiedRoot(softwarePath), objectPathJson);
+                bool write = action != "read" && !dryRun; using var access = write ? _session.AcquireHmiEditAccess() : null;
+                var target = EngineeringObjectAddress.Resolve(_session.ExactUnifiedRoot(softwarePath), objectPathJson);
                 var dynamizations = EngineeringGroupOperations.Get(target, "Dynamizations");
                 var existing = UnifiedUiModelLogic.FindDynamization(dynamizations, propertyName);
                 meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson); meta["propertyName"] = propertyName; meta["action"] = action;
@@ -145,16 +150,17 @@ namespace TiaMcpServer.Siemens
             parent.Add(new JsonObject { ["property"] = path[path.Count - 1]!["property"]!.DeepClone() });
             return EngineeringObjectAddress.Resolve(root, parent.ToJsonString());
         }
+
         public ResponseMessage ManageUnifiedScreenLayout(string softwarePath, string objectPathJson, string action = "read", string name = "", string propertiesJson = "{}", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageUnifiedScreenLayout", meta => {
+            => _session.RunHmiStepTool("ManageUnifiedScreenLayout", meta => {
                 if (!new[] { "read", "create", "rename", "update", "resize", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/rename/update/resize/delete.");
                 var changes = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be an object.");
                 if (action != "update" && changes.Count != 0) throw new ArgumentException("propertiesJson is only accepted by update.");
                 if (action == "update" && changes.Count == 0) throw new ArgumentException("update requires nonempty propertiesJson.");
                 if ((action == "create" || action == "rename") != (name != "")) throw new ArgumentException("name is required by create/rename only.");
                 if (name != "") UnifiedUiModelLogic.ValidateScreenName(name);
-                bool write = action != "read" && !dryRun; using var access = write ? AcquireHmiEditAccess() : null;
-                var root = ExactUnifiedRoot(softwarePath);
+                bool write = action != "read" && !dryRun; using var access = write ? _session.AcquireHmiEditAccess() : null;
+                var root = _session.ExactUnifiedRoot(softwarePath);
                 meta["objectPath"] = EngineeringObjectAddress.Parse(objectPathJson); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["layoutFields"] = "ExportLayoutFields/ImportLayoutFields are not part of the V21/V20 public HmiScreen API; screen copy/duplicate is not exposed either.";
                 if (action == "create")
@@ -213,10 +219,10 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageUnifiedListEntries(string softwarePath, string category, string listName, string action = "read", string entryKey = "", string entryJson = "{}", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageUnifiedListEntries", meta => {
+            => _session.RunHmiStepTool("ManageUnifiedListEntries", meta => {
                 if (!new[] { "read", "create", "update", "delete" }.Contains(action)) throw new ArgumentException("action must be read/create/update/delete.");
                 if (string.IsNullOrWhiteSpace(listName)) throw new ArgumentException("Exact list name required.");
-                var root = ExactUnifiedRoot(softwarePath);
+                var root = _session.ExactUnifiedRoot(softwarePath);
                 var property = root.GetType().GetProperty(UnifiedUiModelLogic.ListCollection(category)) ?? throw new NotSupportedException(category + " collection is not exposed by this API version (V20 has no HmiGraphicLists).");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("List collection is null.");
                 var list = EngineeringGroupOperations.Find(collection, listName) ?? throw new InvalidOperationException("Exact list not found: " + listName);
@@ -231,9 +237,9 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ReadUnifiedAlarmCommon(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadUnifiedAlarmCommon", meta => {
+            => _session.RunHmiStepTool("ReadUnifiedAlarmCommon", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
-                var collection = EngineeringGroupOperations.Get(ExactUnifiedRoot(softwarePath), UnifiedUiModelLogic.AlarmCommonCollection(category));
+                var collection = EngineeringGroupOperations.Get(_session.ExactUnifiedRoot(softwarePath), UnifiedUiModelLogic.AlarmCommonCollection(category));
                 var items = string.IsNullOrEmpty(name) ? EngineeringGroupOperations.Items(collection).ToArray()
                     : new[] { EngineeringGroupOperations.Find(collection, name) ?? throw new InvalidOperationException("Exact object not found: " + name) };
                 var rows = new JsonArray();
@@ -263,9 +269,9 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ReadUnifiedAuditSettings(string softwarePath, string category, string name = "", int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadUnifiedAuditSettings", meta => {
+            => _session.RunHmiStepTool("ReadUnifiedAuditSettings", meta => {
                 if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset >= 0 and limit 1..500 required.");
-                var root = ExactUnifiedRoot(softwarePath);
+                var root = _session.ExactUnifiedRoot(softwarePath);
                 var propertyName = UnifiedUiModelLogic.AuditCollection(category);
                 var property = root.GetType().GetProperty(propertyName) ?? throw new NotSupportedException("HmiSoftware." + propertyName + " is not exposed by this API version.");
                 var collection = property.GetValue(root) ?? throw new InvalidOperationException("Audit collection is null.");

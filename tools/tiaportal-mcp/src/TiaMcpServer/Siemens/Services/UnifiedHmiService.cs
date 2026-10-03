@@ -1,3 +1,4 @@
+using UnifiedHmiPlcPartnerInfo = TiaMcpServer.Siemens.Portal.UnifiedHmiPlcPartnerInfo;
 using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
@@ -35,11 +36,13 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class UnifiedHmiService
     {
-        #region software - UnifiedHmi
+        private readonly IEngineeringSession _session;
+
+        public UnifiedHmiService(IEngineeringSession session) => _session = session;
 
         public ResponseMessage EnsureStartStopUnifiedHmi(
             string hmiSoftwarePath,
@@ -76,7 +79,7 @@ namespace TiaMcpServer.Siemens
                     {
                         foreach (var it in en)
                         {
-                            var n = TryGetName(it);
+                            var n = _session.TryGetName(it);
                             if (!string.IsNullOrWhiteSpace(n) &&
                                 string.Equals(n!.Trim(), name, StringComparison.OrdinalIgnoreCase))
                             {
@@ -94,13 +97,13 @@ namespace TiaMcpServer.Siemens
                 var totalDeadline = DateTime.UtcNow.AddSeconds(25); // hard timeout for this tool
                 bool TimedOut() => DateTime.UtcNow > totalDeadline;
 
-                if (IsProjectNull())
+                if (_session.IsProjectNull())
                 {
                     Step("precheck", false, "Project is null");
                     return new ResponseMessage { Message = "Project is null", Meta = meta };
                 }
 
-                var sc = GetSoftwareContainer(hmiSoftwarePath);
+                var sc = _session.GetSoftwareContainer(hmiSoftwarePath);
                 if (sc?.Software == null)
                 {
                     Step("resolveSoftware", false, $"SoftwareContainer not found at '{hmiSoftwarePath}'");
@@ -119,7 +122,7 @@ namespace TiaMcpServer.Siemens
                 }
                 Step("findScreen", true, screen.GetType().FullName);
 
-                var tagTable = TryFindByNameInCollection(sw, new[] { "TagTables" }, tagTableName);
+                var tagTable = _session.TryFindByNameInCollection(sw, new[] { "TagTables" }, tagTableName);
                 if (tagTable == null)
                 {
                     Step("findTagTable", false, $"TagTable '{tagTableName}' not found");
@@ -209,7 +212,7 @@ namespace TiaMcpServer.Siemens
                             continue;
                         }
 
-                        TrySetProperty(tagObj, "Name", tn);
+                        _session.TrySetProperty(tagObj, "Name", tn);
                         var wrNew = new JsonArray();
                         BindUnifiedHmiTagToPlcSymbol(tagObj, connName, plcName, tn, "Bool", wrNew);
 
@@ -448,68 +451,68 @@ namespace TiaMcpServer.Siemens
                 {
                     if (hdrBar != null)
                     {
-                        TrySetProperty(hdrBar, "Left", 0);
-                        TrySetProperty(hdrBar, "Top", 0);
-                        TrySetProperty(hdrBar, "Width", (uint)1280);
-                        TrySetProperty(hdrBar, "Height", (uint)72);
-                        TrySetProperty(hdrBar, "BackColor", ColorTranslator.FromHtml("#1E3A5F"));
-                        TrySetProperty(hdrBar, "BorderWidth", (uint)0);
+                        _session.TrySetProperty(hdrBar, "Left", 0);
+                        _session.TrySetProperty(hdrBar, "Top", 0);
+                        _session.TrySetProperty(hdrBar, "Width", (uint)1280);
+                        _session.TrySetProperty(hdrBar, "Height", (uint)72);
+                        _session.TrySetProperty(hdrBar, "BackColor", ColorTranslator.FromHtml("#1E3A5F"));
+                        _session.TrySetProperty(hdrBar, "BorderWidth", (uint)0);
                     }
 
                     if (hdrTitle != null)
                     {
-                        TrySetProperty(hdrTitle, "Left", 24);
-                        TrySetProperty(hdrTitle, "Top", 12);
-                        TrySetProperty(hdrTitle, "Width", (uint)900);
-                        TrySetProperty(hdrTitle, "Height", (uint)48);
+                        _session.TrySetProperty(hdrTitle, "Left", 24);
+                        _session.TrySetProperty(hdrTitle, "Top", 12);
+                        _session.TrySetProperty(hdrTitle, "Width", (uint)900);
+                        _session.TrySetProperty(hdrTitle, "Height", (uint)48);
                         var txtH = hdrTitle.GetType().GetProperty("Text")?.GetValue(hdrTitle);
                         if (txtH != null)
                         {
-                            TrySetProperty(txtH, "Item", "MCP 验证 · 起停与状态");
-                            TrySetProperty(txtH, "HorizontalAlignment", "Left");
+                            _session.TrySetProperty(txtH, "Item", "MCP 验证 · 起停与状态");
+                            _session.TrySetProperty(txtH, "HorizontalAlignment", "Left");
                         }
 
-                        TrySetProperty(hdrTitle, "ForeColor", Color.White);
+                        _session.TrySetProperty(hdrTitle, "ForeColor", Color.White);
                     }
 
                     if (btnStart != null)
                     {
-                        TrySetProperty(btnStart, "Left", 48);
-                        TrySetProperty(btnStart, "Top", 110);
-                        TrySetProperty(btnStart, "Width", (uint)200);
-                        TrySetProperty(btnStart, "Height", (uint)72);
-                        TrySetProperty(btnStart, "BackColor", ColorTranslator.FromHtml("#2E7D32"));
+                        _session.TrySetProperty(btnStart, "Left", 48);
+                        _session.TrySetProperty(btnStart, "Top", 110);
+                        _session.TrySetProperty(btnStart, "Width", (uint)200);
+                        _session.TrySetProperty(btnStart, "Height", (uint)72);
+                        _session.TrySetProperty(btnStart, "BackColor", ColorTranslator.FromHtml("#2E7D32"));
                         var txt = btnStart.GetType().GetProperty("Text")?.GetValue(btnStart);
                         if (txt != null)
                         {
-                            TrySetProperty(txt, "Item", "启动 (Start)");
-                            TrySetProperty(txt, "HorizontalAlignment", "Center");
+                            _session.TrySetProperty(txt, "Item", "启动 (Start)");
+                            _session.TrySetProperty(txt, "HorizontalAlignment", "Center");
                         }
                     }
 
                     if (btnStop != null)
                     {
-                        TrySetProperty(btnStop, "Left", 48);
-                        TrySetProperty(btnStop, "Top", 200);
-                        TrySetProperty(btnStop, "Width", (uint)200);
-                        TrySetProperty(btnStop, "Height", (uint)72);
-                        TrySetProperty(btnStop, "BackColor", ColorTranslator.FromHtml("#C62828"));
+                        _session.TrySetProperty(btnStop, "Left", 48);
+                        _session.TrySetProperty(btnStop, "Top", 200);
+                        _session.TrySetProperty(btnStop, "Width", (uint)200);
+                        _session.TrySetProperty(btnStop, "Height", (uint)72);
+                        _session.TrySetProperty(btnStop, "BackColor", ColorTranslator.FromHtml("#C62828"));
                         var txt = btnStop.GetType().GetProperty("Text")?.GetValue(btnStop);
                         if (txt != null)
                         {
-                            TrySetProperty(txt, "Item", "停止 (Stop)");
-                            TrySetProperty(txt, "HorizontalAlignment", "Center");
+                            _session.TrySetProperty(txt, "Item", "停止 (Stop)");
+                            _session.TrySetProperty(txt, "HorizontalAlignment", "Center");
                         }
                     }
 
                     if (lampRun != null)
                     {
-                        TrySetProperty(lampRun, "Left", 300);
-                        TrySetProperty(lampRun, "Top", 110);
-                        TrySetProperty(lampRun, "Width", (uint)120);
-                        TrySetProperty(lampRun, "Height", (uint)120);
-                        TrySetProperty(lampRun, "BackColor", ColorTranslator.FromHtml("#B0BEC5"));
-                        TrySetProperty(lampRun, "BorderWidth", (uint)2);
+                        _session.TrySetProperty(lampRun, "Left", 300);
+                        _session.TrySetProperty(lampRun, "Top", 110);
+                        _session.TrySetProperty(lampRun, "Width", (uint)120);
+                        _session.TrySetProperty(lampRun, "Height", (uint)120);
+                        _session.TrySetProperty(lampRun, "BackColor", ColorTranslator.FromHtml("#B0BEC5"));
+                        _session.TrySetProperty(lampRun, "BorderWidth", (uint)2);
                     }
 
                     Step("ui:layout", true);
@@ -528,7 +531,7 @@ namespace TiaMcpServer.Siemens
                         var pst = button.GetType().GetProperty("PressedStateTags")?.GetValue(button);
                         if (pst == null)
                         {
-                            Step($"bind:{TryGetName(button)}.PressedStateTags", false, "PressedStateTags missing");
+                            Step($"bind:{_session.TryGetName(button)}.PressedStateTags", false, "PressedStateTags missing");
                             return;
                         }
 
@@ -537,13 +540,13 @@ namespace TiaMcpServer.Siemens
                             .Where(m => m.Name.StartsWith("Create", StringComparison.OrdinalIgnoreCase))
                             .Select(m => $"{m.Name}({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.FullName))})")
                             .ToArray();
-                        Step($"bind:{TryGetName(button)}.PressedStateTags.CreateSignatures", true, string.Join(" | ", sigs));
+                        Step($"bind:{_session.TryGetName(button)}.PressedStateTags.CreateSignatures", true, string.Join(" | ", sigs));
 
                         // idempotent check
                         var existing = FindExistingByName(pst, tagName);
                         if (existing != null)
                         {
-                            Step($"bind:{TryGetName(button)}:{tagName}", true, "exists");
+                            Step($"bind:{_session.TryGetName(button)}:{tagName}", true, "exists");
                             return;
                         }
 
@@ -560,14 +563,14 @@ namespace TiaMcpServer.Siemens
                                     var bound = TrySetAnyProperty(o, path, "Tag", "TagName", "HmiTag", "HmiTagName", "Path", "HmiTagPath", "FullName")
                                                 || TrySetEngineeringAttribute(o, "Tag", path)
                                                 || TrySetEngineeringAttribute(o, "HmiTag", path);
-                                    Step($"bind:{TryGetName(button)}:{tagName}", bound, o.GetType().FullName);
+                                    Step($"bind:{_session.TryGetName(button)}:{tagName}", bound, o.GetType().FullName);
                                     return;
                                 }
                             }
                             catch (TargetInvocationException tie) when (tie.InnerException != null)
                             {
                                 var msg = $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}";
-                                Step($"bind:{TryGetName(button)}:{tagName}", false, msg);
+                                Step($"bind:{_session.TryGetName(button)}:{tagName}", false, msg);
                                 return;
                             }
                         }
@@ -580,23 +583,23 @@ namespace TiaMcpServer.Siemens
                             {
                                 var path2 = string.IsNullOrWhiteSpace(table) ? tagName : $"{table}/{tagName}";
                                 var o = m1.Invoke(pst, new object[] { path2 });
-                                Step($"bind:{TryGetName(button)}:{tagName}", o != null, o?.GetType().FullName);
+                                Step($"bind:{_session.TryGetName(button)}:{tagName}", o != null, o?.GetType().FullName);
                                 return;
                             }
                             catch (TargetInvocationException tie) when (tie.InnerException != null)
                             {
                                 var msg = $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}";
-                                Step($"bind:{TryGetName(button)}:{tagName}", false, msg);
+                                Step($"bind:{_session.TryGetName(button)}:{tagName}", false, msg);
                                 return;
                             }
                         }
 
                         // Fallback: some parts may expose a property like TagName/Tag
-                        Step($"bind:{TryGetName(button)}:{tagName}", false, "No suitable Create on PressedStateTags");
+                        Step($"bind:{_session.TryGetName(button)}:{tagName}", false, "No suitable Create on PressedStateTags");
                     }
                     catch (Exception ex)
                     {
-                        Step($"bind:{TryGetName(button)}:{tagName}", false, ex.InnerException?.Message ?? ex.Message);
+                        Step($"bind:{_session.TryGetName(button)}:{tagName}", false, ex.InnerException?.Message ?? ex.Message);
                     }
                 }
 
@@ -648,9 +651,9 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage EnsureUnifiedHmiScreen(string hmiSoftwarePath, string screenName, uint width = 0, uint height = 0)
         {
-            return RunHmiStepTool("EnsureUnifiedHmiScreen", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiScreen", meta =>
             {
-                var sw = ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+                var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
                 var screens = TryGetPropertyValue(sw, "Screens");
                 if (screens == null) throw new InvalidOperationException("HMI Screens collection not found.");
 
@@ -665,8 +668,8 @@ namespace TiaMcpServer.Siemens
                 }
 
                 if (screen == null) throw new InvalidOperationException("Screen create/find returned null.");
-                if (width > 0) TrySetProperty(screen, "Width", width);
-                if (height > 0) TrySetProperty(screen, "Height", height);
+                if (width > 0) _session.TrySetProperty(screen, "Width", width);
+                if (height > 0) _session.TrySetProperty(screen, "Height", height);
 
                 meta["action"] = action;
                 meta["screenType"] = screen.GetType().FullName;
@@ -676,13 +679,13 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage EnsureUnifiedHmiTagTable(string hmiSoftwarePath, string tagTableName)
         {
-            return RunHmiStepTool("EnsureUnifiedHmiTagTable", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiTagTable", meta =>
             {
-                var sw = ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
-                var tables = TryGetHmiTagTablesCollection(sw);
-                if (tables == null) throw new InvalidOperationException($"HMI TagTables collection not found. hmiType={sw.GetType().FullName}; tagRootType={TryGetHmiTagRoot(sw).GetType().FullName}");
+                var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+                var tables = _session.TryGetHmiTagTablesCollection(sw);
+                if (tables == null) throw new InvalidOperationException($"HMI TagTables collection not found. hmiType={sw.GetType().FullName}; tagRootType={_session.TryGetHmiTagRoot(sw).GetType().FullName}");
 
-                var table = TryFindHmiTagTable(sw, tagTableName);
+                var table = _session.TryFindHmiTagTable(sw, tagTableName);
                 var action = "exists";
                 if (table == null)
                 {
@@ -776,7 +779,7 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        private static void TrySetUnifiedHmiTagRuntimeAddress(object tag, string runtimeAddress, JsonArray writeResults)
+        private void TrySetUnifiedHmiTagRuntimeAddress(object tag, string runtimeAddress, JsonArray writeResults)
         {
             var addressNames = new[]
             {
@@ -802,7 +805,7 @@ namespace TiaMcpServer.Siemens
                 var extraOk = false;
                 foreach (var name in addressNames.Skip(2))
                 {
-                    extraOk = TrySetProperty(tag, name, runtimeAddress) || TrySetEngineeringAttribute(tag, name, runtimeAddress) || extraOk;
+                    extraOk = _session.TrySetProperty(tag, name, runtimeAddress) || TrySetEngineeringAttribute(tag, name, runtimeAddress) || extraOk;
                 }
 
                 writeResults.Add("RuntimeAddressExtra=" + extraOk);
@@ -812,7 +815,7 @@ namespace TiaMcpServer.Siemens
             writeResults.Add("RuntimeAddressReadback=" + (readback ?? string.Empty));
         }
 
-        private static string TryReadUnifiedHmiTagRuntimeAddress(object tag, params string[] addressNames)
+        private string TryReadUnifiedHmiTagRuntimeAddress(object tag, params string[] addressNames)
         {
             foreach (var name in addressNames)
             {
@@ -829,7 +832,7 @@ namespace TiaMcpServer.Siemens
                 {
                 }
 
-                var attr = TryGetEngineeringAttribute(tag, name)?.ToString();
+                var attr = _session.TryGetEngineeringAttribute(tag, name)?.ToString();
                 if (!string.IsNullOrWhiteSpace(attr)) return attr!;
             }
 
@@ -840,7 +843,7 @@ namespace TiaMcpServer.Siemens
         /// WinCC Unified HMI tags expose addressing mode as enums; writing display strings (e.g. "SymbolicAccess")
         /// via generic SetProperty fails silently and leaves the UI on default Absolute with empty Address/PLC tag.
         /// </summary>
-        private static void TrySetUnifiedHmiTagAddressingModeEnum(object tag, bool symbolic, JsonArray writeResults)
+        private void TrySetUnifiedHmiTagAddressingModeEnum(object tag, bool symbolic, JsonArray writeResults)
         {
             var ok = TrySetUnifiedHmiTagAccessModeByEnumScan(tag, symbolic);
             if (!ok)
@@ -857,7 +860,7 @@ namespace TiaMcpServer.Siemens
         /// <summary>
         /// Unified <see cref="HmiTag"/> access mode enum names differ by TIA version; scan all declared enum members.
         /// </summary>
-        private static bool TrySetUnifiedHmiTagAccessModeByEnumScan(object tag, bool wantSymbolic)
+        private bool TrySetUnifiedHmiTagAccessModeByEnumScan(object tag, bool wantSymbolic)
         {
             foreach (var propName in new[] { "AccessMode", "AddressAccessMode", "TagAddressingMode", "HmiTagAddressingMode" })
             {
@@ -890,7 +893,7 @@ namespace TiaMcpServer.Siemens
         /// S7-1200/1500 PLC partner in HMI connections uses rack 0 and CPU slot 1 in almost all compact PLC projects.
         /// Missing slot shows as "?" in TIA and breaks tag resolution.
         /// </summary>
-        private static void TryConfigureUnifiedHmiConnectionS7PartnerRackSlot(object connection, string plcFamily)
+        private void TryConfigureUnifiedHmiConnectionS7PartnerRackSlot(object connection, string plcFamily)
         {
             if (plcFamily != "S71200" && plcFamily != "S71500" && plcFamily != "UNKNOWN") return;
 
@@ -898,7 +901,7 @@ namespace TiaMcpServer.Siemens
             {
                 foreach (var slotVal in new object[] { 1, (short)1, (ushort)1, "1" })
                 {
-                    if (TrySetProperty(connection, slotName, slotVal) || TrySetEngineeringAttribute(connection, slotName, slotVal))
+                    if (_session.TrySetProperty(connection, slotName, slotVal) || TrySetEngineeringAttribute(connection, slotName, slotVal))
                     {
                         break;
                     }
@@ -909,7 +912,7 @@ namespace TiaMcpServer.Siemens
             {
                 foreach (var rackVal in new object[] { 0, (short)0, (ushort)0, "0" })
                 {
-                    if (TrySetProperty(connection, rackName, rackVal) || TrySetEngineeringAttribute(connection, rackName, rackVal))
+                    if (_session.TrySetProperty(connection, rackName, rackVal) || TrySetEngineeringAttribute(connection, rackName, rackVal))
                     {
                         break;
                     }
@@ -917,7 +920,7 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        private static void TryBindUnifiedHmiTagPlcSymbolicPaths(object tag, string normalizedTag, JsonArray writeResults)
+        private void TryBindUnifiedHmiTagPlcSymbolicPaths(object tag, string normalizedTag, JsonArray writeResults)
         {
             if (string.IsNullOrWhiteSpace(normalizedTag)) return;
             var names = new[]
@@ -926,7 +929,7 @@ namespace TiaMcpServer.Siemens
             };
             foreach (var n in names)
             {
-                var ok = TrySetProperty(tag, n, normalizedTag) || TrySetEngineeringAttribute(tag, n, normalizedTag);
+                var ok = _session.TrySetProperty(tag, n, normalizedTag) || TrySetEngineeringAttribute(tag, n, normalizedTag);
                 writeResults.Add($"{n}={ok}");
             }
         }
@@ -998,15 +1001,15 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage EnsureUnifiedHmiTag(string hmiSoftwarePath, string tagTableName, string tagName, string hmiDataType = "Bool", string plcName = "PLC_1", string plcTag = "", string connectionName = "", string address = "", bool requireVerifiedBinding = true)
         {
-            return RunHmiStepTool("EnsureUnifiedHmiTag", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiTag", meta =>
             {
-                var sw = ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+                var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
                 var tagTable = EnsureHmiTagTableObject(sw, tagTableName);
                 var tags = TryGetPropertyValue(tagTable, "Tags");
                 if (tags == null) throw new InvalidOperationException($"Tags collection not found on tag table '{tagTableName}'.");
 
                 // 去掉 ?? TryFindByNameInCollection(tags, Array.Empty<string>(), ...)：空 hints 恒返回 null。
-                var tag = FindExistingByName(tags, tagName);
+                var tag = _session.FindExistingByName(tags, tagName);
                 var action = "exists";
                 if (tag == null)
                 {
@@ -1043,12 +1046,12 @@ namespace TiaMcpServer.Siemens
 
         public ModelContextProtocol.ResponseObjectDescribe EnsureUnifiedHmiConnection(string hmiSoftwarePath, string connectionName = "HMI_Connection_1", string plcName = "PLC_1")
         {
-            var sw = ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+            var sw = _session.ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
             var connections = TryGetPropertyValue(sw, "Connections");
             if (connections == null) throw new InvalidOperationException($"Connections collection not found on HMI software '{hmiSoftwarePath}'.");
 
             // 去掉 ?? TryFindByNameInCollection(connections, Array.Empty<string>(), ...)：空 hints 恒返回 null。
-            var connection = FindExistingByName(connections, connectionName);
+            var connection = _session.FindExistingByName(connections, connectionName);
             if (connection == null)
             {
                 var create = connections.GetType().GetMethod("Create", new[] { typeof(string) });
@@ -1058,7 +1061,7 @@ namespace TiaMcpServer.Siemens
 
             if (connection == null) throw new InvalidOperationException("Connection create/find returned null.");
 
-            TrySetProperty(connection, "Name", connectionName);
+            _session.TrySetProperty(connection, "Name", connectionName);
             var partner = ResolveUnifiedHmiPlcPartner(plcName);
             TryConfigureUnifiedHmiConnectionPartner(connection, partner);
             TryConfigureUnifiedHmiConnectionS7PartnerRackSlot(connection, partner.Family);
@@ -1071,20 +1074,20 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "HmiConnection",
                 ObjectPath = $"{hmiSoftwarePath}:{connectionName}",
                 TypeName = connection.GetType().FullName,
-                Members = DescribeMembers(connection, 220),
-                Message = $"HMI connection '{connectionName}' ensured. PartnerResolved={partner.Summary}; {SummarizeHmiObjectReadback(connection, "Name", "CommunicationDriver", "Partner", "Station", "Node", "InitialAddress", "PlcName", "ControllerName", "PartnerName")}"
+                Members = _session.DescribeMembers(connection, 220),
+                Message = $"HMI connection '{connectionName}' ensured. PartnerResolved={partner.Summary}; {_session.SummarizeHmiObjectReadback(connection, "Name", "CommunicationDriver", "Partner", "Station", "Node", "InitialAddress", "PlcName", "ControllerName", "PartnerName")}"
             };
         }
 
         public ResponseMessage EnsureUnifiedHmiScreenItem(string hmiSoftwarePath, string screenName, string itemName, string itemType = "Button", int left = 0, int top = 0, uint width = 120, uint height = 40, string text = "")
         {
-            return RunHmiStepTool("EnsureUnifiedHmiScreenItem", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiScreenItem", meta =>
             {
-                var screen = ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
+                var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
                 var items = TryGetPropertyValue(screen, "ScreenItems");
                 if (items == null) throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
-                var item = FindExistingByName(items, itemName);
+                var item = _session.FindExistingByName(items, itemName);
                 var action = "exists";
                 if (item == null)
                 {
@@ -1094,14 +1097,14 @@ namespace TiaMcpServer.Siemens
                 }
 
                 if (item == null) throw new InvalidOperationException("Screen item create/find returned null.");
-                TrySetProperty(item, "Left", left);
-                TrySetProperty(item, "Top", top);
-                TrySetProperty(item, "Width", width);
-                TrySetProperty(item, "Height", height);
+                _session.TrySetProperty(item, "Left", left);
+                _session.TrySetProperty(item, "Top", top);
+                _session.TrySetProperty(item, "Width", width);
+                _session.TrySetProperty(item, "Height", height);
                 if (!string.IsNullOrWhiteSpace(text))
                 {
                     var textPart = TryGetPropertyValue(item, "Text", "DisplayName");
-                    if (textPart != null) TrySetProperty(textPart, "Item", text);
+                    if (textPart != null) _session.TrySetProperty(textPart, "Item", text);
                 }
 
                 meta["action"] = action;
@@ -1112,7 +1115,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage ReadUnifiedHmiTexts(string hmiSoftwarePath, string screenName, string itemName, string textProperty)
         {
-            return RunHmiStepTool("ReadUnifiedHmiTexts", meta =>
+            return _session.RunHmiStepTool("ReadUnifiedHmiTexts", meta =>
             {
                 var item = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, itemName);
                 var text = TryGetPropertyValue(item, textProperty)
@@ -1126,7 +1129,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage ApplyUnifiedHmiScreenDesignJson(string hmiSoftwarePath, string screenName, string designJson, bool strict = true)
         {
-            return RunHmiStepTool("ApplyUnifiedHmiScreenDesignJson", meta =>
+            return _session.RunHmiStepTool("ApplyUnifiedHmiScreenDesignJson", meta =>
             {
                 if (string.IsNullOrWhiteSpace(designJson))
                 {
@@ -1136,7 +1139,7 @@ namespace TiaMcpServer.Siemens
                 var root = JsonNode.Parse(designJson) as JsonObject
                     ?? throw new InvalidOperationException("designJson root must be a JSON object.");
 
-                var screen = ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
+                var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
                 var items = TryGetPropertyValue(screen, "ScreenItems")
                     ?? throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
@@ -1175,7 +1178,7 @@ namespace TiaMcpServer.Siemens
                         var typeHint = JsonString(itemNode, "type");
                         if (string.IsNullOrWhiteSpace(typeHint)) typeHint = "Rectangle";
 
-                        var item = FindExistingByName(items, name!);
+                        var item = _session.FindExistingByName(items, name!);
                         var action = "updated";
                         if (item == null)
                         {
@@ -1193,10 +1196,10 @@ namespace TiaMcpServer.Siemens
                                 JsonString(itemNode, "culture") ?? "zh-CN");
 
                         itemStatus["mayHaveChanged"] = true;
-                        if (itemNode["left"] != null) TrySetProperty(item, "Left", JsonObjectValue(itemNode["left"]));
-                        if (itemNode["top"] != null) TrySetProperty(item, "Top", JsonObjectValue(itemNode["top"]));
-                        if (itemNode["width"] != null) TrySetProperty(item, "Width", JsonObjectValue(itemNode["width"]));
-                        if (itemNode["height"] != null) TrySetProperty(item, "Height", JsonObjectValue(itemNode["height"]));
+                        if (itemNode["left"] != null) _session.TrySetProperty(item, "Left", JsonObjectValue(itemNode["left"]));
+                        if (itemNode["top"] != null) _session.TrySetProperty(item, "Top", JsonObjectValue(itemNode["top"]));
+                        if (itemNode["width"] != null) _session.TrySetProperty(item, "Width", JsonObjectValue(itemNode["width"]));
+                        if (itemNode["height"] != null) _session.TrySetProperty(item, "Height", JsonObjectValue(itemNode["height"]));
 
                         if (itemNode["properties"] is JsonObject props)
                         {
@@ -1261,13 +1264,13 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage BindUnifiedHmiButtonPressedTag(string hmiSoftwarePath, string screenName, string buttonName, string tagName)
         {
-            return RunHmiStepTool("BindUnifiedHmiButtonPressedTag", meta =>
+            return _session.RunHmiStepTool("BindUnifiedHmiButtonPressedTag", meta =>
             {
-                var screen = ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
+                var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
                 var items = TryGetPropertyValue(screen, "ScreenItems");
                 if (items == null) throw new InvalidOperationException($"ScreenItems collection not found on screen '{screenName}'.");
 
-                var button = FindExistingByName(items, buttonName);
+                var button = _session.FindExistingByName(items, buttonName);
                 if (button == null) throw new InvalidOperationException($"Screen item '{buttonName}' not found.");
 
                 var pressedStateTags = TryGetPropertyValue(button, "PressedStateTags");
@@ -1347,7 +1350,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage EnsureUnifiedHmiButtonEventHandler(string hmiSoftwarePath, string screenName, string buttonName, string eventType)
         {
-            return RunHmiStepTool("EnsureUnifiedHmiButtonEventHandler", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiButtonEventHandler", meta =>
             {
                 var button = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, buttonName);
                 var eventHandlers = TryGetPropertyValue(button, "EventHandlers");
@@ -1382,7 +1385,7 @@ namespace TiaMcpServer.Siemens
                 meta["eventEnumType"] = enumType.FullName;
                 meta["eventType"] = enumValue.ToString();
                 meta["handlerType"] = handler.GetType().FullName;
-                meta["handlerMembers"] = string.Join(" | ", DescribeMembers(handler, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
+                meta["handlerMembers"] = string.Join(" | ", _session.DescribeMembers(handler, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                 return $"Button event handler '{eventValueToText(enumValue)}' on '{buttonName}' {action}.";
             });
 
@@ -1393,7 +1396,7 @@ namespace TiaMcpServer.Siemens
         {
             try
             {
-                if (IsProjectNull())
+                if (_session.IsProjectNull())
                 {
                     throw new PortalException(PortalErrorCode.InvalidState, "Project is null");
                 }
@@ -1429,7 +1432,7 @@ namespace TiaMcpServer.Siemens
 
                 if (script != null)
                 {
-                    members.AddRange(DescribeMembers(script, Math.Max(10, Math.Min(2000, maxMembers))));
+                    members.AddRange(_session.DescribeMembers(script, Math.Max(10, Math.Min(2000, maxMembers))));
                     try
                     {
                         var infos = script.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes)?.Invoke(script, Array.Empty<object>());
@@ -1451,7 +1454,7 @@ namespace TiaMcpServer.Siemens
                 }
                 else
                 {
-                    members.AddRange(DescribeMembers(handler, Math.Max(10, Math.Min(2000, maxMembers))));
+                    members.AddRange(_session.DescribeMembers(handler, Math.Max(10, Math.Min(2000, maxMembers))));
                     try
                     {
                         var infos = handler.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes)?.Invoke(handler, Array.Empty<object>());
@@ -1499,7 +1502,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage SetUnifiedHmiButtonEventScriptCode(string hmiSoftwarePath, string screenName, string buttonName, string eventType, string scriptCode, string globalDefinitionAreaScriptCode = "", bool async = false, bool syntaxCheck = false)
         {
-            return RunHmiStepTool("SetUnifiedHmiButtonEventScriptCode", meta =>
+            return _session.RunHmiStepTool("SetUnifiedHmiButtonEventScriptCode", meta =>
             {
                 var handler = ResolveHmiButtonEventHandlerOrThrow(hmiSoftwarePath, screenName, buttonName, eventType);
                 var script = TryGetPropertyValue(handler, "Script");
@@ -1508,9 +1511,9 @@ namespace TiaMcpServer.Siemens
                     throw new InvalidOperationException($"Script object is null on '{buttonName}.{eventType}'. Ensure the event handler exists first.");
                 }
 
-                var setScriptCode = TrySetProperty(script, "ScriptCode", scriptCode ?? string.Empty);
-                var setGlobalCode = TrySetProperty(script, "GlobalDefinitionAreaScriptCode", globalDefinitionAreaScriptCode ?? string.Empty);
-                var setAsync = TrySetProperty(script, "Async", async);
+                var setScriptCode = _session.TrySetProperty(script, "ScriptCode", scriptCode ?? string.Empty);
+                var setGlobalCode = _session.TrySetProperty(script, "GlobalDefinitionAreaScriptCode", globalDefinitionAreaScriptCode ?? string.Empty);
+                var setAsync = _session.TrySetProperty(script, "Async", async);
 
                 meta["scriptType"] = script.GetType().FullName;
                 meta["setScriptCode"] = setScriptCode;
@@ -1552,12 +1555,12 @@ namespace TiaMcpServer.Siemens
                             meta["syntaxCheckStatus"] = "ran";
                             meta["syntaxResultType"] = syntaxResult.GetType().FullName;
                             meta["syntaxResult"] = syntaxResult.ToString();
-                            meta["syntaxErrors"] = ToJsonArray(syntaxErrors);
-                            meta["syntaxWarnings"] = ToJsonArray(syntaxWarnings);
+                            meta["syntaxErrors"] = _session.ToJsonArray(syntaxErrors);
+                            meta["syntaxWarnings"] = _session.ToJsonArray(syntaxWarnings);
                             meta["syntaxErrorCount"] = syntaxErrors.Count;
                             meta["syntaxWarningCount"] = syntaxWarnings.Count;
                             meta["syntaxPropertyName"] = TryGetPropertyValue(syntaxResult, "PropertyName")?.ToString() ?? string.Empty;
-                            meta["syntaxMembers"] = string.Join(" | ", DescribeMembers(syntaxResult, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
+                            meta["syntaxMembers"] = string.Join(" | ", _session.DescribeMembers(syntaxResult, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                         }
                         else
                         {
@@ -1592,7 +1595,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage EnsureUnifiedHmiDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string dynamizationType = "")
         {
-            return RunHmiStepTool("EnsureUnifiedHmiDynamization", meta =>
+            return _session.RunHmiStepTool("EnsureUnifiedHmiDynamization", meta =>
             {
                 var item = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, itemName);
                 var dynamizations = TryGetPropertyValue(item, "Dynamizations");
@@ -1604,7 +1607,7 @@ namespace TiaMcpServer.Siemens
                 {
                     meta["action"] = "exists";
                     meta["dynamizationType"] = existing.GetType().FullName;
-                    meta["members"] = string.Join(" | ", DescribeMembers(existing, 100).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
+                    meta["members"] = string.Join(" | ", _session.DescribeMembers(existing, 100).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                     return $"Dynamization for '{itemName}.{propertyName}' exists.";
                 }
 
@@ -1633,7 +1636,7 @@ namespace TiaMcpServer.Siemens
 
                         meta["action"] = "created";
                         meta["dynamizationType"] = created.GetType().FullName;
-                        meta["members"] = string.Join(" | ", DescribeMembers(created, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
+                        meta["members"] = string.Join(" | ", _session.DescribeMembers(created, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
                         return $"Dynamization for '{itemName}.{propertyName}' created as '{created.GetType().Name}'.";
                     }
                     catch (Exception ex)
@@ -1651,12 +1654,12 @@ namespace TiaMcpServer.Siemens
         /// Unified TagDynamization: PLC address may live on property <c>Address</c>, <c>LogicalAddress</c>,
         /// or only as an engineering attribute — plain <see cref="TrySetProperty"/> often misses it.
         /// </summary>
-        private static bool TrySetTagDynamizationAddress(object dyn, string address)
+        private bool TrySetTagDynamizationAddress(object dyn, string address)
         {
             if (string.IsNullOrWhiteSpace(address) || dyn == null) return false;
             foreach (var attr in new[] { "Address", "LogicalAddress", "ControllerTagAddress", "PlcAddress" })
             {
-                if (TrySetProperty(dyn, attr, address)) return true;
+                if (_session.TrySetProperty(dyn, attr, address)) return true;
                 if (TrySetEngineeringAttribute(dyn, attr, address)) return true;
             }
 
@@ -1665,7 +1668,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage BindUnifiedHmiTagDynamization(string hmiSoftwarePath, string screenName, string itemName, string propertyName, string tagName, string dataType = "Bool", string plcTag = "", string address = "")
         {
-            return RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
+            return _session.RunHmiStepTool("BindUnifiedHmiTagDynamization", meta =>
             {
                 var item = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, itemName);
                 var dynamizations = TryGetPropertyValue(item, "Dynamizations");
@@ -1688,9 +1691,9 @@ namespace TiaMcpServer.Siemens
                 }
 
                 if (dyn == null) throw new InvalidOperationException("Dynamization create/find returned null.");
-                var setTag = TrySetProperty(dyn, "Tag", tagName);
-                var setDataType = TrySetProperty(dyn, "DataType", dataType);
-                var setPlcTag = !string.IsNullOrWhiteSpace(plcTag) && TrySetProperty(dyn, "PlcTag", plcTag);
+                var setTag = _session.TrySetProperty(dyn, "Tag", tagName);
+                var setDataType = _session.TrySetProperty(dyn, "DataType", dataType);
+                var setPlcTag = !string.IsNullOrWhiteSpace(plcTag) && _session.TrySetProperty(dyn, "PlcTag", plcTag);
                 var setAddress = false;
                 if (!string.IsNullOrWhiteSpace(address))
                 {
@@ -1703,7 +1706,7 @@ namespace TiaMcpServer.Siemens
                 meta["setDataType"] = setDataType;
                 meta["setPlcTag"] = string.IsNullOrWhiteSpace(plcTag) ? "skipped" : setPlcTag;
                 meta["setAddress"] = string.IsNullOrWhiteSpace(address) ? "skipped" : setAddress;
-                meta["members"] = string.Join(" | ", DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
+                meta["members"] = string.Join(" | ", _session.DescribeMembers(dyn, 120).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"));
 
                 if (!setTag)
                 {
@@ -1714,6 +1717,938 @@ namespace TiaMcpServer.Siemens
             });
         }
 
-        #endregion
+        private object ResolveHmiScreenItemOrThrow(string hmiSoftwarePath, string screenName, string itemName)
+        {
+            var screen = _session.ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
+            var items = TryGetPropertyValue(screen, "ScreenItems");
+            if (items == null)
+            {
+                throw new PortalException(PortalErrorCode.NotFound, $"ScreenItems collection not found on screen '{screenName}'.");
+            }
+
+            var item = HmiExactAccess.Named(items, itemName);
+            if (item == null)
+            {
+                throw new PortalException(PortalErrorCode.NotFound, $"Screen item '{itemName}' not found on screen '{screenName}'.");
+            }
+
+            return item;
+        }
+
+        private object ResolveHmiButtonEventHandlerOrThrow(string hmiSoftwarePath, string screenName, string buttonName, string eventType, bool createIfMissing = true)
+        {
+            var button = ResolveHmiScreenItemOrThrow(hmiSoftwarePath, screenName, buttonName);
+            var handlers = button.GetType().GetProperty("EventHandlers")?.GetValue(button)
+                ?? throw new PortalException(PortalErrorCode.NotFound, "EventHandlers not found on " + buttonName);
+            return HmiEventAccess.Resolve(handlers, eventType, createIfMissing);
+        }
+
+        private object EnsureHmiTagTableObject(object hmiSoftware, string tagTableName)
+        {
+            var tagRoot = _session.TryGetHmiTagRoot(hmiSoftware);
+            var table = _session.TryFindHmiTagTable(hmiSoftware, tagTableName);
+            if (table != null) return table;
+
+            var tables = _session.TryGetHmiTagTablesCollection(hmiSoftware);
+            if (tables == null)
+            {
+                throw new InvalidOperationException($"HMI TagTables collection not found. hmiType={hmiSoftware.GetType().FullName}; tagRootType={tagRoot.GetType().FullName}; tagRootMembers={string.Join(" | ", _session.DescribeMembers(tagRoot, 80).Select(m => $"{m.Kind}:{m.Name}:{m.Type}"))}");
+            }
+
+            table = TryCreateNamedEngineeringObject(tables, tagTableName, out var createError);
+            if (table == null)
+            {
+                throw new InvalidOperationException(createError ?? $"Failed to create HMI tag table '{tagTableName}'.");
+            }
+
+            return table;
+        }
+
+        private object? TryCreateNamedEngineeringObject(object collection, string name, out string? error)
+        {
+            error = null;
+            var attempts = new List<string>();
+
+            foreach (var method in collection.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                         .Where(m => string.Equals(m.Name, "Create", StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(m => m.GetParameters().Length))
+            {
+                var ps = method.GetParameters();
+                var sig = $"{method.Name}({string.Join(", ", ps.Select(p => p.ParameterType.FullName + " " + p.Name))})";
+
+                object?[]? args = null;
+                if (ps.Length == 1 && ps[0].ParameterType == typeof(string))
+                {
+                    args = new object?[] { name };
+                }
+                else if (ps.Length == 2 && ps[0].ParameterType == typeof(string) && ps[1].ParameterType == typeof(string))
+                {
+                    args = new object?[] { name, name };
+                }
+                else if (ps.Length == 2 && ps[0].ParameterType == typeof(string) && ps[1].ParameterType.IsEnum)
+                {
+                    args = new object?[] { name, Enum.ToObject(ps[1].ParameterType, 0) };
+                }
+                else if (ps.Length == 2 && ps[0].ParameterType.IsEnum && ps[1].ParameterType == typeof(string))
+                {
+                    args = new object?[] { Enum.ToObject(ps[0].ParameterType, 0), name };
+                }
+                else
+                {
+                    attempts.Add($"SKIP {sig}");
+                    continue;
+                }
+
+                try
+                {
+                    var created = method.Invoke(collection, args);
+                    if (created != null) return created;
+                    attempts.Add($"NULL {sig}");
+                }
+                catch (TargetInvocationException tie) when (tie.InnerException != null)
+                {
+                    var msg = $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}";
+                    attempts.Add($"ERR {sig}: {msg}");
+                    if (msg.IndexOf("ValueIsNotUnique", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        var existing = _session.FindExistingByName(collection, name);
+                        if (existing != null) return existing;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    attempts.Add($"ERR {sig}: {ex.Message}");
+                }
+            }
+
+            error = $"No supported Create overload succeeded on {collection.GetType().FullName}. Attempts: {string.Join(" | ", attempts)}";
+            return null;
+        }
+
+        private static object? InvokeCreate(MethodInfo method, object target, object[] args)
+        {
+            try
+            {
+                return method.Invoke(target, args);
+            }
+            catch (TargetInvocationException tie) when (tie.InnerException != null)
+            {
+                var msg = $"{tie.InnerException.GetType().FullName}: {tie.InnerException.Message}";
+                throw new InvalidOperationException(msg, tie.InnerException);
+            }
+        }
+
+        private static Type? ResolveUnifiedScreenItemType(string itemType)
+        {
+            var key = (itemType ?? string.Empty).Trim();
+            var candidates = key.Equals("Button", StringComparison.OrdinalIgnoreCase) || key.Equals("HmiButton", StringComparison.OrdinalIgnoreCase)
+                ? new[] { "Siemens.Engineering.HmiUnified.UI.Widgets.HmiButton" }
+                : key.Equals("Text", StringComparison.OrdinalIgnoreCase) || key.Equals("HmiText", StringComparison.OrdinalIgnoreCase)
+                    ? new[] { "Siemens.Engineering.HmiUnified.UI.Shapes.HmiText" }
+                : key.Equals("Rectangle", StringComparison.OrdinalIgnoreCase) || key.Equals("Lamp", StringComparison.OrdinalIgnoreCase) || key.Equals("HmiRectangle", StringComparison.OrdinalIgnoreCase)
+                    ? new[] { "Siemens.Engineering.HmiUnified.UI.Shapes.HmiRectangle", "Siemens.Engineering.HmiUnified.UI.Widgets.HmiRectangle" }
+                    : key.Equals("IOField", StringComparison.OrdinalIgnoreCase) || key.Equals("HmiIOField", StringComparison.OrdinalIgnoreCase)
+                        ? new[] { "Siemens.Engineering.HmiUnified.UI.Widgets.HmiIOField" }
+                        : new[] { key };
+
+            foreach (var name in candidates.Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    try
+                    {
+                        var t = asm.GetType(name, throwOnError: false, ignoreCase: false);
+                        if (t != null) return t;
+                    }
+                    catch /* swallow(probe-optional): The screen-item type may be available in another loaded assembly. */ { }
+                }
+            }
+
+            return null;
+        }
+
+        private static IEnumerable<Type> ResolveUnifiedHmiDynamizationTypes(string dynamizationType)
+        {
+            var filter = (dynamizationType ?? string.Empty).Trim();
+            var preferredNames = string.IsNullOrWhiteSpace(filter)
+                ? new[]
+                {
+                    "Siemens.Engineering.HmiUnified.UI.Dynamization.TagDynamization",
+                    "Siemens.Engineering.HmiUnified.UI.Dynamization.DiscreteDynamization",
+                    "Siemens.Engineering.HmiUnified.UI.Dynamization.RangeDynamization",
+                    "Siemens.Engineering.HmiUnified.UI.Dynamization.ScriptDynamization"
+                }
+                : filter.Contains(".")
+                    ? new[] { filter }
+                    : new[]
+                    {
+                        $"Siemens.Engineering.HmiUnified.UI.Dynamization.{filter}",
+                        $"Siemens.Engineering.HmiUnified.UI.Dynamization.{filter}Dynamization",
+                        filter
+                    };
+
+            foreach (var name in preferredNames)
+            {
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Type? t = null;
+                    try { t = asm.GetType(name, throwOnError: false, ignoreCase: false); } catch /* swallow(probe-optional): The dynamization type may be available in another loaded assembly. */ { }
+                    if (t != null) yield return t;
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter) && !filter.Contains("."))
+            {
+                foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    Type[] types;
+                    try { types = asm.GetTypes(); }
+                    catch (ReflectionTypeLoadException ex) { types = ex.Types.Where(t => t != null).Cast<Type>().ToArray(); }
+                    catch /* swallow(probe-optional): Assemblies whose types cannot load cannot supply dynamization candidates. */ { continue; }
+
+                    foreach (var t in types)
+                    {
+                        if (t.FullName == null) continue;
+                        if (!t.FullName.StartsWith("Siemens.Engineering.HmiUnified.UI.Dynamization.", StringComparison.Ordinal)) continue;
+                        if (t.FullName.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) yield return t;
+                    }
+                }
+            }
+        }
+
+        private static object? CreateUnifiedScreenItem(object items, string itemName, Type? itemClrType, string itemTypeHint)
+        {
+            var methods = items.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                .Where(m => string.Equals(m.Name, "Create", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var m in methods)
+            {
+                var ps = m.GetParameters();
+                if (itemClrType != null && m.IsGenericMethodDefinition && ps.Length == 1 && ps[0].ParameterType == typeof(string))
+                {
+                    var created = m.MakeGenericMethod(itemClrType).Invoke(items, new object[] { itemName });
+                    if (created != null) return created;
+                }
+
+                if (!m.IsGenericMethodDefinition && ps.Length == 2 && ps[0].ParameterType == typeof(string) && ps[1].ParameterType == typeof(string))
+                {
+                    foreach (var args in new[] { new object[] { itemName, itemTypeHint }, new object[] { itemTypeHint, itemName } })
+                    {
+                        try
+                        {
+                            var created = m.Invoke(items, args);
+                            if (created != null) return created;
+                        }
+                        catch /* swallow(native-fallback): An unsupported screen-item creation overload leaves the remaining overloads available. */ { }
+                    }
+                }
+            }
+
+            throw new InvalidOperationException($"Unable to create screen item '{itemName}' as '{itemTypeHint}'. ResolvedType={itemClrType?.FullName ?? "null"}.");
+        }
+
+        private static object? FindPressedStateTag(object pressedStateTags, string tagName)
+        {
+            try
+            {
+                if (pressedStateTags is IEnumerable en)
+                {
+                    foreach (var it in en)
+                    {
+                        foreach (var propName in new[] { "Tag", "TagName", "HmiTag", "HmiTagName", "Name", "TagPath" })
+                        {
+                            var value = TryGetPropertyValue(it, propName)?.ToString();
+                            if (!string.IsNullOrWhiteSpace(value) &&
+                                string.Equals(value!.Trim(), tagName, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return it;
+                            }
+                        }
+                    }
+                }
+            }
+            catch /* swallow(enumerate-optional): Unavailable pressed-state tag enumeration preserves the missing-tag result. */ { }
+
+            return null;
+        }
+
+        private bool TrySetAnyProperty(object target, string value, params string[] propertyNames)
+        {
+            foreach (var propName in propertyNames)
+            {
+                if (_session.TrySetProperty(target, propName, value)) return true;
+            }
+
+            return false;
+        }
+
+        private bool TrySetAnyPropertyOrAttribute(object target, object? value, params string[] propertyNames)
+        {
+            var any = false;
+            foreach (var propName in propertyNames)
+            {
+                any = _session.TrySetProperty(target, propName, value) || any;
+                any = TrySetEngineeringAttribute(target, propName, value) || any;
+            }
+
+            return any;
+        }
+
+        private bool TrySetAnyEnumCandidatePropertyOrAttribute(object target, IEnumerable<string> valueCandidates, params string[] propertyNames)
+        {
+            var any = false;
+            foreach (var propName in propertyNames)
+            {
+                var prop = target.GetType().GetProperty(propName, BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null && prop.CanWrite && prop.PropertyType.IsEnum)
+                {
+                    foreach (var candidate in valueCandidates)
+                    {
+                        try
+                        {
+                            var enumValue = Enum.Parse(prop.PropertyType, candidate, ignoreCase: true);
+                            prop.SetValue(target, enumValue);
+                            any = true;
+                            break;
+                        }
+                        catch /* swallow(native-fallback): An unsupported enum property write leaves the next candidate available. */ { }
+                    }
+                }
+
+                var oldValue = _session.TryGetEngineeringAttribute(target, propName);
+                if (oldValue != null && oldValue.GetType().IsEnum)
+                {
+                    foreach (var candidate in valueCandidates)
+                    {
+                        try
+                        {
+                            var enumValue = Enum.Parse(oldValue.GetType(), candidate, ignoreCase: true);
+                            if (TrySetEngineeringAttribute(target, propName, enumValue))
+                            {
+                                any = true;
+                                break;
+                            }
+                        }
+                        catch /* swallow(native-fallback): An unsupported enum attribute write leaves the next candidate available. */ { }
+                    }
+                }
+            }
+
+            return any;
+        }
+
+        private string DescribeWritableEnumProperties(object target, params string[] propertyNames)
+        {
+            var parts = new List<string>();
+            foreach (var name in propertyNames)
+            {
+                var prop = target.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null && prop.PropertyType.IsEnum)
+                {
+                    parts.Add($"{name}:{prop.PropertyType.FullName}=[{string.Join(",", Enum.GetNames(prop.PropertyType))}]");
+                    continue;
+                }
+
+                var oldValue = _session.TryGetEngineeringAttribute(target, name);
+                if (oldValue != null && oldValue.GetType().IsEnum)
+                {
+                    parts.Add($"{name}:attr:{oldValue.GetType().FullName}=[{string.Join(",", Enum.GetNames(oldValue.GetType()))}]");
+                }
+            }
+
+            return string.Join(" | ", parts);
+        }
+
+        private sealed class UnifiedHmiTagBindingReadback
+        {
+            public string Status { get; set; } = "Failed";
+            public bool Verified { get; set; }
+            public string Readback { get; set; } = string.Empty;
+            public string Guidance { get; set; } = string.Empty;
+        }
+
+        private UnifiedHmiTagBindingReadback ClassifyUnifiedHmiTagBinding(object tag, string connectionName, string plcTag, string address)
+        {
+            string Attr(params string[] names)
+            {
+                foreach (var name in names)
+                {
+                    try
+                    {
+                        var prop = tag.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                        if (prop != null && prop.CanRead)
+                        {
+                            var v = prop.GetValue(tag)?.ToString();
+                            if (!string.IsNullOrWhiteSpace(v)) return v!;
+                        }
+                    }
+                    catch /* swallow(probe-optional): Unavailable tag properties fall through to attribute readback and other names. */ { }
+
+                    try
+                    {
+                        var v = _session.TryGetEngineeringAttribute(tag, name)?.ToString();
+                        if (!string.IsNullOrWhiteSpace(v)) return v!;
+                    }
+                    catch /* swallow(probe-optional): Unavailable tag attributes leave the remaining binding names available. */ { }
+                }
+
+                return string.Empty;
+            }
+
+            var readback = _session.SummarizeHmiObjectReadback(tag, "Connection", "AccessMode", "AddressAccessMode", "TagType", "PlcName", "ControllerName", "Station", "PlcTag", "ControllerTag", "ControllerTagName", "Address", "LogicalAddress", "ProcessValueAddress", "RuntimeAddress", "ControllerAddress", "ControllerTagAddress", "ExternalAddress", "PlcAddress", "PLCAddress", "TagAddress", "AbsoluteAddress", "DataType", "HmiDataType");
+            var connection = Attr("Connection", "ConnectionName");
+            var accessMode = Attr("AccessMode", "AddressAccessMode");
+            var symbol = Attr("PlcTag", "ControllerTag", "ControllerTagName");
+            var runtimeAddress = Attr("Address", "LogicalAddress", "ProcessValueAddress", "RuntimeAddress", "ControllerAddress", "ControllerTagAddress", "ExternalAddress", "PlcAddress", "PLCAddress", "TagAddress", "AbsoluteAddress");
+            var requestedAddress = (address ?? string.Empty).Trim();
+            var requestedSymbol = NormalizeControllerTagName(plcTag ?? string.Empty);
+            var expectedConnection = (connectionName ?? string.Empty).Trim();
+
+            var connectionOk = string.IsNullOrWhiteSpace(expectedConnection) ||
+                string.Equals(connection, expectedConnection, StringComparison.OrdinalIgnoreCase);
+            var absoluteOk = !string.IsNullOrWhiteSpace(requestedAddress) &&
+                connectionOk &&
+                string.Equals(runtimeAddress, requestedAddress, StringComparison.OrdinalIgnoreCase);
+            var symbolicOk = !string.IsNullOrWhiteSpace(requestedSymbol) &&
+                connectionOk &&
+                string.Equals(NormalizeControllerTagName(symbol), requestedSymbol, StringComparison.OrdinalIgnoreCase) &&
+                accessMode.IndexOf("Symbol", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (symbolicOk)
+            {
+                return new UnifiedHmiTagBindingReadback
+                {
+                    Status = "SymbolicVerified",
+                    Verified = true,
+                    Readback = readback,
+                    Guidance = "PLC symbolic HMI tag binding read back successfully."
+                };
+            }
+
+            if (absoluteOk)
+            {
+                return new UnifiedHmiTagBindingReadback
+                {
+                    Status = "AbsoluteVerified",
+                    Verified = true,
+                    Readback = readback,
+                    Guidance = "Absolute-address HMI tag binding read back successfully."
+                };
+            }
+
+            var status = string.IsNullOrWhiteSpace(connection) || connection.IndexOf("internal", StringComparison.OrdinalIgnoreCase) >= 0 || connection.IndexOf("内部", StringComparison.OrdinalIgnoreCase) >= 0
+                ? "InternalOnly"
+                : "Unverified";
+            return new UnifiedHmiTagBindingReadback
+            {
+                Status = status,
+                Verified = false,
+                Readback = readback,
+                Guidance = "Pass connectionName plus a verified PLC symbol or absolute address, then read back Connection/AccessMode/PlcTag/Address. Internal HMI tags are not accepted by the stable project-generation path."
+            };
+        }
+
+        private static string NormalizeControllerTagName(string tagName)
+        {
+            if (string.IsNullOrWhiteSpace(tagName)) return string.Empty;
+            return tagName.Replace("\"", string.Empty);
+        }
+
+
+
+        private UnifiedHmiPlcPartnerInfo ResolveUnifiedHmiPlcPartner(string plcSoftwarePath)
+        {
+            plcSoftwarePath ??= string.Empty;
+            var info = new UnifiedHmiPlcPartnerInfo
+            {
+                SoftwarePath = plcSoftwarePath,
+                DeviceName = FirstPathSegment(plcSoftwarePath),
+                StationName = FirstPathSegment(plcSoftwarePath),
+                Family = InferUnifiedPlcFamilyFromSoftwarePath(plcSoftwarePath)
+            };
+
+            try
+            {
+                var sc = _session.GetSoftwareContainer(plcSoftwarePath);
+                var di = sc?.Parent as DeviceItem;
+                if (di != null)
+                {
+                    info.StationName = _session.TryGetName(di) ?? di.Name ?? info.StationName;
+                    var root = GetTopDeviceItem(di);
+                    if (root != null)
+                    {
+                        info.DeviceName = _session.TryGetName(root) ?? root.Name ?? info.DeviceName;
+                        info.StationName = _session.TryGetName(root) ?? root.Name ?? info.StationName;
+                        _session.FillUnifiedHmiPartnerNetworkInfo(root, info);
+                    }
+                }
+            }
+            catch /* swallow(probe-optional): Unavailable software parent metadata preserves path-derived partner values and device lookup. */
+            {
+            }
+
+            if (string.IsNullOrWhiteSpace(info.NodeName))
+            {
+                try
+                {
+                    var root = _session.GetDeviceItemByPath(info.DeviceName);
+                    if (root != null) _session.FillUnifiedHmiPartnerNetworkInfo(root, info);
+                }
+                catch /* swallow(probe-optional): Unavailable device network metadata preserves the partner values already resolved. */
+                {
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(info.DeviceName)) info.DeviceName = FirstPathSegment(plcSoftwarePath);
+            if (string.IsNullOrWhiteSpace(info.StationName)) info.StationName = info.DeviceName;
+            return info;
+        }
+
+        private static string FirstPathSegment(string path)
+        {
+            return (path ?? string.Empty).Trim()
+                .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault() ?? string.Empty;
+        }
+
+        private static DeviceItem? GetTopDeviceItem(DeviceItem item)
+        {
+            var current = item;
+            while (current.Parent is DeviceItem parent)
+            {
+                current = parent;
+            }
+
+            return current;
+        }
+
+
+
+        private void TryConfigureUnifiedHmiConnectionPartner(object connection, UnifiedHmiPlcPartnerInfo partner)
+        {
+            var deviceName = string.IsNullOrWhiteSpace(partner.DeviceName) ? partner.SoftwarePath : partner.DeviceName;
+            var stationName = string.IsNullOrWhiteSpace(partner.StationName) ? deviceName : partner.StationName;
+
+            TrySetAnyPropertyOrAttribute(connection, deviceName, "Partner", "PartnerName", "DeviceName", "PlcName", "ControllerName");
+            TrySetAnyPropertyOrAttribute(connection, stationName, "Station", "StationName", "ControllerStation");
+            TrySetAnyPropertyOrAttribute(connection, deviceName, "Controller", "Device", "Plc", "Target");
+
+            if (!string.IsNullOrWhiteSpace(partner.NodeName))
+            {
+                TrySetAnyPropertyOrAttribute(connection, partner.NodeName, "Node", "PartnerNode", "Interface", "NetworkNode", "AccessPoint");
+            }
+
+            if (!string.IsNullOrWhiteSpace(partner.InitialAddress))
+            {
+                TrySetAnyPropertyOrAttribute(connection, partner.InitialAddress, "InitialAddress", "Address", "IpAddress", "IPAddress", "PartnerAddress");
+            }
+        }
+
+        /// <summary>
+        /// Infer PLC CPU family from the PLC software path (device TypeIdentifier / order number).
+        /// </summary>
+        private string InferUnifiedPlcFamilyFromSoftwarePath(string plcSoftwarePath)
+        {
+            try
+            {
+                var sc = _session.GetSoftwareContainer(plcSoftwarePath);
+                var di = sc?.Parent as DeviceItem;
+                while (di != null)
+                {
+                    var tid = TryGetPropertyValue(di, "TypeIdentifier")?.ToString() ?? string.Empty;
+                    var t = tid.ToUpperInvariant();
+                    // Catalog MLFB often contains spaces (e.g. "OrderNumber:6ES7 211-1BE40-0XB0/...").
+                    // Compact whitespace before matching the MLFB so S7-1200 devices keep their matching driver.
+                    var tCompact = string.Concat(t.Where(ch => !char.IsWhiteSpace(ch)));
+                    if (t.IndexOf("S7-1200", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S71200", StringComparison.OrdinalIgnoreCase) >= 0
+                        || tCompact.IndexOf("6ES721", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES722", StringComparison.OrdinalIgnoreCase) >= 0)
+                        return "S71200";
+                    if (t.IndexOf("S7-1500", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S71500", StringComparison.OrdinalIgnoreCase) >= 0
+                        || tCompact.IndexOf("6ES751", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES752", StringComparison.OrdinalIgnoreCase) >= 0)
+                        return "S71500";
+                    if (t.IndexOf("S7-300", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S7300", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES731", StringComparison.OrdinalIgnoreCase) >= 0)
+                        return "S7300";
+                    if (t.IndexOf("S7-400", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S7400", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES741", StringComparison.OrdinalIgnoreCase) >= 0)
+                        return "S7400";
+                    di = di.Parent as DeviceItem;
+                }
+
+                var fromDevices = TryInferPlcFamilyFromProjectDevices(plcSoftwarePath);
+                if (!string.IsNullOrEmpty(fromDevices)) return fromDevices;
+            }
+            catch /* swallow(probe-optional): Unavailable hardware metadata preserves the UNKNOWN PLC-family result. */
+            {
+            }
+
+            return "UNKNOWN";
+        }
+
+        /// <summary>
+        /// When <see cref="SoftwareContainer.Parent"/> is not a <see cref="DeviceItem"/>, CPU TypeIdentifier may still
+        /// exist on nested rack/CPU items under the PLC device — walk the device tree by PLC software path head name.
+        /// </summary>
+        private string TryInferPlcFamilyFromProjectDevices(string plcSoftwarePath)
+        {
+            try
+            {
+                if (_session.CurrentProject?.Devices == null) return string.Empty;
+                var head = (plcSoftwarePath ?? string.Empty).Trim()
+                    .Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(head)) return string.Empty;
+
+                foreach (var device in _session.CurrentProject.Devices)
+                {
+                    if (!device.Name.Equals(head, StringComparison.OrdinalIgnoreCase)) continue;
+                    var stack = new Stack<DeviceItem>(device.DeviceItems ?? Enumerable.Empty<DeviceItem>());
+                    while (stack.Count > 0)
+                    {
+                        var di = stack.Pop();
+                        if (di == null) continue;
+                        if (di.DeviceItems != null)
+                        {
+                            foreach (var ch in di.DeviceItems) stack.Push(ch);
+                        }
+
+                        var tid = TryGetPropertyValue(di, "TypeIdentifier")?.ToString() ?? string.Empty;
+                        var t = tid.ToUpperInvariant();
+                        var tCompact = string.Concat(t.Where(ch => !char.IsWhiteSpace(ch)));
+                        if (t.IndexOf("S7-1200", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S71200", StringComparison.OrdinalIgnoreCase) >= 0
+                            || tCompact.IndexOf("6ES721", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES722", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "S71200";
+                        if (t.IndexOf("S7-1500", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S71500", StringComparison.OrdinalIgnoreCase) >= 0
+                            || tCompact.IndexOf("6ES751", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES752", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "S71500";
+                        if (t.IndexOf("S7-300", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S7300", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES731", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "S7300";
+                        if (t.IndexOf("S7-400", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S7400", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES741", StringComparison.OrdinalIgnoreCase) >= 0)
+                            return "S7400";
+                    }
+                }
+            }
+            catch /* swallow(enumerate-optional): Unavailable project device traversal leaves the PLC-family fallback unresolved. */
+            {
+            }
+
+            return string.Empty;
+        }
+
+        private static object? SelectCommunicationDriverEnumValue(Type enumType, string plcFamily)
+        {
+            object? best = null;
+            var bestScore = -1;
+            foreach (var name in Enum.GetNames(enumType))
+            {
+                var u = name.ToUpperInvariant();
+                var score = 0;
+                if (plcFamily == "S71200" || plcFamily == "S71500" || plcFamily == "UNKNOWN")
+                {
+                    if (u.Contains("300") && !u.Contains("1500")) continue;
+                    if (u.Contains("400") && !u.Contains("1500")) continue;
+                    if (u.Contains("318") || u.Contains("319")) continue;
+                    if (u.Contains("1200") || u.Contains("1500") || u.Contains("S712") || u.Contains("S715") || u.Contains("PLUS"))
+                        score += 10;
+                    if (u.Contains("UNIFIED") || u.Contains("PLUS")) score += 2;
+                }
+                else if (plcFamily == "S7300")
+                {
+                    if (u.Contains("300") || u.Contains("318") || u.Contains("319")) score += 10;
+                }
+                else if (plcFamily == "S7400")
+                {
+                    if (u.Contains("400") || u.Contains("414") || u.Contains("416")) score += 10;
+                }
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = Enum.Parse(enumType, name);
+                }
+            }
+
+            return bestScore > 0 ? best : null;
+        }
+
+        private void TryConfigureUnifiedDriverProperties(object connection, string plcFamily)
+        {
+            try
+            {
+                var dps = TryGetPropertyValue(connection, "DriverProperties");
+                if (dps is not IEnumerable en) return;
+
+                foreach (var dp in en)
+                {
+                    if (dp == null) continue;
+                    var n = TryGetPropertyValue(dp, "Name")?.ToString() ?? _session.TryGetName(dp) ?? string.Empty;
+                    var nu = n.ToUpperInvariant();
+                    if (nu.Contains("DRIVER") || nu.Contains("FAMILY") || nu.Contains("CPU") || nu.Contains("CONTROLLER"))
+                    {
+                        if (plcFamily == "S71200" || plcFamily == "S71500" || plcFamily == "UNKNOWN")
+                        {
+                            _session.TrySetProperty(dp, "Value", "SIMATIC S7-1200/1500");
+                            TrySetEngineeringAttribute(dp, "Value", "SIMATIC S7-1200/1500");
+                        }
+                    }
+                }
+            }
+            catch /* swallow(native-fallback): Optional driver-property writes retain the existing communication-driver fallbacks. */
+            {
+            }
+        }
+
+        /// <summary>
+        /// WinCC Unified HMI connection: pick CommunicationDriver enum / attribute that matches the PLC hardware.
+        /// </summary>
+        private void TryConfigureUnifiedHmiCommunicationDriver(object connection, string plcSoftwarePath)
+        {
+            var plcFamily = InferUnifiedPlcFamilyFromSoftwarePath(plcSoftwarePath);
+
+            try
+            {
+                var prop = connection.GetType().GetProperty("CommunicationDriver", BindingFlags.Public | BindingFlags.Instance);
+                if (prop != null && prop.CanWrite && prop.PropertyType.IsEnum)
+                {
+                    var ev = SelectCommunicationDriverEnumValue(prop.PropertyType, plcFamily);
+                    if (ev != null)
+                    {
+                        prop.SetValue(connection, ev);
+                        return;
+                    }
+                }
+            }
+            catch /* swallow(native-fallback): An unsupported enum property write falls through to engineering attribute configuration. */
+            {
+            }
+
+            // CommunicationDriver is commonly exposed as an engineering attribute typed as an enum; string writes fail.
+            if (TrySetUnifiedHmiCommunicationDriverEnum(connection, plcFamily))
+            {
+                return;
+            }
+
+            var driverCandidates = plcFamily switch
+            {
+                "S7300" => new[] { "SIMATIC S7 300/400", "SIMATIC S7-300/400", "SIMATIC S7 300", "SIMATIC S7-300" },
+                "S7400" => new[] { "SIMATIC S7 400", "SIMATIC S7-400", "SIMATIC S7 300/400", "SIMATIC S7-300/400" },
+                _ => new[]
+                {
+                    "SIMATIC S7-1200/1500",
+                    "SIMATIC S7 1200/1500",
+                    "SIMATIC S7-1200",
+                    "SIMATIC S7 1200",
+                    "SIMATIC S7-1500",
+                    "SIMATIC S7 1500",
+                    "S7-1200/1500",
+                    "S7-1200",
+                    "S7-1500",
+                    "S71200",
+                    "S71500"
+                }
+            };
+
+            foreach (var driver in driverCandidates)
+            {
+                if (_session.TrySetProperty(connection, "CommunicationDriver", driver) ||
+                    TrySetEngineeringAttribute(connection, "CommunicationDriver", driver))
+                {
+                    return;
+                }
+            }
+
+            TrySetCommunicationDriverFromAttributeInfos(connection, driverCandidates);
+
+            TryConfigureUnifiedDriverProperties(connection, plcFamily);
+        }
+
+        private void ValidateUnifiedHmiCommunicationDriver(object connection, string plcFamily)
+        {
+            var driver = ReadUnifiedHmiCommunicationDriver(connection);
+            var normalized = (driver ?? string.Empty).ToUpperInvariant().Replace("-", "").Replace(" ", "");
+            if (plcFamily == "S7300" || plcFamily == "S7400") return;
+
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                throw new InvalidOperationException("HMI connection CommunicationDriver did not read back. S7-1200/S7-1500 projects must read back a 1200/1500 driver before HMI tags are created.");
+            }
+
+            if (normalized.Contains("300/400") || normalized.Contains("S7300") || normalized.Contains("S7400"))
+            {
+                throw new InvalidOperationException($"HMI connection CommunicationDriver read back as '{driver}', but the PLC family is {plcFamily}. Use SIMATIC S7-1200/1500 for S7-1200/S7-1500 projects.");
+            }
+        }
+
+        private string ReadUnifiedHmiCommunicationDriver(object connection)
+        {
+            foreach (var name in new[] { "CommunicationDriver", "Driver", "Protocol" })
+            {
+                try
+                {
+                    var prop = connection.GetType().GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+                    if (prop != null && prop.CanRead)
+                    {
+                        var value = prop.GetValue(connection)?.ToString();
+                        if (!string.IsNullOrWhiteSpace(value)) return value!;
+                    }
+                }
+                catch /* swallow(probe-optional): Unreadable driver properties fall through to engineering attribute readback. */
+                {
+                }
+
+                var attr = _session.TryGetEngineeringAttribute(connection, name)?.ToString();
+                if (!string.IsNullOrWhiteSpace(attr)) return attr!;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Some Unified builds expose the driver only under a localized or version-specific engineering attribute name.
+        /// </summary>
+        private void TrySetCommunicationDriverFromAttributeInfos(object connection, string[] driverCandidates)
+        {
+            try
+            {
+                var getInfos = connection.GetType().GetMethod("GetAttributeInfos", Type.EmptyTypes);
+                if (getInfos == null) return;
+                var infos = getInfos.Invoke(connection, null) as System.Collections.IEnumerable;
+                if (infos == null) return;
+                foreach (var info in infos)
+                {
+                    if (info == null) continue;
+                    var n = TryGetPropertyValue(info, "Name")?.ToString() ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(n)) continue;
+                    var nu = n.ToUpperInvariant();
+                    if (!nu.Contains("COMMUNICATIONDRIVER") && !nu.Contains("DRIVER") && !n.Contains("通信")) continue;
+                    foreach (var driver in driverCandidates)
+                    {
+                        try
+                        {
+                            if (TrySetEngineeringAttribute(connection, n, driver)) return;
+                        }
+                        catch /* swallow(native-fallback): An unsupported driver candidate leaves the remaining candidates available. */
+                        {
+                        }
+                    }
+                }
+            }
+            catch /* swallow(probe-optional): Unavailable attribute metadata leaves driver validation to the existing caller. */
+            {
+            }
+        }
+
+        private void ApplyJsonProperties(object target, JsonObject props, JsonArray failed, string path, string typeHint = "")
+        {
+            foreach (var kv in props)
+            {
+                var schemaError = ValidateUnifiedHmiDesignProperty(typeHint, kv.Key);
+                if (!string.IsNullOrEmpty(schemaError))
+                {
+                    failed.Add($"{path}.{kv.Key}: {schemaError}");
+                    continue;
+                }
+
+                var value = JsonObjectValue(kv.Value);
+                if (_session.TrySetProperty(target, kv.Key, value)) continue;
+                if (TrySetEngineeringAttribute(target, kv.Key, value)) continue;
+                failed.Add($"{path}.{kv.Key}: property/attribute write failed");
+            }
+        }
+
+        private static string ValidateUnifiedHmiDesignProperty(string typeHint, string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName)) return "property name is empty";
+            var type = (typeHint ?? string.Empty).Trim();
+            var prop = propertyName.Trim();
+
+            if (type.Equals("Rectangle", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("Lamp", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("HmiRectangle", StringComparison.OrdinalIgnoreCase))
+            {
+                if (prop.Equals("ForeColor", StringComparison.OrdinalIgnoreCase) ||
+                    prop.Equals("Text", StringComparison.OrdinalIgnoreCase) ||
+                    prop.Equals("Font", StringComparison.OrdinalIgnoreCase) ||
+                    prop.Equals("Content", StringComparison.OrdinalIgnoreCase) ||
+                    prop.Equals("Padding", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "unsupported on Rectangle. Use a separate HmiText item for text/foreground/font, and keep Rectangle for BackColor/BorderColor/BorderWidth.";
+                }
+            }
+
+            if (type.Equals("IOField", StringComparison.OrdinalIgnoreCase) ||
+                type.Equals("HmiIOField", StringComparison.OrdinalIgnoreCase))
+            {
+                var stable = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "BackColor", "ForeColor", "BorderColor", "BorderWidth", "Visible", "Enabled", "Name"
+                };
+                if (!stable.Contains(prop))
+                    return "not in the stable IOField property set for generated screens. Bind runtime values with BindUnifiedHmiTagDynamization instead of ad-hoc ProcessValue properties.";
+            }
+
+            return string.Empty;
+        }
+
+        private bool TrySetEngineeringAttribute(object target, string attributeName, object? value)
+        {
+            try
+            {
+                var get = target.GetType().GetMethod("GetAttribute", new[] { typeof(string) });
+                var set = target.GetType().GetMethod("SetAttribute", new[] { typeof(string), typeof(object) });
+                if (set == null) return false;
+
+                object? oldValue = null;
+                try { oldValue = get?.Invoke(target, new object[] { attributeName }); } catch /* swallow(probe-optional): An unreadable old attribute value leaves the supplied value uncoerced. */ { }
+                var typed = oldValue == null ? value : _session.CoerceReflectionValue(value, oldValue.GetType());
+                set.Invoke(target, new[] { attributeName, typed });
+                return true;
+            }
+            catch /* swallow(native-fallback): Unsupported attribute conversion or assignment reports false to the existing caller fallback. */
+            {
+                return false;
+            }
+        }
+
+        private static string? JsonString(JsonObject obj, string propertyName)
+        {
+            var node = obj[propertyName];
+            if (node == null) return null;
+            if (node is JsonValue v && v.TryGetValue<string>(out var s)) return s;
+            return node.ToJsonString();
+        }
+
+        private static object? JsonObjectValue(JsonNode? node)
+        {
+            if (node == null) return null;
+            if (node is JsonValue value)
+            {
+                if (value.TryGetValue<string>(out var s)) return s;
+                if (value.TryGetValue<bool>(out var b)) return b;
+                if (value.TryGetValue<int>(out var i)) return i;
+                if (value.TryGetValue<long>(out var l)) return l;
+                if (value.TryGetValue<double>(out var d)) return d;
+                return value.ToJsonString();
+            }
+
+            return node.ToJsonString();
+        }
+
+        private static IEnumerable<string> TryGetEnumerableStrings(object target, string propertyName)
+        {
+            try
+            {
+                var value = TryGetPropertyValue(target, propertyName);
+                if (value is IEnumerable en)
+                {
+                    foreach (var item in en)
+                    {
+                        if (item != null) yield return item.ToString() ?? string.Empty;
+                    }
+                }
+            }
+            finally
+            {
+            }
+        }
     }
 }

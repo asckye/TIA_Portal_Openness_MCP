@@ -32,6 +32,18 @@ snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
     {'tool': 'GetOpcUaConfig', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
 
 
+snapshots.RAW_MASK_RULES += [
+    {'tool': 'EnsureUnifiedHmiButtonAction', 'path': [key, 'setMeta', 'timestamp'],
+     'reason': 'SetUnifiedHmiButtonEventScriptCode nested step DateTime.Now'}
+    for key in ('meta', 'Meta')]
+
+
+snapshots.RAW_MASK_RULES += [
+    {'tool': 'RunHmiActionScriptRecipeSafetySelfTest', 'path': [key, 'timestamp'],
+     'reason': 'HmiActionScriptRecipeBuilder.RunSafetySelfTest wall clock'}
+    for key in ('data', 'Data')]
+
+
 ERROR_PATHS = {('"meta"', '"error"'), ('"Meta"', '"error"')}
 # RunHmiStepTool writes ex.ToString() here. The local .NET Framework SDK uses
 # the zh-CN frame prefix; keep this as narrow as the English "at " prefix.
@@ -537,6 +549,183 @@ snapshots.RAW_MASK_RULES += [
     {'tool': name, 'path': [key, 'timestamp'], 'reason': 'Offline template analysis DateTime.Now.ToString("O")'}
     for name in ('AnalyzeGlobalLibraryPackage', 'AnalyzeHmiTemplateReference', 'AnalyzeUnifiedHmiTemplateLayout')
     for key in ('data', 'Data')]
+# Unified HMI: exact offline/disconnected fixtures for every moved tool.
+CASES.update({'UnifiedHmi': [('EnsureStartStopUnifiedHmi', 'offline', {'hmiSoftwarePath': 'HMI_RT_1'}),
+                ('EnsureUnifiedHmiScreen', 'offline', {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main'}),
+                ('EnsureUnifiedHmiTagTable', 'offline', {'hmiSoftwarePath': 'HMI_RT_1', 'tagTableName': 'Tags'}),
+                ('EnsureUnifiedHmiTag',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'tagTableName': 'Tags', 'tagName': 'Tag1'}),
+                ('EnsureUnifiedHmiConnection', 'offline', {'hmiSoftwarePath': 'HMI_RT_1'}),
+                ('EnsureUnifiedHmiScreenItem',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'itemName': 'Button1'}),
+                ('ReadUnifiedHmiTexts',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'itemName': 'Button1'}),
+                ('ApplyUnifiedHmiScreenDesignJson',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'designJson': '{}'}),
+                ('BuildUnifiedHmiThemeDesignJson', 'offline', {'themeJson': '{}'}),
+                ('BuildUnifiedHmiLayoutDesignJson', 'offline', {'layoutJson': '{"items":[]}'}),
+                ('ApplyUnifiedHmiTheme',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'themeJson': '{}'}),
+                ('ApplyUnifiedHmiLayout',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1', 'screenName': 'Main', 'layoutJson': '{"items":[]}'}),
+                ('BindUnifiedHmiButtonPressedTag',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'buttonName': 'Button1',
+                  'tagName': 'Tag1'}),
+                ('ListUnifiedHmiApiTypes', 'offline', {'nameContains': 'HmiButton', 'limit': 10}),
+                ('EnsureUnifiedHmiButtonEventHandler',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'buttonName': 'Button1',
+                  'eventType': 'Down'}),
+                ('DescribeUnifiedHmiButtonEventScript',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'buttonName': 'Button1',
+                  'eventType': 'Down'}),
+                ('SetUnifiedHmiButtonEventScriptCode',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'buttonName': 'Button1',
+                  'eventType': 'Down',
+                  'scriptCode': 'export function Button1_OnDown(item, x, y, modifiers, trigger) {}'}),
+                ('BuildUnifiedHmiButtonActionScript', 'offline', {'actionKind': 'set-bit', 'eventType': 'Down', 'targetTag': 'Tag1'}),
+                ('RunHmiActionScriptRecipeSafetySelfTest', 'offline', {}),
+                ('EnsureUnifiedHmiButtonAction',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'buttonName': 'Button1',
+                  'eventType': 'Down',
+                  'actionKind': 'set-bit',
+                  'targetTag': 'Tag1'}),
+                ('EnsureUnifiedHmiDynamization',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'itemName': 'Button1',
+                  'propertyName': 'Visible'}),
+                ('BindUnifiedHmiTagDynamization',
+                 'offline',
+                 {'hmiSoftwarePath': 'HMI_RT_1',
+                  'screenName': 'Main',
+                  'itemName': 'Button1',
+                  'propertyName': 'Visible',
+                  'tagName': 'Tag1'})],
+ 'UnifiedObjectServices': [('ReadUnifiedPlantObject', 'offline', {}),
+                           ('ManageUnifiedPlantNode', 'offline', {'plantPath': 'Plant/Node', 'action': 'create'}),
+                           ('UpdateUnifiedPlantObject',
+                            'offline',
+                            {'plantPath': 'Plant/Node',
+                             'objectPathJson': '[]',
+                             'propertiesJson': '{"Visible":true}'}),
+                           ('ReadUnifiedObjectProperties', 'offline', {'softwarePath': 'HMI_RT_1'}),
+                           ('UpdateUnifiedObjectProperties',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1',
+                             'objectPathJson': '[]',
+                             'propertiesJson': '{"Visible":true}'}),
+                           ('UpdateUnifiedMultilingualProperty',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1',
+                             'objectPathJson': '[]',
+                             'property': 'Text',
+                             'culture': 'en-US',
+                             'rawText': 'Start'}),
+                           ('ValidateUnifiedObject',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                           ('GetUnifiedCrossReferences',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                           ('ExportUnifiedEngineeringList',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1',
+                             'category': 'textLists',
+                             'name': 'Object1',
+                             'destinationDirectory': 'C:/domain-unified-output'}),
+                           ('ManageUnifiedLoggingTag',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1', 'tagPathJson': '[]'}),
+                           ('SetUnifiedLogDuration',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1',
+                             'durationPathJson': '[]',
+                             'kind': 'log',
+                             'days': 0,
+                             'hours': 0,
+                             'minutes': 1,
+                             'seconds': 0,
+                             'hundredNanoseconds': 0}),
+                           ('ManageUnifiedOpcUaAlarmType',
+                            'offline',
+                            {'softwarePath': 'HMI_RT_1',
+                             'name': 'Object1',
+                             'nodeId': 'ns=1;s=Alarm',
+                             'connection': 'Connection1'})],
+ 'UnifiedUiModel': [('ReadUnifiedObjectEvents', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                    ('ManageUnifiedObjectParts', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                    ('ManageUnifiedDynamization',
+                     'offline',
+                     {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]', 'propertyName': 'Visible'}),
+                    ('ManageUnifiedScreenLayout', 'offline', {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]'}),
+                    ('ManageUnifiedListEntries',
+                     'offline',
+                     {'softwarePath': 'HMI_RT_1', 'category': 'textLists', 'listName': 'List1'}),
+                    ('ReadUnifiedAlarmCommon',
+                     'offline',
+                     {'softwarePath': 'HMI_RT_1', 'category': 'alarmClasses'}),
+                    ('ReadUnifiedAuditSettings',
+                     'offline',
+                     {'softwarePath': 'HMI_RT_1', 'category': 'auditTrails'})],
+ 'UnifiedScreenItems': [('DescribeUnifiedScreenItemType', 'offline', {'itemType': 'Button', 'depth': 1}),
+                        ('ManageUnifiedScreenItem',
+                         'offline',
+                         {'softwarePath': 'HMI_RT_1', 'screenPath': 'Main'})],
+ 'UnifiedEngineering': [('ImportUnifiedEngineeringList',
+                         'offline',
+                         {'softwarePath': 'HMI_RT_1',
+                          'category': 'textLists',
+                          'filePath': 'C:/domain-unified.xml',
+                          'expectedNamesJson': '[]'}),
+                        ('ReadUnifiedEngineeringObjects',
+                         'offline',
+                         {'softwarePath': 'HMI_RT_1', 'category': 'textLists'}),
+                        ('ManageUnifiedEngineeringObject',
+                         'offline',
+                         {'softwarePath': 'HMI_RT_1',
+                          'category': 'textLists',
+                          'name': 'Object1',
+                          'action': 'create'})],
+ 'UnifiedExchange': [('ExchangeUnifiedTags',
+                      'offline',
+                      {'softwarePath': 'HMI_RT_1', 'action': 'export', 'directory': 'C:/domain-unified-exchange'}),
+                     ('ExchangeUnifiedScriptModules',
+                      'offline',
+                      {'softwarePath': 'HMI_RT_1', 'action': 'export', 'directory': 'C:/domain-unified-exchange'}),
+                     ('ImportUnifiedOpcUaAlarms',
+                      'offline',
+                      {'softwarePath': 'HMI_RT_1', 'connectionName': 'Connection1'})],
+ 'UnifiedEvents': [('ManageUnifiedEvent',
+                    'offline',
+                    {'softwarePath': 'HMI_RT_1', 'objectPathJson': '[]', 'eventType': 'Down'})],
+ 'UnifiedHmiGroups': [('ManageUnifiedHmiGroup',
+                       'offline',
+                       {'softwarePath': 'HMI_RT_1',
+                        'family': 'screens',
+                        'groupPath': 'Screens',
+                        'action': 'create'})]})
 
 
 # Older hardware tools mix thrown MCP errors, failure POCOs and empty inventories.
@@ -745,6 +934,54 @@ def table_reply(reply, profile, name):
     return raw
 
 
+def unified_reply(reply, profile, name):
+    """Check the Unified shortcuts' original thrown, failed and offline response families."""
+    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
+    result = reply['result']
+    raw = result['content'][0]['text']
+    throwing = name == 'EnsureUnifiedHmiConnection'
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
+                          f'{name}: unexpected bridge status: {raw}')
+        raw = bridge['message']
+    else:
+        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
+    if throwing:
+        resources.require("HMI software not found at 'HMI_RT_1'." in raw, f'{name}: missing disconnected refusal: {raw}')
+        return raw
+    value = json.loads(raw)
+    get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
+    meta = get('meta') or {}
+    if name in ('BuildUnifiedHmiThemeDesignJson', 'BuildUnifiedHmiLayoutDesignJson',
+                'RunHmiActionScriptRecipeSafetySelfTest'):
+        resources.require(get('ok') is True and meta.get('success') is True and meta.get('offlineOnly') is True, raw)
+    elif name == 'BuildUnifiedHmiButtonActionScript':
+        resources.require(meta.get('ok') is True and meta.get('recipeKind') == 'set-bit'
+                          and 'SetBitInTag' in meta.get('script', ''), raw)
+    elif name == 'ListUnifiedHmiApiTypes':
+        resources.require(meta.get('success') is True and isinstance(get('items'), list), raw)
+    elif name == 'DescribeUnifiedScreenItemType':
+        resources.require(meta.get('success') is True and meta.get('tool') == name
+                          and meta.get('description', {}).get('type', '').endswith('.HmiButton'), raw)
+    elif name == 'EnsureUnifiedHmiButtonAction':
+        resources.require(meta.get('applyStatus') == 'apply-failed' and meta.get('ensureMessage') == 'Project is null'
+                          and meta.get('setMessage') == 'Project is null'
+                          and meta.get('setMeta', {}).get('operationSuccess') is False, raw)
+    elif name == 'DescribeUnifiedHmiButtonEventScript':
+        resources.require(get('message') == 'Event script read failed' and get('members') == []
+                          and meta.get('status') == 'InvalidState' and meta.get('error') == 'Project is null', raw)
+    else:
+        resources.require(get('message') == 'Project is null' and meta.get('success') is False, raw)
+        if name == 'EnsureStartStopUnifiedHmi':
+            resources.require(meta.get('steps') == [{'step': 'precheck', 'ok': False, 'detail': 'Project is null'}], raw)
+        else:
+            expected = 'ApplyUnifiedHmiScreenDesignJson' if name in ('ApplyUnifiedHmiTheme', 'ApplyUnifiedHmiLayout') else name
+            resources.require(meta.get('tool') == expected and meta.get('status') == 'InvalidState'
+                              and meta.get('operationSuccess') is False, raw)
+    return raw
+
+
 def check_coverage(domains):
     root = Path(__file__).resolve().parents[2] / 'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools'
     for domain in domains:
@@ -809,6 +1046,11 @@ def capture(args, exe, harness, profile, isolated):
                     continue
                 if domain == 'PlcTables':
                     raw = table_reply(reply, profile, name)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
+                if domain == 'UnifiedHmi' or name == 'DescribeUnifiedScreenItemType':
+                    raw = unified_reply(reply, profile, name)
                     reached_child = True
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
@@ -1047,6 +1289,29 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(response(before), response(after))
         self.assertNotEqual(response(before), response(after.replace('unchanged', 'changed')))
         self.assertNotEqual(response(before), response(after.replace('open', 'open!')))
+    def test_unified_nested_timestamp_mask_is_narrow(self):
+        raw = '{"meta":{"setMeta":{"timestamp":"2026-10-03T12:34:56+08:00"},"other":"2026-10-03T12:34:56+08:00"}}'
+        masked = snapshots.mask_raw_text(raw, 'EnsureUnifiedHmiButtonAction')
+        self.assertIn('"timestamp":"<string:timestamp>"', masked)
+        self.assertIn('"other":"2026-10-03T12:34:56+08:00"', masked)
+        self.assertEqual(snapshots.mask_raw_text(raw, 'EnsureUnifiedHmiScreen'), raw)
+
+    def test_unified_self_test_masks_only_its_report_clock(self):
+        for key in ('data', 'Data'):
+            raw = json.dumps({key: {'timestamp': '2026-10-03T12:34:56+08:00',
+                                   'sourceDate': '2026-10-03T12:34:56+08:00'}})
+            masked = snapshots.mask_raw_text(raw, 'RunHmiActionScriptRecipeSafetySelfTest')
+            self.assertIn('"timestamp": "<string:timestamp>"', masked)
+            self.assertIn('"sourceDate": "2026-10-03T12:34:56+08:00"', masked)
+            self.assertEqual(snapshots.mask_raw_text(raw, 'BuildUnifiedHmiButtonActionScript'), raw)
+
+    def test_unified_connection_rejects_unrelated_dispatch_failure(self):
+        raw = "HMI software not found at 'HMI_RT_1'."
+        reply = {'result': {'isError': True, 'content': [{'text': raw}]}}
+        self.assertEqual(unified_reply(reply, 'full', 'EnsureUnifiedHmiConnection'), raw)
+        reply['result']['content'][0]['text'] = 'Unexpected service constructor failure'
+        with self.assertRaises(AssertionError):
+            unified_reply(reply, 'full', 'EnsureUnifiedHmiConnection')
 
 
 def main():

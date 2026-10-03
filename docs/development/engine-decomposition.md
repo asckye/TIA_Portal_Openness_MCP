@@ -617,3 +617,37 @@ Addresses 5、Devices 15、HardwareServices 11、MotionProDiagClassicHmi 12、Li
 同名工具和服务按声明类型分别输入原生调用顺序检查器，完整织入清单另比较全部类别的成员多重集合。
 `Test-DomainTools.py` 覆盖六个领域的全部工具，包括断开前置检查、离线分析以及 full/lite、直接/隔离路径；
 只屏蔽已列明的时间戳与 D1 允许变化的错误堆栈。真机验收未执行。
+
+### Unified HMI core
+
+P3-14b 将 51 个工具迁入 `UnifiedHmi`（22）、`UnifiedObjectServices`（12）、`UnifiedUiModel`（7）、
+`UnifiedScreenItems`（2）、`UnifiedEngineering`（3）、`UnifiedExchange`（3）、`UnifiedEvents`（1）和
+`UnifiedHmiGroups`（1）。每个领域的 `<Domain>Service.cs` 位于 `Siemens/Services/`，对应的
+`<Domain>Tools.cs` 位于 `ModelContextProtocol/Tools/`，按 `EngineRegistration` 约定注册为非可释放单例。
+`UnifiedObjectServicesService` 包括原 `Portal.PlantViews.cs`、`Portal.UnifiedLogging.cs` 中的领域方法。
+混合文件中的 `ManageUnifiedEvent`、`ManageUnifiedHmiGroup` 一并迁移；其他领域成员保持原位。
+
+共享辅助留在 `Portal.Software.UnifiedHmiHelpers.cs`：`TrySetProperty`、`ResolveHmiScreenOrThrow`、
+`TryGetHmiTagRoot`、`TryGetHmiTagTablesCollection`、`TryFindHmiTagTable`、`EnumerateHmiTagTablesRecursive`、
+`FindExistingByName`、`TryGetEngineeringAttribute`、`SummarizeHmiObjectReadback`、`IsAttributeWritable`、
+`CoerceAttributeValue`、`CoerceReflectionValue`、`CoerceColor`、`ToJsonArray`、`FormatExceptionDetail`。
+`FillUnifiedHmiPartnerNetworkInfo` 和其结果类型 `UnifiedHmiPlcPartnerInfo` 也留在内核，避免把共享硬件遍历的
+私有 `NetworkNodeInfo` 类型扩散到服务。后者只将可见性改为 internal，字段与读写顺序不变。
+`ExactUnifiedRoot`、`UnifiedCollection` 由多个 Unified 服务共用，分别保留在
+`Portal.UnifiedObjectServices.cs`、`Portal.UnifiedEngineering.cs`。
+`Portal.UnifiedScreenItems.cs` 保留 `UnifiedAssembly` 静态字段：原有内核初始化时机影响
+`ListUnifiedHmiApiTypes` 对已加载程序集的枚举，不能推迟到屏幕服务第一次调用时。
+
+`IEngineeringSession` 新增 `FindExistingByName`、`TryGetEngineeringAttribute`、`SummarizeHmiObjectReadback`、
+`CoerceReflectionValue`、`ExactUnifiedRoot`、`UnifiedCollection`、`FillUnifiedHmiPartnerNetworkInfo`、
+`TryGetHmiTagRoot`、`TryGetHmiTagTablesCollection`、`TryFindHmiTagTable` 和只读 `UnifiedAssembly`；
+显式实现仅转发现有成员。其余会话解析、属性写入与错误格式化均复用原接口。
+
+`McpServer.UnifiedHmiForwarders.cs` 保留 13 个无 MCP 属性的 CLI 静态入口：
+`EnsureUnifiedHmiScreen`、`EnsureUnifiedHmiTagTable`、`EnsureUnifiedHmiTag`、`EnsureUnifiedHmiConnection`、
+`EnsureUnifiedHmiScreenItem`、`ApplyUnifiedHmiScreenDesignJson`、`BindUnifiedHmiButtonPressedTag`、
+`EnsureUnifiedHmiButtonEventHandler`、`DescribeUnifiedHmiButtonEventScript`、`SetUnifiedHmiButtonEventScriptCode`、
+`BuildUnifiedHmiButtonActionScript`、`EnsureUnifiedHmiButtonAction`、`BindUnifiedHmiTagDynamization`。
+`UnifiedHmiDomainShapeChecks` 验证完整工具归属、单例、共享会话、调用关系和这些转发；已有 HTTP 断言保留。
+`Test-DomainTools.py` 覆盖全部 51 个工具的 full/lite、直接/隔离调用，只屏蔽明确的时间戳及 D1 堆栈帧。
+原生调用顺序、参数与线程归属保持不变；上述离线证明不替代真机验收。

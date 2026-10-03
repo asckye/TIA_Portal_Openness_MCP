@@ -10,14 +10,18 @@ using Siemens.Engineering.HmiUnified.HmiTags;
 using Siemens.Engineering.HmiUnified.Scripts;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Native WinCC Unified file exchange: tag tables (WinCC ML .hmi.yml via HmiTagComposition.Export/Import),
     // global script modules (HmiScriptModuleComposition / HmiScriptModule Export/Import, the IChromDataExchangeExport
     // interface) and OPC UA alarm definitions (OpcUaAlarm.Import / GetNodeId / DisplayNames on an HMI connection).
-    public partial class Portal
+    internal sealed class UnifiedExchangeService
     {
-        private HmiSoftware ExactUnifiedSoftware(string softwarePath) => (HmiSoftware)ExactUnifiedRoot(softwarePath);
+        private readonly IEngineeringSession _session;
+
+        public UnifiedExchangeService(IEngineeringSession session) => _session = session;
+
+        private HmiSoftware ExactUnifiedSoftware(string softwarePath) => (HmiSoftware)_session.ExactUnifiedRoot(softwarePath);
 
         // Tag tables live at the root or inside nested TagTableGroups; accept an absolute /Group/Sub/Table path or a unique table name.
         private static HmiTagTable? FindUnifiedTagTable(HmiSoftware hmi, string nameOrPath)
@@ -43,14 +47,14 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseMessage ExchangeUnifiedTags(string softwarePath, string action, string directory, string tagTable = "", string fileName = "", string expectedTagNamesJson = "[]", bool dryRun = true)
-            => RunHmiStepTool("ExchangeUnifiedTags", meta => {
+            => _session.RunHmiStepTool("ExchangeUnifiedTags", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
                 var dir = UnifiedExchangeLogic.ValidateDirectory(directory, exporting);
                 var name = UnifiedExchangeLogic.ValidateFileName(fileName);
                 var expected = UnifiedExchangeLogic.ParseExpectedNames(expectedTagNamesJson);
                 if (exporting && expected.Length > 0) throw new ArgumentException("expectedTagNamesJson is only used by import.");
-                using var access = !dryRun && !exporting ? AcquireHmiEditAccess() : null;
+                using var access = !dryRun && !exporting ? _session.AcquireHmiEditAccess() : null;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 // Official pattern: tagTable.Tags.Export(dir, name) / tagTable.Tags.Import(dir); the root Tags composition carries the same members for the whole device.
                 HmiTagComposition tags;
@@ -89,13 +93,13 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ExchangeUnifiedScriptModules(string softwarePath, string action, string directory, string moduleName = "", string fileName = "", bool dryRun = true)
-            => RunHmiStepTool("ExchangeUnifiedScriptModules", meta => {
+            => _session.RunHmiStepTool("ExchangeUnifiedScriptModules", meta => {
                 if (!UnifiedExchangeLogic.ExchangeActions.Contains(action)) throw new ArgumentException("action must be export or import.");
                 bool exporting = action == "export";
                 var dir = UnifiedExchangeLogic.ValidateDirectory(directory, exporting);
                 var name = UnifiedExchangeLogic.ValidateFileName(fileName);
                 if (!exporting && !string.IsNullOrWhiteSpace(moduleName)) throw new ArgumentException("moduleName selects one module for export; import takes the directory (optionally one fileName).");
-                using var access = !dryRun && !exporting ? AcquireHmiEditAccess() : null;
+                using var access = !dryRun && !exporting ? _session.AcquireHmiEditAccess() : null;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 HmiScriptModuleComposition modules = hmi.Scripts;
                 HmiScriptModule? module = null;
@@ -124,13 +128,13 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ImportUnifiedOpcUaAlarms(string softwarePath, string connectionName, string action = "read", string xmlPath = "", string displayName = "", bool dryRun = true)
-            => RunHmiStepTool("ImportUnifiedOpcUaAlarms", meta => {
+            => _session.RunHmiStepTool("ImportUnifiedOpcUaAlarms", meta => {
                 if (!UnifiedExchangeLogic.OpcUaAlarmActions.Contains(action)) throw new ArgumentException("action must be read or import.");
                 if (string.IsNullOrWhiteSpace(connectionName)) throw new ArgumentException("Exact HMI connection name required.");
                 var xml = action == "import" ? UnifiedExchangeLogic.ValidateXmlPath(xmlPath) : "";
                 if (action == "import" && !File.Exists(xml)) throw new FileNotFoundException("OPC UA alarm xml not found.", xml);
                 if (action == "read" && !string.IsNullOrEmpty(xmlPath)) throw new ArgumentException("xmlPath is only used by import.");
-                using var access = action == "import" && !dryRun ? AcquireHmiEditAccess() : null;
+                using var access = action == "import" && !dryRun ? _session.AcquireHmiEditAccess() : null;
                 var hmi = ExactUnifiedSoftware(softwarePath);
                 var connection = hmi.Connections.Find(connectionName) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact HMI connection not found: " + connectionName);
                 meta["connection"] = new JsonObject { ["name"] = connection.Name, ["communicationDriver"] = connection.CommunicationDriver, ["partner"] = connection.Partner };

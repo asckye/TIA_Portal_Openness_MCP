@@ -75,9 +75,9 @@ namespace TiaMcpServer.Tests
         private static void RunDefaultOffContractTests(Action<bool, string> check, Action<string, string> skip)
         {
             // 这两个文件依赖 Siemens.Engineering / MCP SDK，链不进这个套件，只能读源码盯形状。
-            // 2.8.0 拆分：Unified HMI 族在 Portal.Software.UnifiedHmi.cs / McpServer.PlcSoftware.UnifiedHmi.cs。
-            var portalSource = FindSource(Path.Combine("Siemens", "Portal", "Portal.Software.UnifiedHmi.cs"));
-            var toolSource = FindSource(Path.Combine("ModelContextProtocol", "Tools", "McpServer.PlcSoftware.UnifiedHmi.cs"));
+            // Unified HMI 族由 UnifiedHmiService / UnifiedHmiTools 提供。
+            var portalSource = FindSource(Path.Combine("Siemens", "Services", "UnifiedHmiService.cs"));
+            var toolSource = FindSource(Path.Combine("ModelContextProtocol", "Tools", "UnifiedHmiTools.cs"));
 
             if (portalSource == null || toolSource == null)
             {

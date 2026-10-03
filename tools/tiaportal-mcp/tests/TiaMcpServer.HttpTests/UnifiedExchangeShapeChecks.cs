@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the Unified exchange family (Portal.UnifiedExchange.cs) and the remaining sub-batch 5 types
+// Native members used by the Unified exchange family (Siemens/Services/UnifiedExchangeService.cs) and the remaining sub-batch 5 types
 // (thresholds, substitute values, driver properties, audit classes), verified against the installed API.
 internal static class UnifiedExchangeShapeChecks
 {

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Web.Script.Serialization;
 
-// Native members used by the Unified screen item family (Portal.UnifiedScreenItems.cs), verified against the installed
+// Native members used by the Unified screen item family (Siemens/Services/UnifiedScreenItemsService.cs), verified against the installed
 // API, plus the engine's own reflective catalog run against that API so every concrete item type is accounted for.
 // JSON results of the engine are read back through their ToJsonString() and System.Web's serializer, so the harness
 // stays free of the engine's System.Text.Json version.
@@ -13,6 +13,7 @@ internal static class UnifiedScreenItemShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
     {
+        UnifiedHmiDomainShapeChecks.Run(server, check);
         Assembly Api(string split,string legacy) { try { return Assembly.Load(split); } catch(System.IO.FileNotFoundException) { return Assembly.Load(legacy); } }
         var unified=Api("Siemens.Engineering.WinCCUnified","Siemens.Engineering");
         var core=Api("Siemens.Engineering.Base","Siemens.Engineering");
