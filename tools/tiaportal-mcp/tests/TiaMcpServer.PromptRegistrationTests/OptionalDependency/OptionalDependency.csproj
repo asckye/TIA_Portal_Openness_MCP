@@ -1,1 +1,2 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>PromptTest.OptionalDependency</AssemblyName></PropertyGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Shared/Harness.props" /><PropertyGroup><TargetFramework>net8.0</TargetFramework><AssemblyName>PromptTest.OptionalDependency</AssemblyName></PropertyGroup></Project>

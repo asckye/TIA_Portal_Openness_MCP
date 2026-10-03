@@ -2,20 +2,14 @@ using System;
 using System.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-internal static class Program
+internal static class ImportSelectionTests
 {
     private sealed class Candidate
     {
         internal string Kind, Name, Path;
         internal Candidate(string kind, string name, string path) { Kind = kind; Name = name; Path = path; }
     }
-    private static int checks;
-    private static void Check(bool value, string name)
-    {
-        if (!value) throw new Exception(name);
-        checks++;
-    }
-    private static void Main()
+    internal static void Run(Action<bool, string> Check)
     {
         var empty = Array.Empty<Candidate>();
         Check(ImportSelectionPolicy.FindConflicts(empty, x => x.Kind, x => x.Name, x => x.Path).Count == 0, "empty");
@@ -26,7 +20,8 @@ internal static class Program
         Check(conflicts.Count == 1, "case insensitive kind and XML identity");
         Check(conflicts[0].Paths.SequenceEqual(new[] { "a.xml", "deep/b.xml" }), "both files retained in diagnostic; no shallowest selection");
         Check(conflicts[0].CandidateCount == 2 && !conflicts[0].PathsTruncated, "full count");
-        var reversed = ImportSelectionPolicy.FindConflicts(duplicate.Reverse(), x => x.Kind, x => x.Name, x => x.Path);
+        // Keep LINQ reversal when the host suite enables the latest language version.
+        var reversed = ImportSelectionPolicy.FindConflicts(Enumerable.Reverse(duplicate), x => x.Kind, x => x.Name, x => x.Path);
         Check(conflicts[0].Message == reversed[0].Message, "enumeration independent diagnostics");
         var delimiter = new[] { new Candidate("type:a", "b", "a.xml"), new Candidate("type", "a:b", "b.xml") };
         Check(ImportSelectionPolicy.FindConflicts(delimiter, x => x.Kind, x => x.Name, x => x.Path).Count == 0, "compound key has no delimiter collision");
@@ -36,6 +31,5 @@ internal static class Program
         var bounded = ImportSelectionPolicy.FindConflicts(many, x => x.Kind, x => x.Name, x => x.Path)[0];
         Check(bounded.CandidateCount == 50 && bounded.Paths.Count == 8 && bounded.PathsTruncated, "bounded diagnostics preserve full count");
         Check(ImportSelectionPolicy.OrderingDescription.Contains("not dependency resolution"), "honest ordering contract");
-        Console.WriteLine($"PASS: {checks} pure import selection checks (no Siemens/native calls).");
     }
 }

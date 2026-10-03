@@ -16,6 +16,7 @@ namespace TiaMcpServer.Tests
 
         public static IEnumerable<object[]> Rows()
         {
+            foreach (var row in CheckSuite.Run(nameof(ImportSelectionTests), ImportSelectionTests.Run)) yield return row;
             // Preserve the console runner's suite order, including suites that mutate shared state.
             foreach (var row in CheckSuite.Run(nameof(PlcFoundationPolicyTests), PlcFoundationPolicyTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(TiaVersionCatalogTests), TiaVersionCatalogTests.Run)) yield return row;

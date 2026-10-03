@@ -2,17 +2,15 @@ using TiaMcp.PlcFoundation;
 
 internal static class BindingSnapshotTests
 {
-    static int checks;
-    static void Check(bool value,string name) { if(!value) throw new Exception(name); checks++; }
     static readonly BindingProcessObservation Anchor=new(321,638000000000000000);
     static FakeProject Detached()=>new(new(false,false,null,null,false));
     static FakeProject Attached()=>new(new(true,false,321,null,false));
     static FakeProject Bound(bool local=false)=>new(new(true,true,321,@"C:\work\Line.ap20",local));
     static BindingObservation Capture(FakeProject source,BindingProcessObservation? anchor=null,FakeProcess? processes=null)=>BindingObservationPolicy.Capture(source,processes??new FakeProcess(),anchor);
-    static void Unknown(BindingObservation observation,string name)=>Check(observation.State==BindingObservationState.Unknown&&!observation.AllowsV2Admission,name);
-    static void Throws(Action action,string name) { try { action(); } catch(InvalidOperationException) { checks++; return; } throw new Exception(name); }
-    public static void Main()
+    internal static void Run(Action<bool,string> Check)
     {
+        void Unknown(BindingObservation observation,string name)=>Check(observation.State==BindingObservationState.Unknown&&!observation.AllowsV2Admission,name);
+        void Throws(Action action,string name) { try { action(); } catch(InvalidOperationException) { Check(true,name); return; } throw new Exception(name); }
         var detached=Capture(Detached()); Check(detached.AllowsV2Admission&&detached.State==BindingObservationState.Unbound,"fresh detached known unbound");
         var project=Bound(); var weak=Capture(project); Check(weak.State==BindingObservationState.Bound && weak.Strength==BindingIdentityStrength.WeakPidOnly && !weak.AllowsV2Admission,"existing PID stays weak even with OS samples");
         Check(project.ProjectReads==2,"native project sampled twice");
@@ -107,7 +105,6 @@ internal static class BindingSnapshotTests
         }),"diagnostic reentry faults without nested native capture");
         Check(callbacks==0,"diagnostic nested callback never executes");
         Check(!AppDomain.CurrentDomain.GetAssemblies().Any(a=>a.GetName().Name!.StartsWith("Siemens.",StringComparison.Ordinal)),"no Siemens assembly loaded");
-        Console.WriteLine($"Binding snapshot checks passed: {checks}; native SDK compilation and runtime acceptance not performed.");
     }
     sealed class FakeProcess : IBindingProcessObservationSource
     {

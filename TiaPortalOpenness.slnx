@@ -55,11 +55,8 @@
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/FakeApi/FakeApi.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ExternalSourceDeleteTests/TiaMcpServer.ExternalSourceDeleteTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ExternalSourcePlanTests/TiaMcpServer.ExternalSourcePlanTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ImportSelectionTests/TiaMcpServer.ImportSelectionTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj" />
@@ -74,7 +71,6 @@
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
     <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/BindingSnapshot.Tests/BindingSnapshot.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">
     <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj" />
