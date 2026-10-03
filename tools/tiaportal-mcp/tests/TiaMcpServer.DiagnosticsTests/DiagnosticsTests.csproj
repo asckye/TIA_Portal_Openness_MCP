@@ -11,10 +11,12 @@
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/NativeCallDiagnostics.cs" Link="NativeCallDiagnostics.cs" />
-    <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
   </ItemGroup>
   <Target Name="InstrumentFixture" AfterTargets="CoreCompile">
     <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="dotnet &quot;../../../native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll&quot; weave &quot;@(IntermediateAssembly)&quot;" />
   </Target>
   <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
 </Project>

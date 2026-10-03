@@ -2,9 +2,8 @@
   <!--
     最小离线自检套件。
 
-    为什么是控制台 Exe 而不是 VSTest 工程：这里链接的是引擎的**源文件**，
-    而引擎主体依赖 Siemens.Engineering.dll（需要本机装了 TIA Portal 才编得动），
-    托管不了整个工程。所以只把**零依赖**的那几个文件链进来，用 `dotnet run` 驱动。
+    已迁移的纯逻辑通过 TiaMcp.Logic 项目引用复用；其余引擎文件继续链接源码，
+    以便在没有 Siemens.Engineering 运行时的环境中执行离线断言。
 
     ⚠️ 千万别用 `dotnet test` 跑它：那样只会还原、一个用例都不跑、然后退 0 ——
     一个和「全部通过」长得一模一样的假绿灯。CI 里写死的是 `dotnet run`。
@@ -25,8 +24,6 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="..\..\src\TiaMcpServer\CliOptions.cs" Link="CliOptions.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentEditing.cs" Link="PlcDocumentEditing.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcOfflineReferences.cs" Link="PlcOfflineReferences.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectBindingIdentity.cs" Link="ProjectBindingIdentity.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PortalProcessLease.cs" Link="PortalProcessLease.cs" />
@@ -80,33 +77,10 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringExport.cs" Link="EngineeringExport.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedMultilingualText.cs" Link="UnifiedMultilingualText.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolBridgeStatus.cs" Link="ToolBridgeStatus.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.ToolBridge.cs" Link="McpServer.ToolBridge.cs" />
     <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
-    <!-- HMI 模板布局体检 + 执行 JSON 构建器：两个都零依赖。
-         盯的是「执行 JSON 检查」那条 —— 它曾经在委托缺省时退化成
-         `items.Length > 0 && errors.Count == 0`，判据里含着 errors.Count == 0，
-         永远不可能新增错误，而发版前的离线验收闸走的正是那条空转路径。
-         恒不触发的检查只有会失败的用例盯得住，而且必须同时盯 API 形状：
-         委托一旦被改回可选，空转路径立刻复活，运行期用例一条都不会红。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\HmiTemplateLayoutAnalyzer.cs" Link="HmiTemplateLayoutAnalyzer.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\HmiTemplateDesignJsonBuilder.cs" Link="HmiTemplateDesignJsonBuilder.cs" />
-    <!-- .s7res 的 en-US 扫描。原实现埋在依赖 MCP SDK 的大文件里，用 XML 解析器读 YAML，
-         对每个真实文件都抛异常又被 catch 吞掉，坏了很久没人发现 —— 抽成零依赖文件
-         就是为了能在这里被测到。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\S7ResScanner.cs" Link="S7ResScanner.cs" />
-    <!-- 参数诊断的判定逻辑与大响应寄存库：两个都零依赖，专门抽成这样就是为了能在这里被喂真输入。
-         这两块坏了都不会崩 —— 一个只是少说一句话，一个只是让某一页文本报废 —— 属于
-         「坏了也悄无声息」那一类，只有会失败的用例盯得住。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ArgDiagnostics.cs" Link="ArgDiagnostics.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ExportStore.cs" Link="ExportStore.cs" />
-    <!-- 「进程没了」和「这步失败了」的分类器。抽成零依赖文件就是为了能在这里被喂输入：
-         它埋在依赖 Siemens.Engineering 的大文件里时，没装博途的机器一行都测不到，
-         而崩溃路径本来就少见 —— 判错了也悄无声息，属于只有会失败的用例盯得住的那类。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolTaxonomy.cs" Link="ToolTaxonomy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\DownloadPromptPolicy.cs" Link="DownloadPromptPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\WatchTableEntryXml.cs" Link="WatchTableEntryXml.cs" />
@@ -118,18 +92,11 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\BaseLeftoversLogic.cs" Link="BaseLeftoversLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcProtectionLogic.cs" Link="PlcProtectionLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ConnectLogic.cs" Link="ConnectLogic.cs" />
-    <!-- 2.7.57：预检 / 示例表 / 更新检查的纯逻辑，都零依赖。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\PreflightLogic.cs" Link="PreflightLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolExamples.cs" Link="ToolExamples.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\UpdateLogic.cs" Link="UpdateLogic.cs" />
-    <!-- 2.7.58：schema 提示与配方表，零依赖。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\SchemaHintsLogic.cs" Link="SchemaHintsLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolRecipes.cs" Link="ToolRecipes.cs" />
     <!-- 2.9.1: cross-reference guard (refuse the query while blocks are uncompiled), zero dependencies. -->
     <Compile Include="..\..\src\TiaMcpServer\Siemens\CrossReferenceGuardLogic.cs" Link="CrossReferenceGuardLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAuditLogic.cs" Link="EngineeringAuditLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\InvocationJournal.cs" Link="InvocationJournal.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ParameterVocabulary.cs" Link="ParameterVocabulary.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareUnitDeepLogic.cs" Link="SoftwareUnitDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Step7LeftoversLogic.cs" Link="Step7LeftoversLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ClassicHmiFoldersLogic.cs" Link="ClassicHmiFoldersLogic.cs" />
@@ -146,38 +113,16 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\OfflineAnalysisLogic.cs" Link="OfflineAnalysisLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVisualComparison.cs" Link="PlcVisualComparison.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EcosystemFiles.cs" Link="EcosystemFiles.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcSchemaValidation.cs" Link="PlcSchemaValidation.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\UnifiedCwcPackage.cs" Link="UnifiedCwcPackage.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\EngineeringQualityAudit.cs" Link="EngineeringQualityAudit.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcTemplateExpansion.cs" Link="PlcTemplateExpansion.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcAliasAlarmBuilder.cs" Link="PlcAliasAlarmBuilder.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcLadFcBlockXmlComposer.cs" Link="PlcLadFcBlockXmlComposer.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcFcBlockXmlComposer.cs" Link="PlcFcBlockXmlComposer.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\StructuredTextXmlBuilder.cs" Link="StructuredTextXmlBuilder.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\BatchPlanStore.cs" Link="BatchPlanStore.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Runtime\RuntimeChannelsLogic.cs" Link="RuntimeChannelsLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedLogic.cs" Link="PlcSimAdvancedLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcDocumentationLogic.cs" Link="PlcDocumentationLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareAmlLogic.cs" Link="HardwareAmlLogic.cs" />
-    <!-- DescribeBlockLogic 的渲染器：零依赖（只用 System.Xml.Linq）。原实现把 SCL 里的调用、命名常量、
-         绝对地址和 LAD 里的 <Call> 块调用整段丢掉，而工具照样报 success —— 只有会失败的用例盯得住。 -->
-    <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\LadTextRenderer.cs" Link="LadTextRenderer.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../openness-shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>
-  <ItemGroup><Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
-  <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs" Link="Shared/ClassicHmiValidationFixture.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs" Link="Shared/McpServer.ScaffoldOperations.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="ToolUsageCatalog.cs" />
-    <EmbeddedResource Include="../../../openness-shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
+    <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
 </Project>

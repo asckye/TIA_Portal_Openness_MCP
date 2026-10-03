@@ -35,11 +35,20 @@ def capture(args):
     spec.loader.exec_module(resources)
     snapshots = {}
     root = args.repo_root.resolve()
+    public_api_root = (args.public_api_root or root).resolve()
+    executables = {}
+    for override in args.exe:
+        release, separator, path = override.partition('=')
+        if not separator or release not in RELEASES or not path:
+            raise ValueError('--exe must be RELEASE=PATH for a supported release')
+        if release in executables:
+            raise ValueError('Duplicate executable override for V' + release)
+        executables[release] = Path(path).resolve()
     for release in args.releases:
-        exe = root / 'runtime' / ('v' + release) / 'TiaMcpServer.exe'
+        exe = executables.get(release, root / 'runtime' / ('v' + release) / 'TiaMcpServer.exe')
         snapshot = {'release': release}
         if release in ('20', '21'):
-            public_api = root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
+            public_api = public_api_root / ('TIA_V' + release + '_PublicAPI') / ('V' + release)
             if release == '21':
                 public_api /= 'net48'
             rosters = {}
@@ -68,7 +77,11 @@ def capture(args):
             if not set(snapshot['liteTools']) <= {tool['name'] for tool in snapshot['tools']}:
                 raise ValueError('Lite roster contains tools absent from full profile')
         else:
-            result = subprocess.run([str(exe), '--catalog'], check=True, capture_output=True,
+            command = [str(exe), '--catalog']
+            if release in executables:
+                # Worktree output has no packaged release-key.txt marker.
+                command.extend(['--release-key', release])
+            result = subprocess.run(command, check=True, capture_output=True,
                                     text=True, encoding='utf-8', timeout=60)
             snapshot.update(profile='plc-foundation', tools=tool_records(json.loads(result.stdout)['tools']))
         snapshots[release] = snapshot
@@ -201,6 +214,10 @@ def main():
     capture_parser.add_argument('--harness', type=Path, required=True)
     capture_parser.add_argument('--output', type=Path, required=True)
     capture_parser.add_argument('--releases', nargs='+', choices=RELEASES, default=RELEASES)
+    capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH',
+                                help='Override a release executable; repeat for multiple releases')
+    capture_parser.add_argument('--public-api-root', type=Path,
+                                help='Root containing TIA_V20_PublicAPI and TIA_V21_PublicAPI (default: repo root)')
     capture_parser.set_defaults(run=capture)
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)

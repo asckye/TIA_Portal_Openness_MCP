@@ -6,6 +6,7 @@
 |---|---|
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
+| `tools/tiaportal-mcp/src/TiaMcp.Logic` | net48/net8.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
 | `tools/mcp-configurator` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
 | `tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
 | `tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests` | .NET 10 配置控制台测试 |
@@ -46,9 +47,12 @@ Siemens PublicAPI 是本机构建输入，通过参数指定目录，不随仓�
 ## 完整引擎源码
 
 `tools/tiaportal-mcp/src/TiaMcpServer` 中的 `ModelContextProtocol/Tools` 声明工具，
-`ModelContextProtocol/Builders` 放纯算法，`Siemens/Portal` 放工程调用，`Siemens/Hmi`
+纯算法位于 `TiaMcp.Logic/ModelContextProtocol/Builders`，引擎的 `ModelContextProtocol/Builders`
+保留依赖工程环境或原生调用的编排；`Siemens/Portal` 放工程调用，`Siemens/Hmi`
 放 HMI 访问层；`Runtime` 是 PLC/OPC UA/Web API/Open Pipe 通道，`Cli` 是命令入口。
 新增原生能力应同时检查工具声明、类型化调用、版本策略、示例及有意义的功能验证。
 
-所有 C# 源码使用无 BOM UTF-8、仓库内 LF。离线测试以相对路径链接纯逻辑源文件，移动文件时同步
-更新项目引用。Foundation 与完整引擎使用不同契约；共享边界见[版本框架](unified-version-framework.md)。
+所有 C# 源码使用无 BOM UTF-8、仓库内 LF。宿主和离线测试通过项目引用复用 `TiaMcp.Logic`，尚未迁移的
+引擎源文件继续以相对路径链接。`tools/openness-shared` 保持共享源码链接；统一示例资源嵌入读取它的
+逻辑库。原生调用诊断和接触 Openness 对象的代码保留在受插桩的引擎程序集内。Foundation 与完整引擎
+使用不同契约；共享边界见[版本框架](unified-version-framework.md)。

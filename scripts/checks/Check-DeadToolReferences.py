@@ -22,6 +22,7 @@ import collections
 from pathlib import Path
 
 ROOT = str(Path(__file__).resolve().parents[2] / 'tools/tiaportal-mcp/src/TiaMcpServer')
+LOGIC_ROOT = str(Path(ROOT).with_name('TiaMcp.Logic'))
 
 # 白名单：形状像工具名、但**不是**本服务器的工具，因此不该被判死引用。
 # 每条必须写明它到底是什么 —— 没有理由的白名单等于把闸门关掉。
@@ -195,6 +196,7 @@ def duplicate_names(src, extra_text=None):
 
 def main():
     src = load(ROOT)
+    src.update(load(LOGIC_ROOT))
     if not src:
         print('找不到源码目录 %s —— 请在仓库根目录运行。' % ROOT)
         return 2
@@ -236,6 +238,7 @@ def main():
 if __name__ == '__main__':
     if '--selftest' in sys.argv:
         src = load(ROOT)
+        src.update(load(LOGIC_ROOT))
         _, caught = scan(src, extra_text='[Description("Use GetNonexistentSentinelTool first.")]')
         ok = 'GetNonexistentSentinelTool' in caught
         print('哨兵自检：' + ('PASS（假名字被抓到）' if ok else 'FAIL（假名字没被抓到）'))

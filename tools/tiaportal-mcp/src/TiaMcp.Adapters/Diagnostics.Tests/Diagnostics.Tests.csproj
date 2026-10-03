@@ -9,7 +9,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="../Diagnostics/InvocationJournal.cs" Link="InvocationJournal.cs" />
     <Compile Include="../Diagnostics/NativeCallDiagnostics.cs" Link="NativeCallDiagnostics.cs" />
-    <Compile Include="$(AdapterSourceRoot)/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+  </ItemGroup>
 </Project>

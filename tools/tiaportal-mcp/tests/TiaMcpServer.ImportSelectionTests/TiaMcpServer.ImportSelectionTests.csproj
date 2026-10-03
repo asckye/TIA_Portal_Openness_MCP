@@ -4,6 +4,6 @@
     <Nullable>enable</Nullable><ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/ImportSelectionPolicy.cs" Link="ImportSelectionPolicy.cs" />
+    <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
 </Project>

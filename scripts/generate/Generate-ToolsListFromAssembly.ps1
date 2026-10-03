@@ -19,9 +19,10 @@ $resolver=[ResolveEventHandler]{param($sender,$eventArgs)
 [AppDomain]::CurrentDomain.add_AssemblyResolve($resolver)
 try {
     $assembly=[Reflection.Assembly]::LoadFrom($exePath)
+    $logic=[Reflection.Assembly]::LoadFrom((Join-Path $runtimePath 'TiaMcp.Logic.dll'))
     $type=$assembly.GetType('TiaMcpServer.ModelContextProtocol.McpServer',$true)
     # 分类的唯一事实来源在引擎里（ToolTaxonomy）；这里经反射取大类与操作类型，避免脚本与二进制各存一份分类表。
-    $taxonomy=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
+    $taxonomy=$logic.GetType('TiaMcpServer.ModelContextProtocol.ToolTaxonomy',$true)
     $categoryOf=$taxonomy.GetMethod('CategoryOf'); $parseTag=$taxonomy.GetMethod('Parse'); $operationOf=$taxonomy.GetMethod('OperationOf')
     $categories=@(foreach($c in $taxonomy.GetField('Categories').GetValue($null)){[ordered]@{key=$c.Key;nameZh=$c.NameZh;nameEn=$c.NameEn;description=$c.Description;domains=@($c.Domains)}})
     # 2.7.57: the worked examples (ToolExamples) are appended to listed tool descriptions and printed by FindTools / PreflightToolCall;
@@ -66,7 +67,7 @@ try {
         fileVersion=(Get-Item -LiteralPath $exePath).VersionInfo.FileVersion;
         exeSha256=(Get-FileHash -LiteralPath $exePath -Algorithm SHA256).Hash.ToLowerInvariant();
         toolCount=$rows.Count;note='Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.';
-        callDiscipline=[ordered]@{parameters=$disciplineJson.parameters;parametersUndocumented=$disciplineJson.parametersUndocumented;parametersFromVocabulary=$disciplineJson.parametersFromVocabulary;toolsWithUndocumentedParameters=$disciplineJson.toolsWithUndocumentedParameters;toolsWithEnumHints=$disciplineJson.toolsWithEnumHints;enumHints=$disciplineJson.enumHints;defaultHints=$disciplineJson.defaultHints;examplesCurated=@($rows | Where-Object { $_.example }).Count;recipes=@($assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolRecipes',$true).GetProperty('All').GetValue($null)).Count};
+        callDiscipline=[ordered]@{parameters=$disciplineJson.parameters;parametersUndocumented=$disciplineJson.parametersUndocumented;parametersFromVocabulary=$disciplineJson.parametersFromVocabulary;toolsWithUndocumentedParameters=$disciplineJson.toolsWithUndocumentedParameters;toolsWithEnumHints=$disciplineJson.toolsWithEnumHints;enumHints=$disciplineJson.enumHints;defaultHints=$disciplineJson.defaultHints;examplesCurated=@($rows | Where-Object { $_.example }).Count;recipes=@($logic.GetType('TiaMcpServer.ModelContextProtocol.ToolRecipes',$true).GetProperty('All').GetValue($null)).Count};
         categories=$categories;
         tools=@($rows | Sort-Object name)
     }

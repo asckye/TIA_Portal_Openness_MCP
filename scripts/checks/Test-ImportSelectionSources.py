@@ -5,8 +5,9 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
-PORTAL = (SRC / "Siemens/Portal/Portal.Blocks.cs").read_text()
-MCP = (SRC / "ModelContextProtocol/Tools/McpServer.Blocks.cs").read_text()
+LOGIC = SRC.parent / "TiaMcp.Logic"
+PORTAL = (SRC / "Siemens/Portal/Portal.Blocks.cs").read_text(encoding='utf-8')
+MCP = (SRC / "ModelContextProtocol/Tools/McpServer.Blocks.cs").read_text(encoding='utf-8')
 BATCH = PORTAL.split("public ResponseImportBatch ImportBlocksFromDirectory", 1)[1].split("public bool ImportType", 1)[0]
 PROGRAM = MCP.split("public static ResponsePlcProgramImport ImportPlcProgramFromDirectory", 1)[1].split('[McpServerTool(Name = "CompileAndDiagnosePlc")', 1)[0]
 
@@ -42,12 +43,12 @@ class ImportSelectionWiring(unittest.TestCase):
         self.assertIn('["importOrdering"] = ImportSelectionPolicy.OrderingDescription', MCP)
         self.assertEqual(PROGRAM.count('.ThenBy(x => x.File, StringComparer.Ordinal)'), 5)
 
-    def test_both_production_projects_include_policy_by_default(self):
-        self.assertTrue((SRC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
+    def test_both_production_projects_reference_policy_library(self):
+        self.assertTrue((LOGIC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
+        self.assertFalse((SRC / 'ModelContextProtocol/Tools/ImportSelectionPolicy.cs').exists())
         for version in (20, 21):
-            project = (SRC / f'TiaMcpServer.V{version}.csproj').read_text()
-            self.assertNotIn('<EnableDefaultCompileItems>false', project)
-            self.assertNotIn('Remove="ModelContextProtocol', project)
+            project = (SRC / f'TiaMcpServer.V{version}.csproj').read_text(encoding='utf-8')
+            self.assertIn('<ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj"', project)
 
 if __name__ == '__main__':
     unittest.main()

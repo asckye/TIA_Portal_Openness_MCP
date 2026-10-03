@@ -5,25 +5,15 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <Compile Include="../TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs" Link="FlgNetCallXmlBuilder.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcLadFcBlockXmlComposer.cs" Link="PlcLadFcBlockXmlComposer.cs" />
 
     <Compile Include="../TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs" Link="PlcFcBlockXmlComposer.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcFbBlockXmlComposer.cs" Link="PlcFbBlockXmlComposer.cs" />
 
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs" Link="PlcGlobalDbXmlBuilder.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcDeclarationXmlFormat.cs" Link="PlcDeclarationXmlFormat.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs" Link="StructuredTextXmlBuilder.cs" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />
     <Compile Include="../TiaMcpServer/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs" Link="PlcUdtXmlBuilder.cs" />
-    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs" Link="PlcTagTableXmlBuilder.cs" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup>
-    <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />
-    <EmbeddedResource Include="../../../openness-shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
+    <ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
 </Project>

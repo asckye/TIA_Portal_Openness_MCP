@@ -29,7 +29,7 @@ internal static class SimulationDocumentationShapeChecks
         var channel = server.GetType("TiaMcpServer.Runtime.PlcSimAdvancedChannel", true)!;
         foreach (var member in new[] { "Load", "ProbePaths", "RegisteredInstances", "OpenInterface", "Register", "Lifecycle", "SetOperatingMode", "RunToNextSyncPoint", "UpdateTagList", "Tags", "Read", "Write", "Dispose" })
             check(channel.GetMethod(member) != null, "PlcSimAdvancedChannel." + member);
-        var logic = server.GetType("TiaMcpServer.Runtime.PlcSimAdvancedLogic", true)!;
+        var logic = Program.FindServerType(server, "TiaMcpServer.Runtime.PlcSimAdvancedLogic");
         check((string?)logic.GetField("ApiFileName")?.GetRawConstantValue() == "Siemens.Simatic.Simulation.Runtime.Api.x64.dll", "API file name is the official x64 assembly");
         check(server.GetReferencedAssemblies().All(a => !a.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.OrdinalIgnoreCase)), "server does not reference the PLCSIM Advanced assembly at compile time (late binding only)");
 
@@ -44,7 +44,7 @@ internal static class SimulationDocumentationShapeChecks
         check(aml.GetParameters().Any(p => p.Name == "outputPath" && !p.HasDefaultValue) && Equals(Default(aml, "referenceAmlPath"), "") && Description(aml).StartsWith("[L2][Hardware][OFFLINE]", StringComparison.Ordinal), "BuildDeviceAmlDocument requires outputPath, optional reference, OFFLINE");
         foreach (var name in new[] { "RenderPlcBlockDocument", "GeneratePlcDocumentation", "LintPlcSclSource", "BuildDeviceAmlDocument" })
             check(Tool(name).GetParameters().All(p => p.Name != "dryRun"), name + " has no dryRun (pure offline tool)");
-        var docLogic = server.GetType("TiaMcpServer.ModelContextProtocol.PlcDocumentationLogic", true)!;
+        var docLogic = Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.PlcDocumentationLogic");
         check(docLogic.GetMethod("RuleCatalog") != null && docLogic.GetMethod("ParseFlgNet") != null && docLogic.GetMethod("Mermaid") != null, "PlcDocumentationLogic rendering/lint entry points");
         check(server.GetType("TiaMcpServer.Siemens.HardwareAmlLogic", true)!.GetMethod("BuiltinSkeleton") != null, "HardwareAmlLogic.BuiltinSkeleton");
     }

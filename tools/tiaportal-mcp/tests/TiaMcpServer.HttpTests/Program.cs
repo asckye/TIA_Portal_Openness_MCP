@@ -13,6 +13,9 @@ using System.Web.Script.Serialization;
 internal static partial class Program
 {
     private static Assembly Server = null!;
+    internal static Type FindServerType(Assembly server, string name)
+        => server.GetType(name, false)
+            ?? Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(server.Location)!, "TiaMcp.Logic.dll")).GetType(name, true)!;
     private static readonly JavaScriptSerializer Json = new JavaScriptSerializer { MaxJsonLength = 16 * 1024 * 1024 };
     private static int Passed;
     private const BindingFlags All = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
@@ -326,7 +329,7 @@ internal static partial class Program
             };
             Server=Assembly.LoadFrom(exe);
             if (args.Length > 1 && args[1] == "example-library-only") {
-                var catalog = Server.GetType("TiaOpenness.Shared.ToolUsageCatalog", true)!;
+                var catalog = FindServerType(Server, "TiaOpenness.Shared.ToolUsageCatalog");
                 foreach (var language in new[] { "", "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" }) {
                     var result = catalog.GetMethod("Examples")!.Invoke(null, new object[] { "21", "full-engine", new[] { "GetProjectTree" }, language, "", "" });
                     Check(result != null && result.ToString()!.Contains("examples"), "Missing library output: " + language);
