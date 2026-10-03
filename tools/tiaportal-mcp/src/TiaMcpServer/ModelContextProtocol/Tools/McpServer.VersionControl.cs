@@ -23,13 +23,12 @@ namespace TiaMcpServer.ModelContextProtocol
     // commitable. Openness can create workspaces and synchronize in both directions, so the whole
     // "export → commit → review → restore" loop can run unattended.
     //
-    // MAPPING IS AUTOMATABLE — an earlier reading of this API said otherwise and was wrong.
+    // Mapping is available through Workspace.ConnectObject.
     // MappedObjectComposition indeed exposes only Find, but the create path does not live on the
     // composition: it is Workspace.ConnectObject(obj, relativeDir, fileName, fileFormat), with
     // Workspace.GetSupportedFileFormats(obj) telling you whether an object can be mapped at all.
     // ConnectProjectToWorkspace below uses both to put a WHOLE project under version control with
-    // no UI interaction. Lesson: before declaring an Openness capability missing, enumerate every
-    // member of the namespace — 'Create' is often on the parent, not on the collection.
+    // no UI interaction; creation is on the workspace, not the mapped-object composition.
     //
     // The generic reflection tools cannot reach any of this: they navigate properties from an
     // object, and VersionControlInterface is a *service*, so the traversal dead-ends immediately.
@@ -86,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var found = new List<Workspace>();
             var pending = new Stack<WorkspaceGroup>();
-            // 2.7.33: the root is the typed WorkspaceSystemGroup, its descendants are WorkspaceUserGroups (Name / Groups / Workspaces).
+            // The root is the typed WorkspaceSystemGroup, its descendants are WorkspaceUserGroups (Name / Groups / Workspaces).
             WorkspaceSystemGroup root = Keep(vci.WorkspaceGroup);
             pending.Push(root);
             while (pending.Count > 0)
@@ -131,9 +130,9 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     n++;
                     int mapped = 0;
-                    try { mapped = w.MappedObjects.Count; } catch { }
+                    try { mapped = w.MappedObjects.Count; } catch { /* swallow(probe-optional): An unavailable mapped-object count leaves the existing zero fallback while other workspace fields remain readable. */ }
                     string root = "";
-                    try { root = w.RootPath?.FullName ?? ""; } catch { }
+                    try { root = w.RootPath?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable workspace root leaves the existing empty-path fallback in the workspace listing. */ }
                     lines.Add(string.Format(
                         "{0} | folder={1} | mappedObjects={2} | language={3}",
                         w.Name, root, mapped, SafeLanguage(w)));
@@ -162,7 +161,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string SafeLanguage(Workspace w)
         {
             try { return w.WorkspaceLanguage?.ToString() ?? "-"; }
-            catch { return "-"; }
+            catch { /* swallow(probe-optional): An unavailable workspace language is represented by the existing dash placeholder. */ return "-"; }
         }
 
         [McpServerTool(Name = "CreateVersionControlWorkspace"), Description(
@@ -275,7 +274,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static string SafeName(MappedObject mo)
         {
-            try { return mo.FileNameWithoutExtension ?? "?"; } catch { return "?"; }
+            try { return mo.FileNameWithoutExtension ?? "?"; } catch { /* swallow(probe-optional): An unavailable mapped-object name is represented by the existing question-mark placeholder. */ return "?"; }
         }
 
         private static string SafeFile(MappedObject mo)
@@ -283,16 +282,16 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 string d = "";
-                try { d = mo.DirectoryPath?.FullName ?? ""; } catch { }
+                try { d = mo.DirectoryPath?.FullName ?? ""; } catch { /* swallow(probe-optional): An unavailable directory leaves the filename-only fallback intact. */ }
                 string f = mo.FileNameWithoutExtension ?? "";
                 return string.IsNullOrEmpty(d) ? f : d.TrimEnd('\\', '/') + "\\" + f;
             }
-            catch { return "?"; }
+            catch { /* swallow(probe-optional): An unreadable mapped-object path is represented by the existing question-mark placeholder. */ return "?"; }
         }
 
         private static string SafeFormat(MappedObject mo)
         {
-            try { return " | format=" + mo.FileFormat; } catch { return ""; }
+            try { return " | format=" + mo.FileFormat; } catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return ""; }
         }
 
         [McpServerTool(Name = "SyncVersionControlWorkspace"), Description(
@@ -349,7 +348,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 foreach (var mo in Keep(ws.MappedObjects))
                 {
                     string st;
-                    try { st = mo.GetStatus().CompareState.ToString(); } catch { st = "Unknown"; }
+                    try { st = mo.GetStatus().CompareState.ToString(); } catch { /* swallow(probe-optional): A failed status probe retains Unknown so the existing synchronization selection rules can decide whether to proceed. */ st = "Unknown"; }
                     if (string.Equals(st, "Equal", StringComparison.OrdinalIgnoreCase)) { skippedEqual++; continue; }
                     if (changedOnly && string.Equals(st, "Unknown", StringComparison.OrdinalIgnoreCase)) continue;
                     targets.Add(mo);
@@ -428,7 +427,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var text = v?.ToString();
                 if (!string.IsNullOrWhiteSpace(text)) return text!;
             }
-            catch { }
+            catch { /* swallow(probe-optional): Objects without a readable Name attribute fall back to their runtime type name. */ }
             return o.GetType().Name;
         }
 
@@ -614,7 +613,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                         MappedObject? existing = null;
                         try { existing = ws.MappedObjects.Find(node.Obj); }
-                        catch { ws = ReAcquire(); }
+                        catch { /* swallow(native-fallback): A failed mapped-object lookup can invalidate its workspace proxy; reacquire it before continuing the existing mapping flow. */ ws = ReAcquire(); }
 
                         if (existing != null)
                         {
@@ -701,7 +700,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static string SafeRoot(Workspace ws)
         {
-            try { return ws.RootPath?.FullName ?? "?"; } catch { return "?"; }
+            try { return ws.RootPath?.FullName ?? "?"; } catch { /* swallow(probe-optional): An unreadable workspace root is represented by the existing question-mark placeholder. */ return "?"; }
         }
     }
 }

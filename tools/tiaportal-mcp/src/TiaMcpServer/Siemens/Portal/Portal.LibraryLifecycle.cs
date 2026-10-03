@@ -8,6 +8,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
+    // Native observations: TIA V21; original observation date not recorded. See docs/reference/real-machine-ledger.md.
     public partial class Portal
     {
         public ResponseMessage ManageGlobalLibrary(string action, string libraryName="", string filePath="", string destinationDirectory="", string openMode="ReadOnly", bool upgrade=false,
@@ -60,7 +61,7 @@ namespace TiaMcpServer.Siemens
                     if (created.Length == 0) { meta["operationSuccess"] = false; return "Archive returned but no new entry appeared in the destination directory; inspect the directory before retrying."; }
                     return "User global library archived; new directory entries listed. The library stays open at its original location.";
                 }
-                // 2.7.46: an empty openMode (create / save / close do not open anything) only produced "要在此字符串中进行分析，必须指定有效信息".
+                // An empty openMode defaults to ReadOnly before enum parsing, including actions that do not open a library.
                 if (string.IsNullOrWhiteSpace(openMode)) openMode = "ReadOnly";
                 if (!System.Enum.GetNames(typeof(OpenMode)).Contains(openMode)) throw new ArgumentException("openMode must be one of: " + string.Join("/", System.Enum.GetNames(typeof(OpenMode))) + ".");
                 var mode = (OpenMode)System.Enum.Parse(typeof(OpenMode), openMode);
@@ -95,7 +96,7 @@ namespace TiaMcpServer.Siemens
             }, requiresProject:false);
 
         // Close / Save / SaveAs / Archive exist on UserGlobalLibrary only; a system library opened through Open(GlobalLibraryInfo) is
-        // found but cannot be closed through the API (2.7.31 real project) - say so instead of "not found".
+        // found but cannot be closed through the API (observed on TIA V21) - say so instead of "not found".
         private static UserGlobalLibrary ExactOpenUserGlobalLibrary(GlobalLibraryComposition libraries, string libraryName, string action)
         {
             var found = EngineeringGroupOperations.Find(libraries, libraryName) ?? throw new InvalidOperationException("Exact open global library not found (action=list shows the open ones).");

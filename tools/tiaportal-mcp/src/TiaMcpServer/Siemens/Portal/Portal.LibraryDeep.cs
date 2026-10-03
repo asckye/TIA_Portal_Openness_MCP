@@ -13,9 +13,10 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Deep library family (phase 3 sub-batch 2): ILibrary update check / synchronization / harmonize / clean-up, type and
+    // Deep library family: ILibrary update check / synchronization / harmonize / clean-up, type and
     // version details (dependencies, dependents, master copies containing instances, consistency status), detailed object
     // comparison and global library infos / archiving. Everything is the official V20/V21 Siemens.Engineering.Library API.
+    // Native observations: TIA V21; original observation date not recorded. See docs/reference/real-machine-ledger.md.
     public partial class Portal
     {
         private static ILibrary AsLibrary(object library) => library as ILibrary ?? throw new NotSupportedException(library.GetType().FullName + " does not implement ILibrary.");
@@ -62,9 +63,9 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex) { row["masterCopiesContainingInstancesError"] = ex.GetBaseException().Message; }
             return row;
         }
-        // 2.7.35: the STEP 7 library type subclasses (CodeBlockLibraryType / PlcTypeLibraryType / PlcDocumentLibraryType) name what a version instantiates;
-        // 2.7.37 / 2.7.38 add the classic HMI and Unified subclasses (2.7.37 real project: Unified faceplates / graphics are plain LibraryType -> "other").
-        // The SiVArc rule-table types and the DCC block type are named by the phase 6 option-package tools (SivarcLibraryTypeKind / DccLibraryTypeKind).
+        // The STEP 7 library type subclasses (CodeBlockLibraryType / PlcTypeLibraryType / PlcDocumentLibraryType) name what a version instantiates;
+        // Classic HMI and Unified subclasses identify their supported kinds; observed V21 Unified faceplates / graphics are plain LibraryType -> "other".
+        // The SiVArc rule-table types and the DCC block type are identified by OptionPackageLibraryTypeKind.
         private static string LibraryTypeKind(LibraryType type) => type switch
         {
             global::Siemens.Engineering.SW.Blocks.CodeBlockLibraryType => "codeBlock",
@@ -198,7 +199,7 @@ namespace TiaMcpServer.Siemens
                 int items = 0;
                 if (includeTypes)
                 {
-                    // SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only; 2.7.31 real project).
+                    // SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only; observed on TIA V21).
                     var typeFolder = lib.TypeFolder;
                     meta["typeFolder"] = typeFolder == null ? null : TypeFolderTree(typeFolder, "", 0, maxDepth, ref items, maxItems);
                     if (typeFolder == null) meta["typeFolderNote"] = library.GetType().Name + " exposes no TypeFolder (master copies only).";
@@ -251,7 +252,7 @@ namespace TiaMcpServer.Siemens
                 var library = ExactOpenEngineeringLibrary(libraryName); var lib = AsLibrary(library);
                 meta["library"] = LibraryRef(library); meta["updateCheckMode"] = updateCheckMode;
                 // TIA answers UpdateCheck on a library without types (SystemGlobalLibrary) with a NonRecoverableException that the
-                // connection guard treats as a lost session (2.7.31 real project): refuse before calling.
+                // connection guard treats as a lost session (observed on TIA V21): refuse before calling.
                 if (lib.TypeFolder == null) throw new ArgumentException(LibraryDeepLogic.NoTypeFolderMessage(library.GetType().Name, "UpdateCheck"));
                 var result = lib.UpdateCheck(_project!, ParseEnum<UpdateCheckMode>(updateCheckMode));
                 int count = 0; bool truncated = false;

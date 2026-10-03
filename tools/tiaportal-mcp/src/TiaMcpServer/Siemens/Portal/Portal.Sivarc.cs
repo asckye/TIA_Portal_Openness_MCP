@@ -17,13 +17,14 @@ using CreateOptions = Siemens.Engineering.SiVArc.CreateOptions;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-① (2.7.38): the SiVArc option package (Siemens.Engineering.SiVArc). Official SiVArc manual, "SiVArc Openness"
+    // The SiVArc option package (Siemens.Engineering.SiVArc). Official SiVArc manual, "SiVArc Openness"
     // chapter: rule tables / folders, rule objects and groups, copying rules from master copies, library objects as rule
     // references, PLC / HMI device columns, tag / text definitions and tag member settings on blocks, the expression resolver,
     // layout data export / import on screens, upgrading SiVArc definitions and generation. The project service is
     // project.GetService<Sivarc>(); SivarcDataProvider hangs on a CodeBlock, SivarcDefinitionsUpgrader on the PlcSoftware and
     // LayoutData on a classic Screen or Unified HmiScreen. The VM has no SiVArc licence: shape checks only, and every tool
     // answers NotSupported when the service is absent. Writes need the SiVArc licence (TIA raises "License not found").
+    // Native observations: TIA V21; original observation date not recorded. See docs/reference/real-machine-ledger.md.
     public partial class Portal
     {
         // ---- family table (typed per rule family; the six families share the shape but no base class) ------------------------------------
@@ -642,7 +643,7 @@ namespace TiaMcpServer.Siemens
                 return "SiVArc definitions upgraded on the PLC; inspect warningCount / messages; project not saved.";
             });
 
-        // ---- typed generation (retrofit of GenerateSiVArc) ----------------------------------------------------------------------------------
+        // ---- typed generation (GenerateSiVArc) ----------------------------------------------------------------------------------
         /// <summary>Name of the Device that owns the PLC software at softwarePath (SoftwareContainer.Parent -> DeviceItem chain -> Device).</summary>
         private string OwningDeviceName(string softwarePath)
         {
@@ -661,7 +662,7 @@ namespace TiaMcpServer.Siemens
                 var extra = Logic.ParseNames(additionalHmiDeviceNamesJson, "additionalHmiDeviceNamesJson").Select(n => ExactEngineeringDevice(new JsonArray(JsonValue.Create(n)).ToJsonString()).Name).ToArray();
                 var devices = new[] { device.Name }.Concat(extra).ToArray();
                 if (devices.Distinct(StringComparer.Ordinal).Count() != devices.Length) throw new ArgumentException("HMI device names repeat.");
-                // 2.7.38 real project: Sivarc.Generate(deviceName, plcs, options) takes PLC *device* names - TIA answered
+                // Observed on TIA V21: Sivarc.Generate(deviceName, plcs, options) takes PLC *device* names - TIA answered
                 // "PLC device '+S1-K1' not found" for the PlcSoftware name, the CPU lives in device "ET 200SP station_1".
                 var plcPaths = ExactNameList(plcSoftwarePathsJson);
                 var plcSoftwareNames = plcPaths.Select(p => ExactPlcForEngineering(p, !dryRun).Name).ToArray();
@@ -675,7 +676,7 @@ namespace TiaMcpServer.Siemens
                 meta["generationOptions"] = options.ToString(); meta["nativeSignature"] = devices.Length > 1 ? "Sivarc.Generate(IEnumerable<string>, IEnumerable<string>, GenerationOptions)" : "Sivarc.Generate(string, IEnumerable<string>, GenerationOptions)";
                 if (dryRun) return "SiVArc native generation preview; generation can create/update HMI objects according to rules and selected native options.";
                 meta["mayHaveChanged"] = true;
-                // 2.7.39 real project: TIA answered "PLC device '<name>' not found" for the software name AND the device name on a project whose
+                // Observed on TIA V21: TIA answered "PLC device '<name>' not found" for the software name AND the device name on a project whose
                 // HMI has no connection to the PLC (HmiSoftware.Connections empty) - the official page lists a configured PLC connection as a
                 // requirement. Try the software name first (the documented "PLC_1" form), then the owning device name, and report both.
                 SivarcGenerationResult result;

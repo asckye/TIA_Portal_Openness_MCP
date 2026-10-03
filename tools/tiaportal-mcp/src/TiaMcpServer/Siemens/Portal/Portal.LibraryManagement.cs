@@ -8,9 +8,10 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
+    // Native observations: TIA V21; original observation date not recorded. See docs/reference/real-machine-ledger.md.
     public partial class Portal
     {
-        // ProjectLibrary has no Name in the PublicAPI (2.7.31 real project); GlobalLibrary does.
+        // ProjectLibrary has no Name in the PublicAPI (observed on TIA V21); GlobalLibrary does.
         private static string LibraryLabel(object library) => library is GlobalLibrary global ? global.Name : LibraryDeepLogic.ProjectLibraryLabel;
         private JsonObject LibraryRef(object library)
         {
@@ -20,7 +21,7 @@ namespace TiaMcpServer.Siemens
         }
         private static object EngineeringLibraryFolder(object library, string folderPath, string rootProperty)
         {
-            // SystemGlobalLibrary.TypeFolder is null (2.7.31 real project): say so instead of the generic "unavailable".
+            // SystemGlobalLibrary.TypeFolder is null (observed on TIA V21): say so instead of the generic "unavailable".
             var folder = library.GetType().GetProperty(rootProperty)?.GetValue(library)
                 ?? throw new PortalException(PortalErrorCode.NotFound, LibraryDeepLogic.NoTypeFolderMessage(library.GetType().Name, "resolving '" + folderPath + "' under " + rootProperty));
             foreach (var part in EngineeringGroupOperations.Parts(folderPath, true))
