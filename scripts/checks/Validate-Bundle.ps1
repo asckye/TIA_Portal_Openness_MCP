@@ -264,7 +264,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         if ((FileHash $multiPath) -ne $delivery.multiVersionBuildSha256) { Fail 'Multi-version build record changed' }
         $multi = Get-Content -LiteralPath $multiPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($multi.release -ne $delivery.release -or $multi.fileVersion -ne $build.fileVersion) { Fail 'Multi-version release/version mismatch' }
-        if (-not $multi.validation.foundationTransportExecuted -or -not $multi.validation.studioFunctionalTestsExecuted -or -not $multi.validation.toolUsageCoverageExecuted) { Fail 'Multi-version functional validation incomplete' }
+        if (-not $multi.validation.foundationTransportExecuted -or -not $multi.validation.studioFunctionalTestsExecuted -or -not $multi.validation.configurationFunctionalTestsExecuted -or -not $multi.validation.toolUsageCoverageExecuted) { Fail 'Multi-version functional validation incomplete' }
         if (($multi.studioReleaseKeys -join ',') -ne '14sp1,15.1,16,17,18,19,20,21') { Fail 'Eight Studio/MCP release keys required' }
         if (-not $NoBinaries) {
             foreach ($key in $multi.studioReleaseKeys) {

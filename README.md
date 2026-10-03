@@ -2,7 +2,9 @@
 
 [Chinese](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-Connect an AI client to Siemens TIA Portal through MCP, or use the bundled TIA Openness Studio desktop directly. Both desktop applications support Chinese and English.
+One TIA Portal Workbench window contains **MCP & clients** and **Engineering** pages. Configure clients, manage the MCP service and work directly with TIA projects without opening a second desktop application. Chinese and English are supported.
+
+This desktop merge is in the current source. The published v3.2.0 ZIP retains its original separate interfaces; build the current source to use the unified desktop until the next release.
 
 ![Architecture](docs/assets/architecture.svg)
 
@@ -10,9 +12,9 @@ Connect an AI client to Siemens TIA Portal through MCP, or use the bundled TIA O
 
 Download the complete **TIA_MCP_Delivery** ZIP from Releases and extract the entire archive to a short, permanent directory. GitHub's source archives contain no runtime binaries.
 
-- **AI client:** open `TiaMcpConfigurator.exe`, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
-- **Studio:** open `runtime/studio/TiaOpenness.exe`, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
-- **Studio demonstration:** run `runtime/studio/TiaOpenness.exe --mock --lang en` from the extracted package. Results are synthetic.
+- **AI client:** open `TiaMcpConfigurator.exe`, choose **MCP & clients**, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
+- **Engineering:** open the same `TiaMcpConfigurator.exe`, switch to **Engineering**, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
+- **Studio demonstration:** run `TiaMcpConfigurator.exe --mock --lang en` from the extracted package. Results are synthetic.
 
 The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installation, VM paths, PLC selection and a first SCL import/compile exercise.
 
@@ -33,7 +35,7 @@ Before an unfamiliar operation, `GetToolUsage(toolName, operation)` supplies the
 
 ## Installation and validation
 
-Install the matching TIA Portal, Openness and licenses separately. The configurator and full engines require .NET Framework 4.8. Foundation hosts additionally require .NET 8 and ASP.NET Core 8. Studio requires .NET 10 Desktop Runtime. See [runtime paths](runtime/README.md).
+Install the matching TIA Portal, Openness and licenses separately. The unified desktop requires .NET 10 Desktop Runtime. The Openness bridge and full engines require .NET Framework 4.8. Foundation hosts additionally require .NET 8 and ASP.NET Core 8. See [runtime paths](runtime/README.md).
 
 All eight runtimes and Studio are built locally against the supplied SDKs. Functional, protocol, API metadata and XML interface checks are recorded separately from real-project acceptance. New native TIA/project acceptance remains **NOT RUN**; a tool catalog or successful build does not establish every engineering operation. Current limits are in [capabilities](docs/reference/capabilities.md).
 

@@ -1,15 +1,15 @@
 {
-    "generatedAt":  "2026-10-03T11:07:17.5488250+00:00",
+    "generatedAt":  "2026-10-03T13:22:58.0132857+00:00",
     "testsPassed":  157,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "05d25a7b583a2b9ea9b9b74eaeaaad7d812dbbc2080f26a705bf7dbb96b3895e"
+                       "sha256":  "f03ecd918aa5bf9214e91ecdf9924eb542bf3bbab6a4c811f7bf698bed709eb6"
                    },
     "sourceFiles":  [
                         {
                             "path":  "scripts/build/Build-Configurator.ps1",
-                            "sha256":  "29acc29e6e79fe41adf5d77f4e9f497dcfdf446492533c97211dffc6b9722124"
+                            "sha256":  "cfce1b7d78366633d3c754334556bcd9f7ea19756caea8d9f0e4d27d711f20a9"
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
@@ -17,11 +17,11 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/ConfigCore.cs",
-                            "sha256":  "e81a16e35cab8a53608cd01ec8aaea895a26216fba0db75341d4cfe3057ef4fa"
+                            "sha256":  "e50f1a5f98284134b3fcc33caeea18a35113648361ab2e74879b835f41262674"
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "8c44b38194b2a889d4a9d3f26f562d8520dbcb87289ad001dc0c2c6c59112e29"
+                            "sha256":  "55fa463f6736251dddc524ec9a6a8d2615d3590fcbd44d835686f2fca4c68ef4"
                         },
                         {
                             "path":  "tools/mcp-configurator/Glass.Dark.xaml",
@@ -40,12 +40,20 @@
                             "sha256":  "cecb6a86b37e6faa1aad3b152c5e1e3831230b9546db138b91da76afd5a568c2"
                         },
                         {
+                            "path":  "tools/mcp-configurator/Launcher.cs",
+                            "sha256":  "d049d51177609184e264da6bee0a3ffbd0b9289dd409c945595381787893b647"
+                        },
+                        {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
-                            "sha256":  "208e80aeea09c4799c8edf24d0453de5a3418a0561adf5611f04054f36a304cf"
+                            "sha256":  "2d3bb8158809602ccbf1bc97d0dad733e77d1313fb3843c48f1ac28f3057e327"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/ModernJson.cs",
+                            "sha256":  "195b42e69cd929ccd47046f62f68e3cb6799337a1f955660d1a3a0fd304ff687"
                         },
                         {
                             "path":  "tools/mcp-configurator/Tests.cs",
-                            "sha256":  "a1bc70f0de52ff49a1530f822f5ae10811cdb5abf27dadbc454fc957f1264e0c"
+                            "sha256":  "5d36a3aeaeac37ece9acf0db286d7e4e60d648464262ef6379dcd4a1182c60ad"
                         },
                         {
                             "path":  "tools/mcp-configurator/UpdateCheck.cs",

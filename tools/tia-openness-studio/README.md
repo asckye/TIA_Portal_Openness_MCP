@@ -1,8 +1,16 @@
 # TIA Openness Studio
 
-The English/Chinese WPF desktop calls Siemens Openness directly through a local .NET Framework
-4.8 x64 bridge. Studio has no MCP client/server, HTTP endpoint, bearer token, tool discovery or
-generic MCP tools panel. The existing MCP engine and configurator remain separate entrypoints.
+The English/Chinese WPF desktop now hosts both **Engineering** and **MCP & clients** in
+one .NET 10 main window. The root `TiaMcpConfigurator.exe` is a compatibility launcher
+for this desktop, not a second configuration application. Configuration code is compiled
+into the GUI and the page remains alive while the engineering view is shown. Version,
+language and appearance are shared; a running service or active engineering bridge locks
+the selected release. Closing the main window still handles its owned MCP service.
+
+Engineering operations continue to call Siemens Openness through the .NET Framework 4.8
+bridge. The MCP engines retain their existing process boundaries. The unified desktop
+requires the complete bundle and .NET 10 Desktop Runtime, including on an AI-only host.
+This source change has not replaced the published v3.2.0 ZIP.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
 copyright 2026 asckye. See [LICENSE](LICENSE) and [file provenance](upstream.json).
@@ -28,7 +36,7 @@ Choose **Connect** to attach to a running instance or start TIA when none is ava
 Headless option controls a newly started TIA instance. Open, Save and Close now operate through
 the native session. The bridge runs calls sequentially on its STA thread. An explicit
 `--openness-version 14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20` or `21` selects the release.
-The sidebar release picker selects the same identity before connecting; omission selects the newest
+The title-bar release picker selects the same identity before connecting; omission selects the newest
 supported installation. Restart Studio to change the native version after a bridge session starts.
 
 For the synthetic workflow, no PublicAPI or TIA installation is needed:
@@ -45,7 +53,7 @@ are removed. Doctor remains available without loading a native TIA session.
 ## Glass Layers interface
 
 The native WPF view uses the shared `tools/ui-glass` styles and bundled OFL fonts. The minimum
-window size is 1200 x 780; the center column expands with the window. The sidebar footer selects
+window size is 1200 x 780; the center column expands with the window. The title bar selects
 English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
 project session, selection and commands.
 
@@ -57,7 +65,7 @@ Git diff includes staged, unstaged and untracked local changes.
 
 Compile and inspection cards display results already recorded by the existing operation log.
 Clearing that log returns the cards to Not run. Object names, paths, code and native diagnostic
-messages keep their original text when the interface language changes. Studio has no MCP tools page.
+messages keep their original text when the interface language changes. The MCP page configures clients and service lifecycle; it is not a generic tool invoker.
 
 Set `TIA_GLASS_SCREENSHOTS` to a local output directory before running the WPF tests below to
 capture the English and Chinese fixtures in both themes. These are actual WPF renderings at

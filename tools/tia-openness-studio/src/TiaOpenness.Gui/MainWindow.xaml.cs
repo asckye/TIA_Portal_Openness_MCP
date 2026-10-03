@@ -10,6 +10,7 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        _model.SelectedReleaseKey = InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
         DataContext = _model;
         Root.Tag = new Controls.GlassResults(_model);
@@ -23,8 +24,12 @@ public partial class MainWindow : Window
         _model.PropertyChanged += (_, e) => {
             if (e.PropertyName == nameof(MainViewModel.IsVcTab)) DetailColumn.Width = new GridLength(_model.IsVcTab ? 340 : 320);
         };
-        Closed += (_, _) => { ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
-        Loaded += async (_, _) => await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
+        Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
+        Closed += (_, _) => { DisposeConfiguration(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
+        Loaded += async (_, _) => {
+            await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "--mcp") >= 0) ShowConfiguration();
+        };
     }
 
     private void OnSyncDirection(object sender, RoutedEventArgs e)

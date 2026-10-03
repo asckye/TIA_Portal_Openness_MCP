@@ -2,6 +2,12 @@
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
+## [Unreleased]
+
+- 将 MCP 配置器与 Openness Studio 合并为一个 WPF/.NET 10 工作台；工程操作与 MCP/客户端配置在同一主窗口内切换，保留各页面状态。
+- 统一版本选择、语言和主题；根目录 `TiaMcpConfigurator.exe` 保留文件名并启动统一桌面。主界面需要 .NET 10 Desktop Runtime，不能只复制入口 EXE。
+- 配置模块在 .NET 10 下保持原有客户端配置合并、备份及密钥保护行为，补充嵌入页面和跨运行时回归。原生 Openness 桥接及各版本引擎保留后台隔离。
+
 ## [3.2.0] - 2026-10-03
 
 八版本运行包、直接调用 Openness 的 Studio 与统一工具示例。正式交付包含 V14 SP1、V15.1、V16–V21，配置器与 Studio 应用版本统一为 3.2.0。详见 [v3.2.0](docs/releases/v3.2.0.md)。

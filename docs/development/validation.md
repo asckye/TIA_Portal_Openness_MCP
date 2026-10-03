@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
-控制台用例必须用 `dotnet run` 执行。WPF 检查使用隔离配置和模拟 HTTP，覆盖客户端配置、
+控制台用例必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块同时在原 Framework 测试宿主和实际 .NET 10 桌面宿主执行。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
 合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。
 
 GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。托管 runner 没有 Siemens

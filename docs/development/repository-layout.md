@@ -5,13 +5,13 @@
 | 路径 | 用途 |
 |---|---|
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
-| `tools/mcp-configurator` | WPF 配置器：版本/连接模式/客户端配置 |
+| `tools/mcp-configurator` | 嵌入工作台的 WPF 配置模块、兼容入口与配置功能测试 |
 | `tools/tia-openness-studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |
 | `tools/openness-shared` | 无 Siemens 版本依赖的环境信息、参数、诊断、导入依赖规划和统一示例库 |
 | `tools/third-party` | 固定版本的第三方组件及其许可证 |
 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` | 构建生成的八个 MCP 运行目录 |
-| `runtime/studio` | Studio 程序及 `bridge/adapters` 内的八版适配器 |
-| `TiaMcpConfigurator.exe` | 构建生成的配置器入口 |
+| `runtime/studio` | 统一桌面程序及 `bridge/adapters` 内的八版适配器 |
+| `TiaMcpConfigurator.exe` | 统一工作台入口（保留原文件名），不再打开独立配置器窗口 |
 | `reference/tool-examples` | 可编辑的调用、语言文件、返回解释和调用顺序 |
 | `reference/siemens-openness`、`reference/siemens-code-snippets` | 固定来源的官方示例与授权记录 |
 | `reference/version-feature-matrix.json` | 按版本区分实现、缺口和原生验收的功能证据 |

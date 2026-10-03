@@ -60,7 +60,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _started;
     private string _selectedReleaseKey;
     public IEnumerable<TiaMcp.Versioning.TiaVersionDescriptor> Releases => TiaMcp.Versioning.TiaVersionCatalog.Runnable;
-    public bool CanSelectRelease => !_started && !Busy;
+    private bool _serviceOwnsRelease;
+    public bool ServiceOwnsRelease
+    {
+        get => _serviceOwnsRelease;
+        set { if (Set(ref _serviceOwnsRelease, value)) Raise(nameof(CanSelectRelease)); }
+    }
+    public bool CanSelectRelease => !_started && !Busy && !ServiceOwnsRelease;
     public string SelectedReleaseKey
     {
         get => _selectedReleaseKey;

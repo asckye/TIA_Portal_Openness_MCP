@@ -2,6 +2,22 @@
 
 ## Current state
 
+Current local development merges the configurator and Studio into one WPF/.NET 10
+workbench. `TiaMcpConfigurator.exe` is now the compatibility launcher for that single
+main window. The embedded configuration module preserves existing settings and service
+ownership; the title bar owns the release, language and theme controls. The native
+Framework bridge and per-release MCP engines remain separate backend processes.
+This local change is not part of the published v3.2.0 asset described below. Native TIA
+acceptance for the merge remains NOT RUN. Local verification completed with 622 WPF
+checks, 45 Studio core checks, 157 configuration checks in each of the Framework and
+.NET 10 hosts, 7,367 foundation checks (one native-related skip), all eight adapter
+builds and 17,936 V20/V21 local stress calls. Strict bundle validation passed. Evidence
+is in the current build manifests and `bin-build/unified-*-build.log` / Studio test logs.
+The host lacked ASP.NET Core 8; this run used a SHA-512-verified Microsoft 8.0.19 archive
+under `bin-build/dotnet-test-runtime` with process-local `DOTNET_ROOT` and `DOTNET_ROOT_X64`.
+That private test runtime is not part of the delivery. The system installation was not changed.
+
+
 Published [v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) from `299f947d4b54a92873e9321a39f6b3dc39279e11`. Both pre-release CI workflows and the independent published-asset verification passed. The release ZIP includes the original beginner guide; the subsequent documentation cleanup is maintained on master. See [publication evidence](../../manifest/publication-v3.2.0.json) and the [current beginner guide (Chinese)](../getting-started/beginners.zh-CN.md).
 
 The v3.2.0 release build includes eight MCP runtimes, the configurator and direct

@@ -135,6 +135,7 @@ public sealed class ThemeManager : INotifyPropertyChanged
         var palette = new ResourceDictionary { Source = wanted };
         if (merged.Count > PaletteSlot) merged[PaletteSlot] = palette;
         else merged.Insert(PaletteSlot, palette);
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectivelyDark)));
     }
 
     /// <summary>

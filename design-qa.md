@@ -1,5 +1,7 @@
 # Glass Layers WPF design QA
 
+Current source adds a unified workbench: configuration and engineering share one window, version selection, language and theme. `UnifiedDesktopTests` renders both languages and themes under `bin-build/unified-desktop`; the earlier two-window reference comparisons below describe v3.2.0.
+
 Status: passed
 
 Scope: native WPF view reconstruction of MCP Configurator and Openness Studio, including

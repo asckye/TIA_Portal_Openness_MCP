@@ -103,7 +103,7 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid Margin="18,0,8,0">
-        <StackPanel Orientation="Horizontal">
+        <StackPanel x:Name="CaptionTitle" Orientation="Horizontal">
           <Border Width="16" Height="16" Background="{DynamicResource Ui.Accent}" CornerRadius="5" VerticalAlignment="Center"/>
           <TextBlock Text="TIA Portal · MCP Bridge" FontWeight="SemiBold" Margin="10,0,0,0"/>
         </StackPanel>

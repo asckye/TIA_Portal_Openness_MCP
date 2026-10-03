@@ -24,6 +24,9 @@ public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
     public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotSupportedException();
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
     {
+        // A view losing its data context during teardown can still receive a
+        // language notification before WPF removes the multi-binding.
+        if (value == null || value == System.Windows.DependencyProperty.UnsetValue || value == Binding.DoNothing) return Binding.DoNothing;
         bool zh = Loc.Current.IsChinese;
         return (string)parameter switch
         {

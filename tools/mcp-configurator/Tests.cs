@@ -320,7 +320,7 @@ namespace TiaMcpConfigurator
                     form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
                     Assert((int)window.Resources["ClientColumns"] == 2, "compact window uses two client columns");
                     window.Width = 1200; window.Height = 780;
-                    var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/Tests;component/"), "./Fonts/#Manrope");
+                    var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/" + typeof(ConfigWindow).Assembly.GetName().Name + ";component/"), "./Fonts/#Manrope");
                     System.Windows.Media.GlyphTypeface glyph;
                     Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
                         && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");

@@ -18,17 +18,31 @@ using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TiaMcp.Versioning;
 
-[assembly: AssemblyTitle("TIA MCP Configurator")]
-[assembly: AssemblyDescription("TIA Portal V14 SP1-V21 service and AI client configuration")]
+#if !UNIFIED_DESKTOP
+[assembly: AssemblyTitle("TIA Portal Workbench")]
+[assembly: AssemblyDescription("Unified TIA Portal engineering, MCP service and AI client desktop")]
 [assembly: AssemblyVersion("3.2.0.0")]
 [assembly: AssemblyFileVersion("3.2.0.0")]
+#endif
 
 namespace TiaMcpConfigurator
 {
     public sealed class ConfigWindow : IDisposable
     {
         public Window Window { get; private set; }
-        private readonly string root = AppDomain.CurrentDomain.BaseDirectory;
+        public FrameworkElement View { get; private set; }
+        private readonly string root;
+        private readonly bool embedded;
+        public event EventHandler ServiceStateChanged;
+        public bool HasRunningServer { get { return server != null && !server.HasExited; } }
+        public bool LocksRelease { get { return busy || HasRunningServer; } }
+        public string SelectedReleaseKey
+        {
+            get { return Version; }
+            set { Find<ComboBox>("Version").SelectedValue = TiaVersionCatalog.RequireRunnable(value).Key; }
+        }
+        public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = !embedded && enabled && !HasRunningServer; }
+        public Func<bool> CanUpdate { get; set; }
         private Process server;
         private UpdateInfo latest;   // 2.8.0: last successful update check
         private string runningKey;
@@ -37,7 +51,7 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
-        private T Find<T>(string name) where T : FrameworkElement { return (T)Window.FindName(name); }
+        private T Find<T>(string name) where T : FrameworkElement { return (T)View.FindName(name); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
         private string Version
         {
@@ -54,28 +68,34 @@ namespace TiaMcpConfigurator
         private string Secret() { return Find<CheckBox>("ShowKey").IsChecked == true ? Text("KeyVisible") : Find<PasswordBox>("Key").Password; }
         private void SetSecret(string value) { Find<TextBox>("KeyVisible").Text = value; Find<PasswordBox>("Key").Password = value; }
 
-        public ConfigWindow(bool loadExisting = true)
+        public ConfigWindow(bool loadExisting = true) : this(null, AppDomain.CurrentDomain.BaseDirectory, loadExisting) { }
+
+        public ConfigWindow(Window owner, string bundleRoot, bool loadExisting = true)
         {
+            embedded = owner != null;
+            root = bundleRoot;
             string markup = ReadViewResource("MainWindow.xaml").Replace("__VIEW_ASSEMBLY__", Assembly.GetExecutingAssembly().GetName().Name);
             string resources = DictionaryBody(ReadViewResource("Glass.Light.xaml")) + DictionaryBody(ReadViewResource("Glass.Strings.en.xaml")) + DictionaryBody(ReadViewResource("Glass.xaml"));
-            Window = (Window)XamlReader.Parse(markup.Replace("<!-- GLASS RESOURCES -->", resources));
+            markup = markup.Replace("<!-- GLASS RESOURCES -->", resources);
+            View = (FrameworkElement)XamlReader.Parse(embedded ? EmbeddedMarkup(markup) : markup);
+            Window = owner ?? (Window)View;
             string assembly = Assembly.GetExecutingAssembly().GetName().Name;
-            Window.Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
-            Window.Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
+            View.Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
+            View.Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
             Click("Minimize", delegate { Window.WindowState = WindowState.Minimized; });
             Click("Maximize", delegate { Window.WindowState = Window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; });
             Click("Close", delegate { Window.Close(); });
             MenuClick("ThemeLight", delegate { ApplyTheme("Light"); });
             MenuClick("ThemeDark", delegate { ApplyTheme("Dark"); });
-            MenuClick("ThemeAuto", delegate { MenuClick("LanguageEnglish", delegate { ApplyLanguage("en"); });
+            MenuClick("ThemeAuto", delegate { ApplyTheme("Auto"); });
+            MenuClick("LanguageEnglish", delegate { ApplyLanguage("en"); });
             MenuClick("LanguageChinese", delegate { ApplyLanguage("zh"); });
-            ApplyTheme("Auto"); });
             ApplyTheme("Auto");
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = "21";
-            Window.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
-            Window.SizeChanged += delegate { Window.Resources["ClientColumns"] = Window.ActualWidth < 1180 ? 2 : 4; };
+            View.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
+            View.SizeChanged += delegate { View.Resources["ClientColumns"] = View.ActualWidth < 1180 ? 2 : 4; };
             var choices = Find<ListBox>("ClientChoices");
             var cards = ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
@@ -128,6 +148,36 @@ namespace TiaMcpConfigurator
             ApplyLanguage(loadExisting && System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh" : "en");
             Append("就绪。服务与客户端配置在同一页完成，两端使用同一密钥。");
             Window.Closing += OnClosing;
+            if (embedded)
+            {
+                foreach (string name in new[] { "CaptionTitle", "Minimize", "Maximize", "Close", "LanguageEnglish", "LanguageChinese", "ThemeLight", "ThemeDark", "ThemeAuto" })
+                    Find<FrameworkElement>(name).Visibility = Visibility.Collapsed;
+                // The desktop owns the version selector; this field only mirrors its state.
+                Find<ComboBox>("Version").IsHitTestVisible = false;
+                Find<ComboBox>("Version").Focusable = false;
+                Find<ComboBox>("Version").IsEnabled = false;
+            }
+        }
+
+        private static string EmbeddedMarkup(string markup)
+        {
+            var document = new System.Xml.XmlDocument(); document.LoadXml(markup);
+            var oldRoot = document.DocumentElement;
+            var view = document.CreateElement("UserControl", oldRoot.NamespaceURI);
+            foreach (System.Xml.XmlAttribute attribute in oldRoot.Attributes)
+                if (attribute.Prefix == "xmlns" || attribute.Name == "xmlns" || new[] { "Background", "Foreground", "FontFamily", "FontSize", "UseLayoutRounding" }.Contains(attribute.Name))
+                    view.Attributes.Append((System.Xml.XmlAttribute)attribute.CloneNode(true));
+            foreach (System.Xml.XmlNode child in oldRoot.ChildNodes)
+            {
+                if (child.LocalName == "WindowChrome.WindowChrome") continue;
+                if (child.LocalName == "Window.Resources")
+                {
+                    var resourceNode = document.CreateElement("UserControl.Resources", oldRoot.NamespaceURI);
+                    resourceNode.InnerXml = child.InnerXml; view.AppendChild(resourceNode);
+                }
+                else view.AppendChild(child.CloneNode(true));
+            }
+            return view.OuterXml;
         }
 
         private static string ReadViewResource(string name)
@@ -146,19 +196,19 @@ namespace TiaMcpConfigurator
                     resolved = key != null && Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) == 0 ? "Dark" : "Light";
             }
             var palette = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass." + resolved + ".xaml"));
-            foreach (object key in palette.Keys) Window.Resources[key] = palette[key];
+            foreach (object key in palette.Keys) View.Resources[key] = palette[key];
             foreach (string choice in new[] { "Light", "Dark", "Auto" }) Find<MenuItem>("Theme" + choice).IsChecked = choice == theme;
         }
 
-        private string T(string key) { return (string)Window.Resources["Text." + key]; }
+        private string T(string key) { return (string)View.Resources["Text." + key]; }
         private string F(string key, object value) { return String.Format(T(key), value); }
         public void ApplyLanguage(string language)
         {
             var strings = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass.Strings." + language + ".xaml"));
-            foreach (object key in strings.Keys) Window.Resources[key] = strings[key];
+            foreach (object key in strings.Keys) View.Resources[key] = strings[key];
             Find<MenuItem>("LanguageEnglish").IsChecked = language == "en";
             Find<MenuItem>("LanguageChinese").IsChecked = language == "zh";
-            Window.Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
+            View.Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
             Mode(Remote); UpdateInstructions(); UpdateDetectionLabel(); UpdateLastTest(); UpdateLogCount();
         }
         private void UpdateDetectionLabel()
@@ -179,6 +229,7 @@ namespace TiaMcpConfigurator
         {
             Find<System.Windows.Shapes.Ellipse>("StatusDot").SetResourceReference(System.Windows.Shapes.Shape.FillProperty, active ? "Ui.Accent" : "Ui.StatusIdle");
             UpdateLink();
+            if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateKeyPlaceholder() { Find<TextBlock>("KeyPlaceholder").Visibility = String.IsNullOrEmpty(Secret()) ? Visibility.Visible : Visibility.Collapsed; }
 
@@ -323,7 +374,11 @@ namespace TiaMcpConfigurator
             Append("重启已配置的客户端，使用 " + (remote ? "tia-portal-vm" : "tia-portal") + " 读取工程树。不要让多个 AI 同时修改同一工程。");
             if (errors.Count > 0) throw new InvalidOperationException("部分客户端未保存，其它成功项已保留：\n" + String.Join("\n", errors));
         }
-        private void SetBusy(bool value) { busy = value; Find<Grid>("Panes").IsEnabled = !value; }
+        private void SetBusy(bool value)
+        {
+            busy = value; Find<Grid>("Panes").IsEnabled = !value;
+            if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
+        }
 
         // ---- 2.8.0 menu "更新": check against GitHub, then hand over to Update-Engine.ps1 with this window closed.
         private void ShowInstalledVersion()
@@ -368,6 +423,7 @@ namespace TiaMcpConfigurator
         }
         private void RunUpdate()
         {
+            if (CanUpdate != null && !CanUpdate()) throw new InvalidOperationException("请先完成工程操作并断开 TIA 会话，再更新软件。");
             if (busy) return;
             if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException("这是源码仓库，不在这里更新。");
             if (server != null && !server.HasExited) throw new InvalidOperationException("先点“停止”结束本窗口启动的 MCP，再更新。");
@@ -447,6 +503,7 @@ namespace TiaMcpConfigurator
         }
         private void OnClosing(object sender, CancelEventArgs e)
         {
+            if (e.Cancel) return;
             if (busy) { e.Cancel = true; Append("正在处理配置，请稍候再关闭。"); return; }
             try { StopServer(); if (server != null && !server.HasExited) { e.Cancel = true; return; } }
             catch (Exception ex) { e.Cancel = true; Report(ex); return; }
@@ -466,9 +523,16 @@ namespace TiaMcpConfigurator
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using (var stream = File.Create(path)) encoder.Save(stream);
         }
-        public void Dispose() { Window.Close(); if (server != null && server.HasExited) server.Dispose(); }
+        public void Dispose()
+        {
+            if (!embedded) Window.Close();
+            Window.Closing -= OnClosing;
+            closing = true;
+            if (server != null && server.HasExited) server.Dispose();
+        }
     }
 
+#if !UNIFIED_DESKTOP
     public static class Program
     {
         [STAThread]
@@ -482,4 +546,5 @@ namespace TiaMcpConfigurator
             catch (Exception ex) { MessageBox.Show(ex.Message, "TIA MCP 配置失败", MessageBoxButton.OK, MessageBoxImage.Error); return 1; }
         }
     }
+#endif
 }

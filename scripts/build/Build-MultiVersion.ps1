@@ -51,7 +51,7 @@ $studioOutput=Join-Path $repo 'runtime/studio'
 New-Item -ItemType Directory -Force $studioOutput | Out-Null
 Get-ChildItem -LiteralPath $studioBuild | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $studioOutput -Recurse -Force}
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
-$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
+$validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
 if($Test) {
     & $Dotnet run --project (Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj') -c Release -- $api (Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcp.Adapters') *> (Join-Path $logs 'foundation-tests.log')
     if($LASTEXITCODE){throw 'Foundation functional tests failed'}
@@ -85,6 +85,7 @@ $record=@{createdAt=[DateTimeOffset]::UtcNow.ToString('o');release=$engineRecord
 [IO.File]::WriteAllText((Join-Path $repo 'manifest/multi-version-build.json'),($record | ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))
 $deliveryPath=Join-Path $repo 'manifest/delivery.json'
 $delivery=Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json
+$delivery | Add-Member -Force NoteProperty configuratorBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/configurator-build.json')).Hash.ToLowerInvariant()
 $delivery | Add-Member -Force NoteProperty multiVersionBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/multi-version-build.json')).Hash.ToLowerInvariant()
 $delivery | Add-Member -Force NoteProperty releaseKeys $record.studioReleaseKeys
 [IO.File]::WriteAllText($deliveryPath,($delivery | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))

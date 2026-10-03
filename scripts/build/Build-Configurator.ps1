@@ -30,7 +30,10 @@ foreach ($assemblyName in @('TiaMcpConfigurator', 'Tests')) {
 $viewResources = @("/resource:$glass\Glass.xaml,Glass.xaml", "/resource:$root\tools\mcp-configurator\Glass.Light.xaml,Glass.Light.xaml", "/resource:$root\tools\mcp-configurator\Glass.Dark.xaml,Glass.Dark.xaml")
 foreach ($language in @('en', 'zh')) { $viewResources += "/resource:$root\tools\mcp-configurator\Glass.Strings.$language.xaml,Glass.Strings.$language.xaml" }
 $resource = "/resource:$root\tools\mcp-configurator\MainWindow.xaml,MainWindow.xaml"
-& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references $resource @viewResources "/resource:$resourceOutput\TiaMcpConfigurator.g.resources,TiaMcpConfigurator.g.resources" @sources
+$metadata = Join-Path $resourceOutput 'DesktopVersion.cs'
+$attributes = [regex]::Matches([IO.File]::ReadAllText((Join-Path $root 'tools/mcp-configurator/Configurator.cs')), '(?m)^\[assembly:.*\]$') | ForEach-Object { $_.Value }
+[IO.File]::WriteAllText($metadata, "using System.Reflection;`n" + ($attributes -join "`n"), [Text.UTF8Encoding]::new($false))
+& $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references (Join-Path $root 'tools/mcp-configurator/Launcher.cs') $processArguments $metadata
 if ($LASTEXITCODE -ne 0) { throw 'Configurator build failed.' }
 if ($Test) {
     $output = Join-Path $root 'bin-build\configurator-tests'

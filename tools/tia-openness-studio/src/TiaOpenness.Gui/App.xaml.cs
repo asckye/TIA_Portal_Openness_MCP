@@ -20,6 +20,18 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        if (e.Args.Length > 0 && e.Args[0] == "--network")
+        {
+            StartupUri = null;
+            try
+            {
+                if (e.Args.Length != 4) throw new ArgumentException("Invalid network configuration arguments.");
+                TiaMcpConfigurator.ConfigCore.ConfigureNetwork(e.Args[1], int.Parse(e.Args[2]), e.Args[3]);
+                Shutdown(0);
+            }
+            catch (Exception ex) { MessageBox.Show(ex.Message, "TIA Portal", MessageBoxButton.OK, MessageBoxImage.Error); Shutdown(1); }
+            return;
+        }
         // A background failure that reaches the dispatcher would otherwise kill the app
         // silently while a TIA session is still open.
         DispatcherUnhandledException += OnUnhandledException;

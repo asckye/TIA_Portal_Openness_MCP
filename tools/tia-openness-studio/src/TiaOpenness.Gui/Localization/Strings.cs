@@ -16,6 +16,8 @@ internal static class Strings
     /// <summary>key, English, Chinese.</summary>
     internal static readonly (string Key, string En, string Zh)[] Catalogue =
     [
+        ("Desktop.Engineering", "Engineering", "工程操作"),
+        ("Desktop.Configuration", "MCP & clients", "MCP 与客户端"),
         ("Connection.OpennessVersion", "Openness API version (blank: automatic)", "Openness API 版本（留空自动选择）"),
         ("Glass.Disconnected", "Not connected", "未连接"),
         ("Glass.Connected", "●  Connected", "●  已连接"),
@@ -67,7 +69,7 @@ internal static class Strings
         ("Glass.Missing", "Missing", "缺失"),
         ("Glass.InspectFile", "Select this VCI object to inspect its local Git diff", "选择此 VCI 对象以查看本地 Git 差异"),
         // ---- shell -----------------------------------------------------------------
-        ("App.Title",                  "Openness Studio", "Openness Studio"),
+        ("App.Title",                  "TIA Portal Workbench", "TIA Portal 工作台"),
         ("Badge.NoVersion",            "TIA —", "TIA —"),
         ("Badge.Version",              "TIA {0}", "TIA {0}"),
         ("Theme.Light",                "Light", "浅色"),

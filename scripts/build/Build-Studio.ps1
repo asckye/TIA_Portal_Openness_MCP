@@ -13,6 +13,10 @@ $studio=Join-Path $repo 'tools/tia-openness-studio'
 $logs=Join-Path $repo 'bin-build/studio-native'
 New-Item -ItemType Directory -Force $logs | Out-Null
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
+$configurationArguments=@('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'Build-Configurator.ps1'))
+if($Test){$configurationArguments+='-Test'}
+& powershell.exe @configurationArguments
+if($LASTEXITCODE){throw 'Desktop launcher/configuration module build failed'}
 function RunDotnet([string[]]$Arguments,[string]$Log) {
     if($NuGetConfig){$Arguments+=('-p:RestoreConfigFile='+(Resolve-Path -LiteralPath $NuGetConfig).Path)}
     & $Dotnet @Arguments > (Join-Path $logs $Log) 2>&1
@@ -38,6 +42,9 @@ foreach($key in $ReleaseKeys) {
     $native+=@{releaseKey=$key;assemblySha256=(Get-FileHash -LiteralPath $assembly).Hash.ToLowerInvariant();nativeAcceptance='NOT RUN'}
 }
 if($Test) {
+    RunDotnet @('build',(Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj'),'-c','Release','--nologo') 'configuration-build.log'
+    & (Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/bin/Release/net10.0-windows/TiaOpenness.Configuration.Tests.exe') (Join-Path $logs 'configuration-tests') > (Join-Path $logs 'configuration-tests.log') 2>&1
+    if($LASTEXITCODE){throw "Embedded configuration tests failed; see $logs/configuration-tests.log"}
     RunDotnet @('test',(Join-Path $studio 'tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj'),'-c','Release','--nologo') 'client-tests.log'
     RunDotnet @('test',(Join-Path $studio 'tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj'),'-c','Release','--nologo') 'gui-tests.log'
 }

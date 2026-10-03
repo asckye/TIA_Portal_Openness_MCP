@@ -2,6 +2,7 @@
   <shell:WindowChrome.WindowChrome>
     <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="12" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
+
   <Grid x:Name="Root" Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource Ui.Label}">
     <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-400,-360,0" IsHitTestVisible="False"/>
     <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-380,0,0,-380" IsHitTestVisible="False"/>
@@ -16,12 +17,23 @@
           <TextBlock Text="{l:Tr App.Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
         </StackPanel>
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+          <RadioButton x:Name="EngineeringTab" Content="{l:Tr Desktop.Engineering}" GroupName="DesktopPage" IsChecked="True" Style="{StaticResource Desktop.Tab}" Click="OnEngineering" Margin="0,0,6,0"/>
+          <RadioButton x:Name="ConfigurationTab" Content="{l:Tr Desktop.Configuration}" GroupName="DesktopPage" Style="{StaticResource Desktop.Tab}" Click="OnConfiguration" Margin="0,0,8,0"/>
+          <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
+                          SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
+          <ComboBox Width="80" Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static l:Loc.Current}, Path=Language, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Lang.Switch}">
+            <ComboBoxItem Content="English"/><ComboBoxItem Content="中文"/>
+          </ComboBox>
+          <ComboBox Width="72" Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static themes:ThemeManager.Current}, Path=Theme, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Theme.Switch}">
+            <ComboBoxItem Content="{l:Tr Theme.Auto}"/><ComboBoxItem Content="{l:Tr Theme.Light}"/><ComboBoxItem Content="{l:Tr Theme.Dark}"/>
+          </ComboBox>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMinimize"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMaximize"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnClose"/>
         </StackPanel>
       </Grid>
-      <Grid Grid.Row="1" Margin="20,8,20,20">
+      <ContentControl x:Name="ConfigurationHost" Grid.Row="1" Visibility="Collapsed" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
+      <Grid x:Name="EngineeringWorkspace" Grid.Row="1" Margin="20,8,20,20">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="210"/>
           <ColumnDefinition Width="16"/>
@@ -53,8 +65,7 @@
                     </TextBlock.Style>
                   </TextBlock>
                 </Border>
-                <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
-                          SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
+
               </StackPanel>
               <StackPanel Grid.Row="1">
                 <Button Content="{l:Tr Project.Label}" Style="{StaticResource Glass.NavAction}" Click="OnProjectOptions"/>
@@ -68,21 +79,7 @@
                 <Button Content="{l:Tr Glass.Git}" Style="{StaticResource Glass.NavAction}" Click="OnGit"/>
                 <RadioButton Content="{l:Tr Tab.Log}" GroupName="View" IsChecked="{Binding IsLogTab}" Style="{StaticResource Glass.Nav}"/>
               </StackPanel>
-              <Grid Grid.Row="2" Margin="12,0,12,4">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*"/>
-                  <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <ComboBox Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static l:Loc.Current}, Path=Language, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Lang.Switch}">
-                  <ComboBoxItem Content="English"/>
-                  <ComboBoxItem Content="中文"/>
-                </ComboBox>
-                <ComboBox Grid.Column="1" Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static themes:ThemeManager.Current}, Path=Theme, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Theme.Switch}">
-                  <ComboBoxItem Content="{l:Tr Theme.Auto}"/>
-                  <ComboBoxItem Content="{l:Tr Theme.Light}"/>
-                  <ComboBoxItem Content="{l:Tr Theme.Dark}"/>
-                </ComboBox>
-              </Grid>
+
             </Grid>
           </Border>
         </Grid>

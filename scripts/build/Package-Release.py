@@ -54,7 +54,7 @@ def main():
     if multi is not None:
         require(sha(multi_path.read_bytes()) == delivery['multiVersionBuildSha256'], 'Multi-version build record changed after delivery preparation')
         require(multi['release'] == metadata['release'] and multi['fileVersion'] == metadata['fileVersion'], 'Multi-version binaries belong to another release')
-        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run Build-MultiVersion.ps1 -Test before publication')
+        require(all(multi['validation'].get(key) for key in ('foundationTransportExecuted', 'studioFunctionalTestsExecuted', 'configurationFunctionalTestsExecuted', 'toolUsageCoverageExecuted')), 'Run Build-MultiVersion.ps1 -Test before publication')
         require(multi['studioReleaseKeys'] == ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'], 'Eight release adapters are required')
         existing = {row['path']: row['sha256'] for row in inventory}
         for row in multi['files']:
@@ -187,7 +187,7 @@ def main():
         f'Engine build validation date: {metadata["generatedAt"]}; unchanged inputs verified by hashes.\r\n'
         f'Configurator isolated tests passed: {gui["testsPassed"]}; see manifest/configurator-build.json.\r\n'
         f'Source commit: {commit}\r\n'
-        'Choose runtime/v<release-key>/TiaMcpServer.exe; Studio is runtime/studio/TiaOpenness.exe when included.\r\n'
+        'Open TiaMcpConfigurator.exe for the unified engineering and MCP desktop; keep the complete bundle together.\r\n'
         'Install matching TIA/Openness and the documented .NET runtimes separately.\r\n'
         'Preserve existing connection configuration and secret. No user secret is bundled.\r\n'
         'Local validation results: manifest/release-build.json. Real-project acceptance remains separate.\r\n'

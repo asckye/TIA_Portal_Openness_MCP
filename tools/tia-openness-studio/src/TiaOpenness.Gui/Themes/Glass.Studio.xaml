@@ -79,4 +79,12 @@
   <HierarchicalDataTemplate x:Key="Ui.DeviceNodeTemplate" DataType="{x:Type vm:DeviceNode}" ItemsSource="{Binding Children}">
     <TextBlock Text="{Binding Label}"/>
   </HierarchicalDataTemplate>
+    <Style x:Key="Desktop.Tab" TargetType="RadioButton" BasedOn="{StaticResource Glass.Button}">
+      <Style.Triggers>
+        <Trigger Property="IsChecked" Value="True">
+          <Setter Property="Background" Value="{DynamicResource Ui.Accent}"/>
+          <Setter Property="Foreground" Value="{DynamicResource Ui.OnAccent}"/>
+        </Trigger>
+      </Style.Triggers>
+    </Style>
 </ResourceDictionary>

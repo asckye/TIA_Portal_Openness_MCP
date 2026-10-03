@@ -8,12 +8,12 @@
 | V15.1 | `runtime/v15.1/TiaMcpServer.exe` | PLC foundation |
 | V16–V19 | `runtime/v16` through `runtime/v19`, `TiaMcpServer.exe` | PLC foundation |
 | V20/V21 | `runtime/v20` and `runtime/v21`, `TiaMcpServer.exe` | Full engine |
-| Studio | `runtime/studio/TiaOpenness.exe` | Direct Openness, eight adapters |
+| Unified desktop | Root `TiaMcpConfigurator.exe` launches `runtime/studio/TiaOpenness.exe` | Engineering and MCP configuration in one window; eight Openness adapters |
 
 Keep each runtime's dependencies and `worker` directory together. V14 SP1 and V15.1
 must retain their exact keys; original V14 and V15 are outside the target set.
 Foundation hosts require .NET 8 / ASP.NET Core 8 and the worker's .NET Framework;
-full engines require .NET Framework 4.8; Studio also needs .NET 10 Desktop Runtime.
+full engines require .NET Framework 4.8; the unified desktop needs .NET 10 Desktop Runtime. Keep the complete bundle together, including on an AI-only host.
 Matching licensed Siemens PublicAPI assemblies come from the installed TIA product.
 
 The configurator selects and registers the matching executable. Foundation hosts

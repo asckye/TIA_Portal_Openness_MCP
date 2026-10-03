@@ -2,7 +2,9 @@
 
 [English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-通过 MCP 让 AI 操作西门子 TIA Portal，或使用包内 Studio 自己浏览、导入导出和编译工程。配置器与 Studio 均支持中文和英文。
+同一个 TIA Portal 工作台提供 **MCP 与客户端** 和 **工程操作** 两个页面，支持中文和英文。配置 AI 连接、启停服务、浏览工程、导入导出和编译均在同一个主窗口内完成。
+
+当前源码已合并桌面界面；已发布的 v3.2.0 ZIP 保留其原来的两个独立界面。使用下述统一界面需要从当前源码构建，等待后续正式版本交付。
 
 ![架构图](docs/assets/architecture.svg)
 
@@ -10,9 +12,9 @@
 
 从 Releases 下载 **TIA_MCP_Delivery** ZIP，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包只含源码。
 
-- **用 AI 操作：**双击 `TiaMcpConfigurator.exe`，选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
-- **自己操作：**双击 `runtime\studio\TiaOpenness.exe`，连接前选择 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
-- **先看演示：**在包根目录运行 `runtime\studio\TiaOpenness.exe --mock --lang zh`。演示使用模拟数据。
+- **用 AI 操作：**双击 `TiaMcpConfigurator.exe`，在 **MCP 与客户端** 页面选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
+- **自己操作：**打开同一个 `TiaMcpConfigurator.exe`，切换到 **工程操作**，连接前选择顶部的 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
+- **先看演示：**在包根目录运行 `TiaMcpConfigurator.exe --mock --lang zh`。演示使用模拟数据。
 
 按[新手使用指南](docs/getting-started/beginners.zh-CN.md)完成安装、连接和第一个 SCL 导入编译练习；具体客户端配置见[配置指南](docs/getting-started/configuration.md)。
 
@@ -33,7 +35,7 @@ AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取�
 
 ## 环境与验证
 
-按需安装对应版本的 TIA Portal、Openness 和许可证。配置器及完整引擎需要 .NET Framework 4.8；基础引擎另外需要 .NET 8 和 ASP.NET Core 8；Studio 需要 .NET 10 Desktop Runtime。具体文件位置见[运行目录](runtime/README.md)。
+按需安装对应版本的 TIA Portal、Openness 和许可证。统一桌面需要 .NET 10 Desktop Runtime；Openness 桥接进程及完整引擎需要 .NET Framework 4.8；基础引擎另外需要 .NET 8 和 ASP.NET Core 8。具体文件位置见[运行目录](runtime/README.md)。
 
 八版本运行文件、Studio、协议、离线功能和官方 SDK/XSD 检查已有构建记录；新增功能的真实 TIA 工程验收仍为 **NOT RUN**。工具数量不等于完整覆盖所有 Siemens API，当前范围见[能力与验收说明](docs/reference/capabilities.md)。
 
