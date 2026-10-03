@@ -13,6 +13,13 @@ using System.Threading.Tasks;
 using TiaMcpServer.ModelContextProtocol;
 using Xunit;
 
+namespace TiaMcpServer.Siemens
+{
+    // Registration-only session boundary; no Siemens SDK types enter the offline suite.
+    internal interface IEngineeringSession { }
+    public partial class Portal : IEngineeringSession { }
+}
+
 namespace TiaMcpServer.ModelContextProtocol
 {
     public class ResponseMessage { public string? Message { get; set; } public JsonObject? Meta { get; set; } }
@@ -125,10 +132,12 @@ namespace TiaMcpServer.Tests
             using var parent = new ServiceCollection().AddSingleton(new ProbeDependency("parent"))
                 .AddEngine(includeSession: false, ToolBridgeFixture.Catalog).BuildServiceProvider();
             Assert.Null(parent.GetService<Siemens.Portal>());
+            Assert.Null(parent.GetService<Siemens.IEngineeringSession>());
             Assert.Same(parent.GetRequiredService<InstanceProbeTools>(), parent.GetRequiredService<InstanceProbeTools>());
             Assert.Same(ToolBridgeFixture.Catalog, parent.GetRequiredService<ToolCatalog>());
             using var child = new ServiceCollection().AddEngine(includeSession: true, ToolBridgeFixture.Catalog).BuildServiceProvider();
             Assert.Same(child.GetRequiredService<Siemens.Portal>(), child.GetRequiredService<Siemens.Portal>());
+            Assert.Same(child.GetRequiredService<Siemens.Portal>(), child.GetRequiredService<Siemens.IEngineeringSession>());
         }
 
         [Fact]

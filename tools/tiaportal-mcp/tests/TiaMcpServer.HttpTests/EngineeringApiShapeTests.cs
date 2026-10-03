@@ -100,6 +100,10 @@ internal static class EngineeringApiShapeTests
         }
         check(Equals(tools.Tool("RunTestSuiteCase")!.GetParameters().Single(p=>p.Name=="confirmExternalExecution").DefaultValue,false),"External Test Suite execution requires explicit confirmation");
         check(Equals(tools.Tool("ExchangeCfcCharts")!.GetParameters().Single(p=>p.Name=="deleteAtTarget").DefaultValue,false),"CFC import does not default to deletion");
+        foreach(var name in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"})
+            check(tools.Tool(name).DeclaringType!.FullName=="TiaMcpServer.ModelContextProtocol.CfcTools"
+                && tools.Method(name).DeclaringType!.FullName=="TiaMcpServer.Siemens.Services.CfcService",
+                name+" resolves through EngineSurface after the CFC move");
         if(core.GetName().Version!.Major==21) {
             var cfc=Assembly.Load("Siemens.Engineering.CFC");
             Method(cfc,"Siemens.Engineering.SW.FunctionCharts.ChartProviderS7","CompleteExport",4);

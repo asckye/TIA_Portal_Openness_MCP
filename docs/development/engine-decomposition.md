@@ -74,7 +74,8 @@ P3-04 的接口沿用 `RunHmiStepTool` / `AcquireHmiEditAccess`，对应上文�
 
 1. 兼容快照与基线比较为 0 breaking、0 compatible、0 info，lite 名单一致。`tools/list` 顺序不属于契约；
    `ToolCatalog` 引入时按名称确定排序，此后不再变化。
-2. 织入覆盖清单中西门子成员的多重集合（`sites[].member`）前后一致；这就是纯迁移不改变调用序列的证据。
+2. 织入覆盖清单中西门子成员的多重集合（`sites[].member`）前后一致；迁移方法还须逐一比较方法体及其
+   lambda 的有序调用点，不能只靠全局多重集合证明顺序不变。
 3. 引用具体引擎源码路径的 8 个检查脚本和 3 个测试工程同步更新。
 4. P0-06 的离线返回结构快照无差异。
 
@@ -132,6 +133,29 @@ HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周�
 [Test-PilotTools.py](../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
 传入 `--baseline-exe` 可逐项比较迁移前后的 `tools/list` 序列；`ToolCatalog` 按名称排序，SDK 的线上枚举序列
 仍以实际宿主输出为准，不在本步调整。
+
+### Portal 领域迁移样板
+
+CFC 是第一个样板：[CfcService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/CfcService.cs)
+放在 `Siemens/Services/`，命名空间为 `TiaMcpServer.Siemens.Services`，类名以 `Service` 结尾；
+[CfcTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs) 保持在工具目录平铺。
+服务通过构造器接收 `IEngineeringSession`，原方法体只把 `RunHmiStepTool`、`AcquireHmiEditAccess`、
+`ExactPlcForEngineering` 改为接口调用，静态辅助继续用 `EngineeringSessionHelpers`，纯逻辑保留在 Logic。
+本次没有新增内核接口成员，也没有直接写会话字段或 CLI 转发。`EngineRegistration` 在包含会话时按上述
+命名空间和类名约定注册非抽象服务，`IEngineeringSession` 解析为已注册的 `Portal` 单例；隔离父进程不注册
+会话或领域服务。工具仍由 `ToolCatalog` 发现。服务和工具都为非 `IDisposable` 的单例。
+
+迁移前先单独补吞异常原因并缩减基线，保存注释补丁，以去注释代码和 Release EXE 字节一致性验收。
+随后原样移动方法，将服务加入 HttpTests 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
+`EngineeringApiShapeTests` 保留原断言，并验证真实声明类型、共享会话、单例和工具到服务的 IL 调用。
+[Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 接收两份 `NativeCallWeaver verify`
+清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，以及六个迁移方法
+折入 lambda 后的有序调用点：保留 lambda 局部编号，各方法体按 IL offset 排序，忽略迁移造成的全局闭包编号。
+它证明静态调用点顺序；方法体原样迁移的源码检查另保证参数、lambda 所在位置与线程调度不变，不能替代真机轨迹。
+[Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 用迁移前后各自的 HttpTests（`--baseline-harness` /
+`--host-harness`）和 EXE（`--baseline-exe` / `--exe`），在 full/lite、直接/桥接及隔离子进程中覆盖两个工具的
+八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
+逐字节相同。契约、响应快照、原生清单及全部离线门禁仍按本页验收要求运行。
 
 ## G9：单 PLC 工程的模糊匹配
 

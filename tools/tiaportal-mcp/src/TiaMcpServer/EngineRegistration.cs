@@ -17,7 +17,19 @@ namespace TiaMcpServer
             if (services == null) throw new ArgumentNullException(nameof(services));
             if (catalog == null) throw new ArgumentNullException(nameof(catalog));
             services.TryAddSingleton(catalog);
-            if (includeSession) services.TryAddSingleton<Portal>();
+            if (includeSession)
+            {
+                services.TryAddSingleton<Portal>();
+                services.TryAddSingleton<IEngineeringSession>(provider => provider.GetRequiredService<Portal>());
+                foreach (var type in typeof(Portal).Assembly.GetTypes())
+                {
+                    if (!type.IsClass || type.IsAbstract || type.Namespace != "TiaMcpServer.Siemens.Services"
+                        || !type.Name.EndsWith("Service", StringComparison.Ordinal)) continue;
+                    if (typeof(IDisposable).IsAssignableFrom(type) || typeof(IAsyncDisposable).IsAssignableFrom(type))
+                        throw new InvalidOperationException("Engine singleton service must not be disposable: " + type.FullName);
+                    services.TryAdd(ServiceDescriptor.Singleton(type, type));
+                }
+            }
             foreach (var type in catalog.Methods.Where(pair => !pair.Value.IsStatic)
                 .Select(pair => pair.Value.DeclaringType!).Distinct())
             {

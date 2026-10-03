@@ -13,8 +13,8 @@ internal sealed class EngineSurface
     private static readonly ConditionalWeakTable<Assembly, EngineSurface> surfaces = new ConditionalWeakTable<Assembly, EngineSurface>();
 
     // engine-decomposition.md: Portal remains the session; add the registered domain services here as they move.
-    // There are no domain services yet. Do not scan arbitrary Siemens helpers or SDK types as services.
-    private static readonly string[] serviceTypeNames = Array.Empty<string>();
+    // Do not scan arbitrary Siemens helpers or SDK types as services.
+    private static readonly string[] serviceTypeNames = { "TiaMcpServer.Siemens.Services.CfcService" };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;
     private readonly Type[] toolTypes;

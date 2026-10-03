@@ -8,7 +8,7 @@ using Siemens.Engineering.SW.FunctionCharts;
 using TiaMcpServer.ModelContextProtocol;
 using Logic = TiaMcpServer.Siemens.CfcLogic;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Phase 6 ⑥-③ (2.7.42): typed CFC option package (Siemens.Engineering.CFC, identical on V20 / V21; replaces the reflective 2.7.x
     // ExchangeCfcCharts). Official entry: PlcSoftware.GetService<ChartProviderS7>() (null when CFC is not installed); ChartProvider
@@ -19,8 +19,12 @@ namespace TiaMcpServer.Siemens
     // (NonRecoverableException, process gone). The provider has no chart enumeration, so since 2.7.43 every name-bound or PLC-bound
     // action first takes the chart inventory from a CompleteExport preflight into a temporary ZIP and refuses when it is empty or the
     // chart is missing.
-    public partial class Portal
+    internal sealed class CfcService
     {
+        private readonly IEngineeringSession _session;
+
+        public CfcService(IEngineeringSession session) => _session = session;
+
         private static ChartProviderS7 RequireChartProvider(PlcSoftware plc)
             => plc.GetService<ChartProviderS7>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "ChartProviderS7 is not provided by PLC software '" + plc.Name + "' (CFC not installed, or the PLC family has no CFC).");
 
@@ -54,11 +58,11 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseMessage ExchangeCfcCharts(string softwarePath, string action, string filePath, string modelVersion = "", long filter = 0, bool unattended = true, bool deleteAtTarget = false, bool dryRun = true, string chartNamesJson = "[]", bool skipChartPreflight = false)
-            => RunHmiStepTool("ExchangeCfcCharts", meta =>
+            => _session.RunHmiStepTool("ExchangeCfcCharts", meta =>
             {
                 var r = Logic.ValidateExchangeRequest(action, filePath, modelVersion, filter, chartNamesJson, deleteAtTarget, dryRun);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
-                var plc = ExactPlcForEngineering(softwarePath, r.Writes);
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
+                var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);
                 var file = action == "import" ? HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath") : NativeFileOutput.Plan(filePath);
                 meta["software"] = plc.Name; meta["action"] = action; meta["dryRun"] = dryRun; meta["deleteAtTarget"] = deleteAtTarget; meta["unattended"] = unattended; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
@@ -83,11 +87,11 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageCfcChartProtection(string softwarePath, string chartName, string action = "read", string currentPassword = "", string newHashedPassword = "", bool dryRun = true, string modelVersion = "V2.0", bool skipChartPreflight = false)
-            => RunHmiStepTool("ManageCfcChartProtection", meta =>
+            => _session.RunHmiStepTool("ManageCfcChartProtection", meta =>
             {
                 var r = Logic.ValidateProtectionRequest(action, chartName, currentPassword, newHashedPassword, dryRun);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
-                var plc = ExactPlcForEngineering(softwarePath, r.Writes);
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
+                var plc = _session.ExactPlcForEngineering(softwarePath, r.Writes);
                 var provider = RequireChartProvider(plc);
                 meta["software"] = plc.Name; meta["chartName"] = chartName; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (!skipChartPreflight) RequireCfcCharts(provider, new[] { chartName }, string.IsNullOrEmpty(modelVersion) ? "V2.0" : modelVersion, 0, meta, "the chart password call");
