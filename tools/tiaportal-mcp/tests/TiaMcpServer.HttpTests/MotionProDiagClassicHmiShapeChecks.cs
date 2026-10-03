@@ -116,5 +116,41 @@ internal static class MotionProDiagClassicHmiShapeChecks
         }
         foreach(var name in new[]{"ReadMotionAxisConfiguration","ReadClassicHmiScripts","ReadClassicHmiGlobalization","ReadClassicHmiFaceplates"})
             check(tools.Tool(name)!=null && tools.Tool(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is a read-only tool");
+
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
+        var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
+        foreach (var domain in new[] {
+            (Name: "ClassicHmiFolders", Field: "_classicHmiFolders", Tools: new[] {
+                "ReadClassicHmiScreenTree", "ManageClassicHmiScreenObject", "ManageClassicHmiFolder", "ManageClassicHmiGraphic" }),
+            (Name: "MotionProDiagClassicHmi", Field: "_motionProDiagClassicHmi", Tools: new[] {
+                "ReadMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ReadClassicHmiScripts",
+                "ManageClassicHmiScript", "ManageClassicHmiCycle", "ManageClassicHmiTextGraphicList",
+                "ReadClassicHmiGlobalization", "ReadClassicHmiFaceplates", "ExportPlcProDiagInfo" }) })
+        {
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
+            var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
+            foreach (var type in new[] { service, toolType })
+                check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
+                    type.FullName + " is a non-disposable singleton class");
+            foreach (var name in domain.Tools)
+            {
+                var method = tools.Method(name);
+                var tool = tools.Tool(name);
+                var target = tools.Target(method);
+                check(method.DeclaringType == service && tool.DeclaringType == toolType && !tool.IsStatic
+                    && ReferenceEquals(target, tools.Target(method)) && ReferenceEquals(tools.Target(tool), tools.Target(tool)),
+                    domain.Name + " surface resolves service and tool singletons: " + name);
+                check(session != null && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                    && ReferenceEquals(toolType.GetField(domain.Field, all)!.GetValue(tools.Target(tool)), target),
+                    domain.Name + " tool uses the service with the shared session: " + name);
+                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+                bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls its service: " + name, tool, method);
+                check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
+                    domain.Name + " tool needs no static CLI forwarder: " + name);
+            }
+        }
     }
 }

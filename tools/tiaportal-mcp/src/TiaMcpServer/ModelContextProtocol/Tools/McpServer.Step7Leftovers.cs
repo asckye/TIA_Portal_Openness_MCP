@@ -46,15 +46,5 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
             bool dryRun=true)
             => Portal.ExchangePlcAlarmTextListsXlsx(softwarePath,action,filePath,unitName,unitKind,textListNamesJson,culturesJson,importOption,confirmImport,dryRun);
-
-        [McpServerTool(Name="ExportPlcProDiagInfo"), Description("[L2][PLC-Software][READ] Native CodeBlock.ExportProDIAGInfo: writes the alarm messages of one exact ProDiag FB (blockPath under BlockGroup or a unit's BlockGroup) as CSV files into an existing directoryPath on the TIA Portal machine and hashes the new files. Refused before the call unless the block is a ProDiag FB and consistent (compile first). Default dryRun=true; no project change.")]
-        public static ResponseMessage ExportPlcProDiagInfo(
-            string softwarePath,
-            string blockPath,
-            [Description("directoryPath: folder on the TIA machine that receives the files.")] string directoryPath,
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            bool dryRun=true)
-            => Portal.ExportPlcProDiagInfo(softwarePath,blockPath,directoryPath,unitName,unitKind,dryRun);
     }
 }

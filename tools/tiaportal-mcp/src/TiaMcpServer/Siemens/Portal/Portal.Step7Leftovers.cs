@@ -208,26 +208,5 @@ namespace TiaMcpServer.Siemens
                 return "Alarm text lists imported from XLSX (native state attached); project not saved / compiled.";
             });
 
-        // ---- ProDiag CSV export -------------------------------------------------------------------------------------------------------------------
-        public ResponseMessage ExportPlcProDiagInfo(string softwarePath, string blockPath, string directoryPath, string unitName = "", string unitKind = "unit", bool dryRun = true)
-            => RunHmiStepTool("ExportPlcProDiagInfo", meta => {
-                Step7LeftoversLogic.ValidateProDiagRequest(blockPath, directoryPath, unitName, unitKind);
-                var plc = ExactPlcForEngineering(softwarePath, false);
-                var unit = OptionalUnit(plc, unitName, unitKind);
-                var block = (PlcBlock)ExactObjectUnder(BlockRootOf(plc, unit), blockPath, "Blocks", "block");
-                CodeBlock code = block as CodeBlock ?? throw new ArgumentException("blockPath must name a code block (FB); " + block.GetType().Name + " has no ExportProDIAGInfo.");
-                meta["block"] = new JsonObject { ["name"] = code.Name, ["blockClass"] = code.GetType().Name, ["programmingLanguage"] = code.ProgrammingLanguage.ToString(), ["isConsistent"] = code.IsConsistent, ["unit"] = unit?.Name };
-                var refusal = Step7LeftoversLogic.ProDiagRefusal(code.ProgrammingLanguage.ToString(), code.IsConsistent);
-                if (refusal != null) throw new PortalException(PortalErrorCode.InvalidState, refusal);
-                var directory = new DirectoryInfo(directoryPath);
-                if (!directory.Exists) throw new DirectoryNotFoundException("directoryPath must already exist: " + directoryPath);
-                meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
-                if (dryRun) return "ProDiag CSV export preview; no files written.";
-                var before = SoftwareUnitDeepLogic.SnapshotDirectory(directory.FullName);
-                meta["mayHaveWrittenFiles"] = true;
-                code.ExportProDIAGInfo(directory); meta["apiCallSuccess"] = true;
-                meta["newFiles"] = SoftwareUnitDeepLogic.NewFilesSince(directory.FullName, before);
-                return "ProDiag alarm messages exported as CSV (new files hashed); no project change.";
-            });
     }
 }

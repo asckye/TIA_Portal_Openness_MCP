@@ -1,3 +1,9 @@
+using System.Collections.Generic;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.Hmi.RuntimeScripting;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.TechnologicalObjects;
+using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -109,6 +115,18 @@ namespace TiaMcpServer.Siemens
         Portal.SivarcFamily IEngineeringSession.GetSivarcFamily(string category) => Family(category);
         global::Siemens.Engineering.SiVArc.Sivarc IEngineeringSession.RequireSivarc() => RequireSivarc();
         Exception IEngineeringSession.SivarcShape(object node) => SivarcShape(node);
+        JsonObject IEngineeringSession.DescribeNode(object target, int depth) => DescribeNode(target, depth);
+        PlcTag IEngineeringSession.ExactPlcTag(string softwarePath, string tagPath) => ExactPlcTag(softwarePath, tagPath);
+        HmiTarget IEngineeringSession.ExactClassicHmi(string softwarePath) => ExactClassicHmi(softwarePath);
+        VBScriptFolder IEngineeringSession.ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath) => ExactVbScriptFolder(hmi, folderPath);
+        JsonObject IEngineeringSession.TechnologyObjectRow(TechnologicalInstanceDB db) => TechnologyObjectRow(db);
+        JsonObject IEngineeringSession.TypedMotionView(TechnologicalInstanceDB to) => TypedMotionView(to);
+        JsonObject IEngineeringSession.ParameterRow(TechnologicalParameter parameter) => ParameterRow(parameter);
+        JsonObject IEngineeringSession.MappingRow(object mapping) => MappingRow(mapping);
+        bool IEngineeringSession.DisconnectTyped(object iface) => DisconnectTyped(iface);
+        bool? IEngineeringSession.IsConnectedTyped(object iface) => IsConnectedTyped(iface);
+        Channel IEngineeringSession.ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber) => ExactChannel(item, channelType, channelIoType, channelNumber);
+        bool IEngineeringSession.ConnectTyped(object iface, MotionProDiagClassicHmiLogic.ConnectionTarget target, string softwarePath, ConnectOption option) => ConnectTyped(iface, target, softwarePath, option);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

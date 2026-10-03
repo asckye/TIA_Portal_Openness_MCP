@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.37 phase 5 classic WinCC folder hierarchy (Portal.ClassicHmiFolders.cs and the typed VB-script /
+// Native members used by the classic WinCC folder hierarchy (Siemens/Services/ClassicHmiFoldersService.cs and the typed VB-script /
 // library-type / value-type retrofits), verified member by member against the installed V20 (Siemens.Engineering) or V21
 // (Siemens.Engineering.Base / Siemens.Engineering.WinCC / Siemens.Engineering.WinCC.Extension) PublicAPI.
 internal static class ClassicHmiFoldersShapeChecks

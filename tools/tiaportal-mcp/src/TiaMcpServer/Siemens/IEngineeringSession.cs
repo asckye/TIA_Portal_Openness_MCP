@@ -1,3 +1,9 @@
+using System.Collections.Generic;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.Hmi.RuntimeScripting;
+using Siemens.Engineering.SW.Tags;
+using Siemens.Engineering.SW.TechnologicalObjects;
+using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -108,6 +114,18 @@ namespace TiaMcpServer.Siemens
         Portal.SivarcFamily GetSivarcFamily(string category);
         global::Siemens.Engineering.SiVArc.Sivarc RequireSivarc();
         Exception SivarcShape(object node);
+        JsonObject DescribeNode(object target, int depth);
+        PlcTag ExactPlcTag(string softwarePath, string tagPath);
+        HmiTarget ExactClassicHmi(string softwarePath);
+        VBScriptFolder ExactVbScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath);
+        JsonObject TechnologyObjectRow(TechnologicalInstanceDB db);
+        JsonObject TypedMotionView(TechnologicalInstanceDB to);
+        JsonObject ParameterRow(TechnologicalParameter parameter);
+        JsonObject MappingRow(object mapping);
+        bool DisconnectTyped(object iface);
+        bool? IsConnectedTyped(object iface);
+        Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber);
+        bool ConnectTyped(object iface, MotionProDiagClassicHmiLogic.ConnectionTarget target, string softwarePath, ConnectOption option);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

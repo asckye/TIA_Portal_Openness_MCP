@@ -32,7 +32,9 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.PlcTablesService",
         "TiaMcpServer.Siemens.Services.LibraryService",
         "TiaMcpServer.Siemens.Services.VersionControlService",
-        "TiaMcpServer.Siemens.Services.SivarcService"
+        "TiaMcpServer.Siemens.Services.SivarcService",
+        "TiaMcpServer.Siemens.Services.ClassicHmiFoldersService",
+        "TiaMcpServer.Siemens.Services.MotionProDiagClassicHmiService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;
