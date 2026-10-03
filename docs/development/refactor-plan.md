@@ -88,7 +88,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | ID | 任务 | 状态 |
 |---|---|---|
 | P2-01 | 统一响应信封构造器替代手写 `["success"]`/`["timestamp"]`；明确抛异常与返回失败的规则；返回结构逐字节兼容 | todo |
-| P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics` | todo |
+| P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics` | doing |
 | P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛 | todo |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界 | todo |
 | P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略 | todo |
@@ -109,7 +109,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除 | todo |
+| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除 | doing |
 | P4-02 | Foundation worker 迁移到共享适配器 | todo |
 | P4-03 | Studio 桥接进程迁移到共享适配器 | todo |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
@@ -121,7 +121,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P5-01 | 配置器改为编译型 UserControl，去掉运行时 XAML 改写；去掉仅供测试的 .NET Framework 配置器构建（启动器仍由 csc 编译，`configurator-build.json` 格式不变） | done |
 | P5-02 | 单一主题引擎与单一本地化方案 | done |
 | P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | done |
-| P5-04 | 配置页 9 个沿用旧词典、英文模式仍显示中文的菜单项（检查更新、运行更新、发布页等，见 `StringsTests` 的允许名单）补英文翻译，同步更新配置测试 | todo |
+| P5-04 | 配置页 9 个沿用旧词典、英文模式仍显示中文的菜单项（检查更新、运行更新、发布页等，见 `StringsTests` 的允许名单）补英文翻译，同步更新配置测试 | doing |
 
 ### 阶段 6：破坏性变更（4.0）
 
