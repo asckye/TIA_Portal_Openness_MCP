@@ -109,6 +109,8 @@ namespace TiaMcpConfigurator
         public static int Main(string[] args)
         {
             Console.OutputEncoding = new UTF8Encoding(false);
+            // Same culture on developer machines (often zh-CN) and the English CI runners; the checks switch
+            // Loc.Current explicitly wherever a language matters.
             System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
             System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             if (args.Length > 0 && args[0] == "--echo")
@@ -283,13 +285,32 @@ namespace TiaMcpConfigurator
                     var menuBar = (System.Windows.Controls.Menu)form.FindName("MenuBar");
                     var runUpdate = (System.Windows.Controls.MenuItem)form.FindName("RunUpdate");
                     var installedItem = (System.Windows.Controls.MenuItem)form.FindName("UpdateInstalledItem");
-                    Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)form.FindName("CheckUpdate")).Header.ToString().StartsWith("检查更新"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
+                    Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)form.FindName("CheckUpdate")).Header.ToString().StartsWith("_Check for Updates"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
                     Assert(installedItem.Header.ToString().StartsWith("Engine "), "English update menu names the installed engine version from the delivery manifest");
+                    void AssertMenuLabels(bool chinese)
+                    {
+                        var labels = new[] {
+                            ("UpdateMenu", "_Update", "更新(_U)"),
+                            ("UpdateStateItem", "Not checked yet", "尚未检查"),
+                            ("CheckUpdate", "_Check for Updates", "检查更新(_C)"),
+                            ("RunUpdate", "Update _Engine…", "更新引擎…(_R)"),
+                            ("OpenReleases", "Open _GitHub Releases", "打开 GitHub Releases(_G)"),
+                            ("ShowClientHelp", "Selected Client _Instructions", "所选客户端的使用说明(_I)"),
+                            ("OpenProjectPage", "Open _Project Page", "打开项目主页(_P)"),
+                            ("AboutItem", "_About", "关于(_A)")
+                        };
+                        foreach (var (name, en, zh) in labels)
+                            Assert(((System.Windows.Controls.MenuItem)form.FindName(name)).Header.ToString() == (chinese ? zh : en),
+                                (chinese ? "Chinese" : "English") + " menu label: " + name);
+                    }
+                    AssertMenuLabels(false);
                     Loc.Current.Language = AppLanguage.Chinese;
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(installedItem.Header.ToString().StartsWith("引擎 ") || installedItem.Header.ToString().StartsWith("引擎版本未知"), "update menu names the installed engine version from manifest\\delivery.json");
+                    AssertMenuLabels(true);
                     Loc.Current.Language = AppLanguage.English;
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
+                    AssertMenuLabels(false);
                     Assert(form.FindName("ShowClientHelp") != null && form.FindName("OpenProjectPage") != null && form.FindName("AboutItem") != null && form.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
                     var generate = (System.Windows.Controls.Button)form.FindName("GenerateKey");
                     generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));

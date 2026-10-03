@@ -35,7 +35,7 @@ public class StringsTests
     }
 
     [Fact]
-    public void Migrated_configuration_entries_preserve_both_original_dictionaries()
+    public void Migrated_configuration_entries_preserve_original_text_except_translated_English_menus()
     {
         string[] keys =
         [
@@ -49,10 +49,18 @@ public class StringsTests
             "NotChecked", "CheckUpdate", "RunUpdate", "Releases", "ClientHelp", "ProjectPage", "About",
         ];
         Assert.Equal(68, keys.Length);
+        string[] translatedMenus =
+        [
+            "Config.Update", "Config.UnknownEngine", "Config.NotChecked", "Config.CheckUpdate", "Config.RunUpdate",
+            "Config.Releases", "Config.ClientHelp", "Config.ProjectPage", "Config.About",
+        ];
         // SHA-256 of the former XML entries, sorted by Config key: key\0English\0Chinese\n.
-        // This also preserves trailing spaces, punctuation and the untranslated legacy menu labels.
+        // These nine English entries originally matched Chinese. Reconstruct only those values
+        // to keep the original hash guarding every Chinese entry and all other English text.
         var entries = keys.Select(key => "Config." + key).OrderBy(key => key, StringComparer.Ordinal);
-        var text = string.Concat(entries.Select(key => key + "\0" + Strings.English[key] + "\0" + Strings.Chinese[key] + "\n"));
+        var text = string.Concat(entries.Select(key => key + "\0" +
+            (translatedMenus.Contains(key, StringComparer.Ordinal) ? Strings.Chinese[key] : Strings.English[key]) +
+            "\0" + Strings.Chinese[key] + "\n"));
         Assert.Equal("8CF4DD14D002189297185CB1529CFAD20E0301A1DE1308E7C0430519F564E1F3",
             Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))));
     }
@@ -123,9 +131,6 @@ public class StringsTests
             // prose, so translating them would be inventing a difference rather than removing one.
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working",
-            // P5-02 preserves all 68 legacy dictionary entries verbatim, including these menus.
-            "Config.Update", "Config.UnknownEngine", "Config.NotChecked", "Config.CheckUpdate", "Config.RunUpdate",
-            "Config.Releases", "Config.ClientHelp", "Config.ProjectPage", "Config.About",
         ];
 
         var untranslated = Strings.Catalogue
