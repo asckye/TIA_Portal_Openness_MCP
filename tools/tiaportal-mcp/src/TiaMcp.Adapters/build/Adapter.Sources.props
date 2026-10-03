@@ -55,7 +55,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/InvocationJournal.cs" Link="Diagnostics/InvocationJournal.cs" />
-    <Compile Include="$(AdapterSourceRoot)/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
+    <Compile Include="$(AdapterSourceRoot)/TiaMcp.Logic/ModelContextProtocol/PortalFailureClassifier.cs" Link="Diagnostics/PortalFailureClassifier.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <Reference Include="@(AdapterApi)">
       <HintPath>%(Reference.Identity)</HintPath><Private>false</Private><SpecificVersion>true</SpecificVersion>
