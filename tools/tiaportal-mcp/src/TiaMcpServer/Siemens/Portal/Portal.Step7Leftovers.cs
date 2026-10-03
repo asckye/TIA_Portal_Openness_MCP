@@ -19,7 +19,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 4 sub-batch 2 (2.7.35): Step7 leftovers. Official pages: "Generating blocks from source" / "Generating
+    // External sources and system groups. Official pages: "Generating blocks from source" / "Generating
     // block/UDT from external source file in specific user group" / "Generate source from block" / "Adding external sources
     // in units", "Querying the system group for system blocks" / "Enumerating system subgroups", "Tag table" (user / system
     // constants), "Export/Import of Plc Alarm TextLists" (PlcAlarmTextListProvider, PLC or unit), watch / force table

@@ -760,7 +760,6 @@ namespace TiaMcpServer.Siemens
 
                         var group = GetPlcBlockGroupByPath(softwarePath, groupPath);
 
-                        //group?.Blocks.ForEach(b => Console.WriteLine($"Block: {b.Name}, Type: {b.GetType().Name}"));
 
                         // join exportPath and groupPath
                         if (!Directory.Exists(exportPath))
@@ -1032,7 +1031,7 @@ namespace TiaMcpServer.Siemens
             var existing = targetGroup.Blocks.Find(fileNameWithoutExtension);
             int? prevNumber = null;
             bool prevAutoNumber = false;
-            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { }
+            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { /* swallow(probe-optional): Unavailable previous numbering leaves the existing best-effort restoration disabled. */ }
 
             DocumentImportResultForBlocks? result;
             try
@@ -1131,7 +1130,7 @@ namespace TiaMcpServer.Siemens
                 var lines = DocumentMessages(result?.Messages).Select(m => m?.ToString()).Where(m => !string.IsNullOrWhiteSpace(m)).ToArray();
                 return lines.Length == 0 ? "" : " Native messages: " + string.Join(" | ", lines);
             }
-            catch { return ""; }
+            catch { /* swallow(probe-optional): Unavailable native document messages must not replace the import result diagnostic. */ return ""; }
         }
 
         /// <summary>Depth-first search for a block by exact name across all nested block groups.</summary>

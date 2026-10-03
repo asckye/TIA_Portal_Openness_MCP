@@ -258,7 +258,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         });
                     }
                     catch
-                    {
+                    { /* swallow(teardown): Progress notification failure must not replace the original export or import error. */
                         // Ignore notification errors during error handling
                     }
                 }
@@ -557,7 +557,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             progressToken
                         });
                     }
-                    catch { }
+                    catch { /* swallow(teardown): Progress notification failure must not replace the original export or import error. */ }
                 }
 
                 Logger?.LogError(ex, $"Failed importing documents from '{importPath}'");
@@ -597,8 +597,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // .s7res is YAML, not XML — see S7ResScanner for why the old XDocument-based
-        // implementation threw on every real file and never produced a single warning.
+        // .s7res is YAML; S7ResScanner reads its culture entries.
         private static List<string> GetResMissingEnUsIds(string directory, string baseName)
             => S7ResScanner.GetMissingEnUsIds(directory, baseName);
 

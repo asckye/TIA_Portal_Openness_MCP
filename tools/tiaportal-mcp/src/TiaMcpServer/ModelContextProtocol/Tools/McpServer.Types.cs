@@ -164,7 +164,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // Un-exposed from MCP (tool consolidation): use ExportType with a caller-chosen directory. Method kept for internal use.
         public static ResponseTempExport ExportTypeToTemp(
             [Description("softwarePath: path to the PLC software")] string softwarePath,
             [Description("typePath: full type path inside PLC software")] string typePath,
@@ -421,7 +420,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         });
                     }
                     catch
-                    {
+                    { /* swallow(teardown): Progress notification failure must not replace the original export or import error. */
                         // Ignore notification errors during error handling
                     }
                 }
@@ -431,7 +430,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // Un-exposed from MCP (tool consolidation): use ExportTypes with a caller-chosen directory. Method kept for internal use.
         public static ResponseTempExport ExportTypesToTemp(
             [Description("softwarePath: path to the PLC software")] string softwarePath,
             [Description("regexName: optional regex filter")] string regexName = "",

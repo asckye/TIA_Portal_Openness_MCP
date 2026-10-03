@@ -36,7 +36,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - ExternalSources
@@ -205,7 +204,7 @@ namespace TiaMcpServer.Siemens
                 return sources as IEnumerable<object?>;
             }
             catch
-            {
+            { /* swallow(probe-optional): Unavailable external-source reflection members are reported as an unresolved collection or group. */
                 return null;
             }
         }
@@ -247,7 +246,7 @@ namespace TiaMcpServer.Siemens
                 return current;
             }
             catch
-            {
+            { /* swallow(probe-optional): Unavailable external-source reflection members are reported as an unresolved collection or group. */
                 return null;
             }
         }

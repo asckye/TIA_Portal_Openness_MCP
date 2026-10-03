@@ -30,8 +30,9 @@ namespace TiaMcpServer.Siemens
                 if (!dryRun)
                 {
                     meta["mayHaveChanged"] = true;
-                    // 2.7.46 real project: CreateInstanceDB(name, true, 0, fb) created "DB0" and the compile failed with "invalid number 0" -
-                    // auto-numbering still needs a valid seed, so 1 is passed and TIA assigns the free number.
+                    // Native project evidence: CreateInstanceDB(name, true, 0, fb) created "DB0" and compilation rejected "invalid number 0".
+                    // Auto-numbering needs a valid seed, so 1 is passed and TIA assigns the free number.
+                    // See docs/reference/real-machine-ledger.md for native acceptance evidence.
                     var db = group.Blocks.CreateInstanceDB(name, autoNumber, autoNumber && number < 1 ? 1 : number, fb.Name);
                     if (db == null || group.Blocks.Find(name) == null) throw new InvalidOperationException("Native instance DB not found after creation.");
                     meta["after"] = EngineeringScalarProperties.Read(db);

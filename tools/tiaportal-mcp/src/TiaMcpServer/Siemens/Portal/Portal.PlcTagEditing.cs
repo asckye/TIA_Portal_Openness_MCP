@@ -24,7 +24,7 @@ namespace TiaMcpServer.Siemens
                 var prepared=EngineeringScalarProperties.Prepare(nativeType,request.Scalars);
                 meta["dryRun"]=dryRun; meta["mayHaveChanged"]=false; meta["tablePath"]=tablePath; meta["name"]=name; meta["kind"]=kind;
                 if(target!=null) { meta["before"]=EngineeringScalarProperties.Read(target); meta["commentBefore"]=CommentItems(TagComment(target)); }
-                // 2.7.46: Comment is a MultilingualText - resolve the cultures now so a preview already reports a missing culture.
+                // Comment is a MultilingualText - resolve the cultures now so a preview already reports a missing culture.
                 var editingCulture=(_project as Project)?.LanguageSettings?.EditingLanguage?.Culture?.Name;
                 if(request.Comments.Length>0) { meta["commentCultures"]=new JsonArray(request.Comments.Select(c => JsonValue.Create(c.Culture ?? editingCulture ?? "(first item)")).ToArray()); }
                 if(target!=null) foreach(var (culture,_) in request.Comments) ResolveCommentItem(TagComment(target),culture,editingCulture);

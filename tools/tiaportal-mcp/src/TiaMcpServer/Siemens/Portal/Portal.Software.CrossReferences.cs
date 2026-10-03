@@ -36,7 +36,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - CrossReferences
@@ -44,7 +43,7 @@ namespace TiaMcpServer.Siemens
         public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind = "Block", string filter = "AllObjects")
             => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out _);
 
-        // 2.7.46: typed CrossReferenceService / CrossReferenceFilter (Siemens.Engineering.CrossReference, V20 and V21) with the real
+        // Typed CrossReferenceService / CrossReferenceFilter (Siemens.Engineering.CrossReference, V20 and V21) with the real
         // reason for a null result - the reflective lookup swallowed everything (real project: filter "" -> Enum.Parse threw ->
         // "Cross reference service not available", although the service was there).
         public List<ModelContextProtocol.CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason)
@@ -106,7 +105,7 @@ namespace TiaMcpServer.Siemens
                 var serviceType = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a =>
                     {
-                        try { return a.GetTypes(); } catch { return Array.Empty<Type>(); }
+                        try { return a.GetTypes(); } catch { /* swallow(probe-optional): An unavailable reflection service or assembly is skipped while probing the optional cross-reference API. */ return Array.Empty<Type>(); }
                     })
                     .FirstOrDefault(t => t.Name.Equals(serviceTypeNameSuffix, StringComparison.OrdinalIgnoreCase) ||
                                          t.FullName?.EndsWith("." + serviceTypeNameSuffix, StringComparison.OrdinalIgnoreCase) == true);
@@ -115,7 +114,7 @@ namespace TiaMcpServer.Siemens
                 return getService.MakeGenericMethod(serviceType).Invoke(target, Array.Empty<object>());
             }
             catch
-            {
+            { /* swallow(probe-optional): An unavailable reflection service or assembly is skipped while probing the optional cross-reference API. */
                 return null;
             }
         }
