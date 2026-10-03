@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     /// <summary>
     /// Partial: 硬件 I/O 起始地址的读写。
@@ -19,8 +19,12 @@ namespace TiaMcpServer.Siemens
     ///   Address.IoType           → AddressIoType，**只读**（None/Input/Output/Substitute/Diagnosis）
     /// 集合只读但元素可写，所以改地址是改 Address 对象，不是往集合里塞新的。
     /// </summary>
-    public partial class Portal
+    internal sealed class AddressesService
     {
+        private readonly IEngineeringSession _session;
+
+        public AddressesService(IEngineeringSession session) => _session = session;
+
         #region io addresses
 
         /// <summary>一条 I/O 地址的快照。StartAddress / Length 一律是**引擎原值**，不做任何换算。</summary>
@@ -39,14 +43,14 @@ namespace TiaMcpServer.Siemens
         /// </summary>
         public IReadOnlyList<IoAddressInfo>? GetDeviceItemAddresses(string deviceItemPath)
         {
-            _logger?.LogInformation($"Getting IO addresses of device item: {deviceItemPath}");
+            _session.Logger?.LogInformation($"Getting IO addresses of device item: {deviceItemPath}");
 
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return null;
             }
 
-            var item = GetDeviceItemByPath(deviceItemPath);
+            var item = _session.GetDeviceItemByPath(deviceItemPath);
             if (item == null)
             {
                 return null;
@@ -66,8 +70,8 @@ namespace TiaMcpServer.Siemens
         public List<string> DescribeChildItemsWithAddresses(string deviceItemPath)
         {
             var hints = new List<string>();
-            if (IsProjectNull()) return hints;
-            var item = GetDeviceItemByPath(deviceItemPath);
+            if (_session.IsProjectNull()) return hints;
+            var item = _session.GetDeviceItemByPath(deviceItemPath);
             if (item == null) return hints;
 
             foreach (DeviceItem child in item.DeviceItems)
@@ -83,7 +87,7 @@ namespace TiaMcpServer.Siemens
             return hints;
         }
 
-        private static List<IoAddressInfo> ReadAddresses(DeviceItem item)
+        internal static List<IoAddressInfo> ReadAddresses(DeviceItem item)
         {
             var list = new List<IoAddressInfo>();
             var addresses = item.Addresses;
@@ -123,10 +127,10 @@ namespace TiaMcpServer.Siemens
         public (bool ok, string message, IoAddressInfo? before, IoAddressInfo? after) SetDeviceItemStartAddress(
             string deviceItemPath, string ioType, int startAddress)
         {
-            _logger?.LogInformation(
+            _session.Logger?.LogInformation(
                 $"Setting IO start address: item={deviceItemPath}, ioType={ioType}, start={startAddress}");
 
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return (false, "没有连接到 TIA Portal 项目。先调用 Connect / OpenProject "
                              + "（或 AttachToOpenProject 接管已打开的工程）。", null, null);
@@ -143,7 +147,7 @@ namespace TiaMcpServer.Siemens
                         null, null);
             }
 
-            var item = GetDeviceItemByPath(deviceItemPath);
+            var item = _session.GetDeviceItemByPath(deviceItemPath);
             if (item == null)
             {
                 return (false, $"设备项 '{deviceItemPath}' 没找到。用 GetDeviceItemTree 确认路径的每一段。",

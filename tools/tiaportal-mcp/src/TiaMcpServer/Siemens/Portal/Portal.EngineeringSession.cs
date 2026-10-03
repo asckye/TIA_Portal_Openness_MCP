@@ -129,6 +129,22 @@ namespace TiaMcpServer.Siemens
         void IEngineeringSession.ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
             => ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, importedNames);
         bool IEngineeringSession.TrySetProperty(object target, string propName, object? value) => TrySetProperty(target, propName, value);
+        string IEngineeringSession.GetProjectTree() => GetProjectTree();
+        List<Device> IEngineeringSession.GetDevices(string regexName) => GetDevices(regexName);
+        Device? IEngineeringSession.GetDevice(string devicePath) => GetDevice(devicePath);
+        DeviceItem? IEngineeringSession.GetDeviceItem(string deviceItemPath) => GetDeviceItem(deviceItemPath);
+        string IEngineeringSession.GetDeviceItemTree(string deviceItemPath, int maxDepth) => GetDeviceItemTree(deviceItemPath, maxDepth);
+        Device? IEngineeringSession.GetDeviceByPath(string devicePath) => GetDeviceByPath(devicePath);
+        IEnumerable<object> IEngineeringSession.FindHardwareCatalogEntries(object catalog, string filter) => FindHardwareCatalogEntries(catalog, filter);
+        bool? IEngineeringSession.IsAttributeWritable(object attributeInfo) => IsAttributeWritable(attributeInfo);
+        object IEngineeringSession.CoerceAttributeValue(string value, object? oldValue, object attributeInfo) => CoerceAttributeValue(value, oldValue, attributeInfo);
+        JsonArray IEngineeringSession.BuildDeviceItemNetworkReadbackJson(string deviceItemPath) => BuildDeviceItemNetworkReadbackJson(deviceItemPath);
+        IEnumerable<Device> IEngineeringSession.EnumerateAllDevices() => EnumerateAllDevices();
+
+        string[] IEngineeringSession.GetPlcSoftwareNamesForDesktop() => GetPlcSoftwareNamesForDesktop();
+        ResponseMessage IEngineeringSession.ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
+            => ValidateAutomationContext(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
+        JsonArray IEngineeringSession.ToJsonArray(IEnumerable<string> values) => ToJsonArray(values);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

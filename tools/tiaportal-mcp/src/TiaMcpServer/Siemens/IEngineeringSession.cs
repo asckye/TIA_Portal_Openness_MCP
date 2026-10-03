@@ -127,6 +127,21 @@ namespace TiaMcpServer.Siemens
         bool ConnectTyped(object iface, MotionProDiagClassicHmiLogic.ConnectionTarget target, string softwarePath, ConnectOption option);
         void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames);
         bool TrySetProperty(object target, string propName, object? value);
+        string GetProjectTree();
+        List<Device> GetDevices(string regexName = "");
+        Device? GetDevice(string devicePath);
+        DeviceItem? GetDeviceItem(string deviceItemPath);
+        string GetDeviceItemTree(string deviceItemPath, int maxDepth = 4);
+        Device? GetDeviceByPath(string devicePath);
+        IEnumerable<object> FindHardwareCatalogEntries(object catalog, string filter);
+        bool? IsAttributeWritable(object attributeInfo);
+        object CoerceAttributeValue(string value, object? oldValue, object attributeInfo);
+        JsonArray BuildDeviceItemNetworkReadbackJson(string deviceItemPath);
+        IEnumerable<Device> EnumerateAllDevices();
+
+        string[] GetPlcSoftwareNamesForDesktop();
+        ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath);
+        JsonArray ToJsonArray(IEnumerable<string> values);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

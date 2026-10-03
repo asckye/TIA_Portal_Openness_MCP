@@ -286,6 +286,47 @@ BaseLeftovers 中的 ManageDeviceServiceObjects 同时处理 Web 应用、遥控
 CertificateServiceRow / CertificateConfigurationRow 保留在硬件领域；本步不拆分该工具的方法体。
 Test-DomainTools 覆盖以上所有工具的 full/lite、直接/隔离调用，并保留 V20 generateBaseId 的版本拒绝；
 门户级工具比较未连接门户的错误首行，其他工具比较未绑定工程的原有拒绝响应。
+### 硬件设备、AML、模块与地址
+
+P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留给 P3-11b。
+`McpServer.Devices.cs` / `Portal.Devices.cs` 中的网络成员保留原位；
+`ImportDeviceAml` 从 HardwareServices 混合文件迁入 AML 领域，`ManageHardwareObject`
+从 EngineeringManagement 混合文件迁出。现存 BaseLeftovers / Step7Leftovers 中没有本次设备、AML、模块或地址成员；
+`ManageHardwareUtilities` 和 `ManageDeviceServiceObjects` 仍属于硬件服务。
+
+| 领域 | 服务 / 工具类 | 工具数 |
+|---|---|---|
+| Devices | [DevicesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs) / [DevicesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) | 14 |
+| HardwareManagement | [HardwareManagementService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareManagementService.cs) / [HardwareManagementTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) | 1 |
+| HardwareAml | [HardwareAmlService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareAmlService.cs) / [HardwareAmlTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) | 3 |
+| Modules | [ModulesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/ModulesService.cs) / [ModulesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) | 2 |
+| Addresses | [AddressesService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AddressesService.cs) / [AddressesTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) | 2 |
+
+`ModulesService` 通过构造器接收同一容器的 `DevicesService` 单例以复用目录查询；模块地址读取复用
+`AddressesService.ReadAddresses`，订货号格式化复用 DevicesService 的静态辅助。四个领域结果 DTO
+（`IoAddressInfo`、`PlugLocationInfo`、`PluggedItemInfo`、`PlugResult`）随所属服务迁移，序列化字段不变。
+
+内核保留设备解析、枚举与其他领域仍使用的成员：`GetProjectTree` 及其树遍历辅助、`GetDevices` /
+`GetDevicesRecursive`、`GetDevice` / `GetDeviceByPath`、`GetDeviceItem` / `GetDeviceItemByPath`、
+`GetDeviceItemTree` / `BuildDeviceItemTree` / `GetTreePrefixStatic`、`ExactEngineeringDevice` / `ExactDeviceItem`、
+`EnumerateAllDevices`、`FindHardwareCatalogEntries`、`ValidateAutomationContext`、`PortalMajorVersion`，
+以及共享 HMI 属性和错误辅助、网络读回辅助。`PortalMajorVersion` 只放宽内部可见性，常量值不变。
+
+`IEngineeringSession` 新增 17 项，仅转发现有成员：只读 `Logger`；`GetProjectTree`、`GetDevices`、
+`GetDevice`、`GetDeviceItem`、`GetDeviceItemTree`、`GetDeviceByPath`、`FindHardwareCatalogEntries`、
+`IsAttributeWritable`、`CoerceAttributeValue`、`BuildDeviceItemNetworkReadbackJson`、`ExactEngineeringDevice`、
+`EnumerateAllDevices`、`GetPlcSoftwareNamesForDesktop`、`ValidateAutomationContext`、`FormatExceptionDetail`、
+`ToJsonArray`。保留原日志类别，不新增会话写入。
+
+[CLI 转发](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.HardwareDeviceForwarders.cs)
+保留八个无属性静态入口：`GetProjectTree`、`GetDeviceInfo`、`ValidateAutomationContext`、`AddDevice`、
+`AddDeviceWithFallback`、`SearchInstalledGsdDevices`、`SearchHardwareCatalog`、`AddHardwareCatalogDeviceWithProbe`。
+工具签名、描述、返回及错误首行不变。`Test-DomainTools.py` 覆盖全部 22 个工具，包含旧式抛异常、
+失败 POCO、空设备列表与 AML 离线拒绝；关键词为空的 GSD 用例在扫描本机文件前拒绝。
+
+同名工具与服务的原生调用清单分别按声明类型交给 `Compare-NativeCallOrder.py`，避免名称匹配歧义；
+完整清单仍比较全局 Siemens 调用多重集合。每版 39 个服务方法族、12 个工具方法族的有序序列相同，
+无原生调用点的方法另做去注释源码比较。其他织入类别仅规范化上述 DTO 的声明类型。
 
 ## G9：单 PLC 工程的模糊匹配
 

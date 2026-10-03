@@ -222,26 +222,6 @@ namespace TiaMcpServer.Siemens
             });
 
 
-        public ResponseMessage ImportDeviceAml(string filePath, string logFilePath, string importOption = "RetainTiaDevice", bool confirmImport = false, bool dryRun = true)
-            => RunHmiStepTool("ImportDeviceAml", meta => {
-                var option = (CaxImportOptions)Enum.Parse(typeof(CaxImportOptions), HardwareServicesLogic.RequireOneOf(importOption, HardwareServicesLogic.CaxImportOptions, "importOption"));
-                HardwareServicesLogic.RequireConfirmation(confirmImport, "confirmImport", dryRun);
-                var source = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath");
-                var log = NativeFileOutput.Plan(logFilePath);
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
-                var cax = _project!.GetService<CaxProvider>() ?? throw new NotSupportedException("CaxProvider unavailable for this project.");
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["importOption"] = option.ToString();
-                meta["sourceFile"] = NativeFileOutput.Verify(source); meta["plannedLogFile"] = log.FullName;
-                meta["deviceCountBefore"] = EnumerateAllDevices().Count();
-                if (dryRun) return "CAx/AutomationML import preview; source hashed, nothing imported.";
-                meta["mayHaveChanged"] = true; meta["mayHaveWrittenFiles"] = true;
-                bool ok = cax.Import(source, log, option);
-                meta["apiCallSuccess"] = true; meta["nativeResult"] = ok; meta["deviceCountAfter"] = EnumerateAllDevices().Count();
-                log.Refresh();
-                if (log.Exists && log.Length > 0) meta["logFile"] = NativeFileOutput.Verify(log); else { meta["logFile"] = null; meta["logFileMissing"] = true; }
-                if (!ok) throw new PortalException(PortalErrorCode.ImportFailed, "CaxProvider.Import returned false; inspect the native log file.");
-                return "CAx/AutomationML import returned true (native log hashed); imported content not semantically verified. Project not saved, compiled or downloaded.";
-            });
 
         public ResponseMessage ReadHardwareFeatures(string devicePathJson, string itemPathJson = "[]", int offset = 0, int limit = 100)
             => RunHmiStepTool("ReadHardwareFeatures", meta => {

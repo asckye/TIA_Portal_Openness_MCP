@@ -4,16 +4,23 @@ using System.Text.Json.Nodes;
 using Siemens.Engineering.HW;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class HardwareManagementService
     {
+        private readonly IEngineeringSession _session;
+
+        public HardwareManagementService(IEngineeringSession session)
+        {
+            _session = session;
+        }
+
         public ResponseMessage ManageHardwareObject(string devicePathJson, string action, string itemPathJson = "[]",
             string destinationDevicePathJson = "[]", string destinationItemPathJson = "[]", int position = -1, bool dryRun = true)
-            => RunHmiStepTool("ManageHardwareObject", meta => {
+            => _session.RunHmiStepTool("ManageHardwareObject", meta => {
                 if (!new[] { "deleteDevice", "deleteItem", "moveItem", "copyItem" }.Contains(action)) throw new ArgumentException("action must be one of: deleteDevice/deleteItem/moveItem/copyItem (case-sensitive).");
-                using var access = dryRun ? null : AcquireHmiEditAccess();
-                var source = ExactEngineeringHardware(devicePathJson, itemPathJson);
+                using var access = dryRun ? null : _session.AcquireHmiEditAccess();
+                var source = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
                 meta["source"] = EngineeringScalarProperties.Read(source); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["dependencyImpact"] = "Hardware descendants and dependent software/configuration can be affected. No online action or download is performed.";
                 if (action == "deleteDevice")
@@ -22,7 +29,7 @@ namespace TiaMcpServer.Siemens
                     if (!dryRun)
                     {
                         meta["mayHaveChanged"] = true; device.Delete();
-                        try { ExactEngineeringDevice(devicePathJson); throw new InvalidOperationException("Device is still present after Delete."); }
+                        try { _session.ExactEngineeringDevice(devicePathJson); throw new InvalidOperationException("Device is still present after Delete."); }
                         catch (InvalidOperationException ex) when (ex.Message == "Exact unique device not found." || ex.Message == "Device not found.") { meta["verifiedAbsent"] = true; }
                     }
                 }
@@ -38,7 +45,7 @@ namespace TiaMcpServer.Siemens
                     else
                     {
                         if (position < 0) throw new ArgumentException("A nonnegative destination slot position is required.");
-                        var destination = ExactEngineeringHardware(destinationDevicePathJson, destinationItemPathJson);
+                        var destination = _session.ExactEngineeringHardware(destinationDevicePathJson, destinationItemPathJson);
                         bool allowed = action == "moveItem" ? destination.CanPlugMove(item, position) : destination.CanPlugCopy(item, position);
                         meta["canPlug"] = allowed; meta["position"] = position;
                         if (!allowed) throw new InvalidOperationException("TIA CanPlugMove/CanPlugCopy refused the destination.");

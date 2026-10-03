@@ -317,7 +317,68 @@ CASES = {
            ('ImportTechnologyObject', 'import', {'softwarePath': PLC, 'folderPath': '', 'importPath': 'C:/domain-offline.xml'}),
            ('ImportTechnologyObjectsFromDirectory', 'import', {'softwarePath': PLC, 'folderPath': '', 'dir': 'C:/domain-offline'}),
            ('ReadTechnologyObjectTree', 'read', {'softwarePath': PLC})]
-        + actions('ManageTechnologyObject', 'read create delete setParameter', softwarePath=PLC, objectPath='Object1')
+        + actions('ManageTechnologyObject', 'read create delete setParameter', softwarePath=PLC, objectPath='Object1'),
+    'Devices': [
+        ('GetProjectTree', 'read', {}),
+        ('GetDeviceInfo', 'read', {'devicePath': PLC}),
+        ('GetDeviceItemInfo', 'read', {'deviceItemPath': PLC}),
+        ('GetDeviceItemTree', 'read', {'deviceItemPath': PLC}),
+        ('SetDeviceItemAttribute', 'write', {'deviceItemPath': PLC, 'attributeName': 'Name', 'value': 'Item1'}),
+        ('ValidateAutomationContext', 'read', {}),
+        ('SetCpuCommonSettings', 'write', {'cpuPath': PLC, 'settingsJson': '{}'}),
+        ('GetDevices', 'read', {}),
+        ('AddDevice', 'write', {'orderNumber': '6ES7513-1AM03-0AB0', 'version': 'V3.0', 'deviceName': PLC}),
+        ('AddDeviceWithFallback', 'write', {'preferredMlfb': '', 'preferredVersion': '', 'deviceName': PLC}),
+        # Empty keywords refuse before scanning machine-local GSDML files.
+        ('SearchInstalledGsdDevices', 'empty-keyword', {'keyword': ''}),
+        ('SearchHardwareCatalog', 'read', {'keyword': 'CPU'}),
+        ('AddGsdDeviceWithProbe', 'empty-keyword', {'keyword': '', 'deviceName': PLC}),
+        ('AddHardwareCatalogDeviceWithProbe', 'write', {'keyword': 'CPU', 'deviceName': PLC})],
+    'HardwareManagement': actions('ManageHardwareObject', 'deleteDevice deleteItem moveItem copyItem',
+                                  devicePathJson='["Station1"]'),
+    'HardwareAml': [
+        ('ExportDeviceAml', 'export', {'devicePath': PLC, 'exportPath': 'C:/domain-offline.aml'}),
+        ('ImportDeviceAml', 'import', {'filePath': 'C:/domain-offline.aml', 'logFilePath': 'C:/domain-offline.log'}),
+        # Relative paths refuse before any file output; the offline executor still runs.
+        ('BuildDeviceAmlDocument', 'relative-path', {'specJson': '{}', 'outputPath': 'domain-offline.aml'})],
+    'Modules': [('GetDevicePlugLocations', 'read', {'deviceItemPath': PLC}),
+                ('PlugDeviceItem', 'preview', {'deviceItemPath': PLC, 'orderNumber': '6ES7521-1BL00-0AB0', 'version': 'V2.0'})],
+    'Addresses': [('GetDeviceItemIoAddresses', 'read', {'deviceItemPath': PLC}),
+                  ('SetDeviceItemIoAddress', 'preview', {'deviceItemPath': PLC, 'ioType': 'Input', 'startAddress': 2})],
+}
+
+
+# Older hardware tools mix thrown MCP errors, failure POCOs and empty inventories.
+# Require a tool-specific terminal marker before comparing every response byte.
+HARDWARE_TERMINALS = {
+    'GetProjectTree': 'Failed retrieving project tree',
+    'GetDeviceInfo': 'Device not found',
+    'GetDeviceItemInfo': 'Device item not found',
+    'GetDeviceItemTree': 'Device item not found',
+    'SetDeviceItemAttribute': 'Project is null',
+    'ValidateAutomationContext': 'Automation context invalid',
+    'SetCpuCommonSettings': 'Project is null',
+    'GetDevices': 'Devices retrieved',
+    'AddDevice': 'No project is open',
+    'AddDeviceWithFallback': 'Failed to add device',
+    'SearchInstalledGsdDevices': 'Keyword is empty',
+    'SearchHardwareCatalog': 'HardwareCatalog is not available',
+    'AddGsdDeviceWithProbe': 'Keyword is empty',
+    'AddHardwareCatalogDeviceWithProbe': 'HardwareCatalog is not available',
+    'ExportDeviceAml': 'No project is open',
+    'BuildDeviceAmlDocument': 'Absolute output file path required',
+    'GetDevicePlugLocations': '的槽位：要么没有连接项目',
+    'PlugDeviceItem': 'NotConnected',
+    'GetDeviceItemIoAddresses': '的地址：要么没有连接项目',
+    'SetDeviceItemIoAddress': '的地址：要么没有连接项目',
+}
+
+
+HARDWARE_THROWS = {
+    'GetProjectTree', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree',
+    'AddDevice', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog',
+    'AddGsdDeviceWithProbe', 'AddHardwareCatalogDeviceWithProbe', 'ExportDeviceAml',
+    'GetDevicePlugLocations', 'PlugDeviceItem', 'GetDeviceItemIoAddresses', 'SetDeviceItemIoAddress',
 }
 
 
@@ -400,6 +461,23 @@ def capture(args, exe, harness, profile, isolated):
                     resources.require(reply.get('result', {}).get('isError') is True, f'{name}: expected MCP error: {reply}')
                     raw = reply['result']['content'][0]['text']
                     resources.require(THROWING_GUARDS[name] in raw, f'{name}: missing disconnected guard: {raw}')
+                if name in HARDWARE_TERMINALS:
+                    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
+                    resources.require(bool(reply['result'].get('isError')) is (profile == 'full' and name in HARDWARE_THROWS),
+                                      f'{name}: unexpected MCP error status: {reply}')
+                    raw = reply['result']['content'][0]['text']
+                    if profile == 'lite':
+                        bridge = json.loads(raw)
+                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (name not in HARDWARE_THROWS),
+                                          f'{name}: unexpected bridge status: {raw}')
+                        raw = bridge['message']
+                    # Match decoded JSON too: System.Text.Json escapes the existing Chinese errors.
+                    try:
+                        decoded = json.dumps(json.loads(raw), ensure_ascii=False)
+                    except ValueError:
+                        decoded = raw
+                    resources.require(HARDWARE_TERMINALS[name] in decoded,
+                                      f'{name}/{case} did not reach its offline terminal: {raw}')
                     reached_child = True
                 elif (hidden or version_action) and profile == 'full':
                     resources.require('error' in reply or reply.get('result', {}).get('isError'),

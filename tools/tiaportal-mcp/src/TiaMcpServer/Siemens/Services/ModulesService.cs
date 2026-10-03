@@ -1,3 +1,5 @@
+using static TiaMcpServer.Siemens.Services.AddressesService;
+using static TiaMcpServer.Siemens.Services.DevicesService;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering.HW;
 using System;
@@ -5,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     /// <summary>
     /// Partial: 往已存在的设备（CPU / 机架）上**插入子模块** —— 信号板 SB、信号模块 SM、通信模块 CM。
@@ -27,8 +29,17 @@ namespace TiaMcpServer.Siemens
     /// **槽位号不写死**：S7-1200 信号板的槽位号由 <c>GetPlugLocations()</c> 在运行时报出来，
     /// 引擎不猜也不硬编码任何 CPU 的槽位表。
     /// </summary>
-    public partial class Portal
+    internal sealed class ModulesService
     {
+        private readonly IEngineeringSession _session;
+        private readonly DevicesService _devices;
+
+        public ModulesService(IEngineeringSession session, DevicesService devices)
+        {
+            _session = session;
+            _devices = devices;
+        }
+
         #region plug submodule
 
         /// <summary>一个可插槽位（空位）。Label 是 TIA 给的槽位描述，PositionNumber 是 PlugNew 要的那个数。</summary>
@@ -92,9 +103,9 @@ namespace TiaMcpServer.Siemens
         public (IReadOnlyList<PlugLocationInfo> free, IReadOnlyList<PluggedItemInfo> occupied)? GetDevicePlugLocations(
             string deviceItemPath, bool plugOnDevice = false)
         {
-            _logger?.LogInformation($"Getting plug locations of: {deviceItemPath} (plugOnDevice={plugOnDevice})");
+            _session.Logger?.LogInformation($"Getting plug locations of: {deviceItemPath} (plugOnDevice={plugOnDevice})");
 
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return null;
             }
@@ -113,7 +124,7 @@ namespace TiaMcpServer.Siemens
         // TIA V21 project (2026-09-20; docs/reference/real-machine-ledger.md): CanPlugNew on the CU device item and on the rack item answered false for every motor-module identifier;
         // a bare device name resolves to the head device item by default, so the Device host has to be asked for explicitly.
         private HardwareObject? ResolvePlugHost(string path, bool plugOnDevice)
-            => plugOnDevice ? (HardwareObject?)GetDeviceByPath(path) : GetDeviceItemByPath(path);
+            => plugOnDevice ? (HardwareObject?)_session.GetDeviceByPath(path) : _session.GetDeviceItemByPath(path);
 
         private List<PlugLocationInfo> ReadFreeSlots(HardwareObject host)
         {
@@ -143,7 +154,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 // 有的宿主对象（接口、通道之类）根本不支持插拔，这里会抛。空列表就是答案，不该整体失败。
-                _logger?.LogWarning(ex, "GetPlugLocations failed; treating as no free slots");
+                _session.Logger?.LogWarning(ex, "GetPlugLocations failed; treating as no free slots");
             }
 
             return list.OrderBy(x => x.PositionNumber).ToList();
@@ -212,7 +223,7 @@ namespace TiaMcpServer.Siemens
         public PlugResult PlugSubmodule(
             string deviceItemPath, string orderNumber, string version, int positionNumber, string? name, bool dryRun, bool plugOnDevice = false)
         {
-            _logger?.LogInformation(
+            _session.Logger?.LogInformation(
                 $"Plug submodule: host={deviceItemPath}, order={orderNumber}, version={version}, "
                 + $"pos={positionNumber}, dryRun={dryRun}, plugOnDevice={plugOnDevice}");
 
@@ -225,7 +236,7 @@ namespace TiaMcpServer.Siemens
                 return result;
             }
 
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 result.Reason = "NotConnected";
                 result.Message = "没有连接到 TIA Portal 项目。先调用 Connect，"
@@ -580,7 +591,7 @@ namespace TiaMcpServer.Siemens
         {
             try
             {
-                var hits = SearchHardwareCatalog(NormalizeOrderNumber(orderNumber), 5);
+                var hits = _devices.SearchHardwareCatalog(NormalizeOrderNumber(orderNumber), 5);
                 if (hits == null || hits.Count == 0)
                 {
                     return (false, "");
@@ -593,7 +604,7 @@ namespace TiaMcpServer.Siemens
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "Hardware catalog probe failed while classifying plug failure");
+                _session.Logger?.LogWarning(ex, "Hardware catalog probe failed while classifying plug failure");
                 return (null, "（硬件目录当前查不了，无法确认订货号是否存在）");
             }
         }

@@ -6,20 +6,16 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
 
+using TiaMcpServer.Siemens.Services;
+
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Partial: 硬件 I/O 起始地址的读写工具。
-    ///
-    /// 这是**硬件组态**的写操作。改错地址不会编译报错，只会让程序读到别的模块的数据，
-    /// 所以写工具默认 dryRun=true。
-    ///
-    /// 本线的 ResponseMessage 只有 Message + Meta，**没有三态 Outcome 契约**：
-    /// 失败一律抛 McpException（与 McpServer.Blocks.cs 同形），成功才正常返回 ResponseMessage。
-    /// 唯一的例外是「写了但读不回来」——那既不是成功也不是失败，见下面 verified=false 的注释。
-    /// </summary>
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class AddressesTools
     {
+        private readonly AddressesService _service;
+
+        public AddressesTools(AddressesService service) => _service = service;
         #region io addresses
 
         [McpServerTool(Name = "GetDeviceItemIoAddresses"), Description(
@@ -27,12 +23,12 @@ namespace TiaMcpServer.ModelContextProtocol
             + "built-in CPU I/O). Returns each address as ioType + startAddress + length in ENGINE RAW VALUES "
             + "(startAddress is the byte offset: %I2.0 is startAddress 2). Use this to confirm an address before "
             + "and after changing it. Device item path looks like 'PLC_1/DI 8x24VDC_1' — get it from GetDeviceItemTree.")]
-        public static ResponseMessage GetDeviceItemIoAddresses(
+        public ResponseMessage GetDeviceItemIoAddresses(
             [Description("deviceItemPath: path in the project structure to the device item")] string deviceItemPath)
         {
             try
             {
-                var addresses = Portal.GetDeviceItemAddresses(deviceItemPath);
+                var addresses = _service.GetDeviceItemAddresses(deviceItemPath);
 
                 if (addresses == null)
                 {
@@ -60,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 常常挂在**子项**而不是模块对象本身，只回一句「没有任何 I/O 地址」
                 // 会让人以为是工具读不到，转头去查一个没问题的组态。
                 var childHints = addresses.Count == 0
-                    ? Portal.DescribeChildItemsWithAddresses(deviceItemPath)
+                    ? _service.DescribeChildItemsWithAddresses(deviceItemPath)
                     : new System.Collections.Generic.List<string>();
 
                 var msg = addresses.Count > 0
@@ -103,7 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "value does NOT fail compilation — the program silently reads a different module. Read back with "
             + "GetDeviceItemIoAddresses, then CompileSoftware and SaveProject. Overlapping address ranges are "
             + "rejected by TIA and reported back with the reason.")]
-        public static ResponseMessage SetDeviceItemIoAddress(
+        public ResponseMessage SetDeviceItemIoAddress(
             [Description("deviceItemPath: path in the project structure to the device item, e.g. 'PLC_1/DI 8x24VDC_1'")] string deviceItemPath,
             [Description("ioType: Input, Output, Diagnosis or Substitute")] string ioType,
             [Description("startAddress: new start address as engine raw byte offset (%I2.0 -> 2)")] int startAddress,
@@ -124,7 +120,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (dryRun)
                 {
                     // 预览也必须走真实定位，否则「预览通过、实写失败」毫无意义。
-                    var current = Portal.GetDeviceItemAddresses(deviceItemPath);
+                    var current = _service.GetDeviceItemAddresses(deviceItemPath);
                     if (current == null)
                     {
                         throw new McpException(
@@ -175,7 +171,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 var (ok, message, before, after) =
-                    Portal.SetDeviceItemStartAddress(deviceItemPath, ioType, startAddress);
+                    _service.SetDeviceItemStartAddress(deviceItemPath, ioType, startAddress);
 
                 if (!ok)
                 {
@@ -231,5 +227,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         #endregion
+
     }
 }

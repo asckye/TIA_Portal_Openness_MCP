@@ -6,20 +6,16 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using TiaMcpServer.Siemens;
 
+using TiaMcpServer.Siemens.Services;
+
 namespace TiaMcpServer.ModelContextProtocol
 {
-    /// <summary>
-    /// Partial: 往已有 CPU / 机架上插入子模块（信号板 SB、信号模块 SM、通信模块 CM）的工具。
-    ///
-    /// 和整机添加（AddDevice / AddDeviceWithFallback）走的是两套 Openness API，失败模式也不同，
-    /// 所以单独成域。插完要改起始地址的话，用 SetDeviceItemIoAddress，本域不碰地址。
-    ///
-    /// 本线的 ResponseMessage 只有 Message + Meta，没有三态 Outcome：
-    /// 可判定的失败一律抛 McpException（失败类别与 attempts 一并写进异常正文，否则排障信息就丢了）；
-    /// 只有 Reason=VerifyFailed 这一档是「插没插上答不上来」，见下面的注释。
-    /// </summary>
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class ModulesTools
     {
+        private readonly ModulesService _service;
+
+        public ModulesTools(ModulesService service) => _service = service;
         #region plug submodule
 
         [McpServerTool(Name = "GetDevicePlugLocations"), Description(
@@ -31,13 +27,13 @@ namespace TiaMcpServer.ModelContextProtocol
             + "path (e.g. 'PLC_1'). Get paths from GetDeviceItemTree. plugOnDevice=true asks the Device (station) itself instead "
             + "of a device item - that is where Startdrive drive components (Motor Modules; motors / encoders below them) plug "
             + "(official 'Creating a drive component': Device.PlugNew(\"OrderNumber:6SL3xxx-xxxxx-xxxx\", name, 65535)).")]
-        public static ResponseMessage GetDevicePlugLocations(
+        public ResponseMessage GetDevicePlugLocations(
             [Description("deviceItemPath: path to the host device item, e.g. 'PLC_1' for a CPU; with plugOnDevice=true the device (station) name")] string deviceItemPath,
             [Description("plugOnDevice: true = the path names a Device (station) and its own plug locations are read (Startdrive drive components)")] bool plugOnDevice = false)
         {
             try
             {
-                var slots = Portal.GetDevicePlugLocations(deviceItemPath, plugOnDevice);
+                var slots = _service.GetDevicePlugLocations(deviceItemPath, plugOnDevice);
 
                 if (slots == null)
                 {
@@ -115,7 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
             + "plugOnDevice=true with the station name, orderNumber '6SL3xxx-xxxxx-xxxx' (unspecified Motor Module) or a concrete "
             + "MLFB, positionNumber 65535 (official 'Creating a drive component'); motors / encoders then plug below the Motor "
             + "Module item ('OrderNumber:1PH2092-4WG4x-xxxx', 'OrderNumber:XExxxxx-xxxxx-xxxx//DRIVE-CLIQ.202').")]
-        public static ResponseMessage PlugDeviceItem(
+        public ResponseMessage PlugDeviceItem(
             [Description("deviceItemPath: host device item. A signal board plugs into the CPU itself, e.g. 'PLC_1'; with plugOnDevice=true the device (station) name")] string deviceItemPath,
             [Description("orderNumber: MLFB of the module, e.g. '6ES7221-3BD30-0XB0' (with or without the space). A full 'OrderNumber:.../V1.1' type identifier is also accepted")] string orderNumber,
             [Description("version: module/firmware version, e.g. 'V1.1'. Leave empty to let TIA pick the default")] string version = "",
@@ -126,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var r = Portal.PlugSubmodule(deviceItemPath, orderNumber, version, positionNumber, name, dryRun, plugOnDevice);
+                var r = _service.PlugSubmodule(deviceItemPath, orderNumber, version, positionNumber, name, dryRun, plugOnDevice);
 
                 // Reason=VerifyFailed 是 Portal 明写的"插完之后重新定位失败，无法确认结果"——
                 // 插没插上答不上来，既不能报成功也不能报失败。本线没有 Unknown 这一档，
@@ -238,5 +234,6 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         #endregion
+
     }
 }
