@@ -836,7 +836,7 @@ namespace TiaMcpServer
                 var candidate = Path.Combine(AppContext.BaseDirectory, name + ".dll");
                 return File.Exists(candidate) ? Assembly.LoadFrom(candidate) : null;
             }
-            catch
+            catch /* swallow(env-probe): failure of the local Siemens dependency probe leaves resolution to the assembly loader */
             {
                 return null;
             }
@@ -846,16 +846,16 @@ namespace TiaMcpServer
         {
             if (exception == null) return "<null>";
             var text = exception.GetType().FullName ?? "<unknown type>";
-            try { if (exception is Exception ex) text += ": " + ex.Message; } catch { text += " (Message unavailable)"; }
-            try { if (exception is Exception ex && ex.InnerException != null) text += " <- " + (ex.InnerException.GetType().FullName ?? ""); } catch { }
+            try { if (exception is Exception ex) text += ": " + ex.Message; } catch /* swallow(logging-failure): an exception message getter must not prevent reporting the original exception type */ { text += " (Message unavailable)"; }
+            try { if (exception is Exception ex && ex.InnerException != null) text += " <- " + (ex.InnerException.GetType().FullName ?? ""); } catch /* swallow(logging-failure): unavailable inner-exception details must not prevent reporting the outer exception */ { }
             return text;
         }
         private static void LogDiag(string message)
         {
             // Console may be swallowed by host; always persist to %TEMP%.
-            try { Console.Error.WriteLine(message); } catch { }
-            try { File.AppendAllText(DiagLogPath, message + Environment.NewLine); } catch { }
-            try { File.AppendAllText(DiagLogPathLocal, message + Environment.NewLine); } catch { }
+            try { Console.Error.WriteLine(message); } catch /* swallow(logging-failure): a closed stderr stream must not interrupt diagnostic file writes */ { }
+            try { File.AppendAllText(DiagLogPath, message + Environment.NewLine); } catch /* swallow(logging-failure): failure to append the temporary diagnostic log must not interrupt the local log attempt */ { }
+            try { File.AppendAllText(DiagLogPathLocal, message + Environment.NewLine); } catch /* swallow(logging-failure): failure to append the local diagnostic log must not escape the logging helper */ { }
         }
 
         private static void LogExceptionSafe(Exception ex)
@@ -875,7 +875,7 @@ namespace TiaMcpServer
             }
             catch
             {
-                try { LogDiag("Exception logging failed; original exception type: " + ex.GetType().FullName); } catch { }
+                try { LogDiag("Exception logging failed; original exception type: " + ex.GetType().FullName); } catch /* swallow(logging-failure): the fallback exception logger must not recursively report its own failure */ { }
             }
         }
     }

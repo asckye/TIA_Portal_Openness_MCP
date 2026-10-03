@@ -77,7 +77,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
     public void Dispose()
     {
         // Close our input only. Never kill a TIA process or replay a timed-out call.
-        if (process != null) { try { process.StandardInput.Close(); } catch (IOException) { } process.Dispose(); }
+        if (process != null) { try { process.StandardInput.Close(); } catch (IOException) /* swallow(teardown): a broken worker input pipe must not prevent releasing local process and semaphore resources */ { } process.Dispose(); }
         serial.Dispose();
     }
 }

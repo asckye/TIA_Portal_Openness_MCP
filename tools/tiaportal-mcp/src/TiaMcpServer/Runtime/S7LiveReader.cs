@@ -146,7 +146,7 @@ namespace TiaMcpServer.Runtime
             }
             finally
             {
-                try { client.Disconnect(); } catch { }
+                try { client.Disconnect(); } catch /* swallow(teardown): disconnect failure must not replace the CPU identity result */ { }
             }
         }
 
@@ -220,7 +220,7 @@ namespace TiaMcpServer.Runtime
             }
             finally
             {
-                try { client.Disconnect(); } catch { }
+                try { client.Disconnect(); } catch /* swallow(teardown): disconnect failure must not replace the S7 item read result */ { }
                 sw.Stop();
                 result.ElapsedMs = sw.ElapsedMilliseconds;
             }
@@ -329,7 +329,7 @@ namespace TiaMcpServer.Runtime
             }
             finally
             {
-                try { client.Disconnect(); } catch { }
+                try { client.Disconnect(); } catch /* swallow(teardown): disconnect failure must not replace collected samples or elapsed-time reporting */ { }
                 sw.Stop();
                 result.ActualElapsedMs = sw.ElapsedMilliseconds;
             }
@@ -343,7 +343,7 @@ namespace TiaMcpServer.Runtime
                 if (v == null) continue;
                 double d;
                 if (v is bool b) d = b ? 1 : 0;
-                else if (v is IConvertible) { try { d = Convert.ToDouble(v, CultureInfo.InvariantCulture); } catch { continue; } }
+                else if (v is IConvertible) { try { d = Convert.ToDouble(v, CultureInfo.InvariantCulture); } catch /* swallow(parse-fallback): non-numeric sample values are excluded from numeric aggregates */ { continue; } }
                 else continue;
                 if (d < min) min = d;
                 if (d > max) max = d;
@@ -400,7 +400,7 @@ namespace TiaMcpServer.Runtime
                     : status == S7StatusUnknown ? "UNKNOWN"
                     : $"OTHER(0x{status:X2})";
 
-                try { var dt = new DateTime(); if (client.GetPlcDateTime(ref dt) == 0) state.PlcDateTime = dt.ToString("O"); } catch { }
+                try { var dt = new DateTime(); if (client.GetPlcDateTime(ref dt) == 0) state.PlcDateTime = dt.ToString("O"); } catch /* swallow(probe-optional): an unavailable PLC clock must not discard operating-state and diagnostic results */ { }
 
                 // Best-effort diagnostic buffer (raw). Wrapped: any failure -> clean note.
                 try
@@ -423,7 +423,7 @@ namespace TiaMcpServer.Runtime
                 return state;
             }
             catch (Exception ex) { state.Error = ex.Message; return state; }
-            finally { try { client.Disconnect(); } catch { } sw.Stop(); state.ElapsedMs = sw.ElapsedMilliseconds; }
+            finally { try { client.Disconnect(); } catch /* swallow(teardown): disconnect failure must not replace the PLC state and diagnostic result */ { } sw.Stop(); state.ElapsedMs = sw.ElapsedMilliseconds; }
         }
 
         // Pure parser for SZL diagnostic records: split Data into fixed-length records,

@@ -61,7 +61,7 @@ namespace TiaMcpServer
             var handlers = new HashSet<Task>();
             Action stop = () =>
             {
-                try { listener.Abort(); } catch (ObjectDisposedException) { }
+                try { listener.Abort(); } catch (ObjectDisposedException) /* swallow(teardown): the listener may already be disposed when cancellation or router completion stops it */ { }
                 router.Dispose();
             };
             listener.Prefixes.Add(prefix);
@@ -82,7 +82,7 @@ namespace TiaMcpServer
                     HttpListenerContext ctx;
                     try { ctx = await listener.GetContextAsync().ConfigureAwait(false); }
                     catch (HttpListenerException) { break; }
-                    catch (ObjectDisposedException) { break; }
+                    catch (ObjectDisposedException) /* swallow(teardown): disposing the listener ends the pending accept and stops the loop */ { break; }
 
                     var handler = Task.Run(async () =>
                     {
@@ -94,7 +94,7 @@ namespace TiaMcpServer
                         {
                             if (!cancellationToken.IsCancellationRequested)
                                 log("HTTP handler error: " + ex);
-                            try { ctx.Response.Abort(); } catch { }
+                            try { ctx.Response.Abort(); } catch /* swallow(teardown): aborting a failed HTTP response must not replace the handler failure */ { }
                         }
                     });
                     lock (handlers) handlers.Add(handler);

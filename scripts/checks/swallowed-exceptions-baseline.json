@@ -3,18 +3,6 @@
   "fingerprint": "sha256 of tokenized try body, catch clause (including filter), catch body; paths/lines are informational; duplicate fingerprints retain their multiplicity",
   "catches": [
     {
-      "fingerprint": "005c9bc9053e726aea217b8496b9b96e180d9331df1f1ea9f8eb8c2c18307e5f",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Exports.cs",
-      "line": 371
-    },
-    {
-      "fingerprint": "01c6b1bb65f0c158b98b3dfb06fd2e4229b3a6a3f2f2c8f1890968ae92256d45",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs",
-      "line": 190
-    },
-    {
       "fingerprint": "01cae8d24aba5322b5f2fad16e6ccc83a403af84f3dd47644f324a223b4d22ad",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
@@ -25,18 +13,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/UnifiedOpenPipeChannel.cs",
       "line": 67
-    },
-    {
-      "fingerprint": "02d311f2cee0e3f9ee2256f2b04cefd946ab1ca637556253f86f86bf6840933f",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs",
-      "line": 160
-    },
-    {
-      "fingerprint": "039a9270dbfd67ebc9ef701d12b79a35a44b43b3ddb3731b1e5fa5a447b1482b",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 273
     },
     {
       "fingerprint": "04a73a63d9667636a77ff2d4f40f3b2678e231cb23b5ed1cccd4ebebddcc6521",
@@ -69,18 +45,6 @@
       "line": 59
     },
     {
-      "fingerprint": "06da5f25bd69ee35ec26141a52d057351b0838cb9197d1506e8acddac97e0712",
-      "kind": "discarding",
-      "path": "tools/openness-shared/NativeCallDiagnostics.cs",
-      "line": 106
-    },
-    {
-      "fingerprint": "083e31892322ebfa5f0d57bcd609186430c7991d03da406977ec508de9c170f5",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpHttpResponseRouter.cs",
-      "line": 166
-    },
-    {
       "fingerprint": "08c63a2b24e7ba75463e9d04559b582f49d71178563430cce5440b1599886431",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
@@ -91,18 +55,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.VersionControl.cs",
       "line": 295
-    },
-    {
-      "fingerprint": "0abf90b3277093dcfbb9d0f701c581343cc03b7e63036210cbf41a9ec0cbbfaf",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Exports.cs",
-      "line": 320
-    },
-    {
-      "fingerprint": "0c1409501f4cd383612bdc718b162bb1cf730ee88d037cd7e2dc9552dba9e2bb",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
-      "line": 64
     },
     {
       "fingerprint": "0c2d52335108ed9a46cd7a24dc309e90fa55233ebd3d0efb3dc9316af9d57e9d",
@@ -127,18 +79,6 @@
       "kind": "empty",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs",
       "line": 141
-    },
-    {
-      "fingerprint": "0deb13bbe94cc32ac7d6c48ec061b1cb45613220cb19dff9612ae46257ca7dfc",
-      "kind": "empty",
-      "path": "tools/openness-shared/LocalProcess.cs",
-      "line": 114
-    },
-    {
-      "fingerprint": "0e771b3a1f5e75e3003de88719936835c30465919b4360166a35aac69bf2c30a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/GlobalLibraryPackageAnalyzer.cs",
-      "line": 284
     },
     {
       "fingerprint": "0ee01974d580c2ac05d001876b4420f6ca6e6751f3e896f159695056102ab23e",
@@ -183,12 +123,6 @@
       "line": 331
     },
     {
-      "fingerprint": "119747b034522cfa0bbb1e242b3555ea188e636d0c8063c8c3a1669b179cdcb6",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/OpcUaLiveReader.cs",
-      "line": 172
-    },
-    {
       "fingerprint": "13760b6573853ab99dd45aa97cc77157646a54b0ae0c64864f66ee4f0a0fecca",
       "kind": "empty",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs",
@@ -210,19 +144,13 @@
       "fingerprint": "13a7a4acba4cee1e9aacbcf4a9ff3b727228a459f718530afc1d7c7b2fada2a7",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/BindingSnapshotContract.cs",
-      "line": 172
+      "line": 117
     },
     {
       "fingerprint": "1788191f40d1cda7f0ed1166c9452bd803a8c124e7bc8469f38f5bb4a747cbe3",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
       "line": 415
-    },
-    {
-      "fingerprint": "193002ec51f7e14afa39665b923656c84c87de96c5cd67a852f472739f15622f",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs",
-      "line": 909
     },
     {
       "fingerprint": "194acc98c8bdf031cfececa31b3acddaf800d408221744a1df0707e1e016dd76",
@@ -235,12 +163,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Doctor.cs",
       "line": 55
-    },
-    {
-      "fingerprint": "1a69829609bfa9de53788202b6f242968a81ab8b6c201bfb509bbcd6201e7a05",
-      "kind": "discarding",
-      "path": "tools/openness-shared/NativeCallDiagnostics.cs",
-      "line": 70
     },
     {
       "fingerprint": "1b93c34f3e5b7afd43e73df6bb55f62c798c9b45bedfaf20555c5bffa0fe8059",
@@ -261,22 +183,10 @@
       "line": 60
     },
     {
-      "fingerprint": "1c6b0b1f38fcb353b69b2f4ab3bbd4228400db2d14441111f50071615f5d06dd",
-      "kind": "discarding",
-      "path": "tools/openness-shared/OpennessEnvironment.cs",
-      "line": 32
-    },
-    {
       "fingerprint": "1e48f9f8a7e904610ebf3967736e0b4fbe24167de1769ca914e29cb7cfa24c28",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 711
-    },
-    {
-      "fingerprint": "1f26b866af9c8df00b01e18ed7953b976ae86ebe1d2d9d0b64da6f03efdcc41a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 431
     },
     {
       "fingerprint": "1ff92535edc67b24e6a7b6fec131e054cb741dccd04ca2cfebf9994fc164cf90",
@@ -327,24 +237,6 @@
       "line": 82
     },
     {
-      "fingerprint": "249f9f077e1cef3ecd4e6d7c47610ebdefccff60edead0aa6708fce7bae4c735",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/IsolatedWorkerHost.cs",
-      "line": 73
-    },
-    {
-      "fingerprint": "24e9a5decc7d815225b2cd82c5d6366c2d094370042874db36bb2e82d9a732be",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/WorkerConnection.cs",
-      "line": 160
-    },
-    {
-      "fingerprint": "253af02ec0ecf08a834445d42f2af0aaf5118fb2c4e50d3165bf54d45aecf552",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpHttpResponseRouter.cs",
-      "line": 167
-    },
-    {
       "fingerprint": "25d10b11334c25c0cd678e7be3fb3657a8bbc1f320f57d5affd485c8e747c118",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs",
@@ -367,12 +259,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
       "line": 1126
-    },
-    {
-      "fingerprint": "29ff44409816c6b3af2363b44285368a85fd86cf465dae3c650d68622a11fa06",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 857
     },
     {
       "fingerprint": "2a7e68a588b0b19b71632618affd44619597c02b08c836ec794f51964b0a1d44",
@@ -471,12 +357,6 @@
       "line": 136
     },
     {
-      "fingerprint": "362a2a78c9c2f0c5faecff100fa14b545c09a823e71c577bce7243d5ecd8d3b4",
-      "kind": "empty",
-      "path": "tools/openness-shared/NativeCallDiagnostics.cs",
-      "line": 82
-    },
-    {
       "fingerprint": "37c41a02e80fc57ab24ca6b72c707a6cd8e2cd95aeb756f556e229f424ce05b6",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs",
@@ -504,7 +384,7 @@
       "fingerprint": "3a31afb62b53ca63f847e5d4adde5b1283b77717787bcc67601701488dad4166",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDocumentImportPolicy.cs",
-      "line": 151
+      "line": 115
     },
     {
       "fingerprint": "3a3660a1615379655c415e5d402c25972dc6b2e466ef3dfb5621cbd4ec95cd09",
@@ -540,25 +420,13 @@
       "fingerprint": "3c02ba9fe17e551eaf9b27ea0c02c6d2b2c738c0b8586c274d95725e97a0152a",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBatchDocumentExportPolicy.cs",
-      "line": 112
-    },
-    {
-      "fingerprint": "3e50a9fcab965107591de19b6b9812450620a98d3ef2f6ddfbf5258642b03293",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 856
+      "line": 84
     },
     {
       "fingerprint": "3eb615008530369d2b2fdf14f82c51d27ea0ea5db98863297fdd70b233024b08",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs",
       "line": 55
-    },
-    {
-      "fingerprint": "3f355c0852b3e6deb7eddb3a92b20b3520c1fa8c171acaa80b7772ec42cb8c98",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Engineering.cs",
-      "line": 115
     },
     {
       "fingerprint": "3fc3aebc850a006f70305a4a7687bfce3e48c4f08d208e90f724dee48d8d09e9",
@@ -579,28 +447,10 @@
       "line": 50
     },
     {
-      "fingerprint": "41799b4674e7ef181894c6118e42abe824d21ab1a007e717ca72829d2c258e4f",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs",
-      "line": 58
-    },
-    {
       "fingerprint": "41869d5475875835fd4ef2ffe8f680467b523849dd5e5123d1ddc15d0e0900e8",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs",
       "line": 167
-    },
-    {
-      "fingerprint": "428b8e8720f629c69dd9e3812192b70083242c83253f70fe9e466115a88f4ec0",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
-      "line": 85
-    },
-    {
-      "fingerprint": "42dbba54f12ccfbf24b328dacbbe2779c340017aa70e495c06de8fbb79b7f07e",
-      "kind": "empty",
-      "path": "tools/openness-shared/NativeCallDiagnostics.cs",
-      "line": 89
     },
     {
       "fingerprint": "433dfd734e53cf842ba96e075be6d9b3fe6509936846ab6b309b4354bf84dcb0",
@@ -609,28 +459,10 @@
       "line": 329
     },
     {
-      "fingerprint": "43f31a4036e3f7ad6e101ea8d284f8cfaa124d83228e2a297af69dc61eab9990",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Engineering.cs",
-      "line": 200
-    },
-    {
-      "fingerprint": "457fbc7291e88a521c362a51f17ffd17e0d428a1447b1435a76e4d83c4e8f4c7",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2139
-    },
-    {
       "fingerprint": "47253e3a1d2e15c192bf529d021d2bf432ba2d1e35be60442c6bfe401cb68393",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/BindingSnapshotContract.cs",
-      "line": 157
-    },
-    {
-      "fingerprint": "4745449250f5da1636521e6d81754bc10c887e57146447b134924b4efedd1851",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 403
+      "line": 102
     },
     {
       "fingerprint": "4867b2e8bfb085245c4c7539a49c0a4e16611aad4203534d0a6a6efa9e7b0812",
@@ -663,12 +495,6 @@
       "line": 298
     },
     {
-      "fingerprint": "4ae2326e06314ccf67038b542d2d842d0babb673d0e2b718d605507b5d771616",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs",
-      "line": 386
-    },
-    {
       "fingerprint": "4c4b33466bc8433355d57ff064ef73f98fd10d238239b9cc4fb42e4a027095d0",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
@@ -681,28 +507,10 @@
       "line": 792
     },
     {
-      "fingerprint": "4ea8f78445ff447aeab85e9944f3bda9d89a18d6925aa4632c4a85ef8bd1c3da",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs",
-      "line": 135
-    },
-    {
       "fingerprint": "4ebbd3913c6826e22ec5fbce6f70eb8a12297c6a329f182e836520284ec4956d",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
       "line": 84
-    },
-    {
-      "fingerprint": "4f66ffc2644ef6547f47ced1b06c6946679fb90b0a205a810074be34e4356949",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 1695
-    },
-    {
-      "fingerprint": "50c101eb31cc0441f8cd2a960782cb77429cbdc80a42558d18c874efc90e30bf",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.HmiTemplates.cs",
-      "line": 1439
     },
     {
       "fingerprint": "523f7f24f217f8a9d78a842b9d28a18d954aad9ea0bd72822fc1a467eb650152",
@@ -741,16 +549,10 @@
       "line": 123
     },
     {
-      "fingerprint": "55c4e4dd6a6fb78a6f60360bee96a7a71e374589276e674f03d785856a80640f",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/IsolatedWorkerHost.cs",
-      "line": 134
-    },
-    {
       "fingerprint": "55e495cdb3e7968a5434c5f1c0240b2a6bf9737bfdac184803281edf7b884a81",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDocumentExportPolicy.cs",
-      "line": 58
+      "line": 41
     },
     {
       "fingerprint": "55f866c0dc6b75176f27dd1a85efb5d43531f06f1c5f6fd2e18ce7d97330587c",
@@ -763,12 +565,6 @@
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessLocator.cs",
       "line": 100
-    },
-    {
-      "fingerprint": "56fe6ce36c7c5d6b9b21ae259ddadc6617fa277c098560198fb6c2c88da8c28a",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderToolJson.cs",
-      "line": 440
     },
     {
       "fingerprint": "573ea2a63293a2d61186d618b0695e3cb76ac6d40663cf686bc44ce3ff09f9c0",
@@ -807,22 +603,10 @@
       "line": 1451
     },
     {
-      "fingerprint": "5a95d1771cc3c6768fe524f971d9f24fc8ad8628d003f0b1614cf9000a7b2cf4",
-      "kind": "discarding",
-      "path": "tools/openness-shared/NativeCallDiagnostics.cs",
-      "line": 102
-    },
-    {
       "fingerprint": "5b0037ba1f8b3db233dc30d52077fd8cc020dc00f1a117d7bd07382f18d726c2",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.HmiOperation.cs",
       "line": 20
-    },
-    {
-      "fingerprint": "5b0f4b15a98bf8c38a6255827a9ac730139a3bf39839fc4b1f39db5650554aae",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 65
     },
     {
       "fingerprint": "5b5b2e63426316accdb980e8cd56940aeccb93fa00c659e761b152bf3dc418d0",
@@ -915,22 +699,10 @@
       "line": 978
     },
     {
-      "fingerprint": "62a03f9521abb4d0ffaa2ee6feef74ac447d122ed0d7d021f5a787585902aa43",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.SerializedCalls.cs",
-      "line": 51
-    },
-    {
       "fingerprint": "62fe7b71e47206138483fd6b027319677dd5dc4c93b13e3f1bd16425a1893b3b",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
       "line": 860
-    },
-    {
-      "fingerprint": "6377144dca859411ae8c19d7dcdf22c215d3595f37314fccdf9f3e57646bef56",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/PortalFailureClassifier.cs",
-      "line": 20
     },
     {
       "fingerprint": "65ea22a14a00a7417d5371ac2e2b897a7843d0c15e84ad691eb2709a2d5cfd6c",
@@ -961,18 +733,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 2592
-    },
-    {
-      "fingerprint": "67165f59b7e8dba74788ae4890c0fdeb5c3fab0f7d9cff15b4452be46a79746a",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/GlobalLibraryPackageAnalyzer.cs",
-      "line": 385
-    },
-    {
-      "fingerprint": "67165f59b7e8dba74788ae4890c0fdeb5c3fab0f7d9cff15b4452be46a79746a",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1592
     },
     {
       "fingerprint": "6826bb730364437f0ed04083d4312c5dde87e6498df6e7649b5fc33804797cd0",
@@ -1017,18 +777,6 @@
       "line": 1434
     },
     {
-      "fingerprint": "6a162fe1e20054fe7696ab2115a763c98b6753f4d1cd705b235cd94b57347e56",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs",
-      "line": 935
-    },
-    {
-      "fingerprint": "6b238ecd2da5eb1577a9e2a78654645f5671f0bf3c7889306f5e6d40c81e7cf4",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineSymbolManifest.cs",
-      "line": 96
-    },
-    {
       "fingerprint": "6dce80d6f3dadf9d3686b4808030b6a50029089e6a303395c496d5965122836b",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
@@ -1039,18 +787,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
       "line": 197
-    },
-    {
-      "fingerprint": "6e389e7ff9eeb31e97de077adc13001dad99532bcc73b800abcfd50b3c3eecfa",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Adapters/Diagnostics/InvocationJournal.cs",
-      "line": 61
-    },
-    {
-      "fingerprint": "6e389e7ff9eeb31e97de077adc13001dad99532bcc73b800abcfd50b3c3eecfa",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/InvocationJournal.cs",
-      "line": 59
     },
     {
       "fingerprint": "6e495f3de2d90e26ebf5850dc0129ea574bb7cca7980ac2ccaa1b1e65c0e9c34",
@@ -1068,7 +804,7 @@
       "fingerprint": "6fb3661f72310eaf54e7bc8923051b3f19e8177c1fd3b7166cbf4dd1af4ddf83",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDocumentExportPolicy.cs",
-      "line": 58
+      "line": 41
     },
     {
       "fingerprint": "710006d7c45b92c5f3971258dae23974c6c5e6cd05c5d1862372c823f4cb8479",
@@ -1081,12 +817,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpHttpResponseRouter.cs",
       "line": 138
-    },
-    {
-      "fingerprint": "7221cd5e990ce5e0b1e77a96c15b151c365722fe6ddc94150fa388efb256518a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs",
-      "line": 42
     },
     {
       "fingerprint": "727516129f88c70f6bb31168e075210782d5f4ca47aff5af0441d9dc9c7e35a6",
@@ -1125,12 +855,6 @@
       "line": 606
     },
     {
-      "fingerprint": "77302621a46e20293d46f46cb307f8f3391ddffe8a67343edbf0c2044d3ba924",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs",
-      "line": 151
-    },
-    {
       "fingerprint": "77992288cad939339228625e243ae8b5ce367f78d3c7fb7d5654b3afebc0a647",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.OpcUa.cs",
@@ -1140,7 +864,7 @@
       "fingerprint": "77a725b68bf5f21af717b5398d107d31e595ccafdcd1195300c9f1f1ce8bf0cb",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcReadContracts.cs",
-      "line": 131
+      "line": 90
     },
     {
       "fingerprint": "793e54989d60b59025972cebe3bf9285f84383d7065baa1ce4ae4d066665f6b6",
@@ -1155,22 +879,10 @@
       "line": 286
     },
     {
-      "fingerprint": "79cb0cbe79e1c29d96b37af5c235e78279cbecba5ed8f9becb8d38b4aa32dd9b",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs",
-      "line": 265
-    },
-    {
       "fingerprint": "7b18cdacd3158e9f44337006a1f30454acb7e7a56a586043bd8ce560060f623f",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 2719
-    },
-    {
-      "fingerprint": "7bbd51b9f0cd4feaa1ab2564ed6bdc1d89d0f19094cd80601f89a1001e1a7440",
-      "kind": "empty",
-      "path": "tools/openness-shared/LocalProcess.cs",
-      "line": 106
     },
     {
       "fingerprint": "7be89a6d96c24664c205f0e1d571818ec861f049df5728d1d0f6d2111d6b0a98",
@@ -1233,52 +945,10 @@
       "line": 1887
     },
     {
-      "fingerprint": "81a5262d520c0476f9c2d6e6a41d24b40cbdc1a8772e0a16d8acffb362346680",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 845
-    },
-    {
-      "fingerprint": "8214c8b0e528155524d11bee8bca80a7ca477274014b14f52d74d2dd5b974c80",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7WebApiChannel.cs",
-      "line": 248
-    },
-    {
-      "fingerprint": "823ca2c7552d732da16613474e9d31b3121b50ff190c4910bfbbc02a3b31699a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 149
-    },
-    {
-      "fingerprint": "823ca2c7552d732da16613474e9d31b3121b50ff190c4910bfbbc02a3b31699a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 223
-    },
-    {
-      "fingerprint": "823ca2c7552d732da16613474e9d31b3121b50ff190c4910bfbbc02a3b31699a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 332
-    },
-    {
-      "fingerprint": "823ca2c7552d732da16613474e9d31b3121b50ff190c4910bfbbc02a3b31699a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 426
-    },
-    {
       "fingerprint": "83703c5eeef95954d37734d7d609bdd9b31e0056f434e23f08abb1b7567c933a",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpBlockingStream.cs",
       "line": 52
-    },
-    {
-      "fingerprint": "8488e5802eb2debad1f668e55ec0f47a8a4387948d7f701aac223544fb3fcc96",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Engineering.cs",
-      "line": 159
     },
     {
       "fingerprint": "84dd92f73abe184a05bfe2d6600000d73b2df01abecd35d1199d5169128733e7",
@@ -1347,22 +1017,10 @@
       "line": 666
     },
     {
-      "fingerprint": "8df61e0ce97bacd54446082f5703093687ce0cdd0463f36024efabbaf72a4c8b",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/HmiTemplateReferenceAnalyzer.cs",
-      "line": 266
-    },
-    {
       "fingerprint": "8e51f78945c009196f30d9bb236e4725bf353aba62afd096a3dadebd5b17a51c",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
       "line": 749
-    },
-    {
-      "fingerprint": "8e61d105101acc35cadd77bc5430df1831bd5e5170187135203ffa8da3e0c361",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/OpennessWorkerSupervisor.cs",
-      "line": 100
     },
     {
       "fingerprint": "922ce606b0e3b5dc80500560ad5a5e19e8342f6f5b48f5b629d18aad2f99418b",
@@ -1377,28 +1035,10 @@
       "line": 1730
     },
     {
-      "fingerprint": "928e12a14bdb8f98d067ee0fee1e36dda2452f5b266b64cb152949bee9b64657",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs",
-      "line": 267
-    },
-    {
       "fingerprint": "93c11360d6bd37d8aaf9c6a88f20553c8034849b416fc8c9e32c5bc06a76bd86",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSupplementaryReadPolicy.cs",
-      "line": 53
-    },
-    {
-      "fingerprint": "948fd18092ea1730b9323b4da89bdc4728864e90485e015eac6b78151880b5c5",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7WebApiChannel.cs",
-      "line": 249
-    },
-    {
-      "fingerprint": "948fd18092ea1730b9323b4da89bdc4728864e90485e015eac6b78151880b5c5",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7WebApiChannel.cs",
-      "line": 394
+      "line": 38
     },
     {
       "fingerprint": "95a7f17395e351e13c78bacd0397e04ff2901556a5984d2500f3a28b23474522",
@@ -1494,7 +1134,7 @@
       "fingerprint": "a2858e4c902532faa5e9ffa8399c7c3a46b90e9f9a10ac9b896ee1821a3feebf",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDocumentExportPolicy.cs",
-      "line": 95
+      "line": 78
     },
     {
       "fingerprint": "a2fc0509c81587489fa9acd9cce1e0036cac036a0bfbd7a3befa3ad71921984f",
@@ -1515,40 +1155,10 @@
       "line": 194
     },
     {
-      "fingerprint": "a44ab89a11a9065158f986dbb20667239425c4efe62e05a1834ff0b4a0644134",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs",
-      "line": 104
-    },
-    {
       "fingerprint": "a5a3e00ac3e84a05345b04f9d04c30825382c442b8a809a1b5248b4abe80bf16",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBatchImportPolicy.cs",
-      "line": 204
-    },
-    {
-      "fingerprint": "a6448c52add1998519f18ff5cda3180aad808852be8e056d62eebe04f232adbe",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 849
-    },
-    {
-      "fingerprint": "a6f70cc155b624ea43a5ff5f60c73262dfbe8f2a889dce8f17ad50fed36339fc",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/RuntimeChannelsLogic.cs",
-      "line": 212
-    },
-    {
-      "fingerprint": "a6f8c1dc3eb9cf4a39ab987ad6425b86035710b20aab1d62c01a40e111af7f44",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/OpennessWorkerSupervisor.cs",
-      "line": 249
-    },
-    {
-      "fingerprint": "a7274142baa81784cde40a44ffa3a7e6f3157b22008e4872bcdab87e6150a91d",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs",
-      "line": 275
+      "line": 165
     },
     {
       "fingerprint": "a7e138c21c7c636d53bd69a5ae0f4d1423ad155bc7cb96fafe35a941fa73e809",
@@ -1569,22 +1179,10 @@
       "line": 170
     },
     {
-      "fingerprint": "a845b42fa954bca199eb79677df97aacd79776e7e9b48f85e077bb4903aed464",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 130
-    },
-    {
       "fingerprint": "a889438292382520757ecfb3fddd97b166822fca52c4ed0736a4634868fcf144",
       "kind": "empty",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessVersionControl.cs",
       "line": 633
-    },
-    {
-      "fingerprint": "a9951ba1ec079038aae7ae8bb5ce89acdefa84d94c4954d3126c7472e6707e3c",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs",
-      "line": 77
     },
     {
       "fingerprint": "aa1cf32d865aee63fe44c26eb59b52d83d8d25a2d0693d9ae507f7bd4959755d",
@@ -1609,18 +1207,6 @@
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessLocator.cs",
       "line": 118
-    },
-    {
-      "fingerprint": "ab8c6882f538a77c0eb0a5ba5bf5bb4c63635d0ca9f1e33e49dde7352687472d",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/OpcUaLiveReader.cs",
-      "line": 131
-    },
-    {
-      "fingerprint": "ac16347b07dfa6773a1bbe50755be1e5ec661285f6ad48fd727b3e4e3704e4a6",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Engineering.cs",
-      "line": 201
     },
     {
       "fingerprint": "ac4ceba1b615ca69bcc993256951dafca276776a0705c2f0b0a72f7672b65489",
@@ -1659,22 +1245,10 @@
       "line": 494
     },
     {
-      "fingerprint": "afddcef4bf6138147b10f6a21ab5130e9c252df0f167e506a0e84796ccc281fd",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.PlcHmiSyncXml.cs",
-      "line": 234
-    },
-    {
       "fingerprint": "b070a336db831eb8fd130ff83977d8c580db8ae6005e0263247e5dad2d4fc392",
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessDoctor.cs",
       "line": 191
-    },
-    {
-      "fingerprint": "b13ba528d7f53f772df35229a5214c798970badfa520d900f79cd4e86c90e049",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
-      "line": 97
     },
     {
       "fingerprint": "b207778bf237262bd286e9cfdde71882fe8d9619e58b78803985e045ac4e5887",
@@ -1689,12 +1263,6 @@
       "line": 297
     },
     {
-      "fingerprint": "b2e912791878b6bc009fed7903e7dbb2f02132008b857d5892d9b01ea5760510",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/PortalFailureClassifier.cs",
-      "line": 41
-    },
-    {
       "fingerprint": "b3c69929c73d8ac37311f3150f35526a72987318912263cf9013ba4f7cee8f5e",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
@@ -1704,7 +1272,7 @@
       "fingerprint": "b5623211bf50215506512cdd4179cef6406ec364b7a314e0bbc91f1f5293d142",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/BindingSnapshotContract.cs",
-      "line": 148
+      "line": 93
     },
     {
       "fingerprint": "b694be138104e1f2490f1c955272036665dbbcc6984e9dc91700ef7dc8c2b41f",
@@ -1752,7 +1320,7 @@
       "fingerprint": "b9a76f992fac5539a136630b684cf426b8d18a7908184dfc86ae43bc44990b76",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/BindingSnapshotContract.cs",
-      "line": 114
+      "line": 59
     },
     {
       "fingerprint": "ba000535706b4acd5760d04a40e5facdbd02ba9514001e35fdb625a3da14d2f8",
@@ -1801,12 +1369,6 @@
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessVersionControl.cs",
       "line": 601
-    },
-    {
-      "fingerprint": "be363059f85dce2ded0fdc509dea3f32de364c3c345a1a035bdbfdd8f102c0f8",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs",
-      "line": 243
     },
     {
       "fingerprint": "befb3ee0209bdcb806d259135d7a994c0f8e1a4e53cf0b8ae7d75910ff7e4f45",
@@ -1923,12 +1485,6 @@
       "line": 67
     },
     {
-      "fingerprint": "c87f2e90a1e3eb2deb00b96dac402babee6d392a730941acd6fdf7dae382bfcb",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/WorkerClient.cs",
-      "line": 80
-    },
-    {
       "fingerprint": "c9316ae7dc62b4c0958ad8360491208777b74aabe28083ca2d543208c349f326",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
@@ -1947,22 +1503,10 @@
       "line": 372
     },
     {
-      "fingerprint": "cd14db119c1abfb457dc0bfe669c6f12d56760edd0842b310aa27017d6643f73",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 306
-    },
-    {
       "fingerprint": "cd4e6f739c53a7797f5e61e2e9c3502f612c94c8302a00f699f80d8811b7f44f",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/WorkerConnection.cs",
       "line": 134
-    },
-    {
-      "fingerprint": "cde582ee061a3623d858352add0ebf1b2534b961baaca058b5be27d581e4e7ec",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/OpcUaLiveReader.cs",
-      "line": 103
     },
     {
       "fingerprint": "ce97f02bf6404ec8f6f5d4803117111ff4c6ede4d1e5514407842ebb5f7e410b",
@@ -2055,12 +1599,6 @@
       "line": 45
     },
     {
-      "fingerprint": "dbe08ea0948294235d813d5756fcff7a28ee87d3aef6dbd7a737b30dd6afd98b",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/WorkerConnection.cs",
-      "line": 160
-    },
-    {
       "fingerprint": "dd1f3dfd429390686cd70a5520b0b82b590a489642e05ce05d1481f93b94c97c",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Blocks.cs",
@@ -2077,12 +1615,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
       "line": 990
-    },
-    {
-      "fingerprint": "def57d593879a29f068542d8422d800ef471d840616a051e4d335e20f1944b99",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 1701
     },
     {
       "fingerprint": "df53d5d13a25b7273b26ae561b700c6557009ba601a72dda134e5e5428171846",
@@ -2151,12 +1683,6 @@
       "line": 387
     },
     {
-      "fingerprint": "e81ecafdb1b7ddb57bafd5874d9509a160357f8784cf378f01ba160e8fd6eaee",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 170
-    },
-    {
       "fingerprint": "e828ef06095c5669773dccac0b485f2784f8aa95d849e24e0e683481dc11d047",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
@@ -2175,12 +1701,6 @@
       "line": 273
     },
     {
-      "fingerprint": "ea3f99819b28d6caa8e8cf5ac531b756b8dacae7184a64a58001789a0478f3e7",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/PlcSimAdvancedChannel.cs",
-      "line": 157
-    },
-    {
       "fingerprint": "ea96bd7254aa1f02aca94270d42d8890f3c29613b000f92cc8213ffeeb6f960f",
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Core/Environment/OpennessLocator.cs",
@@ -2191,12 +1711,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
       "line": 236
-    },
-    {
-      "fingerprint": "eb3dc6b8dfc68509d72450796a9e7e30c49c5487d4465d2bb17ecdf82bf9a499",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/WorkerConnection.cs",
-      "line": 53
     },
     {
       "fingerprint": "ec5c557960d2ccf59cfb9497b8aa0a133e91164bb5be279eb94c9130801e0fc4",
@@ -2232,7 +1746,7 @@
       "fingerprint": "eebd9e7ef28952ecf0e967184d5b84c60d3d69e7918cb3a0eec39b691929afe2",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSpecialExportPolicy.cs",
-      "line": 46
+      "line": 28
     },
     {
       "fingerprint": "efd994332ba52e8a7320ead65dee899999a01ec72978d17e9f3108e8f101c389",
@@ -2253,12 +1767,6 @@
       "line": 38
     },
     {
-      "fingerprint": "f084c1f335296a135a6d7855a9f4de45a4dddd9d7562ef7d93c49df888488ddd",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.CliProbes.cs",
-      "line": 1677
-    },
-    {
       "fingerprint": "f120bc26dc60afb56f57d9a0fe2978aa869d8eb586eb40c45e35529744a3e368",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
@@ -2269,12 +1777,6 @@
       "kind": "empty",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessSession.cs",
       "line": 132
-    },
-    {
-      "fingerprint": "f4666aa3bc643dac2adee3ecfa83fa4c74eeaf0434557bf47e8c52d034c0c1ca",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 850
     },
     {
       "fingerprint": "f4f27282f993cbf9989fa7b2af510a35789b7a091fd03452db25226aff2808b2",
@@ -2301,12 +1803,6 @@
       "line": 439
     },
     {
-      "fingerprint": "f67ea692364169b5e3b17d2241dfe2cc65b346b980e62b13c6679c073f791128",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 839
-    },
-    {
       "fingerprint": "f6f8dd92addfc13cfc8325f1ce4fc5f927d8236f074128aa352443d0d12eaadf",
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/HmiNavigator.cs",
@@ -2317,18 +1813,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
       "line": 421
-    },
-    {
-      "fingerprint": "f740b0fd05642324a20137eeeb87b9b5bff664f58c855b44084119cfd8bc0dae",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 1657
-    },
-    {
-      "fingerprint": "f7cb38c764d14823f8ace2732809c220d5f29c6fb056c98f6afa9cb3eaec8e42",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 858
     },
     {
       "fingerprint": "f82c0a8e9994253ab1b2aca7d1210e8ba13187cfb49b3e14bf235c0c214e6cff",
@@ -2353,18 +1837,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.VersionControl.cs",
       "line": 431
-    },
-    {
-      "fingerprint": "f9abcfba197536ae9bd6a91de016e60b808b30ae3cbd352fd93d0255984814d4",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/S7LiveReader.cs",
-      "line": 346
-    },
-    {
-      "fingerprint": "f9b9a02d4b00124ba56d28674db97abc98ff7f007cf012100477f16e200a0b0c",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Program.cs",
-      "line": 878
     },
     {
       "fingerprint": "f9c3a2aab821d5a9eb68aec605c0416ac7f79f472514f5c7aede7017863607d9",

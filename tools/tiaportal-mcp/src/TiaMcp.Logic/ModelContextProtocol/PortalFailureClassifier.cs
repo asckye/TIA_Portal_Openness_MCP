@@ -17,7 +17,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // A worker can latch recognized channel loss even if an inner tool converts it to a normal error response.
         // No hook is installed in the ordinary host or the offline suite.
         internal static Action<string>? ProcessLostObserved;
-        private static bool Lost(string reason) { try { ProcessLostObserved?.Invoke(reason); } catch { } return true; }
+        private static bool Lost(string reason) { try { ProcessLostObserved?.Invoke(reason); } catch /* swallow(fail-open-guard): an observer failure must not change the recognized process-loss result */ { } return true; }
         /// <summary>
         /// 一律按类型名（含 InnerException 链）判断，不硬引用具体异常类型，原因有两条：
         /// 1) Openness 程序集是运行时按 TIA 版本解析进来的，异常类型随大版本变；
@@ -38,7 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 // 反射调用外面包着 TargetInvocation 层时，真正的类型名有时只出现在消息里。
                 string message;
-                try { message = e.Message; } catch { message = ""; }
+                try { message = e.Message; } catch /* swallow(probe-optional): an unavailable exception message must not prevent classification by type and inner exceptions */ { message = ""; }
                 if (Has(message, "NonRecoverableException"))
                 {
                     return Lost("NonRecoverableException");

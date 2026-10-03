@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (!(JsonNode.Parse(protocol.InputSchema.GetRawText()) is JsonObject schema)) return tool;
                 var example = ToolExamples.Find(name);
                 JsonObject? exampleArgs = null;
-                if (example != null) { try { exampleArgs = JsonNode.Parse(example.ArgumentsJson) as JsonObject; } catch (JsonException) { } }
+                if (example != null) { try { exampleArgs = JsonNode.Parse(example.ArgumentsJson) as JsonObject; } catch (JsonException) /* swallow(parse-fallback): malformed example arguments omit example hints while retaining the tool schema */ { } }
                 var result = SchemaHintsLogic.Augment(schema, SpecsOf(method), exampleArgs);
                 if (!result.Changed) return tool;
                 using var doc = JsonDocument.Parse(schema.ToJsonString(DisciplineJson));
@@ -55,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
                 return new SchemaHintedTool(tool, clone);
             }
-            catch
+            catch /* swallow(fail-open-guard): failure to enrich schema hints must leave the original tool available */
             {
                 return tool;    // a hint that cannot be built must never cost the tool itself
             }
@@ -101,7 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 JsonObject? payload = null;
                 if (body.TrimStart().StartsWith("{"))
                 {
-                    try { payload = JsonNode.Parse(body) as JsonObject; } catch (JsonException) { payload = null; }
+                    try { payload = JsonNode.Parse(body) as JsonObject; } catch (JsonException) /* swallow(parse-fallback): a non-JSON failure body remains plain text for preflight guidance */ { payload = null; }
                 }
                 bool failed = result.IsError == true;
                 JsonObject? meta = null;
@@ -132,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var innerArgs = args["argumentsJson"];
                     if (innerArgs is JsonValue v && v.TryGetValue<string>(out var innerText))
                     {
-                        try { innerArgs = JsonNode.Parse(innerText); } catch (JsonException) { innerArgs = null; }
+                        try { innerArgs = JsonNode.Parse(innerText); } catch (JsonException) /* swallow(parse-fallback): malformed bridge arguments leave an empty argument set for optional preflight guidance */ { innerArgs = null; }
                     }
                     args = innerArgs as JsonObject ?? new JsonObject();
                 }
@@ -157,7 +157,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Content = new List<ContentBlock> { new TextContentBlock { Text = body + "\npreflight: " + summary.ToJsonString(DisciplineJson) } },
                 };
             }
-            catch
+            catch /* swallow(fail-open-guard): failure to append preflight guidance must preserve the original tool answer */
             {
                 return result!;   // guidance must never replace or break the tool's own answer
             }

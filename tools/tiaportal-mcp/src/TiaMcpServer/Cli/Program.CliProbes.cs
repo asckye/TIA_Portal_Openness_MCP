@@ -842,7 +842,7 @@ namespace TiaMcpServer
             void Report(string line)
             {
                 reportLines.Add(line);
-                try { File.WriteAllLines(reportPath, reportLines, Encoding.UTF8); } catch { }
+                try { File.WriteAllLines(reportPath, reportLines, Encoding.UTF8); } catch /* swallow(logging-failure): failure to persist an incremental probe report must not interrupt the probe */ { }
             }
 
             Directory.CreateDirectory(projectDirectory);
@@ -1674,7 +1674,7 @@ namespace TiaMcpServer
                             {
                                 return McpServer.InvokeObject("HmiTag", $"HMI_RT_1:Motor_HMI_Tags:{tagName}", "GetAttribute", new JsonArray(attr)).Value?.ToString() ?? "";
                             }
-                            catch
+                            catch /* swallow(probe-optional): HMI tag attributes vary by API and missing values remain empty in the binding summary */
                             {
                                 return "";
                             }
@@ -1692,13 +1692,13 @@ namespace TiaMcpServer
                         string P(string path)
                         {
                             try { return McpServer.GetObjectProperty("HmiConnection", $"HMI_RT_1:{ensuredConnectionName}", path).Value?.ToString() ?? ""; }
-                            catch { return ""; }
+                            catch /* swallow(probe-optional): unavailable HMI connection properties remain empty in the diagnostic summary */ { return ""; }
                         }
 
                         string A(string attr)
                         {
                             try { return McpServer.InvokeObject("HmiConnection", $"HMI_RT_1:{ensuredConnectionName}", "GetAttribute", new JsonArray(attr)).Value?.ToString() ?? ""; }
-                            catch { return ""; }
+                            catch /* swallow(probe-optional): unavailable HMI connection attributes remain empty in the diagnostic summary */ { return ""; }
                         }
 
                         return $"Name={P("Name")}; CommunicationDriver={P("CommunicationDriver")}; Partner={P("Partner")}; Station={P("Station")}; Node={P("Node")}; DriverAttr={A("CommunicationDriver")}";

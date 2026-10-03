@@ -112,7 +112,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
               }
-              catch { }
+              catch /* swallow(env-probe): an inaccessible registry view must not discard versions found through other installation probes */ { }
             }
 
             return candidates.Count > 0 ? candidates.Max() : (int?)null;
@@ -156,7 +156,7 @@ namespace TiaMcpServer.Siemens
                 {
                     string? found;
                     try { found = FindAssemblyRecursive(dir, dll, excluded); }
-                    catch { continue; }
+                    catch /* swallow(env-probe): an inaccessible SDK search directory does not rule out the remaining assembly locations */ { continue; }
                     if (found != null) return (true, installPath, found, null);
                 }
             }
@@ -197,8 +197,8 @@ namespace TiaMcpServer.Siemens
                     if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath)) return regPath;
                 }
               }
-              catch (System.Security.SecurityException) { }
-              catch (UnauthorizedAccessException) { }
+              catch (System.Security.SecurityException) /* swallow(env-probe): registry security restrictions leave the other installation view available for probing */ { }
+              catch (UnauthorizedAccessException) /* swallow(env-probe): registry access denial leaves the other installation view available for probing */ { }
             }
             return null; // A path explicitly naming another version is not a fallback.
         }

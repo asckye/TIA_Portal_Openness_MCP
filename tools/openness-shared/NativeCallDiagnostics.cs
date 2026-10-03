@@ -67,7 +67,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Active.Value = span;
                 return span;
             }
-            catch { return null; } // Diagnostics must never change the original operation.
+            catch /* swallow(logging-failure): creating a diagnostic span must not prevent the original native call */ { return null; } // Diagnostics must never change the original operation.
         }
         internal static void Returned(object? token, object? result)
         {
@@ -79,14 +79,14 @@ namespace TiaMcpServer.ModelContextProtocol
                     Addresses.GetValue(result, _ => new Address(Limit(span.Path + "/" + Leaf(span.Member))));
                 Write(span, "RETURNED", null);
             }
-            catch { }
+            catch /* swallow(logging-failure): recording the returned object must not replace the native call result */ { }
             finally { Active.Value = span.Parent; }
         }
         internal static void Threw(object? token, Exception error)
         {
             if (!(token is Span span)) return;
             try { Write(span, "THREW", error); _ = PortalFailureClassifier.IsPortalProcessLost(error); }
-            catch { }
+            catch /* swallow(logging-failure): failure diagnostics must not replace the original native exception */ { }
             finally { Active.Value = span.Parent; }
         }
         private static T Call<T>(object receiver, string member, Func<T> action)
@@ -99,11 +99,11 @@ namespace TiaMcpServer.ModelContextProtocol
         // observed native inputs so every GetEnumerator/MoveNext/Current/Dispose is bracketed.
         internal static IEnumerable? Enumerate(IEnumerable? source)
         {
-            try { return source == null || !Known(source) ? source : source is IList list ? new ListSequence(list) : source is ICollection collection ? new CollectionSequence(collection) : new Sequence(source); } catch { return source; }
+            try { return source == null || !Known(source) ? source : source is IList list ? new ListSequence(list) : source is ICollection collection ? new CollectionSequence(collection) : new Sequence(source); } catch /* swallow(fail-open-guard): if diagnostic wrapping fails, pass the original enumerable to its consumer */ { return source; }
         }
         internal static IEnumerable<T>? EnumerateGeneric<T>(IEnumerable<T>? source)
         {
-            try { return source == null || !Known(source) ? source : source is IList<T> list ? new ListSequence<T>(list) : source is ICollection<T> collection ? new CollectionSequence<T>(collection) : new Sequence<T>(source); } catch { return source; }
+            try { return source == null || !Known(source) ? source : source is IList<T> list ? new ListSequence<T>(list) : source is ICollection<T> collection ? new CollectionSequence<T>(collection) : new Sequence<T>(source); } catch /* swallow(fail-open-guard): if diagnostic wrapping fails, pass the original generic enumerable to its consumer */ { return source; }
         }
         // Cast<T> returns an already typed input verbatim without enumerating it.
         // Its next consumer is instrumented separately. Only the lazy fallback

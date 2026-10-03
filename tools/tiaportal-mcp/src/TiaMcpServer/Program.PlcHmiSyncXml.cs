@@ -231,7 +231,7 @@ namespace TiaMcpServer
                 {
                     return McpServer.InvokeObject("HmiTag", $"HMI_RT_1:{tableName}:{tagName}", "GetAttribute", new JsonArray(attr)).Value?.ToString() ?? "";
                 }
-                catch
+                catch /* swallow(probe-optional): unavailable HMI tag attributes remain empty while alternate binding names are checked */
                 {
                     return "";
                 }

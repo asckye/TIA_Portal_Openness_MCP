@@ -148,7 +148,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return true;
             }
-            catch
+            catch /* swallow(fail-open-guard): schema diagnostics must not reject a tool call when the schema cannot be inspected */
             {
                 return false;   // schema 读不动，绝不能因此把调用拦下来
             }

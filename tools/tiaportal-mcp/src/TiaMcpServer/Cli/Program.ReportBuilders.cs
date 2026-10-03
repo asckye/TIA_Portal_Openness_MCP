@@ -1589,7 +1589,7 @@ namespace TiaMcpServer
                 var relative = Uri.UnescapeDataString(baseUri.MakeRelativeUri(fileUri).ToString());
                 return relative.Replace('/', Path.DirectorySeparatorChar);
             }
-            catch
+            catch /* swallow(parse-fallback): retain the original report path when relative URI conversion fails */
             {
                 return fullPath;
             }
@@ -1654,7 +1654,7 @@ namespace TiaMcpServer
                         }
                     }
                 }
-                catch
+                catch /* swallow(probe-optional): binary runtime string scanning skips unreadable samples and retains other hints */
                 {
                     // Binary runtime files are best-effort only.
                 }
@@ -2136,7 +2136,7 @@ namespace TiaMcpServer
                         symbols.Add(value);
                     }
                 }
-                catch
+                catch /* swallow(parse-fallback): optional symbol analysis skips unreadable exports; export failures are reported separately */
                 {
                     // Exported XML analysis is best-effort; export failures are reported separately.
                 }

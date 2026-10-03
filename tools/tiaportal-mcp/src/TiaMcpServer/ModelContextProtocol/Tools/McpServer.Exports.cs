@@ -317,7 +317,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (forwarded != null) target = ("→" + forwarded + " " + target).Trim();
                 return Shrink(result, forwarded ?? name, target);
             }
-            catch
+            catch /* swallow(fail-open-guard): failure to store or shrink a large response must preserve the original tool result */
             {
                 // 瘦身失败绝不能吃掉本来正常的结果。
                 return result;
@@ -368,7 +368,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 unwrapped = true;
                 return s ?? "";
             }
-            catch
+            catch /* swallow(parse-fallback): content that cannot be parsed as a response envelope is returned unchanged */
             {
                 return content;   // 解不出来就当它不是信封
             }

@@ -281,7 +281,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                     }
                 }
-                catch
+                catch /* swallow(probe-optional): 全局库字符串扫描仅提供线索，单个文件不可读时继续其余样本 */
                 {
                     // 全局库大多是二进制，字符串提示只做尽力扫描。
                 }
@@ -382,7 +382,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var relative = Uri.UnescapeDataString(baseUri.MakeRelativeUri(fileUri).ToString());
                 return relative.Replace('/', Path.DirectorySeparatorChar);
             }
-            catch
+            catch /* swallow(parse-fallback): 路径无法转换为相对 URI 时保留原路径供报告定位 */
             {
                 return fullPath;
             }

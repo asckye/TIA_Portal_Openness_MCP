@@ -245,8 +245,8 @@ namespace TiaMcpServer.Runtime
             lock (Gate) { all = Sessions.Values.ToList(); Sessions.Clear(); }
             foreach (var s in all)
             {
-                try { s.Handler.ApiLogoutAsync().Wait(2000); } catch { }
-                try { s.Http.Dispose(); } catch { }
+                try { s.Handler.ApiLogoutAsync().Wait(2000); } catch /* swallow(teardown): logout failure must not prevent disposal of the cached HTTP client and remaining sessions */ { }
+                try { s.Http.Dispose(); } catch /* swallow(teardown): one HTTP client disposal failure must not prevent closing the remaining sessions */ { }
             }
         }
 
@@ -391,7 +391,7 @@ namespace TiaMcpServer.Runtime
             {
                 if (Sessions.TryGetValue(key, out var cur) && ReferenceEquals(cur, s)) Sessions.Remove(key);
             }
-            try { s.Http.Dispose(); } catch { }
+            try { s.Http.Dispose(); } catch /* swallow(teardown): disposing a stale HTTP client must not replace the request failure or retry outcome */ { }
         }
     }
 }

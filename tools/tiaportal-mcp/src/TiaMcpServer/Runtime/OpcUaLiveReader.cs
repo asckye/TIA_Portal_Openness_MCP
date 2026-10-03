@@ -100,7 +100,7 @@ namespace TiaMcpServer.Runtime
         {
             List<ClientSessionChannel> chs;
             lock (Gate) { chs = Channels.Values.ToList(); Channels.Clear(); }
-            foreach (var ch in chs) { try { ch.CloseAsync().Wait(2000); } catch { } }
+            foreach (var ch in chs) { try { ch.CloseAsync().Wait(2000); } catch /* swallow(teardown): one cached OPC UA channel failing to close must not prevent closing the others */ { } }
         }
 
         private static async Task ReadReuseAsync(string endpointUrl, List<string> nodeIds, OpcUaReadResult result, int budget)
@@ -128,7 +128,7 @@ namespace TiaMcpServer.Runtime
                         result.ReusedSession = reused;
                         return;
                     }
-                    catch when (attempt == 0)
+                    catch when (attempt == 0) /* swallow(native-fallback): a failed OPC UA read drops the cached channel and retries once with a fresh session */
                     {
                         Forget(endpointUrl, channel);
                         result.Items.Clear();
@@ -169,7 +169,7 @@ namespace TiaMcpServer.Runtime
                 if (Channels.TryGetValue(endpointUrl, out var cur) && ReferenceEquals(cur, ch))
                     Channels.Remove(endpointUrl);
             }
-            try { ch.AbortAsync().Wait(1000); } catch { }
+            try { ch.AbortAsync().Wait(1000); } catch /* swallow(teardown): aborting a stale OPC UA channel must not prevent the fresh-session read attempt */ { }
         }
 
         private static async Task DoReadAsync(ClientSessionChannel channel, List<string> nodeIds, OpcUaReadResult result)

@@ -50,7 +50,7 @@ namespace TiaMcpServer.Isolation
             _ = Task.Factory.StartNew(() =>
             {
                 try { var buffer = new char[2048]; while (process.StandardError.Read(buffer, 0, buffer.Length) > 0) { } }
-                catch (Exception) { /* Output is intentionally not retained: it can contain tool input. */ }
+                catch (Exception) /* swallow(privacy): worker stderr is drained without retention because it can contain tool input */ { /* Output is intentionally not retained: it can contain tool input. */ }
             }, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
@@ -157,7 +157,7 @@ namespace TiaMcpServer.Isolation
                 pending?.TrySetException(new ObjectDisposedException(nameof(WorkerConnection)));
                 pending = null; notification = null;
             }
-            try { if (!process.HasExited) process.Kill(); } catch (InvalidOperationException) { } catch (System.ComponentModel.Win32Exception) { }
+            try { if (!process.HasExited) process.Kill(); } catch (InvalidOperationException) /* swallow(teardown): the owned worker may exit before disposal reaches the kill request */ { } catch (System.ComponentModel.Win32Exception) /* swallow(teardown): failure to kill the owned worker must not replace the already terminated request outcome */ { }
             // Do not wait for TIA or dispose a writer while another thread is blocked in a large write.
             // Killing this owned process closes its pipe ends and releases both reader tasks.
             _ = ReaderCompletion.ContinueWith(_ => process.Dispose(), TaskScheduler.Default);

@@ -74,7 +74,7 @@ namespace TiaMcpServer.Cli
         public static string OwnExePath()
         {
             try { return System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName; }
-            catch { return System.Reflection.Assembly.GetExecutingAssembly().Location; }
+            catch /* swallow(env-probe): when the process module path is unavailable, use the executing assembly location */ { return System.Reflection.Assembly.GetExecutingAssembly().Location; }
         }
 
         /// <summary>
@@ -187,7 +187,7 @@ namespace TiaMcpServer.Cli
                 if (servers[ServerKey] is not JsonObject entry) return null;
                 return entry["command"]?.GetValue<string>();
             }
-            catch { return null; }
+            catch /* swallow(parse-fallback): unreadable host configuration has no discoverable registered command */ { return null; }
         }
 
         /// <summary>The TOML section Codex needs; standalone so `config --print` can show it too.</summary>
@@ -264,7 +264,7 @@ namespace TiaMcpServer.Cli
             }
             finally
             {
-                try { if (File.Exists(tmp)) File.Delete(tmp); } catch { }
+                try { if (File.Exists(tmp)) File.Delete(tmp); } catch /* swallow(cleanup): removing the temporary config file must not replace the atomic write outcome */ { }
             }
         }
     }

@@ -262,7 +262,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 };
 
                 try { env.OpennessGroupOk = Siemens.Openness.IsUserInGroupNoFix(); }
-                catch { env.OpennessGroupOk = false; }
+                catch /* swallow(env-probe): if group membership cannot be checked, Bootstrap does not claim Openness access is ready */ { env.OpennessGroupOk = false; }
 
                 var portalDto = new BootstrapPortal();
                 try
@@ -272,7 +272,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     portalDto.ProjectName = st?.Project;
                     portalDto.SessionName = st?.Session;
                 }
-                catch { portalDto.Connected = false; }
+                catch /* swallow(probe-optional): Bootstrap remains available with a disconnected indication when the current Portal state cannot be read */ { portalDto.Connected = false; }
                 portalDto.LastConnectError = Portal.LastConnectError;
 
                 string nextTool;
@@ -906,7 +906,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return Siemens.Guard.DidYouMean(candidates);
             }
-            catch
+            catch /* swallow(enumerate-optional): failure to enumerate block suggestions must preserve the original not-found error */
             {
                 return string.Empty;
             }
@@ -932,7 +932,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
                 return Siemens.Guard.DidYouMean(candidates);
             }
-            catch
+            catch /* swallow(enumerate-optional): failure to enumerate type suggestions must preserve the original not-found error */
             {
                 return string.Empty;
             }

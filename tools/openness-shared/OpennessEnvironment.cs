@@ -29,7 +29,7 @@ namespace TiaOpenness.Shared
                 using (var key = OpenLocalMachineKey(RegistryView.Registry64, @"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
                     return key == null ? 0 : (int)(key.GetValue("Release") ?? 0);
             }
-            catch { return 0; }
+            catch /* swallow(env-probe): an unreadable framework registry release is reported as unknown (zero) */ { return 0; }
         }
 
         public static int? PathVersion(string path)

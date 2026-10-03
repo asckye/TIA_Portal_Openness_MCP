@@ -70,7 +70,7 @@ namespace TiaMcpServer.Isolation
                     using var parent = Process.GetProcessById(options.WorkerParentPid);
                     if (!parent.HasExited && parent.StartTime.ToUniversalTime().Ticks == options.WorkerParentStart) return;
                 }
-                catch { }
+                catch /* swallow(env-probe): failure to verify the owning process falls through to terminating this worker */ { }
                 // End this client only. Do not Close/Save/Dispose a TIA project after an unknown interruption.
                 Environment.Exit(74);
             }
@@ -131,7 +131,7 @@ namespace TiaMcpServer.Isolation
                             _ = request.Server.SendNotificationAsync("notifications/progress", frame["params"], cancellationToken: cancellationToken)
                                 .ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
                         }
-                        catch { }
+                        catch /* swallow(fail-open-guard): optional progress delivery must not interrupt the worker response reader */ { }
                     };
                     var envelope = await supervisor.CallAsync(parameters, progress, cancellationToken).ConfigureAwait(false);
                     if (envelope["error"] != null) return Error("Worker rejected the request: " + envelope["error"]!.ToJsonString(), false, supervisor);

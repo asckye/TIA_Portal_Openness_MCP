@@ -62,7 +62,7 @@ namespace TiaMcpServer.Runtime
                 if (Interfaces.TryGetValue(name, out var cached))
                 {
                     try { _ = OperatingState(cached.Instance); cached.Uses++; return cached.Instance; }
-                    catch (Exception) { Forget(name); }
+                    catch (Exception) /* swallow(native-fallback): a cached PLCSIM interface that no longer answers is released and opened again */ { Forget(name); }
                 }
                 var created = OpenInterface(api, name);
                 Interfaces[name] = new CachedInterface { Instance = created, Opened = DateTime.Now, Uses = 1 };
@@ -127,7 +127,7 @@ namespace TiaMcpServer.Runtime
                 var root = System.IO.Path.Combine(pf, "Common Files", "Siemens", "PLCSIMADV", "API");
                 IEnumerable<string> folders;
                 try { folders = Directory.Exists(root) ? Directory.GetDirectories(root) : Array.Empty<string>(); }
-                catch (Exception) { folders = Array.Empty<string>(); }
+                catch (Exception) /* swallow(env-probe): unreadable installed API subdirectories leave explicit and environment paths available */ { folders = Array.Empty<string>(); }
                 roots.Add(new KeyValuePair<string, IEnumerable<string>>(root, folders));
             }
             return PlcSimAdvancedLogic.CandidateApiPaths(explicitPath, Environment.GetEnvironmentVariable(PlcSimAdvancedLogic.ApiEnvironmentVariable), roots);
@@ -154,7 +154,7 @@ namespace TiaMcpServer.Runtime
                 else
                 {
                     try { asm = Assembly.Load("Siemens.Simatic.Simulation.Runtime.Api.x64"); source = "GAC"; hit = asm.Location; }
-                    catch (Exception) { source = ""; }
+                    catch (Exception) /* swallow(env-probe): a failed GAC probe falls through to the explicit API-not-found diagnostic */ { source = ""; }
                 }
                 if (asm == null)
                     throw new InvalidOperationException("PLCSIM Advanced API (" + PlcSimAdvancedLogic.ApiFileName + ") not found. Install S7-PLCSIM Advanced on this machine, or set apiPath / " + PlcSimAdvancedLogic.ApiEnvironmentVariable + ". Probed: " + string.Join("; ", probed));
@@ -167,7 +167,7 @@ namespace TiaMcpServer.Runtime
                     PrimitiveDataType = asm.GetType("Siemens.Simatic.Simulation.Runtime.EPrimitiveDataType", false) ?? throw new InvalidOperationException("EPrimitiveDataType missing in PLCSIM Advanced API.")
                 };
                 try { api.Version = Convert.ToString(GetMember(manager, null, "Version")) ?? asm.GetName().Version?.ToString() ?? ""; }
-                catch (Exception) { api.Version = asm.GetName().Version?.ToString() ?? ""; }
+                catch (Exception) /* swallow(probe-optional): an unavailable runtime Version member falls back to the assembly version */ { api.Version = asm.GetName().Version?.ToString() ?? ""; }
                 _api = api;
                 return api;
             }
@@ -270,7 +270,7 @@ namespace TiaMcpServer.Runtime
                     else if (v is int i) o[Camel(prop)] = i;
                     else o[Camel(prop)] = Convert.ToString(v);
                 }
-                catch (Exception) { /* optional members differ between API versions */ }
+                catch (Exception) /* swallow(probe-optional): optional PLCSIM instance properties differ between API versions */ { /* optional members differ between API versions */ }
             }
             return o;
         }
@@ -303,7 +303,7 @@ namespace TiaMcpServer.Runtime
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.ECommunicationInterface", false) ?? throw NotSupported("ECommunicationInterface");
             object? value = null;
             try { value = Enum.Parse(enumType, communicationInterface.Trim(), true); }
-            catch (ArgumentException) { /* not an ECommunicationInterface name - may still be an ENetworkMode name below */ }
+            catch (ArgumentException) /* swallow(parse-fallback): a name absent from ECommunicationInterface may still identify an ENetworkMode below */ { /* not an ECommunicationInterface name - may still be an ENetworkMode name below */ }
             if (value != null && (WritableProperty(instance, "CommunicationInterface") != null || FindSetter(instance, "CommunicationInterface", enumType) != null))
             {
                 SetThroughPropertyOrMethod(instance, "CommunicationInterface", value, enumType);
@@ -428,7 +428,7 @@ namespace TiaMcpServer.Runtime
         public static void Dispose(object? instance)
         {
             if (instance == null) return;
-            try { (instance as IDisposable)?.Dispose(); } catch (Exception) { /* interface release is best effort */ }
+            try { (instance as IDisposable)?.Dispose(); } catch (Exception) /* swallow(teardown): releasing a PLCSIM interface must not replace the operation outcome */ { /* interface release is best effort */ }
         }
 
         // ------------------------------------------------------------------ tags

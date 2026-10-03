@@ -437,7 +437,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // StructuredText inner XML 是供 Block Composer 嵌入的片段，允许多个同级节点。
                     XDocument.Parse("<Fragment>" + xml + "</Fragment>");
                 }
-                catch
+                catch /* swallow(parse-fallback): 片段包装仍无法解析时报告最初的 XML 解析错误 */
                 {
                     parseOk = false;
                     error = ex.Message;

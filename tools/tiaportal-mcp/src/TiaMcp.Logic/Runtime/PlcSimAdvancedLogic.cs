@@ -240,7 +240,7 @@ namespace TiaMcpServer.Runtime
                     if (decimal.TryParse(expected.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var em))
                     {
                         try { return Math.Abs(Convert.ToDecimal(actual, CultureInfo.InvariantCulture) - em) <= (decimal)Math.Max(tolerance, 0); }
-                        catch (OverflowException) { return actual.ToString() == expected.ToString(); }
+                        catch (OverflowException) /* swallow(parse-fallback): decimal overflow falls back to comparing the original value text */ { return actual.ToString() == expected.ToString(); }
                     }
                     return string.Equals(actual.ToString(), expected.ToString(), StringComparison.Ordinal);
             }

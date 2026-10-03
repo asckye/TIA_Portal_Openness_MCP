@@ -93,7 +93,7 @@ internal static class OfflineSymbolManifest
                 }
                 catch (OperationCanceledException) { throw; }
                 catch (ManifestInputException ex) { source["error"] = ex.Code; errors.Add(new JsonObject { ["file"] = file.Relative, ["code"] = ex.Code }); }
-                catch (XmlException) { source["error"] = "invalid-or-prohibited-xml"; errors.Add(new JsonObject { ["file"] = file.Relative, ["code"] = "invalid-or-prohibited-xml" }); }
+                catch (XmlException) /* swallow(parse-fallback): malformed or prohibited XML is reported per file using the stable manifest error code */ { source["error"] = "invalid-or-prohibited-xml"; errors.Add(new JsonObject { ["file"] = file.Relative, ["code"] = "invalid-or-prohibited-xml" }); }
                 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
                 { source["error"] = "file-read-failed"; errors.Add(new JsonObject { ["file"] = file.Relative, ["code"] = "file-read-failed" }); }
                 if (total > MaxTotalBytes) break;

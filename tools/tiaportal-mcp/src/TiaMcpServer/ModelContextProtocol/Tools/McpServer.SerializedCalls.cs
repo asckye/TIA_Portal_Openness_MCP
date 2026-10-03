@@ -48,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var meta = System.Text.Json.Nodes.JsonNode.Parse(System.Text.Json.JsonSerializer.Serialize(request.Params?.Meta, global::ModelContextProtocol.McpJsonUtilities.DefaultOptions));
                     correlation = meta?["tiaMcpWorkerCorrelation"]?.GetValue<string>();
                 }
-                catch { /* Malformed optional metadata must not leak the serialization gate. */ }
+                catch /* swallow(parse-fallback): malformed optional correlation metadata uses a new journal id without leaking the call gate */ { /* Malformed optional metadata must not leak the serialization gate. */ }
             }
             string id = InvocationJournal.Begin(ProtocolTool.Name, correlation);
             try

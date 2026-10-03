@@ -209,7 +209,7 @@ namespace TiaMcpServer.Runtime
                 default:
                     if (serializeComplex != null)
                     {
-                        try { return JsonNode.Parse(serializeComplex(value)); } catch { /* fall through */ }
+                        try { return JsonNode.Parse(serializeComplex(value)); } catch /* swallow(parse-fallback): a complex value that cannot be serialized as JSON is represented by its text */ { /* fall through */ }
                     }
                     return JsonValue.Create(value.ToString());
             }

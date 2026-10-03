@@ -163,8 +163,8 @@ namespace TiaMcpServer
                 foreach (var waiter in _pending.Values) waiter.TrySetException(error);
                 _pending.Clear();
                 try { _writer.Dispose(); }
-                catch (IOException) { }
-                catch (InvalidOperationException) { }
+                catch (IOException) /* swallow(teardown): a failed pipe flush must not replace the terminal error already delivered to pending calls */ { }
+                catch (InvalidOperationException) /* swallow(teardown): the request writer may already be closed while pending calls are being failed */ { }
                 _requests.CompleteWriting();
             }
             _ended.Cancel(); // Also release callers still waiting for the dispatch gate.

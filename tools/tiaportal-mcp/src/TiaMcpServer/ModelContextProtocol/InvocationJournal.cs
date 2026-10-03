@@ -56,7 +56,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) { writer.WriteLine(row); writer.Flush(); stream.Flush(true); }
                 }
             }
-            catch (Exception ex) { lock (Sync) { failedWrites++; lastWriteFailure = ex.GetType().Name; } try { Console.Error.WriteLine("Invocation journal unavailable: " + ex.GetType().Name); } catch { } }
+            catch (Exception ex) { lock (Sync) { failedWrites++; lastWriteFailure = ex.GetType().Name; } try { Console.Error.WriteLine("Invocation journal unavailable: " + ex.GetType().Name); } catch /* swallow(logging-failure): stderr may be unavailable while reporting a journal write failure */ { } }
         }
     }
 }

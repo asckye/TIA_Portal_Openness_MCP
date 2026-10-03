@@ -103,7 +103,7 @@ namespace TiaOpenness.Shared
                     // host that reads Console.In concurrently must install a BOM-free InputEncoding at
                     // startup (the engine's Program.cs does), which makes this switch a no-op there.
                     try { Console.InputEncoding = new UTF8Encoding(false); changed = true; }
-                    catch (Exception) { /* A host without a console must still attempt process startup. */ }
+                    catch (Exception) /* swallow(env-probe): a host without a console must still attempt child process startup */ { /* A host without a console must still attempt process startup. */ }
                     return process.Start();
                 }
                 finally
@@ -111,7 +111,7 @@ namespace TiaOpenness.Shared
                     if (changed)
                     {
                         try { Console.InputEncoding = previous; }
-                        catch (Exception) { /* The console may have disappeared; preserve the process startup outcome. */ }
+                        catch (Exception) /* swallow(teardown): the console may disappear before its encoding is restored; preserve the startup outcome */ { /* The console may have disappeared; preserve the process startup outcome. */ }
                     }
                 }
             }

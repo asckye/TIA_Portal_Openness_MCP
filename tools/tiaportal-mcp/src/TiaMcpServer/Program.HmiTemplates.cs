@@ -1436,7 +1436,7 @@ END_DATA_BLOCK
                 var json = JsonNode.Parse(File.ReadAllText(path, Encoding.UTF8)) as JsonObject;
                 return json?["TemplateName"]?.ToString() ?? Path.GetFileNameWithoutExtension(path);
             }
-            catch
+            catch /* swallow(parse-fallback): template discovery uses the file name when embedded template metadata cannot be read */
             {
                 return Path.GetFileNameWithoutExtension(path);
             }

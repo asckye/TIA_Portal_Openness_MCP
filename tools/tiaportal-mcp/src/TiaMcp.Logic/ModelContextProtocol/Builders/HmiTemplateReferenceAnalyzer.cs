@@ -263,7 +263,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             }
                         }
                     }
-                    catch
+                    catch /* swallow(probe-optional): RDF 扫描仅提供离线参考线索，单个样本不可读时继续扫描 */
                     {
                         // RDF内容可能是二进制或局部编码，离线学习只记录可读线索。
                     }

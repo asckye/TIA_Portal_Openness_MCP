@@ -383,7 +383,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // 2.7.46: an array parameter (InvokeObject / InvokeService args: JsonElement[]) given as a JSON-encoded string.
                     if (p.ParameterType.IsArray && value is JsonValue encodedArray && encodedArray.TryGetValue<string>(out var encodedText) && encodedText.TrimStart().StartsWith("["))
                     {
-                        try { value = JsonNode.Parse(encodedText); } catch (JsonException) { }
+                        try { value = JsonNode.Parse(encodedText); } catch (JsonException) /* swallow(parse-fallback): an invalid encoded array stays unchanged for normal argument validation */ { }
                     }
                     // 2.7.47: lenient coercion - the recurring "format errors" of AI callers. A *Json / string parameter given as the
                     // object or array itself becomes its JSON text; numbers and booleans given as strings (or 0/1) are parsed; a

@@ -97,7 +97,7 @@ namespace TiaMcpServer.Isolation
                 effectiveName = effectiveArguments?["name"]?.GetValue<string>()?.Trim() ?? "";
                 var inner = effectiveArguments?["argumentsJson"];
                 try { effectiveArguments = inner is JsonObject obj ? obj : inner == null ? null : JsonNode.Parse(inner.GetValue<string>()) as JsonObject; }
-                catch { effectiveArguments = null; }
+                catch /* swallow(parse-fallback): malformed bridge arguments provide no project-binding evidence and remain for tool validation */ { effectiveArguments = null; }
             }
             bool binding = string.Equals(effectiveName, "ConnectToProject", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "ConnectIsolated", StringComparison.OrdinalIgnoreCase) ||
                 ((string.Equals(effectiveName, "Connect", StringComparison.OrdinalIgnoreCase) || string.Equals(effectiveName, "AttachToOpenProject", StringComparison.OrdinalIgnoreCase)) &&
@@ -246,7 +246,7 @@ namespace TiaMcpServer.Isolation
                 return bridge ? meta?["bridgeSuccess"]?.GetValue<bool>() == true && meta?["operationSuccess"]?.GetValue<bool>() == true
                     : meta?["success"]?.GetValue<bool>() == true;
             }
-            catch { return false; }
+            catch /* swallow(parse-fallback): an unreadable binding response cannot establish successful project binding */ { return false; }
         }
         public void Dispose()
         {
