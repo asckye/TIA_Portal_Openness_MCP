@@ -45,15 +45,15 @@ public class GlassInteractionTests(WpfContext wpf)
                 host.Measure(new Size(1200,780));host.Arrange(new Rect(0,0,1200,780));host.UpdateLayout();
                 var preview=Find<Button>(host).Single(b=>Equals(b.Content,"Preview sync"));
                 var run=Find<Button>(host).Single(b=>Equals(b.Content,"Run sync"));
-                Assert.Same(model.VcPush,preview.Command);
+                Assert.Same(model.VersionControl.VcPush,preview.Command);
                 var direction=(RadioButton)window.FindName("ToWorkspace");
                 direction.IsChecked=false;host.UpdateLayout();
-                Assert.Same(model.VcPull,preview.Command);
-                Assert.Same(model.VcPull,run.Command);
+                Assert.Same(model.VersionControl.VcPull,preview.Command);
+                Assert.Same(model.VersionControl.VcPull,run.Command);
                 bool? observed=null;
-                preview.Command=new ProbeCommand(()=>observed=model.VcDryRun);
-                model.VcDryRun=false;Click(preview);Assert.True(observed);
-                run.Command=new ProbeCommand(()=>observed=model.VcDryRun);
+                preview.Command=new ProbeCommand(()=>observed=model.VersionControl.VcDryRun);
+                model.VersionControl.VcDryRun=false;Click(preview);Assert.True(observed);
+                run.Command=new ProbeCommand(()=>observed=model.VersionControl.VcDryRun);
                 Click(run);Assert.False(observed);
             }
             finally {window.Close();}

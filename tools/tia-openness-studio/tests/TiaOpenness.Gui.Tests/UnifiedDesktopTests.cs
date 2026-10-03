@@ -16,6 +16,18 @@ namespace TiaOpenness.Gui.Tests;
 public sealed class UnifiedDesktopTests(WpfContext wpf)
 {
     [Theory]
+    [InlineData(AppLanguage.Chinese, AppTheme.Light, false)]
+    [InlineData(AppLanguage.Chinese, AppTheme.Dark, false)]
+    [InlineData(AppLanguage.English, AppTheme.Light, false)]
+    [InlineData(AppLanguage.English, AppTheme.Dark, false)]
+    [InlineData(AppLanguage.Chinese, AppTheme.Light, true)]
+    [InlineData(AppLanguage.Chinese, AppTheme.Dark, true)]
+    [InlineData(AppLanguage.English, AppTheme.Light, true)]
+    [InlineData(AppLanguage.English, AppTheme.Dark, true)]
+    public void Engineering_renders_blocks_and_vci(AppLanguage language, AppTheme theme, bool vci)
+        => new GlassViewTests(wpf).RenderEngineeringFixture(theme, vci, language);
+
+    [Theory]
     [InlineData(AppLanguage.Chinese, AppTheme.Light)]
     [InlineData(AppLanguage.Chinese, AppTheme.Dark)]
     [InlineData(AppLanguage.English, AppTheme.Light)]
@@ -163,6 +175,8 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                     Assert.Equal(Loc.Current["Config.Write"], ((Button)page.FindName("SaveClient")).Content);
                     Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("ClientSelection"));
                     Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("LinkClient"));
+                    Assert.Equal("First" + Loc.Current["Config.ListSeparator"] + "Second",
+                        ((TextBlock)page.FindName("LinkClient")).ToolTip);
                     Assert.Equal(Loc.Current.T("Config.Entries", entries), Text("LogCount"));
                     Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestNotRun"]), Text("LastTest"));
                     Assert.Equal(detected ? "● " + Loc.Current["Config.Detected"] : Loc.Current["Config.NotDetected"], Text("DetectionSource"));
@@ -200,12 +214,19 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 typeof(ConfigurationView).GetField("lastTestFailed", flags)!.SetValue(page, true);
                 typeof(ConfigurationView).GetField("tiaDetected", flags)!.SetValue(page, true);
                 Assert.Equal(status, ((TextBlock)page.FindName("Status")).Text);
+                typeof(ConfigurationView).GetMethod("SetLocalizedText", flags)!.Invoke(page, new object[]
+                {
+                    "UpdateStateItem", MenuItem.HeaderProperty, "Config.UpdateAvailable",
+                    new object[] { "9.0", LocalizedText.Key("Config.UpdateSize", "15.4 MB") },
+                });
 
                 Loc.Current.Language = language == AppLanguage.Chinese ? AppLanguage.English : AppLanguage.Chinese;
                 window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
                 Assert.Equal(Loc.Current.T("Config.ClientsConfigured", 3), ((TextBlock)page.FindName("Status")).Text);
                 Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]), ((TextBlock)page.FindName("LastTest")).Text);
                 Assert.Equal("● " + Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
+                Assert.Equal(Loc.Current.T("Config.UpdateAvailable", "9.0", Loc.Current.T("Config.UpdateSize", "15.4 MB")),
+                    ((MenuItem)page.FindName("UpdateStateItem")).Header);
                 var installed = (MenuItem)page.FindName("UpdateInstalledItem");
                 string root = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
                 string? version = UpdateCheck.Installed(root);
@@ -218,6 +239,21 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 Assert.Equal(history, log.Text);
             }
             finally { window.Close(); }
+        });
+    }
+
+    [Theory]
+    [InlineData(AppLanguage.English, ", ", "Client: failure", "(15.4 MB)", "; ")]
+    [InlineData(AppLanguage.Chinese, "、", "Client：failure", "（15.4 MB）", "；")]
+    public void Configuration_punctuation_comes_from_the_active_catalogue(
+        AppLanguage language, string list, string error, string size, string reasons)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            Assert.Equal(list, Loc.Current["Config.ListSeparator"]);
+            Assert.Equal(error, Loc.Current.T("Config.ClientSaveError", "Client", "failure"));
+            Assert.Equal(size, Loc.Current.T("Config.UpdateSize", "15.4 MB"));
+            Assert.Equal(reasons, Loc.Current["Config.ReasonSeparator"]);
         });
     }
 
@@ -260,10 +296,10 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 setBusy.Invoke(page, new object[] { false });
                 Assert.True(model.CanSelectRelease);
 
-                typeof(MainViewModel).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model, true);
+                typeof(TiaOpenness.Gui.Services.WorkbenchActivity).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model.Activity, true);
                 window.Close();
                 Assert.False(closed);
-                typeof(MainViewModel).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model, false);
+                typeof(TiaOpenness.Gui.Services.WorkbenchActivity).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model.Activity, false);
                 page.GetType().GetMethod("Append", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!.Invoke(page, new object[] { "operation completed after cancelled close" });
                 Assert.Contains("operation completed after cancelled close", ((TextBox)page.FindName("Log")).Text);
                 window.Close();
@@ -274,7 +310,7 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 if (!closed)
                 {
                     setBusy.Invoke(page, new object[] { false });
-                    typeof(MainViewModel).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model, false);
+                    typeof(TiaOpenness.Gui.Services.WorkbenchActivity).GetProperty(nameof(MainViewModel.Busy))!.SetValue(model.Activity, false);
                     window.Close();
                 }
             }

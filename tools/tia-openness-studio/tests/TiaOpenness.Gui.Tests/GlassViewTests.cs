@@ -18,10 +18,10 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public class GlassViewTests(WpfContext wpf)
 {
-    private static void Set(MainViewModel model, string name, object value) =>
-        typeof(MainViewModel).GetProperty(name)!.SetValue(model, value);
-    private static void Field(MainViewModel model, string name, object value) =>
-        typeof(MainViewModel).GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(model, value);
+    private static void Set(object model, string name, object value) =>
+        model.GetType().GetProperty(name)!.SetValue(model, value);
+    private static void Field(object model, string name, object value) =>
+        model.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(model, value);
     private const string CompileLog = "09:50:02  Connected to native Openness\n09:50:03  Project bound · Conveyor_Line_04\n"
         + "09:52:48  Warning: Safety_Door_FB - Block not consistent — recompile required\n"
         + "09:52:48  Warning: Scale_Analog_FC - Unused temp variable #tmpRaw\n"
@@ -39,7 +39,7 @@ public class GlassViewTests(WpfContext wpf)
             using var model = new MainViewModel();
             using var results = new GlassResults(model);
             Assert.Equal("—", results.Errors);
-            Set(model, "Log", CompileLog);
+            Set(model.Activity, "Log", CompileLog);
             Assert.Equal("0", results.Errors);
             Assert.Equal("3", results.Warnings);
             Assert.Equal(3, results.Diagnostics.Count);
@@ -47,22 +47,14 @@ public class GlassViewTests(WpfContext wpf)
             Assert.Equal(4, results.Rules.Count);
             Assert.Contains("Naming · 3", results.Rules);
             Assert.Contains("Know-how · 0", results.Rules);
-            model.ClearLog();
+            model.Activity.ClearLog();
             Assert.Equal("—", results.Errors);
             Assert.Empty(results.Diagnostics);
             Assert.Equal("Not run", results.InspectionSummary);
         });
     }
 
-    [Theory]
-    [InlineData(AppTheme.Light, false, AppLanguage.English)]
-    [InlineData(AppTheme.Light, false, AppLanguage.Chinese)]
-    [InlineData(AppTheme.Light, true, AppLanguage.Chinese)]
-    [InlineData(AppTheme.Dark, false, AppLanguage.English)]
-    [InlineData(AppTheme.Dark, false, AppLanguage.Chinese)]
-    [InlineData(AppTheme.Dark, true, AppLanguage.English)]
-    [InlineData(AppTheme.Dark, true, AppLanguage.Chinese)]
-    public void Renders_reference_fixture_at_1200_by_780(AppTheme theme, bool vci, AppLanguage language)
+    internal void RenderEngineeringFixture(AppTheme theme, bool vci, AppLanguage language)
     {
         wpf.RunWithLanguage(language, () =>
         {
@@ -72,20 +64,20 @@ public class GlassViewTests(WpfContext wpf)
             var model = (MainViewModel)window.DataContext;
             try
             {
-                model.ProjectPath = @"D:\Projects\Line04\Conveyor_Line_04.ap21";
-                Set(model, "ProjectName", "Conveyor_Line_04");
-                Set(model, "IsConnected", true);
-                Field(model, "_opennessVersion", "V21");
-                Field(model, "_suppressDeviceLoad", true);
+                model.Session.ProjectPath = @"D:\Projects\Line04\Conveyor_Line_04.ap21";
+                Set(model.Session, "ProjectName", "Conveyor_Line_04");
+                Set(model.Session, "IsConnected", true);
+                Field(model.Session, "_opennessVersion", "V21");
+                Field(model.Engineering, "_suppressDeviceLoad", true);
                 var device = new DeviceInfo { Id = "PLC_1", Name = "PLC_1 · Software", Category = "Plc" };
-                model.Devices.Add(device);
-                model.SelectedDevice = device;
-                model.OutputDirectory = @"D:\Exports";
+                model.Engineering.Devices.Add(device);
+                model.Engineering.SelectedDevice = device;
+                model.Engineering.OutputDirectory = @"D:\Exports";
                 string[] names = ["Main", "Conveyor_Ctrl_FB", "Conveyor_Ctrl_IDB", "Scale_Analog_FC", "Safety_Door_FB", "HMI_Interface_DB", "Motor_Start_FB"];
                 BlockKind[] kinds = [BlockKind.OB, BlockKind.FB, BlockKind.DB, BlockKind.FC, BlockKind.FB, BlockKind.DB, BlockKind.FB];
                 int[] numbers = [1, 120, 121, 30, 200, 300, 110];
                 string[] languages = ["LAD", "SCL", "DB", "SCL", "F-FBD", "DB", "FBD"];
-                for (int i = 0; i < names.Length; i++) model.Blocks.Add(new BlockRow(new BlockInfo
+                for (int i = 0; i < names.Length; i++) model.Engineering.Blocks.Add(new BlockRow(new BlockInfo
                 {
                     Name = names[i], Kind = kinds[i], Number = numbers[i], ProgrammingLanguage = languages[i],
                     Path = "Program blocks" + (i == 0 ? "" : "/" + names[i]), IsConsistent = i != 4, IsKnowHowProtected = i == 4,
@@ -97,20 +89,20 @@ public class GlassViewTests(WpfContext wpf)
                     .Replace("Warning: 0 error(s), 3 warning(s) in 1.4s", Loc.Current.T("Status.CompileResult", "Warning", 0, 3, "1.4"))
                     .Replace("--- inspection of PLC_1 ---", Loc.Current.T("Log.InspectionHeader", "PLC_1"))
                     .Replace("5 finding(s) over 128 block(s).", Loc.Current.T("Status.InspectResult", 5, 128));
-                Set(model, "Log", fixtureLog);
+                Set(model.Activity, "Log", fixtureLog);
                 if (vci)
                 {
                     model.IsVcTab = true;
-                    Set(model, "VcSupported", true);
+                    Set(model.VersionControl, "VcSupported", true);
                     var workspace = new WorkspaceInfo { Name = "Line04_Workspace", RootPath = @"D:\Workspaces\Line04", MappedObjectCount = 128 };
-                    model.Workspaces.Add(workspace); model.SelectedWorkspace = workspace;
-                    foreach (string name in new[] { names[1], names[4], names[5], names[3], names[0], names[6] }) model.VcStatusItems.Add(new MappedObjectInfo
+                    model.VersionControl.Workspaces.Add(workspace); model.VersionControl.SelectedWorkspace = workspace;
+                    foreach (string name in new[] { names[1], names[4], names[5], names[3], names[0], names[6] }) model.VersionControl.VcStatusItems.Add(new MappedObjectInfo
                     { Name = name, FilePath = name + ".xml", FileFormat = "SimaticML", CompareState = name == "Main" || name == "Motor_Start_FB" ? VcCompareState.Equal : VcCompareState.Unequal });
-                    Field(model,"_selectedVcItem",model.VcStatusItems[0]);
-                    Set(model, "VcDiffCaption", "Conveyor_Ctrl_FB.xml");
-                    foreach (string line in new[] { "@@ -212,7 +212,18 @@", "   <Member Name=\"Speed_SP\"", "-    Datatype=\"Int\" />", "+    Datatype=\"Real\">", "+    <Comment>Setpoint mm/min</Comment>", "+  </Member>", "+  <Member Name=\"Ramp_Up\"", "+    Datatype=\"Time\" />", "+  <Member Name=\"Enable\"", "+    Datatype=\"Bool\" />" }) model.VcDiffLines.Add(new DiffLine
+                    Field(model.VersionControl,"_selectedVcItem",model.VersionControl.VcStatusItems[0]);
+                    Set(model.VersionControl, "VcDiffCaption", "Conveyor_Ctrl_FB.xml");
+                    foreach (string line in new[] { "@@ -212,7 +212,18 @@", "   <Member Name=\"Speed_SP\"", "-    Datatype=\"Int\" />", "+    Datatype=\"Real\">", "+    <Comment>Setpoint mm/min</Comment>", "+  </Member>", "+  <Member Name=\"Ramp_Up\"", "+    Datatype=\"Time\" />", "+  <Member Name=\"Enable\"", "+    Datatype=\"Bool\" />" }) model.VersionControl.VcDiffLines.Add(new DiffLine
                     { Text = line, Kind = line.StartsWith('+') ? DiffLineKind.Added : line.StartsWith('-') ? DiffLineKind.Removed : DiffLineKind.Context });
-                    Set(model, "Log", "09:54:00  Mapped 128, already 0, unsupported 6, failed 0.\n09:54:01  Dry run: 4 would sync ProjectToWorkspace, 124 already equal. Clear Dry run to apply.\n");
+                    Set(model.Activity, "Log", "09:54:00  Mapped 128, already 0, unsupported 6, failed 0.\n09:54:01  Dry run: 4 would sync ProjectToWorkspace, 124 already equal. Clear Dry run to apply.\n");
                 }
                 var root = (FrameworkElement)window.Content;
                 window.Content = null;

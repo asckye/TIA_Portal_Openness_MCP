@@ -9,6 +9,7 @@ using System.Windows.Data;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Gui.Localization;
 using TiaOpenness.Gui.ViewModels;
+using TiaOpenness.Gui.Services;
 
 namespace TiaOpenness.Gui.Controls;
 
@@ -63,26 +64,29 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public GlassResults(MainViewModel model)
     {
         this.model = model;
-        model.PropertyChanged += Changed;
-        model.VcStatusItems.CollectionChanged += CollectionChanged;
-        model.VcDiffLines.CollectionChanged += CollectionChanged;
-        model.BlocksView.CollectionChanged += CollectionChanged;
+        model.Activity.PropertyChanged += Changed;
+        model.Session.PropertyChanged += Changed;
+        model.Engineering.PropertyChanged += Changed;
+        model.VersionControl.PropertyChanged += Changed;
+        model.VersionControl.VcStatusItems.CollectionChanged += CollectionChanged;
+        model.VersionControl.VcDiffLines.CollectionChanged += CollectionChanged;
+        model.Engineering.BlocksView.CollectionChanged += CollectionChanged;
         Loc.Current.LanguageChanged += LanguageChanged;
         Refresh();
     }
     public event PropertyChangedEventHandler? PropertyChanged;
-    public string DiffAdded => "+" + model.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Added);
-    public string DiffRemoved => "−" + model.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Removed);
-    public IReadOnlyList<MappedObjectInfo> OtherMappedFiles => model.VcStatusItems
-        .Where(i=>i!=model.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
+    public string DiffAdded => "+" + model.VersionControl.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Added);
+    public string DiffRemoved => "−" + model.VersionControl.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Removed);
+    public IReadOnlyList<MappedObjectInfo> OtherMappedFiles => model.VersionControl.VcStatusItems
+        .Where(i=>i!=model.VersionControl.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
     public string BlocksSummary => Loc.Current.IsChinese
-        ? $"{model.Blocks.Count} 个程序块 · {model.Blocks.Count(b=>b.Selected)} 已选 · {model.BlocksView.Cast<BlockRow>().Count()} 显示"
-        : $"{model.Blocks.Count} blocks · {model.Blocks.Count(b=>b.Selected)} selected · {model.BlocksView.Cast<BlockRow>().Count()} shown";
-    public string DifferenceLabel => (Loc.Current.IsChinese ? "差异" : "Differ") + " · " + model.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
-    public string MissingLabel => (Loc.Current.IsChinese ? "缺失" : "Missing") + " · " + model.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
-    public string WorkspaceSummary => model.SelectedWorkspace is null ? model.WorkspaceRootDisplay
-        : Loc.Current.IsChinese ? $"{model.WorkspaceRootDisplay} · {model.SelectedWorkspace.MappedObjectCount} 已映射 · {model.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} 存在差异"
-        : $"{model.WorkspaceRootDisplay} · {model.SelectedWorkspace.MappedObjectCount} mapped · {model.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} differ";
+        ? $"{model.Engineering.Blocks.Count} 个程序块 · {model.Engineering.Blocks.Count(b=>b.Selected)} 已选 · {model.Engineering.BlocksView.Cast<BlockRow>().Count()} 显示"
+        : $"{model.Engineering.Blocks.Count} blocks · {model.Engineering.Blocks.Count(b=>b.Selected)} selected · {model.Engineering.BlocksView.Cast<BlockRow>().Count()} shown";
+    public string DifferenceLabel => (Loc.Current.IsChinese ? "差异" : "Differ") + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
+    public string MissingLabel => (Loc.Current.IsChinese ? "缺失" : "Missing") + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
+    public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
+        : Loc.Current.IsChinese ? $"{model.VersionControl.WorkspaceRootDisplay} · {model.VersionControl.SelectedWorkspace.MappedObjectCount} 已映射 · {model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} 存在差异"
+        : $"{model.VersionControl.WorkspaceRootDisplay} · {model.VersionControl.SelectedWorkspace.MappedObjectCount} mapped · {model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} differ";
     public string Errors { get; private set; } = "—";
     public string Warnings { get; private set; } = "—";
     public string CompileState { get; private set; } = "";
@@ -99,8 +103,8 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 
     private void Changed(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(MainViewModel.Log) or nameof(MainViewModel.ProjectPath)) Refresh();
-        else if (e.PropertyName is nameof(MainViewModel.SelectionSummary) or nameof(MainViewModel.WorkspaceRootDisplay) or nameof(MainViewModel.SelectedVcItem))
+        if (e.PropertyName is nameof(WorkbenchActivity.Log) or nameof(SessionViewModel.ProjectPath)) Refresh();
+        else if (e.PropertyName is nameof(EngineeringViewModel.SelectionSummary) or nameof(VersionControlViewModel.WorkspaceRootDisplay) or nameof(VersionControlViewModel.SelectedVcItem))
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
     }
     private void CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null));
@@ -138,7 +142,7 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
         var pendingDiagnostics = new List<Diagnostic>();
         var rules = new List<string>();
         bool inspection = false;
-        foreach (string raw in model.Log.Split('\n'))
+        foreach (string raw in model.Activity.Log.Split('\n'))
         {
             string line = Regex.Replace(raw.TrimEnd('\r'), @"^\d{2}:\d{2}:\d{2}\s+", "");
             var compile = Outcome(line, "Status.CompileResult");
@@ -191,10 +195,13 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 
     public void Dispose()
     {
-        model.PropertyChanged -= Changed;
-        model.VcStatusItems.CollectionChanged -= CollectionChanged;
-        model.VcDiffLines.CollectionChanged -= CollectionChanged;
-        model.BlocksView.CollectionChanged -= CollectionChanged;
+        model.Activity.PropertyChanged -= Changed;
+        model.Session.PropertyChanged -= Changed;
+        model.Engineering.PropertyChanged -= Changed;
+        model.VersionControl.PropertyChanged -= Changed;
+        model.VersionControl.VcStatusItems.CollectionChanged -= CollectionChanged;
+        model.VersionControl.VcDiffLines.CollectionChanged -= CollectionChanged;
+        model.Engineering.BlocksView.CollectionChanged -= CollectionChanged;
         Loc.Current.LanguageChanged -= LanguageChanged;
     }
 }

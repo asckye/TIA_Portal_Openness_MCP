@@ -16,6 +16,10 @@ internal static class Strings
     /// <summary>key, English, Chinese.</summary>
     internal static readonly (string Key, string En, string Zh)[] Catalogue =
     [
+        ("Config.ListSeparator", ", ", "、"),
+        ("Config.ClientSaveError", "{0}: {1}", "{0}：{1}"),
+        ("Config.UpdateSize", "({0})", "（{0}）"),
+        ("Config.ReasonSeparator", "; ", "；"),
         ("Config.Eyebrow", "ENGINEERING LINK CONSOLE", "工程连接控制台"),
         ("Config.RemoteTitle", "Connect TIA and AI on one page", "一页连接 TIA 与 AI"),
         ("Config.LocalTitle", "Same machine, one pass", "同机连接，一次配置"),

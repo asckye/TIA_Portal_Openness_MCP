@@ -220,8 +220,8 @@ public class MainWindowTests(WpfContext wpf)
             using var rendered = Render();
             var model = (ViewModels.MainViewModel)rendered.Host.DataContext;
 
-            Assert.False(model.HasDevices);
-            Assert.False(model.HasBlocks);
+            Assert.False(model.Engineering.HasDevices);
+            Assert.False(model.Engineering.HasBlocks);
 
             var visible = Descendants<TextBlock>(rendered.Host)
                 .Where(IsShown)
@@ -248,11 +248,11 @@ public class MainWindowTests(WpfContext wpf)
             using var rendered = Render();
             var model = (ViewModels.MainViewModel)rendered.Host.DataContext;
 
-            Assert.Equal(Loc.Current["Badge.NoVersion"], model.OpennessBadge);
-            Assert.Equal(string.Empty, model.ModeLabel);
+            Assert.Equal(Loc.Current["Badge.NoVersion"], model.Session.OpennessBadge);
+            Assert.Equal(string.Empty, model.Session.ModeLabel);
 
-            model.UseMock = true;
-            Assert.Equal(Loc.Current["Status.MockMode"], model.ModeLabel);
+            model.Session.UseMock = true;
+            Assert.Equal(Loc.Current["Status.MockMode"], model.Session.ModeLabel);
         });
     }
 

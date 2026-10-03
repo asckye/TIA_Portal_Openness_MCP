@@ -6,10 +6,13 @@ namespace TiaOpenness.Gui;
 
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _model = new();
+    private readonly MainViewModel _model;
 
-    public MainWindow()
+    public MainWindow() : this(new MainViewModel()) { }
+
+    internal MainWindow(MainViewModel model)
     {
+        _model = model;
         _model.SelectedReleaseKey = InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
         DataContext = _model;
@@ -58,7 +61,7 @@ public partial class MainWindow : Window
     private void OnCloseOptions(object sender, RoutedEventArgs e) => OptionsPanel.Visibility = Visibility.Collapsed;
     private void OnSoftware(object sender, RoutedEventArgs e) { _model.IsBlocksTab = true; SoftwarePicker.IsDropDownOpen = true; }
     private void OnGit(object sender, RoutedEventArgs e) => _model.IsVcTab = true;
-    private void OnMappedFile(object sender, RoutedEventArgs e) => _model.SelectedVcItem = (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
+    private void OnMappedFile(object sender, RoutedEventArgs e) => _model.VersionControl.SelectedVcItem = (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
     private void OnMappedFilter(object sender, RoutedEventArgs e)
     {
         string state = (string)((Button)sender).Tag;
@@ -67,29 +70,29 @@ public partial class MainWindow : Window
     private void OnMappedAll(object sender, RoutedEventArgs e)
     {
         MappedList.Items.Filter = null;
-        if (_model.VcStatus.CanExecute(null)) _model.VcStatus.Execute(null);
+        if (_model.VersionControl.VcStatus.CanExecute(null)) _model.VersionControl.VcStatus.Execute(null);
     }
-    private void OnPreview(object sender, RoutedEventArgs e) => _model.VcDryRun = true;
-    private void OnRun(object sender, RoutedEventArgs e) => _model.VcDryRun = false;
-    private void OnExportClicked(object sender, RoutedEventArgs e) { if (_model.OutputDirectory.Length == 0) OnExportOptions(sender, e); else if (_model.Export.CanExecute(null)) _model.Export.Execute(null); }
+    private void OnPreview(object sender, RoutedEventArgs e) => _model.VersionControl.VcDryRun = true;
+    private void OnRun(object sender, RoutedEventArgs e) => _model.VersionControl.VcDryRun = false;
+    private void OnExportClicked(object sender, RoutedEventArgs e) { if (_model.Engineering.OutputDirectory.Length == 0) OnExportOptions(sender, e); else if (_model.Engineering.Export.CanExecute(null)) _model.Engineering.Export.Execute(null); }
 
     // ---- browse buttons ----------------------------------------------------
 
     /// <summary>The tree carries folders as well as devices; only a device changes the selection.</summary>
     private void OnDeviceSelected(object sender, RoutedPropertyChangedEventArgs<object> e)
     {
-        if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) _model.SelectedDevice = node.Device;
+        if (e.NewValue is ViewModels.DeviceNode { Device: not null } node) _model.Engineering.SelectedDevice = node.Device;
     }
 
-    private void OnBrowseProject(object sender, RoutedEventArgs e) => _model.BrowseProject();
+    private void OnBrowseProject(object sender, RoutedEventArgs e) => _model.Session.BrowseProject();
 
-    private void OnBrowseOutput(object sender, RoutedEventArgs e) => _model.BrowseOutput();
+    private void OnBrowseOutput(object sender, RoutedEventArgs e) => _model.Engineering.BrowseOutput();
 
-    private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => _model.BrowseWorkspaceFolder();
+    private void OnBrowseWorkspace(object sender, RoutedEventArgs e) => _model.VersionControl.BrowseWorkspaceFolder();
 
-    private void OnSelectAll(object sender, RoutedEventArgs e) => _model.SelectAll(true);
+    private void OnSelectAll(object sender, RoutedEventArgs e) => _model.Engineering.SelectAll(true);
 
-    private void OnSelectNone(object sender, RoutedEventArgs e) => _model.SelectAll(false);
+    private void OnSelectNone(object sender, RoutedEventArgs e) => _model.Engineering.SelectAll(false);
 
     // ---- log ---------------------------------------------------------------
 
@@ -103,7 +106,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            Clipboard.SetText(_model.Log);
+            Clipboard.SetText(_model.Activity.Log);
         }
         catch (System.Runtime.InteropServices.COMException)
         {
@@ -112,6 +115,6 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnClearLog(object sender, RoutedEventArgs e) => _model.ClearLog();
+    private void OnClearLog(object sender, RoutedEventArgs e) => _model.Activity.ClearLog();
 
 }

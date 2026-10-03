@@ -195,7 +195,7 @@ namespace TiaMcpConfigurator
             bool remote = Remote;
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : selected.Count == 1 ? selected[0].DisplayName : Loc.Current.T("Config.Selected", selected.Count);
-            Find<TextBlock>("LinkClient").ToolTip = String.Join("、", selected.Select(x => x.DisplayName));
+            Find<TextBlock>("LinkClient").ToolTip = String.Join(Loc.Current["Config.ListSeparator"], selected.Select(x => x.DisplayName));
             Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
             bool running = server != null && !server.HasExited;
             string address = Text("ServerAddress");
@@ -301,7 +301,7 @@ namespace TiaMcpConfigurator
             foreach (var target in targets)
             {
                 try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path)); }
-                catch (Exception ex) { errors.Add(target.Names + "：" + ex.Message); }
+                catch (Exception ex) { errors.Add(Loc.Current.T("Config.ClientSaveError", target.Names, ex.Message)); }
             }
             if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
             SetStatus("Config.ClientsConfigured", saved);
@@ -334,7 +334,7 @@ namespace TiaMcpConfigurator
                 latest = info;
                 if (info.UpdateAvailable)
                 {
-                    string size = info.ZipSizeText.Length > 0 ? "（" + info.ZipSizeText + "）" : "";
+                    var size = info.ZipSizeText.Length > 0 ? LocalizedText.Key("Config.UpdateSize", info.ZipSizeText) : LocalizedText.Empty;
                     SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.UpdateAvailable", info.Latest, size);
                     SetLocalizedText("UpdateMenu", MenuItem.HeaderProperty, "Config.UpdateMenuAvailable", info.Latest);
                     Find<MenuItem>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
@@ -361,7 +361,7 @@ namespace TiaMcpConfigurator
             if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
             if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.StopServiceBeforeUpdate"]);
             var running = UpdateCheck.RunningEngines();
-            if (running.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", String.Join("；", running)));
+            if (running.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", String.Join(Loc.Current["Config.ReasonSeparator"], running)));
             string updater = UpdateCheck.UpdaterPath(root);
             if (!File.Exists(updater)) throw new InvalidOperationException(Loc.Current.T("Config.UpdaterMissing", updater));
             string target = latest != null && latest.UpdateAvailable ? latest.Latest : Loc.Current["Config.LatestVersion"];

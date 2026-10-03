@@ -61,18 +61,18 @@
     </Style.Triggers>
   </Style>
   <Style x:Key="Glass.SyncPreview" TargetType="Button" BasedOn="{StaticResource Glass.Button}">
-    <Setter Property="Command" Value="{Binding VcPush}"/>
+    <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding IsChecked,ElementName=ToWorkspace}" Value="False">
-        <Setter Property="Command" Value="{Binding VcPull}"/>
+        <Setter Property="Command" Value="{Binding VersionControl.VcPull}"/>
       </DataTrigger>
     </Style.Triggers>
   </Style>
   <Style x:Key="Glass.SyncRun" TargetType="Button" BasedOn="{StaticResource Glass.Primary}">
-    <Setter Property="Command" Value="{Binding VcPush}"/>
+    <Setter Property="Command" Value="{Binding VersionControl.VcPush}"/>
     <Style.Triggers>
       <DataTrigger Binding="{Binding IsChecked,ElementName=ToWorkspace}" Value="False">
-        <Setter Property="Command" Value="{Binding VcPull}"/>
+        <Setter Property="Command" Value="{Binding VersionControl.VcPull}"/>
       </DataTrigger>
     </Style.Triggers>
   </Style>
