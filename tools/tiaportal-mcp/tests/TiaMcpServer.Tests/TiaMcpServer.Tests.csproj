@@ -16,6 +16,11 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
+    <Compile Include="../../src/TiaMcpServer/EngineServices.cs" Link="EngineServices.cs" />
+    <Compile Include="../../src/TiaMcpServer/EngineRegistration.cs" Link="EngineRegistration.cs" />
+    <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
     <Compile Include="..\..\src\TiaMcpServer.PlcFoundation\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />

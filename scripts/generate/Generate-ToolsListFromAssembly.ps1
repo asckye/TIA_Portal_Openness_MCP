@@ -43,12 +43,13 @@ try {
             throw "Parameters without a [Description] went up from $($previous.parametersUndocumented) to $($disciplineJson.parametersUndocumented) - document the new parameters (the schema hints, preflight and examples read them)"
         }
     }
-    $rows=@(foreach($method in $type.GetMethods([Reflection.BindingFlags]'Public,Static')){
+    $catalogType=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolCatalog',$true)
+    $catalog=$catalogType.GetProperty('Engine',[Reflection.BindingFlags]'NonPublic,Static').GetValue($null)
+    $methods=$catalogType.GetProperty('Methods',[Reflection.BindingFlags]'NonPublic,Instance').GetValue($catalog)
+    $rows=@(foreach($entry in $methods){
+        $method=$entry.Value
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
-        $tool=$attributes | Where-Object { $_.AttributeType.Name -eq 'McpServerToolAttribute' } | Select-Object -First 1
-        if(!$tool){continue}
-        $name=$method.Name
-        foreach($arg in $tool.NamedArguments){if($arg.MemberName -eq 'Name'){$name=[string]$arg.TypedValue.Value}}
+        $name=$entry.Key
         $desc=$attributes | Where-Object { $_.AttributeType.FullName -eq 'System.ComponentModel.DescriptionAttribute' } | Select-Object -First 1
         $description=if($desc){[string]$desc.ConstructorArguments[0].Value}else{''}
         $tag=$parseTag.Invoke($null,@($description))

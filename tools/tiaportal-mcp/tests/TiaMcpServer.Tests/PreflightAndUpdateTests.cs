@@ -125,9 +125,7 @@ namespace TiaMcpServer.Tests
             // Validate every example against the tools this suite links (the build gate validates all of them against the engine).
             IReadOnlyList<KeyValuePair<string, bool>>? Specs(string tool)
             {
-                var method = typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .FirstOrDefault(m => string.Equals(m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>()?.Name ?? m.Name, tool, StringComparison.Ordinal)
-                                         && m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>() != null);
+                var method = ToolBridgeFixture.Catalog.Methods.FirstOrDefault(entry => string.Equals(entry.Key, tool, StringComparison.Ordinal)).Value;
                 if (method == null) return new List<KeyValuePair<string, bool>>();   // not linked here: treat as "any parameters" (the gate checks the real one)
                 return method.GetParameters().Where(p => !McpServer.IsInfrastructureParameter(p.ParameterType)).Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
             }

@@ -23,8 +23,9 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertEqual(profile.count('VersionToolProblem(name).Length == 0'), 2)
         bridge = read(SERVER / 'ModelContextProtocol/Tools/McpServer.ToolBridge.cs')
         invoke = bridge.split('private static object? InvokeToolMethod', 1)[1]
-        self.assertLess(invoke.index('VersionCallProblem'), invoke.index('method.Invoke(null, call)'))
-        self.assertIn('AvailableToolMethods(_allToolMethods, includeUnavailable)', bridge)
+        self.assertLess(invoke.index('VersionCallProblem'), invoke.index('method.Invoke(method.IsStatic ? null : EngineServices.Get(method.DeclaringType!), call)'))
+        self.assertIn('AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable)', bridge)
+        self.assertIn('includeUnavailable || VersionToolProblem(kv.Key).Length == 0', bridge)
         self.assertIn('versionAvailable', bridge)
 
     def test_version_exclusions_have_real_registered_names(self):

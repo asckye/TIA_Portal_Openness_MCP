@@ -25,25 +25,27 @@ namespace TiaMcpServer.ModelContextProtocol
     // pattern that Anthropic, VS Code and the agent gateways all converged on during 2025-26.
     public static partial class McpServer
     {
-        // name -> the static method carrying [McpServerTool]. Built once; ~212 entries.
-        private static Dictionary<string, MethodInfo>? _allToolMethods;
+        private static ToolCatalog? _bridgeCatalog;
+        private static Func<bool> _bridgeIsLiteProfile = () => false;
+        private static ISet<string> _bridgeLiteToolNames = new HashSet<string>(StringComparer.Ordinal);
+
+        static McpServer() { ConfigureToolBridgeProfile(); }
+        static partial void ConfigureToolBridgeProfile();
+
+        internal static void ConfigureToolBridge(ToolCatalog catalog, Func<bool> isLiteProfile, ISet<string> liteToolNames)
+        {
+            _bridgeCatalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+            _bridgeIsLiteProfile = isLiteProfile ?? throw new ArgumentNullException(nameof(isLiteProfile));
+            _bridgeLiteToolNames = liteToolNames ?? throw new ArgumentNullException(nameof(liteToolNames));
+        }
 
         private static Dictionary<string, MethodInfo> AllToolMethods(bool includeUnavailable = false)
         {
-            if (_allToolMethods != null) return AvailableToolMethods(_allToolMethods, includeUnavailable);
-            var map = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
-            foreach (var m in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
-            {
-                var attr = m.GetCustomAttribute<McpServerToolAttribute>();
-                if (attr == null) continue;
-                map[attr.Name ?? m.Name] = m;
-            }
-            _allToolMethods = map;
-            return AvailableToolMethods(map, includeUnavailable);
+            return AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable);
         }
 
-        private static Dictionary<string, MethodInfo> AvailableToolMethods(Dictionary<string, MethodInfo> methods, bool includeUnavailable)
-            => includeUnavailable ? methods : methods.Where(kv => VersionToolProblem(kv.Key).Length == 0)
+        private static Dictionary<string, MethodInfo> AvailableToolMethods(IEnumerable<KeyValuePair<string, MethodInfo>> methods, bool includeUnavailable)
+            => methods.Where(kv => includeUnavailable || VersionToolProblem(kv.Key).Length == 0)
                 .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
 
         internal static string VersionToolProblem(string name)
@@ -67,7 +69,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>Renders one tool's signature the way the model needs to call it through CallTool.</summary>
-        // Name-based on purpose: the offline test project links this file without the MCP SDK.
+        // Keep infrastructure parameters out of bridge signatures and argument binding.
         internal static bool IsInfrastructureParameter(Type type)
             => type.Name == "IMcpServer" || (type.IsGenericType && type.GetGenericTypeDefinition().Name.StartsWith("RequestContext", StringComparison.Ordinal))
                || (type.Namespace != null && type.Namespace.StartsWith("ModelContextProtocol", StringComparison.Ordinal));
@@ -221,12 +223,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     .OrderByDescending(x => x.Key).ThenBy(x => x.Value, StringComparer.Ordinal)
                     .Take(limit).ToList();
 
-                bool lite = IsLiteProfile();
+                bool lite = _bridgeIsLiteProfile();
                 var lines = new List<string>();
                 foreach (var h in hits)
                 {
                     var m = all[h.Value];
-                    bool listed = !lite || LiteToolNames.Contains(h.Value);
+                    bool listed = !lite || _bridgeLiteToolNames.Contains(h.Value);
                     lines.Add(RenderSignature(h.Value, m)
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
@@ -761,7 +763,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 });
                 if (problem.Length != 0) throw new NotSupportedException(problem);
                 ValidateRuntimeBinding(method);
-                object? result = method.Invoke(null, call);
+                object? result = method.Invoke(method.IsStatic ? null : EngineServices.Get(method.DeclaringType!), call);
                 if (result is Task task)
                 {
                     task.GetAwaiter().GetResult();

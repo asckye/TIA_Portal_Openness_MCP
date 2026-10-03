@@ -120,7 +120,7 @@ namespace TiaMcpServer.Tests
             check(!ToolBridgeStatus.Create(false)["success"]!.GetValue<bool>(), "bridge failure is failure");
             foreach (var success in new[] { true, false })
             {
-                var direct = McpServer.ProbeResult(success);
+                var direct = ToolBridgeProbes.ProbeResult(success);
                 var bridged = McpServer.CallTool("ProbeResult", new JsonObject { ["success"] = success }.ToJsonString());
                 check(direct.Meta!["success"]!.GetValue<bool>() == success && bridged.Meta!["operationSuccess"]!.GetValue<bool>() == success, "direct/CallTool business result parity");
                 check(JsonNode.Parse(bridged.Message!)!["Meta"]!["success"]!.GetValue<bool>() == success, "bridge retains payload");

@@ -98,7 +98,7 @@ namespace TiaMcpServer.Tests
             // ---- vocabulary (parameters without their own [Description]) ----
             check(ParameterVocabulary.Describe("dryRun")!.StartsWith("dryRun: true (default) previews") && ParameterVocabulary.Describe("nope") == null && ParameterVocabulary.Names.Count >= 60, "vocabulary: common names covered, unknown -> null");
             check(PreflightLogic.Alternatives(ParameterVocabulary.Describe("unitKind")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("action")).Count == 0 && PreflightLogic.Alternatives(ParameterVocabulary.Describe("eventType")).Count == 0, "vocabulary: generic texts never turn into a (wrong) enum");
-            var probeSpecs = McpServer.SpecsOf(typeof(McpServer).GetMethod("ProbeResult")!);
+            var probeSpecs = McpServer.SpecsOf(typeof(ToolBridgeProbes).GetMethod("ProbeResult")!);
             check(probeSpecs.Count == 1 && probeSpecs[0].Name == "success" && !probeSpecs[0].Synthesized && probeSpecs[0].Description.Length == 0, "vocabulary: a name outside the vocabulary stays undescribed and unsynthesized");
             var vocabSchema = O("{\"properties\":{\"dryRun\":{\"type\":\"boolean\"},\"x\":{\"type\":\"string\",\"description\":\"own\"}}}");
             var vocabResult = SchemaHintsLogic.Augment(vocabSchema, new List<PreflightLogic.ParameterSpec> { new PreflightLogic.ParameterSpec("dryRun", "boolean", false, "true", ParameterVocabulary.Describe("dryRun")!, true), new PreflightLogic.ParameterSpec("x", "string", true, null, "synthesized", true) }, null);
@@ -115,9 +115,7 @@ namespace TiaMcpServer.Tests
             check(sentinel.Any(p => p.Contains("connect-project step 2 (Connect): 'projectName' is not a parameter")) && sentinel.Any(p => p.Contains("required parameter 'project' missing")) && sentinel.Any(p => p.EndsWith("no tool of that name")), "recipes: validation flags wrong keys, missing required and unknown tools (sentinel)");
             IReadOnlyList<KeyValuePair<string, bool>>? Linked(string tool)
             {
-                var method = typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static)
-                    .FirstOrDefault(m => m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>() != null
-                                         && string.Equals(m.GetCustomAttribute<global::ModelContextProtocol.Server.McpServerToolAttribute>()!.Name ?? m.Name, tool, StringComparison.Ordinal));
+                var method = ToolBridgeFixture.Catalog.Methods.FirstOrDefault(entry => string.Equals(entry.Key, tool, StringComparison.Ordinal)).Value;
                 return method == null ? null : method.GetParameters().Where(p => !McpServer.IsInfrastructureParameter(p.ParameterType)).Select(p => new KeyValuePair<string, bool>(p.Name!, !p.HasDefaultValue)).ToList();
             }
             var linkedProblems = ToolRecipes.ValidateAgainst(Linked).Where(p => !p.EndsWith("no tool of that name")).ToList();

@@ -22,7 +22,7 @@ namespace TiaMcpServer.ModelContextProtocol
     [McpServerToolType]
     public static partial class McpServer
     {
-        private static IServiceProvider? _services;
+        private static IServiceProvider? _services => EngineServices.Host;
         private static Portal? _portal;
 
         public static ILogger? Logger { get; set; }
@@ -39,7 +39,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     if (_portal == null)
                     {
-                        _portal = new Portal();
+                        _portal = (Portal)EngineServices.Get(typeof(Portal));
                     }
                     return _portal;
                 }
@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         public static void SetServiceProvider(IServiceProvider services)
         {
-            _services = services;
+            EngineServices.SetServiceProvider(services);
         }
 
         #region portal
@@ -604,23 +604,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static List<string> GetMcpToolNames()
         {
-            var names = new List<string>();
-            foreach (var method in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
-            {
-                foreach (var attribute in method.CustomAttributes)
-                {
-                    if (!string.Equals(attribute.AttributeType.Name, "McpServerToolAttribute", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
-
-                    var name = attribute.NamedArguments
-                        .FirstOrDefault(x => string.Equals(x.MemberName, "Name", StringComparison.Ordinal))
-                        .TypedValue.Value?.ToString();
-                    names.Add(string.IsNullOrWhiteSpace(name) ? method.Name : name!);
-                }
-            }
-            return names;
+            return ToolCatalog.Engine.Methods.Select(entry => entry.Key).ToList();
         }
 
         private static string? InvokeReflectionDenyGuard(MethodInfo guardMethod, string resultKind, string resultPath, string methodName)

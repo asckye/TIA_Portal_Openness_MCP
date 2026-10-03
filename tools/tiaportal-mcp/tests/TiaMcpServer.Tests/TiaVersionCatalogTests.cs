@@ -72,20 +72,20 @@ namespace TiaMcpServer.Tests
                 check(ToolVersionPolicy.CallProblem("20", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length > 0, "V20 library option refused before dispatch " + option);
                 check(ToolVersionPolicy.CallProblem("21", "ImportLibraryTypeDocuments", key => key == "importOptions" ? option : null).Length == 0, "V21 library option retains native validation " + option);
             }
-            ModelContextProtocol.McpServer.VersionProbeCalls = 0;
+            ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls = 0;
             bool isV20 = EngineRouter.CompiledTiaMajorVersion == 20;
             var preflight = ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"action\":\"import\"}");
             check((preflight.Meta?["ok"]?.GetValue<bool?>() == true) != isV20, "preflight agrees with compiled adapter action gate");
             var imported = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"action\":\"import\"}");
             check((imported.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true) != isV20, "bridge agrees with compiled adapter action gate");
-            check(ModelContextProtocol.McpServer.VersionProbeCalls == (isV20 ? 0 : 1), "denial happens before invoking mutation body");
+            check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == (isV20 ? 0 : 1), "denial happens before invoking mutation body");
             var read = ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{}");
             check(read.Meta?["bridgeSuccess"]?.GetValue<bool?>() == true, "mixed-action read remains callable in both builds");
-            int callsBeforeUnknown = ModelContextProtocol.McpServer.VersionProbeCalls;
+            int callsBeforeUnknown = ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls;
             ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"action\":\"futureAction\"}");
-            check(ModelContextProtocol.McpServer.VersionProbeCalls == callsBeforeUnknown, "unknown action cannot invoke body");
+            check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == callsBeforeUnknown, "unknown action cannot invoke body");
             ModelContextProtocol.McpServer.CallTool("ManageDcbLibraries", "{\"ACTION\":\"read\",\"action\":\"import\"}");
-            check(ModelContextProtocol.McpServer.VersionProbeCalls == callsBeforeUnknown, "case-duplicate bridge selectors are rejected before dispatch");
+            check(ModelContextProtocol.ToolBridgeProbes.VersionProbeCalls == callsBeforeUnknown, "case-duplicate bridge selectors are rejected before dispatch");
             check(ModelContextProtocol.McpServer.PreflightToolCall("ManageDcbLibraries", "{\"ACTION\":\"read\",\"action\":\"import\"}").Meta?["ok"]?.GetValue<bool?>() == false,
                 "preflight refuses case-duplicate selectors");
             var safety = ModelContextProtocol.McpServer.CallTool("ReadSafetyActivationTests", "{}");

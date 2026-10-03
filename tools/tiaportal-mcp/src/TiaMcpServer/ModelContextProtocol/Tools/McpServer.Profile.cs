@@ -10,7 +10,6 @@ namespace TiaMcpServer.ModelContextProtocol
     // Windsurf 100) can load the server at all, and every turn carries ~8k instead of
     // ~40k tokens of schema. Opt out per session with --profile full / TIA_MCP_PROFILE=full;
     // reach any individual non-lite tool without opting out via FindTools + CallTool.
-    // All tools are static so no DI target is needed.
     public static partial class McpServer
     {
         // Explicit allowlist (tool Name, not method name). Kept explicit on purpose:
@@ -72,14 +71,12 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IList<McpServerTool> GetLiteTools()
         {
             var tools = new List<McpServerTool>();
-            foreach (var method in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
+            foreach (var entry in ToolCatalog.Engine.Methods)
             {
-                var attr = method.GetCustomAttribute<McpServerToolAttribute>();
-                if (attr == null) continue;
-                var name = attr.Name ?? method.Name;
+                var name = entry.Key;
                 if (LiteToolNames.Contains(name) && VersionToolProblem(name).Length == 0)
                 {
-                    tools.Add(CreateTool(name, method));
+                    tools.Add(CreateTool(name, entry.Value));
                 }
             }
             return tools;
@@ -93,11 +90,10 @@ namespace TiaMcpServer.ModelContextProtocol
         public static IList<McpServerTool> GetAllTools()
         {
             var tools = new List<McpServerTool>();
-            foreach (var method in typeof(McpServer).GetMethods(BindingFlags.Public | BindingFlags.Static))
+            foreach (var entry in ToolCatalog.Engine.Methods)
             {
-                if (method.GetCustomAttribute<McpServerToolAttribute>() == null) continue;
-                var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name ?? method.Name;
-                if (VersionToolProblem(name).Length == 0) tools.Add(CreateTool(name, method));
+                var name = entry.Key;
+                if (VersionToolProblem(name).Length == 0) tools.Add(CreateTool(name, entry.Value));
             }
             return tools;
         }
@@ -110,8 +106,8 @@ namespace TiaMcpServer.ModelContextProtocol
             var description = attribute?.Description ?? "";
             var decorated = ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
             var tool = ReferenceEquals(decorated, description) || decorated == description
-                ? McpServerTool.Create(method)
-                : McpServerTool.Create(method, options: new McpServerToolCreateOptions { Name = name, Description = decorated });
+                ? ToolCatalog.CreateTool(method)
+                : ToolCatalog.CreateTool(method, new McpServerToolCreateOptions { Name = name, Description = decorated });
             // 2.7.58: enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
             return WithSchemaHints(tool, name, method);
         }
@@ -126,6 +122,12 @@ namespace TiaMcpServer.ModelContextProtocol
         // CallTool (McpServer.ToolBridge.cs) reach every one of the other tools on demand.
         // Precedence: --profile flag > TIA_MCP_PROFILE env > lite.
         private static string? _profileOverride;
+
+        static partial void ConfigureToolBridgeProfile()
+        {
+            _bridgeIsLiteProfile = IsLiteProfile;
+            _bridgeLiteToolNames = LiteToolNames;
+        }
 
         /// <summary>Applies the CLI --profile flag. Wins over TIA_MCP_PROFILE. Call before building the host.</summary>
         public static void SetProfileOverride(string? profile)

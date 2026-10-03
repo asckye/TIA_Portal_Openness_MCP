@@ -17,10 +17,14 @@ $resolver=[ResolveEventHandler]{param($sender,$eventArgs)
 [AppDomain]::CurrentDomain.add_AssemblyResolve($resolver)
 try {
     $assembly=[Reflection.Assembly]::LoadFrom($exePath)
-    $server=$assembly.GetType('TiaMcpServer.ModelContextProtocol.McpServer',$true)
+    $catalogType=$assembly.GetType('TiaMcpServer.ModelContextProtocol.ToolCatalog',$true)
+    $catalog=$catalogType.GetProperty('Engine',[Reflection.BindingFlags]'NonPublic,Static').GetValue($null)
+    $methods=$catalogType.GetProperty('Methods',[Reflection.BindingFlags]'NonPublic,Instance').GetValue($catalog)
     $names=@('ListUnifiedGlobalScripts','ReadUnifiedGlobalScript','ReadUnifiedTagDefinitions','ReadUnifiedScreenBranch','ReadUnifiedLibraryType','ReadUnifiedFaceplateInstance','ListUnifiedLibraryFolder','ReleaseUnifiedReadCursor')
     foreach($name in $names){
-        $method=$server.GetMethod($name,[Reflection.BindingFlags]'Public,Static')
+        $method=@($methods | Where-Object {$_.Key -ceq $name} | ForEach-Object {$_.Value})
+        if($method.Count -ne 1){throw "Missing or duplicate tool: $name"}
+        $method=$method[0]
         if(!$method){throw "Missing tool: $name"}
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
         if(!($attributes | Where-Object {$_.AttributeType.Name -eq 'McpServerToolAttribute'})){throw "Unregistered tool: $name"}

@@ -179,6 +179,7 @@ namespace TiaMcpServer
                 // handlers can connect immediately. Falls through to MCP host when args[0] isn't a verb.
                 if (args.Length > 0 && Cli.CliCommands.IsVerb(args[0]))
                 {
+                    EngineServices.InitializeStandalone();
                     Environment.Exit(Cli.CliCommands.Run(args));
                     return;
                 }
@@ -696,8 +697,8 @@ namespace TiaMcpServer
                     throw;
                 }
 
-                // Register the Portal service for dependency injection
-                if (Isolation.IsolatedWorkerHost.Current == null) builder.Services.AddSingleton<Portal>();
+                // The isolated parent owns only protocol services; the child uses this same host with a session.
+                builder.Services.AddEngine(includeSession: Isolation.IsolatedWorkerHost.Current == null);
 
                 var host = builder.Build();
 
@@ -778,7 +779,7 @@ namespace TiaMcpServer
                     ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);
                     ConfigureResourceDiscovery(mcpHttp);
 
-                    if (Isolation.IsolatedWorkerHost.Current == null) builder.Services.AddSingleton<TiaMcpServer.Siemens.Portal>();
+                    builder.Services.AddEngine(includeSession: Isolation.IsolatedWorkerHost.Current == null);
 
                     using var host = builder.Build();
                     McpServer.SetServiceProvider(host.Services);
