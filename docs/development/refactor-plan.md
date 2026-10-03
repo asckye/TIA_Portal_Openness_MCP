@@ -77,7 +77,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | done |
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
-| P1-04 | 抽出无 Siemens 依赖的纯逻辑库（`Siemens/*Logic.cs`、`Builders`、`openness-shared`），多目标 net461/net48/net8.0；测试改为项目引用，删除逐文件链接 | todo |
+| P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | doing |
 | P1-05 | 测试迁移到 xunit；去掉测试中的 `partial class` 注入和伪造 Siemens 命名空间；HttpTests 字符串反射改为编译期引用 | todo |
 | P1-06 | 合并两个相似的 TransportFixture；把 `src` 下的测试工程移到 `tests` | todo |
 
