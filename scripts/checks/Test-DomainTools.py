@@ -391,7 +391,41 @@ CASES = {
            ('UploadDeviceParameters', 'disconnected', {'devicePathJson': '[]', 'itemPathJson': '[]',
                                                      'targetIpAddress': '192.0.2.1'}),
            ('DownloadPlcToFolder', 'disconnected', {'softwarePath': PLC,
-                                                  'destinationDirectory': 'C:/domain-offline-card'})]
+                                                  'destinationDirectory': 'C:/domain-offline-card'})],
+    'PlcSoftware': [(name, 'disconnected', {'softwarePath': PLC})
+                      for name in ('GetSoftwareInfo', 'CompileSoftware', 'GetSoftwareTree')],
+    'Reflection': [
+        ('DescribeObjectProperty', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'propertyPath': 'Name'}),
+        ('DescribeObject', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC}),
+        ('GetObjectProperty', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'propertyPath': 'Name'}),
+        ('ListObjectChildren', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'collectionProperty': 'Blocks'}),
+        ('InvokeObject', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'methodName': 'ToString'}),
+        ('DescribeService', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'serviceTypeSuffix': 'ICompilable'}),
+        ('InvokeService', 'disconnected', {'objectKind': 'Software', 'objectPath': PLC, 'serviceTypeSuffix': 'ICompilable', 'methodName': 'ToString'})],
+    'Export': [
+        ('GetExport', 'missing', {'exportId': 'domain-missing'}),
+        ('ListExports', 'empty', {}),
+        ('SaveExport', 'missing', {'exportId': 'domain-missing', 'outputPath': 'unused.xml'}),
+        ('DeleteExport', 'missing', {'exportId': 'domain-missing'}),
+        ('ClearExports', 'empty', {})],
+    'EngineeringAudit': [('ReadPlcBlockScopes', 'disconnected', {'softwarePath': PLC})]
+        + actions('ManagePlcBlockDocuments', 'list read export import', softwarePath=PLC),
+    'EngineeringDiagnostics': [('InspectSimaticSdCompatibility', 'invalid-version', {'filePath': '', 'tiaMajor': 19}),
+           ('ReadOpennessCompatibility', 'metadata', {}),
+           ('ReadNativeInvocationLog', 'invalid-count', {'take': 0})],
+    'OfflineAnalysis': [
+        ('ComparePlcBlockDocuments', 'invalid-page', {'offset': -1}),
+        ('ScanPlcSourceAnnotations', 'invalid-page', {'directory': '', 'offset': -1}),
+        ('ExtractPlcBlockMetrics', 'invalid-page', {'path': '', 'offset': -1})],
+    'XmlBuilder': [(name, 'invalid-json', {parameter: '{'}) for name, parameter in (
+        ('BuildClassicHmiScreenXml', 'designJson'), ('BuildPlcUdtXml', 'udtJson'),
+        ('BuildPlcTagTableXml', 'tagTableJson'), ('BuildPlcGlobalDbXml', 'globalDbJson'),
+        ('BuildStructuredTextXml', 'structuredTextJson'), ('BuildFlgNetCallXml', 'flgNetJson'),
+        ('ComposePlcFcBlockXml', 'fcBlockJson'), ('ComposePlcFbBlockXml', 'fbBlockJson'),
+        ('ComposePlcLadFcBlockXml', 'ladFcBlockJson'))],
+    'PlcBuild': [('PlcBuildAndImport', 'invalid-kind', {'softwarePath': PLC, 'kind': 'invalid', 'json': '{}'})],
+    'SoftwareUnitManagement': [('SetPlcUnitObjectAccess', 'disconnected',
+        {'softwarePath': PLC, 'unitName': 'Unit1', 'objectKind': 'block', 'objectPath': 'FC1', 'access': 'Published'})]
 }
 
 
@@ -476,6 +510,43 @@ def plc_block_reply(reply, profile, name):
     return raw
 
 
+SOFTWARE_REPLY_MARKERS = {
+    'GetSoftwareInfo': 'Software not found', 'CompileSoftware': 'Project is null',
+    'GetSoftwareTree': 'no project is open',
+    **{name: 'not found' for name in ('DescribeObjectProperty', 'DescribeObject', 'ListObjectChildren',
+                                    'InvokeObject', 'DescribeService', 'InvokeService')},
+    'GetObjectProperty': 'Null',
+    'GetExport': 'domain-missing', 'SaveExport': 'domain-missing', 'DeleteExport': 'domain-missing',
+    'ListExports': '当前没有寄存的响应', 'ClearExports': '0',
+    'InspectSimaticSdCompatibility': ("An error occurred invoking 'InspectSimaticSdCompatibility'", 'tiaMajor must be 20/21'),
+    'ReadOpennessCompatibility': 'installedPatch', 'ReadNativeInvocationLog': 'take',
+    **{name: 'InvalidParams' for name in ('ComparePlcBlockDocuments', 'ScanPlcSourceAnnotations', 'ExtractPlcBlockMetrics')},
+    **{name: 'JSON' for name, _, _ in CASES['XmlBuilder']},
+    'PlcBuildAndImport': 'kind'
+}
+
+
+def software_reply(reply, profile, name):
+    """Exercise the existing error/success family before comparing the complete raw reply."""
+    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
+    result = reply['result']
+    raw = result['content'][0]['text']
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        if bridge.get('meta', {}).get('bridgeSuccess') is True:
+            raw = bridge['message']
+        else:
+            resources.require(bridge.get('meta', {}).get('bridgeSuccess') is False,
+                              f'{name}: missing bridge outcome: {raw}')
+    readable = json.dumps(json.loads(raw), ensure_ascii=False) if raw.startswith('{') else raw
+    marker = SOFTWARE_REPLY_MARKERS[name]
+    if isinstance(marker, tuple):
+        marker = marker[profile == 'lite']
+    resources.require(marker.lower() in readable.lower(),
+                      f'{name}: did not reach the expected offline result: {raw}')
+    return raw
+
+
 def table_reply(reply, profile, name):
     """Preserve each table tool's existing throw/POCO/plan family, without connecting."""
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
@@ -550,6 +621,11 @@ def capture(args, exe, harness, profile, isolated):
                 reply = rpc('tools/call', params=params)
                 if domain == 'PlcBlocks':
                     raw = plc_block_reply(reply, profile, name)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
+                if name in SOFTWARE_REPLY_MARKERS:
+                    raw = software_reply(reply, profile, name)
                     reached_child = True
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue

@@ -46,7 +46,11 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.HardwareNetworkService",
         "TiaMcpServer.Siemens.Services.HardwareServicesService",
         "TiaMcpServer.Siemens.Services.OnlineDownloadService",
-        "TiaMcpServer.Siemens.Services.PlcBlocksService"
+        "TiaMcpServer.Siemens.Services.PlcBlocksService",
+        "TiaMcpServer.Siemens.Services.PlcSoftwareService",
+        "TiaMcpServer.Siemens.Services.ReflectionService",
+        "TiaMcpServer.Siemens.Services.EngineeringAuditService",
+        "TiaMcpServer.Siemens.Services.SoftwareUnitManagementService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;
@@ -131,7 +135,20 @@ internal sealed class EngineSurface
 
     // Guard-only checks must not construct a session or acquire any native resources.
     internal static object? InvokeUninitialized(MethodInfo method, object?[] arguments)
-        => method.Invoke(method.IsStatic ? null : System.Runtime.Serialization.FormatterServices.GetUninitializedObject(method.DeclaringType!), arguments);
+    {
+        if (method.IsStatic) return method.Invoke(null, arguments);
+        var type = method.DeclaringType!;
+        var target = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+        var session = type.GetField("_session", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (session?.FieldType.FullName == "TiaMcpServer.Siemens.IEngineeringSession")
+        {
+            // A migrated guard reaches the same empty kernel through its injected interface.
+            // Allocate both objects without running constructors or registering a live session.
+            var portal = type.Assembly.GetType("TiaMcpServer.Siemens.Portal", true)!;
+            session.SetValue(target, System.Runtime.Serialization.FormatterServices.GetUninitializedObject(portal));
+        }
+        return method.Invoke(target, arguments);
+    }
 
     // Include compiler-generated delegate bodies on the resolved declaring type, even after a service move.
     internal static IEnumerable<MethodInfo> MethodFamily(MethodInfo method)

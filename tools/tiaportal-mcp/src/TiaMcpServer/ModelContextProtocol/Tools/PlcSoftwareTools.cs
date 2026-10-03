@@ -18,19 +18,30 @@ using System.Xml.Linq;
 using TiaMcpServer.Siemens;
 
 
+using TiaMcpServer.Siemens.Services;
+using static TiaMcpServer.ModelContextProtocol.McpServer;
+
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class PlcSoftwareTools
     {
-        #region plc software
+        private readonly PlcSoftwareService _software;
+        private readonly IEngineeringSession _session;
+
+        public PlcSoftwareTools(PlcSoftwareService software, IEngineeringSession session)
+        {
+            _software = software;
+            _session = session;
+        }
 
         [McpServerTool(Name = "GetSoftwareInfo"), Description("[L1][PLC-Software] Get PLC software properties (language, version, block counts). Requires: Connect + OpenProject. softwarePath comes from GetProjectTree (e.g. 'PLC_1'). Use GetSoftwareTree for the full block hierarchy.")]
-        public static ResponseSoftwareInfo GetSoftwareInfo(
+        public ResponseSoftwareInfo GetSoftwareInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
             try
             {
-                var software = Portal.GetPlcSoftware(softwarePath);
+                var software = _session.GetPlcSoftware(softwarePath);
                 if (software != null)
                 {
 
@@ -51,7 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Software not found at '{softwarePath}'" + Portal.AvailablePlcPathsSuffix(), McpErrorCode.InternalError);
+                    throw new McpException($"Software not found at '{softwarePath}'" + _session.AvailablePlcPathsSuffix(), McpErrorCode.InternalError);
                 }
             }
             catch (Exception ex) when (ex is not McpException)
@@ -60,47 +71,15 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "DescribeObjectProperty"), Description("[L2][Reflection]Describe an object's nested property via reflection (members list). propertyPath supports dotted path.")]
-        public static ResponseObjectDescribe DescribeObjectProperty(
-            [Description("objectKind: Project|Portal|Device|DeviceItem|Software|Block|Type")] string objectKind,
-            [Description("objectPath: object path")] string objectPath,
-            [Description("propertyPath: dotted property path, e.g. 'Connections' or 'PressedStateTags'")] string propertyPath,
-            [Description("softwarePath: required for Block/Type")] string softwarePath = "",
-            [Description("maxMembers: max member count")] int maxMembers = 200)
-        {
-            try
-            {
-                var res = Portal.DescribeObjectProperty(objectKind, objectPath, propertyPath, softwarePath, maxMembers);
-                // 对象解析成功即为成功；成员表可以为空，实际数量由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
-                return res;
-            }
-            catch (PortalException pex)
-            {
-                // 路径解析不到是调用方的参数问题，不是服务器内部意外错误。
-                throw new McpException(pex.Message, pex,
-                    pex.Code == PortalErrorCode.NotFound ? McpErrorCode.InvalidParams : McpErrorCode.InternalError);
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"Unexpected error describing property '{propertyPath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
-
         [McpServerTool(Name = "CompileSoftware"), Description("[L1][PLC-Software] Compile all blocks in the PLC software. Requires: Connect + OpenProject. Returns basic success/failure. For structured error/warning details use CompileAndDiagnosePlc instead. Must compile before ExportBlock if any blocks are inconsistent. After adding new blocks via import, always compile to catch type/interface mismatches.")]
-        public static ResponseCompile CompileSoftware(
+        public ResponseCompile CompileSoftware(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("password: the password to access adminsitration, default: no password")] string password = "")
         {
             try
             {
                 var compileWatch = System.Diagnostics.Stopwatch.StartNew();
-                var result = WithAutoOffline(() => Portal.CompileSoftware(softwarePath, password));
+                var result = WithAutoOffline(() => _session.CompileSoftware(softwarePath, password));
                 var compileMs = compileWatch.ElapsedMilliseconds;
                 var collected = CollectCompilerMessages(result.Messages);
                 var summary = collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount);
@@ -128,14 +107,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-
         [McpServerTool(Name = "GetSoftwareTree"), Description("[L1][PLC-Software] Get the PLC user block/type hierarchy as ASCII tree; system block groups and external sources are excluded. Inspect meta.dataComplete for unreadable attributes. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'PLC_1'). ALWAYS call before ExportBlock/ImportBlock to get exact group paths (e.g. 'Program blocks/FBs/FB_Motor'). Returns OB/FB/FC/GlobalDB/UDT/ExternalSource blocks with group hierarchy.")]
-        public static ResponseSoftwareTree GetSoftwareTree(
+        public ResponseSoftwareTree GetSoftwareTree(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath)
         {
             try
             {
-                var tree = Portal.GetSoftwareTree(softwarePath, out var metadata);
+                var tree = _software.GetSoftwareTree(softwarePath, out var metadata);
 
                 if (!string.IsNullOrEmpty(tree))
                 {
@@ -162,7 +140,5 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error retrieving software tree from '{softwarePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
-
-        #endregion
     }
 }

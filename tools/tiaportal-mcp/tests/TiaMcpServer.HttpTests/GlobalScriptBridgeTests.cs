@@ -33,15 +33,15 @@ internal static class GlobalScriptBridgeTests
         object Json(string value) => parse.Invoke(null, new object?[] { value, null, Activator.CreateInstance(parse.GetParameters()[2].ParameterType) })!;
         object? Get(object value, string property) => value.GetType().GetProperty(property)!.GetValue(value);
         var target = new PathTarget();
-        var result = invoke.Invoke(null, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
+        var result = portal.Invoke(invoke, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
         check((string?)Get(result, "Message") == "OK" && (string?)Get(result, "Value") == Path.GetFullPath(@"C:\NativeScripts") && target.Calls == 1,
             "actual EXE converts JSON directory string to DirectoryInfo");
-        result = invoke.Invoke(null, new object[] { target, "HmiScriptModule", "Navigation", "Export", Json("[\"C:\\\\NativeScripts\\\\Module.hmi.js\"]"), true })!;
+        result = portal.Invoke(invoke, new object[] { target, "HmiScriptModule", "Navigation", "Export", Json("[\"C:\\\\NativeScripts\\\\Module.hmi.js\"]"), true })!;
         check((string?)Get(result, "Message") == "OK" && (string?)Get(result, "Value") == Path.GetFullPath(@"C:\NativeScripts\Module.hmi.js") && target.Calls == 2,
             "actual EXE converts JSON file string to FileInfo");
-        result = invoke.Invoke(null, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), false })!;
+        result = portal.Invoke(invoke, new object[] { target, "HmiScripts", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), false })!;
         check((string?)Get(result, "Message") != "OK" && target.Calls == 2, "actual EXE retains allowWrite gate for native Import");
-        result = invoke.Invoke(null, new object[] { target, "Force", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
+        result = portal.Invoke(invoke, new object[] { target, "Force", "/Scripts", "Import", Json("[\"C:\\\\NativeScripts\"]"), true })!;
         check((string?)Get(result, "Message") != "OK" && target.Calls == 2, "actual EXE retains hard force deny even with allowWrite");
 
         var access = server.GetType("TiaMcpServer.Siemens.UnifiedScriptAccess", true)!;

@@ -181,5 +181,15 @@ namespace TiaMcpServer.Siemens
         void AdoptProject(ProjectBase? project, string missingProjectMessage);
         // Release handles after native CloseAndCommit has already closed the local session.
         void ReleaseProject();
+
+        string? PlcLookupPathsSuffix { get; }
+        PlcSoftware ResolvePlcForListing(string path);
+        string GetTreePrefix(List<bool> ancestorStates, bool isLast);
+        object? ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access = PlcAccess.Read);
+        void DenyCrossReferenceReflection(string? service, string? method);
+        object? CoerceReflectionValue(object? value, Type targetType);
+        void ValidateUnitKind(string kind);
+        IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> PlcScopes(PlcSoftware plc);
+        IEnumerable<(string Path, object Value)> ScopedObjects(object group, string collection, string prefix = "", int depth = 0);
     }
 }

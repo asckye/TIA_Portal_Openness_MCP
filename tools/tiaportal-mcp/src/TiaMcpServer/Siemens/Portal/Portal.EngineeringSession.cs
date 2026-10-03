@@ -197,5 +197,14 @@ namespace TiaMcpServer.Siemens
 
         object? IEngineeringSession.ResolvePlcTagTableGroup(object plc) => ResolvePlcTagTableGroup(plc);
         string? IEngineeringSession.CrossReferenceRefusal(string softwarePath) => CrossReferenceRefusal(softwarePath);
+        string? IEngineeringSession.PlcLookupPathsSuffix => _plcLookupPathsSuffix;
+        PlcSoftware IEngineeringSession.ResolvePlcForListing(string path) => ResolvePlcForListing(path);
+        string IEngineeringSession.GetTreePrefix(List<bool> ancestorStates, bool isLast) => GetTreePrefix(ancestorStates, isLast);
+        object? IEngineeringSession.ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access) => ResolveObject(objectKind, objectPath, softwarePath, access);
+        void IEngineeringSession.DenyCrossReferenceReflection(string? service, string? method) => DenyCrossReferenceReflection(service, method);
+        object? IEngineeringSession.CoerceReflectionValue(object? value, Type targetType) => CoerceReflectionValue(value, targetType);
+        void IEngineeringSession.ValidateUnitKind(string kind) => ValidateUnitKind(kind);
+        IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> IEngineeringSession.PlcScopes(PlcSoftware plc) => PlcScopes(plc);
+        IEnumerable<(string Path, object Value)> IEngineeringSession.ScopedObjects(object group, string collection, string prefix, int depth) => ScopedObjects(group, collection, prefix, depth);
     }
 }

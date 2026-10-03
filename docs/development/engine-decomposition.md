@@ -194,6 +194,59 @@ Portal 实现，包括批量块导出、删除、保护/快照/指纹、验证�
 `Test-DomainTools.py --domain PlcBlocks` 覆盖全部工具的 full/lite、直接/隔离 STDIO 路径；`ExportBlocks` 的离线成功响应含
 实际耗时，故字节比对使用缺参拒绝用例，不扩大时间字段屏蔽范围。原生调用顺序、参数和线程调度保持不变，
 同名的工具/服务 `ExportBlocks` 调用序列分别核对；`PatchPlcBlockDocument` 无原生调用点，以源码方法体比较补证。
+### PLC 软件、反射、审计与离线构造
+
+P3-13c 将 34 个工具迁入以下实例类；注册和单例生命周期沿用领域约定。
+
+| 工具类 | 工具数 | 服务或共享依赖 |
+|---|---:|---|
+| `PlcSoftwareTools` | 3 | `PlcSoftwareService` 保存软件树遍历；查询与编译通过 `IEngineeringSession` |
+| `ReflectionTools` | 7 | `ReflectionService` 保存描述、属性读取和调用桥；包含 `DescribeObjectProperty` |
+| `EngineeringAuditTools` | 2 | `EngineeringAuditService` 保存作用域清单与文档操作 |
+| `EngineeringDiagnosticsTools` | 3 | 无会话依赖；原始诊断日志在隔离父进程中也可调用 |
+| `SoftwareUnitManagementTools` | 1 | `SoftwareUnitManagementService` 保存单元对象 Access 操作 |
+| `ExportTools` | 5 | 无会话依赖；复用响应保护层共享的 `ExportStore` |
+| `OfflineAnalysisTools` | 3 | 复用共享比较/清理辅助；块路径模式仍通过内核导出，文件模式无需会话 |
+| `XmlBuilderTools` | 9 | 无会话依赖，沿用试点的实例工具类，不增设服务转发层 |
+| `PlcBuildTools` | 1 | `IEngineeringSession` 的导入与编译接口；领域私有构造辅助随工具迁移 |
+
+`EngineeringDiagnosticsTools`、`ExportTools`、`XmlBuilderTools` 没有 Portal 依赖；
+`OfflineAnalysisTools` 的共享比较辅助也被 PLC 编辑工具调用，保留在 `McpServer`，不增加无状态服务层。
+`RunOfflineAnalysisTool` 和 `BuildOfflineXmlBuilderReport` 仍供试点工具共用。
+
+新增内核接口成员为 `PlcLookupPathsSuffix`（只读）、`CompileSoftware`、`ResolvePlcForListing`、
+`GetTreePrefix`、`ResolveObject`、`DenyCrossReferenceReflection`、`CoerceReflectionValue`、
+`ValidateUnitKind`、`PlcScopes`、`ScopedObjects`、`ImportBlock`、`ImportType`。均显式转发现有实现；
+沿用已有 `GetPlcSoftware`、`AvailablePlcPathsSuffix`、`ImportPlcTagTable`、`DescribeMembers`、
+`TryGetName`、`FindTypeBySuffix`、`TryGetService` 等接口，没有重复增加别名。
+
+以下共享成员保留在内核：
+
+- `CompileSoftware` / `ResolveCompileService`：块导入、诊断编译和构建后编译复用。
+- PLC 解析、`ResolvePlcForListing`、`GetTreePrefix`：会话、块清单和工程树共用。
+- `ResolveObject` / `_plcLookupPathsSuffix`：解析中维护共享查询提示；服务不写会话字段。
+- `TryGetName`、`DescribeMembers`、`FindTypeBySuffix`、`TryGetService`、`CoerceReflectionValue` 以及
+  `Portal.Software.Reflection.cs` 的导入/导出、显式反射和子组解析辅助：HMI、技术对象等领域复用。
+- `DenyCrossReferenceReflection`：交叉引用领域同样调用；审计中的 `RecoverableAuditError`、
+  `ValidateUnitKind`、`PlcScopes`、`ScopedObjects`、`ReadPlcConsistency`、`ExactCrossReferenceTarget`、
+  `VerifyLastDocumentImport` 仍支持交叉引用、下载、删除和文档交换。
+- `LastExportedFile`：`McpServer.Blocks.cs`、`McpServer.Types.cs` 读取，块/类型导出写入。
+  `ExportStore` 则由所有工具的响应保护层读写，仍为共享基础设施。
+- `ExportBlockDocumentForAnalysis`：PLC 文档生成复用；`Portal.CausalTrace.cs` 的两个追踪入口由 Runtime
+  工具调用，保持原位。`ImportBlock` / `ImportType` 留在内核，构建工具不依赖块领域的具体类。
+
+CLI 使用的 `DescribeObjectProperty`、`GetObjectProperty`、`ListObjectChildren`、`InvokeObject`（两个重载）
+在 `McpServer.PlcSoftwareTools.cs` 保留无属性静态转发。`PlcBuildAndImport` 另保留同类转发，供 Patch、
+ProjectSession 和 ScaffoldOperations 调用。共享工具辅助 `MakeSafeFileName`、`BuildCompileResponse`、
+`ReadIntProperty`、`ClassifyPlcXml`、`BuildPlcProgramImportResponse`、`ResolveCompareSide`、
+`DeleteAnalysisTempDir` 原实现保留，迁出工具经 `PlcSoftwareToolSupport` 访问。
+
+迁移前后的原生序列保持一致：工具 → 原 Portal 方法内的调用体，变为实例工具 → 服务内同一调用体 →
+`IEngineeringSession` → 原共享内核辅助。没有新增原生调用、参数改写或线程调度。
+`DescribeObjectProperty` 在工具与服务中同名，原生顺序检查对这两个方法族分别明确配对，其余由脚本自动匹配。
+`InvokeOnInstance` 通过服务实例访问共享内核辅助，HttpTests 的反射调用改由 `EngineSurface.Invoke` 解析目标，
+原有断言全部保留。`EngineSurface.InvokeUninitialized` 给迁出的服务注入未初始化的 Portal，保持原有 guard
+测试的空内核条件；两者均不执行构造函数，也不获取原生资源。
 
 ### 库、VCI 与 SiVArc
 

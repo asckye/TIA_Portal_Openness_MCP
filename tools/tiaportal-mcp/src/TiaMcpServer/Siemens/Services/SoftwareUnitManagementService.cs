@@ -4,18 +4,22 @@ using System.Text.Json.Nodes;
 using Siemens.Engineering.SW.Units;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class SoftwareUnitManagementService
     {
+        private readonly IEngineeringSession _session;
+
+        public SoftwareUnitManagementService(IEngineeringSession session) => _session = session;
+
         public ResponseMessage SetPlcUnitObjectAccess(string softwarePath, string unitName, string objectKind, string objectPath, string access, bool dryRun = true)
-            => RunHmiStepTool("SetPlcUnitObjectAccess", meta => {
+            => _session.RunHmiStepTool("SetPlcUnitObjectAccess", meta => {
                 var parts = EngineeringGroupOperations.Parts(objectPath);
                 if (objectKind != "block" && objectKind != "type") throw new ArgumentException("objectKind must be block or type.");
                 var desired = (UnitAccessType)EngineeringScalarProperties.ConvertValue(JsonValue.Create(access), typeof(UnitAccessType))!;
-                using var exclusive = dryRun ? null : AcquireHmiEditAccess();
-                var plc = ExactPlcForEngineering(softwarePath, !dryRun);
-                PlcUnitProvider provider = RequireUnitProvider(plc);
+                using var exclusive = dryRun ? null : _session.AcquireHmiEditAccess();
+                var plc = _session.ExactPlcForEngineering(softwarePath, !dryRun);
+                PlcUnitProvider provider = _session.RequireUnitProvider(plc);
                 PlcUnitSystemGroup unitGroup = provider.UnitGroup;
                 // Safety unit blocks are publishable too (official "Publishing blocks under the SafetyUnit"); fall back to it by exact name.
                 PlcUnitBase unit = (PlcUnitBase?)unitGroup.Units.Find(unitName) ?? unitGroup.SafetyUnits.Find(unitName) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact software / safety unit not found: " + unitName);
