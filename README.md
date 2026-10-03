@@ -69,4 +69,4 @@ Independently maintained by asckye. Provenance and third-party notices remain in
 
 ### Integrated desktop (unreleased)
 
-[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows use this repository's existing V20/V21 MCP service; the original Studio source and history are preserved. Native acceptance and release packaging remain pending.
+[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows call V20/V21 Openness through a local native bridge, independently of MCP; the original Studio source and history are preserved. Native acceptance and release packaging remain pending.

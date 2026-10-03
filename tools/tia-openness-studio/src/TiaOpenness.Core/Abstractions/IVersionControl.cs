@@ -4,7 +4,7 @@ using TiaOpenness.Contracts.Models;
 namespace TiaOpenness.Core.Abstractions
 {
     /// <summary>
-    /// TIA Portal V21's Version Control Interface.
+    /// TIA Portal's Version Control Interface.
     ///
     /// A TIA project is a binary blob Git cannot diff. VCI fixes that: a <em>workspace</em> is an
     /// ordinary folder holding one text file per mapped object, so the project becomes reviewable
@@ -12,7 +12,7 @@ namespace TiaOpenness.Core.Abstractions
     /// uncompiled edits and reports per object rather than per file.
     ///
     /// A session exposes this only when the backend supports it; see
-    /// <see cref="ITiaSession.VersionControl"/>, which is null on TIA Portal below V21.
+    /// <see cref="ITiaSession.VersionControl"/>, which is null when the project exposes no VCI service.
     /// </summary>
     public interface IVersionControl
     {

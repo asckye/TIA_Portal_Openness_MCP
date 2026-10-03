@@ -8,8 +8,7 @@ using TiaOpenness.Contracts.Rpc;
 namespace TiaOpenness.Client
 {
     /// <summary>
-    /// Typed wrapper over <see cref="BridgeClient"/>. Every front end (CLI, desktop UI,
-    /// MCP server) goes through this, so a change to the wire protocol lands in one place.
+    /// Typed wrapper over <see cref="BridgeClient"/>. The desktop calls the local native bridge through this single typed contract.
     /// </summary>
     public sealed class TiaClient : IDisposable
     {
@@ -32,16 +31,6 @@ namespace TiaOpenness.Client
         public Task<DoctorReport> DoctorAsync(CancellationToken ct = default)
         {
             return _bridge.CallAsync<DoctorReport>(RpcMethods.DoctorRun, null, ct);
-        }
-
-        /// <summary>
-        /// Builds the Openness adapter against the TIA Portal installed on this machine - the one
-        /// step that cannot be done before shipping, because the Siemens assemblies it compiles
-        /// against are not redistributable. The next <see cref="ConnectAsync"/> picks it up.
-        /// </summary>
-        public Task<AdapterBuildResult> BuildAdapterAsync(string version = null, CancellationToken ct = default)
-        {
-            return _bridge.CallAsync<AdapterBuildResult>(RpcMethods.OpennessBuild, new { version }, ct);
         }
 
         public Task<SessionState> ConnectAsync(bool withUserInterface = true, bool attachToRunning = true,
@@ -130,7 +119,7 @@ namespace TiaOpenness.Client
                 new { deviceId, blockNamePattern, requireBlockComment, findUnusedBlocks, flagInconsistentBlocks }, ct);
         }
 
-        // ---- Version Control Interface (TIA Portal V21+) -------------------
+        // ---- Version Control Interface (project capability) -------------------
 
         /// <summary>True when the open project exposes a Version Control Interface.</summary>
         public async Task<bool> VcSupportedAsync(CancellationToken ct = default)

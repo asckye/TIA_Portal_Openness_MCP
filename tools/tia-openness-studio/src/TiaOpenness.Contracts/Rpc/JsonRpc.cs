@@ -20,7 +20,7 @@ namespace TiaOpenness.Contracts.Rpc
         public const int OpennessFailure = -32002;
         /// <summary>The environment cannot host Openness at all (see doctor.run).</summary>
         public const int EnvironmentUnusable = -32003;
-        /// <summary>The open project has no Version Control Interface; it needs TIA Portal V21 or later.</summary>
+        /// <summary>The open project exposes no Version Control Interface service.</summary>
         public const int VersionControlUnsupported = -32004;
     }
 
@@ -105,7 +105,7 @@ namespace TiaOpenness.Contracts.Rpc
         public const string CompileDevice = "compile.device";
         public const string InspectProject = "inspect.run";
 
-        // Version Control Interface (TIA Portal V21+).
+        // Version Control Interface (project capability).
         public const string VcSupported = "vc.supported";
         public const string VcWorkspaceList = "vc.workspaces";
         public const string VcWorkspaceCreate = "vc.workspace.create";
@@ -115,6 +115,5 @@ namespace TiaOpenness.Contracts.Rpc
         public const string VcDiff = "vc.diff";
 
         /// <summary>Builds the Openness adapter against the local TIA installation.</summary>
-        public const string OpennessBuild = "openness.build";
     }
 }

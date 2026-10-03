@@ -29,12 +29,14 @@ v3.0.0 生态扩展：[工具与使用说明](reference/ecosystem-tools.md) · [
 
 ## 参考与排错
 
-- [TIA 版本分支与适用范围](reference/version-branches.md)（master 与独立 v17–v21 分支）
+- [TIA 版本分支与适用范围](reference/version-branches.md)（仅维护 master，历史版本分支已备份）
 - [工具矩阵](reference/tool-matrix.md)、[能力与验收边界](reference/capabilities.md)、[真机台账（逐工具）](reference/real-machine-ledger.md)、[官方 API 覆盖清单](reference/openness-coverage.md)、[生态与参考资源](reference/ecosystem.md)、[自然语言配方](reference/natural-language-recipes.md)
 - [错误模型](troubleshooting/errors.md)、[Openness 限制](troubleshooting/openness-limitations.md)、[HMI 快照诊断](troubleshooting/hmi-snapshots.md)
 - [模板索引](../templates/README.md)、[AI 操作 skill](../tools/tiaportal-mcp/skill/SKILL.md)、[清单说明](../manifest/README.md)
 
 ## 开发与历史
+
+- [Studio 直接调用 Openness 与全库重复检查](development/studio-native-and-duplicates-20261002.md)：移除 Studio MCP 层，V20/V21 原生构建、功能测试与剩余重叠。
 
 - [结构与迁移对照](development/repository-layout.md)、[验证](development/validation.md)、[发布](development/release-workflow.md)、[贡献指南](../.github/CONTRIBUTING.md)、[支持](../.github/SUPPORT.md)、[安全策略](../.github/SECURITY.md)、[接续工作交接](development/handoff.md)（现状、下一步、每阶段固定动作、闸门、真机约定）、[交接历史](development/handoff-history.md)（逐版本记录、阶段收口清单）、[换机器交接单](development/handoff-checklist.md)（新机器准备、虚拟机现状、部署后按序要做的事、真机批跑工具）
 - [路线图与待办](development/roadmap.md)：官方 API 全量对齐分阶段计划（阶段 1–5 Safety / WinCC Unified / Base / Step7 / 经典 WinCC 已于 2.7.25–2.7.37 收口，阶段 6 选件包进行中：⑥-① SiVArc 2.7.38、⑥-② Startdrive + DCC 2.7.39、⑥-③ SafetyValidation / Test Suite / Teamcenter / CFC 2.7.42 完成——阶段 6 收口，功能类型缺口全部归零）、引擎待重建项、第三方集成候选、合规事项（2026-09-17 审计，2026-09-19 更新）

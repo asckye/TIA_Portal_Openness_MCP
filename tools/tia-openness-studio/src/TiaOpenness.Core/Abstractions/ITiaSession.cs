@@ -51,8 +51,7 @@ namespace TiaOpenness.Core.Abstractions
         InspectionReport Inspect(string deviceId, InspectionOptions options);
 
         /// <summary>
-        /// The project's Version Control Interface, or null when this TIA Portal is older than
-        /// V21 and has none. Modelled as a nullable capability rather than methods that throw,
+        /// The project's Version Control Interface, or null when unavailable. Modelled as a nullable capability,
         /// so a front end can hide the feature instead of offering it and failing.
         /// </summary>
         IVersionControl VersionControl { get; }

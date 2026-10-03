@@ -82,9 +82,17 @@ namespace TiaOpenness.Core.Inspection
                 return diff;
             }
 
-            output += UntrackedDiff(root, pathspec);
+            var stagedArguments = new StringBuilder("diff --no-color --cached");
+            if (pathspec != null) stagedArguments.Append(" -- \"").Append(pathspec).Append('"');
+            string staged;
+            if (!TryRun(root, stagedArguments.ToString(), out staged))
+            {
+                diff.Detail = "git " + stagedArguments + " failed.";
+                return diff;
+            }
+            output = staged + output + UntrackedDiff(root, pathspec);
 
-            diff.Detail = "git " + arguments;
+            diff.Detail = "Staged, working-tree and untracked changes: git " + stagedArguments + "; git " + arguments;
             diff.Lines = Parse(output);
             return diff;
         }

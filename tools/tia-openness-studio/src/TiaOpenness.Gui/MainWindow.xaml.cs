@@ -16,12 +16,6 @@ public partial class MainWindow : Window
         Loaded += async (_, _) => await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
     }
 
-    private void OnMcpTools(object sender, RoutedEventArgs e)
-    {
-        try { _model.Transport.Start(forceMock: _model.UseMock); new McpToolsWindow(_model.Transport) { Owner = this }.Show(); }
-        catch (System.Exception ex) { MessageBox.Show(this, ex.Message, "MCP tools"); }
-    }
-
     // ---- browse buttons ----------------------------------------------------
 
     /// <summary>The tree carries folders as well as devices; only a device changes the selection.</summary>

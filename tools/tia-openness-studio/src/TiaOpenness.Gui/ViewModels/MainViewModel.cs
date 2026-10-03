@@ -57,7 +57,6 @@ public enum MainView
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly TiaClient _client = new();
-    public BridgeClient Transport => _client.Bridge;
     private bool _started;
 
     private string _projectPath = string.Empty;
@@ -322,7 +321,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    /// <summary>False on TIA Portal below V21, which has no Version Control Interface.</summary>
+    /// <summary>Whether the current project exposes the Version Control Interface.</summary>
     public bool VcSupported
     {
         get => _vcSupported;
@@ -439,11 +438,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     });
 
     /// <summary>
-    /// Builds the Openness adapter against the TIA Portal on this machine - the one step that
-    /// cannot be done before shipping, because the Siemens assemblies are not redistributable.
-    /// The bridge re-checks on the next connect, so this takes effect without a restart.
-    /// </summary>
-    /// <summary>
     /// Opens the session. Shared with <see cref="OpenProjectAsync"/>, which connects on the
     /// operator's behalf rather than making them discover the ordering.
     /// </summary>
@@ -523,7 +517,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (SelectedDevice is not null) await RefreshBlocksAsync();
 
         // Populate the version-control tab up front, so the feature is visibly absent on
-        // TIA Portal below V21 rather than failing when someone clicks a button.
+        // projects without a VCI service before offering the related commands.
         await VcRefreshAsync();
     }
 
@@ -796,7 +790,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     // ---- version control ---------------------------------------------------
 
     /// <summary>
-    /// Loads the VCI panel. Absent below TIA Portal V21, in which case the panel disables itself
+    /// Loads the VCI panel. If the project exposes no service, the panel disables itself
     /// rather than offering buttons that can only fail.
     /// </summary>
     private async Task VcRefreshAsync() => await Guarded("Status.ReadingVc", async () =>

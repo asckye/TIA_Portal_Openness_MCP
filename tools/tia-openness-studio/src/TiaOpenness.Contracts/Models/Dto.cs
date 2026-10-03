@@ -219,25 +219,3 @@ namespace TiaOpenness.Contracts.Models
         public List<InspectionFinding> Findings { get; set; } = new List<InspectionFinding>();
     }
 }
-
-namespace TiaOpenness.Contracts.Models
-{
-    /// <summary>Outcome of building the Openness adapter against the local TIA installation.</summary>
-    public class AdapterBuildResult
-    {
-        public bool Succeeded { get; set; }
-        /// <summary>Openness version the adapter was built against, e.g. "21.0".</summary>
-        public string OpennessVersion { get; set; }
-        /// <summary>Directory the Siemens assemblies were referenced from.</summary>
-        public string ReferenceDirectory { get; set; }
-        /// <summary>Where the adapter was written.</summary>
-        public string OutputPath { get; set; }
-        /// <summary>Number of Siemens assemblies referenced.</summary>
-        public int ReferencedAssemblies { get; set; }
-        /// <summary>
-        /// Compiler diagnostics when it failed. Each names a file and line in the adapter sources,
-        /// so a missing Siemens member is reported as the API mismatch it is.
-        /// </summary>
-        public List<string> Errors { get; set; } = new List<string>();
-    }
-}

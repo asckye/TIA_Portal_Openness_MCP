@@ -1,4 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net10.0</TargetFramework><Nullable>annotations</Nullable></PropertyGroup>
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><Nullable>annotations</Nullable></PropertyGroup>
   <ItemGroup><ProjectReference Include="../../src/TiaOpenness.Client/TiaOpenness.Client.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../src/TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
+  <Target Name="CopyBridgeForFunctionalTests" AfterTargets="Build">
+    <ItemGroup><BridgePayload Include="../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.exe;../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.dll;../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.config" /></ItemGroup>
+    <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

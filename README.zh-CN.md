@@ -67,4 +67,4 @@
 
 ### 融合版桌面（尚未发布）
 
-[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作调用本仓库现有的 V20/V21 MCP 服务；原 Studio 的完整源码与历史已保留。原生验收和发布打包仍待完成。
+[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作通过本地原生 Bridge 直接调用 V20/V21 Openness，Studio 不再依赖 MCP；原 Studio 的完整源码与历史已保留。原生验收和发布打包仍待完成。

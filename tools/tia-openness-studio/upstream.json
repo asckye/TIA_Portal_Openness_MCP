@@ -9,9 +9,34 @@
       "integratedSha256": "e16e3cba58a5a21c8218571e7833ff4348e7c00310e6e15f56dfb1def2604baf"
     },
     {
+      "path": "src/TiaOpenness.Bridge/Program.cs",
+      "upstreamSha256": "115825101f5bc146602f45f899548e1a7084669e62812bc4e5e4d5b375845baa",
+      "integratedSha256": "3edc1b9e80d5889f71892ee205a8a7db64ec1ae66120f5e1091a0ea03b572872"
+    },
+    {
+      "path": "src/TiaOpenness.Bridge/TiaOpenness.Bridge.csproj",
+      "upstreamSha256": "c1c7d4c8f0f794abe681bfc6e1799807e4868a37d5c0785baf91d07c47889747",
+      "integratedSha256": "bdfc602b197e9414ba2e92685c31ef0a0ca5af689f8057636caf6f4cac3119dd"
+    },
+    {
+      "path": "src/TiaOpenness.Client/BridgeClient.cs",
+      "upstreamSha256": "a3be4f2282ae6d660a05ec205c151c70396568a2bf52a57a3504c211a2669727",
+      "integratedSha256": "e7c85704a9c37365c927da9f486997b57dd99ebfd7062301c5f76901ec205fd2"
+    },
+    {
+      "path": "src/TiaOpenness.Client/TiaClient.cs",
+      "upstreamSha256": "37a9a98e9472f72de9a586f92b41249274b04d251d46c64e7ab4d050b27a9571",
+      "integratedSha256": "b6a4d221670b5563657ee5823fd0c2dce59f725d70901abefbcda8724e38ae16"
+    },
+    {
+      "path": "src/TiaOpenness.Client/TiaOpenness.Client.csproj",
+      "upstreamSha256": "9243652f38491a6c8b0d51fb2dad9546eefb0e39610470d53bb6ce6f221fb6cd",
+      "integratedSha256": "8579d0f22cdcd6cd5a07fec32678eb82cd4cabe20abca3b888b642b5acc6daeb"
+    },
+    {
       "path": "src/TiaOpenness.Contracts/Models/Dto.cs",
       "upstreamSha256": "91b4fc175cc779a59dc7606bdbd4df60083ee42c45d920d38cb07841d36499e6",
-      "integratedSha256": "91b4fc175cc779a59dc7606bdbd4df60083ee42c45d920d38cb07841d36499e6"
+      "integratedSha256": "818ace2de7e0f63e8fad0cdeea08673d7e100af60a1370b9d10bbb7521903e71"
     },
     {
       "path": "src/TiaOpenness.Contracts/Models/Enums.cs",
@@ -26,7 +51,84 @@
     {
       "path": "src/TiaOpenness.Contracts/Rpc/JsonRpc.cs",
       "upstreamSha256": "397c9094d0e47a520016f6b6d1fdb8589c6ca0968aa230bbf8b0ae3bd5661f4d",
-      "integratedSha256": "397c9094d0e47a520016f6b6d1fdb8589c6ca0968aa230bbf8b0ae3bd5661f4d"
+      "integratedSha256": "878f71786ac3772457208a62fad4859df3f7c3a629e2c7cf601b8da02249d177"
+    },
+    {
+      "path": "src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj",
+      "upstreamSha256": "f740eb39d822b537ad7f00feb6d04f871bf80ba1964a373a91137f191b272d14",
+      "integratedSha256": "6961ae31db9a6840d52253a2f5926ef7c63b99e52e0e57ec257253e2d50a04c8"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Abstractions/ITiaSession.cs",
+      "upstreamSha256": "2d737bdda9f34e7d905891054ff26ac6fa686c5285d3cbd70fbfdaf74cffc1ed",
+      "integratedSha256": "4dedbda2fdd732f41d001e8e160f286c61d2512257bff8b27221af2489c19b99"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Abstractions/IVersionControl.cs",
+      "upstreamSha256": "647f05d9cffdae93a29ef536d7d77d146982bf15805cdd796b2b74041219a122",
+      "integratedSha256": "98896958190439fc74cb98a89ad52edc51e72e4eec64a322893dcc3b96cf4923"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs",
+      "upstreamSha256": "940b3fd3a9418d81d50fe8c90639dd739cfe75a489ef346472425bcef123348f",
+      "integratedSha256": "f85a63e7f55adcc2dcf84ed49a7ad81270e4d879d57b64b9495bc295de994eeb"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Abstractions/UnavailableSessionFactory.cs",
+      "upstreamSha256": "13e014aa270607ec4e1dbd9e4d9e9a95ddd2d4eb75082f248b6cf646e896a3ea",
+      "integratedSha256": "13e014aa270607ec4e1dbd9e4d9e9a95ddd2d4eb75082f248b6cf646e896a3ea"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Environment/OpennessAssemblyResolver.cs",
+      "upstreamSha256": "25ff377642907c1b1048b1c082913d803321554f7c558f23bcbadcb1f2da3d00",
+      "integratedSha256": "25ff377642907c1b1048b1c082913d803321554f7c558f23bcbadcb1f2da3d00"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Environment/OpennessDoctor.cs",
+      "upstreamSha256": "74c875709e8eff5abf5804c4f8551848c40cd6d98e3576d2883d2aacb32de620",
+      "integratedSha256": "1457b2a95e329524b7eca807bd96fc3247495cf74dfa2ad09a73b16a1312737e"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Environment/OpennessLocator.cs",
+      "upstreamSha256": "3a95f850122409ae89bc8b44e306fa53d4da20eb18c37940fca43ed551909287",
+      "integratedSha256": "f38e6a4013d90b496f3622b97125494ea391212675c8356ec223e0fb913e406a"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Inspection/GitWorkspaceDiff.cs",
+      "upstreamSha256": "1a4298e8b52b19db0d3b051acf6b9ffc81941908f8a09dae3b7579b421a38306",
+      "integratedSha256": "6763b3298bebc095db6f37ec9d5064bc044b13401b834762b1c6fb2e2caf0c37"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Inspection/InspectionEngine.cs",
+      "upstreamSha256": "38f154286f039ff5b9179c1ed1f18ea039576fa86d1d989262b6c256c09f8eed",
+      "integratedSha256": "0f4d31be4b3532f1f6a1f89e984c5f7dea73b01bc4b2004ae62ff6d22c8f6a12"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Mock/MockTiaSession.cs",
+      "upstreamSha256": "ad9687106eb9f3713f7fd85881c12061578b330bb9fb17fd2cb0918363a1f728",
+      "integratedSha256": "9f0eda01d177d6350c172e5a509817633055f1377d27524082c89425fde8693b"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Mock/MockVersionControl.cs",
+      "upstreamSha256": "37504a7f6401b5ada32e72e86aa6c6df36185279403defc7da93ddf428549ac1",
+      "integratedSha256": "941c6cb628e0fe138c1eab285ff3b3de41d6591d32a681274a764fbe033efebf"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Rpc/RpcDispatcher.cs",
+      "upstreamPath": "src/TiaOpenness.Bridge/RpcDispatcher.cs",
+      "upstreamSha256": "88d52e0b48e9e9ec461311718fc291bab0fa3a74ae78d309027abb2c0cf5f74c",
+      "integratedSha256": "3f66a9f540d805337f36cc2c092aa6fa7603f2038b32c492618951c019721753"
+    },
+    {
+      "path": "src/TiaOpenness.Core/Rpc/VersionControlUnsupportedException.cs",
+      "upstreamPath": "src/TiaOpenness.Bridge/VersionControlUnsupportedException.cs",
+      "upstreamSha256": "9d1f45fd44268795385ea73e3c602abd3f4c86f1150ff99ac5d8c369db4d773f",
+      "integratedSha256": "347762d674d706cb710f83b214e94d663d6c4cfc5d371483625037464d114608"
+    },
+    {
+      "path": "src/TiaOpenness.Core/TiaOpenness.Core.csproj",
+      "upstreamSha256": "0fdec0bae04e1091658243f45a5b3bd3ae50942ba8083c6b1f14a15a69217505",
+      "integratedSha256": "51b2dcfc2c7459b236b28a68c01a835aeee9323cc390e93a445c1285f8970ef6"
     },
     {
       "path": "src/TiaOpenness.Gui/App.xaml",
@@ -71,7 +173,7 @@
     {
       "path": "src/TiaOpenness.Gui/Localization/Strings.cs",
       "upstreamSha256": "cac911faa3d47a32544f3a295274e5935440b58d0aa3127ff759312a9f29c6be",
-      "integratedSha256": "b3c3e7aa3711906205d7cff79829a0278b471632e4281cc668db32e81bfd2b21"
+      "integratedSha256": "fc4866fbde46982e8bb756f3d542802d9ab670cead355f51bb2538de537e4a23"
     },
     {
       "path": "src/TiaOpenness.Gui/Localization/TrExtension.cs",
@@ -81,12 +183,12 @@
     {
       "path": "src/TiaOpenness.Gui/MainWindow.xaml",
       "upstreamSha256": "fb0705b4ef222a3d4350bb4c23c7aab11a27de96f87b69e0eceef396d4f5f5c8",
-      "integratedSha256": "6f015f3a5f993c2eb765384c3a87e3a208459a18e072c19f600715b480cb3ac6"
+      "integratedSha256": "fb0705b4ef222a3d4350bb4c23c7aab11a27de96f87b69e0eceef396d4f5f5c8"
     },
     {
       "path": "src/TiaOpenness.Gui/MainWindow.xaml.cs",
       "upstreamSha256": "2e26358491ef53084693578e77417b7cf5d1ff6c84d1b5f42735292deec6686d",
-      "integratedSha256": "5f94838d8df578f53ec138497356bfd7b83ab36b8e0c0df13f0b7d33d5a44328"
+      "integratedSha256": "2e26358491ef53084693578e77417b7cf5d1ff6c84d1b5f42735292deec6686d"
     },
     {
       "path": "src/TiaOpenness.Gui/Settings/UiSettings.cs",
@@ -144,6 +246,11 @@
       "integratedSha256": "b79304e9af6f3381945e8950c751c33a7dc75f1b6b8a33082f72f0588072eb37"
     },
     {
+      "path": "src/TiaOpenness.Gui/TiaOpenness.Gui.csproj",
+      "upstreamSha256": "a6ab514c1784e8b81cb4c8000d0e04b6ec22620f6ac97600d7b793f6a85b5327",
+      "integratedSha256": "8005bebd29d294524760fba3c5cbaa5e1a1d14c56efd5c8a8c8b7b546625a8c7"
+    },
+    {
       "path": "src/TiaOpenness.Gui/ViewModels/BlockNode.cs",
       "upstreamSha256": "f7d9f86787f8b10e5bce86e5cb48ee06375f2614686c9943d33281fbe5806c55",
       "integratedSha256": "f7d9f86787f8b10e5bce86e5cb48ee06375f2614686c9943d33281fbe5806c55"
@@ -156,42 +263,47 @@
     {
       "path": "src/TiaOpenness.Gui/ViewModels/MainViewModel.cs",
       "upstreamSha256": "099b2449477b02e10bd16e8e79fa959d2b3661c5226251d419a575dfe786c21c",
-      "integratedSha256": "f8ddbeb692e47d98ac1998f6f7cb801e43810ff3982137b2a466c3783df10d33"
+      "integratedSha256": "fce1c46ee104443e07179eb4b260bd2a2d04dd0e110ce78e370b53e11ab79700"
     },
     {
-      "path": "src/TiaOpenness.Core/Mock/MockTiaSession.cs",
-      "upstreamSha256": "ad9687106eb9f3713f7fd85881c12061578b330bb9fb17fd2cb0918363a1f728",
-      "integratedSha256": "ad9687106eb9f3713f7fd85881c12061578b330bb9fb17fd2cb0918363a1f728"
+      "path": "src/TiaOpenness.Openness/EngineeringExtensions.cs",
+      "upstreamSha256": "fb7667bdfdd85d68f7b8bd985c89337f9a92c2f0c37aaa006851463037f6e6fb",
+      "integratedSha256": "fb7667bdfdd85d68f7b8bd985c89337f9a92c2f0c37aaa006851463037f6e6fb"
     },
     {
-      "path": "src/TiaOpenness.Core/Mock/MockVersionControl.cs",
-      "upstreamSha256": "37504a7f6401b5ada32e72e86aa6c6df36185279403defc7da93ddf428549ac1",
-      "integratedSha256": "941c6cb628e0fe138c1eab285ff3b3de41d6591d32a681274a764fbe033efebf"
+      "path": "src/TiaOpenness.Openness/HmiNavigator.cs",
+      "upstreamSha256": "a80e26a6b9fb1c0b210e1b34a7042c7c3419b9749a88be132f167b24cf94fe22",
+      "integratedSha256": "a80e26a6b9fb1c0b210e1b34a7042c7c3419b9749a88be132f167b24cf94fe22"
     },
     {
-      "path": "src/TiaOpenness.Core/Inspection/GitWorkspaceDiff.cs",
-      "upstreamSha256": "1a4298e8b52b19db0d3b051acf6b9ffc81941908f8a09dae3b7579b421a38306",
-      "integratedSha256": "95baeebee1a8e2b3c0a51f90edf11c7f52dcbabc9de9eeaa3b41a40aea3dec7b"
+      "path": "src/TiaOpenness.Openness/OpennessSession.cs",
+      "upstreamSha256": "207e8fa984b9974ab233dd020326a64fd53f5c3ea1c40ef6958b7867934fc2e0",
+      "integratedSha256": "4add7a9b6807eb2d44558bcbb5fda0b319f33a6871af06d10a7da16330e8697f"
     },
     {
-      "path": "src/TiaOpenness.Core/Inspection/InspectionEngine.cs",
-      "upstreamSha256": "38f154286f039ff5b9179c1ed1f18ea039576fa86d1d989262b6c256c09f8eed",
-      "integratedSha256": "0f4d31be4b3532f1f6a1f89e984c5f7dea73b01bc4b2004ae62ff6d22c8f6a12"
+      "path": "src/TiaOpenness.Openness/OpennessSessionFactory.cs",
+      "upstreamSha256": "0439a7a40b04a969a130feae32edd91ab5ee56b33dda0b165d3f317996d3126d",
+      "integratedSha256": "e34e4b979f7aaadadb9e8c4b04e8aa3b8bf39cf8cb165f68b7f401b4c10385cc"
     },
     {
-      "path": "src/TiaOpenness.Core/Abstractions/ITiaSession.cs",
-      "upstreamSha256": "2d737bdda9f34e7d905891054ff26ac6fa686c5285d3cbd70fbfdaf74cffc1ed",
-      "integratedSha256": "f9ab33b0f48300073404cd9353c025c294100fef3af56f08942133d49cc53879"
+      "path": "src/TiaOpenness.Openness/OpennessVersionControl.cs",
+      "upstreamSha256": "86047bad89bdc28015479c8058c035c532fe9bcc6fdeffec6f0d93c327b6562e",
+      "integratedSha256": "626e8f0a70b2a2b2c9d502be55a8263e28d9cfc2dc355a66b99521acad48fa58"
     },
     {
-      "path": "src/TiaOpenness.Core/Abstractions/IVersionControl.cs",
-      "upstreamSha256": "647f05d9cffdae93a29ef536d7d77d146982bf15805cdd796b2b74041219a122",
-      "integratedSha256": "647f05d9cffdae93a29ef536d7d77d146982bf15805cdd796b2b74041219a122"
+      "path": "src/TiaOpenness.Openness/PlcNavigator.cs",
+      "upstreamSha256": "57dcd9c326ca2f2d828a87727609894013f123a3ad91ab2672e81fdfb1eb3f87",
+      "integratedSha256": "57dcd9c326ca2f2d828a87727609894013f123a3ad91ab2672e81fdfb1eb3f87"
     },
     {
-      "path": "src/TiaOpenness.Client/TiaClient.cs",
-      "upstreamSha256": "37a9a98e9472f72de9a586f92b41249274b04d251d46c64e7ab4d050b27a9571",
-      "integratedSha256": "37a9a98e9472f72de9a586f92b41249274b04d251d46c64e7ab4d050b27a9571"
+      "path": "tests/TiaOpenness.Core.Tests/InspectionEngineTests.cs",
+      "upstreamSha256": "73dc04fa079c81449312078997c2348b58097ab29d633cfe7d60114eefb690f6",
+      "integratedSha256": "73dc04fa079c81449312078997c2348b58097ab29d633cfe7d60114eefb690f6"
+    },
+    {
+      "path": "tests/TiaOpenness.Core.Tests/MockTiaSessionTests.cs",
+      "upstreamSha256": "2def1a171dd0ef5020e16a1756e0b6cbf4cd26499f1be396929a7c9032cdb6ca",
+      "integratedSha256": "2def1a171dd0ef5020e16a1756e0b6cbf4cd26499f1be396929a7c9032cdb6ca"
     },
     {
       "path": "tests/TiaOpenness.Gui.Tests/AssemblyInfo.cs",
@@ -204,14 +316,14 @@
       "integratedSha256": "849ca56ad5115c6db3caf63dd6a5508da1b97b498deea3196f09e838e2e3aa31"
     },
     {
-      "path": "tests/TiaOpenness.Gui.Tests/LocalizedTextTests.cs",
-      "upstreamSha256": "1da8ff5f58431f00f50c4c1be714dcd894e303b662ae621579a9668b6e396db7",
-      "integratedSha256": "1da8ff5f58431f00f50c4c1be714dcd894e303b662ae621579a9668b6e396db7"
-    },
-    {
       "path": "tests/TiaOpenness.Gui.Tests/LocTests.cs",
       "upstreamSha256": "5d82788a40e4ffe8f9a70cdaa23a280aec89bfc95aeb321fd4c417d3cac23306",
       "integratedSha256": "5d82788a40e4ffe8f9a70cdaa23a280aec89bfc95aeb321fd4c417d3cac23306"
+    },
+    {
+      "path": "tests/TiaOpenness.Gui.Tests/LocalizedTextTests.cs",
+      "upstreamSha256": "1da8ff5f58431f00f50c4c1be714dcd894e303b662ae621579a9668b6e396db7",
+      "integratedSha256": "1da8ff5f58431f00f50c4c1be714dcd894e303b662ae621579a9668b6e396db7"
     },
     {
       "path": "tests/TiaOpenness.Gui.Tests/MainWindowTests.cs",
@@ -252,16 +364,6 @@
       "path": "tests/TiaOpenness.Gui.Tests/WpfContext.cs",
       "upstreamSha256": "81ed394a8264e0f2ce5815a2838c7fe5aeb2f2fe42a4199e0b6c9dbb0b1ebfd0",
       "integratedSha256": "81ed394a8264e0f2ce5815a2838c7fe5aeb2f2fe42a4199e0b6c9dbb0b1ebfd0"
-    },
-    {
-      "path": "tests/TiaOpenness.Core.Tests/MockTiaSessionTests.cs",
-      "upstreamSha256": "2def1a171dd0ef5020e16a1756e0b6cbf4cd26499f1be396929a7c9032cdb6ca",
-      "integratedSha256": "2def1a171dd0ef5020e16a1756e0b6cbf4cd26499f1be396929a7c9032cdb6ca"
-    },
-    {
-      "path": "tests/TiaOpenness.Core.Tests/InspectionEngineTests.cs",
-      "upstreamSha256": "73dc04fa079c81449312078997c2348b58097ab29d633cfe7d60114eefb690f6",
-      "integratedSha256": "73dc04fa079c81449312078997c2348b58097ab29d633cfe7d60114eefb690f6"
     }
   ],
   "archives": [
@@ -294,5 +396,7 @@
     "refs/tags/v2.3.0 a5f2e9918cd793058c57310a261dcea7750f0e94",
     "refs/tags/v2.4.0 31968e14d8445cb684b594de41744db81a9b962c"
   ],
-  "textHashNormalization": "CRLF normalized to LF; upstream text is read from the pinned Git source archive."
+  "textHashNormalization": "CRLF normalized to LF; upstream text is read from the pinned Git source archive.",
+  "integrationMode": "Direct Openness through local native bridge; no active MCP client/server or runtime compiler",
+  "integrationUpdatedOn": "2026-10-02"
 }

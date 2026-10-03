@@ -1,5 +1,7 @@
 # Studio integration and official API audit — 2026-10-03
 
+> Superseded for Studio transport by the maintainer's direct-Openness decision on 2026-10-02 (local time). See [native Studio and duplicate review](studio-native-and-duplicates-20261002.md). The following is the historical MCP integration audit; its API inventory and original evidence retain their original scope.
+
 Base: `offline/publicapi-validation`, `db2039e09be6e21b37cff4cbc719162aa502b212`, including the previous uncommitted local validation fixes.
 This report records source review, exact local PublicAPI XML inventory and offline functional validation.
 It is not native TIA acceptance or a statement that every official member has a working MCP wrapper.

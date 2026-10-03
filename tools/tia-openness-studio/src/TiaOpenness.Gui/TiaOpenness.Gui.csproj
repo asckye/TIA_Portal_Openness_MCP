@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../TiaOpenness.Client/TiaOpenness.Client.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
+  <Target Name="CopyNativeBridge" AfterTargets="Build">
+    <ItemGroup><BridgePayload Include="../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.exe;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.dll;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.config" /></ItemGroup>
+    <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -1,65 +1,64 @@
-# Integrated TIA Openness Studio
+# TIA Openness Studio
 
-The desktop UI, English/Chinese localization, themes, inspection rules and offline mock from
-`asckye/tia-openness-studio` now live here. The active desktop uses this repository's existing
-MCP service for native work. It does not download a compiler, load Siemens DLLs, launch TIA,
-or maintain a second native engine.
+The English/Chinese WPF desktop calls Siemens Openness directly through a local .NET Framework
+4.8 x64 bridge. Studio has no MCP client/server, HTTP endpoint, bearer token, tool discovery or
+generic MCP tools panel. The existing MCP engine and configurator remain separate entrypoints.
 
-Upstream: commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02` (v2.4.0), MIT, copyright 2026 asckye.
-See [LICENSE](LICENSE) and [file provenance](upstream.json). The complete original tree and
-Git history are preserved under `upstream/`; these archives are reference data, not build inputs.
+Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,
+copyright 2026 asckye. See [LICENSE](LICENSE) and [file provenance](upstream.json).
+The complete original tree and Git history remain under `upstream/` as reference archives.
 
-## Run
+## Build and run
 
-Requires Windows and .NET 10 SDK/runtime for this source build:
+Build on Windows with .NET 10 SDK, .NET Framework 4.8 and the authorized PublicAPI directories:
+
+```powershell
+pwsh ./scripts/build/Build-Studio.ps1 -V20ReferenceRoot 'D:\Project\TIA_Portal_MCP\TIA_V20_PublicAPI\V20' -V21ReferenceRoot 'D:\Project\TIA_Portal_MCP\TIA_V21_PublicAPI\V21\net48' -Test
+& ./tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows/TiaOpenness.exe --lang zh --openness-version 21
+```
+
+`-NuGetConfig` may select a local restore configuration. Each version compiles the same native
+source against its exact SDK into a separate adapter DLL. The build places them under the app's
+`bridge/adapters/v20` and `bridge/adapters/v21` directories. No Siemens assembly is copied into
+the output; the native bridge resolves the installed version at runtime.
+
+Choose **Connect** to attach to a running instance or start TIA when none is available. The
+Headless option controls a newly started TIA instance. Open, Save and Close now operate through
+the native session. The bridge runs calls sequentially on its STA thread. An explicit
+`--openness-version 20` or `21` selects the release; omission selects the newest supported
+installation. V14 SP1–V19 production support is not enabled.
+
+For the synthetic workflow, no PublicAPI or TIA installation is needed:
 
 ```powershell
 dotnet build tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj -c Release
-& tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows/TiaOpenness.exe --mock --lang zh
+& ./tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows/TiaOpenness.exe --mock --lang zh
 ```
 
-For the native route, first run and bind the repository's V20 or V21 HTTP MCP engine to the
-intended project through your existing MCP client. Then use its actual loopback endpoint:
+The GUI build also builds and deploys the API-independent bridge. Native adapters are built only
+by the explicit SDK build above. Runtime compiler downloads and automatic adapter compilation
+are removed. Doctor remains available without loading a native TIA session.
 
-```powershell
-& tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows/TiaOpenness.exe --mcp-url http://127.0.0.1:8080/mcp
-```
+## Workflows and boundaries
 
-Press **Connect** to adopt that service's existing project. No TIA process is started or attached
-by Studio. An optional `--bound-project C:\Projects\Line.ap21` checks a specific project;
-repeat `--software PLC_1` to choose a subset of exact software paths. With no `--software`,
-Studio discovers PLC names using the integrated engine's `GetDevices(includePlcSoftware:true)`.
-Set `TIA_STUDIO_API_KEY` in the launching environment if the HTTP engine requires a bearer token.
-Keys are not stored in UI settings or logged. Remote HTTP endpoints are outside this build's scope.
-
-## Integrated workflows
-
-| Workflow | Route and behavior |
+| Workflow | Implementation |
 |---|---|
-| Doctor | Existing `Doctor(fix:false)`; diagnosis does not change user-group membership. |
-| Project / PLC browser | Cached exact engine binding, PLC inventory and structured user-block hierarchy. |
-| XML export | Selected/all user blocks through `ExportBlock`; each run has its own output folder. |
-| Text export | `ExportAsDocuments`; actual SIMATIC SD files, not a claim of lossless source conversion. |
-| XML import | Explicit overwrite through `ImportBlock`, followed by the engine's verified readback. |
-| Compile | `CompileAndDiagnosePlc`; structured state, counts and diagnostics. |
-| Inspection | Upstream naming, author, consistency and protection rules on returned metadata. |
-| V21 workspace | List/create, compare, map preview/apply, synchronize preview/apply, local Git diff. |
-| MCP tools panel | Existing discovery, preflight and exact tool dispatch, including tools outside the desktop forms. |
-| Offline mock | Original synthetic PLC/HMI fixtures, file exports, import/compile/inspection and VCI simulation. |
+| Project / PLC / HMI browser | Native session and shared desktop contracts |
+| XML export | Native block/type export; existing output files are reported instead of silently replaced |
+| Text export | Native external-source generation for supported textual blocks/types; no claim of lossless graphical conversion |
+| XML import | Native import with the operator's overwrite choice |
+| Source import | `.scl`, `.db`, `.udt`; requires overwrite confirmation because native generation may replace blocks; temporary source has a unique name |
+| Compile | Native compiler result with counts and messages |
+| Inspection | Shared metadata rules; unused-block inference is skipped without complete reference evidence |
+| VCI | Workspace create/list, preview/map, compare, preview/synchronize; actual support follows the selected API/project |
+| Git diff | Staged, working-tree and untracked local file changes |
+| Mock | The same typed operations and dispatcher with synthetic PLC/HMI fixtures |
 
-The integrated browser currently lists **root PLC user blocks**. Software/safety units, system
-blocks, UDTs and HMI artifacts remain accessible through the MCP tools panel, not this grid.
-The desktop's VCI Map action targets the whole project. Workspace-to-project synchronization
-retains the engine's existing edition restrictions. Studio does not bypass them.
-
-Native XML import cannot promise atomic no-overwrite behavior; choosing No in the upstream
-overwrite dialog is rejected before import. Source/document imports are available through the
-MCP tools panel. Opening another project, closing the project or disconnecting TIA remains with
-the MCP session owner. Headless selection is relevant only to the mock UI in this integrated build.
-
-The original dead-code rule runs only when actual reference data is supplied. The desktop does
-not classify all blocks as unused when that data is absent. The legacy `RequireBlockComment`
-option checks **HeaderAuthor**, as documented by the upstream rule, not the block's comment.
+VCI mapping exports once at the workspace root. It does not retry a failed write with another
+directory. Import/mapping/synchronization batches stop after the first failed native operation
+and retain their partial results. An interrupted bridge call is not automatically replayed.
+These operations do not provide rollback. An unsuccessful source generation retains its uniquely
+named source for inspection. The legacy `RequireBlockComment` inspection rule checks HeaderAuthor.
 
 ## Validation
 
@@ -68,10 +67,11 @@ dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.C
 dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release
 ```
 
-Core tests include real typed-client workflows against an in-memory HTTP handler and the mock
-backend. GUI tests render and inspect WPF controls without launching TIA. These are functional
-offline checks; a native scratch-project run remains necessary before release acceptance.
+The client suite runs both in-process mock workflows and the real bridge executable with its
+mock backend, including project lifecycle, browsing, export/import, compile, inspection, VCI,
+progress and error recovery. It also runs Doctor through the ordinary bridge without a TIA
+session. WPF tests render and inspect the actual controls. Native adapters compile against the
+official V20/V21 SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Upstream's standalone `mcp` mode, dynamic compiler/native adapter and release scripts are
-preserved in the archive but not part of the active build. Use this repository's MCP engine and
-release process. This integration does not enable V14 SP1–V19 production routes or alter release gates.
+Live TIA project acceptance and release packaging remain pending. Full audit findings are in
+[the duplicate-code review](../../docs/development/studio-native-and-duplicates-20261002.md).

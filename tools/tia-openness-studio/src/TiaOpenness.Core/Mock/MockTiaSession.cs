@@ -12,7 +12,7 @@ namespace TiaOpenness.Core.Mock
 {
     /// <summary>
     /// An in-memory stand-in for a real Openness session. It exists so the bridge, the CLI,
-    /// the desktop UI and the MCP server can be built and exercised end to end on a machine
+    /// the desktop UI can be built and exercised end to end on a machine
     /// with no TIA Portal &#8212; exports really write files, compiles really return diagnostics,
     /// and the inspection rules run against the same shapes as production.
     /// </summary>

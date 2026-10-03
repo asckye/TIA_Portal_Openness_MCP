@@ -44,7 +44,6 @@
 
         <!-- session controls, in the order they are used: how it looks, how it runs, then go -->
         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-          <Button Content="MCP tools / 工具" Click="OnMcpTools" Margin="0,0,10,0" />
           <Border Style="{StaticResource Ui.SegmentBar}" ToolTip="{l:Tr Theme.Switch}">
             <StackPanel Orientation="Horizontal">
               <RadioButton Style="{StaticResource Ui.Segment}" GroupName="Appearance"
@@ -63,7 +62,7 @@
                     ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding UseMock}"
                     Margin="18,0,0,0" />
           <CheckBox Style="{StaticResource Ui.Switch}" Content="{l:Tr Toolbar.Headless}"
-                    ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Headless}" IsEnabled="{Binding UseMock}"
+                    ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Headless}"
                     Margin="18,0,18,0" />
 
           <Button Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}"

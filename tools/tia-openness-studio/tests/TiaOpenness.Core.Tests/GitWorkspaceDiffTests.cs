@@ -49,6 +49,17 @@ public sealed class GitWorkspaceDiffTests
         Assert.Contains(diff.Lines, l => l.Text == "+new source");
     }
 
+    [Fact]
+    public void Staged_only_block_is_visible_before_the_first_commit()
+    {
+        var root = CreateRepository();
+        File.WriteAllText(Path.Combine(root, "Staged.scl"), "staged source body\n");
+        Git(root, "add", "Staged.scl");
+        var diff = GitWorkspaceDiff.Read("test", root, "Staged");
+        Assert.True(diff.Available, diff.Detail);
+        Assert.Contains(diff.Lines, l => l.Text == "+staged source body");
+    }
+
     private static string CreateRepository()
     {
         var root = Path.Combine(Path.GetTempPath(), "studio-git-test-" + Guid.NewGuid().ToString("N"));
