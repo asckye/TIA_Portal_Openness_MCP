@@ -49,7 +49,9 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('Assembly.Load', source)
 
     def test_move_refusal_and_recovery_precede_cleanup(self):
-        source = read(SERVER / 'Siemens/Portal/Portal.Helpers.cs').split('public string MoveBlockToGroup', 1)[1].split('private PlcTypeGroup?', 1)[0]
+        # P3-13a moved the method into the PLC block service; it is the last member there.
+        source = re.split(r'\n        (?:public|private|internal) ',
+                          read(SERVER / 'Siemens/Services/PlcBlocksService.cs').split('public string MoveBlockToGroup', 1)[1], 1)[0]
         self.assertLess(source.index('if (block is OB)'), source.index('EnsurePlcBlockGroup'))
         self.assertLess(source.index('moveVerified = verifyGroup'), source.index('finally'))
         self.assertIn('if (moveVerified)', source.split('finally', 1)[1])
