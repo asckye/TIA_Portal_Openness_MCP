@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-③ (2.7.42): typed Safety Validation Assistant option package (V21 only; every tool answers NotSupportedOnVersion on
+    // Typed Safety Validation Assistant option package (V21 only; every tool answers NotSupportedOnVersion on
     // V20). Activation tests live under "Cross-device functions > Safety Activation Tests" and may be organised in user groups, which
     // groupPathJson names outermost first ([] = root).
     public static partial class McpServer

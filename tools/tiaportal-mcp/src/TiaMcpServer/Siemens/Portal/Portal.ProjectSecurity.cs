@@ -50,7 +50,7 @@ namespace TiaMcpServer.Siemens
             if (item is UmcUserGroup group) row["roles"] = Names(group.Roles);
             if (item is CustomRole custom) row["assignedEngineeringRights"] = Names(custom.AssignedEngineeringRights);
             if (item is SystemRole system) row["assignedEngineeringRights"] = Names(system.AssignedEngineeringRights);
-            // 2.7.32: DeviceFunctionRight rows typed (Identifier / Group; Comment on both the system and the custom subclass).
+            // DeviceFunctionRight rows typed (Identifier / Group; Comment on both the system and the custom subclass).
             if (item is DeviceFunctionRight right) { row["identifier"] = right.Identifier; row["group"] = right.Group; row["rightClass"] = right.GetType().Name; }
             if (item is SystemDeviceFunctionRight systemRight) row["comment"] = systemRight.Comment;
             if (item is CustomDeviceFunctionRight customRight) row["comment"] = customRight.Comment;
@@ -334,7 +334,7 @@ namespace TiaMcpServer.Siemens
         }
         private static string PublishCompareResult(object result, bool includeIdentical, int maxDepth, int offset, int limit, JsonObject meta)
         {
-            // 2.7.33: the software compare tree is typed (CompareResult.RootElement -> CompareResultElement.Elements); the library
+            // The software compare tree is typed (CompareResult.RootElement -> CompareResultElement.Elements); the library
             // tree keeps the reflective walk (LibraryCompareResultElement lives in the Library.Compare namespace).
             var root = result is global::Siemens.Engineering.Compare.CompareResult typedResult ? (object)typedResult.RootElement : EngineeringGroupOperations.Get(result, "RootElement");
             if (root is global::Siemens.Engineering.Compare.CompareResultElement rootElement) meta["rootElement"] = new JsonObject { ["leftName"] = rootElement.LeftName, ["rightName"] = rootElement.RightName, ["comparisonResult"] = rootElement.ComparisonResult.ToString(), ["detailedInformation"] = rootElement.DetailedInformation, ["elements"] = EngineeringGroupOperations.Items(rootElement.Elements).Count() };
@@ -424,7 +424,7 @@ namespace TiaMcpServer.Siemens
                 ProjectSecurityLogic.ValidatePage(offset, limit);
                 if (_portal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 var parts = EngineeringGroupOperations.Parts(folderPath, true);
-                // 2.7.33: typed root (TiaPortal.SettingsFolders -> TiaPortalSettingsFolder.Folders / Settings -> TiaPortalSetting.Name / Value).
+                // Typed root (TiaPortal.SettingsFolders -> TiaPortalSettingsFolder.Folders / Settings -> TiaPortalSetting.Name / Value).
                 TiaPortalSettingsFolderComposition rootFolders = _portal.SettingsFolders; object collection = rootFolders; object? folder = null;
                 foreach (var part in parts)
                 {
@@ -449,7 +449,7 @@ namespace TiaMcpServer.Siemens
                     var provider = _project!.GetService<CustomIdentityProvider>() ?? throw new NotSupportedException("CustomIdentityProvider service unavailable on the project root.");
                     var identity = new JsonObject { ["key"] = customIdentityKey };
                     try { identity["value"] = provider.Get(customIdentityKey); identity["found"] = true; }
-                    catch (CustomIdentityNotFoundException) { identity["value"] = null; identity["found"] = false; }
+                    catch (CustomIdentityNotFoundException) { /* swallow(probe-optional): A missing custom identity is reported as found=false, without failing the settings read. */ identity["value"] = null; identity["found"] = false; }
                     meta["customIdentity"] = identity;
                 }
                 meta["apiCallSuccess"] = true; meta["dataComplete"] = complete;

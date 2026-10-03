@@ -10,7 +10,7 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        // 2.7.32: CertificateTemplate is read typed (Signature / SubjectCommonName / Usage / ValidFrom / ValidUntil + SubjectAlternativeNames).
+        // CertificateTemplate is read typed (Signature / SubjectCommonName / Usage / ValidFrom / ValidUntil + SubjectAlternativeNames).
         private static JsonObject TemplateRow(CertificateTemplate template)
         {
             var row = new JsonObject { ["signature"] = template.Signature.ToString(), ["subjectCommonName"] = template.SubjectCommonName, ["usage"] = template.Usage.ToString(), ["validFrom"] = EngineeringScalarProperties.Json(template.ValidFrom), ["validUntil"] = EngineeringScalarProperties.Json(template.ValidUntil) };

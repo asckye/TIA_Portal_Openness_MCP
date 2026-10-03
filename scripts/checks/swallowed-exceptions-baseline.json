@@ -27,12 +27,6 @@
       "line": 1815
     },
     {
-      "fingerprint": "06d284359e4bd5686b6dc910e3f06b7b817dacb95a1b18e5f81d9cd06149971d",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.SafetyValidation.cs",
-      "line": 59
-    },
-    {
       "fingerprint": "08c63a2b24e7ba75463e9d04559b582f49d71178563430cce5440b1599886431",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
@@ -943,12 +937,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
       "line": 176
-    },
-    {
-      "fingerprint": "b694be138104e1f2490f1c955272036665dbbcc6984e9dc91700ef7dc8c2b41f",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.ProjectSecurity.cs",
-      "line": 452
     },
     {
       "fingerprint": "b780ef375c445a852dabd9b69dce758cbbc7d8620aac4c228dcc495be8a16847",

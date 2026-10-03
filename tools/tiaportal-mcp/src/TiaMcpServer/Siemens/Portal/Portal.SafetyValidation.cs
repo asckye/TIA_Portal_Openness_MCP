@@ -15,7 +15,7 @@ using Siemens.Engineering.SafetyValidation;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): typed Safety Validation Assistant option package (V21 Siemens.Engineering.SafetyValidation.dll; the
+    // Typed Safety Validation Assistant option package (V21 Siemens.Engineering.SafetyValidation.dll; the
     // namespace does not exist on V20, so every tool answers NotSupportedOnVersion there). Official entry: Project.GetService<
     // SafetyValidationAssistant>() -> ActivationTests / ActivationTestGroups (nested user groups) and the DeviceQuery service listing
     // the evaluation devices; ActivationTest -> SafetyFunctions -> Conditions / TraceConfiguration; TestValidity.CheckValidity() and
@@ -56,7 +56,7 @@ namespace TiaMcpServer.Siemens
         {
             var all = EngineeringGroupOperations.Items(test.SafetyFunctions).Cast<SafetyFunction>().ToArray();
             var byName = all.FirstOrDefault(f => f.Name == name); if (byName != null) return byName;
-            var byTest = all.Where(f => { try { return f.TestName == name; } catch { return false; } }).Take(2).ToArray();
+            var byTest = all.Where(f => { try { return f.TestName == name; } catch { /* swallow(enumerate-optional): An unreadable TestName cannot match the requested safety function; continue checking the remaining candidates. */ return false; } }).Take(2).ToArray();
             if (byTest.Length == 1) return byTest[0];
             throw new PortalException(PortalErrorCode.NotFound, byTest.Length == 0 ? "Safety function not found in activation test '" + test.Name + "': " + name + " (Name or unique TestName)." : "TestName '" + name + "' is ambiguous in activation test '" + test.Name + "'; use the generated Name.");
         }
@@ -168,7 +168,7 @@ namespace TiaMcpServer.Siemens
                 if (action == "checkValidity") { meta["validity"] = CheckValidity(existing!); return "Activation test validity checked (TestValidity.CheckValidity); nothing changed."; }
                 DeviceItem? device = null;
                 if (action == "create") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");
-                if (action == "changeEvaluationDevice") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");   // 2.7.42 real project: a drive from AvailableDevices is refused natively ("not a valid evaluation device")
+                if (action == "changeEvaluationDevice") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");   // TIA Portal V21 real-project evidence (recorded 2026-09-20): a drive from AvailableDevices is refused natively ("not a valid evaluation device"); see docs/reference/real-machine-ledger.md.
                 if (device != null) meta["evaluationDevice"] = DeviceItemRef(device);
                 ActivationTest? source = action == "createFromTest" ? ExactActivationTest(scope.Tests, sourceName) : null;
                 MasterCopy? masterCopy = action == "createFromMasterCopy" ? ExactMasterCopy(libraryName, masterCopyPath) : null;

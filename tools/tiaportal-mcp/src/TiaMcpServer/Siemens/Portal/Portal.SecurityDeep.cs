@@ -11,7 +11,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 3 sub-batch 3 (2.7.32): project-global syslog servers, password policies and UMC users / groups / server.
+    // Project-global syslog servers, password policies and UMC users / groups / server.
     // Official pages: "Managing Syslog configuration" (PLC service), "Setting password policies for UMAC", "Setting password
     // policy for PLC", "Functions for UMAC Global Users and UMC Server" (offline users, import, activate, delete, roles,
     // authentication, synchronize). Everything is the official V20/V21 Siemens.Engineering.Security / .Umac / .HW.Features API.
