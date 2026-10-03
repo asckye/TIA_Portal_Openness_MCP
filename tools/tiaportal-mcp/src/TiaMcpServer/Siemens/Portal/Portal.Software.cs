@@ -36,7 +36,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. 2.8.0 split by family into Portal.Software.<Family>.cs; behavior unchanged.
     public partial class Portal
     {
         #region software
@@ -85,24 +84,24 @@ namespace TiaMcpServer.Siemens
                             result.Add(plc);
                         }
                     }
-                    catch { }
-                    try { if (it.DeviceItems != null) foreach (var ch in it.DeviceItems) if (ch != null) stack.Push(ch); } catch { }
+                    catch { /* swallow(probe-optional): An unavailable software service must not prevent discovering PLCs on other device items. */ }
+                    try { if (it.DeviceItems != null) foreach (var ch in it.DeviceItems) if (ch != null) stack.Push(ch); } catch { /* swallow(enumerate-optional): An unreadable child collection must not prevent inspecting other device items. */ }
                 }
             }
 
             void WalkDevices(DeviceComposition? devices)
             {
                 if (devices == null) return;
-                foreach (var d in devices) { try { Collect(d.DeviceItems); } catch { } }
+                foreach (var d in devices) { try { Collect(d.DeviceItems); } catch { /* swallow(enumerate-optional): An unreadable device must not prevent PLC discovery on other devices. */ } }
             }
             void WalkGroups(DeviceUserGroupComposition? groups)
             {
                 if (groups == null) return;
-                foreach (var g in groups) { try { WalkDevices(g.Devices); WalkGroups(g.Groups); } catch { } }
+                foreach (var g in groups) { try { WalkDevices(g.Devices); WalkGroups(g.Groups); } catch { /* swallow(enumerate-optional): An unreadable device group must not prevent inspecting sibling groups. */ } }
             }
 
-            try { WalkDevices(_project.Devices); } catch { }
-            try { WalkGroups(_project.DeviceGroups); } catch { }
+            try { WalkDevices(_project.Devices); } catch { /* swallow(enumerate-optional): Root device enumeration is best effort; grouped devices are still inspected. */ }
+            try { WalkGroups(_project.DeviceGroups); } catch { /* swallow(enumerate-optional): Grouped device enumeration is best effort; already discovered PLCs are retained. */ }
             return result;
         }
 
@@ -114,12 +113,10 @@ namespace TiaMcpServer.Siemens
             {
                 var names = GetAllPlcSoftware().Select(p => p.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToList();
                 var paths = names.Count > 0 ? " Available PLC paths: " + string.Join(", ", names) : string.Empty;
-                // 附上设备树遍历中被吞掉的真因：路径其实是对的、只是遍历半途抛了的那种情况，
-                // 光报 "Available PLC paths" 会把用户引去改一个本来就没错的参数。
-                // 遍历正常时 DeviceScanErrorSuffix() 返回空串，消息与以前逐字节相同。
+                // 可用路径提示保留设备树遍历错误，区分路径不存在与遍历失败。
                 return paths + DeviceScanErrorSuffix();
             }
-            catch { return DeviceScanErrorSuffix(); }
+            catch { /* swallow(probe-optional): Unavailable PLC names leave the recorded device-scan diagnostic as the not-found hint. */ return DeviceScanErrorSuffix(); }
         }
 
         public CompilerResult CompileSoftware(string softwarePath, string password = "")
@@ -174,7 +171,7 @@ namespace TiaMcpServer.Siemens
                     foreach (CompilerResultMessage top in EngineeringGroupOperations.Items(result.Messages).Cast<CompilerResultMessage>().Take(20))
                         _logger?.LogInformation("Compile {Path}: {State} {Description} ({Errors} errors / {Warnings} warnings, {Time}, {Nested} nested)", top.Path, top.State, top.Description, top.ErrorCount, top.WarningCount, top.DateTime, EngineeringGroupOperations.Items(top.Messages).Count());
                 }
-                catch { }
+                catch { /* swallow(logging-failure): Optional compiler-message logging must not replace the native compile result. */ }
 
                 return result;
             }

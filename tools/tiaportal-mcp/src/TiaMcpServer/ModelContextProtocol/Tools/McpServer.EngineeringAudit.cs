@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     while (reader.ReadLine() is string line)
                     {
                         try { var row = JsonNode.Parse(line); if (row != null) { queue.Enqueue(row); if (queue.Count > take) queue.Dequeue(); } }
-                        catch (System.Text.Json.JsonException) { malformed++; }
+                        catch (System.Text.Json.JsonException) { /* swallow(parse-fallback): Malformed diagnostic records are counted and skipped so the remaining bounded log window can be read. */ malformed++; }
                     }
             return new ResponseMessage { Message = "Recent journal entries read; partial trailing records are counted separately.", Meta = new JsonObject {
                 ["success"] = true, ["directory"] = root, ["records"] = new JsonArray(queue.ToArray()), ["malformedLines"] = malformed, ["filesRead"] = files.Length } };

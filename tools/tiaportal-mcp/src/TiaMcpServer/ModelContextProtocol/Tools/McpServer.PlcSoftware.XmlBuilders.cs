@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - XmlBuilders
@@ -380,7 +379,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 root = JsonNode.Parse(json) as JsonObject;
             }
             catch
-            {
+            { /* swallow(parse-fallback): Capability analysis reports a warning; the builder still performs authoritative JSON validation. */
                 result.Warnings.Add("PLC JSON could not be parsed for capability analysis; builder will still validate the schema.");
                 result.NextActions.Add("Fix JSON parsing/schema errors before importing into TIA Portal.");
                 return result;
@@ -455,7 +454,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return string.IsNullOrWhiteSpace(name) ? "" : name!.Trim();
             }
             catch
-            {
+            { /* swallow(parse-fallback): An unreadable generated object name falls back to the artifact kind for the temporary filename. */
                 return "";
             }
         }

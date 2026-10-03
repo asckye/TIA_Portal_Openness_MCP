@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. 2.8.0 split by family into McpServer.PlcSoftware.<Family>.cs; behavior unchanged.
     public static partial class McpServer
     {
         #region plc software
@@ -72,10 +71,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeObjectProperty(objectKind, objectPath, propertyPath, softwarePath, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 对象解析成功即为成功；成员表可以为空，实际数量由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,

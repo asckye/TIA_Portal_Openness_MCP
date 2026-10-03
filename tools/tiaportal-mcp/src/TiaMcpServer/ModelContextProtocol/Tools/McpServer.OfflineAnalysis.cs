@@ -154,7 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static void DeleteAnalysisTempDir(string? tempDir)
         {
             if (string.IsNullOrWhiteSpace(tempDir)) return;
-            try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* best-effort cleanup of our own temp export */ }
+            try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* swallow(cleanup): Failure to delete an analysis export must not replace the comparison result or its original error. */ /* best-effort cleanup of our own temp export */ }
         }
 
         // File-only tools never need a project; mirrors RunHmiStepTool's meta/status contract without touching Portal.

@@ -309,10 +309,7 @@ namespace TiaMcpServer.Siemens
 
             if (IsProjectNull())
             {
-                // 原来返回空串，工具层的 else 分支于是报「Failed retrieving software tree from 'X'」
-                // + InternalError —— 最常见的一种错（忘了 Connect）拿到的是最没用的一句话：
-                // 既没说该去 Connect，又把用户的操作顺序问题说成服务器内部错误。
-                // 同轮的 GetOnlineState / GetTechnologyObjects 对同一情形已经这么改了，这里补齐。
+                // 无工程时明确拒绝，提示调用方先连接并打开工程。
                 throw new PortalException(PortalErrorCode.InvalidState,
                     "GetSoftwareTree: no project is open. Call Connect + OpenProject "
                     + "(or AttachToOpenProject) first.");
@@ -367,10 +364,7 @@ namespace TiaMcpServer.Siemens
                 }
                 else
                 {
-                    // 原来这里把一句「找不到」当作**树的内容**返回。工具层只判了
-                    // string.IsNullOrEmpty(tree)，非空即算成功 —— 于是路径写错会得到
-                    // outcome=Success + message「Software tree retrieved from 'XXX'」，
-                    // 而树体里写着找不到。两个信号互相矛盾，客户端只读 message 就被骗了。
+                    // 找不到软件必须失败，错误文本不能作为成功的树内容返回。
                     throw new PortalException(PortalErrorCode.NotFound,
                         $"GetSoftwareTree: PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix());
                 }
@@ -382,8 +376,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error getting software tree for {SoftwarePath}", softwarePath);
-                // 同理：异常文本原来也被当成树返回，于是「遍历炸在半路」也是一次成功。
-                // 残缺的树比没有树更危险 —— 它看起来完全正常。
+                // 遍历失败必须抛出，不能返回看似完整的残缺树。
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"GetSoftwareTree failed halfway through '{softwarePath}': {ex.Message}. "
                     + "The tree would have been INCOMPLETE, so it is not returned.", null, ex);
@@ -1411,7 +1404,7 @@ namespace TiaMcpServer.Siemens
                         var sc = GetSoftwareContainer(objectPath);
                         if (sc?.Software != null) return sc.Software;
                     }
-                    catch { }
+                    catch { /* swallow(probe-optional): An unavailable HMI software container leaves this optional reflection target unresolved. */ }
                     return null;
                 }
 
@@ -1492,9 +1485,7 @@ namespace TiaMcpServer.Siemens
                             }
                         }
                     }
-                    catch { }
-                    // 原来这里还有一层 TryFindByNameInCollection(tagsComp, Array.Empty<string>(), ...) 的"兜底"，
-                    // 但该方法只遍历 propertyHints，空数组＝循环体一次不进＝恒返回 null，是死代码。
+                    catch { /* swallow(enumerate-optional): An unreadable HMI tag collection leaves the reflection target unresolved. */ }
                     return null;
                 }
 
@@ -1511,7 +1502,6 @@ namespace TiaMcpServer.Siemens
                     if (sc?.Software == null) return null;
                     var conns = TryGetPropertyValue(sc.Software, "Connections");
                     if (conns == null) return null;
-                    // 去掉 ?? TryFindByNameInCollection(conns, Array.Empty<string>(), ...)：空 hints 恒返回 null。
                     return FindExistingByName(conns, connectionName);
                 }
 
@@ -1549,7 +1539,7 @@ namespace TiaMcpServer.Siemens
                             }
                         }
                     }
-                    catch { }
+                    catch { /* swallow(enumerate-optional): An unreadable screen-item collection leaves the reflection target unresolved. */ }
                     return null;
                 }
 
@@ -1622,10 +1612,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
@@ -1647,10 +1634,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
@@ -1723,10 +1707,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
@@ -1846,7 +1827,7 @@ namespace TiaMcpServer.Siemens
                     if (pt == typeof(bool)) { converted[i] = Convert.ToBoolean(av); continue; }
                     if (pt == typeof(System.IO.DirectoryInfo) && av is string directory) { converted[i] = new System.IO.DirectoryInfo(directory); continue; }
                     if (pt == typeof(System.IO.FileInfo) && av is string file) { converted[i] = new System.IO.FileInfo(file); continue; }
-                    // 2.7.53: enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
+                    // Convert enum parameters by name (PlcProtectionAccessLevel, ImportOptions, ...) and SecureString parameters from a
                     // plain string (SetPassword / Protect / LoginToSafetyOfflineProgram) - the bridge could reach neither before.
                     if (pt.IsEnum && av is string enumName) { converted[i] = Enum.Parse(pt, enumName, true); continue; }
                     if (pt == typeof(SecureString) && av is string secret) { converted[i] = ProjectSecurityLogic.Secure(secret); continue; }
@@ -1965,10 +1946,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
@@ -2035,10 +2013,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
@@ -2098,10 +2073,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
             if (o == null)
             {
-                // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
-                // 客户端看到的是 isError=false + 一张空成员表，模型据此断定「这个对象没有任何成员/属性」，
-                // 而真相是路径写错了。反射桥恰恰是**用来猜路径**的工具，猜错时它必须响，
-                // 否则每一次猜错都被记成一条「已确认为空」的事实，越猜越偏。
+                // 路径未解析必须失败，不能用空成员表表示一个不存在的对象。
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
