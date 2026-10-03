@@ -10,6 +10,7 @@
 | [version-tools.json](version-tools.json) | 八版工具分组及完整列表 |
 | [tools-list.json](tools-list.json) | V21 完整引擎目录；实际连接仍以 tools/list 为准 |
 | `contracts/baseline/*.json` | 八版离线工具契约基线，记录输入 schema、描述哈希及 V20/V21 lite 名单；用 `scripts/checks/Snapshot-ToolContracts.py capture` 生成，`compare --baseline manifest/contracts/baseline --current <目录>` 检查兼容性，破坏性变化返回 1 |
+| `contracts/responses/*.json` | 八版离线响应与参数拒绝基线；V20/V21 全部工具覆盖 full 直接调用和 lite 桥接路径。大响应、GetToolUsage 和新增桥接拒绝保存规范化 SHA-256、字节数及 JSON 类型摘要；用 `scripts/checks/Snapshot-ToolResponses.py capture` 连续抓取两轮，`compare --baseline manifest/contracts/responses --current <目录>` 严格比较，任何变化返回 1；命令和范围见[验证指南](../docs/development/validation.md#工具契约兼容检查) |
 | [version-api-audit.json](version-api-audit.json) | 官方 SDK 与编译调用成员的对照，不代表原生功能覆盖率 |
 | [tool-usage-coverage.json](tool-usage-coverage.json) | 各版本工具、操作、编程示例和官方来源的检索检查 |
 

@@ -74,6 +74,27 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 只报告。基线只检查输入契约，不检查返回结构或原生语义。缺少 ASP.NET Core 8 时，抓取前把
 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
+返回结构另用 `manifest/contracts/responses` 守护。先在当前 worktree 依次构建 Release 的 V20、V21
+（指定对应 `SiemensEngineeringDirectory`），再构建 HttpTests 和 LegacyHost；`--exe` 指向这些新产物：
+
+```powershell
+$engine = 'tools/tiaportal-mcp/src/TiaMcpServer'
+$harness = 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
+$legacy = 'tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/bin/Release/net8.0/TiaMcpServer.exe'
+python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-8-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcpServer.exe" --exe "21=$engine/bin/Release/net48/TiaMcpServer.exe" --temp-root TiaMcp_Output/responses-temp --output TiaMcp_Output/responses
+python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/responses --current TiaMcp_Output/responses
+```
+
+脚本复用 STDIO 启动器和统一示例检查，每次 capture 在全新进程中连续抓取两轮，一致才写入。
+V20 记录 2,007 次不同调用、V21 记录 2,060 次；两版分别对全部 477/488 个广告工具执行 full 直接参数拒绝，以及 lite `CallTool` 桥接拒绝。
+输入使用两个仅大小写不同的参数名：`VersionPolicyTool` 在转交内部调用前拒绝，桥接层在参数绑定和 `InvokeToolMethod` 前拒绝；不能以单个未知参数代替，因为桥接会忽略它。
+每个原始响应必须带预期拒绝标记。桥接的 476/487 个目标走重复参数诊断，`CallTool` 自身走更早的递归拒绝并单独统计；脚本列明源码依据，不新增可执行目标工具体调用。
+原有 18 个纯离线构造/分析示例、9 个 L1 领域断开状态、参数诊断及 V20 的 11 个 V21 专用工具拒绝全部保留；GetToolUsage 检索全部工具及 493/545 个操作示例，不代表执行这些操作。
+Foundation 六版分别记录 59/60/62/62/62/64 次调用，对全部 57/58/60/60/60/62 个广告工具验证宿主参数拒绝，并执行纯托管 `Bootstrap`、`RunCapabilitySelfTest`。参数校验位于 worker/构造器调用之前；正常 `GetState` 需要 worker，故只记录拒绝调用，正常调用跳过原因入基线。Foundation 不广告 `CallTool`，逐工具记录桥接跳过原因。`--dotnet-root` 仅为这些宿主设置 `DOTNET_ROOT` 和 `DOTNET_ROOT_X64`；不使用 `--catalog` 或启动 worker。
+JSON 对象键排序、数组保序，仅屏蔽脚本列明的生成时间路径。GetToolUsage、超过 16 KiB 的响应及新增 lite 桥接拒绝保存完整规范化响应的 SHA-256、UTF-8 字节数、顶层键与 JSON 类型摘要；消息和错误文本也参与哈希。其他响应保留全文，每个调用一行；V20/V21 每版约 0.76 MB，Foundation 每版约 40 KB。响应上限固定为 2,000,000 字符，不覆盖自动导出分页。
+compare 报告每版 changed/added/removed 数及变化调用的首个差异路径；摘要变化报告哈希路径和字节数增减，任何差异（含新增和元数据）返回 1。两次独立 capture 的八版文件逐字节相同。
+默认 HTTP harness 两版仍在各 16 项检查通过后因 `HttpListener` 的 `PlatformNotSupportedException` 停止。以上均为离线证据，不代表原生 TIA 验收。
+
 ## 压力与故障检查
 
 `Test-LocalStability.py` 对 V20/V21 的普通/隔离进程、两种传输和 full/lite
