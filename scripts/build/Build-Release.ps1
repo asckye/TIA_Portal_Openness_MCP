@@ -9,6 +9,42 @@ param(
     [ValidateRange(10,10000)][int]$LocalStabilityRounds=50
 )
 $ErrorActionPreference='Stop'
+
+$expectedCheckCounts=[ordered]@{
+    diagnosticBehavior=@{value=36;mode='min'}
+    diagnosticRejection=@{value=5;mode='min'}
+    nativeMcpSafety=@{value=8;mode='min'}
+    crashEvidence=@{value=6;mode='min'}
+    nativeJournalReader=@{value=3;mode='min'}
+    processLeases=@{value=2;mode='min'}
+    workerFaults=@{value=25;mode='min'}
+    workerProtocol=@{value=58;mode='min'}
+    softwareLookup=@{value=45;mode='min'}
+    engineeringApiV20=@{value=2840;mode='min'}
+    engineeringApiV21=@{value=3126;mode='min'}
+    v21Ecosystem=@{value=75;mode='min'}
+    # V21 bridge verification enumerates the eight fixed native script API signatures.
+    globalScriptV21=@{value=8;mode='exact'}
+    graphicSelection=@{value=8;mode='min'}
+    runtimeSettingsV20=@{value=8;mode='min'}
+    runtimeSettingsV21=@{value=9;mode='min'}
+    ecosystem=@{value=31;mode='min'}
+}
+function Assert-CheckCount([string]$Key,$Actual,[string]$Message) {
+    $expected=$expectedCheckCounts[$Key]
+    if($null -eq $expected){throw "Unknown check-count gate: $Key"}
+    if($null -eq $Actual -or
+        ($expected.mode -eq 'min' -and $Actual -lt $expected.value) -or
+        ($expected.mode -eq 'exact' -and $Actual -ne $expected.value)){
+        $reportedActual=if($null -eq $Actual){'missing'}else{$Actual}
+        throw "$Message; expected $($expected.mode) $($expected.value), actual $reportedActual"
+    }
+}
+function Assert-MatchedCheckCount([string]$Key,[System.Text.RegularExpressions.Match]$Match,[string]$Message) {
+    $actual=if($Match.Success){[int]$Match.Groups[1].Value}else{$null}
+    Assert-CheckCount $Key $actual $Message
+}
+
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $source=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer'
 [xml]$projectXml=Get-Content (Join-Path $source 'TiaMcpServer.V21.csproj') -Raw
@@ -70,16 +106,20 @@ $diagnosticFixture=Join-Path (Split-Path $diagnosticProject) 'bin/Release/net48/
 $diagnosticOut=Join-Path $out ('native-diagnostics-'+[Guid]::NewGuid().ToString('N'))
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py'),'--fixture',$diagnosticFixture,'--weaver',$weaver,'--output',$diagnosticOut) 'native-diagnostics-tests.log'
 $diagnosticTests=Get-Content (Join-Path $diagnosticOut 'result.json') -Raw | ConvertFrom-Json
-if($diagnosticTests.behaviorChecks -lt 36 -or $diagnosticTests.rejectionChecks -ne 5 -or $diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate incomplete'}
+Assert-CheckCount 'diagnosticBehavior' $diagnosticTests.behaviorChecks 'Native diagnostic fixture behavior checks incomplete'
+Assert-CheckCount 'diagnosticRejection' $diagnosticTests.rejectionChecks 'Native diagnostic fixture rejection checks incomplete'
+if($diagnosticTests.nativeTiaExecuted){throw 'Native diagnostic fixture gate incomplete'}
 # Compile the separate opt-in native harness, but execute ONLY its offline safety
 # checks here. Live TIA creation belongs to a dedicated, explicitly enabled run.
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeLifecycle.py'),'--self-test') 'native-supervisor.log'
 $nativeSupervisor=[regex]::Match((Get-Content (Join-Path $out 'native-supervisor.log') -Raw),'COMPLETE: (\d+) native supervisor checks passed; live TIA tests NOT RUN')
 if(!$nativeSupervisor.Success){throw 'Native supervisor offline checks incomplete'}
 Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--self-test') 'native-mcp-safety.log'
-if ((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw) -notmatch 'COMPLETE: 8 native MCP safety checks passed') { throw 'Native MCP safety checks incomplete' }
+$nativeMcpSafety=[regex]::Match((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw),'COMPLETE: (\d+) native MCP safety checks passed')
+Assert-MatchedCheckCount 'nativeMcpSafety' $nativeMcpSafety 'Native MCP safety checks incomplete'
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
-if ((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw) -notmatch 'COMPLETE: 6 crash evidence checks passed') { throw 'Crash evidence collector checks incomplete' }
+$crashEvidence=[regex]::Match((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw),'COMPLETE: (\d+) crash evidence checks passed')
+Assert-MatchedCheckCount 'crashEvidence' $crashEvidence 'Crash evidence collector checks incomplete'
 Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
 $checks=[ordered]@{}
 foreach($major in @(20,21)) {
@@ -116,22 +156,23 @@ foreach($major in @(20,21)) {
     Run $harness @($exe,'native-diagnostics-only',$api) "native-jit-v$major.log"
     $nativeJit=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) native diagnostic wrappers JIT prepared; (\d+) open generic wrappers')
     if(!$nativeJit.Success -or ([int]$nativeJit.Groups[1].Value+[int]$nativeJit.Groups[2].Value) -ne $coverage.count){throw 'Diagnostic wrapper JIT/inventory mismatch'}
-    if((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw) -notmatch 'COMPLETE: 3 native journal reader checks passed'){throw 'Native journal reader checks incomplete'}
+    $nativeJournalReader=[regex]::Match((Get-Content (Join-Path $out "native-jit-v$major.log") -Raw),'COMPLETE: (\d+) native journal reader checks passed')
+    Assert-MatchedCheckCount 'nativeJournalReader' $nativeJournalReader 'Native journal reader checks incomplete'
     Run $harness @($exe,'process-leases-only') "process-leases-v$major.log"
-    if ((Get-Content (Join-Path $out "process-leases-v$major.log") -Raw) -notmatch 'COMPLETE: 2 process lease checks passed') { throw 'Cross-process lease checks incomplete' }
+    $processLeases=[regex]::Match((Get-Content (Join-Path $out "process-leases-v$major.log") -Raw),'COMPLETE: (\d+) process lease checks passed')
+    Assert-MatchedCheckCount 'processLeases' $processLeases 'Cross-process lease checks incomplete'
     Run $harness @($exe,'worker-supervisor-only') "worker-supervisor-v$major.log"
     $workerFaults=[regex]::Match((Get-Content (Join-Path $out "worker-supervisor-v$major.log") -Raw),'COMPLETE: (\d+) worker supervisor checks passed; no TIA connection attempted')
-    if(!$workerFaults.Success -or [int]$workerFaults.Groups[1].Value -lt 25){throw 'Worker supervisor fault checks incomplete'}
+    Assert-MatchedCheckCount 'workerFaults' $workerFaults 'Worker supervisor fault checks incomplete'
     Run $Python @((Join-Path $repo 'scripts/checks/Test-WorkerIsolation.py'),'--exe',$exe,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "worker-protocol-v$major.log"
     $workerProtocol=[regex]::Match((Get-Content (Join-Path $out "worker-protocol-v$major.log") -Raw),'COMPLETE: (\d+) isolated MCP checks passed; no TIA connection attempted')
-    if(!$workerProtocol.Success -or [int]$workerProtocol.Groups[1].Value -lt 58){throw 'Isolated MCP protocol checks incomplete'}
+    Assert-MatchedCheckCount 'workerProtocol' $workerProtocol 'Isolated MCP protocol checks incomplete'
     Run $harness @($exe,'software-lookup-only',$api) "software-lookup-v$major.log"
     $softwareLookup=[regex]::Match((Get-Content (Join-Path $out "software-lookup-v$major.log") -Raw),'COMPLETE: (\d+) software lookup checks passed')
-    if(!$softwareLookup.Success -or [int]$softwareLookup.Groups[1].Value -ne 45){throw 'Software lookup/listing validation did not report complete success'}
+    Assert-MatchedCheckCount 'softwareLookup' $softwareLookup 'Software lookup/listing validation did not report complete success'
     Run $harness @($exe,'engineering-api-only',$api) "engineering-api-v$major.log"
     $engineeringApi=[regex]::Match((Get-Content (Join-Path $out "engineering-api-v$major.log") -Raw),'COMPLETE: (\d+) engineering API checks passed')
-    $expectedEngineeringChecks=if($major -eq 21){3126}else{2840}
-    if(!$engineeringApi.Success -or [int]$engineeringApi.Groups[1].Value -ne $expectedEngineeringChecks){throw 'Engineering API compatibility checks incomplete'}
+    Assert-MatchedCheckCount "engineeringApiV$major" $engineeringApi 'Engineering API compatibility checks incomplete'
     Run $harness @($exe) "http-v$major.log"
     Run $harness @($exe,'hmi-only',"$major",$version) "hmi-v$major.log"
     $http=[regex]::Match((Get-Content (Join-Path $out "http-v$major.log") -Raw),'COMPLETE: (\d+) passed')
@@ -149,7 +190,8 @@ foreach($major in @(20,21)) {
     $v21EcosystemFiles=@(Get-ChildItem -LiteralPath $v21EcosystemOut -Filter result.json -Recurse -File)
     if($v21EcosystemFiles.Count -ne 1){throw 'V21 ecosystem evidence missing or ambiguous'}
     $v21Ecosystem=Get-Content -LiteralPath $v21EcosystemFiles[0].FullName -Raw -Encoding UTF8 | ConvertFrom-Json
-    if($v21Ecosystem.status -ne 'passed' -or $v21Ecosystem.checks -lt 75 -or $v21Ecosystem.selfTestOnly -or $v21Ecosystem.nativeTiaExecuted -or $v21Ecosystem.runtimeSha256 -ne (Get-FileHash $exe).Hash.ToLowerInvariant()){throw 'V21 ecosystem adapter checks incomplete'}
+    Assert-CheckCount 'v21Ecosystem' $v21Ecosystem.checks 'V21 ecosystem adapter checks incomplete'
+    if($v21Ecosystem.status -ne 'passed' -or $v21Ecosystem.selfTestOnly -or $v21Ecosystem.nativeTiaExecuted -or $v21Ecosystem.runtimeSha256 -ne (Get-FileHash $exe).Hash.ToLowerInvariant()){throw 'V21 ecosystem adapter checks incomplete'}
     # Local-only release gate: mixed success/failure calls, full/lite, STDIO and
     # eight HTTP clients. This explicitly cannot certify native TIA stability.
     $stabilityOut=Join-Path $out ("stability-v$major-"+[Guid]::NewGuid().ToString('N'))
@@ -168,15 +210,14 @@ foreach($major in @(20,21)) {
     if(!$snapshot.Success){throw 'HMI snapshot remoting validation did not report complete success'}
     Run $harness @($exe,'global-script-only',$api) "global-script-v$major.log"
     $globalScript=[regex]::Match((Get-Content (Join-Path $out "global-script-v$major.log") -Raw),'COMPLETE: (\d+) global script bridge checks passed')
-    if(!$globalScript.Success){throw 'Global script bridge validation did not report complete success'}
-    if($major -eq 21 -and [int]$globalScript.Groups[1].Value -ne 8){throw 'V21 native script API signatures were not verified'}
+    if($major -eq 21){Assert-MatchedCheckCount 'globalScriptV21' $globalScript 'V21 native script API signatures were not verified'}
+    elseif(!$globalScript.Success){throw 'Global script bridge validation did not report complete success'}
     Run $harness @($exe,'graphic-selection-only',$api) "graphic-selection-v$major.log"
     $graphicSelection=[regex]::Match((Get-Content (Join-Path $out "graphic-selection-v$major.log") -Raw),'COMPLETE: (\d+) graphical selection checks passed')
-    if(!$graphicSelection.Success -or [int]$graphicSelection.Groups[1].Value -ne 8){throw 'Graphical selection runtime validation did not report complete success'}
+    Assert-MatchedCheckCount 'graphicSelection' $graphicSelection 'Graphical selection runtime validation did not report complete success'
     Run $harness @($exe,'runtime-settings-only',$api) "runtime-settings-v$major.log"
     $runtimeSettings=[regex]::Match((Get-Content (Join-Path $out "runtime-settings-v$major.log") -Raw),'COMPLETE: (\d+) runtime settings checks passed')
-    $expectedRuntimeChecks=if($major -eq 21){9}else{8}
-    if(!$runtimeSettings.Success -or [int]$runtimeSettings.Groups[1].Value -ne $expectedRuntimeChecks){throw 'Runtime settings validation did not report complete success'}
+    Assert-MatchedCheckCount "runtimeSettingsV$major" $runtimeSettings 'Runtime settings validation did not report complete success'
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-MigrationReadAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "assembly-v$major.log"
     $checks["V$major"]=[ordered]@{httpPassed=[int]$http.Groups[1].Value;hmiPassed=[int]$hmi.Groups[1].Value;resourceDiscoveryPassed=[int]$resources.Groups[1].Value;nativeExportRemotingPassed=[int]$nativeExport.Groups[1].Value;migrationAssembly='passed';realProjectAcceptance='NOT PERFORMED for this release'}
     $checks["V$major"]['hmiSnapshotRemotingPassed']=[int]$snapshot.Groups[1].Value
@@ -186,7 +227,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['localStability']=$stability
     $checks["V$major"]['v21EcosystemAdapters']=$v21Ecosystem
     $checks["V$major"]['isolatedLocalStability']=$isolatedStability
-    $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=2;nativeMcpSafetyChecksPassed=8;crashEvidenceChecksPassed=6;nativeMcpExecuted=$false}
+    $checks["V$major"]['sessionStability']=[ordered]@{processLeaseChecksPassed=[int]$processLeases.Groups[1].Value;nativeMcpSafetyChecksPassed=[int]$nativeMcpSafety.Groups[1].Value;crashEvidenceChecksPassed=[int]$crashEvidence.Groups[1].Value;nativeMcpExecuted=$false}
     $categories=[ordered]@{}
     $coverage.sites | Group-Object category | ForEach-Object {$categories[$_.Name]=$_.Count}
     $checks["V$major"]['nativeDiagnostics']=[ordered]@{status='passed';sites=$coverage.count;categories=$categories;uncoveredSupportedBoundaries=0;coverageSha256=(Get-FileHash $coveragePath).Hash.ToLowerInvariant();instrumenterSha256=$coverage.instrumenterSha256;jitPrepared=[int]$nativeJit.Groups[1].Value;openGenericWrappers=[int]$nativeJit.Groups[2].Value;fixture=$diagnosticTests;scriptSha256=(Get-FileHash (Join-Path $repo 'scripts/checks/Test-NativeDiagnostics.py')).Hash.ToLowerInvariant();liveTiaExecuted=$false;scope='Engine-owned Openness call sites; not SDK/server internals or a native stability claim'}
@@ -198,7 +239,7 @@ foreach($major in @(20,21)) {
     $checks["V$major"]['runtimeSettingsPassed']=[int]$runtimeSettings.Groups[1].Value
     Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-EcosystemAssembly.ps1'),'-Exe',$exe,'-PublicApiDirectory',$api) "ecosystem-v$major.log"
     $ecosystem=[regex]::Match((Get-Content (Join-Path $out "ecosystem-v$major.log") -Raw),'COMPLETE: (\d+) ecosystem assembly checks passed')
-    if(!$ecosystem.Success -or [int]$ecosystem.Groups[1].Value -ne 31){throw 'Ecosystem runtime validation incomplete; install the companion Python environment first'}
+    Assert-MatchedCheckCount 'ecosystem' $ecosystem 'Ecosystem runtime validation incomplete; install the companion Python environment first'
     $checks["V$major"]['ecosystemAssemblyPassed']=[int]$ecosystem.Groups[1].Value
     $checks["V$major"]['globalScriptNativeApiSignature']=if($major -eq 21){'verified in referenced V21 DLL; live import not tested'}else{'not established; bridge checks only'}
     if($major -eq 21){
