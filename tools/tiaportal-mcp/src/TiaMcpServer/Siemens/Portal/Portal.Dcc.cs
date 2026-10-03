@@ -13,7 +13,7 @@ using Logic = TiaMcpServer.Siemens.DccLogic;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-② (2.7.39): typed SINAMICS DCC option package (V21 Siemens.Engineering.DCC.dll, V20 inside Siemens.Engineering.dll).
+    // Typed SINAMICS DCC option package (V21 Siemens.Engineering.DCC.dll, V20 inside Siemens.Engineering.dll).
     // DriveControlChartContainer is a service of the DriveObject (null when the drive does not support DCC); charts nest through
     // Subcharts, blocks come from DCB libraries (DcbLibrary / DcbBlockType), pins connect pin-to-pin or to chart interfaces and can be
     // published as drive parameters. Every DCC failure is a DccException (: EngineeringTargetInvocationException) - the 39 concrete
@@ -180,11 +180,11 @@ namespace TiaMcpServer.Siemens
                 return "DCC chart read (attributes, partitions, interfaces, blocks / subcharts to maxDepth, run sequence); no modification.";
             }));
 
-        // Typed retrofit of the 2.7.x reflective tool (same leading signature): chartName is now a chart path (Root/Sub), empty on create = auto name.
+        // chartName is a chart path (Root/Sub); empty on create requests an automatic name.
         public ResponseMessage ManageDccChart(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string chartName, string action, string filePath = "", string importOptions = "", string propertiesJson = "{}", bool dryRun = true, int driveObjectIndex = -1, bool confirmDelete = false, int sequenceIndex = -1)
             => RunHmiStepTool("ManageDccChart", meta => DccStep(meta, () =>
             {
-                var r = Logic.ValidateChartRequest(chartName, action, filePath, importOptions, propertiesJson, confirmDelete, dryRun, sequenceIndex);   // 2.7.45: sequenceIndex alone is a valid update (real project: refused as "needs at least one property")
+                var r = Logic.ValidateChartRequest(chartName, action, filePath, importOptions, propertiesJson, confirmDelete, dryRun, sequenceIndex);   // sequenceIndex alone is a valid update.
                 using var access = r.Writes ? AcquireHmiEditAccess() : null;
                 var drive = ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
                 var container = ExactDccContainer(drive);
@@ -279,7 +279,7 @@ namespace TiaMcpServer.Siemens
                 return "DCC block " + action + " executed and read back; no save, download or online drive command.";
             }));
 
-        // 2.7.45 real project (S120 V5.2 drive axis, ADD block): DccPin.Value is declared object but TIA only accepts the pin's own data
+        // TIA V21, 2026-09-20 (docs/reference/real-machine-ledger.md), S120 V5.2 drive axis, ADD block: DccPin.Value is declared object but TIA only accepts the pin's own data
         // type ("The specified value is of type System.Int32, which is not accepted in place of System.Single") - a JSON number is
         // therefore converted to the CLR type of the current value (Single / Int32 / Boolean / ...) before the write.
         private static List<(System.Reflection.PropertyInfo Property, object? Value)> TypedValueChanges(List<(System.Reflection.PropertyInfo Property, object? Value)> changes, JsonObject properties, object? currentValue)
@@ -426,7 +426,7 @@ namespace TiaMcpServer.Siemens
 #endif
             }));
 
-        // Generic property-path reader kept from 2.7.x for arbitrary DCC sub-paths (typed drive resolution since 2.7.39).
+        // Generic property-path reader for arbitrary DCC sub-paths after typed drive resolution.
         public ResponseMessage ReadDccObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string objectPathJson = "[]", int offset = 0, int limit = 100, int driveObjectIndex = -1)
             => RunHmiStepTool("ReadDccObject", meta => DccStep(meta, () =>
             {

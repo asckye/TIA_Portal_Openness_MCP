@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-② (2.7.39): typed Startdrive option package. Drive objects are addressed by devicePathJson + itemPathJson (the drive
+    // Typed Startdrive option package. Drive objects are addressed by devicePathJson + itemPathJson (the drive
     // unit / control unit device item hosting DriveObjectContainer) plus driveObjectNumber (official DriveObjectNumber) or
     // driveObjectIndex (position in DriveObjects; the reliable selector on G120 drives, where DriveObjectNumber is not retrievable).
     public static partial class McpServer

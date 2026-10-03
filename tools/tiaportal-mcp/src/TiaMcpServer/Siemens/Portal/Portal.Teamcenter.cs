@@ -14,7 +14,7 @@ using Logic = TiaMcpServer.Siemens.TeamcenterLogic;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): typed Teamcenter Gateway option package (Siemens.Engineering.TeamcenterGateway, identical on V20 / V21).
+    // Typed Teamcenter Gateway option package (Siemens.Engineering.TeamcenterGateway, identical on V20 / V21).
     // Official entry: TiaPortal.GetService<TeamcenterConnectionProvider>() -> Connect / ConnectSSO answer an encrypted
     // TcGatewayConnectionInfo that every other call must present; TcGatewayLockProvider and TcGatewaySearchAndDownloadProvider are
     // services of the TiaPortal, TcGatewayWorkflowProvider is a service of the open Project or GlobalLibrary. The engine keeps the

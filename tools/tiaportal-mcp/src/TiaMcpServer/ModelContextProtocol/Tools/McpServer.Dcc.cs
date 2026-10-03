@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-② (2.7.39): typed SINAMICS DCC option package. The chart container is a service of a drive object (see
+    // Typed SINAMICS DCC option package. The chart container is a service of a drive object (see
     // ReadDriveObjects for the addressing); chartPath is Root/Sub/Sub relative to DriveControlChartContainer.Charts.
     public static partial class McpServer
     {

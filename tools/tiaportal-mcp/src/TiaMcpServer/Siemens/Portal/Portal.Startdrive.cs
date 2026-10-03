@@ -22,10 +22,10 @@ using DriveConnectOption = Siemens.Engineering.MC.Drives.Enums.ConnectOption;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-② (2.7.39): typed Startdrive option package (V21 Siemens.Engineering.Startdrive.dll, V20 inside Siemens.Engineering.dll).
+    // Typed Startdrive option package (V21 Siemens.Engineering.Startdrive.dll, V20 inside Siemens.Engineering.dll).
     // DriveObjectContainer is a service of the drive unit / control unit DeviceItem; DriveObject carries Parameters / ReadParameters /
     // Telegrams / Security and the DriveFunctionInterface, TechnologyExtensionContainer and (DCC) DriveControlChartContainer services;
-    // OnlineDriveObjectContainer / OnlineDriveFunctionInterface mirror the offline shape for a connected drive. 2.7.38 real project
+    // OnlineDriveObjectContainer / OnlineDriveFunctionInterface mirror the offline shape for a connected drive. TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project
     // (G120C): DriveObject.DriveObjectNumber throws "Drive object number could not be retrieved", so every selector accepts the
     // composition index and DriveObjectNumber is read defensively.
     public partial class Portal
@@ -35,8 +35,8 @@ namespace TiaMcpServer.Siemens
             => ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("itemPathJson must select a device item (the drive unit / control unit), not the device itself.");
         private DriveObjectContainer ExactDriveContainer(DeviceItem item)
             => item.GetService<DriveObjectContainer>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "DriveObjectContainer unavailable on device item '" + item.Name + "' (not a Startdrive drive object host, or Startdrive not installed).");
-        private static ushort? SafeDriveObjectNumber(DriveObject drive) { try { return drive.DriveObjectNumber; } catch { return null; } }
-        // 2.7.39 real project (G120C): Find("r722.0") answers null - bit parameters are only reachable through the parent's Bits, whose
+        private static ushort? SafeDriveObjectNumber(DriveObject drive) { try { return drive.DriveObjectNumber; } catch { /* swallow(probe-optional): G120C may not expose DriveObjectNumber; the selector also supports composition index. */ return null; } }
+        // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (G120C): Find("r722.0") answers null - bit parameters are only reachable through the parent's Bits, whose
         // members carry the dotted name. Find(name) first, then base name + Bits when the name has a bit suffix.
         private static DriveParameter? FindParameter(DriveParameterComposition parameters, string name)
         {
@@ -72,7 +72,7 @@ namespace TiaMcpServer.Siemens
             OnlineDriveObjectComposition objects = container.OnlineDriveObjects;
             if (selector.ByNumber)
             {
-                var matches = objects.Where(o => { try { return o.DriveObjectNumber == selector.Number; } catch { return false; } }).Take(2).ToArray();
+                var matches = objects.Where(o => { try { return o.DriveObjectNumber == selector.Number; } catch { /* swallow(enumerate-optional): a drive without a readable number cannot match the requested number; index selection remains available. */ return false; } }).Take(2).ToArray();
                 if (matches.Length != 1) throw new PortalException(PortalErrorCode.NotFound, "Exactly one online drive object with " + selector.Label + " expected, found " + matches.Length + ".");
                 return matches[0];
             }
@@ -92,7 +92,8 @@ namespace TiaMcpServer.Siemens
             var o = new JsonObject(); if (list == null) return o;
             foreach (var pair in list.Take(500)) o[pair.Key.ToString()] = pair.Value; return o;
         }
-        // Value is read last and only on request (includeValue): on the 2.7.39 real project TIA Portal V21 went down while reading the Value of
+        // Value is read last and only on request (includeValue): TIA V21, 2026-09-19
+        // (docs/reference/real-machine-ledger.md): TIA went down while reading the Value of
         // r2139 (existing G120C) and of the unwired BICO sink p840[0] (freshly added G120C) - the metadata reads before it are safe.
         private static JsonObject DriveParameterRow(DriveParameter p, bool bits, bool enums, bool value = true)
         {
@@ -226,7 +227,7 @@ namespace TiaMcpServer.Siemens
                 return "Offline drive parameters read (" + (source == "read" ? "ReadDriveParameter rows incl. BICO sources" : "DriveParameter rows incl. BICO sources") + "); no OnlineDriveObject or drive access.";
             });
 
-        // Typed retrofit of the 2.7.x reflective tool (same signature plus driveObjectIndex): Parameters.Find(name), scalar or BICO-source writes.
+        // Parameters.Find(name) resolves scalar or BICO-source writes; driveObjectIndex selects by composition position.
         public ResponseMessage ManageStartdriveParameter(string devicePathJson, string itemPathJson, ushort driveObjectNumber, string parameter, string action = "read", string valueJson = "null", bool dryRun = true, int driveObjectIndex = -1)
             => RunHmiStepTool("ManageStartdriveParameter", meta =>
             {
@@ -237,7 +238,8 @@ namespace TiaMcpServer.Siemens
                 if (action == "read")
                 {
                     // Official BICO example: Parameters.Find(name).Value. Do not expand Bits,
-                    // limits or enum tables when asked for one value (p2051[0] crash report).
+                    // limits or enum tables when asked for one value (TIA V21 p2051[0] crash report;
+                    // docs/reference/real-machine-ledger.md, recorded by 2026-10-03; native retest pending).
                     meta["before"] = Logic.ReadExactParameter<DriveParameter, ReadDriveParameter>(parameter,
                         name => FindParameter(drive.Parameters, name), name => FindParameter(drive.ReadParameters, name),
                         target => BicoOrScalar(target.Value), target => BicoOrScalar(target.Value))
@@ -273,12 +275,12 @@ namespace TiaMcpServer.Siemens
                 var type = (TelegramType)Enum.Parse(typeof(TelegramType), r.TelegramType);
                 Telegram? existing = telegrams.Find(type);
                 var checks = new JsonObject();
-                // 2.7.40 real project (freshly added G120C without a bus interface, Telegrams empty): CanInsertAdditionalTelegram(2, 4) threw
+                // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (freshly added G120C without a bus interface, Telegrams empty): CanInsertAdditionalTelegram(2, 4) threw
                 // "Invalid operation" and CanInsertTelegram(700, SupplementaryTelegram) took TIA Portal V21 down. The Can* / Insert* family
                 // presupposes a networked drive object with its main telegram; without any telegram nothing is asked of TIA.
                 if (telegrams.Count == 0 && action != "read")
                     throw new PortalException(PortalErrorCode.InvalidState, "This drive object has no telegram yet (not connected to a PROFINET / PROFIBUS IO system): TelegramComposition.Can* / Insert* / Erase are not called in this state (TIA Portal V21 crashed on a G120C here). Connect the drive to the IO system first, then retry.");
-                // 2.7.39 real project (G120C, main telegram present): CanInsertTelegram(1, MainTelegram) answered false and the following
+                // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md), real project (G120C, main telegram present): CanInsertTelegram(1, MainTelegram) answered false and the following
                 // CanInsertMainTelegram(1) took TIA Portal V21 down. Official: main telegrams are only inserted / erased on G220 drives, so
                 // neither Can* nor Insert* is called while a main telegram exists - changeNumber / changeSize edit the existing one.
                 if (type == TelegramType.MainTelegram && existing != null && (action == "check" || action == "insert"))

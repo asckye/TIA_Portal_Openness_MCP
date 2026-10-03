@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-③ (2.7.42): typed Teamcenter Gateway option package (identical on V20 / V21). The engine keeps one active
+    // Typed Teamcenter Gateway option package (identical on V20 / V21). The engine keeps one active
     // TcGatewayConnectionInfo per session; the dataset and workflow tools present it to the gateway.
     public static partial class McpServer
     {

@@ -447,12 +447,6 @@
       "line": 2258
     },
     {
-      "fingerprint": "5e50922565ff203b36fc078956a9e7b5c0cbbfa346170d0c637823bdd5eb87f5",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Startdrive.cs",
-      "line": 75
-    },
-    {
       "fingerprint": "603a0be06e0343e9520d386e8abd6042d976ad93e7f236b47035ee99080f4adc",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.VersionControl.cs",
@@ -1321,12 +1315,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
       "line": 461
-    },
-    {
-      "fingerprint": "f07cc211745700eb9b6abbf52c2049f1e71ae41dff87a53b519b5f68e73ddfdf",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Startdrive.cs",
-      "line": 38
     },
     {
       "fingerprint": "f120bc26dc60afb56f57d9a0fe2978aa869d8eb586eb40c45e35529744a3e368",
