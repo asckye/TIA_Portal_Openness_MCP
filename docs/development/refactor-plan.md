@@ -37,8 +37,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 1. Claude 写任务说明：范围（允许修改的路径）、目标结构、不变量、验收命令、预期结果。
 2. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支，Codex 以 `workspace-write` 沙箱执行，
-   在分支上提交，不推送、不合并。
-3. Claude 在 worktree 中复跑验收命令、审查 diff；不合格则带具体问题退回同一 Codex 会话。
+   改动留在 worktree，不提交（worktree 的 Git 元数据不在沙箱可写范围内）。
+3. Claude 在 worktree 中复跑验收命令、审查 diff 后在任务分支提交；不合格则带具体问题退回同一 Codex 会话。
 4. 验收通过后变基到 master、快进合并，更新本页任务状态。
 5. 阶段结束时跑完整八版本构建（L3）；涉及原生路径的阶段再做真机回放（L5）。
 

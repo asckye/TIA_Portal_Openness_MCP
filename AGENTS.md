@@ -1,7 +1,7 @@
 # 给 Codex 的执行规则
 
 仓库通用规则见 [CLAUDE.md](CLAUDE.md)，重构目标、约束与任务清单见
-[重构计划](docs/development/refactor-plan.md)。每次执行只完成任务说明中的一个任务。
+[重构计划](docs/development/refactor-plan.md)。每次执行完成任务说明中的全部内容；一份说明可以包含多个计划编号。
 
 ## 范围
 
@@ -21,9 +21,9 @@
 
 ## 提交
 
-- 在当前分支提交，使用显式 `git add <路径>`，不用 `git add -A` 或 `git add .`。
-- 英文提交信息，首行概括改动；不加 AI 署名或 Co-Authored-By。
-- 不推送、不合并、不改写已有提交历史。
+- 不执行 `git add`、`git commit`、推送、合并或改写历史；改动留在 worktree 中，由审查者核对后提交。
+  worktree 的 Git 元数据位于沙箱可写范围之外。
+- 任务说明要求分多个提交时，在报告中按提交分组列出文件，并给出英文提交信息（不加 AI 署名）。
 
 ## 报告
 
