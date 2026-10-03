@@ -152,6 +152,31 @@ namespace TiaMcpServer.Siemens
         string ReadReflectedString(object? owner, string propertyName);
         System.Collections.Generic.List<object?> EnumerateReflectedProperty(object? owner, string propertyName);
 
+        string? LastExportedFile { get; }
+        char[] RegexChars { get; }
+        global::Siemens.Engineering.Compiler.CompilerResult CompileSoftware(string softwarePath, string password = "");
+        PlcBlock? ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath = false);
+        (string TempDir, List<string> Paths)? ExportBlockToTemp(string softwarePath, string blockPath, bool preservePath = false);
+        PlcBlock? GetBlock(string softwarePath, string blockPath);
+        PlcBlockGroup? GetBlockRootGroup(string softwarePath);
+        List<PlcBlock>? GetBlocks(string softwarePath, string regexName = "");
+        bool ImportBlock(string softwarePath, string groupPath, string importPath);
+        ResponseImportBatch ImportBlocksFromDirectory(string softwarePath, string groupPath, string dir, string regexName = "", bool overwrite = true);
+        void ImportTechnologyObject(string softwarePath, string folderPath, string importPath);
+        bool ImportType(string softwarePath, string groupPath, string importPath);
+        string GetBlockPath(PlcBlock block);
+        PlcType? GetType(string softwarePath, string typePath);
+        List<PlcType>? GetTypes(string softwarePath, string regexName = "");
+        string GetPlcBlockGroupPath(PlcBlockGroup group);
+        string GetPlcTypeGroupPath(PlcTypeGroup group);
+        PlcBlockGroup? GetPlcBlockGroupByPath(string softwarePath, string groupPath);
+        List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried);
+        List<CrossReferenceEntry> TryFlattenCrossReferenceResult(object crossReferenceResult, string sourcePathFallback);
+        JsonObject GetBindingIdentity();
+
+        object? ResolvePlcTagTableGroup(object plc);
+        string? CrossReferenceRefusal(string softwarePath);
+
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);
         // Release handles after native CloseAndCommit has already closed the local session.

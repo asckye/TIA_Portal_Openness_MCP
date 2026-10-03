@@ -78,7 +78,7 @@ namespace TiaMcpServer.Tests
             // TiaMcpServer/ModelContextProtocol/Tools/McpServer.RuntimeChannels.cs:31.
             bool ok = false;
             Compare("Basic/RuntimeMeta", new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = ok }, ResponseMeta.Basic(ok), check);
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.BlockLogic.cs:54.
+            // TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs: DescribeBlockLogic.
             string lang = "中文 <>& '\" / \\ \n 😀";
             Compare("Basic/after", new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = true, ["language"] = lang },
                 ResponseMeta.Basic(true, ("language", lang)), check);
@@ -132,7 +132,7 @@ namespace TiaMcpServer.Tests
                     ["timestamp"] = ResponseClock.Now, ["success"] = ok, ["offlineOnly"] = true
                 }, ResponseMeta.Basic(ok, ("offlineOnly", true)), check);
 
-                // McpServer.Deletion.cs: BuildDeletionReport retains the caller's array.
+                // PlcBlocksTools.cs: BuildDeletionReport retains the caller's array.
                 var nextActions = new JsonArray("中文 <>&", "CompileSoftware");
                 var deletion = ResponseMeta.Basic(ok, ("dryRun", !ok), ("deleted", ok),
                     ("verifiedAbsent", ok), ("crossReferenceAvailable", false), ("nextActions", nextActions));

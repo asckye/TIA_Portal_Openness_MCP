@@ -172,5 +172,30 @@ namespace TiaMcpServer.Siemens
         {
             _session = null; _project = null; _projectOpenedByUs = false; InvalidateHmiSoftwareCache();
         }
+
+        string? IEngineeringSession.LastExportedFile => LastExportedFile;
+        char[] IEngineeringSession.RegexChars => _regexChars;
+        global::Siemens.Engineering.Compiler.CompilerResult IEngineeringSession.CompileSoftware(string softwarePath, string password) => CompileSoftware(softwarePath, password);
+        PlcBlock? IEngineeringSession.ExportBlock(string softwarePath, string blockPath, string exportPath, bool preservePath) => ExportBlock(softwarePath, blockPath, exportPath, preservePath);
+        (string TempDir, List<string> Paths)? IEngineeringSession.ExportBlockToTemp(string softwarePath, string blockPath, bool preservePath) => ExportBlockToTemp(softwarePath, blockPath, preservePath);
+        PlcBlock? IEngineeringSession.GetBlock(string softwarePath, string blockPath) => GetBlock(softwarePath, blockPath);
+        PlcBlockGroup? IEngineeringSession.GetBlockRootGroup(string softwarePath) => GetBlockRootGroup(softwarePath);
+        List<PlcBlock>? IEngineeringSession.GetBlocks(string softwarePath, string regexName) => GetBlocks(softwarePath, regexName);
+        bool IEngineeringSession.ImportBlock(string softwarePath, string groupPath, string importPath) => ImportBlock(softwarePath, groupPath, importPath);
+        ResponseImportBatch IEngineeringSession.ImportBlocksFromDirectory(string softwarePath, string groupPath, string dir, string regexName, bool overwrite) => ImportBlocksFromDirectory(softwarePath, groupPath, dir, regexName, overwrite);
+        void IEngineeringSession.ImportTechnologyObject(string softwarePath, string folderPath, string importPath) => ImportTechnologyObject(softwarePath, folderPath, importPath);
+        bool IEngineeringSession.ImportType(string softwarePath, string groupPath, string importPath) => ImportType(softwarePath, groupPath, importPath);
+        string IEngineeringSession.GetBlockPath(PlcBlock block) => GetBlockPath(block);
+        PlcType? IEngineeringSession.GetType(string softwarePath, string typePath) => GetType(softwarePath, typePath);
+        List<PlcType>? IEngineeringSession.GetTypes(string softwarePath, string regexName) => GetTypes(softwarePath, regexName);
+        string IEngineeringSession.GetPlcBlockGroupPath(PlcBlockGroup group) => GetPlcBlockGroupPath(group);
+        string IEngineeringSession.GetPlcTypeGroupPath(PlcTypeGroup group) => GetPlcTypeGroupPath(group);
+        PlcBlockGroup? IEngineeringSession.GetPlcBlockGroupByPath(string softwarePath, string groupPath) => GetPlcBlockGroupByPath(softwarePath, groupPath);
+        List<CrossReferenceEntry>? IEngineeringSession.GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried) => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried);
+        List<CrossReferenceEntry> IEngineeringSession.TryFlattenCrossReferenceResult(object crossReferenceResult, string sourcePathFallback) => TryFlattenCrossReferenceResult(crossReferenceResult, sourcePathFallback);
+        JsonObject IEngineeringSession.GetBindingIdentity() => GetBindingIdentity();
+
+        object? IEngineeringSession.ResolvePlcTagTableGroup(object plc) => ResolvePlcTagTableGroup(plc);
+        string? IEngineeringSession.CrossReferenceRefusal(string softwarePath) => CrossReferenceRefusal(softwarePath);
     }
 }

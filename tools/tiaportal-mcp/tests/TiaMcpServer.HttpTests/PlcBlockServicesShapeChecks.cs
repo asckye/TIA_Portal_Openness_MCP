@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the PlcBlockServices family (Portal.PlcBlockServices.cs), verified against the installed API.
+// Native members used by the PlcBlockServices family (Siemens/Services/PlcBlocksService.cs), verified against the installed API.
 internal static class PlcBlockServicesShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
@@ -31,7 +31,7 @@ internal static class PlcBlockServicesShapeChecks
         Property(step7,"Siemens.Engineering.SW.Blocks.PlcBlock","IsKnowHowProtected","Boolean");
         // ManagePlcDataBlockSnapshot
         Property(step7,"Siemens.Engineering.SW.Blocks.DataBlock","Interface","PlcBlockInterface");
-        // Snapshot service resolution order in Portal.PlcBlockServices.cs: DataBlock.Interface, then DataBlock, then ValueService.
+        // Snapshot service resolution order in Siemens/Services/PlcBlocksService.cs: DataBlock.Interface, then DataBlock, then ValueService.
         var provider=T(core,"Siemens.Engineering.IEngineeringServiceProvider");
         check(provider.IsAssignableFrom(T(step7,"Siemens.Engineering.SW.Blocks.PlcBlock")),"PlcBlock is a service provider (InterfaceSnapshot fallback owner)");
         if(!provider.IsAssignableFrom(T(step7,"Siemens.Engineering.SW.Blocks.Interface.PlcBlockInterface")) && v20) Console.WriteLine("CAPABILITY V20 PlcBlockInterface is not a service provider; InterfaceSnapshot must resolve from the DataBlock, ValueService is absent.");
@@ -81,5 +81,48 @@ internal static class PlcBlockServicesShapeChecks
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         foreach(var (name,flag) in new[]{("ManagePlcBlockProtection","confirmProtectionChange"),("ManagePlcDataBlockSnapshot","confirmValueChange"),("UpdatePlcProgram","confirmUpdate"),("ManagePlcAlarmTextList","confirmDelete")})
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==flag).DefaultValue,false),name+" requires explicit "+flag);
+
+        // The migrated tools and native operations share the existing session singleton.
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        var toolType = server.GetType("TiaMcpServer.ModelContextProtocol.PlcBlocksTools", true)!;
+        var serviceType = server.GetType("TiaMcpServer.Siemens.Services.PlcBlocksService", true)!;
+        var sessionType = server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!;
+        var engineProvider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
+        var toolInstance = engineProvider.GetService(toolType);
+        var serviceInstance = engineProvider.GetService(serviceType);
+        var session = engineProvider.GetService(sessionType);
+        foreach (var type in new[] { toolType, serviceType })
+            check(type.IsSealed && !typeof(IDisposable).IsAssignableFrom(type)
+                && ReferenceEquals(engineProvider.GetService(type), engineProvider.GetService(type)), type.Name + " is a non-disposable singleton");
+        check(ReferenceEquals(toolType.GetField("_session", all)!.GetValue(toolInstance), session)
+            && ReferenceEquals(serviceType.GetField("_session", all)!.GetValue(serviceInstance), session)
+            && ReferenceEquals(toolType.GetField("_blocks", all)!.GetValue(toolInstance), serviceInstance),
+            "PLC block tools and service share the kernel session");
+        foreach (var name in new[] { "GetBlockInfo", "GetBlocks", "GetBlocksWithHierarchy", "ExportBlock", "ImportBlock",
+            "ImportBlocksFromDirectory", "ImportPlcProgramFromDirectory", "CompileAndDiagnosePlc", "RepairAndReimportBlock", "ExportBlocks",
+            "DescribeBlockLogic", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "UpdatePlcProgram", "ReadPlcBlockFingerprints",
+            "ReadPlcBlockEditCapabilities", "AnalyzePlcReferences", "PatchPlcBlockDocument", "ImportPlcBlockVerified",
+            "DeletePlcBlock", "DeletePlcTagTable", "DeletePlcType", "CreatePlcTypeGroup", "DeleteEmptyPlcBlockGroup",
+            "CreatePlcBlockGroup", "MoveBlockToGroup", "ManagePlcUserGroup" })
+        {
+            var method = tools.Tool(name);
+            check(method.DeclaringType == toolType && !method.IsStatic && ReferenceEquals(tools.Target(method), toolInstance),
+                name + " belongs to the PLC block tool singleton");
+        }
+        foreach (var name in new[] { "ExportBlocks", "ExportBlocksToTemp", "DeleteEmptyPlcBlockGroup", "DeletePlcBlock", "DeletePlcTagTable",
+            "DeletePlcType", "ManagePlcBlockProtection", "ManagePlcDataBlockSnapshot", "UpdatePlcProgram", "ReadPlcBlockFingerprints",
+            "ImportPlcBlockVerified", "CreatePlcTypeGroup", "ManagePlcUserGroup", "EnsurePlcBlockGroup", "MoveBlockToGroup" })
+            check(tools.Method(name).DeclaringType == serviceType && ReferenceEquals(tools.Target(tools.Method(name)), serviceInstance),
+                name + " native operation belongs to the PLC block service");
+        var facade = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        foreach (var name in new[] { "GetBlocks", "ExportBlock", "ImportBlocksFromDirectory", "ImportPlcProgramFromDirectory",
+            "CompileAndDiagnosePlc", "ExportBlocksToTemp" })
+        {
+            var method = facade.GetMethod(name, all)!;
+            check(method.IsStatic && !method.GetCustomAttributes().Any(attribute => attribute.GetType().Name == "McpServerToolAttribute"),
+                name + " retains an attribute-less CLI forwarder");
+        }
+        check(tools.Field("_blockGroupDeleteGate", all).DeclaringType == serviceType,
+            "Block group deletion gate belongs to the service");
     }
 }

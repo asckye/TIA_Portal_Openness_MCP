@@ -429,6 +429,53 @@ HARDWARE_THROWS = {
 }
 
 
+CASES['PlcBlocks'] = [
+    ('GetBlockInfo', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('GetBlocks', 'read', {'softwarePath': PLC}),
+    ('GetBlocksWithHierarchy', 'read', {'softwarePath': PLC}),
+    ('ExportBlock', 'export', {'softwarePath': PLC, 'blockPath': 'Group/Block1', 'exportPath': 'C:/domain-offline'}),
+    ('ImportBlock', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
+    ('ImportBlocksFromDirectory', 'import', {'softwarePath': PLC, 'groupPath': '', 'dir': 'C:/domain-offline'}),
+    ('ImportPlcProgramFromDirectory', 'import', {'softwarePath': PLC, 'sourceDir': 'C:/domain-offline'}),
+    ('CompileAndDiagnosePlc', 'compile', {'softwarePath': PLC}),
+    ('RepairAndReimportBlock', 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.xml'}),
+    ('ExportBlocks', 'missing-required-argument', {'exportPath': 'C:/domain-offline'}),
+    ('DescribeBlockLogic', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('UpdatePlcProgram', 'preview', {'softwarePath': PLC}),
+    ('ReadPlcBlockFingerprints', 'preview', {'softwarePath': PLC, 'targetIpAddress': '192.0.2.1'}),
+    ('ReadPlcBlockEditCapabilities', 'read', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('AnalyzePlcReferences', 'missing-directory', {'directory': 'C:/domain-offline'}),
+    ('PatchPlcBlockDocument', 'missing-file', {'filePath': 'C:/domain-offline.xml', 'changesJson': '[]', 'expectedFingerprint': 'none'}),
+    ('ImportPlcBlockVerified', 'preview', {'softwarePath': PLC, 'blockPath': 'Group/Block1', 'importPath': 'C:/domain-offline.xml', 'evidenceDirectory': 'C:/domain-evidence'}),
+    ('DeletePlcBlock', 'preview', {'softwarePath': PLC, 'blockPath': 'Group/Block1'}),
+    ('DeletePlcTagTable', 'preview', {'softwarePath': PLC, 'tagTableName': 'Table1'}),
+    ('DeletePlcType', 'preview', {'softwarePath': PLC, 'typePath': 'Type1'}),
+    ('CreatePlcTypeGroup', 'preview', {'softwarePath': PLC, 'groupPath': 'Group'}),
+    ('DeleteEmptyPlcBlockGroup', 'preview', {'softwarePath': PLC, 'groupPath': 'Group'}),
+    ('CreatePlcBlockGroup', 'create', {'softwarePath': PLC, 'groupPath': 'Group'}),
+    ('MoveBlockToGroup', 'move', {'softwarePath': PLC, 'blockName': 'Block1', 'targetGroupPath': 'Group'})
+] + actions('ManagePlcBlockProtection', 'read protect unprotect', softwarePath=PLC, blockPath='Group/Block1') \
+  + actions('ManagePlcDataBlockSnapshot', 'read createSnapshot loadSnapshotAsActualValues loadStartValuesAsActualValues exportSnapshot', softwarePath=PLC, blockPath='Group/Block1') \
+  + actions('ManagePlcUserGroup', 'create rename deleteEmpty', softwarePath=PLC, family='blocks', groupPath='Group')
+
+
+def plc_block_reply(reply, profile, name):
+    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
+    raw = reply['result']['content'][0]['text']
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(isinstance(bridge.get('meta', {}).get('bridgeSuccess'), bool),
+                          f'{name}: missing bridge status: {raw}')
+        raw = bridge['message']
+    resources.require(any(marker in raw for marker in (
+        'Project is null', 'No project', 'no project', 'No TIA project', 'Block not found',
+        'Block root group not found', 'No blocks found', 'not found', 'not exist', 'does not exist',
+        'required', 'Required', 'must not be empty', 'empty', 'Import failed',
+        'Analysis failed', 'analysis failed', 'failed', 'Failed')),
+        f'{name}: did not reach its existing offline refusal: {raw}')
+    return raw
+
+
 def table_reply(reply, profile, name):
     """Preserve each table tool's existing throw/POCO/plan family, without connecting."""
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
@@ -501,6 +548,11 @@ def capture(args, exe, harness, profile, isolated):
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
                 reply = rpc('tools/call', params=params)
+                if domain == 'PlcBlocks':
+                    raw = plc_block_reply(reply, profile, name)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
                 if domain == 'PlcTables':
                     raw = table_reply(reply, profile, name)
                     reached_child = True

@@ -164,6 +164,37 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 [Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 和
 [Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 保留为兼容入口。
 
+### PLC 块、编辑与用户组
+
+[PlcBlocksTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) 承载
+P3-13a 的 27 个工具：块读取、导入导出、编译诊断、逻辑描述、保护/快照/指纹、离线编辑、验证导入、删除和 PLC 用户组。
+[PlcBlocksService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcBlocksService.cs) 承载这些工具独有的
+Portal 实现，包括批量块导出、删除、保护/快照/指纹、验证导入及组管理；`_blockGroupDeleteGate` 随服务实例迁移。
+两者按约定注册为非 `IDisposable` 单例。`ManageUnifiedHmiGroup` 留在原混合文件。
+
+跨领域成员继续留在内核：`GetBlock`、`GetBlocks`、`GetBlockRootGroup`、`GetBlockPath`、`GetType`、`GetTypes`、
+块/类型组路径解析，以及 `ResolveSingleByName`、`GetBlocksRecursive`、`GetPlcSoftware`、`GetSoftwareContainer`。
+`ImportBlock` 仍供 XML 构造工具使用，`ImportBlocksFromDirectory` 仍供库播种使用；`ExportBlock` / `ExportBlockToTemp`
+仍供离线文档比较的导出路径使用。`LastExportedFile` 与 `ResolveExportFile` 为块/类型导出共享，
+`PrepareXmlForImport` / `UnwrapImportError` 为块、类型或变量表导入共享，均留在内核。
+
+会话接口新增只读 `LastExportedFile`、`RegexChars`，以及 `CompileSoftware`、`ExportBlock`、`ExportBlockToTemp`、
+`GetBlock`、`GetBlockRootGroup`、`GetBlocks`、`ImportBlock`、`ImportBlocksFromDirectory`、三参数 `ImportTechnologyObject`、
+`ImportType`、`GetBlockPath`、`GetType`、`GetTypes`、`GetPlcBlockGroupPath`、`GetPlcTypeGroupPath`、`GetPlcBlockGroupByPath`、
+六参数 `GetCrossReferences`、`TryFlattenCrossReferenceResult`、`RecoverableAuditError`、`GetBindingIdentity`、
+`ResolvePlcTagTableGroup`、`CrossReferenceRefusal`、`EnumerateReflectedProperty`、`ReadReflectedString`；均显式转发原成员。
+变量表清单复用现有带 `out diagnostics` 的 `GetPlcTagTables`，丢弃诊断，保持原单参数重载的行为。
+
+`McpServer.Blocks.cs` 保留 CLI 所需的无属性静态转发：`GetBlocks`、`ExportBlock`、`ImportBlocksFromDirectory`、
+`ImportPlcProgramFromDirectory`、`CompileAndDiagnosePlc` 和内部 `ExportBlocksToTemp`。
+`CompileAndDiagnoseCore` 仍与 HMI 编译共享；`ClassifyPlcXml`、`BuildPlcProgramImportResponse` 仍与 XML 构造工具共享，
+通过同文件的 `PlcBlockToolSupport` 适配器复用。路径建议、离线分析和编译响应构造也复用原有共享实现。
+
+`EngineSurface` 加入服务名单，`PlcBlockServicesShapeChecks` 核对 27 个工具的实例归属、共享会话、服务单例和 CLI 转发。
+`Test-DomainTools.py --domain PlcBlocks` 覆盖全部工具的 full/lite、直接/隔离 STDIO 路径；`ExportBlocks` 的离线成功响应含
+实际耗时，故字节比对使用缺参拒绝用例，不扩大时间字段屏蔽范围。原生调用顺序、参数和线程调度保持不变，
+同名的工具/服务 `ExportBlocks` 调用序列分别核对；`PatchPlcBlockDocument` 无原生调用点，以源码方法体比较补证。
+
 ### 库、VCI 与 SiVArc
 
 | 领域 | 服务 / 工具类 | 工具数 |

@@ -236,7 +236,6 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-
         private void GetProjectTreeDeviceItemSoftware(StringBuilder sb, DeviceItem deviceItem, List<bool> ancestorStates)
         {
             var softwareContainer = deviceItem.GetService<SoftwareContainer>();
@@ -1105,7 +1104,6 @@ namespace TiaMcpServer.Siemens
                     return null;
                 }
 
-
                 // Split the path by '/' to get each group name
                 var groupNames = groupPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
 
@@ -1135,167 +1133,6 @@ namespace TiaMcpServer.Siemens
             }
 
             return null;
-        }
-
-        // ======================================================================
-        // Block group operations: create (sub)groups + move a block into a group.
-        // NOTE: TIA Openness has NO API to reparent an existing PlcBlock
-        // (PlcBlock.Parent is read-only). So:
-        //   - EnsurePlcBlockGroup: native, via PlcBlockUserGroupComposition.Create.
-        //   - MoveBlockToGroup: export -> Delete -> import-into-group round-trip,
-        //     so generated blocks can be organized into layer folders afterwards.
-        // ======================================================================
-
-        // Navigate the block-group tree by path, CREATING any missing user groups.
-        // Returns the leaf group (or null if software not found). `created` lists the
-        // group names that were newly created this call (for reporting / idempotency).
-        public PlcBlockGroup? EnsurePlcBlockGroup(string softwarePath, string groupPath, out List<string> created)
-        {
-            created = new List<string>();
-            if (IsProjectNull())
-            {
-                return null;
-            }
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware || plcSoftware.BlockGroup == null)
-            {
-                return null;
-            }
-
-            var groupNames = groupPath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
-            PlcBlockGroup currentGroup = plcSoftware.BlockGroup;
-            foreach (var groupName in groupNames)
-            {
-                var next = currentGroup.Groups.FirstOrDefault(g => g.Name.Equals(groupName, StringComparison.OrdinalIgnoreCase));
-                if (next == null)
-                {
-                    next = currentGroup.Groups.Create(groupName);
-                    created.Add(groupName);
-                    _logger?.LogInformation($"Created PLC block group '{groupName}'");
-                }
-                currentGroup = next;
-            }
-            return currentGroup;
-        }
-
-        // Move an existing block (found anywhere by exact name) into targetGroupPath.
-        // Implemented as export -> Delete -> import-into-group because Openness cannot
-        // reparent a block. Prefers SIMATIC SD documents (.s7dcl, keeps comments);
-        // falls back to SimaticML XML for mixed-language/STL blocks. Returns a summary.
-        public string MoveBlockToGroup(string softwarePath, string blockName, string targetGroupPath, bool autoCreateGroup = true)
-        {
-            if (IsProjectNull())
-            {
-                throw new PortalException(PortalErrorCode.InvalidState, "No project is open in TIA Portal");
-            }
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-            if (softwareContainer?.Software is not PlcSoftware plcSoftware || plcSoftware.BlockGroup == null)
-            {
-                throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
-            }
-
-            // 1) find the block anywhere by exact name
-            var all = new List<PlcBlock>();
-            GetBlocksRecursive(plcSoftware.BlockGroup, all);
-            var block = all.FirstOrDefault(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase));
-            if (block == null)
-            {
-                throw new PortalException(PortalErrorCode.NotFound, $"Block '{blockName}' not found in '{softwarePath}'");
-            }
-
-            // Siemens SIMATIC SD import recreates OBs as cyclic OBs with a new
-            // number. Do not delete an original OB through this generic move route.
-            if (block is OB)
-            {
-                var existingGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                if (existingGroup != null && ReferenceEquals(block.Parent, existingGroup))
-                    return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
-                throw new PortalException(PortalErrorCode.NotSupportedOnVersion,
-                    "Moving organization blocks by export/delete/import is disabled: SIMATIC SD import does not preserve OB type/number. Move this OB in TIA Portal.");
-            }
-
-            // 2) ensure the target group exists
-            var targetGroup = autoCreateGroup
-                ? EnsurePlcBlockGroup(softwarePath, targetGroupPath, out _)
-                : GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-            if (targetGroup == null)
-            {
-                throw new PortalException(PortalErrorCode.NotFound,
-                    $"Target block group '{targetGroupPath}' not found (set autoCreateGroup=true to create it)");
-            }
-
-            // already in the target group?
-            if (ReferenceEquals(block.Parent, targetGroup))
-            {
-                return $"Block '{blockName}' already in group '{targetGroupPath}' (no move needed)";
-            }
-            if (targetGroup.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)))
-                throw new PortalException(PortalErrorCode.InvalidParams,
-                    $"Target group already contains '{blockName}'; relocation never overwrites another block.");
-
-            // 3) export -> delete -> import into target group (no native reparent)
-            var tempDir = Path.Combine(Path.GetTempPath(), "tia_mcp_move", Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tempDir);
-            string method;
-            bool moveVerified = false;
-            try
-            {
-                bool usedDocs;
-                try
-                {
-                    var exp = block.ExportAsDocuments(new DirectoryInfo(tempDir), blockName);
-                    usedDocs = exp != null && exp.State == DocumentResultState.Success;
-                }
-                catch (EngineeringNotSupportedException)
-                {
- /* swallow(native-fallback): Unsupported document export falls back to SimaticML before deleting the source block. */                    usedDocs = false; // mixed-language / STL -> fall back to XML
-                }
-
-                if (usedDocs)
-                {
-                    block.Delete();
-                    var res = targetGroup.Blocks.ImportFromDocuments(new DirectoryInfo(tempDir), blockName, ImportDocumentOptions.Override);
-                    if (res == null || res.State != DocumentResultState.Success)
-                    {
-                        throw new PortalException(PortalErrorCode.ImportFailed,
-                            $"Re-import of '{blockName}' into '{targetGroupPath}' failed (documents)");
-                    }
-                    method = "documents(.s7dcl)";
-                }
-                else
-                {
-                    var xml = Path.Combine(tempDir, blockName + ".xml");
-                    block.Export(new FileInfo(xml), ExportOptions.None);
-                    block.Delete();
-                    var imp = targetGroup.Blocks.Import(new FileInfo(xml), ImportOptions.Override);
-                    if (imp == null || imp.Count == 0)
-                    {
-                        throw new PortalException(PortalErrorCode.ImportFailed,
-                            $"Re-import of '{blockName}' into '{targetGroupPath}' failed (xml)");
-                    }
-                    method = "xml(SimaticML)";
-                }
-                var verifyGroup = GetPlcBlockGroupByPath(softwarePath, targetGroupPath);
-                moveVerified = verifyGroup?.Blocks.Any(b => b.Name.Equals(blockName, StringComparison.OrdinalIgnoreCase)) == true;
-                if (!moveVerified) throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"Move of '{blockName}' to '{targetGroupPath}' could not be verified");
-            }
-            catch (Exception ex)
-            {
-                throw new PortalException(PortalErrorCode.ImportFailed,
-                    $"Move failed: {ex.Message}. Recovery export retained at '{tempDir}'; inspect the source and destination before retrying.", null, ex);
-            }
-            finally
-            {
-                // A failed import may have already deleted the source. Never erase
-                // its only recovery export during exception cleanup.
-                if (moveVerified)
-                    try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Cleanup after verified relocation must not replace the successful move result. *//* best-effort cleanup */ }
-            }
-
-            return $"Moved '{blockName}' to '{targetGroupPath}' via {method}";
         }
 
         private PlcTypeGroup? GetPlcTypeGroupByPath(string softwarePath, string groupPath)

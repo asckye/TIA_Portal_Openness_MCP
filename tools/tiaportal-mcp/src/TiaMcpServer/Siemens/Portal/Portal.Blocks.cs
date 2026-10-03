@@ -591,127 +591,6 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        public IEnumerable<PlcBlock>? ExportBlocks(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
-        {
-            _logger?.LogInformation("Exporting blocks...");
-
-            if (IsProjectNull())
-            {
-                throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
-            }
-
-            var exportList = new List<PlcBlock>();
-            var failures = new List<string>();
-            
-            PlcBlock[] list;
-
-            try
-            {
-                list = (GetBlocks(softwarePath, regexName) is { } got ? got.ToArray() : []);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Failed to retrieve block list for {SoftwarePath}", softwarePath);
-                return exportList;
-            }
-
-            for (int k = 0; k < list.Count(); k++)
-            {
-                var block = list[k];
-
-                _logger?.LogDebug($"- Exporting block {k}/{list.Count()} : {block.Name}");
-
-                string path;
-                if (preservePath)
-                {
-                    var groupPath = "";
-                    if (block.Parent is PlcBlockGroup parentGroup)
-                    {
-                        groupPath = GetPlcBlockGroupPath(parentGroup);
-                    }
-                    path = Path.Combine(exportPath, groupPath.Replace('/', '\\'), $"{block.Name}.xml");
-                }
-                else
-                {
-                    path = Path.Combine(exportPath, $"{block.Name}.xml");
-                }
-
-                try
-                {
-                    if (!block.IsConsistent)
-                    {
-                        _logger?.LogWarning("Skipping inconsistent block {Name}", block.Name);
-
-                        continue;
-                    }
-
-                    var dir = Path.GetDirectoryName(path);
-                    if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-                    {
-                        Directory.CreateDirectory(dir);
-                    }
-
-                    if (File.Exists(path))
-                    {
-                        try { File.Delete(path); }
-                        catch (Exception ioEx)
-                        {
-                            failures.Add($"{block.Name}: cannot delete existing file ({ioEx.Message})");
-                            _logger?.LogError(ioEx, "Delete failed for {File}", path);
-
-                            continue;
-                        }
-                    }
-
-                    try
-                    {
-                        block.Export(new FileInfo(path), ExportOptions.None);
-                    }
-                    catch (LicenseNotFoundException licEx)
-                    {
-                        failures.Add($"{block.Name}: license not found ({licEx.Message})");
-                        _logger?.LogError(licEx, "License issue exporting {Block}", block.Name);
-
-                        continue;
-                    }
-                    catch (EngineeringTargetInvocationException engEx)
-                    {
-                        failures.Add($"{block.Name}: target invocation failed ({engEx.Message})");
-                        _logger?.LogError(engEx, "TargetInvocationException exporting {Block}", block.Name);
-
-                        continue;
-                    }
-                    catch (Exception ex)
-                    {
-                        failures.Add($"{block.Name}: export failed ({ex.Message})");
-                        _logger?.LogError(ex, "Export failed for {Block}", block.Name);
-
-                        continue;
-                    }
-
-                    exportList.Add(block);
-                }
-                catch (Exception ex)
-                {
-                    // Catch only truly unexpected wrapper-level errors
-                    failures.Add($"{block.Name}: unexpected exception ({ex.Message})");
-                    _logger?.LogError(ex, "Unexpected error at block {Block}", block.Name);
-                    // continue with next block
-                }
-            }
-
-            if (failures.Count > 0)
-            {
-                _logger?.LogWarning($"ExportBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
-            }
-            else
-            {
-                _logger?.LogInformation($"ExportBlocks completed successfully. Exported {exportList.Count} blocks.");
-            }
-
-            return exportList;
-        }
-
         public IEnumerable<PlcType>? ExportTypes(string softwarePath, string exportPath, string regexName = "", bool preservePath = false)
         {
             _logger?.LogInformation("Exporting types...");
@@ -841,18 +720,6 @@ namespace TiaMcpServer.Siemens
             return (tempDir, paths);
         }
 
-        public (string TempDir, List<string> Paths)? ExportBlocksToTemp(string softwarePath, string regexName = "", bool preservePath = false)
-        {
-            var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tempDir);
-
-            var list = ExportBlocks(softwarePath, tempDir, regexName, preservePath);
-            if (list == null) return null;
-
-            var paths = Directory.GetFiles(tempDir, "*.xml", SearchOption.AllDirectories).ToList();
-            return (tempDir, paths);
-        }
-
         public (string TempDir, List<string> Paths)? ExportTypesToTemp(string softwarePath, string regexName = "", bool preservePath = false)
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "TiaMcpServer_Export_" + Guid.NewGuid().ToString("N"));
@@ -945,7 +812,6 @@ namespace TiaMcpServer.Siemens
                     }
 
                 }
-
 
             }
             catch (Exception ex)
