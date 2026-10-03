@@ -123,98 +123,21 @@ namespace TiaMcpServer.Siemens
             if (group == null)
                 throw new PortalException(PortalErrorCode.NotFound, $"ImportPlcExternalSource: ExternalSourceGroup not found (groupPath='{groupPath}')");
 
-            // Openness API for external sources differs across TIA versions:
-            // some expose Import(FileInfo,...), others expose Add/Create/ImportFromFile(FileInfo,...).
-            // Prefer the ExternalSources composition first — CreateFromFile lives there in V21.
-            var targets = new List<object>();
+            var fi = new FileInfo(filePath);
+            if (!fi.Exists) throw new PortalException(PortalErrorCode.InvalidParams, "External source file not found: " + filePath);
+            var target = group as global::Siemens.Engineering.SW.ExternalSources.PlcExternalSourceGroup;
+            if (target == null) throw new PortalException(PortalErrorCode.OpennessError, "Expected a public PLC external-source group.");
             try
             {
-                var extSourcesObj = group.GetType().GetProperty("ExternalSources")?.GetValue(group);
-                if (extSourcesObj != null) targets.Add(extSourcesObj);
+                // Official V20/V21 signature: source name, then the full source file path.
+                var source = target.ExternalSources.CreateFromFile(fi.Name, fi.FullName);
+                if (source == null) throw new InvalidOperationException("CreateFromFile returned no source.");
             }
-            catch { }
-            targets.Add(group);
-
-            var fi = new FileInfo(filePath);
-            if (!fi.Exists)
-                throw new PortalException(PortalErrorCode.InvalidParams, $"ImportPlcExternalSource: file not found '{filePath}'");
-
-            var candidates = new List<(object Target, MethodInfo Method)>();
-            foreach (var tgt in targets)
+            catch (Exception ex)
             {
-                var methods = tgt.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                candidates.AddRange(methods
-                    .Where(m =>
-                    {
-                        var ps = m.GetParameters();
-                        if (ps.Length < 1) return false;
-                        if (ps[0].ParameterType != typeof(FileInfo) && ps[0].ParameterType != typeof(string)) return false;
-                        var n = m.Name ?? "";
-                        return n.StartsWith("Import", StringComparison.OrdinalIgnoreCase)
-                               || n.StartsWith("Add", StringComparison.OrdinalIgnoreCase)
-                               || n.StartsWith("Create", StringComparison.OrdinalIgnoreCase);
-                    })
-                    .Select(m => (Target: tgt, Method: m)));
-            }
-
-            candidates = candidates
-                .OrderBy(c => c.Method.GetParameters()[0].ParameterType == typeof(FileInfo) ? 0 : 1)
-                .ThenBy(c => c.Method.Name.StartsWith("Import", StringComparison.OrdinalIgnoreCase) ? 0 : 1)
-                .ThenBy(c => c.Method.GetParameters().Length)
-                .ToList();
-
-            if (candidates.Count == 0)
-            {
-                string Dump(object tgt)
-                {
-                    try
-                    {
-                        var ms = tgt.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                            .Where(m => (m.Name ?? "").IndexOf("Import", StringComparison.OrdinalIgnoreCase) >= 0
-                                     || (m.Name ?? "").IndexOf("Create", StringComparison.OrdinalIgnoreCase) >= 0
-                                     || (m.Name ?? "").IndexOf("Add", StringComparison.OrdinalIgnoreCase) >= 0)
-                            .Select(m => $"{m.Name}({string.Join(", ", m.GetParameters().Select(p => p.ParameterType.Name))})")
-                            .Take(10);
-                        return string.Join("; ", ms);
-                    }
-                    catch { return ""; }
-                }
-
-                var extDump = targets.Count > 1 ? Dump(targets[1]) : "";
                 throw new PortalException(PortalErrorCode.OpennessError,
-                    $"ImportPlcExternalSource: No import-like method found. group={group.GetType().FullName} methods=[{Dump(group)}] extSources=[{extDump}]");
+                    "External source import outcome is unknown. Inspect the source collection before another write; no alternative import was attempted.", inner: ex);
             }
-
-            var failures = new List<string>();
-            foreach (var candidate in candidates)
-            {
-                var importMethod = candidate.Method;
-                var parms = importMethod.GetParameters();
-                var argLists = BuildExternalSourceImportArguments(parms, fi);
-                if (argLists.Count == 0) continue;
-
-                foreach (var args in argLists)
-                {
-                    var sig = $"{importMethod.Name}({string.Join(", ", parms.Select(p => p.ParameterType.Name))})";
-                    try
-                    {
-                        var result = importMethod.Invoke(candidate.Target, args);
-                        if (importMethod.ReturnType == typeof(void) || result != null)
-                        {
-                            return;
-                        }
-
-                        failures.Add($"{sig} returned null");
-                    }
-                    catch (Exception ex)
-                    {
-                        var inner = (ex is TargetInvocationException tie && tie.InnerException != null) ? tie.InnerException : ex;
-                        failures.Add($"{sig} threw {inner.GetType().FullName}: {inner.Message}");
-                    }
-                }
-            }
-
-            throw new PortalException(PortalErrorCode.OpennessError, "ImportPlcExternalSource: all import-like methods failed: " + string.Join(" | ", failures.Take(12)));
         }
 
         private static bool ExternalSourceNameMatches(string actualName, string requested)
@@ -232,66 +155,6 @@ namespace TiaMcpServer.Siemens
                 return true;
             }
             return false;
-        }
-
-        private static List<object?[]> BuildExternalSourceImportArguments(ParameterInfo[] parms, FileInfo fi)
-        {
-            var result = new List<object?[]>();
-            if (parms.Length < 1) return result;
-            if (parms[0].ParameterType != typeof(FileInfo) && parms[0].ParameterType != typeof(string)) return result;
-
-            object firstArg = parms[0].ParameterType == typeof(FileInfo) ? fi : fi.FullName;
-            var sourceName = Path.GetFileNameWithoutExtension(fi.Name);
-
-            if (parms.Length == 1)
-            {
-                result.Add(new object?[] { firstArg });
-                return result;
-            }
-
-            // Siemens.Openness: PlcExternalSourceComposition.CreateFromFile(string name, string path)
-            // Manual 5.11.3.x — first arg is the external-source *name* (often "Block_1.scl"), second is full path.
-            // Older reflection code wrongly passed (FullPath, fileTitleWithoutExtension).
-            if (parms.Length == 2 && parms[0].ParameterType == typeof(string) && parms[1].ParameterType == typeof(string))
-            {
-                result.Add(new object?[] { fi.Name, fi.FullName });
-                if (!string.IsNullOrEmpty(sourceName) &&
-                    !string.Equals(sourceName, fi.Name, StringComparison.OrdinalIgnoreCase))
-                {
-                    result.Add(new object?[] { sourceName, fi.FullName });
-                }
-                return result;
-            }
-
-            if (parms.Length == 2 && parms[0].ParameterType == typeof(FileInfo) && parms[1].ParameterType == typeof(string))
-            {
-                result.Add(new object?[] { fi, sourceName });
-                return result;
-            }
-
-            if (parms.Length == 2 && parms[1].ParameterType.IsEnum)
-            {
-                foreach (var preferred in new[] { "Override", "Overwrite", "Replace", "None" })
-                {
-                    try
-                    {
-                        result.Add(new object?[] { firstArg, Enum.Parse(parms[1].ParameterType, preferred, ignoreCase: true) });
-                    }
-                    catch { }
-                }
-                foreach (var value in Enum.GetValues(parms[1].ParameterType))
-                {
-                    if (!result.Any(args => Equals(args[1], value))) result.Add(new object?[] { firstArg, value });
-                }
-                return result;
-            }
-
-            if (parms.Skip(1).All(p => p.IsOptional))
-            {
-                result.Add(new[] { firstArg }.Concat(parms.Skip(1).Select(p => p.DefaultValue)).ToArray());
-            }
-
-            return result;
         }
 
         public void GenerateBlocksFromExternalSource(string softwarePath, string externalSourceName)
@@ -317,76 +180,17 @@ namespace TiaMcpServer.Siemens
             }
             if (src == null) throw new PortalException(PortalErrorCode.NotFound, $"GenerateBlocksFromExternalSource: external source not found: {externalSourceName}");
 
-            // V18+ often exposes GenerateBlocksFromSource(PlcBlockUserGroup, GenerateBlockOption) only;
-            // parameterless GenerateBlocks() may not exist.
-            var t = src.GetType();
-            var methods = t.GetMethods(BindingFlags.Public | BindingFlags.Instance)
-                .Where(m =>
-                {
-                    var n = m.Name ?? "";
-                    return n.Equals("GenerateBlocks", StringComparison.OrdinalIgnoreCase)
-                           || n.Equals("GenerateBlocksFromSource", StringComparison.OrdinalIgnoreCase)
-                           || n.Equals("GenerateBlocksFromExternalSource", StringComparison.OrdinalIgnoreCase);
-                })
-                .OrderBy(m => m.GetParameters().Length)
-                .ToList();
-
-            var failures = new List<string>();
-            foreach (var gen in methods)
+            var source = src as global::Siemens.Engineering.SW.ExternalSources.PlcExternalSource;
+            if (source == null) throw new PortalException(PortalErrorCode.OpennessError, "Expected a public PLC external source.");
+            try
             {
-                var ps = gen.GetParameters();
-                try
-                {
-                    if (ps.Length == 0)
-                    {
-                        gen.Invoke(src, Array.Empty<object>());
-                        return;
-                    }
-
-                    if (ps.Length == 2 && ps[1].ParameterType.IsEnum)
-                    {
-                        var folderType = ps[0].ParameterType;
-                        var blockRoot = plcSoftware.BlockGroup;
-                        if (blockRoot == null)
-                        {
-                            failures.Add($"{gen.Name}: BlockGroup is null");
-                            continue;
-                        }
-
-                        if (!folderType.IsAssignableFrom(blockRoot.GetType()))
-                        {
-                            failures.Add($"{gen.Name}: BlockGroup type {blockRoot.GetType().Name} not assignable to {folderType.Name}");
-                            continue;
-                        }
-
-                        object optionVal;
-                        try
-                        {
-                            optionVal = Enum.Parse(ps[1].ParameterType, "None", ignoreCase: true);
-                        }
-                        catch
-                        {
-                            var vals = Enum.GetValues(ps[1].ParameterType);
-                            if (vals.Length == 0)
-                            {
-                                failures.Add($"{gen.Name}: GenerateBlockOption enum empty");
-                                continue;
-                            }
-                            optionVal = vals.GetValue(0)!;
-                        }
-
-                        gen.Invoke(src, new[] { blockRoot, optionVal });
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var inner = (ex is TargetInvocationException tie && tie.InnerException != null) ? tie.InnerException : ex;
-                    failures.Add($"{gen.Name}({ps.Length}): {inner.Message}");
-                }
+                source.GenerateBlocksFromSource();
             }
-
-            throw new PortalException(PortalErrorCode.OpennessError, "GenerateBlocksFromExternalSource: " + string.Join(" | ", failures.Take(10)));
+            catch (Exception ex)
+            {
+                throw new PortalException(PortalErrorCode.OpennessError,
+                    "Block generation outcome is unknown. Inspect generated blocks before another write; no alternative generation was attempted.", inner: ex);
+            }
         }
 
         private static IEnumerable<object?>? TryGetExternalSourcesCollection(PlcSoftware plcSoftware)

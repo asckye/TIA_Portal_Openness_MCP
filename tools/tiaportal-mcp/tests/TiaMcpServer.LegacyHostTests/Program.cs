@@ -61,6 +61,7 @@ internal static class Program
         await PassiveHostDiagnosticsTests.Run(server,Check);
         DocumentImportTests.Run(Check);
         BatchDocumentImportTests.Run(Check);
+        WorkerSessionOutcomeTests.Run(Check);
         DocumentExportTests.Run(Check);
         BatchDocumentExportTests.Run(Check);
         ExternalSourcePlanTests.Run(Check);

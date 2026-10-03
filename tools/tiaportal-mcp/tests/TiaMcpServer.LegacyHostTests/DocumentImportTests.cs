@@ -5,18 +5,20 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 internal static class DocumentImportTests
 {
-    internal static JsonNode Payload(JsonObject args) { var result=JsonSerializer.SerializeToNode(new PlcDocumentImportResult { Release="21",ProjectFile="C:/Projects/Example.ap21",ProcessId=123,TargetIdentity="session/project/plc/group",SoftwarePath=args["softwarePath"]!.GetValue<string>(),GroupPath=args["groupPath"]!.GetValue<string>(),InputDirectory=args["importPath"]!.GetValue<string>(),DeclaredName=args["fileNameWithoutExtension"]!.GetValue<string>(),CodeSha256=new string('a',64),PlanHash=new string('b',64) })!.AsObject();result["PlanHash"]=DocumentImportContract.PlanHash(result);return result; }
+    private static readonly string FixtureRoot=Path.Combine(Path.GetTempPath(),"tia-document-import-tests");
+    internal static JsonNode Payload(JsonObject args) { var result=JsonSerializer.SerializeToNode(new PlcDocumentImportResult { Release="21",ProjectFile=Path.Combine(FixtureRoot,"Example.ap21"),ProcessId=123,TargetIdentity="session/project/plc/group",SoftwarePath=args["softwarePath"]!.GetValue<string>(),GroupPath=args["groupPath"]!.GetValue<string>(),InputDirectory=args["importPath"]!.GetValue<string>(),DeclaredName=args["fileNameWithoutExtension"]!.GetValue<string>(),CodeSha256=new string('a',64),PlanHash=new string('b',64) })!.AsObject();result["PlanHash"]=DocumentImportContract.PlanHash(result);return result; }
     private sealed class DisposeFailureStream(byte[] bytes):MemoryStream(bytes,false)
     { protected override void Dispose(bool disposing) {base.Dispose(disposing);if(disposing)throw new IOException("Injected cleanup failure.");} }
     internal static void Run(Action<bool,string> Check)
     {
+string projectFile=Path.Combine(FixtureRoot,"p.ap21"), documentDirectory=Path.Combine(FixtureRoot,"documents");
 void Reject(Action a,string n) {bool rejected=false;try{a();}catch(ArgumentException){rejected=true;}catch(NotSupportedException){rejected=true;}catch(InvalidDataException){rejected=true;}Check(rejected,n);}
 string code="{ S7_Optimized := \"TRUE\"; S7_Version := \"0.1\" } DATA_BLOCK \"Demo\" VAR Flag : Bool := true; Count : DInt := -12; END_VAR END_DATA_BLOCK";
 Check(PlcDocumentDeclaration.Parse(Encoding.ASCII.GetBytes(code))=="Demo","identity");
 Check(PlcDocumentDeclaration.Parse(Encoding.ASCII.GetBytes("//DATA_BLOCK Fake\n"+code+"// DATA_BLOCK Other"))=="Demo","comments ignored");
 foreach(var bad in new[]{code+" DATA_BLOCK Other VAR x:Bool; END_VAR END_DATA_BLOCK",code.Replace("DATA_BLOCK \"Demo\"","DATA_BLOCK Demo FB1"),code.Replace("DInt","String"),code.Replace("Count :","Flag :"),code.Replace("S7_Optimized","S7_Safety"),code.Replace("S7_Optimized","S7_Number"),code.Replace("S7_Optimized","S7_Language"),code.Replace("-12","1 + 2"),code.Replace("VAR Flag","(* comment *) VAR Flag"),code.Replace("END_DATA_BLOCK","END_FUNCTION_BLOCK"),code+" \"\"",code.Replace("\"Demo\"","\"De$\"mo\""),code.Replace("true","'true'"),code.Replace("VAR Flag","VAR Flag:Bool; //\n Flag"),code.Replace("DATA_BLOCK","FUNCTION_BLOCK"),code.Replace("Flag : Bool","Flag : Array[0..1] of Bool"),code.Replace("END_VAR","END_VAR BEGIN"),code.Replace("S7_Version := \"0.1\"","S7_Optimized := \"TRUE\"")})Reject(()=>PlcDocumentDeclaration.Parse(Encoding.ASCII.GetBytes(bad)),"reject grammar");
-var r=new PlcDocumentImportRequest {Release="21",Project="/p.ap21",Software="PLC",Group="",Directory="/documents",Name="Demo",ProcessId=1,TargetIdentity="object"};
-int calls=0,checks=0;string[] files={"/documents/Demo.s7dcl"};byte[] input=Encoding.ASCII.GetBytes(code);
+var r=new PlcDocumentImportRequest {Release="21",Project=projectFile,Software="PLC",Group="",Directory=documentDirectory,Name="Demo",ProcessId=1,TargetIdentity="object"};
+int calls=0,checks=0;string[] files={Path.Combine(documentDirectory,"Demo.s7dcl")};byte[] input=Encoding.ASCII.GetBytes(code);
 PlcDocumentImportNative Native()=>new(){State="Success",Success=true,ExistsVerified=true,Identities=new[]{PlcDocumentImportPolicy.InventoryItem("","Demo","GlobalDB","returned")}};
 PlcDocumentImportResult Run(Func<PlcDocumentImportNative>? native=null,Func<IEnumerable<string>>? inventory=null)=>PlcDocumentImportPolicy.Run(r,()=>files,_=>new MemoryStream(input,false),inventory??(()=>Array.Empty<string>()),_=>false,()=>checks++,()=>{calls++;return (native??Native)();});
 var preview=Run();Check(calls==0&&checks==0&&!preview.Attempted&&!preview.MayHaveChanged,"preview nonmutating");
@@ -28,7 +30,7 @@ foreach(var kind in new[]{"null","exception","partial","failure","zero","extra",
 }
 var before=calls;r.ExpectedHash=new string('0',64);Reject(()=>Run(),"stale plan");Check(calls==before,"stale zero calls");r.ExpectedHash=preview.PlanHash;
 r.ExpectedProject="other";Reject(()=>Run(),"wrong project");r.ExpectedProject=r.Project;
-r.Name="Other";files=new[]{"/documents/Other.s7dcl"};Reject(()=>Run(),"filename is not identity");r.Name="Demo";files=new[]{"/documents/Demo.s7dcl"};
+r.Name="Other";files=new[]{Path.Combine(documentDirectory,"Other.s7dcl")};Reject(()=>Run(),"filename is not identity");r.Name="Demo";files=new[]{Path.Combine(documentDirectory,"Demo.s7dcl")};
 r.Overwrite=true;Reject(()=>Run(),"override rejected");r.Overwrite=false;
 r.Release="20";Reject(()=>Run(),"v20 pair required");r.Release="21";
 r.DryRun=true;Reject(()=>Run(inventory:()=>Enumerable.Repeat("item",4097)),"inventory bound");
@@ -39,15 +41,15 @@ Reject(()=>PlcDocumentImportPolicy.Read(new MemoryStream(new byte[PlcDocumentImp
 r.DryRun=true;
 var originalHash=Run().PlanHash;
 foreach(var mutate in new Action[]{()=>r.ProcessId++,()=>r.TargetIdentity+="x",()=>r.Project+="x",()=>r.Software+="x",()=>r.Group="Group"}) { mutate();Check(Run().PlanHash!=originalHash,"Document plan binds exact target identity");originalHash=Run().PlanHash; }
-r.Group="";r.Project="/p.ap21";r.Software="PLC";r.ProcessId=1;r.TargetIdentity="object";
+r.Group="";r.Project=projectFile;r.Software="PLC";r.ProcessId=1;r.TargetIdentity="object";
 var inventoryPlan=Run(inventory:()=>new[]{"item"});Check(inventoryPlan.PlanHash!=Run().PlanHash,"Document plan binds complete inventory");
 input=Encoding.ASCII.GetBytes(code+" //changed bytes");Check(Run().PlanHash!=preview.PlanHash,"Document plan binds unchanged code bytes including comments");input=Encoding.ASCII.GetBytes(code);
-files=new[]{"/documents/Demo.s7dcl","/documents/Demo.s7res"};Check(Run().ResourceSha256==PlcDocumentImportPolicy.Hash(input),"Optional V21 resources remain hashed unchanged");r.Release="20";Check(Run().Status=="planned","V20 pair admitted");r.Release="21";files=new[]{"/documents/Demo.s7dcl"};
+files=new[]{Path.Combine(documentDirectory,"Demo.s7dcl"),Path.Combine(documentDirectory,"Demo.s7res")};Check(Run().ResourceSha256==PlcDocumentImportPolicy.Hash(input),"Optional V21 resources remain hashed unchanged");r.Release="20";Check(Run().Status=="planned","V20 pair admitted");r.Release="21";files=new[]{Path.Combine(documentDirectory,"Demo.s7dcl")};
 foreach(var release in new[]{"14sp1","15.1","16","17","18","19","V20","22"}) {r.Release=release;Reject(()=>Run(),"Document release gate "+release);}r.Release="21";
 if(!OperatingSystem.IsWindows())Reject(()=>PlcDocumentImportPolicy.Scan(r),"Document native path scan refuses non-Windows");
 r.DryRun=false;r.ExpectedHash=preview.PlanHash;
 int reads=0;var countBefore=calls;Reject(()=>Run(inventory:()=>++reads==1?Array.Empty<string>():new[]{"changed"}),"Inventory changed between preview and apply");Check(calls==countBefore,"Changed inventory invokes no native call");
-var request=new JsonObject { ["softwarePath"]="PLC",["groupPath"]="",["importPath"]="/documents",["fileNameWithoutExtension"]="Demo",["dryRun"]=true };
+var request=new JsonObject { ["softwarePath"]="PLC",["groupPath"]="",["importPath"]=documentDirectory,["fileNameWithoutExtension"]="Demo",["dryRun"]=true };
 JsonObject Wire(PlcDocumentImportResult x)=>JsonSerializer.SerializeToNode(x)!.AsObject();
 DocumentImportContract.Validate(Wire(preview),request);
 foreach(var field in new[]{"Executed","Attempted","MayHaveChanged","RequiresSessionReset","ExistsVerified","ContentVerified"}) {var bad=Wire(preview);bad[field]=true;Reject(()=>DocumentImportContract.Validate(bad,request),"Forged preview "+field);}

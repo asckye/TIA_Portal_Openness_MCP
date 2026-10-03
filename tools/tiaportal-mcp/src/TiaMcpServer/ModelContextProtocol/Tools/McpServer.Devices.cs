@@ -409,7 +409,8 @@ namespace TiaMcpServer.ModelContextProtocol
         // NOTE: Deprecated demo tools removed (GenerateStartStopBlocks / EnsureUnifiedMainScreen).
 
         [McpServerTool(Name = "GetDevices"), Description("[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: Connect + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like AddDevice or SetDeviceItemAttribute.")]
-        public static ResponseDevices GetDevices()
+        public static ResponseDevices GetDevices(
+            [Description("includePlcSoftware: include a structured PLC software name inventory for desktop browsing.")] bool includePlcSoftware = false)
         {
             try
             {
@@ -439,6 +440,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
+                            ["plcSoftwareNames"] = includePlcSoftware ? new JsonArray(Portal.GetPlcSoftwareNamesForDesktop().Select(n => (JsonNode)n).ToArray()) : null,
                             ["success"] = true
                         }
                     };

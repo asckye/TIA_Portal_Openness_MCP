@@ -1,0 +1,18 @@
+{
+  "version": "V15.1",
+  "publicApiDirectory": "D:\\Project\\TIA_Portal_MCP\\TIA_V15.1_PublicAPI\\V15.1",
+  "generatedAt": "2026-10-02T18:54:41",
+  "xmlFiles": 3,
+  "sourceFiles": 353,
+  "domainMembers": 1209,
+  "referenced": 994,
+  "ownerOnly": 97,
+  "unreferenced": 118,
+  "types": 379,
+  "typesCovered": 307,
+  "typesNamedOnly": 13,
+  "typesDynamic": 0,
+  "typesUntouched": 59,
+  "dynamicCoverageFile": "D:\\Project\\TIA_Portal_MCP\\scripts\\diagnostics\\openness-dynamic-coverage.json",
+  "caveat": "Lexical only. REFERENCED = owner type name AND .member( both appear in engine source. Generic reflection tools can reach unreferenced members dynamically. AddIn.* assemblies and documented non-public types (Siemens.Engineering.Private.*, Compiler.CompileProvider) excluded."
+}

@@ -1,0 +1,292 @@
+<!--
+  Buttons, segments, tabs, links and the small identity pieces (logo, badge, section mark).
+
+  The hierarchy is deliberate and the view relies on it being kept:
+    - filled amber   = the one action the row is for (Connect, Open, Export)
+    - soft amber     = an important action that is not the row's purpose (Save project)
+    - outlined       = everything else that is a button
+    - plain link     = actions on the content itself (All / None, Copy / Clear / Collapse)
+  Using filled amber twice in a row is how the accent stops meaning anything.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls">
+
+  <!-- One template behind every button, segment and tab. The corner radius comes from an attached
+       property read with TemplateBinding rather than a Binding path: a "(ux:Ux.CornerRadius)"
+       path that fails to resolve fails silently to its default, whereas a TemplateBinding is
+       resolved at parse time and a mistake is a load error. -->
+  <ControlTemplate x:Key="Ui.ButtonTemplate" TargetType="ButtonBase">
+    <Border x:Name="Chrome"
+            Background="{TemplateBinding Background}"
+            BorderBrush="{TemplateBinding BorderBrush}"
+            BorderThickness="{TemplateBinding BorderThickness}"
+            CornerRadius="{TemplateBinding ux:Ux.CornerRadius}"
+            SnapsToDevicePixels="True">
+      <ContentPresenter x:Name="Label"
+                        Margin="{TemplateBinding Padding}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        RecognizesAccessKey="True"
+                        SnapsToDevicePixels="True" />
+    </Border>
+
+    <ControlTemplate.Triggers>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Opacity" Value="0.45" />
+      </Trigger>
+    </ControlTemplate.Triggers>
+  </ControlTemplate>
+
+  <!-- ===================== outlined (the app-wide default) ===================== -->
+  <Style x:Key="Ui.Button" TargetType="Button">
+    <Setter Property="Template" Value="{StaticResource Ui.ButtonTemplate}" />
+    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}" />
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Body}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+    <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.ControlBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="MinWidth" Value="64" />
+    <Setter Property="Margin" Value="0,0,8,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="ux:Ux.CornerRadius" Value="8" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlHover}" />
+      </Trigger>
+      <Trigger Property="IsPressed" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlPressed}" />
+      </Trigger>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlDisabled}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <Style TargetType="Button" BasedOn="{StaticResource Ui.Button}" />
+
+  <!-- ===================== filled: the row's one primary action ===================== -->
+  <Style x:Key="Ui.Button.Primary" TargetType="Button" BasedOn="{StaticResource Ui.Button}">
+    <Setter Property="Background" Value="{DynamicResource Ui.Accent}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.Accent}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.OnAccent}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Padding" Value="18,0" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.AccentHover}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ui.AccentHover}" />
+      </Trigger>
+      <Trigger Property="IsPressed" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.AccentPressed}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ui.AccentPressed}" />
+      </Trigger>
+      <!-- A disabled action drops the accent entirely rather than fading it. Amber at 45% opacity
+           reads as a rendering fault; neutral grey reads as "not available yet", which is what it
+           means - Export waits for a folder, Compile waits for a device. -->
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlDisabled}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ui.ControlBorder}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===================== soft: important, but not the row's purpose ===================== -->
+  <Style x:Key="Ui.Button.Soft" TargetType="Button" BasedOn="{StaticResource Ui.Button}">
+    <Setter Property="Background" Value="{DynamicResource Ui.AccentSoft}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.AccentSoftBorder}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.AccentText}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="BorderBrush" Value="{DynamicResource Ui.Accent}" />
+      </Trigger>
+      <Trigger Property="IsPressed" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.AccentSoftBorder}" />
+      </Trigger>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlDisabled}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Ui.ControlBorder}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===================== destructive: red label, ordinary chrome ===================== -->
+  <Style x:Key="Ui.Button.Destructive" TargetType="Button" BasedOn="{StaticResource Ui.Button}">
+    <Setter Property="Foreground" Value="{DynamicResource Ui.Red}" />
+  </Style>
+
+  <!-- ===================== links: actions on the content itself ===================== -->
+  <Style x:Key="Ui.Button.Link" TargetType="Button" BasedOn="{StaticResource Ui.Button}">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.AccentText}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Margin" Value="0,0,4,0" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlHover}" />
+      </Trigger>
+      <Trigger Property="IsPressed" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlPressed}" />
+      </Trigger>
+      <Trigger Property="IsEnabled" Value="False">
+        <Setter Property="Background" Value="Transparent" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The quiet variant for housekeeping (copy, clear, collapse): no accent, no weight. -->
+  <Style x:Key="Ui.Button.LinkQuiet" TargetType="Button" BasedOn="{StaticResource Ui.Button.Link}">
+    <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}" />
+    <Setter Property="FontWeight" Value="Normal" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.ControlHover}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <Style x:Key="Ui.Button.Icon" TargetType="Button" BasedOn="{StaticResource Ui.Button.LinkQuiet}">
+    <Setter Property="Padding" Value="6" />
+    <Setter Property="MinHeight" Value="28" />
+  </Style>
+
+  <!-- ===================== segmented control ===================== -->
+  <!-- A bordered white bar holding RadioButtons. A RadioButton refuses to deselect itself, which
+       is exactly the behaviour a picker needs; a ToggleButton could be clicked back to nothing. -->
+  <Style x:Key="Ui.SegmentBar" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.ControlBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="4" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- The picker segment: selected = filled accent. -->
+  <Style x:Key="Ui.Segment" TargetType="RadioButton">
+    <Setter Property="Template" Value="{StaticResource Ui.ButtonTemplate}" />
+    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}" />
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Body}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Padding" Value="14,0" />
+    <Setter Property="MinHeight" Value="26" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Margin" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="ux:Ux.CornerRadius" Value="7" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+      </Trigger>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.Accent}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ui.OnAccent}" />
+        <Setter Property="FontWeight" Value="Bold" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The tab strip segment: selected = quiet grey fill, bold label. Same bar, different weight,
+       because a view switch is not a setting. -->
+  <Style x:Key="Ui.Tab" TargetType="RadioButton" BasedOn="{StaticResource Ui.Segment}">
+    <Setter Property="Padding" Value="20,0" />
+    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="ux:Ux.CornerRadius" Value="8" />
+    <Style.Triggers>
+      <Trigger Property="IsMouseOver" Value="True">
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+      </Trigger>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="Background" Value="{DynamicResource Ui.SegmentThumb}" />
+        <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+        <Setter Property="FontWeight" Value="Bold" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The language switch at the foot of the sidebar: the active language is bold, the other is
+       an underlined link. Text-only, so it has its own template rather than the button one. -->
+  <Style x:Key="Ui.LangLink" TargetType="RadioButton">
+    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}" />
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Body}" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}" />
+    <Setter Property="Padding" Value="6,2" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border Background="Transparent" Padding="{TemplateBinding Padding}">
+            <TextBlock x:Name="Text" Text="{TemplateBinding Content}"
+                       Foreground="{TemplateBinding Foreground}"
+                       FontFamily="{TemplateBinding FontFamily}"
+                       FontSize="{TemplateBinding FontSize}"
+                       TextDecorations="Underline"
+                       VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Text" Property="FontWeight" Value="Bold" />
+              <Setter TargetName="Text" Property="TextDecorations" Value="{x:Null}" />
+              <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource Ui.Label}" />
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource Ui.AccentText}" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===================== identity pieces ===================== -->
+
+  <!-- The 40px amber tile with the two-letter mark. -->
+  <Style x:Key="Ui.Logo" TargetType="Border">
+    <Setter Property="Width" Value="40" />
+    <Setter Property="Height" Value="40" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Background" Value="{DynamicResource Ui.Accent}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- A pill of mono text: the TIA version next to the app name. -->
+  <Style x:Key="Ui.Badge" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Ui.ControlBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.ControlBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="Padding" Value="9,3" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- The short amber bar that precedes a section label. -->
+  <Style x:Key="Ui.SectionMark" TargetType="Rectangle">
+    <Setter Property="Width" Value="3" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="RadiusX" Value="1.5" />
+    <Setter Property="RadiusY" Value="1.5" />
+    <Setter Property="Fill" Value="{DynamicResource Ui.Accent}" />
+    <Setter Property="Margin" Value="0,0,8,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+</ResourceDictionary>

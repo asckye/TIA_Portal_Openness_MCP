@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
+using Siemens.Engineering.SW;
 
 namespace TiaMcpServer.Siemens
 {
@@ -32,6 +33,13 @@ namespace TiaMcpServer.Siemens
                     $"Hardware/software lookup failed for '{name}' ({ex.GetType().Name}): {ex.Message}. "
                     + "This does not mean the software or its blocks are absent.", null, ex);
             }
+        }
+
+        public string[] GetPlcSoftwareNamesForDesktop()
+        {
+            if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open.");
+            return EnumerateSoftwareContainersForExactLookup()
+                .Select(c => c.Software).OfType<PlcSoftware>().Select(p => p.Name).ToArray();
         }
 
         private IEnumerable<SoftwareContainer> EnumerateSoftwareContainersForExactLookup()

@@ -5,12 +5,22 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
-PORTAL = (SRC / 'Siemens/Portal/Portal.Blocks.cs').read_text()
+PORTAL = (SRC / 'Siemens/Portal/Portal.Blocks.cs').read_text(encoding='utf-8')
 SINGLE = PORTAL.split('public bool ImportFromDocuments(', 1)[1].split('private static string DocumentImportedNamesSuffix', 1)[0]
 BATCH = PORTAL.split('public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(', 1)[1]
-MCP = (SRC / 'ModelContextProtocol/Tools/McpServer.Documents.cs').read_text().split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
+MCP = (SRC / 'ModelContextProtocol/Tools/McpServer.Documents.cs').read_text(encoding='utf-8').split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
 
 class DocumentImportSafetySources(unittest.TestCase):
+    def test_worker_blocks_reads_and_previews_after_uncertain_document_batch(self):
+        worker = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker'
+        program = (worker / 'Program.cs').read_text(encoding='utf-8')
+        guard = program.index('sessionOutcome.RequireUsable(readOnly);')
+        self.assertLess(guard, program.index('MutationIdentityPolicy.ValidateTarget'))
+        self.assertLess(guard, program.index('method.Invoke(engine, call)'))
+        self.assertIn('if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);', program)
+        self.assertNotIn('batchOutcomeUnknown', program)
+        self.assertIn('WorkerSessionOutcomeState.cs', (worker / 'TiaMcpServer.PlcWorker.csproj').read_text(encoding='utf-8'))
+
     def test_missing_group_rejected_before_native_call(self):
         self.assertIn('string.IsNullOrWhiteSpace(groupPath) ? plcSoftware.BlockGroup', BATCH)
         gate = BATCH.index('?? throw new PortalException(PortalErrorCode.NotFound')

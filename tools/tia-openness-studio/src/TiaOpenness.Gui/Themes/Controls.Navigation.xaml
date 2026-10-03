@@ -1,0 +1,127 @@
+<!--
+  Containers, progress, splitters and tooltips.
+
+  There is deliberately no TabControl style here: the tab strip in the header is a group of
+  RadioButtons (Ui.Tab) driving a content switch, because the strip shares its row with unrelated
+  buttons and a TabControl would insist on owning that whole row.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===================== containers ===================== -->
+
+  <!-- The white, hairline-bordered panel most content sits in. -->
+  <Style x:Key="Ui.Card" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Ui.CardBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.Separator}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="12" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- A strip inside a card, separated by a hairline: the filter row above the table and the
+       export row below it. -->
+  <Style x:Key="Ui.CardBand" TargetType="Border">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.Separator}" />
+    <Setter Property="BorderThickness" Value="0,0,0,1" />
+    <Setter Property="Padding" Value="16,12" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- The dashed placeholder shown where a list will appear once there is something to list. -->
+  <Style x:Key="Ui.Placeholder" TargetType="Border">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Ui.DashedBorder}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="20,28" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- A thin vertical rule between groups of controls in a row. -->
+  <Style x:Key="Ui.VerticalRule" TargetType="Rectangle">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Height" Value="22" />
+    <Setter Property="Fill" Value="{DynamicResource Ui.Separator}" />
+    <Setter Property="Margin" Value="10,0,12,0" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="SnapsToDevicePixels" Value="True" />
+  </Style>
+
+  <!-- ===================== progress ===================== -->
+  <Style TargetType="ProgressBar">
+    <Setter Property="Height" Value="6" />
+    <Setter Property="Foreground" Value="{DynamicResource Ui.Accent}" />
+    <Setter Property="Background" Value="{DynamicResource Ui.SegmentTrack}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ProgressBar">
+          <Border Background="{TemplateBinding Background}" CornerRadius="3" ClipToBounds="True">
+            <Grid>
+              <Rectangle x:Name="PART_Track" />
+              <Border x:Name="PART_Indicator" HorizontalAlignment="Left"
+                      Background="{TemplateBinding Foreground}" CornerRadius="3" />
+            </Grid>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ===================== splitter ===================== -->
+  <!-- Invisible until pointed at; the panes' own edges do the separating. -->
+  <Style TargetType="GridSplitter">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Focusable" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="GridSplitter">
+          <Border Background="Transparent">
+            <Border x:Name="Line" Background="Transparent" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Line" Property="Background" Value="{DynamicResource Ui.Accent}" />
+              <Setter TargetName="Line" Property="Opacity" Value="0.45" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="ResizeDirection" Value="Columns">
+        <Setter Property="Cursor" Value="SizeWE" />
+      </Trigger>
+      <Trigger Property="ResizeDirection" Value="Rows">
+        <Setter Property="Cursor" Value="SizeNS" />
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- ===================== tooltip ===================== -->
+  <Style TargetType="ToolTip">
+    <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+    <Setter Property="FontFamily" Value="{DynamicResource Ui.Font}" />
+    <Setter Property="FontSize" Value="{DynamicResource Ui.FontSize.Small}" />
+    <Setter Property="MaxWidth" Value="340" />
+    <Setter Property="HasDropShadow" Value="False" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="ToolTip">
+          <Border Background="{DynamicResource Ui.CardBackground}"
+                  BorderBrush="{DynamicResource Ui.Separator}"
+                  BorderThickness="1" CornerRadius="8" Padding="10,7">
+            <Border.Effect>
+              <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.16" Direction="270" />
+            </Border.Effect>
+            <ContentPresenter />
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

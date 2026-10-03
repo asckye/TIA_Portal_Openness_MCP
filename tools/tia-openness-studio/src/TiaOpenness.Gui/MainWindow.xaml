@@ -1,0 +1,621 @@
+<Window x:Class="TiaOpenness.Gui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:l="clr-namespace:TiaOpenness.Gui.Localization"
+        xmlns:th="clr-namespace:TiaOpenness.Gui.Themes"
+        xmlns:ux="clr-namespace:TiaOpenness.Gui.Controls"
+        Style="{StaticResource Ui.Window}"
+        Title="{l:Tr App.Title}"
+        Height="880" Width="1400" MinHeight="600" MinWidth="1000"
+        WindowStartupLocation="CenterScreen">
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- ============================ header ============================ -->
+    <Border Grid.Row="0" Background="{DynamicResource Ui.HeaderBackground}"
+            BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="0,0,0,1"
+            Padding="20,14">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" MinWidth="20" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- identity: monogram tile, product name, and which Openness the session bound to -->
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+          <Border Style="{StaticResource Ui.Logo}">
+            <TextBlock Text="{l:Tr App.Monogram}" Foreground="{DynamicResource Ui.OnAccent}"
+                       FontSize="16" FontWeight="Bold"
+                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <TextBlock Text="{l:Tr App.Title}" Style="{StaticResource Ui.Text.AppTitle}"
+                     Margin="12,0,10,0" />
+          <Border Style="{StaticResource Ui.Badge}" ToolTip="{Binding ProjectName}">
+            <TextBlock Text="{Binding OpennessBadge}" Style="{StaticResource Ui.Text.Mono}" />
+          </Border>
+        </StackPanel>
+
+        <!-- session controls, in the order they are used: how it looks, how it runs, then go -->
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Content="MCP tools / 工具" Click="OnMcpTools" Margin="0,0,10,0" />
+          <Border Style="{StaticResource Ui.SegmentBar}" ToolTip="{l:Tr Theme.Switch}">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Style="{StaticResource Ui.Segment}" GroupName="Appearance"
+                           Content="{l:Tr Theme.Light}"
+                           IsChecked="{Binding IsLight, Source={x:Static th:ThemeManager.Current}, Mode=TwoWay}" />
+              <RadioButton Style="{StaticResource Ui.Segment}" GroupName="Appearance"
+                           Content="{l:Tr Theme.Dark}"
+                           IsChecked="{Binding IsDark, Source={x:Static th:ThemeManager.Current}, Mode=TwoWay}" />
+              <RadioButton Style="{StaticResource Ui.Segment}" GroupName="Appearance"
+                           Content="{l:Tr Theme.Auto}"
+                           IsChecked="{Binding IsAuto, Source={x:Static th:ThemeManager.Current}, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <CheckBox Style="{StaticResource Ui.Switch}" Content="{l:Tr Toolbar.Mock}"
+                    ToolTip="{l:Tr Toolbar.Mock.Tip}" IsChecked="{Binding UseMock}"
+                    Margin="18,0,0,0" />
+          <CheckBox Style="{StaticResource Ui.Switch}" Content="{l:Tr Toolbar.Headless}"
+                    ToolTip="{l:Tr Toolbar.Headless.Tip}" IsChecked="{Binding Headless}" IsEnabled="{Binding UseMock}"
+                    Margin="18,0,18,0" />
+
+          <Button Content="{l:Tr Toolbar.Doctor}" ToolTip="{l:Tr Toolbar.Doctor.Tip}"
+                  Command="{Binding RunDoctor}" />
+          <Button Content="{l:Tr Toolbar.Connect}" ToolTip="{l:Tr Toolbar.Connect.Tip}"
+                  Style="{StaticResource Ui.Button.Primary}" Command="{Binding Connect}"
+                  Margin="0" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ============================ project ============================ -->
+    <Border Grid.Row="1" Background="{DynamicResource Ui.HeaderBackground}"
+            BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="0,0,0,1"
+            Padding="20,14">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                    Margin="0,0,16,0">
+          <Rectangle Style="{StaticResource Ui.SectionMark}" />
+          <TextBlock Text="{l:Tr Project.Label}" Style="{StaticResource Ui.Text.Section}" />
+        </StackPanel>
+
+        <TextBox Grid.Column="1" Style="{StaticResource Ui.TextBox.Mono}"
+                 Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged}"
+                 ux:Ux.Placeholder="{l:Tr Project.Placeholder}" />
+
+        <Button Grid.Column="2" Content="{l:Tr Common.Browse}" Click="OnBrowseProject"
+                Margin="12,0,8,0" />
+        <Button Grid.Column="3" Content="{l:Tr Common.Open}"
+                Style="{StaticResource Ui.Button.Primary}" Command="{Binding OpenProject}"
+                Margin="0" />
+      </Grid>
+    </Border>
+
+    <!-- ============================ body ============================ -->
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="300" MinWidth="220" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" MinWidth="520" />
+      </Grid.ColumnDefinitions>
+
+      <!-- ===== sidebar ===== -->
+      <Border Grid.Column="0" Background="{DynamicResource Ui.SidebarBackground}"
+              BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="0,0,1,0">
+        <DockPanel Margin="18,18,18,14">
+          <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,14">
+            <Rectangle Style="{StaticResource Ui.SectionMark}" />
+            <TextBlock Text="{l:Tr Sidebar.Devices}" Style="{StaticResource Ui.Text.Section}" />
+          </StackPanel>
+
+          <!-- The app version and the language switch sit together at the foot of the sidebar:
+               both are things you set once and then stop looking at. -->
+          <Grid DockPanel.Dock="Bottom" Margin="0,14,0,0">
+            <TextBlock Text="{Binding AppVersion}" Style="{StaticResource Ui.Text.Mono}"
+                       Foreground="{DynamicResource Ui.TertiaryLabel}" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                        ToolTip="{l:Tr Lang.Switch}">
+              <RadioButton Style="{StaticResource Ui.LangLink}" GroupName="Language"
+                           Content="{l:Tr Lang.English}"
+                           IsChecked="{Binding IsEnglish, Source={x:Static l:Loc.Current}, Mode=TwoWay}" />
+              <RadioButton Style="{StaticResource Ui.LangLink}" GroupName="Language"
+                           Content="{l:Tr Lang.Chinese}"
+                           IsChecked="{Binding IsChinese, Source={x:Static l:Loc.Current}, Mode=TwoWay}" />
+            </StackPanel>
+          </Grid>
+
+          <Grid>
+            <Border Style="{StaticResource Ui.Placeholder}" VerticalAlignment="Top"
+                    Visibility="{Binding HasDevices, Converter={StaticResource NotBoolToVisibility}}">
+              <TextBlock Text="{l:Tr Sidebar.Empty}" Style="{StaticResource Ui.Text.Caption}"
+                         TextWrapping="Wrap" TextAlignment="Center" />
+            </Border>
+
+            <!-- The project tree as TIA shows it: the project at the root, the device groups the
+                 engineer filed devices into, then the devices. -->
+            <TreeView ItemsSource="{Binding DeviceTree}" BorderThickness="0" Background="Transparent"
+                      SelectedItemChanged="OnDeviceSelected"
+                      Visibility="{Binding HasDevices, Converter={StaticResource BoolToVisibility}}">
+              <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                  <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                  <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+                </Style>
+              </TreeView.ItemContainerStyle>
+
+              <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                  <StackPanel Margin="0,3">
+                    <TextBlock Text="{Binding Label}" TextTrimming="CharacterEllipsis">
+                      <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                          <Setter Property="FontWeight" Value="Bold" />
+                          <Style.Triggers>
+                            <!-- The project and its groups are structure; the devices are the
+                                 things you click. -->
+                            <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                              <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}" />
+                            </DataTrigger>
+                          </Style.Triggers>
+                        </Style>
+                      </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Ui.Text.Mono}" Margin="0,2,0,0"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{DynamicResource Ui.TertiaryLabel}">
+                      <Run Text="{Binding Category, Mode=OneWay}" />
+                      <Run Text="{Binding Detail, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                </HierarchicalDataTemplate>
+              </TreeView.ItemTemplate>
+            </TreeView>
+          </Grid>
+        </DockPanel>
+      </Border>
+
+      <GridSplitter Grid.Column="1" Width="6" HorizontalAlignment="Stretch"
+                    ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" />
+
+      <!-- ===== main pane ===== -->
+      <Grid Grid.Column="2" Margin="18,18,18,14">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" MinHeight="220" />
+        </Grid.RowDefinitions>
+
+        <!-- view switch on the left, actions on the whole project on the right -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+          <Border Style="{StaticResource Ui.SegmentBar}" HorizontalAlignment="Left">
+            <StackPanel Orientation="Horizontal">
+              <RadioButton Style="{StaticResource Ui.Tab}" GroupName="View"
+                           Content="{l:Tr Tab.Blocks}" IsChecked="{Binding IsBlocksTab, Mode=TwoWay}" />
+              <RadioButton Style="{StaticResource Ui.Tab}" GroupName="View"
+                           Content="{l:Tr Tab.VersionControl}" IsChecked="{Binding IsVcTab, Mode=TwoWay}" />
+              <RadioButton Style="{StaticResource Ui.Tab}" GroupName="View"
+                           Content="{l:Tr Tab.Log}" IsChecked="{Binding IsLogTab, Mode=TwoWay}" />
+            </StackPanel>
+          </Border>
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Content="{l:Tr Toolbar.Compile}" Command="{Binding Compile}" />
+            <Button Content="{l:Tr Toolbar.Inspect}" Command="{Binding Inspect}" />
+            <Button Content="{l:Tr Toolbar.Import}" Command="{Binding Import}" />
+            <Button Content="{l:Tr Toolbar.Save}" ToolTip="{l:Tr Toolbar.Save.Tip}"
+                    Style="{StaticResource Ui.Button.Soft}" Command="{Binding Save}" Margin="0" />
+          </StackPanel>
+        </Grid>
+
+        <!-- ===== blocks ===== -->
+        <Border Grid.Row="1" Style="{StaticResource Ui.Card}"
+                Visibility="{Binding IsBlocksTab, Converter={StaticResource BoolToVisibility}}">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Style="{StaticResource Ui.CardBand}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" MaxWidth="460" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Style="{StaticResource Ui.TextBox.Filled}"
+                         Text="{Binding BlockFilter, UpdateSourceTrigger=PropertyChanged}"
+                         ux:Ux.Placeholder="{l:Tr Blocks.Filter}" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="16,0,0,0"
+                            VerticalAlignment="Center">
+                  <Button Content="{l:Tr Common.All}" Style="{StaticResource Ui.Button.Link}"
+                          Click="OnSelectAll" />
+                  <Button Content="{l:Tr Common.None}" Style="{StaticResource Ui.Button.Link}"
+                          Click="OnSelectNone" />
+                </StackPanel>
+                <Button Grid.Column="3" Content="{l:Tr Common.Reload}" Command="{Binding Refresh}"
+                        Margin="0" />
+              </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Bottom" Style="{StaticResource Ui.CardBand}"
+                    BorderThickness="0,1,0,0">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" MinWidth="130" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{Binding SelectionSummary}" Style="{StaticResource Ui.Text.Caption}" />
+
+                <TextBlock Grid.Column="1" Text="{l:Tr Blocks.ExportTo}"
+                           Style="{StaticResource Ui.Text.Secondary}" Margin="16,0,12,0" />
+                <TextBox Grid.Column="2" Style="{StaticResource Ui.TextBox.Mono}"
+                         Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="3" Content="{l:Tr Common.Browse}" Click="OnBrowseOutput"
+                        Margin="12,0,16,0" />
+                <CheckBox Grid.Column="4" Content="{l:Tr Blocks.SourceFormat}"
+                          ToolTip="{l:Tr Blocks.SourceFormat.Tip}"
+                          IsChecked="{Binding SourceFormat}" Margin="0,0,16,0" />
+                <Button Grid.Column="5" Content="{l:Tr Blocks.Export}"
+                        Style="{StaticResource Ui.Button.Primary}" Command="{Binding Export}"
+                        Margin="0" />
+              </Grid>
+            </Border>
+
+            <Grid>
+              <!-- The empty state explains the two steps that lead here, so a first run is not a
+                   blank table with no hint of what is missing. -->
+              <StackPanel Visibility="{Binding HasBlocks, Converter={StaticResource NotBoolToVisibility}}"
+                          VerticalAlignment="Center" HorizontalAlignment="Left"
+                          MaxWidth="560" Margin="40,0">
+                <TextBlock Text="{l:Tr Blocks.Empty.Title}" Style="{StaticResource Ui.Text.Heading}" />
+                <TextBlock Text="{l:Tr Blocks.Empty.Body}" Style="{StaticResource Ui.Text.Secondary}"
+                           TextWrapping="Wrap" LineHeight="24" />
+              </StackPanel>
+
+              <!-- The tree TIA itself shows: its categories, then the folders the engineer made.
+                   A flat list of slash-separated paths is how the bridge addresses a block, not how
+                   anyone thinks about their program. -->
+              <!-- The tree TIA itself shows: its categories, then the folders the engineer made.
+                   A flat list of slash-separated paths is how the bridge addresses a block, not how
+                   anyone thinks about their program.
+
+                   The metadata trails the name instead of sitting in aligned columns: every row in a
+                   tree starts at a different indent, so columns would only look aligned by accident. -->
+              <TreeView ItemsSource="{Binding BlockTree}" BorderThickness="0" Background="Transparent"
+                        Visibility="{Binding HasBlocks, Converter={StaticResource BoolToVisibility}}">
+                <TreeView.ItemContainerStyle>
+                  <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                    <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+                  </Style>
+                </TreeView.ItemContainerStyle>
+
+                <TreeView.ItemTemplate>
+                  <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                    <StackPanel Orientation="Horizontal" Height="26">
+                      <CheckBox Style="{StaticResource Ui.CheckBox}"
+                                IsThreeState="{Binding IsFolder}"
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                VerticalAlignment="Center" Margin="0,0,10,0" />
+
+                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                          <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                              <!-- Folders read as structure, blocks as content. -->
+                              <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                              </DataTrigger>
+                            </Style.Triggers>
+                          </Style>
+                        </TextBlock.Style>
+                      </TextBlock>
+
+                      <TextBlock Text="{Binding Detail}" Style="{StaticResource Ui.Text.Mono}"
+                                 Foreground="{DynamicResource Ui.TertiaryLabel}"
+                                 VerticalAlignment="Center" Margin="12,0,0,0" />
+
+                      <TextBlock Text="{Binding Language}" Style="{StaticResource Ui.Text.Mono}"
+                                 Foreground="{DynamicResource Ui.TertiaryLabel}"
+                                 VerticalAlignment="Center" Margin="12,0,0,0" />
+
+                      <TextBlock Text="{Binding Author}"
+                                 Foreground="{DynamicResource Ui.TertiaryLabel}"
+                                 VerticalAlignment="Center" Margin="12,0,0,0" />
+
+                      <TextBlock Text="{Binding Status}"
+                                 Foreground="{DynamicResource Ui.Orange}"
+                                 VerticalAlignment="Center" Margin="14,0,0,0" />
+                    </StackPanel>
+                  </HierarchicalDataTemplate>
+                </TreeView.ItemTemplate>
+              </TreeView>
+            </Grid>
+          </DockPanel>
+        </Border>
+
+        <!-- ===== version control ===== -->
+        <Border Grid.Row="1" Style="{StaticResource Ui.Card}"
+                Visibility="{Binding IsVcTab, Converter={StaticResource BoolToVisibility}}">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Style="{StaticResource Ui.CardBand}">
+              <StackPanel>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="{l:Tr Vc.Workspace}" Style="{StaticResource Ui.Text.Secondary}"
+                             Margin="0,0,12,0" />
+                  <!-- An explicit template rather than DisplayMemberPath: the closed box renders
+                       SelectionBoxItem through SelectionBoxItemTemplate, and with only a display
+                       path it fell back to ToString() and showed the type name. -->
+                  <ComboBox Grid.Column="1" ItemsSource="{Binding Workspaces}"
+                            SelectedItem="{Binding SelectedWorkspace}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <Button Grid.Column="2" Content="{l:Tr Common.Reload}" Command="{Binding VcRefresh}"
+                          Margin="12,0,0,0" />
+                </Grid>
+                <TextBlock Text="{Binding WorkspaceRootDisplay}" Style="{StaticResource Ui.Text.Mono}"
+                           TextWrapping="Wrap" Margin="0,10,0,0" />
+              </StackPanel>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Style="{StaticResource Ui.CardBand}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="150" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{l:Tr Vc.New}" Style="{StaticResource Ui.Text.Secondary}"
+                           Margin="0,0,12,0" />
+                <TextBox Grid.Column="1"
+                         Text="{Binding NewWorkspaceName, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBlock Grid.Column="2" Text="{l:Tr Vc.In}" Style="{StaticResource Ui.Text.Secondary}"
+                           Margin="12,0,12,0" />
+                <TextBox Grid.Column="3" Style="{StaticResource Ui.TextBox.Mono}"
+                         ToolTip="{l:Tr Vc.Folder.Tip}"
+                         Text="{Binding NewWorkspaceFolder, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="4" Content="{l:Tr Common.Browse}" Click="OnBrowseWorkspace"
+                        Margin="12,0,8,0" />
+                <Button Grid.Column="5" Content="{l:Tr Vc.Create}" Command="{Binding VcCreate}"
+                        Margin="0" />
+              </Grid>
+            </Border>
+
+            <Border DockPanel.Dock="Top" Style="{StaticResource Ui.CardBand}">
+              <StackPanel Orientation="Horizontal">
+                <CheckBox Content="{l:Tr Vc.DryRun}" ToolTip="{l:Tr Vc.DryRun.Tip}"
+                          IsChecked="{Binding VcDryRun}" Margin="0,0,20,0" />
+                <CheckBox Content="{l:Tr Vc.ShowAll}" IsChecked="{Binding VcShowAll}" />
+
+                <Rectangle Style="{StaticResource Ui.VerticalRule}" />
+
+                <Button Content="{l:Tr Vc.Map}" ToolTip="{l:Tr Vc.Map.Tip}" Command="{Binding VcMap}" />
+                <Button Content="{l:Tr Vc.Status}" Command="{Binding VcStatus}" />
+                <Button Content="{l:Tr Vc.Push}" ToolTip="{l:Tr Vc.Push.Tip}"
+                        Style="{StaticResource Ui.Button.Soft}" Command="{Binding VcPush}" />
+                <Button Content="{l:Tr Vc.Pull}" ToolTip="{l:Tr Vc.Pull.Tip}"
+                        Style="{StaticResource Ui.Button.Destructive}" Command="{Binding VcPull}"
+                        Margin="0" />
+              </StackPanel>
+            </Border>
+
+            <Grid>
+              <StackPanel Visibility="{Binding HasVcItems, Converter={StaticResource NotBoolToVisibility}}"
+                          VerticalAlignment="Center" HorizontalAlignment="Left"
+                          MaxWidth="560" Margin="40,0">
+                <TextBlock Text="{l:Tr Vc.Empty.Title}" Style="{StaticResource Ui.Text.Heading}" />
+                <TextBlock Text="{l:Tr Vc.Empty.Body}" Style="{StaticResource Ui.Text.Secondary}"
+                           TextWrapping="Wrap" LineHeight="24" />
+              </StackPanel>
+
+              <!-- The list of what differs, and under it what actually changed. The diff comes
+                   from Git in the workspace folder, so it only says anything after a push - which
+                   is precisely when it is worth reading, in the moment before committing. -->
+              <Grid Visibility="{Binding HasVcItems, Converter={StaticResource BoolToVisibility}}">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="*" MinHeight="120" />
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="*" MinHeight="120" />
+                </Grid.RowDefinitions>
+
+                <DataGrid Grid.Row="0" ItemsSource="{Binding VcStatusItems}" IsReadOnly="True"
+                          SelectedItem="{Binding SelectedVcItem}"
+                          Visibility="{Binding HasVcItems, Converter={StaticResource BoolToVisibility}}">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Binding="{Binding CompareState}" Width="190">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="{l:Tr Col.State}" />
+                    </DataGridTextColumn.Header>
+                    <DataGridTextColumn.ElementStyle>
+                      <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource Ui.Orange}" />
+                        <Style.Triggers>
+                          <DataTrigger Binding="{Binding CompareState}" Value="Equal">
+                            <Setter Property="Foreground" Value="{DynamicResource Ui.Green}" />
+                          </DataTrigger>
+                          <DataTrigger Value="True"
+                                       Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=DataGridRow}}">
+                            <Setter Property="Foreground" Value="{DynamicResource Ui.SelectionText}" />
+                          </DataTrigger>
+                        </Style.Triggers>
+                      </Style>
+                    </DataGridTextColumn.ElementStyle>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding Name}" Width="*">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="{l:Tr Col.Object}" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+
+                  <DataGridTextColumn Binding="{Binding FileFormat}" Width="110">
+                    <DataGridTextColumn.Header>
+                      <TextBlock Text="{l:Tr Col.Format}" />
+                    </DataGridTextColumn.Header>
+                  </DataGridTextColumn>
+                </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Grid.Row="1" Height="1" Margin="0,10"
+                        Background="{DynamicResource Ui.Separator}" />
+
+                <DockPanel Grid.Row="2">
+                  <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <Run Text="{l:Tr Vc.Diff}" FontWeight="SemiBold" />
+                    <Run Text="{Binding VcDiffCaption, Mode=OneWay}"
+                         Foreground="{DynamicResource Ui.SecondaryLabel}" />
+                  </TextBlock>
+
+                  <TextBlock Text="{l:Tr Vc.Diff.Empty}" Style="{StaticResource Ui.Text.Caption}"
+                             TextWrapping="Wrap" VerticalAlignment="Top"
+                             Visibility="{Binding HasVcDiff, Converter={StaticResource NotBoolToVisibility}}" />
+
+                  <ListBox ItemsSource="{Binding VcDiffLines}" BorderThickness="0"
+                           Background="{DynamicResource Ui.CodeBackground}"
+                           ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                           Visibility="{Binding HasVcDiff, Converter={StaticResource BoolToVisibility}}">
+                    <ListBox.ItemContainerStyle>
+                      <Style TargetType="ListBoxItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                      </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <TextBlock Text="{Binding Text}">
+                          <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Ui.Text.Mono}">
+                              <Setter Property="Foreground" Value="{DynamicResource Ui.Label}" />
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding Kind}" Value="Added">
+                                  <Setter Property="Foreground" Value="{DynamicResource Ui.Green}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="Removed">
+                                  <Setter Property="Foreground" Value="{DynamicResource Ui.Red}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="Hunk">
+                                  <Setter Property="Foreground" Value="{DynamicResource Ui.AccentText}" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Kind}" Value="Header">
+                                  <Setter Property="Foreground" Value="{DynamicResource Ui.TertiaryLabel}" />
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </TextBlock.Style>
+                        </TextBlock>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </DockPanel>
+              </Grid>
+            </Grid>
+          </DockPanel>
+        </Border>
+
+        <!-- ===== log =====
+             Its own view rather than a strip under the block tree: it is read when something
+             went wrong, and the rest of the time it should not be taking room from the tree. -->
+        <Border Grid.Row="1" Style="{StaticResource Ui.Card}"
+                Visibility="{Binding IsLogTab, Converter={StaticResource BoolToVisibility}}">
+          <DockPanel>
+            <Border DockPanel.Dock="Top" Style="{StaticResource Ui.CardBand}">
+              <Grid>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                  <TextBlock Text="{l:Tr Log.Title}" Style="{StaticResource Ui.Text.Section}" />
+                  <TextBlock Text="{Binding LogLineCount}" Style="{StaticResource Ui.Text.Mono}"
+                             Margin="10,0,0,0" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                  <Button Content="{l:Tr Log.Copy}" Style="{StaticResource Ui.Button.LinkQuiet}"
+                          Click="OnCopyLog" />
+                  <Button Content="{l:Tr Log.Clear}" Style="{StaticResource Ui.Button.LinkQuiet}"
+                          Click="OnClearLog" Margin="0" />
+                </StackPanel>
+              </Grid>
+            </Border>
+
+            <Grid Margin="16,12,16,16">
+              <TextBlock Text="{l:Tr Log.Empty}" Style="{StaticResource Ui.Text.Caption}"
+                         VerticalAlignment="Top"
+                         Visibility="{Binding HasLog, Converter={StaticResource NotBoolToVisibility}}" />
+              <TextBox Style="{StaticResource Ui.TextBox.Console}"
+                       Text="{Binding Log, Mode=OneWay}" IsReadOnly="True"
+                       VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
+                       TextWrapping="NoWrap" TextChanged="OnLogChanged"
+                       Visibility="{Binding HasLog, Converter={StaticResource BoolToVisibility}}" />
+            </Grid>
+          </DockPanel>
+        </Border>
+      </Grid>
+    </Grid>
+
+
+    <!-- ============================ status bar ============================ -->
+    <Border Grid.Row="3" Background="{DynamicResource Ui.HeaderBackground}"
+            BorderBrush="{DynamicResource Ui.Separator}" BorderThickness="0,1,0,0"
+            Padding="20,10">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- The one always-visible read on session state: grey idle, amber working, green live. -->
+        <Ellipse Width="9" Height="9" VerticalAlignment="Center" Margin="0,0,10,0">
+          <Ellipse.Style>
+            <Style TargetType="Ellipse">
+              <Setter Property="Fill" Value="{DynamicResource Ui.StatusIdle}" />
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                  <Setter Property="Fill" Value="{DynamicResource Ui.Green}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Busy}" Value="True">
+                  <Setter Property="Fill" Value="{DynamicResource Ui.Orange}" />
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Ellipse.Style>
+        </Ellipse>
+
+        <TextBlock Grid.Column="1" Text="{Binding Status}" Style="{StaticResource Ui.Text.Secondary}"
+                   TextTrimming="CharacterEllipsis" />
+
+        <ProgressBar Grid.Column="2" Width="220" Margin="16,0"
+                     Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue, Mode=OneWay}"
+                     Visibility="{Binding Busy, Converter={StaticResource BoolToVisibility}}" />
+
+        <TextBlock Grid.Column="3" Text="{Binding ModeLabel}" Style="{StaticResource Ui.Text.Caption}" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

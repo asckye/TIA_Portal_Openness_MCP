@@ -66,3 +66,7 @@ Root launch/configuration CMD/BAT files were replaced by the GUI. Delivery ZIPs 
 Read [CONTRIBUTING](.github/CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. Questions: [SUPPORT](.github/SUPPORT.md); vulnerabilities: [SECURITY](.github/SECURITY.md) (private reporting, never a public issue). History: [CHANGELOG](CHANGELOG.md), per-version notes in [docs/releases](docs/releases/), [archived release notes](docs/archive/release-notes.md) for v2.7.2–v2.7.15.
 
 Independently maintained by asckye. Provenance and third-party notices remain in [NOTICE](NOTICE.md) and [LICENSE](LICENSE).
+
+### Integrated desktop (unreleased)
+
+[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows use this repository's existing V20/V21 MCP service; the original Studio source and history are preserved. Native acceptance and release packaging remain pending.

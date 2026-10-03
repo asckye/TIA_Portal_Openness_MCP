@@ -1,5 +1,7 @@
 # 官方 Openness API 覆盖清单（V21，2.7.42）
 
+> 2026-10-03: Fresh eight-release XML inventory and the desktop integration findings are in [the current audit](../development/studio-and-api-audit-20261003.md). Historical figures below are retained as historical evidence.
+
 > 3.1.0 本地候选已补入本轮 B1–B6 修正及 10 个工具，见 [补充工具指南](v20-v21-audit-tools.md)。未发布/部署，原生选件行为待验收；不能据工具数宣称覆盖全部 PublicAPI。
 
 > 2026-09-30 更新：本页保留历史 V21 词法统计，不能作为 3.0.0 的“全部功能已完成”证明。已重新扫描根目录 V20/V21 SDK，并核实了当前代码问题和 V20 专用工具缺口，见 [双版本核查](../development/v20-v21-bugs-and-gaps-20260930.md)。通用反射只覆盖部分可解析的公开调用，受参数转换和策略限制，不保证到达全部 API。
@@ -11,7 +13,7 @@
 ## 口径（先读这个，再看数字）
 
 - 分母是 **4,490 个领域成员**（1,239 个方法 + 3,251 个属性），已剔除每个类型都有的 `ToString`/`Equals`/`GetHashCode`/`Parent`/`GetAttribute(s)`/`SetAttribute(s)`/集合枚举等 10,294 个样板成员、构造函数和显式接口实现。
-- 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明"有专用代码路径"，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可以动态到达任何公开成员，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
+- 判定是**词法**的：方法记为"已引用"须同时满足所属类型简名出现在源码、且 `.方法名(` 出现在源码。这只证明源码中出现了相关词法标记（包含注释、不同版本条件分支及同名成员），不证明存在可执行代码路径，不证明 MCP 工具已完整封装该能力；反过来，**"未触及"不等于"不可用"**——`DescribeObject` / `InvokeObject` / `InvokeService` 等通用反射工具可动态访问部分可解析的公开成员，仍受参数转换、服务可用性和操作策略限制，而且 2.7.18 的 Unified 事件/部件、库比较等工具是按官方 `GetCompositionInfos` / 泛型 `Create<T>` 等动态接口实现的，类型名以字符串出现，词法扫描看不到（例如 `HmiUnified.UI.Events` 仍显示 0 引用，但 `ReadUnifiedObjectEvents` 会枚举全部 96 种事件类型）。
 - 因此下面分两层：**统计表**如实给出词法结果；**状态表**只列同时经工具清单与人工核对的结论。
 - **动态覆盖（2.7.26 起）**：类型名从不出现在源码、但由反射/泛型适配器到达的类型，登记在 [scripts/diagnostics/openness-dynamic-coverage.json](../../scripts/diagnostics/openness-dynamic-coverage.json)（模式、工具、机制、真机证据），审计脚本按全名通配匹配后记为 DYNAMIC 并单列一栏。登记的前提是有形状检查或真机验证；没有证据的不登记，仍算"未触及"。
 - 结果（V21，2.7.27）：领域成员已引用 **675**（2.7.26 为 663，2.7.18 为 609）、仅类型名 824、未引用 2,991；有领域成员的类型 1,217 个中有专用引用 **231**、仅类型名 102、**动态覆盖 285**、完全未触及 **599**（2.7.26 为 626，2.7.25 为 885）。2.7.27 的变化：真机验证后把 `HmiAlarm` / `HmiLogging` / `RuntimeSettings` 登记为动态覆盖，`UI.Controls` 补上真机创建证据。

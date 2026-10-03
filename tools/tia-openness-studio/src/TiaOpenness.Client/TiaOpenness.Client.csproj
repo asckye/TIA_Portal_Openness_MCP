@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Compile Include="../TiaOpenness.Contracts/**/*.cs" />
+    <Compile Include="../TiaOpenness.Core/Abstractions/*.cs" />
+    <Compile Include="../TiaOpenness.Core/Inspection/*.cs" />
+    <Compile Include="../TiaOpenness.Core/Mock/*.cs" />
+  </ItemGroup>
+</Project>

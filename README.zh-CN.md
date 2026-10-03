@@ -64,3 +64,7 @@
 开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。提问看 [支持说明](.github/SUPPORT.md)；安全问题按 [安全策略](.github/SECURITY.md) 私下报告，不要开公开 issue。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
 
 本项目由 asckye 独立维护，原始来源和依赖声明保留于 [NOTICE](NOTICE.md) 与 [LICENSE](LICENSE)。
+
+### 融合版桌面（尚未发布）
+
+[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作调用本仓库现有的 V20/V21 MCP 服务；原 Studio 的完整源码与历史已保留。原生验收和发布打包仍待完成。

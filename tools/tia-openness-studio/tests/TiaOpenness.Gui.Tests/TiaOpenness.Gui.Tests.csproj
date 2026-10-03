@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF><Nullable>enable</Nullable></PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaOpenness.Gui/TiaOpenness.Gui.csproj" />
+    <EmbeddedResource Include="../../src/TiaOpenness.Gui/**/*.xaml;../../src/TiaOpenness.Gui/**/*.cs"
+      Exclude="../../src/TiaOpenness.Gui/bin/**;../../src/TiaOpenness.Gui/obj/**" LinkBase="Source" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,20 @@
 # Bounded document batch import candidate
 
+## Local continuation (2026-10-02 America/Los_Angeles)
+
+The independent bounded source-wiring review was rerun for the local increment
+based on `db2039e` and identified a raw-worker guard mismatch: uncertain document
+batches still admitted read-only and dry-run requests. The current local fix
+blocks every subsequent request in that worker session and preserves older XML
+batch read-inspection policy. The reviewed guard is compiled into all eight
+exact workers and covered by managed callback and actual source-wiring checks.
+
+[Local validation record](local-development-validation-20261002.md) documents
+4,103 managed passes, eight source checks, actual Csc compilation of all eight
+Adapter/Worker pairs and both full V20/V21 engines, source hashes and limits.
+This closes the source-review gap for this local increment only. The historical
+blocked final review below remains provenance; Windows/native document import,
+release gates, runtime enablement and feature counts are not promoted.
 ## Compile evidence update (2026-10-03)
 
 For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,

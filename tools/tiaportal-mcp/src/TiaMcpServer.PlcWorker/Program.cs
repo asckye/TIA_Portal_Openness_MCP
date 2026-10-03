@@ -45,7 +45,7 @@ internal static class Program
             var methods = typeof(PlcFoundationEngine).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(m => WorkerOperations.Names.Contains(m.Name)).ToDictionary(m => m.Name, StringComparer.Ordinal);
             if(methods.Count!=WorkerOperations.Names.Count) throw new InvalidOperationException("Worker operation allowlist does not match the compiled facade.");
-            bool batchOutcomeUnknown=false;
+            var sessionOutcome=new WorkerSessionOutcomeState();
             bool disconnectAttempted=false;
             string? line;
             while ((line = Console.ReadLine()) != null)
@@ -65,7 +65,7 @@ internal static class Program
                     if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
                     if(name=="Disconnect" && values.HasValues) throw new ArgumentException("Disconnect takes no arguments.");
                     readOnly=readOnly || (values["dryRun"]?.Type==JTokenType.Boolean && (bool)values["dryRun"]!);
-                    if(batchOutcomeUnknown && !readOnly) throw new InvalidOperationException("Prior batch outcome is unknown; no further execution in this worker session.");
+                    sessionOutcome.RequireUsable(readOnly);
                     var confirm=values["confirm"];
                     var expected=values["expectedProjectFile"];
                     if(!method.GetParameters().Any(p=>p.Name=="confirm")) values.Remove("confirm");
@@ -98,15 +98,15 @@ internal static class Program
                     enteredOperation=true;
                     if(name=="Disconnect") disconnectAttempted=true;
                     var result = method.Invoke(engine, call);
-                    if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcExternalSourceDeleteResult deleted && deleted.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcBatchDocumentExportResult documents && documents.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcDocumentExportResult document && document.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcSpecialExportResult special && special.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcBatchExportResult batch && batch.RequiresSessionReset) batchOutcomeUnknown=true;
-                    if(result is PlcBatchImportResult imported && imported.RequiresSessionReset) batchOutcomeUnknown=true;
+                    if(result is PlcDeviceAddResult deviceAdd && deviceAdd.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcBatchDocumentImportResult batchDocuments && batchDocuments.RequiresSessionReset) sessionOutcome.MarkUncertain(blockReads: true);
+                    if(result is PlcDocumentImportResult documentImport && documentImport.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcExternalSourceDeleteResult deleted && deleted.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcBatchDocumentExportResult documents && documents.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcDocumentExportResult document && document.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcSpecialExportResult special && special.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcBatchExportResult batch && batch.RequiresSessionReset) sessionOutcome.MarkUncertain();
+                    if(result is PlcBatchImportResult imported && imported.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     Console.WriteLine(JsonConvert.SerializeObject(new { id, result }));
                 }
                 catch (Exception ex)

@@ -72,7 +72,7 @@ Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTr
             ["scl"] =
 @"SCL AUTHORING (verified):
 Preferred import: ImportBlocksFromDocuments (importPath=directory) with .s7dcl files (UTF-8 WITH BOM). Alternative: GenerateBlocksFromExternalSource with .scl external source (UTF-8 WITHOUT BOM for ASCII-only; if the .scl has Chinese, no-BOM mojibakes it -> add a BOM or keep comments ASCII, or better author it as .s7dcl).
-CAUTION: GenerateBlocksFromExternalSource does NOT overwrite an existing block — re-running updates modifiedDate but keeps the OLD code (you then debug 'phantom' errors). To change a block: delete it first (InvokeObject methodName=Delete, instance DB first), then regenerate. (ImportFromDocuments/.s7dcl DOES overwrite with importOption=Override.)
+CAUTION: The official V20/V21 GenerateBlocksFromSource documentation says existing blocks are overwritten; generation supports ASCII external sources and requires the PLC to be offline. Do not delete existing blocks as a routine prerequisite. Verify the intended block content by a fresh export/readback or fingerprint comparison after generation; a successful call, ModifiedDate and a clean compile alone do not prove the requested logic landed. These documented semantics do not establish native acceptance of this checkout.
 Skeleton (block names in English; for a .s7dcl Chinese comments are fine, but in a .scl external source keep comments ASCII unless the file has a BOM):
   FUNCTION_BLOCK ""FB_Name""
   { S7_Optimized_Access := 'TRUE' }

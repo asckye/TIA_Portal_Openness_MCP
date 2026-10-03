@@ -63,3 +63,11 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 - 引擎依赖版本变更时（`tools/tiaportal-mcp/src/TiaMcpServer/*.csproj`），同步更新本表及对应原文文件。
 - 新增会随包分发的程序集，必须先在此登记许可证，再进入 `runtime/`。
 - 与 MIT 不兼容的许可证（GPL/AGPL 等）不得以静态链接或打包方式进入交付包；LGPL 组件只能以独立进程或动态链接方式使用并保留替换可能。
+
+## TIA Openness Studio desktop integration (unreleased)
+
+- Source: [asckye/tia-openness-studio](https://github.com/asckye/tia-openness-studio), commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, v2.4.0.
+- Copyright (c) 2026 asckye; [MIT license](../../tools/tia-openness-studio/LICENSE).
+- Integrated WPF UI, contracts, typed client, mock, inspection/diff helpers and tests. Replaced the upstream native bridge with the existing MCP engine transport. No upstream native DLL or Siemens SDK is included in the desktop build.
+- [Provenance and archive hashes](../../tools/tia-openness-studio/upstream.json); [integration and behavior](../../tools/tia-openness-studio/README.md). The full original source and complete Git history are retained as reference archives.
+- Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.

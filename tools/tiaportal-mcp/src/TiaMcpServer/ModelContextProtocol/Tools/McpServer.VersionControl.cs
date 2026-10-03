@@ -125,6 +125,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var vci = RequireVci();
                 var lines = new List<string>();
+                var entries = new JsonArray();
                 int n = 0;
                 foreach (var w in AllWorkspaces(vci))
                 {
@@ -136,6 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     lines.Add(string.Format(
                         "{0} | folder={1} | mappedObjects={2} | language={3}",
                         w.Name, root, mapped, SafeLanguage(w)));
+                    entries.Add(new JsonObject { ["name"] = w.Name, ["rootPath"] = root, ["mappedObjectCount"] = mapped, ["language"] = SafeLanguage(w) });
                 }
                 return new ResponseStringList
                 {
@@ -144,7 +146,7 @@ namespace TiaMcpServer.ModelContextProtocol
                           "CreateVersionControlWorkspace, then map objects into it in the TIA UI."
                         : n + " version control workspace(s).",
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaces"] = entries },
                 };
             }
             catch (Exception ex)
@@ -230,6 +232,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var ws = FindWorkspace(vci, workspaceName);
 
                 var lines = new List<string>();
+                var entries = new JsonArray();
                 int total = 0, differing = 0;
                 foreach (var mo in Keep(ws.MappedObjects))
                 {
@@ -244,6 +247,8 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (changedOnly && inSync) continue;
                     lines.Add(string.Format("{0} | {1} | file={2}{3}",
                         SafeName(mo), status, SafeFile(mo), SafeFormat(mo)));
+                    entries.Add(new JsonObject { ["name"] = SafeName(mo), ["compareState"] = status.StartsWith("Unknown") ? "Unknown" : status,
+                        ["error"] = status.StartsWith("Unknown(") ? status : null, ["filePath"] = SafeFile(mo), ["fileFormat"] = SafeFormat(mo).Replace(" | format=", "") });
                 }
 
                 return new ResponseStringList
@@ -255,7 +260,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             ? " Project and workspace are in sync — nothing to commit."
                             : " Call SyncVersionControlWorkspace(direction='ProjectToWorkspace') to write the changes out, then commit."),
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["total"] = total, ["differing"] = differing, ["objects"] = entries },
                 };
             }
             catch (Exception ex)
@@ -359,7 +364,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseStringList
                     {
                         Message = "Workspace '" + ws.Name + "': nothing to synchronize — every mapped object is already in sync.",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true },
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = dryRun, ["synchronized"] = 0, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
                     };
 
                 var lines = new List<string>();
@@ -373,7 +378,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             "(folder {3}). Call again with dryRun=false to do it.",
                             targets.Count, mode, ws.Name, SafeRoot(ws)),
                         Items = lines,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true },
+                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = true, ["synchronized"] = 0, ["wouldSynchronize"] = targets.Count, ["failed"] = 0, ["skippedEqual"] = skippedEqual },
                     };
                 }
 
@@ -394,7 +399,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             : " The project now holds the workspace's version — compile and save to persist it.",
                         skippedEqual),
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0 },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0, ["workspaceName"] = ws.Name, ["rootPath"] = SafeRoot(ws), ["dryRun"] = false, ["synchronized"] = ok, ["failed"] = failed, ["skippedEqual"] = skippedEqual },
                 };
             }
             catch (Exception ex)
@@ -608,7 +613,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (formats.Count > 0)
                     {
                         string fmt = PreferredFormat(formats) ?? formats[0];
-                        string name = SanitizePathPart(ObjName(node.Obj));
+                        string rel = node.RelDir ?? "";
+                        string flatName = SanitizePathPart(
+                            (string.IsNullOrEmpty(rel) ? "" : rel.Replace(Path.DirectorySeparatorChar, '_') + "_") + ObjName(node.Obj));
 
                         MappedObject? existing = null;
                         try { existing = ws.MappedObjects.Find(node.Obj); }
@@ -625,50 +632,18 @@ namespace TiaMcpServer.ModelContextProtocol
                         {
                             mapped++;
                             lines.Add(node.Label + " | would map | format=" + fmt +
-                                      " | dir=" + (string.IsNullOrEmpty(node.RelDir) ? "<root>" : node.RelDir));
+                                      " | dir=<root> | file=" + flatName);
                         }
                         else
                         {
                             try
                             {
-                                // ExportObject - not ConnectObject - is the call that maps an object: it writes
-                                // the text file AND creates the mapping. ConnectObject only binds an object to
-                                // files that ALREADY exist ("Missing Mandatory files") and rejects relative paths
-                                // ("cannot be a relative path") despite the parameter name. Verified against V21.
-                                // Sub-folders are refused on this build ("Relative Directory Path is Invalid"),
-                                // so fall back to a flat layout at the workspace root, folding the project path
-                                // into the file name so nothing collides.
-                                string rel = node.RelDir ?? "";
-                                bool flat = false;
-                                if (!string.IsNullOrEmpty(rel))
-                                {
-                                    string abs = Path.Combine(wsRootPath, rel);
-                                    try
-                                    {
-                                        Directory.CreateDirectory(abs);
-                                        ws.ExportObject(node.Obj, new DirectoryInfo(abs), name, fmt);
-                                    }
-                                    catch (Exception subEx)
-                                    {
-                                        if (walkTrace) Console.Error.WriteLine("[VCI-walk]     subdir refused (" + Flatten(subEx.Message) + ") -> flat");
-                                        ws = ReAcquire();
-                                        flat = true;
-                                    }
-                                }
-                                else flat = true;
-
-                                if (flat)
-                                {
-                                    string flatName = SanitizePathPart(
-                                        (string.IsNullOrEmpty(rel) ? "" : rel.Replace(Path.DirectorySeparatorChar, '_') + "_") + ObjName(node.Obj));
-                                    if (walkTrace)
-                                        Console.Error.WriteLine("[VCI-walk]     ExportObject root name='" + flatName + "' fmt='" + fmt + "'");
-                                    ws.ExportObject(node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
-                                    name = flatName;
-                                }
+                                // Use the established root layout once. An exception can follow a partial
+                                // export, so never retry the same object with a different target directory.
+                                ws.ExportObject(node.Obj, new DirectoryInfo(wsRootPath), flatName, fmt);
                                 mapped++;
                                 lines.Add(node.Label + " | mapped | format=" + fmt +
-                                          " | dir=" + (string.IsNullOrEmpty(node.RelDir) ? "<root>" : node.RelDir));
+                                          " | dir=<root> | file=" + flatName);
                             }
                             catch (Exception ex)
                             {
@@ -716,7 +691,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = head,
                     Items = lines,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0 },
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = failed == 0, ["workspaceName"] = wsName, ["rootPath"] = wsRootPath, ["dryRun"] = dryRun, ["visited"] = visited, ["mapped"] = mapped, ["alreadyMapped"] = already, ["unsupported"] = unsupported, ["failed"] = failed, ["truncated"] = truncated },
                 };
             }
             catch (Exception ex)

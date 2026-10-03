@@ -65,6 +65,7 @@
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcLifecyclePolicy.cs" Link="PlcLifecyclePolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17ProjectEnvelope.cs" Link="V17ProjectEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs" Link="OfflineXmlBuilders.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/OfflineXmlTools.cs" Link="OfflineXmlTools.cs" />
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs" Link="PlcUdtXmlBuilder.cs" />
