@@ -5,13 +5,6 @@ using TiaMcp.Versioning;
 
 namespace TiaMcp.PlcFoundation
 {
-    public sealed class PlcDiagnostic
-    {
-        public string State { get; set; }="";
-        public string Description { get; set; }="";
-        public string Formatted { get; set; }="";
-        public bool HasChildren { get; set; }
-    }
     internal static class PlcCompilePolicy
     {
         internal static void RequirePasswordCapability(string release,string password)

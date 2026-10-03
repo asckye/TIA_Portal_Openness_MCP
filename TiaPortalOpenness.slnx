@@ -1,6 +1,7 @@
 <Solution>
   <!-- PlcWorker is built per TiaReleaseKey by Build-PlcAdapterWorkers.ps1; it has no default release. -->
   <Folder Name="/Engine/">
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Project Path="tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj" />
     <Project Path="tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj" />
     <Project Path="tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj" />
@@ -70,6 +71,7 @@
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">

@@ -26,6 +26,8 @@ internal static class AdapterSourceClosureTests
         }
         foreach(var file in Directory.GetFiles(Path.Combine(src,"TiaMcpServer.PlcFoundation"),"*.cs"))
             check(code.ContainsKey("TiaMcpServer.PlcFoundation/"+Path.GetFileName(file)),"Every foundation source/policy has explicit adapter inclusion: "+Path.GetFileName(file));
+        foreach(var type in typeof(TiaMcp.PlcFoundation.PlcObjectInfo).Assembly.GetExportedTypes().Where(t=>t.Namespace=="TiaMcp.PlcFoundation"))
+            check(!code.Values.Any(text=>Regex.IsMatch(text,@"\b(?:class|enum)\s+"+Regex.Escape(type.Name)+@"\b")),"Moved DTO is not recompiled in adapters: "+type.Name);
         HashSet<string> Methods(IEnumerable<string> texts)=>Regex.Matches(string.Join("\n",texts),@"public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(").Select(m=>m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
         var all=Methods(code.Values);
         foreach(var op in WorkerOperations.Names) check(all.Contains(op),"Worker operation exists in actual adapter source inventory: "+op);
@@ -52,7 +54,7 @@ internal static class AdapterSourceClosureTests
             {
                 WorkingDirectory=adapters,UseShellExecute=false,RedirectStandardOutput=true,RedirectStandardError=true,CreateNoWindow=true
             };
-            foreach(var argument in new[]{"msbuild",project,"-nologo","-getItem:Compile,AdapterSource"}) start.ArgumentList.Add(argument);
+            foreach(var argument in new[]{"msbuild",project,"-nologo","-getItem:Compile,AdapterSource,ProjectReference","-getProperty:DefineConstants"}) start.ArgumentList.Add(argument);
             start.Environment["DOTNET_GENERATE_ASPNET_CERTIFICATE"]="false";
             start.Environment["DOTNET_ADD_GLOBAL_TOOLS_TO_PATH"]="false";
             start.Environment["DOTNET_CLI_TELEMETRY_OPTOUT"]="1";
@@ -73,6 +75,10 @@ internal static class AdapterSourceClosureTests
             var sources=Paths("AdapterSource");
             var compile=Paths("Compile");
             var release=Path.GetFileName(project);
+            var contracts=Path.Combine(src,"TiaMcp.Adapters.Contracts");
+            check(Paths("ProjectReference").Count(path=>comparer.Equals(path,Path.Combine(contracts,"TiaMcp.Adapters.Contracts.csproj")))==1,"Adapter references Contracts exactly once: "+release);
+            check(!compile.Any(path=>path.StartsWith(contracts+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)),"Adapter does not source-link contract DTOs: "+release);
+            check(result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';').Contains("TIA_ADAPTER_INTERNAL_VERSIONING"),"Adapter version catalog copies are internal: "+release);
             check(expected.SetEquals(sources),"Evaluated adapter inventory matches explicit allowlist: "+release);
             check(sources.Length==sources.Distinct(comparer).Count(),"Evaluated adapter inventory has no duplicates: "+release);
             foreach(var source in expected)

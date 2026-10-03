@@ -45,12 +45,4 @@ namespace TiaMcp.PlcFoundation
         internal static string CreationFile(string release,string directory,string name)
         { PlcFoundationPolicy.RequireName(name); return MutationIdentityPolicy.Absolute(MutationIdentityPolicy.Absolute(directory).TrimEnd('\\')+"\\"+name+"\\"+name+".ap"+Major(release)); }
     }
-    public sealed class PlcConnectionResult
-    {
-        public string Stage { get; internal set; }="attached";
-        public string Strategy { get; internal set; }="explicit-existing-pid";
-        public int[] AttemptedPids { get; internal set; }=new int[0];
-        public string LaunchMode { get; internal set; }="never";
-        public bool OwnsPortal { get; internal set; }
-    }
 }

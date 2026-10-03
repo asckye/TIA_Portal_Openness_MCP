@@ -56,7 +56,6 @@ namespace TiaMcp.PlcFoundation
     {
         internal static void RequireLocalSessionExecution(bool local, bool dryRun) { if(!local) throw new InvalidOperationException(); }
     }
-    public sealed class PlcSpecialExportResult { }
     internal static class PlcSpecialExportPolicy
     {
         // Stub only: policy behavior has its own tests. Route to the selected fake table.

@@ -181,6 +181,8 @@ def main():
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = ('docs/README.md',
+                'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
+                'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
                 'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
                 'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
                 'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',

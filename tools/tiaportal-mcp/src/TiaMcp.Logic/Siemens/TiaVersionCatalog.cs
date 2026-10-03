@@ -8,7 +8,11 @@ using System.IO;
 namespace TiaMcp.Versioning
 {
     /// <summary>A release identity, not a claim that an installed SDK or engine is usable.</summary>
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+    internal sealed class TiaVersionDescriptor
+#else
     public sealed class TiaVersionDescriptor
+#endif
     {
         public string Key { get; private set; }
         public string DisplayName { get; private set; }
@@ -50,7 +54,11 @@ namespace TiaMcp.Versioning
     /// Existing-engine means a build target exists, not that every tool was validated.
     /// Keep this file compatible with the configurator's .NET Framework C# 5 compiler.
     /// </summary>
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+    internal static class TiaVersionCatalog
+#else
     public static class TiaVersionCatalog
+#endif
     {
         private static readonly ReadOnlyCollection<TiaVersionDescriptor> Entries =
             Array.AsReadOnly(new[]

@@ -5,6 +5,7 @@
     <DefineConstants>$(DefineConstants);PLC_WATCH_READ;PLC_WATCH_EXPORT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSpecialExport.cs" Link="PlcSpecialExport.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcSupplementaryReadPolicy.cs" Link="PlcSupplementaryReadPolicy.cs" />
   </ItemGroup>

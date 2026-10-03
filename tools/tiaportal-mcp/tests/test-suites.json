@@ -33,7 +33,7 @@
   },
   "foundation": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 6521,
+    "minimumPassed": 6609,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -42,7 +42,7 @@
   },
   "foundation-api": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 7566,
+    "minimumPassed": 7670,
     "maximumSkipped": 1,
     "arguments": []
   },
@@ -79,6 +79,12 @@
   "prompt-registration": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj",
     "minimumPassed": 134,
+    "maximumSkipped": 0,
+    "arguments": []
+  },
+  "adapter-contracts": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
+    "minimumPassed": 232,
     "maximumSkipped": 0,
     "arguments": []
   }

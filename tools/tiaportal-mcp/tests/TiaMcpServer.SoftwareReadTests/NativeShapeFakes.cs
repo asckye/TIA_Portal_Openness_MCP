@@ -33,12 +33,6 @@ namespace Siemens.Engineering.SW.Types
 }
 namespace TiaMcp.PlcFoundation
 {
-    public sealed class PlcAttributeValue
-    {
-        public string? Name { get; set; }
-        public object? Value { get; set; }
-        public string? AccessMode { get; set; }
-    }
     internal class FakeSoftware
     {
         internal string Name = "PLC";

@@ -54,6 +54,8 @@ def check(root, no_binaries=False):
     for key, value in package['entrypoints'].items():
         required(value, 'package entry ' + key)
     required(package['cli']['exe'], 'CLI')
+    required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj', 'adapter contracts')
+    required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json', 'adapter contracts lock')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
         required(name, 'blueprint')
     studio = 'tools/tia-openness-studio/src/'

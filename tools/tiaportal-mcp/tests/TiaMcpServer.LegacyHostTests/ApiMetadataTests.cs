@@ -119,6 +119,13 @@ internal static class ApiMetadataTests
             using var pe=new PEReader(stream);
             var md=pe.GetMetadataReader();
             check(md.GetString(md.GetAssemblyDefinition().Name)=="TiaMcp.Adapter."+key,"Compiled adapter identity "+key);
+            foreach(var name in new[]{"TiaVersionCatalog","TiaVersionDescriptor"})
+            {
+                var catalogType=md.TypeDefinitions.Select(md.GetTypeDefinition).Single(t=>md.GetString(t.Namespace)=="TiaMcp.Versioning" && md.GetString(t.Name)==name);
+                check((catalogType.Attributes & TypeAttributes.VisibilityMask)==TypeAttributes.NotPublic,"Adapter versioning copy is internal: "+key+"/"+name);
+            }
+            check(md.AssemblyReferences.Select(md.GetAssemblyReference).Any(a=>md.GetString(a.Name)=="TiaMcp.Adapters.Contracts"),"Adapter PE references shared contracts "+key);
+            check(File.Exists(Path.Combine(workerDirectory,"TiaMcp.Adapters.Contracts.dll")),"Worker deployment includes shared contracts "+key);
             foreach(var nativeRef in md.AssemblyReferences.Select(md.GetAssemblyReference).Where(a=>md.GetString(a.Name).StartsWith("Siemens.Engineering",StringComparison.Ordinal)))
             {
                 var expected=AssemblyName.GetAssemblyName(Path.Combine(apiRoot,directory,md.GetString(nativeRef.Name)+".dll"));

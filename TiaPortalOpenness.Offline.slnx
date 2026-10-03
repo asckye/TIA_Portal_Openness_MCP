@@ -3,6 +3,7 @@
   <!-- Windows/.NET 10 SDK required for Studio. No Siemens assemblies required.
        dotnet test runs only Studio Core/Gui xunit tests; console suites require dotnet run. -->
   <Folder Name="/Engine/">
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" />
     <Project Path="tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj" />
     <Project Path="tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj" />
   </Folder>
@@ -31,6 +32,7 @@
     <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
   </Folder>
   <Folder Name="/Tests/PlcAdapters/">
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj" />
     <Project Path="tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj" />
   </Folder>
   <Folder Name="/Tests/Studio/">

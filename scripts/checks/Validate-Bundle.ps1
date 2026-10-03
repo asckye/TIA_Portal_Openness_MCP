@@ -59,6 +59,8 @@ if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at releas
 
 if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
 foreach ($guiFile in @(
+    'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
+    'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
     'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
     'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
     'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',

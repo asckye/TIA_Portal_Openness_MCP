@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Shared/Xunit.props" />
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><DefineConstants>$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup>
-  <ItemGroup><Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" /><Compile Include="../../src/TiaMcpServer.LegacyHost/HardwareCatalogContract.cs" Link="HardwareCatalogContract.cs" /><Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcHardwareCatalog.cs" Link="PlcHardwareCatalog.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" /><Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcHardwareCatalogPolicy.cs" Link="PlcHardwareCatalogPolicy.cs" /><Compile Include="../../src/TiaMcpServer.LegacyHost/HardwareCatalogContract.cs" Link="HardwareCatalogContract.cs" /><Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcHardwareCatalog.cs" Link="PlcHardwareCatalog.cs" /></ItemGroup>
 </Project>
