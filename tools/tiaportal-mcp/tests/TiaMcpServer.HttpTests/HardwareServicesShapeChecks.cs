@@ -3,7 +3,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Every native type/member the HardwareServices family touches. Absent-on-V20 members print CAPABILITY and continue.
+// Native service surfaces, including OPC UA and CAx checks retained after their domain moves.
+// Absent-on-V20 members print CAPABILITY and continue.
 internal static class HardwareServicesShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
@@ -70,7 +71,7 @@ internal static class HardwareServicesShapeChecks
         Property(T(core,"Siemens.Engineering.HW.Systemdiagnostics.Settings.SystemdiagnosticsSettingsExportImportResult"),"State");
         check(T(core,"Siemens.Engineering.ProjectBase").GetMethod("GetService")!=null,"ProjectBase.GetService<T> for project-level providers");
 
-        // 4. OPC UA access control (V21+)
+        // 4. OPC UA domain access control (V21+; retained native signature checks)
         Property(T(step7,"Siemens.Engineering.SW.OpcUa.OpcUaProvider"),"CommunicationGroup");
         Property(T(step7,"Siemens.Engineering.SW.OpcUa.OpcUaCommunicationGroup"),"ServerInterfaceGroup");
         var sig=T(step7,"Siemens.Engineering.SW.OpcUa.ServerInterfaceGroup");
@@ -133,16 +134,24 @@ internal static class HardwareServicesShapeChecks
 
         // Tool surface
         var tools=EngineSurface.For(server);
-        foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ManageOpcUaAccessControl","ImportDeviceAml","ManagePlcProtection"}) {
+        foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ImportDeviceAml","ManagePlcProtection"}) {
             var method=tools.Tool(name)!;
             var preview=method.GetParameters().Last();
             check(preview.Name=="dryRun" && Equals(preview.DefaultValue,true),name+" ends with dryRun=true");
         }
-        foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ManageOpcUaAccessControl","confirmChange"),("ImportDeviceAml","confirmImport"),("ManagePlcProtection","confirmChange")})
+        foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ImportDeviceAml","confirmImport"),("ManagePlcProtection","confirmChange")})
             check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==confirm).DefaultValue,false),name+" requires explicit "+confirm);
-        foreach(var name in new[]{"ReadCommunicationConnections","ReadOpcUaAccessControl","ReadHardwareFeatures"}) {
+        foreach(var name in new[]{"ReadCommunicationConnections","ReadHardwareFeatures"}) {
             var method=tools.Tool(name)!;
             check(method.GetParameters().Any(p=>p.Name=="offset") && method.GetParameters().Any(p=>p.Name=="limit") && !method.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read without dryRun");
         }
+
+        // These parameter contracts remain meaningful on OpcUaTools; domain ownership is checked separately.
+        var opcUaWrite=tools.Tool("ManageOpcUaAccessControl");
+        var opcUaPreview=opcUaWrite.GetParameters().Last();
+        check(opcUaPreview.Name=="dryRun" && Equals(opcUaPreview.DefaultValue,true),"ManageOpcUaAccessControl ends with dryRun=true");
+        check(Equals(opcUaWrite.GetParameters().Single(p=>p.Name=="confirmChange").DefaultValue,false),"ManageOpcUaAccessControl requires explicit confirmChange");
+        var opcUaRead=tools.Tool("ReadOpcUaAccessControl");
+        check(opcUaRead.GetParameters().Any(p=>p.Name=="offset") && opcUaRead.GetParameters().Any(p=>p.Name=="limit") && !opcUaRead.GetParameters().Any(p=>p.Name=="dryRun"),"ReadOpcUaAccessControl is a paginated read without dryRun");
     }
 }

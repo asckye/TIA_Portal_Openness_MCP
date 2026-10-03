@@ -145,6 +145,10 @@ namespace TiaMcpServer.Siemens
         ResponseMessage IEngineeringSession.ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath)
             => ValidateAutomationContext(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
         JsonArray IEngineeringSession.ToJsonArray(IEnumerable<string> values) => ToJsonArray(values);
+        DeviceItem IEngineeringSession.RequireDeviceItem(HardwareObject owner, string parameter) => RequireDeviceItem(owner, parameter);
+        void IEngineeringSession.ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write) => ApplyScalarsAndAttributes(target, propertiesJson, attributesJson, meta, write);
+        IEngineeringServiceProvider IEngineeringSession.ServiceProvider(HardwareObject owner) => ServiceProvider(owner);
+        JsonNode? IEngineeringSession.LinkedTagRows(Channel channel, JsonObject row) => LinkedTagRows(channel, row);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

@@ -327,6 +327,33 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 同名工具与服务的原生调用清单分别按声明类型交给 `Compare-NativeCallOrder.py`，避免名称匹配歧义；
 完整清单仍比较全局 Siemens 调用多重集合。每版 39 个服务方法族、12 个工具方法族的有序序列相同，
 无原生调用点的方法另做去注释源码比较。其他织入类别仅规范化上述 DTO 的声明类型。
+### 硬件网络与服务
+
+`HardwareNetworkTools` / `Siemens/Services/HardwareNetworkService.cs` 承接 IO 系统、同步/MRP 域、传输区、
+通道、设备用户组/用户和端口互连共 11 个工具；`HardwareServicesTools` /
+`Siemens/Services/HardwareServicesService.cs` 承接通信连接、监控/强制表 Web 访问、系统诊断设置、
+硬件特性共 5 个工具，并接收 `*BaseLeftovers.cs` 的 `ManageDeviceServiceObjects`、
+`TelecontrolRow`、`CertificateServiceRow` 和 `CertificateConfigurationRow`。17 个工具均无 `Program*.cs` /
+`Cli/` 静态调用点，因此没有 `McpServer` 转发；服务和工具依照约定注册为共享同一会话的非 IDisposable 单例。
+
+`Portal.HardwareNetwork.cs` / `McpServer.HardwareNetwork.cs` 暂留 `ReadDeviceAddressing` 与 `UpdateDeviceAddress`；
+`ImportDeviceAml` 已由硬件设备任务迁入 `HardwareAmlService` / `HardwareAmlTools`。
+`ReadOpcUaAccessControl`、`ManageOpcUaAccessControl` 及其专用辅助由 `OpcUaService` / `OpcUaTools` 承接，
+不在硬件服务领域重复注册；`GetOpcUaServerInterfaceGroup` 是 `OpcUaService` 的私有辅助，不经内核接口转发。
+设备及设备项解析器仍在内核，新服务通过已有 `IEngineeringSession.ExactEngineeringHardware` 访问。
+
+以下共享实现保持在内核，只增加 `IEngineeringSession` 的显式转发，不改变调用参数或线程：
+
+- `Portal.HardwareNetwork.cs`：`RequireDeviceItem`、`RequireHardwareService<T>`、`HardwareOwnerPath`、
+  `DynamicAttributes`、`SetDynamicAttributes`、`ApplyScalarsAndAttributes`、`FindOnFresh`、`CountOnFresh`、
+  `AddressRow`、`ExactChannel`；它们仍被地址、安全、Startdrive、Motion/ProDiag 或工艺映射调用。
+- `Portal.HardwareServices.cs`：`ServiceProvider`，仍被 PLC 保护和地址工具调用。
+- `Portal.SoftwareUnitDeep.cs`：`LinkedTagRows`。
+
+仅服务内部需要上述接口的行构造器改为实例方法，原方法体按接口访问替换后保持一致。
+`Test-DomainTools.py` 的 `HardwareNetwork` / `HardwareServices` 用例覆盖全部迁移工具、full/lite、
+直接及隔离子进程路径，并比较 V20 的通信连接和设备服务对象版本拒绝。
+HttpTests 保留全部既有断言，另检查两个领域的工具归属、共享会话、单例、生命周期和工具到服务的 IL 调用。
 
 ## G9：单 PLC 工程的模糊匹配
 

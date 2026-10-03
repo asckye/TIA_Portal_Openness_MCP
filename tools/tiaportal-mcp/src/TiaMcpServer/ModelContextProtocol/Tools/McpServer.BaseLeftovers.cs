@@ -31,19 +31,6 @@ namespace TiaMcpServer.ModelContextProtocol
             bool dryRun=true)
             => Portal.ManageHardwareUtilities(action,typeIdentifier,devicePathJson,itemPathJson,filePath,password,dryRun);
 
-        [McpServerTool(Name="ManageDeviceServiceObjects"), Description("[L2][Hardware][WRITE] Typed objects behind three PLC services of the exact hardware object. family=webApplications (DefaultWebPagesFeature.WebApplicationConfigurations: read Name/ApplicationType/IsDefault, setDefault name). family=telecontrolDataPoints (TelecontrolManagement.TelecontrolDataPoints: read Name/DataPointType and DNP3/IEC DataPointIndex/MasterFunction or WDC DataPointIndex, update name + propertiesJson, delete, export/import filePath via ExportDataPoints/ImportDataPoints). family=certificateServices (CertificateManagementConfiguration, PLC families V3.0+: read Usage TIAPortal/Runtime, CertificateExpirationEventActivated, RemainingCertificateLifetime 10..90 % and CertificateSupportedServices Id/ServiceType/ServiceGroupName/ApplicationUri/Guid; update propertiesJson; setServiceGroupName name=<Id or Guid> propertiesJson {ServiceGroupName<=64}; createService; deleteService name=<Id or Guid>). Real changes need confirmChange with dryRun=false; no save/compile/download.")]
-        public static ResponseMessage ManageDeviceServiceObjects(
-            string devicePathJson,
-            string itemPathJson,
-            [Description("family: webApplications | telecontrolDataPoints | certificateServices.")] string family,
-            [Description("read | setDefault | update | delete | export | import | setServiceGroupName | createService | deleteService. ")] string action="read",
-            string name="",
-            string propertiesJson="{}",
-            string filePath="",
-            bool confirmChange=false,
-            bool dryRun=true)
-            => Portal.ManageDeviceServiceObjects(devicePathJson,itemPathJson,family,action,name,propertiesJson,filePath,confirmChange,dryRun);
-
         [McpServerTool(Name="ReadObjectIdentifier"), Description("[L2][Project][READ] ObjectIdentifierProvider (project service): GetIdentifier of the exact object (kind=device/deviceItem via devicePathJson/itemPathJson, kind=plcBlock/plcType/plcTagTable via softwarePath + objectPath) - a cross-session stable identifier - or, with identifier given, Find(identifier) and describe the object it resolves to (class, name, owner path, ISystemObject flag). Official support: Device, DeviceItem, code/data blocks, PLC tags, software units, TechnologicalInstanceDB, PlcStruct. Read-only.")]
         public static ResponseMessage ReadObjectIdentifier(
             [Description("kind: device | deviceItem | plcBlock | plcType | plcTagTable.")] string kind="device",

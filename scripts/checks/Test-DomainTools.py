@@ -108,6 +108,7 @@ def actions(tool, values, **arguments):
 
 
 PLC = 'DomainOfflineFixture'
+HARDWARE = {'devicePathJson': '["DomainOfflineFixture"]', 'itemPathJson': '["CPU"]'}
 CASES = {
     'Cfc': actions('ExchangeCfcCharts', 'export selectiveExport import exportInstructionData',
         softwarePath=PLC, filePath='C:/cfc-offline-fixture.xml.zip', modelVersion='V2.0', chartNamesJson='["Chart1"]')
@@ -345,6 +346,41 @@ CASES = {
                 ('PlugDeviceItem', 'preview', {'deviceItemPath': PLC, 'orderNumber': '6ES7521-1BL00-0AB0', 'version': 'V2.0'})],
     'Addresses': [('GetDeviceItemIoAddresses', 'read', {'deviceItemPath': PLC}),
                   ('SetDeviceItemIoAddress', 'preview', {'deviceItemPath': PLC, 'ioType': 'Input', 'startAddress': 2})],
+    'HardwareNetwork': [('ReadIoSystems', 'subnet', {'subnetName': 'PN/IE_1'}),
+                        ('ReadIoSystems', 'interface', HARDWARE),
+                        ('ReadNetworkDomains', 'read', {'subnetName': 'PN/IE_1'}),
+                        ('ReadTransferAreas', 'read', HARDWARE),
+                        ('ReadDeviceItemChannels', 'read', HARDWARE),
+                        ('UpdateDeviceItemChannel', 'update', dict(HARDWARE, channelType='Digital',
+                            channelIoType='Input', channelNumber=0, attributesJson='{"ChannelAddress":0}'))]
+        + actions('ManageIoSystem', 'create delete update connect disconnect', **HARDWARE, name='IO1')
+        + [(tool, kind + '/' + case, arguments) for kind in ('sync', 'mrp')
+           for tool, case, arguments in actions('ManageNetworkDomain', 'create delete update addParticipant',
+               subnetName='PN/IE_1', kind=kind, name='Domain1')]
+        + actions('ManageTransferArea', 'create delete update createMappingRule updateMappingRule deleteMappingRule',
+                  **HARDWARE, name='Area1', type='IN')
+        + [(tool, 'multicast/' + case, arguments) for tool, case, arguments in actions('ManageTransferArea',
+            'create createReceiver delete update', **HARDWARE, kind='multicast', name='Area1', type='DDX')]
+        + actions('ManageDeviceUserGroup', 'read create rename deleteEmpty', groupPath='Group1', newName='Group2')
+        + [(tool, family + '/' + case, arguments) for family, values in (
+            ('webserver', 'read create delete setPassword setPermissions'),
+            ('simpleWebserver', 'read setPassword setPermissions setActive rename'),
+            ('opcUa', 'read create delete setPassword'))
+           for tool, case, arguments in actions('ManageDeviceUsers', values, **HARDWARE, family=family,
+               userName='User1', password='offline', newName='User2')]
+        + actions('ManagePortInterconnection', 'read connect disconnect', **HARDWARE),
+    'HardwareServices': [('ReadCommunicationConnections', 'read', HARDWARE),
+                         ('ReadHardwareFeatures', 'read', HARDWARE)]
+        + actions('ManageCommunicationConnection', 'create delete', **HARDWARE,
+                  connectionType='S7Connection', connectionName='Connection1')
+        + actions('ManageWatchForceTableWebAccess', 'read assign unassign', **HARDWARE,
+                  softwarePath=PLC, tablePath='Table1')
+        + actions('ExchangeSystemDiagnosticsSettings', 'export import', filePath='C:/domain-offline.dat')
+        + [(tool, family + '/' + case, arguments) for family, values in (
+            ('webApplications', 'read setDefault'), ('telecontrolDataPoints', 'read update delete export import'),
+            ('certificateServices', 'read update setServiceGroupName createService deleteService'))
+           for tool, case, arguments in actions('ManageDeviceServiceObjects', values, **HARDWARE,
+               family=family, name='1', filePath='C:/domain-offline.xml')]
 }
 
 
@@ -439,13 +475,16 @@ def capture(args, exe, harness, profile, isolated):
             for name, case, arguments in CASES[domain]:
                 hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
                                                         'ManageSivarcScreenLayout',
-                                                        'ManageClassicHmiGraphic')
+                                                        'ManageClassicHmiGraphic',
+                                                        'ReadCommunicationConnections', 'ManageCommunicationConnection')
                                                or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (
                     (name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType'))
                     or (name == 'ManageDcbLibraries' and arguments['action'] == 'import')
                     or (name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
-                    or (name == 'ManagePlcSafety' and arguments['action'] == 'generateBaseId'))
+                    or (name == 'ManagePlcSafety' and arguments['action'] == 'generateBaseId')
+                    or (name == 'ManageDeviceServiceObjects' and (arguments['family'] == 'webApplications'
+                        or (arguments['family'] == 'telecontrolDataPoints' and arguments['action'] in ('read', 'update', 'delete')))))
                 if profile == 'full':
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {

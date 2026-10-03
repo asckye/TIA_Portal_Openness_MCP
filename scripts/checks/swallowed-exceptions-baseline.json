@@ -600,7 +600,7 @@
       "fingerprint": "95a7f17395e351e13c78bacd0397e04ff2901556a5984d2500f3a28b23474522",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs",
-      "line": 98
+      "line": 85
     },
     {
       "fingerprint": "9af81b5d8d0019a99a280e5c1333f21c19d7fb77637d1faca5751bad2f3b07cb",
@@ -960,7 +960,7 @@
       "fingerprint": "df53d5d13a25b7273b26ae561b700c6557009ba601a72dda134e5e5428171846",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 422
+      "line": 266
     },
     {
       "fingerprint": "dff25acc28b1d89d599ad8ee6007baf58a9bd657093ddf30d78b5742ce912076",
@@ -1038,7 +1038,7 @@
       "fingerprint": "edb2a0881d594a86259698abcec9e021c855fa5d0809348cd16112ef900c56c6",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 377
+      "line": 221
     },
     {
       "fingerprint": "f4f27282f993cbf9989fa7b2af510a35789b7a091fd03452db25226aff2808b2",

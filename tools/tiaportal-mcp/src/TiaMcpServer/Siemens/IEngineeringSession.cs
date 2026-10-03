@@ -142,6 +142,10 @@ namespace TiaMcpServer.Siemens
         string[] GetPlcSoftwareNamesForDesktop();
         ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath, string expectedHmiSoftwarePath);
         JsonArray ToJsonArray(IEnumerable<string> values);
+        DeviceItem RequireDeviceItem(HardwareObject owner, string parameter);
+        void ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write);
+        IEngineeringServiceProvider ServiceProvider(HardwareObject owner);
+        JsonNode? LinkedTagRows(Channel channel, JsonObject row);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

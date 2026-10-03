@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the hardware-network family (Portal.HardwareNetwork.cs): IO systems, sync/MRP domains,
+// Native members used by the hardware-network family (HardwareNetworkService.cs and the shared Portal.HardwareNetwork.cs kernel): IO systems, sync/MRP domains,
 // transfer areas, channels, addressing, device user groups, device users and port interconnections, verified against
 // the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base) PublicAPI.
 internal static class HardwareNetworkShapeChecks
@@ -140,5 +140,44 @@ internal static class HardwareNetworkShapeChecks
         var portal=EngineSurface.For(server);
         foreach(var tool in new[]{"ReadIoSystems","ManageIoSystem","ReadNetworkDomains","ManageNetworkDomain","ReadTransferAreas","ManageTransferArea","ReadDeviceItemChannels","UpdateDeviceItemChannel","ReadDeviceAddressing","UpdateDeviceAddress","ManageDeviceUserGroup","ManageDeviceUsers","ManagePortInterconnection"})
             check(portal.Method(tool)!=null,"Portal."+tool+" present");
+
+        CheckDomain(server, check, "HardwareNetwork", new[] { "ReadIoSystems", "ManageIoSystem", "ReadNetworkDomains",
+            "ManageNetworkDomain", "ReadTransferAreas", "ManageTransferArea", "ReadDeviceItemChannels",
+            "UpdateDeviceItemChannel", "ManageDeviceUserGroup", "ManageDeviceUsers", "ManagePortInterconnection" });
+        CheckDomain(server, check, "HardwareServices", new[] { "ReadCommunicationConnections", "ManageCommunicationConnection",
+            "ManageWatchForceTableWebAccess", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects" });
+    }
+
+    private static void CheckDomain(Assembly server, Action<bool,string> check, string domain, string[] names)
+    {
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        var surface = EngineSurface.For(server);
+        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
+        var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
+        var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
+        var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
+        check(session != null && ReferenceEquals(session, provider.GetService(server.GetType("TiaMcpServer.Siemens.Portal", true)!)),
+            domain + " uses the registered Portal session");
+        foreach (var type in new[] { service, tools })
+            check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
+                type.FullName + " is a non-disposable singleton class");
+        foreach (var name in names)
+        {
+            var method = surface.Method(name);
+            var tool = surface.Tool(name);
+            var target = surface.Target(method);
+            check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
+                && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
+                domain + " resolves the service and tool singletons: " + name);
+            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                && ReferenceEquals(tools.GetField("_hardware", all)!.GetValue(surface.Target(tool)), target),
+                domain + " tool uses the service with the shared session: " + name);
+            var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+            bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
+            check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
+                domain + " tool needs no static CLI forwarder: " + name);
+        }
     }
 }
