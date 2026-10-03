@@ -76,8 +76,8 @@ rendered view and preservation of operation meanings, not a frozen hash of sourc
 have subsequently received functional changes.
 
 The current eight-version release records full-engine, foundation, adapter and desktop checks
-in `manifest/release-build.json`, `manifest/multi-version-build.json` and
-`manifest/configurator-build.json`. Use those records for current test counts and input hashes.
+in [`manifest/release-build.json`](../../manifest/release-build.json), [`manifest/multi-version-build.json`](../../manifest/multi-version-build.json) and
+[`manifest/configurator-build.json`](../../manifest/configurator-build.json). Use those records for current test counts and input hashes.
 Native TIA/project/PLC acceptance is separate from the UI and offline checks. Release status
 is recorded in the release notes, not inferred from this visual review.
 
@@ -85,4 +85,7 @@ Reproduce the captures by setting `TIA_GLASS_SCREENSHOTS` to an output directory
 `scripts/build/Build-Configurator.ps1 -Test` (requires the .NET 10 SDK) plus the Studio WPF test
 project in Release mode. Configuration is rendered from the compiled
 `tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml` control.
-The shared styles, log presentation and embedded font files live under `tools/ui-glass`.
+The workbench styles, log presentation and embedded font files live in
+[`Themes/Glass.xaml`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml),
+[`Controls/GlassLogView.cs`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs) and
+[`Fonts`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts).

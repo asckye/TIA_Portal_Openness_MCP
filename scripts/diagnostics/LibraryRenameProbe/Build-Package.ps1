@@ -19,9 +19,9 @@ foreach ($file in @('Run-Tests.cmd','Run-Tests.ps1','README.md')) { Copy-Item -L
 $source = New-Item -ItemType Directory -Path (Join-Path $OutputDirectory 'source')
 foreach ($file in @('Program.cs','Native.cs','LibraryRenameProbe.csproj','Build-Package.ps1')) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination $source.FullName }
 $evidenceSets = @(
-    @{manifest='manifest\unified-library-rename-followup-20261001.json'; directory='existing-mcp-evidence'},
-    @{manifest='manifest\library-rename-probe-first-vm-run-20261001.json'; directory='first-vm-run-evidence'},
-    @{manifest='manifest\library-rename-probe-second-vm-run-20261001.json'; directory='second-vm-run-evidence'}
+    @{manifest='manifest\history\unified-library-rename-followup-20261001.json'; directory='existing-mcp-evidence'},
+    @{manifest='manifest\history\library-rename-probe-first-vm-run-20261001.json'; directory='first-vm-run-evidence'},
+    @{manifest='manifest\history\library-rename-probe-second-vm-run-20261001.json'; directory='second-vm-run-evidence'}
 )
 foreach ($evidenceSet in $evidenceSets) {
     $evidenceManifest = Join-Path $repository $evidenceSet.manifest

@@ -11,10 +11,8 @@
   <ItemGroup><ProjectReference Include="../TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Configuration/OpennessEnvironment.cs" />
-    <Compile Include="../../../ui-glass/GlassLogView.cs" Link="Controls/GlassLogView.cs"/>
-    <Page Include="../../../ui-glass/Glass.xaml" Link="Themes/Glass.xaml"/>
-    <Resource Include="../../../ui-glass/Fonts/*.ttf" Link="Fonts/%(Filename)%(Extension)"/>
-    <Content Include="../../../ui-glass/Fonts/*OFL.txt" Link="Fonts/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest"/>
+    <Resource Include="Fonts/*.ttf"/>
+    <Content Include="Fonts/*OFL.txt" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
   <Target Name="CopyNativeBridge" AfterTargets="Build">
     <ItemGroup><BridgePayload Include="../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.exe;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.dll;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.config" /></ItemGroup>

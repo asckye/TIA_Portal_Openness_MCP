@@ -10,8 +10,9 @@
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
 | `tools/tiaportal-mcp/src/TiaMcp.Logic` | net48/net8.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
-| `tools/mcp-configurator` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
+| `tools/tia-openness-studio/src/TiaOpenness.Launcher` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
 | `tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
+| `tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml`、`Controls/GlassLogView.cs`、`Fonts` | 工作台内的 Glass 样式、日志视图和字体；字体许可及来源记录与字体同目录 |
 | `tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests` | .NET 10 配置控制台测试 |
 | `tools/tia-openness-studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |
 | `tools/openness-shared` | 无 Siemens 版本依赖的环境信息、参数、诊断、导入依赖规划和统一示例库 |
@@ -23,7 +24,8 @@
 | `reference/siemens-openness`、`reference/siemens-code-snippets` | 固定来源的官方示例与授权记录 |
 | `reference/version-feature-matrix.json` | 按版本区分实现、缺口和原生验收的功能证据 |
 | `templates` | 编程及工程模板 |
-| `manifest` | 生成的版本/工具/构建/交付哈希证据 |
+| `manifest` | 生成的版本/工具/构建/交付哈希证据；`publication-v*.json` 保留在此 |
+| `manifest/history` | 一次性日期取证记录，保留原始内容和适用版本 |
 | `scripts` | build、checks、generate、diagnostics、operations 分类脚本 |
 | `.github` | Actions、贡献/安全/行为规范 |
 | `.claude-plugin`、`hooks` | 插件定义和 Claude Code 钩子 |
@@ -60,7 +62,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 | `docs/guides` | PLC/HMI、硬件网络、版本控制与具体工作流 |
 | `docs/reference` | 版本工具矩阵、能力、API 缺口及生态参考 |
 | `docs/troubleshooting` | 错误定位、Openness 限制与诊断 |
-| `docs/development` | 当前架构、交接、验证、发布与路线图 |
+| `docs/development` | 当前架构、交接、验证、发布与路线图；[design-qa.md](design-qa.md) 记录界面设计验收 |
 | `docs/releases`、`docs/archive` | 发布记录及历史资料 |
 | `docs/licenses` | 再分发组件的许可证清单和原文 |
 

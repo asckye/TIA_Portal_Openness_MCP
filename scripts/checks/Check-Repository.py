@@ -56,6 +56,14 @@ def check(root, no_binaries=False):
     required(package['cli']['exe'], 'CLI')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
         required(name, 'blueprint')
+    studio = 'tools/tia-openness-studio/src/'
+    required(studio + 'TiaOpenness.Launcher/Launcher.cs', 'GUI entry')
+    for name in ('Themes/Glass.xaml', 'Controls/GlassLogView.cs',
+                 'Fonts/Manrope-Regular.ttf', 'Fonts/Manrope-Medium.ttf',
+                 'Fonts/Manrope-SemiBold.ttf', 'Fonts/Manrope-Bold.ttf', 'Fonts/Manrope-OFL.txt',
+                 'Fonts/JetBrainsMono-Regular.ttf', 'Fonts/JetBrainsMono-Medium.ttf',
+                 'Fonts/JetBrainsMono-OFL.txt', 'Fonts/SOURCES.txt'):
+        required(studio + 'TiaOpenness.Gui/' + name, 'GUI entry')
     roster = read('manifest/tools-list.json')
     names = [row['name'] for row in roster['tools']]
     if len(names) != len(set(names)) or len(names) != roster['toolCount'] or len(names) != package['capabilities']['mcpToolCount']:

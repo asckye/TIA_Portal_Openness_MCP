@@ -74,7 +74,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 ## Glass Layers desktop fonts
 
-Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The font files, original licenses, source URLs and file hashes are under `tools/ui-glass/Fonts/`. Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
+Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The font files, original licenses, source URLs and file hashes are under [`tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/`](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts). Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.
 
 ## Eido import dependency planner
 

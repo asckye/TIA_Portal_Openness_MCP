@@ -21,6 +21,8 @@
 
 2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `tools/tia-openness-studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license, file hashes, full source snapshot and Git history are retained there. The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
 
+The workbench embeds Manrope and JetBrains Mono under SIL Open Font License 1.1. The fonts, original licenses and source records are retained together in [the Studio font directory](tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts); see [the third-party notices](docs/licenses/THIRD-PARTY-NOTICES.md).
+
 The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](tools/third-party/eido-import-planner/README.md).
 
 The AI-facing usage catalog embeds reference text from Siemens AI extensions and

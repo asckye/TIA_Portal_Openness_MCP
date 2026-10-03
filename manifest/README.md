@@ -14,6 +14,6 @@
 | [version-api-audit.json](version-api-audit.json) | 官方 SDK 与编译调用成员的对照，不代表原生功能覆盖率 |
 | [tool-usage-coverage.json](tool-usage-coverage.json) | 各版本工具、操作、编程示例和官方来源的检索检查 |
 
-`publication-v*.json` 记录对应公开版本的资产、哈希、源码提交和工作流。发布打包生成的 `release-file-hashes.json` 属于安装包，不提交到源码仓库。历史日期命名的取证记录保留其原始时间和适用版本，不作为当前版本测试结果。
+`publication-v*.json` 记录对应公开版本的资产、哈希、源码提交和工作流。发布打包生成的 `release-file-hashes.json` 属于安装包，不提交到源码仓库。一次性日期取证记录位于 [history/](history/)，保留其原始时间、适用版本和文件内容，不作为当前版本测试结果。
 
 文档改动不会改变引擎的构建日期或测试记录。编译输入和运行文件变化应重新运行对应构建流程；使用[验证指南](../docs/development/validation.md)检查实际文件，不手工改哈希来掩盖差异。原生未执行项保持 NOT RUN。

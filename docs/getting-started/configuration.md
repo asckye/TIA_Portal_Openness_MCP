@@ -96,3 +96,5 @@ V20/V21 默认 lite 显示 63 个常用工具，其余用 `FindTools` / `CallToo
 作为 Claude Code 插件使用时，还会加载仓库的 `hooks/tia-write-guard.ps1`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
 
 手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由配置器生成，避免复制不匹配参数。
+
+从源码构建时，兼容启动器位于 `tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs`；构建入口与工作台资源位置见[仓库结构](../development/repository-layout.md)。

@@ -162,11 +162,11 @@ def main():
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
     studio = 'tools/tia-openness-studio/'
     desktop_projects = tuple(studio + 'src/TiaOpenness.' + name + '/' for name in ('Gui', 'Client', 'Core', 'Contracts', 'Bridge'))
-    gui_inputs = {n for n in files if n.startswith('tools/ui-glass/') or
+    gui_inputs = {n for n in files if n.startswith(studio + 'src/TiaOpenness.Gui/Fonts/') or
                   (n.startswith(desktop_projects) and Path(n).suffix in ('.cs', '.xaml', '.csproj')) or
                   (n.startswith(studio + 'tests/TiaOpenness.Configuration.Tests/') and Path(n).suffix in ('.cs', '.csproj'))} | {
         'scripts/build/Build-Configurator.ps1', 'Version.props',
-        'tools/mcp-configurator/Launcher.cs',
+        studio + 'src/TiaOpenness.Launcher/Launcher.cs',
         studio + 'Directory.Build.props', studio + 'tests/Directory.Build.props',
         'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs',
         'tools/openness-shared/OpennessEnvironment.cs',
@@ -182,7 +182,18 @@ def main():
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = ('docs/README.md',
                 'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',
-                'tools/mcp-configurator/Launcher.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Controls/GlassLogView.cs',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Regular.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Medium.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-SemiBold.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-Bold.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/Manrope-OFL.txt',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Regular.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-Medium.ttf',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/JetBrainsMono-OFL.txt',
+                'tools/tia-openness-studio/src/TiaOpenness.Gui/Fonts/SOURCES.txt',
                 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj',
                 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml',
                 'tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs',

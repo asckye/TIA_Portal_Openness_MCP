@@ -52,7 +52,7 @@ are removed. Doctor remains available without loading a native TIA session.
 
 ## Glass Layers interface
 
-The native WPF view uses the shared `tools/ui-glass` styles and bundled OFL fonts. The minimum
+The native WPF view uses the [Glass styles](src/TiaOpenness.Gui/Themes/Glass.xaml) and bundled [OFL fonts](src/TiaOpenness.Gui/Fonts). The minimum
 window size is 1200 x 780; the center column expands with the window. The title bar selects
 English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
 project session, selection and commands.
@@ -70,7 +70,7 @@ messages keep their original text when the interface language changes. The MCP p
 Set `TIA_GLASS_SCREENSHOTS` to a local output directory before running the WPF tests below to
 capture the English and Chinese fixtures in both themes. These are actual WPF renderings at
 1200 x 780 with synthetic data, without connecting to TIA. The reference package remains local
-to the design handoff; see the root `design-qa.md` for comparison notes.
+to the design handoff; see [design QA](../../docs/development/design-qa.md) for comparison notes.
 
 ## Workflows and boundaries
 
@@ -95,7 +95,7 @@ named source for inspection. The legacy `RequireBlockComment` inspection rule ch
 
 The configuration page is the compiled `src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml`
 UserControl. Its code-behind retains the configuration/service logic and loads the Studio palettes
-and its own compiled English/Chinese dictionaries. `tools/mcp-configurator` contains only the
+and its own compiled English/Chinese dictionaries. `src/TiaOpenness.Launcher` contains only the
 Framework compatibility launcher; configuration tests run in the .NET 10 desktop host.
 
 ## Validation
