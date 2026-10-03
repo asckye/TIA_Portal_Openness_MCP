@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: project/session. Extracted from McpServer.cs (god-file split); behavior unchanged.
     public static partial class McpServer
     {
         #region project/session
@@ -206,9 +205,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // NOTE: Deprecated demo tool removed.
-        // In V21, prefer importing block XML via ImportBlock/ImportBlocksFromDirectory, then CompileSoftware.
-
         [McpServerTool(Name = "ScaffoldProject"), Description("[L1][Project] One-shot project generator: from a single JSON spec it creates the project, adds PLC (and optional Unified HMI) hardware, builds UDTs/global DBs/PLC tag tables, imports SCL external sources and LAD S7DCL documents, compiles, sets up the HMI connection/screens/tags, and saves — collapsing the ~20-step runbook into one call. Auto-connects if needed. Critical-step failures (connect/createProject/PLC device) abort; per-element failures are collected and reported. Spec keys: projectName(required); directoryPath?(default %TEMP%); plcName?(PLC_1); plcFamily?(S7-1500); plcMlfb?; hmiName?(omit to skip all HMI); hmiFamily?(WinCCUnifiedPC); hmiSoftwarePath?(HMI_RT_1); connectionName?(HMI_Connection_1); udt?/globalDb?/tagTable? = arrays of the same json objects PlcBuildAndImport accepts; sclSourceFiles? = array of .scl file paths; ladDocs? = array of {importPath,name}; hmiScreens? = array of {screenName,width,height,designJson(object)}; hmiTags? = array of {tagTableName?,tagName,hmiDataType?,plcTag?,address?}; compile?(true); save?(true). Returns a per-step report with compile error/warning counts. dryRun DEFAULTS TO TRUE (safety): the default call only validates the spec offline (PLC block JSON shapes, SCL/LAD file paths, designJson) WITHOUT connecting to TIA or creating anything; after a clean dry run, call again with dryRun=false to actually create the project.")]
         public static ResponseScaffold ScaffoldProject(
             [Description("spec: JSON object describing the project to generate. See tool description for keys.")] string spec,
@@ -222,10 +218,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try { root = JsonNode.Parse(spec) ?? throw new Exception("spec parsed to null"); }
             catch (Exception ex) { throw new McpException($"ScaffoldProject: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
-            string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch { return def; } }
-            bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch { return def; } }
+            string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
+            bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
             JsonArray Arr(string key) => root[key] as JsonArray ?? new JsonArray();
-            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch { return def; } }
+            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): malformed optional scaffold values retain the caller-provided default */ { return def; } }
 
             var projectName = S("projectName");
             if (string.IsNullOrWhiteSpace(projectName))
@@ -254,7 +250,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 foreach (var item in Arr("sclSourceFiles"))
                 {
-                    string path; try { path = item?.GetValue<string>() ?? ""; } catch { path = ""; }
+                    string path; try { path = item?.GetValue<string>() ?? ""; } catch /* swallow(parse-fallback): non-string scaffold source entries are skipped as empty paths */ { path = ""; }
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     bool exists = System.IO.File.Exists(path);
                     Step("scl", exists ? "ok" : "failed", (exists ? "exists: " : "MISSING: ") + path); if (!exists) resp.Ok = false;

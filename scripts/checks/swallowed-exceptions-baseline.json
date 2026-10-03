@@ -5,7 +5,7 @@
     {
       "fingerprint": "0240f349cd24897386850398cbee5030341a5948ca573cab29802476a61c60f5",
       "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/UnifiedOpenPipeChannel.cs",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.Runtime/UnifiedOpenPipeChannel.cs",
       "line": 67
     },
     {
@@ -37,12 +37,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Patch.cs",
       "line": 31
-    },
-    {
-      "fingerprint": "1b93c34f3e5b7afd43e73df6bb55f62c798c9b45bedfaf20555c5bffa0fe8059",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSession.cs",
-      "line": 228
     },
     {
       "fingerprint": "1b93c34f3e5b7afd43e73df6bb55f62c798c9b45bedfaf20555c5bffa0fe8059",
@@ -165,12 +159,6 @@
       "line": 28
     },
     {
-      "fingerprint": "66a2ce7db25833623bfed4ba84728a2bf22cc8416e9dd54e288a02ae096710e3",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSession.cs",
-      "line": 225
-    },
-    {
       "fingerprint": "66a8216456423ec36ebb661e389a2d9d914114920b42c6a60e3bbe2978c1272f",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
@@ -237,12 +225,6 @@
       "line": 183
     },
     {
-      "fingerprint": "95a7f17395e351e13c78bacd0397e04ff2901556a5984d2500f3a28b23474522",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs",
-      "line": 68
-    },
-    {
       "fingerprint": "9af81b5d8d0019a99a280e5c1333f21c19d7fb77637d1faca5751bad2f3b07cb",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolVersionPolicy.cs",
@@ -277,12 +259,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.CausalTrace.cs",
       "line": 90
-    },
-    {
-      "fingerprint": "bbe79904e150c3a5f8fb79beea1b4e7d64b6ea8c731bdfb4c086886f295780e8",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSession.cs",
-      "line": 257
     },
     {
       "fingerprint": "bcbad772da5731540215927ca0776e82de72df000a83fb1d2f979d6fae99ee3a",
@@ -343,12 +319,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Patch.cs",
       "line": 29
-    },
-    {
-      "fingerprint": "d2c8035f46b3a8cdf4d8e559fc674cf33990ba881863fdc6d79160b30beb211e",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ProjectSession.cs",
-      "line": 226
     },
     {
       "fingerprint": "d889f39afce1d7d1a2d6738cac6a4da12f194806e1f53e77754803702f291da9",

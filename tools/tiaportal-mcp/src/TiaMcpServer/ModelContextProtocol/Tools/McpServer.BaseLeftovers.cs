@@ -65,7 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     var call = calls[index];
                     var response = CallTool(call.Name, call.ArgumentsJson);
                     bool ok = response.Meta?["operationSuccess"]?.GetValue<bool?>() == true;
-                    JsonNode? payload; try { payload = JsonNode.Parse(response.Message); } catch { payload = response.Message; }
+                    JsonNode? payload; try { payload = JsonNode.Parse(response.Message); } catch /* swallow(parse-fallback): plain-text tool responses are retained as the transaction result */ { payload = response.Message; }
                     results.Add(new JsonObject { ["name"] = call.Name, ["ok"] = ok, ["result"] = payload });
                     if (!ok) meta["stoppedAt"] = call.Name;
                     return ok;
