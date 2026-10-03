@@ -322,14 +322,9 @@ namespace TiaMcpServer.ModelContextProtocol
                         Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false },
                     };
 
-                // Tiering is by DIRECTION, and it is the same boundary in both builds: exporting
-                // (project -> text files) is free; importing (text files -> project) OVERWRITES blocks
-                // in the engineer's project, so it belongs to the commercial build.
-                if (mode == SynchronizationMode.WorkspaceToProject
-#if COMMERCIAL
-                    && !Licensing.Entitlement.IsProTier()
-#endif
-                    )
+                // Exporting (project -> text files) is allowed; importing (text files -> project)
+                // overwrites blocks in the engineer's project and is rejected here.
+                if (mode == SynchronizationMode.WorkspaceToProject)
                     return new ResponseStringList
                     {
                         Message = "direction='WorkspaceToProject' (restoring a Git version back INTO the project) " +
