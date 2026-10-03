@@ -96,6 +96,20 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert built.get('ok', True) and built.get('meta', {}).get('success', True), (name, built)
             root = ET.fromstring(built['xml'])
             assert len(list(root.iter())) > 3, name + ': empty XML'
+            if name in ('BuildPlcUdtXml', 'BuildPlcGlobalDbXml'):
+                target = args['outputReleaseKey']
+                assert target == str(release), (name, target, release)
+                engineering, interface = {
+                    '14sp1': ('V14 SP1', 2), '15.1': ('V15.1', 3),
+                    '16': ('V16', 4), '17': ('V17', 4), '18': ('V18', 5),
+                    '19': ('V19', 5), '20': ('V20', 5), '21': ('V21', 5)
+                }[target]
+                namespace = f'http://www.siemens.com/automation/Openness/SW/Interface/v{interface}'
+                assert root.find('Engineering').attrib['version'] == engineering, (name, target)
+                assert root.find('.//{' + namespace + '}Sections') is not None, (name, namespace)
+                assert built['data']['outputReleaseKey'] == target, built
+                assert built['data']['interfaceNamespace'] == namespace, built
+                assert (root.find('.//AttributeList/Namespace') is not None) == (int(target[:2]) >= 18), (name, target)
             if name == 'BuildPlcUdtXml':
                 assert any(e.tag.endswith('Member') and e.attrib.get('Name') == 'Ready' and e.attrib.get('Datatype') == 'Bool' for e in root.iter())
             if name == 'BuildPlcTagTableXml':

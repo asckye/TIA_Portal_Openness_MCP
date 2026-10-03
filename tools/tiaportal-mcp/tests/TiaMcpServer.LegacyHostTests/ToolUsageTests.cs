@@ -23,6 +23,11 @@ internal static class ToolUsageTests
                 var usage = JsonNode.Parse(((TextContentBlock)response.Content.Single()).Text)!["usage"]!;
                 check(usage["releaseKey"]!.GetValue<string>() == release, "usage has exact release");
                 check(JsonNode.DeepEquals(usage["inputSchema"], JsonNode.Parse(tool.ProtocolTool.InputSchema.GetRawText())), "usage reflects actual schema");
+                if(release is not ("20" or "21"))
+                    check((string?)usage["example"]!["kind"]=="parameterized-call-example", "every deployed foundation tool has a maintained call example: "+release+"/"+tool.ProtocolTool.Name+" ("+(string?)usage["example"]!["kind"]+")");
+                if(tool.ProtocolTool.Name is "BuildPlcUdtXml" or "BuildPlcGlobalDbXml")
+                    check((string?)usage["example"]!["request"]!["params"]!["arguments"]!["outputReleaseKey"]==release,
+                        "declaration example chooses the exact target release, including 14sp1 and 15.1");
             }
             var connect = JsonNode.Parse(((TextContentBlock)(await Call("{\"toolName\":\"Connect\"}")).Content.Single()).Text)!["usage"]!;
             var arguments = connect["example"]!["request"]!["params"]!["arguments"]!.AsObject();

@@ -771,5 +771,105 @@
         "expect": "path written"
       }
     ]
+  },
+  {
+    "id": "sequence/plc-scl-block-foundation",
+    "topic": "plc-scl-block",
+    "purpose": "Ordinary PLC root: ASCII external source import, block generation, compilation and readback on the foundation profile.",
+    "preconditions": "Intended TIA/project already attached. An operator-reviewed ASCII FC_Add.scl is on the TIA host; generation may overwrite same-named PLC objects.",
+    "notes": "Use GetToolUsage(exampleId=\"scl-add\") for the complete source. V14 SP1 returns no generated object list; the later overload reports native objects. No automatic save or download. Normal native generation rejection is Status=failed and keeps the session usable; correct the source and preview again. Status=outcome-unknown requires project inspection.",
+    "releaseKeys": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19"
+    ],
+    "profile": "plc-foundation",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetState",
+        "arguments": {},
+        "expect": "Intended exact project already attached; copy ProjectFile."
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "Copy the exact PLC software path; use the complete ASCII FC_Add.scl example on the TIA host."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "filePath": "C:\\Examples\\FC_Add.scl",
+          "dryRun": true
+        },
+        "expect": "Status=planned; review source/target and copy this operation's PlanHash."
+      },
+      {
+        "tool": "ImportPlcExternalSource",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "filePath": "C:\\Examples\\FC_Add.scl",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<ProjectFile from GetState>",
+          "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
+        },
+        "expect": "Status=completed, Executed=true; retain returned SourceName. No generation/compile yet."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "externalSourceName": "<exact SourceName from completed import>",
+          "dryRun": true
+        },
+        "expect": "Status=planned; review source/target and copy this operation's PlanHash."
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "externalSourceName": "<exact SourceName from completed import>",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<ProjectFile from GetState>",
+          "expectedPlanHash": "<PlanHash from the immediately preceding preview>"
+        },
+        "expect": "Status=completed; inspect GeneratedObjects or V14 SP1 inventory observations. Same-named PLC objects may be overwritten. Compilation remains notRun."
+      },
+      {
+        "tool": "CompileAndDiagnosePlc",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": true
+        },
+        "expect": "Preview only; state/counts are null and meta.executed=false."
+      },
+      {
+        "tool": "CompileAndDiagnosePlc",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "dryRun": false,
+          "confirm": true,
+          "expectedProjectFile": "<ProjectFile from GetState>"
+        },
+        "expect": "All project devices must be offline; check native compiler state, errorCount and nested rawMessages. Do not treat transport success as compile success. Inspect meta.offlineStateNotExposedByDevices for devices whose state cannot be confirmed by these PLC services."
+      },
+      {
+        "tool": "GetBlockInfo",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "FC_Add"
+        },
+        "expect": "Confirm the expected generated block and its consistency. No implicit project save or PLC download."
+      }
+    ]
   }
 ]

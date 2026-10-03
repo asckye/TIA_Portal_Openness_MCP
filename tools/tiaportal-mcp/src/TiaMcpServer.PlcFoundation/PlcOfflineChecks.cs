@@ -39,40 +39,32 @@ namespace TiaMcp.PlcFoundation
                     return new PlcOfflineObservation(provider!=null,provider?.State.ToString());
                 }, redundant);
         }
-        private void RequireProjectOffline()
+        private string[] CheckProjectOfflineProviders()
         {
-            PlcOfflinePolicy.RequireReviewedExecution("project-wide compile");
             PlcOfflinePolicy.RequireDocumentedRelease(ReleaseKey);
-            var project=Project(); int count=0;
-            foreach(var device in project.Devices) { RequireDeviceOffline(device); count++; }
-            foreach(var device in project.UngroupedDevicesGroup.Devices) { RequireDeviceOffline(device); count++; }
-            foreach(var group in project.DeviceGroups) count+=RequireGroupOffline(group,0);
-            if(count==0) throw new NotSupportedException("An empty device inventory cannot establish all-device offline coverage.");
+            var project=Project();
+            var unobserved=new List<string>();
+            PlcOfflinePolicy.RequireProjectDevicesOffline(project.Devices,project.UngroupedDevicesGroup.Devices,
+                project.DeviceGroups,group=>group.Devices,group=>group.Groups,
+                device=> { if(!CheckDeviceOfflineProviders(device)) unobserved.Add(device.Name); });
+            return unobserved.ToArray();
         }
-        private static int RequireGroupOffline(DeviceUserGroup group,int depth)
+        private static bool CheckDeviceOfflineProviders(Device device)
         {
-            Depth(depth); int count=0;
-            foreach(var device in group.Devices) { RequireDeviceOffline(device); count++; }
-            foreach(var child in group.Groups) count+=RequireGroupOffline(child,depth+1);
-            return count;
-        }
-        private static void RequireDeviceOffline(Device device)
-        {
-            var states=new List<string?>(); bool covered=true;
+            var states=new List<string?>(); bool covered=true,unobservedSoftware=false;
             bool redundant=ReadRedundantStates(device,states);
-            foreach(var item in device.DeviceItems) ReadItemStates(item,redundant,states,ref covered,0);
-            // Devices with no recognized provider remain unknown (including HMI or
-            // unsupported hardware), even if other PLCs in the project are offline.
-            PlcOfflinePolicy.RequireStates(states,covered,"device "+device.Name);
+            foreach(var item in device.DeviceItems) ReadItemStates(item,redundant,states,ref covered,ref unobservedSoftware,0);
+            return PlcOfflinePolicy.CheckCompileStates(states,covered,"device "+device.Name) && !unobservedSoftware;
         }
-        private static void ReadItemStates(DeviceItem item,bool redundant,List<string?> states,ref bool covered,int depth)
+        private static void ReadItemStates(DeviceItem item,bool redundant,List<string?> states,ref bool covered,ref bool unobservedSoftware,int depth)
         {
             Depth(depth);
             var provider=((IEngineeringServiceProvider)item).GetService<OnlineProvider>();
             if(provider!=null) states.Add(provider.State.ToString());
             var software=((IEngineeringServiceProvider)item).GetService<SoftwareContainer>()?.Software;
-            if(software!=null && (!(software is PlcSoftware) || (!redundant && provider==null))) covered=false;
-            foreach(var child in item.DeviceItems) ReadItemStates(child,redundant,states,ref covered,depth+1);
+            if(software is PlcSoftware && !redundant && provider==null) covered=false;
+            if(software!=null && !(software is PlcSoftware) && provider==null) unobservedSoftware=true;
+            foreach(var child in item.DeviceItems) ReadItemStates(child,redundant,states,ref covered,ref unobservedSoftware,depth+1);
         }
         private T WithTargetOffline<T>(PlcReadCandidate<PlcSoftware> selected,Func<T> action)
         { RequireTargetOffline(selected); return action(); }

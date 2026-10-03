@@ -18,7 +18,8 @@ internal static class OfflineCompositionBuilders
 
     internal static JsonObject Build(string name, string outputReleaseKey, string json, bool innerOnly = false)
     {
-        if (outputReleaseKey != "21") throw new ArgumentException("Explicit outputReleaseKey 21 required.");
+        var format = name == "BuildPlcGlobalDbXml" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
+        if (format == null && outputReleaseKey != "21") throw new ArgumentException("Explicit outputReleaseKey 21 required.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");
         using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });
         var root = document.RootElement;
@@ -42,7 +43,7 @@ internal static class OfflineCompositionBuilders
                 return new PlcDbMemberDefinition(Text(row, true, "name"), Text(row, true, "datatype", "dataType"),
                     writable, OptionalElementText(Text(row, false, "commentZhCn", "comment", "commentZh")), OptionalElementText(Text(row, false, "startValue")));
             }).ToArray();
-            xml = PlcGlobalDbXmlBuilder.BuildXml(dbName, number, members);
+            xml = PlcGlobalDbXmlBuilder.BuildXml(dbName, number, members, outputReleaseKey);
             mode = "plc-build-global-db-xml";
             scope = "bounded input and complete document XML well-formedness only";
             summary = new JsonObject { ["dbName"] = dbName, ["dbNumber"] = number, ["memberCount"] = members.Length };
@@ -149,13 +150,14 @@ internal static class OfflineCompositionBuilders
         var parsed = XDocument.Load(reader);
         if (name == "BuildPlcGlobalDbXml")
         {
-            if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != "V21") throw new InvalidOperationException("Unexpected document format.");
+            if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != format!.EngineeringVersion) throw new InvalidOperationException("Unexpected document format.");
         }
         else if (parsed.Root?.Name != XName.Get("StructuredText", StructuredTextNamespace)) throw new InvalidOperationException("Unexpected fragment format.");
         var data = new JsonObject
         {
             ["ok"] = true, ["mode"] = mode, ["offlineOnly"] = true, ["xmlParseOk"] = true,
-            ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false, ["outputReleaseKey"] = "21",
+            ["schemaValidated"] = false, ["importValidated"] = false, ["programSemanticsValidated"] = false, ["outputReleaseKey"] = outputReleaseKey,
+            ["interfaceNamespace"] = format?.InterfaceNamespace.NamespaceName, ["interfaceSchemaFile"] = format?.InterfaceSchemaFile,
             ["error"] = null, ["xml"] = xml, ["summary"] = summary,
             ["safetyPolicy"] = new JsonObject { ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
         };
@@ -164,11 +166,11 @@ internal static class OfflineCompositionBuilders
             ["Message"] = "Candidate XML built in memory; schema, program semantics and import validation pending.",
             ["Meta"] = new JsonObject
             {
-                ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = "21", ["schemaValidated"] = false,
+                ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = outputReleaseKey, ["schemaValidated"] = false,
                 ["importValidated"] = false, ["programSemanticsValidated"] = false, ["nativeAcceptance"] = "NOT RUN",
-                ["provenance"] = "Existing V21 generators; GlobalDB StartValue/Comment ordering corrected from official manual; no version conversion", ["validationScope"] = scope
+                ["provenance"] = format != null ? "Flat GlobalDB generation with the target release interface schema and object attributes; not an XML converter" : "Existing V21 StructuredText generator; no version conversion", ["validationScope"] = scope
             },
-            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(Warning),
+            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : Warning),
             ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] = xml
         };
     }

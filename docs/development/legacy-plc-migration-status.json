@@ -1239,7 +1239,7 @@
         "21": "manual-signature-source-candidate-typed-rebuild-pending"
       },
       "contractAlignment": {
-        "parameters": "Original keyword and limit=50 retained; keyword 256 characters and result limit1\u2013100; manual open-project requirement conservatively enforced.",
+        "parameters": "Original keyword and limit=50 retained; keyword 256 characters and result limit1–100; manual open-project requirement conservatively enforced.",
         "response": "Keyword/Count/Items preserved with explicit bounded-scope/truncation metadata; exact raw identifiers, insertion and score unknown. No undocumented filter expansion.",
         "errors": "Invalid input fails before native access; native/enumeration failures propagate instead of empty success. Unexpected host payload fields are refused.",
         "remaining": "V18 precise manual semantics pending; all current exact-SDK builds and native acceptance NOT RUN. See hardware-catalog-search-candidate.md."
@@ -1248,7 +1248,7 @@
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
       "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
-      "scope": "V19\u201321 installed catalog read only; bounded client traversal, not bounded native Find duration or materialization."
+      "scope": "V19–21 installed catalog read only; bounded client traversal, not bounded native Find duration or materialization."
     },
     {
       "tool": "AddDeviceWithFallback",
@@ -1349,7 +1349,7 @@
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
       "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
-      "scope": "V19\u201321 exact installed catalog, two documented standard PLC articles only; no fallback probes"
+      "scope": "V19–21 exact installed catalog, two documented standard PLC articles only; no fallback probes"
     },
     {
       "tool": "BuildPlcUdtXml",
@@ -2835,10 +2835,10 @@
     },
     {
       "tool": "ImportPlcExternalSource",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-external-source-workflow-contract-tested",
+      "operation": "ImportPlcExternalSource",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Implemented for one exact ordinary PLC root ASCII .scl/.awl/.db/.udt file. Calls CreateFromFile(filename,fullPath) once under the input read lock and reads back actual SourceName; existing source name is refused. Preview plus exact project and plan hash confirmation is required. Import does not generate, compile, save or download. Chinese/non-ASCII source encoding remains unverified for this foundation contract.",
       "v17Contract": {
         "parameters": [
           {
@@ -2878,22 +2878,32 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "15.1": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "16": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "17": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "18": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "19": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "20": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "21": "implemented-scoped-source-and-contract-tests; native NOT RUN"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original softwarePath/groupPath/filePath retained; only empty root group supported. Adds dryRun=true, expectedPlanHash, confirm and expectedProjectFile.",
+        "response": "Structured planned/completed/outcome-unknown result with actual SourceName and input/plan evidence; not the historical ResponseMessage.",
+        "errors": "An attempted uncertain creation requires session reset; no retry or replacement fallback.",
+        "remaining": "Native acceptance and full historical V17 contract parity are NOT established. Exact-compatible migration count is unchanged."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "scoped-evidence-recorded-not-full-contract-parity",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "typedApiCompilation": "current-batch eight typed adapters/workers built; final aggregate evidence is recorded in current build manifests",
+      "implementationFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs"
+      ]
     },
     {
       "tool": "DeletePlcExternalSource",
@@ -2958,10 +2968,10 @@
     },
     {
       "tool": "GenerateBlocksFromExternalSource",
-      "status": "pending",
-      "operation": null,
+      "status": "source-implemented-external-source-workflow-contract-tested",
+      "operation": "GenerateBlocksFromExternalSource",
       "nativeAcceptance": "NOT RUN",
-      "note": "Not exposed by preview host; no placeholder success.",
+      "note": "Implemented for one exact ordinary PLC root source name, including extension. V15.1+ uses GenerateBlockOption.None and records native GeneratedObjects; V14 SP1 uses the void overload and exposes ObjectsBefore/ObjectsAfter/ObservedChanges only, with GeneratedObjects empty. Inventory changes are not a complete generated-object list. Generation may overwrite existing block/type names. Preview binds source identity and block/type metadata, not source contents. Compile/readback is separate; no implicit save/download. An ordinary native EngineeringException from generation returns Status=failed with its diagnostic and preserves the session. Interruption or post-generation readback uncertainty returns outcome-unknown and requires session reset; no automatic replay.",
       "v17Contract": {
         "parameters": [
           {
@@ -2995,29 +3005,39 @@
         "responses": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Responses.cs",
         "implementation": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpServer.cs"
       },
-      "migrationState": "unimplemented",
+      "migrationState": "partial-safe-contract-candidate",
       "releaseState": {
-        "14sp1": "unimplemented",
-        "15.1": "unimplemented",
-        "16": "unimplemented",
-        "17": "unimplemented",
-        "18": "unimplemented",
-        "19": "unimplemented",
-        "20": "unimplemented",
-        "21": "unimplemented"
+        "14sp1": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "15.1": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "16": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "17": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "18": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "19": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "20": "implemented-scoped-source-and-contract-tests; native NOT RUN",
+        "21": "implemented-scoped-source-and-contract-tests; native NOT RUN"
       },
       "contractAlignment": {
-        "parameters": "unimplemented",
-        "response": "unimplemented",
-        "errors": "unimplemented"
-      }
+        "parameters": "Original softwarePath/externalSourceName retained; exact root source name including extension required. Adds dryRun=true, expectedPlanHash, confirm and expectedProjectFile.",
+        "response": "Structured planned/completed/failed/outcome-unknown result with before/after/native-returned/observed-change records and explicit SourceContentReviewed=false; not the historical ResponseMessage.",
+        "errors": "An ordinary native EngineeringException from generation returns Status=failed with its diagnostic and preserves the session. Interruption or post-generation readback uncertainty returns outcome-unknown and requires session reset; no automatic replay.",
+        "remaining": "Native acceptance and full historical V17 contract parity are NOT established. Exact-compatible migration count is unchanged."
+      },
+      "sourceComplete": false,
+      "implementationOfflineVerified": true,
+      "manualReconciliation": "scoped-evidence-recorded-not-full-contract-parity",
+      "manualChecklist": "legacy-plc-manual-checklist.json",
+      "typedApiCompilation": "current-batch eight typed adapters/workers built; final aggregate evidence is recorded in current build manifests",
+      "implementationFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs"
+      ]
     },
     {
       "tool": "CompileSoftware",
       "status": "implementation-offline-verified-manual-pending",
       "operation": "CompileSoftware",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Native compile execution is reachable; the unconditional review refusal has been removed. Actual compilation is enabled after explicit execution confirmation. The selected standard-provider PLC must be Offline; the project traversal checks every observable OnlineProvider and both RHOnlineProvider states in top-level, ungrouped and nested devices. A PLC without the required provider, an observed unknown/online state or a read failure is rejected. Devices/non-PLC software without exposed state are recorded in OfflineStateNotExposedByDevices (host meta.offlineStateNotExposedByDevices), not treated as proven Offline and not refused solely for lacking a provider. Siemens still requires all devices offline; callers must account for the unobserved list. No state is changed automatically. Native acceptance NOT RUN.",
       "v17Contract": {
         "parameters": [
           {
@@ -3080,7 +3100,7 @@
       },
       "contractAlignment": {
         "parameters": "V17 softwarePath/password defaults preserved; dryRun/confirm/exact expectedProjectFile added",
-        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts",
+        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts; current result also reports devices whose offline state is not exposed instead of claiming complete observed coverage",
         "paths": "v17-read-safe-v1 selection binds software and its actual host device together",
         "errors": "classified failures; unknown compile/login/cleanup outcome stops session; no password echo",
         "intentionalSafetyChanges": [
@@ -3088,9 +3108,10 @@
           "password never silently ignored when API/service missing",
           "Safety login added only for verified V17+ API; V21 split assembly identity/directory verified",
           "only log off a safety session established by this call",
-          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting"
+          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting",
+          "Diagnostics use typed State/Path/DateTime/Description, native counts and recursive Messages; no guessed dynamic diagnostic attributes."
         ],
-        "remaining": "Native acceptance NOT RUN, including authentication, compilation and session cleanup"
+        "remaining": "Native import/compile/readback and Safety authentication/cleanup acceptance NOT RUN; unobserved device states require separate confirmation."
       },
       "sourceComplete": false,
       "contractVersion": "v17-compile-safe-v1",
@@ -3120,14 +3141,14 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Actual compilation is enabled after explicit execution confirmation. The selected standard-provider PLC must be Offline; the project traversal checks every observable OnlineProvider and both RHOnlineProvider states in top-level, ungrouped and nested devices. A PLC without the required provider, an observed unknown/online state or a read failure is rejected. Devices/non-PLC software without exposed state are recorded in OfflineStateNotExposedByDevices (host meta.offlineStateNotExposedByDevices), not treated as proven Offline and not refused solely for lacking a provider. Siemens still requires all devices offline; callers must account for the unobserved list. No state is changed automatically."
     },
     {
       "tool": "CompileAndDiagnosePlc",
       "status": "implementation-offline-verified-manual-pending",
       "operation": "CompileSoftware",
       "nativeAcceptance": "NOT RUN",
-      "note": "Implementation and offline checks passed for declared safe contract; source completion withheld until official manual reconciliation; native acceptance NOT RUN.",
+      "note": "Native compile execution is reachable; the unconditional review refusal has been removed. Actual compilation is enabled after explicit execution confirmation. The selected standard-provider PLC must be Offline; the project traversal checks every observable OnlineProvider and both RHOnlineProvider states in top-level, ungrouped and nested devices. A PLC without the required provider, an observed unknown/online state or a read failure is rejected. Devices/non-PLC software without exposed state are recorded in OfflineStateNotExposedByDevices (host meta.offlineStateNotExposedByDevices), not treated as proven Offline and not refused solely for lacking a provider. Siemens still requires all devices offline; callers must account for the unobserved list. No state is changed automatically. Native acceptance NOT RUN.",
       "v17Contract": {
         "parameters": [
           {
@@ -3202,7 +3223,7 @@
       },
       "contractAlignment": {
         "parameters": "V17 softwarePath/password defaults preserved; dryRun/confirm/exact expectedProjectFile added",
-        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts",
+        "response": "V17 State/ErrorCount/WarningCount; Messages or Errors/Warnings/Info/RawMessages; actual aggregate counts kept separate from deduplicated detail counts; current result also reports devices whose offline state is not exposed instead of claiming complete observed coverage",
         "paths": "v17-read-safe-v1 selection binds software and its actual host device together",
         "errors": "classified failures; unknown compile/login/cleanup outcome stops session; no password echo",
         "intentionalSafetyChanges": [
@@ -3210,9 +3231,10 @@
           "password never silently ignored when API/service missing",
           "Safety login added only for verified V17+ API; V21 split assembly identity/directory verified",
           "only log off a safety session established by this call",
-          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting"
+          "native diagnostic read failure is not swallowed; diagnostic DateTime uses round-trip formatting",
+          "Diagnostics use typed State/Path/DateTime/Description, native counts and recursive Messages; no guessed dynamic diagnostic attributes."
         ],
-        "remaining": "Native acceptance NOT RUN, including authentication, compilation and session cleanup"
+        "remaining": "Native import/compile/readback and Safety authentication/cleanup acceptance NOT RUN; unobserved device states require separate confirmation."
       },
       "sourceComplete": false,
       "contractVersion": "v17-compile-safe-v1",
@@ -3242,7 +3264,7 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Actual compilation is enabled after explicit execution confirmation. The selected standard-provider PLC must be Offline; the project traversal checks every observable OnlineProvider and both RHOnlineProvider states in top-level, ungrouped and nested devices. A PLC without the required provider, an observed unknown/online state or a read failure is rejected. Devices/non-PLC software without exposed state are recorded in OfflineStateNotExposedByDevices (host meta.offlineStateNotExposedByDevices), not treated as proven Offline and not refused solely for lacking a provider. Siemens still requires all devices offline; callers must account for the unobserved list. No state is changed automatically."
     },
     {
       "tool": "GetSoftwareTree",
@@ -3636,7 +3658,7 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Execution uses the implemented selected standard-provider PLC Offline guard, not the former blanket all-device gate. LocalSession/RH target and XML-specific scope restrictions remain; native acceptance NOT RUN."
     },
     {
       "tool": "ImportBlock",
@@ -3714,7 +3736,7 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Execution uses the implemented selected standard-provider PLC Offline guard, not the former blanket all-device gate. LocalSession/RH target and XML-specific scope restrictions remain; native acceptance NOT RUN."
     },
     {
       "tool": "ImportBlocksFromDirectory",
@@ -4327,7 +4349,7 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Execution uses the implemented selected standard-provider PLC Offline guard, not the former blanket all-device gate. LocalSession/RH target and XML-specific scope restrictions remain; native acceptance NOT RUN."
     },
     {
       "tool": "ImportType",
@@ -4405,7 +4427,7 @@
       "implementationOfflineVerified": true,
       "manualReconciliation": "partial; exact-release and workflow gaps recorded in checklist",
       "manualChecklist": "legacy-plc-manual-checklist.json",
-      "executionGate": "blocked for all releases pending proven R/H and passive/unknown hardware coverage; state checks implemented; staged publication and V14 SCL format policy source/offline closed"
+      "executionGate": "Execution uses the implemented selected standard-provider PLC Offline guard, not the former blanket all-device gate. LocalSession/RH target and XML-specific scope restrictions remain; native acceptance NOT RUN."
     },
     {
       "tool": "ExportTypes",
@@ -4561,7 +4583,7 @@
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
       "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
-      "scope": "Root ordinary PLC technology metadata through V18; root/user groups V19\u2013V21; no online values."
+      "scope": "Root ordinary PLC technology metadata through V18; root/user groups V19–V21; no online values."
     },
     {
       "tool": "ExportTechnologyObject",
@@ -5188,11 +5210,25 @@
   ],
   "completeContractMigrations": 7,
   "sourceOfflineComplete": 12,
-  "partial": 43,
-  "unimplemented": 7,
-  "implementationOfflineVerified": 23,
+  "partial": 45,
+  "unimplemented": 5,
+  "implementationOfflineVerified": 26,
   "manualPending": 11,
-  "sourceImplementedCandidates": 32,
-  "sourceImplemented": 55,
-  "implementationSummary": "55 source implementations: 12 scoped source/offline/manual closures (7 ordinary PLC reads and 5 ordinary lifecycle safe contracts), 43 partial implementations (11 earlier manual-partial implementations and 32 cloud partial candidates); 7 unimplemented. Exactly compatible migrations remain seven; native NOT RUN; exact-commit typed compilation passed as recorded in compileEvidence; Windows/native groups remain pending. ExportAsDocuments adds a V20/V21 LAD/DB single-block staged publication candidate, not full-format support. SearchHardwareCatalog adds a bounded V19\u201321 catalog read candidate; V18 signature known but semantics gated, V14SP1\u201317 API absent. The separate PlanPlcExternalSourceImport is an additional read-only tool and does not implement the original ImportPlcExternalSource. Existing special-object exports, terminal non-owning Disconnect, passive host diagnostics and V21-output LAD builders remain scoped partial candidates. DeletePlcExternalSource adds a separately confirmed exact-root single-source candidate; no generation/save and native deletion NOT RUN. ExportBlocksAsDocuments adds a bounded exact-group V20/V21 LAD/DB document-tree candidate with retained partial staging, not full-wrapper parity. ImportFromDocuments adds one bounded V20/V21 ordinary global DB declaration candidate. AddDeviceWithFallback adds a V19\u201321 two-model exact-catalog single-attempt creation candidate, not automatic fallback compatibility. ImportBlocksFromDocuments adds an ordered batch of admitted GlobalDB document sets with full-manifest locks and fail-stop evidence; independent final wiring review remains incomplete."
+  "sourceImplementedCandidates": 34,
+  "sourceImplemented": 57,
+  "implementationSummary": "57 source implementations from the historical 62-tool profile: 12 scoped source/offline/manual closures and 45 partial implementations; five remain unimplemented. Exactly compatible migrations remain seven. The current batch adds bounded root external-source creation/generation across eight typed adapters (six production foundation hosts), without claiming original V17 response/parameter parity. Compilation is reachable after observable offline-state checks; unobserved device states are explicitly reported. Flat UDT/GlobalDB output now supports all eight explicit release keys; the six other PLC XML builders remain V21 candidates. Historical compileEvidence and native acceptance records are retained; current build evidence is in manifest/multi-version-build.json and manifest/release-build.json. Native acceptance NOT RUN.",
+  "currentBatchReview": {
+    "date": "2026-10-03",
+    "historicalProfilePreserved": true,
+    "contractCompatibleMigrationCountUnchanged": true,
+    "implementedTools": [
+      "ImportPlcExternalSource",
+      "GenerateBlocksFromExternalSource"
+    ],
+    "compileExecution": "Actual compilation is enabled after explicit execution confirmation. The selected standard-provider PLC must be Offline; the project traversal checks every observable OnlineProvider and both RHOnlineProvider states in top-level, ungrouped and nested devices. A PLC without the required provider, an observed unknown/online state or a read failure is rejected. Devices/non-PLC software without exposed state are recorded in OfflineStateNotExposedByDevices (host meta.offlineStateNotExposedByDevices), not treated as proven Offline and not refused solely for lacking a provider. Siemens still requires all devices offline; callers must account for the unobserved list. No state is changed automatically.",
+    "nativeAcceptance": "NOT RUN",
+    "priorImplementationOfflineVerifiedCount": 23,
+    "currentAdditionalWorkflowContracts": 2,
+    "sourceFlagCountMeaning": "implementationOfflineVerified is the current count of per-tool true flags; prior aggregate 23 was retained above as history."
+  }
 }

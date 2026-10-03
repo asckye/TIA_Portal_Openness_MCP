@@ -1,5 +1,6 @@
 <Project>
   <PropertyGroup>
+    <DefineConstants Condition="'$(AdapterReleaseKey)' != '14sp1'">$(DefineConstants);PLC_SOURCE_RESULTS</DefineConstants>
     <DefineConstants Condition="'$(AdapterReleaseKey)' == '19' or '$(AdapterReleaseKey)' == '20' or '$(AdapterReleaseKey)' == '21'">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
     <DefineConstants Condition="'$(AdapterReleaseKey)' == '20' or '$(AdapterReleaseKey)' == '21'">$(DefineConstants);PLC_DOCUMENT_EXPORT</DefineConstants>
     <!-- Import before SDK props: restore and compile share the isolated paths. -->

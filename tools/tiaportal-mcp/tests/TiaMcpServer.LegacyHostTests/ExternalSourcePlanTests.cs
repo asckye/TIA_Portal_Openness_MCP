@@ -22,6 +22,6 @@ internal static class ExternalSourcePlanTests
         bool blocked=false;try{tool.InvokeAsync(request).AsTask().GetAwaiter().GetResult();}catch(ModelContextProtocol.McpException e){blocked=e.ErrorCode==ModelContextProtocol.McpErrorCode.InvalidParams;}
         check(blocked && fake.Calls==0,"Confirmed external-source apply never dispatches worker");
         check(TiaMcp.PlcWorker.WorkerOperations.Names.Contains("PlanPlcExternalSourceImport"),"External-source explicit worker operation registered");
-        check(!TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ImportPlcExternalSource"),"Legacy native external-source import remains unavailable");
+        check(TiaMcp.PlcWorker.WorkerOperations.Names.Contains("ImportPlcExternalSource"),"External-source import has its own executable route instead of changing the legacy plan contract");
     }
 }

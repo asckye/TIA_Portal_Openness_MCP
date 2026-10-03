@@ -1,0 +1,3272 @@
+{
+  "schemaVersion": 1,
+  "reviewedDate": "2026-10-03",
+  "reviewBaseline": "c5379c1",
+  "workingTreeReview": "Includes external-source creation/generation, the compile execution fix and per-release flat declaration formats. Catalog-derived tool lists were refreshed after the successful final Build-Release and Build-MultiVersion -Test.",
+  "scope": "Functional review of selected engineering workflows and major version migration families; not an exhaustive API completeness claim.",
+  "implementationMeaning": {
+    "implemented": "An advertised implementation exists for the explicitly described scope; this is not native acceptance.",
+    "partial": "Some stages or operations exist, but a declared workflow gap, runtime block or version-format limitation remains.",
+    "pending": "The inspected API exists, but a dedicated advertised MCP implementation is missing for this scope.",
+    "unavailable": "The exact inspected native API is absent from the supplied release SDK; this says nothing about manual TIA product features.",
+    "unverified": "Equivalent API/service availability or semantics has not been established; absence of an XML match is not enough to generalize."
+  },
+  "nativeAcceptance": "NOT RUN for this eight-release feature review",
+  "evidenceLimits": [
+    "SDK identifiers show static availability, not licenses, project capability or successful execution.",
+    "Advertised tool names come from manifest/version-tools.json; a route may still have an execution gate.",
+    "Broad family rows are deliberately partial on full engines until their subfeatures are reviewed.",
+    "Pending names in the historical PLC migration ledger are a subset, not an API gap count."
+  ],
+  "metadataReview": "ReflectionOnlyLoadFrom of the original Siemens.Engineering.dll for V14 SP1, V15.1, V16, V17 and V18 confirmed the exact absent types/properties/import method underlying every unavailable cell. No TIA instance or native engineering call was executed.",
+  "releases": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ],
+  "sdkInputs": {
+    "14sp1": {
+      "sdkRelativePath": "TIA_V14SP1_PublicAPI/V14 SP1",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "67892ad36b697bd0919c6b4ac0f4b6fe65b3128235c90333f5f509f4a389b6e6"
+      },
+      "metadataAssembly": "Siemens.Engineering.dll",
+      "metadataAssemblySha256": "ffe719564daade6fe09633b1e99d4ae1b0eee9521ab1b637562cccdd980d8d66"
+    },
+    "15.1": {
+      "sdkRelativePath": "TIA_V15.1_PublicAPI/V15.1",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "e6864dad4478bffac958e1d2ce72328d3b5218ccf1447557fa1da6d3469991b6"
+      },
+      "metadataAssembly": "Siemens.Engineering.dll",
+      "metadataAssemblySha256": "0647a5daadf05e7f6264c023e6b2bad132bcb49a14411271fd71386e91897488"
+    },
+    "16": {
+      "sdkRelativePath": "TIA_V16_PublicAPI/V16",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "b2b6542acc3ad33270193487eae57f896e11acd281038377f1bdce1cb478413a"
+      },
+      "metadataAssembly": "Siemens.Engineering.dll",
+      "metadataAssemblySha256": "ed9935f093821dd37a996837014709c3e9f7762f92ed46bb088c7627c54187dc"
+    },
+    "17": {
+      "sdkRelativePath": "TIA_V17_PublicAPI/V17",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "5ab7b2e24b129ede6daa7e28d53dc6e9e724f6ee7f86c13c20625d35190f53fa"
+      },
+      "metadataAssembly": "Siemens.Engineering.dll",
+      "metadataAssemblySha256": "8bc055e8ef9e1659e678a1489cd8f6689fcb6969334a659904b01d5e7d0aef08"
+    },
+    "18": {
+      "sdkRelativePath": "TIA_V18_PublicAPI/V18",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "4ee727da5077757f28081197cb26d222df9bb90329ab2176400fc39c163b5245"
+      },
+      "metadataAssembly": "Siemens.Engineering.dll",
+      "metadataAssemblySha256": "25ce6407cfd1220ec6c2a0c19c07955b769dd3a2a5b320ef9bd7e0d87aa0f797"
+    },
+    "19": {
+      "sdkRelativePath": "TIA_V19_PublicAPI/V19",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "a6bf56b1adb638e6b4b7ff9a52e7d89021323ee3b46e52967c95eb3764dae684"
+      }
+    },
+    "20": {
+      "sdkRelativePath": "TIA_V20_PublicAPI/V20",
+      "xmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "154d83b9cf013c2428b514bbafdb4802946661b177c6323e53e037f05a297cd8"
+      }
+    },
+    "21": {
+      "sdkRelativePath": "TIA_V21_PublicAPI/V21/net48",
+      "xmlSha256": {
+        "Siemens.Engineering.Base.xml": "0bf27f4ab7918c811a7dfde7f7c294b3133169b5f791e507278bfd27182cea43",
+        "Siemens.Engineering.CFC.xml": "31725d5b281a668fbd25809eacd01f71e22fcac945c2757bbec775fd3f48e330",
+        "Siemens.Engineering.DCC.xml": "7b271a5bb25ec50a8a7593de55208c471327dd15eeed427728ec474d48770444",
+        "Siemens.Engineering.Safety.xml": "b969c90b05c413b9f03b90888b1adcd2b21997005ef4b92db53b85a6b186d98d",
+        "Siemens.Engineering.SafetyValidation.xml": "c435bbf13890630290d8623b6a398437158d7d7dedc5c95867188f7f9f21da96",
+        "Siemens.Engineering.Sivarc.xml": "9b527859205d2c18c56938fc5a965291754db62672a35652bee1436c53bd96b9",
+        "Siemens.Engineering.Startdrive.xml": "a7a1f72b0c7c6aebba4187d21db9931690c6609c154e1b4aa358097ad8f4fa73",
+        "Siemens.Engineering.Step7.xml": "344f0652a1b10fedca6cd3501434ae8b1a8c4c0a014b3ef0ff1ef444f3fddda0",
+        "Siemens.Engineering.TeamcenterGateway.xml": "206ed2ea306c210341c71e856de224e20c3c9c82ebc5dfc7f4fb28895bfc501d",
+        "Siemens.Engineering.TestSuite.xml": "6eeb5842454b70fb9131fe25ce7653472ba9686a5f1db85d0ea35350889c4637",
+        "Siemens.Engineering.WinCC.Extension.xml": "1b7eb100a6900509ceb548bb35c72e81087cf5ab0af1aa850bf04db991f45307",
+        "Siemens.Engineering.WinCC.xml": "2d1c7e1816b43ab10ead3036d37e007d15540ddbddc6a1a239635f71e43e7615",
+        "Siemens.Engineering.WinCCUnified.xml": "894afc507742b3498a3be4273e6818b05677103ecdd4687af1c6d1caa4a5f73b"
+      }
+    }
+  },
+  "features": [
+    {
+      "id": "ordinary-plc-read",
+      "title": "Ordinary PLC block, type and tag-table browsing",
+      "scope": "Advertised root/user PLC block/type readers; tag-table names are narrower on foundation hosts. System groups and units are separate scopes.",
+      "implementation": {
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetTypes",
+        "GetBlockInfo",
+        "GetTypeInfo",
+        "GetPlcTagTables"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SW.PlcSoftware"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSoftwareRead.cs"
+      ],
+      "nextStep": "Use these readers to verify generated/imported identities in each version test project.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SW.PlcSoftware"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "15.1": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "16": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "17": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "18": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "19": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "20": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ],
+        "21": [
+          "GetBlocks",
+          "GetBlocksWithHierarchy",
+          "GetTypes",
+          "GetBlockInfo",
+          "GetTypeInfo",
+          "GetPlcTagTables"
+        ]
+      }
+    },
+    {
+      "id": "plc-xml-exchange",
+      "title": "PLC block/type/tag-table XML exchange",
+      "scope": "Routes exist. V14 SP1 SCL XML is interface-only; cross-version schema/import compatibility and special block types are not established.",
+      "implementation": {
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ImportBlock",
+        "ImportType",
+        "ImportPlcTagTable",
+        "ExportBlock",
+        "ExportType",
+        "ExportPlcTagTable",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcBatchImport.cs"
+      ],
+      "nextStep": "Roundtrip a version-native fixture and compare blocks, types and tags; do not rewrite XML version markers.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.SW.Blocks.PlcBlockComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "15.1": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "16": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "17": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "18": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "19": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "20": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ],
+        "21": [
+          "ImportBlock",
+          "ImportType",
+          "ImportPlcTagTable",
+          "ExportBlock",
+          "ExportType",
+          "ExportPlcTagTable",
+          "ImportBlocksFromDirectory",
+          "ImportPlcProgramFromDirectory"
+        ]
+      }
+    },
+    {
+      "id": "external-source-create",
+      "title": "Create an external source from a local file",
+      "scope": "Foundation ImportPlcExternalSource now executes CreateFromFile(name, fullPath) for one ASCII SCL/AWL/DB/UDT root source, then reads back the actual source name. Preview/exact project/plan hash required; the older planning-only tool remains compatible.",
+      "implementation": {
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "PlanPlcExternalSourceImport",
+        "ImportPlcExternalSource",
+        "ManagePlcExternalSources"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs"
+      ],
+      "nextStep": "Run native source creation/readback on each selected test project. Chinese and other non-ASCII source encodings remain outside the foundation contract until version-specific validation.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "15.1": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "16": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "17": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "18": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "19": [
+          "PlanPlcExternalSourceImport",
+          "ImportPlcExternalSource"
+        ],
+        "20": [
+          "ImportPlcExternalSource",
+          "ManagePlcExternalSources"
+        ],
+        "21": [
+          "ImportPlcExternalSource",
+          "ManagePlcExternalSources"
+        ]
+      }
+    },
+    {
+      "id": "external-source-generate",
+      "title": "Generate blocks from an external source",
+      "scope": "Foundation generation is now exposed for exact root source names. V15.1+ calls GenerateBlocksFromSource(GenerateBlockOption.None) and records native returned objects. V14 SP1 uses the void overload: GeneratedObjects is empty and before/after inventories are observations, not a complete generated-object list. Existing blocks/types may be overwritten.",
+      "implementation": {
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GenerateBlocksFromExternalSource",
+        "ManagePlcExternalSources"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs"
+      ],
+      "nextStep": "Test generation followed by explicit compilation/readback. Preview reviews source identity and block/type metadata, not source contents. A normal native EngineeringException returns failed and retains the session; interruption or post-generation readback uncertainty requires reset. Generation does not compile/save/download.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "15.1": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "16": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "17": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "18": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "19": [
+          "GenerateBlocksFromExternalSource"
+        ],
+        "20": [
+          "GenerateBlocksFromExternalSource",
+          "ManagePlcExternalSources"
+        ],
+        "21": [
+          "GenerateBlocksFromExternalSource",
+          "ManagePlcExternalSources"
+        ]
+      }
+    },
+    {
+      "id": "plc-compile",
+      "title": "Compile PLC software and read nested diagnostics",
+      "scope": "The blanket foundation execution block has been removed. The selected PLC and all observed OnlineProvider/RH states must be Offline; missing required PLC providers and unknown/online observed states are refused. Devices/non-PLC software without exposed state are returned in OfflineStateNotExposedByDevices / meta.offlineStateNotExposedByDevices, not inferred Offline or refused solely for provider absence. Diagnostics use typed fields and recursive Messages.",
+      "implementation": {
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "CompileSoftware",
+        "CompileAndDiagnosePlc"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+        "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+        "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcOfflineChecks.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs"
+      ],
+      "nextStep": "Compile valid/invalid sources on each release and compare native counts/diagnostics. Siemens still requires all devices Offline; independently confirm devices whose state is not exposed. No native acceptance is claimed.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.Compiler.ICompilable.Compile",
+            "P:Siemens.Engineering.Compiler.CompilerResult.ErrorCount",
+            "P:Siemens.Engineering.Compiler.CompilerResult.Messages"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "15.1": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "16": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "17": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "18": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "19": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "20": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "21": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ]
+      }
+    },
+    {
+      "id": "plc-source-pipeline",
+      "title": "Source creation, generation, compilation and readback",
+      "scope": "Foundation source creation/generation now exist, with root/ASCII scope and V14 SP1 generation observations. Compilation checks observed states and reports unexposed device states for caller confirmation. Clients must check every stage. PlcBuildAndImport is a separate JSON-to-XML workflow, not external-source generation.",
+      "implementation": {
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "ImportPlcExternalSource",
+        "GenerateBlocksFromExternalSource",
+        "CompileAndDiagnosePlc",
+        "GetBlocks",
+        "GetBlockInfo"
+      ],
+      "sdkIdentifiers": [],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs"
+      ],
+      "nextStep": "Complete and test individual stages first; compose existing operations instead of implementing a second native pipeline.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "15.1": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "16": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "17": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "18": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "19": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "20": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ],
+        "21": [
+          "ImportPlcExternalSource",
+          "GenerateBlocksFromExternalSource",
+          "CompileAndDiagnosePlc",
+          "GetBlocks",
+          "GetBlockInfo"
+        ]
+      }
+    },
+    {
+      "id": "plc-xml-builders",
+      "title": "Offline PLC XML builders for the selected release",
+      "scope": "BuildPlcUdtXml and BuildPlcGlobalDbXml now construct explicit output for all eight releases using their interface schema versions and object attributes. The six other PLC builders remain V21-only candidates. I for V21 describes output format only.",
+      "implementation": {
+        "14sp1": "partial",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "partial",
+        "21": "implemented"
+      },
+      "tools": [
+        "BuildPlcUdtXml",
+        "BuildPlcTagTableXml",
+        "BuildPlcGlobalDbXml",
+        "BuildStructuredTextXml",
+        "BuildFlgNetCallXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcFbBlockXml",
+        "ComposePlcLadFcBlockXml"
+      ],
+      "sdkIdentifiers": [],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs"
+      ],
+      "nextStep": "Complete target-specific formats for tag tables and executable blocks; whole-document/native import/CPU semantics remain unverified even when the interface fragment passes its XSD.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "15.1": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "16": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "17": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "18": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "19": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "20": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ],
+        "21": [
+          "BuildPlcUdtXml",
+          "BuildPlcTagTableXml",
+          "BuildPlcGlobalDbXml",
+          "BuildStructuredTextXml",
+          "BuildFlgNetCallXml",
+          "ComposePlcFcBlockXml",
+          "ComposePlcFbBlockXml",
+          "ComposePlcLadFcBlockXml"
+        ]
+      },
+      "functionalEvidence": {
+        "interfaceXsdChecks": 16,
+        "scope": "Flat UDT/GlobalDB interface fragments against the real supplied XSD for each release; whole-document and native import validation NOT RUN.",
+        "formats": {
+          "14sp1": "SW.InterfaceSections_v2.xsd",
+          "15.1": "SW.InterfaceSections_v3.xsd",
+          "16": "SW.InterfaceSections_v4.xsd",
+          "17": "SW.InterfaceSections_v4.xsd",
+          "18": "SW.InterfaceSections_v5.xsd",
+          "19": "SW.InterfaceSections_v5.xsd",
+          "20": "SW.InterfaceSections_v5.xsd",
+          "21": "SW.InterfaceSections_v5.xsd"
+        }
+      },
+      "officialReferences": [
+        "https://cache.industry.siemens.com/dl/files/802/109773802/att_1007204/v1/TIAPortalOpenness_en-US.pdf",
+        "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/major-changes/major-changes-for-long-term-stability-in-tia-portal-openness-v18"
+      ]
+    },
+    {
+      "id": "technology-read",
+      "title": "Read ordinary technology-object metadata",
+      "scope": "Foundation readers inspect the root through V18 and recurse through user groups from V19. This does not read live process values.",
+      "implementation": {
+        "14sp1": "implemented",
+        "15.1": "implemented",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GetTechnologyObjects"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs"
+      ],
+      "nextStep": "Use exact identities to check technology-object imports.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "GetTechnologyObjects"
+        ],
+        "15.1": [
+          "GetTechnologyObjects"
+        ],
+        "16": [
+          "GetTechnologyObjects"
+        ],
+        "17": [
+          "GetTechnologyObjects"
+        ],
+        "18": [
+          "GetTechnologyObjects"
+        ],
+        "19": [
+          "GetTechnologyObjects"
+        ],
+        "20": [
+          "GetTechnologyObjects"
+        ],
+        "21": [
+          "GetTechnologyObjects"
+        ]
+      }
+    },
+    {
+      "id": "technology-import",
+      "title": "Import technology-object XML",
+      "scope": "The exact collection import API is absent from supplied V14 SP1/V15.1 XML; it exists from V16. MCP foundation import routes are absent at the review baseline.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "ImportTechnologyObject",
+        "ImportTechnologyObjectsFromDirectory"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs"
+      ],
+      "nextStep": "Implement V16-V18 root import and V19 group-aware import; reuse single-item execution for directory batches.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory"
+        ],
+        "21": [
+          "ImportTechnologyObject",
+          "ImportTechnologyObjectsFromDirectory"
+        ]
+      }
+    },
+    {
+      "id": "technology-user-groups",
+      "title": "Technology-object user-group traversal",
+      "scope": "The exact Groups property is present only in supplied V19-V21 SDKs. Root technology objects remain a separate supported scope.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "unavailable",
+        "17": "unavailable",
+        "18": "unavailable",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GetTechnologyObjects"
+      ],
+      "sdkIdentifiers": [
+        "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs"
+      ],
+      "nextStep": "Preserve the version boundary when importing, exporting or resolving object paths.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "18": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "19": {
+          "present": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "P:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup.Groups"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "GetTechnologyObjects"
+        ],
+        "15.1": [
+          "GetTechnologyObjects"
+        ],
+        "16": [
+          "GetTechnologyObjects"
+        ],
+        "17": [
+          "GetTechnologyObjects"
+        ],
+        "18": [
+          "GetTechnologyObjects"
+        ],
+        "19": [
+          "GetTechnologyObjects"
+        ],
+        "20": [
+          "GetTechnologyObjects"
+        ],
+        "21": [
+          "GetTechnologyObjects"
+        ]
+      }
+    },
+    {
+      "id": "technology-export",
+      "title": "Export technology-object XML",
+      "scope": "Export API exists in all supplied releases, but foundation catalog excludes V14 SP1/V15.1 while their export semantics remain unreviewed.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "implemented",
+        "17": "implemented",
+        "18": "implemented",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "ExportTechnologyObject",
+        "ExportTechnologyObjectsToDirectory"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSpecialExportPolicy.cs"
+      ],
+      "nextStep": "Review old-release export semantics and test root-object roundtrip independently of the unavailable collection import API.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB.Export(System.IO.FileInfo,Siemens.Engineering.ExportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [
+          "ExportTechnologyObject"
+        ],
+        "17": [
+          "ExportTechnologyObject"
+        ],
+        "18": [
+          "ExportTechnologyObject"
+        ],
+        "19": [
+          "ExportTechnologyObject"
+        ],
+        "20": [
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
+        ],
+        "21": [
+          "ExportTechnologyObject",
+          "ExportTechnologyObjectsToDirectory"
+        ]
+      }
+    },
+    {
+      "id": "watch-table-exchange",
+      "title": "Watch-table listing and XML exchange",
+      "scope": "V15.1 adds listing; V16-V19 also expose export. Foundation import is missing although its SDK member exists from V15.1.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "partial",
+        "16": "partial",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GetPlcWatchTables",
+        "ExportPlcWatchTable",
+        "ImportPlcWatchTableOffline"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+        "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcSpecialExport.cs"
+      ],
+      "nextStep": "Add offline XML import using the per-release collection API; leave online watch/force behavior as a separate feature.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition",
+            "M:Siemens.Engineering.SW.WatchAndForceTables.PlcWatchTableComposition.Import(System.IO.FileInfo,Siemens.Engineering.ImportOptions)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [
+          "GetPlcWatchTables"
+        ],
+        "16": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable"
+        ],
+        "17": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable"
+        ],
+        "18": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable"
+        ],
+        "19": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable"
+        ],
+        "20": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable",
+          "ImportPlcWatchTableOffline"
+        ],
+        "21": [
+          "GetPlcWatchTables",
+          "ExportPlcWatchTable",
+          "ImportPlcWatchTableOffline"
+        ]
+      }
+    },
+    {
+      "id": "hardware-catalog",
+      "title": "Hardware catalog search",
+      "scope": "The inspected catalog type begins in V18; its MCP route is admitted from V19. The V18 operation contract remains to be reviewed.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "unavailable",
+        "17": "unavailable",
+        "18": "pending",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "SearchHardwareCatalog"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcHardwareCatalog.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcHardwareCatalogPolicy.cs"
+      ],
+      "nextStep": "Compare V18 search/provider signatures with V19 and expose only the supported search contract.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.HW.HardwareCatalog.HardwareCatalog"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [
+          "SearchHardwareCatalog"
+        ],
+        "20": [
+          "SearchHardwareCatalog"
+        ],
+        "21": [
+          "SearchHardwareCatalog"
+        ]
+      }
+    },
+    {
+      "id": "hardware-create",
+      "title": "Create a device with its initial item",
+      "scope": "Native CreateWithItem exists in every supplied SDK; foundation exposure currently starts at V19. Device/catalog-specific compatibility still requires a target.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "implemented",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "AddDeviceWithFallback"
+      ],
+      "sdkIdentifiers": [
+        "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDeviceAdd.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcDeviceAddPolicy.cs"
+      ],
+      "nextStep": "Separate the common exact-identifier creation API from newer catalog-search helpers before porting older releases.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "M:Siemens.Engineering.HW.DeviceComposition.CreateWithItem(System.String,System.String,System.String)"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [
+          "AddDeviceWithFallback"
+        ],
+        "20": [
+          "AddDeviceWithFallback"
+        ],
+        "21": [
+          "AddDeviceWithFallback"
+        ]
+      }
+    },
+    {
+      "id": "network-engineering",
+      "title": "Network interface and connection engineering",
+      "scope": "An interface API exists in every SDK; foundation hosts have no dedicated network engineering routes. Full-engine action/version breadth is not fully audited here.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadHardwareFeatures",
+        "ReadNetworkDomains",
+        "ManageNetworkDomain",
+        "GetProjectTopology"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.HW.Features.NetworkInterface"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolVersionPolicy.cs"
+      ],
+      "nextStep": "Split interface addressing, subnets, IO systems, domains and communication connections into exact API-supported subfeatures.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.HW.Features.NetworkInterface"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadHardwareFeatures",
+          "ReadNetworkDomains",
+          "ManageNetworkDomain",
+          "GetProjectTopology"
+        ],
+        "21": [
+          "ReadHardwareFeatures",
+          "ReadNetworkDomains",
+          "ManageNetworkDomain",
+          "GetProjectTopology"
+        ]
+      }
+    },
+    {
+      "id": "cax-exchange",
+      "title": "CAx device exchange",
+      "scope": "CAx provider exists in every supplied SDK; foundation hosts do not expose the full engine AML import route.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "ImportDeviceAml"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.Cax.CaxProvider"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Port provider-backed device exchange and verify import log plus actual device identities.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.Cax.CaxProvider"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ImportDeviceAml"
+        ],
+        "21": [
+          "ImportDeviceAml"
+        ]
+      }
+    },
+    {
+      "id": "libraries",
+      "title": "Project/global library engineering",
+      "scope": "Project library types exist in all releases. Dedicated foundation routes are missing; full engines expose multiple library operations with version-specific options.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadLibraryOverview",
+        "ManageGlobalLibrary",
+        "ManageLibraryType",
+        "ManageLibraryTypeVersion",
+        "ManageLibraryMasterCopy"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.Library.ProjectLibrary"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolVersionPolicy.cs"
+      ],
+      "nextStep": "Port read/instantiate/import operations first and keep type versions, master copies and global library lifecycle separate.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.Library.ProjectLibrary"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ],
+        "21": [
+          "ReadLibraryOverview",
+          "ManageGlobalLibrary",
+          "ManageLibraryType",
+          "ManageLibraryTypeVersion",
+          "ManageLibraryMasterCopy"
+        ]
+      }
+    },
+    {
+      "id": "vci",
+      "title": "Version Control Interface through MCP",
+      "scope": "MCP lacks V16-V19 routes although Studio already has direct VCI adapters. V16-V19 use WorkspaceMapping; V20/V21 use MappedObject; V14 SP1/V15.1 lack this service.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "GetVersionControlWorkspaces",
+        "CreateVersionControlWorkspace",
+        "ConnectProjectToWorkspace",
+        "GetVersionControlStatus",
+        "SyncVersionControlWorkspace"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+      ],
+      "sourceFiles": [
+        "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessSession.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Reuse the existing Studio workflow/contract where independent of Siemens types; compile native operations against each API.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.VersionControl.VersionControlInterface"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "GetVersionControlWorkspaces",
+          "CreateVersionControlWorkspace",
+          "ConnectProjectToWorkspace",
+          "GetVersionControlStatus",
+          "SyncVersionControlWorkspace"
+        ],
+        "21": [
+          "GetVersionControlWorkspaces",
+          "CreateVersionControlWorkspace",
+          "ConnectProjectToWorkspace",
+          "GetVersionControlStatus",
+          "SyncVersionControlWorkspace"
+        ]
+      }
+    },
+    {
+      "id": "classic-hmi",
+      "title": "Classic HMI engineering",
+      "scope": "Classic HMI target API exists in all eight SDKs; no foundation HMI tool family is advertised. Existing full tools do not certify every older object/action.",
+      "implementation": {
+        "14sp1": "pending",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadClassicHmiScreenTree",
+        "ManageClassicHmiScreenObject",
+        "ManageClassicHmiScript",
+        "ExportHmiScreen",
+        "ImportHmiScreen"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.Hmi.HmiTarget"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Start with screen/tag/script read and version-native import/export before object editing.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.Hmi.HmiTarget"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ],
+        "21": [
+          "ReadClassicHmiScreenTree",
+          "ManageClassicHmiScreenObject",
+          "ManageClassicHmiScript",
+          "ExportHmiScreen",
+          "ImportHmiScreen"
+        ]
+      }
+    },
+    {
+      "id": "unified-hmi",
+      "title": "Unified HMI engineering",
+      "scope": "The supplied XML sets contain this type from V19. Earlier XML absence alone is not a claim that the TIA product has no Unified capabilities or alternate SDK.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "unverified",
+        "16": "unverified",
+        "17": "unverified",
+        "18": "unverified",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadUnifiedEngineeringObjects",
+        "ReadUnifiedScreenBranch",
+        "UpdateUnifiedGlobalScript"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Verify the intended older-release SDK/API scope; port V19 read/import/export contracts where the inspected API exists.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ]
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ]
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ]
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ]
+        },
+        "18": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ]
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.HmiUnified.HmiSoftware"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadUnifiedEngineeringObjects",
+          "ReadUnifiedScreenBranch",
+          "UpdateUnifiedGlobalScript"
+        ],
+        "21": [
+          "ReadUnifiedEngineeringObjects",
+          "ReadUnifiedScreenBranch",
+          "UpdateUnifiedGlobalScript"
+        ]
+      }
+    },
+    {
+      "id": "software-units",
+      "title": "PLC software-unit engineering",
+      "scope": "The inspected unit API begins in V16. Foundation ordinary-PLC operations do not traverse software units.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadPlcSoftwareUnits",
+        "ManagePlcSoftwareUnit",
+        "SetPlcUnitObjectAccess"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SW.Units.PlcUnit"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Port explicit unit readers and exchange; resolve per-version access enums and unit dependencies.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SW.Units.PlcUnit"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
+        ],
+        "21": [
+          "ReadPlcSoftwareUnits",
+          "ManagePlcSoftwareUnit",
+          "SetPlcUnitObjectAccess"
+        ]
+      }
+    },
+    {
+      "id": "safety-offline-login",
+      "title": "Safety offline-program login for compilation",
+      "scope": "Inspected login service begins in V17. Foundation compile contains login/logoff and now admits execution after observed provider checks, with unexposed device states reported. Hardware/Safety/UMAC combinations remain a partial scope. A password is not silently ignored on older releases.",
+      "implementation": {
+        "14sp1": "unavailable",
+        "15.1": "unavailable",
+        "16": "unavailable",
+        "17": "partial",
+        "18": "partial",
+        "19": "partial",
+        "20": "implemented",
+        "21": "implemented"
+      },
+      "tools": [
+        "CompileSoftware",
+        "CompileAndDiagnosePlc",
+        "ManagePlcSafety"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.Safety.SafetyAdministration"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.PlcFoundation/PlcFoundationEngine.cs"
+      ],
+      "nextStep": "Verify the compiled path and native test target separately from ordinary PLC compilation.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "metadataAbsenceConfirmed": true
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.Safety.SafetyAdministration"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "15.1": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "16": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "17": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "18": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "19": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc"
+        ],
+        "20": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc",
+          "ManagePlcSafety"
+        ],
+        "21": [
+          "CompileSoftware",
+          "CompileAndDiagnosePlc",
+          "ManagePlcSafety"
+        ]
+      }
+    },
+    {
+      "id": "drive-parameters",
+      "title": "Modern Startdrive parameter operations",
+      "scope": "Modern DriveParameter exists from V15.1. V14 SP1 has a different Startdrive.DriveObject API, so its equivalent operations remain unverified. Full-engine native BICO acceptance remains open.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ManageStartdriveParameter"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.MC.Drives.DriveParameter"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Startdrive.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Port version-specific parameter contracts, teaching returned parameter references, ordinary values and null through the shared example library.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ]
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.DriveParameter"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ManageStartdriveParameter"
+        ],
+        "21": [
+          "ManageStartdriveParameter"
+        ]
+      }
+    },
+    {
+      "id": "sivarc",
+      "title": "SiVArc engineering",
+      "scope": "SiVArc identifiers appear from V15.1 in supplied SDKs. V14 SP1 compatibility has not been established; foundation routes are absent.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadSivarcRuleTree",
+        "ManageSivarcRuleContainer",
+        "ManageSivarcTableRule"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SiVArc.AlarmRule"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Audit rule/table/definition actions by exact release and optional installed service.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ]
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SiVArc.AlarmRule"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadSivarcRuleTree",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcTableRule"
+        ],
+        "21": [
+          "ReadSivarcRuleTree",
+          "ManageSivarcRuleContainer",
+          "ManageSivarcTableRule"
+        ]
+      }
+    },
+    {
+      "id": "dcc",
+      "title": "Drive Control Chart engineering",
+      "scope": "DriveControlChart appears from V16 in supplied SDKs. Foundation routes are absent; earlier alternate interfaces remain unverified.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "unverified",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadDccCharts",
+        "ManageDccChart",
+        "ManageDccBlock",
+        "ManageDccPin"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Audit read/chart exchange before chart/pin/library mutations.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ]
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ]
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.MC.Drives.Dcc.DriveControlChart"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadDccCharts",
+          "ManageDccChart",
+          "ManageDccBlock",
+          "ManageDccPin"
+        ],
+        "21": [
+          "ReadDccCharts",
+          "ManageDccChart",
+          "ManageDccBlock",
+          "ManageDccPin"
+        ]
+      }
+    },
+    {
+      "id": "cfc",
+      "title": "Continuous Function Chart exchange",
+      "scope": "The inspected ChartProvider type exists from V18, while full engines alone expose chart tools. Earlier alternate service shape, optional package prerequisites and equivalent API behavior remain unverified.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "unverified",
+        "16": "unverified",
+        "17": "unverified",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ExchangeCfcCharts",
+        "ManageCfcChartProtection"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Inspect each available ChartProvider and import/export semantics before admitting a legacy route.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ]
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ]
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ]
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ]
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.SW.FunctionCharts.ChartProvider"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ],
+        "21": [
+          "ExchangeCfcCharts",
+          "ManageCfcChartProtection"
+        ]
+      }
+    },
+    {
+      "id": "testsuite",
+      "title": "Test Suite case management and execution",
+      "scope": "The inspected service appears from V17; foundation routes are absent. Suite kinds, licenses and execution requirements need action-level review.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "unverified",
+        "16": "unverified",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ReadTestSuiteCases",
+        "ManageTestSuiteCase",
+        "ExchangeTestSuiteCase",
+        "RunTestSuiteCase"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.TestSuite.TestSuiteService"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Port reading and case exchange before execution, using per-version official case formats.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ]
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ]
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ]
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.TestSuite.TestSuiteService"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ReadTestSuiteCases",
+          "ManageTestSuiteCase",
+          "ExchangeTestSuiteCase",
+          "RunTestSuiteCase"
+        ],
+        "21": [
+          "ReadTestSuiteCases",
+          "ManageTestSuiteCase",
+          "ExchangeTestSuiteCase",
+          "RunTestSuiteCase"
+        ]
+      }
+    },
+    {
+      "id": "teamcenter",
+      "title": "Teamcenter project data integration",
+      "scope": "Inspected gateway identifiers appear from V18. Foundation routes are absent; an installed gateway and actual server authorization are separate prerequisites.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "unverified",
+        "16": "unverified",
+        "17": "unverified",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "ManageTeamcenterConnection",
+        "ManageTeamcenterDataset",
+        "ManageTeamcenterWorkflow"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Check exact gateway service contracts before sharing full-engine wrappers.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ]
+        },
+        "15.1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ]
+        },
+        "16": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ]
+        },
+        "17": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ]
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.TeamcenterGateway.TcGatewaySearchAndDownloadProvider"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow"
+        ],
+        "21": [
+          "ManageTeamcenterConnection",
+          "ManageTeamcenterDataset",
+          "ManageTeamcenterWorkflow"
+        ]
+      }
+    },
+    {
+      "id": "online-transfer",
+      "title": "PLC upload and download",
+      "scope": "Inspected transfer providers appear from V15.1. Foundation hosts do not expose upload/download; full-engine device/configuration scope is broader than this audit.",
+      "implementation": {
+        "14sp1": "unverified",
+        "15.1": "pending",
+        "16": "pending",
+        "17": "pending",
+        "18": "pending",
+        "19": "pending",
+        "20": "partial",
+        "21": "partial"
+      },
+      "tools": [
+        "DownloadToPlc",
+        "UploadStationFromPlc",
+        "UploadDeviceParameters"
+      ],
+      "sdkIdentifiers": [
+        "T:Siemens.Engineering.Download.DownloadProvider",
+        "T:Siemens.Engineering.Upload.StationUploadProvider"
+      ],
+      "sourceFiles": [
+        "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
+      ],
+      "nextStep": "Keep separate from offline authoring and require an explicit target for eventual native acceptance.",
+      "sdkEvidence": {
+        "14sp1": {
+          "present": [],
+          "absentFromInspectedXml": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ]
+        },
+        "15.1": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "16": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "17": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "18": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "19": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "20": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        },
+        "21": {
+          "present": [
+            "T:Siemens.Engineering.Download.DownloadProvider",
+            "T:Siemens.Engineering.Upload.StationUploadProvider"
+          ],
+          "absentFromInspectedXml": []
+        }
+      },
+      "advertisedTools": {
+        "14sp1": [],
+        "15.1": [],
+        "16": [],
+        "17": [],
+        "18": [],
+        "19": [],
+        "20": [
+          "DownloadToPlc",
+          "UploadStationFromPlc",
+          "UploadDeviceParameters"
+        ],
+        "21": [
+          "DownloadToPlc",
+          "UploadStationFromPlc",
+          "UploadDeviceParameters"
+        ]
+      }
+    }
+  ],
+  "catalogEvidence": {
+    "source": "manifest/version-tools.json",
+    "sha256": "bdf791d517bab4e05c801cce8dddf2dccf67c39c5afe2363ab89ab3e7e6e22c4",
+    "releaseToolCounts": {
+      "14sp1": 57,
+      "15.1": 58,
+      "16": 60,
+      "17": 60,
+      "18": 60,
+      "19": 62,
+      "20": 477,
+      "21": 488
+    },
+    "versionToolPairs": 1322,
+    "uniqueToolNames": 496,
+    "groupCounts": {
+      "shared-subset": 436,
+      "all-releases": 49,
+      "release-only": 11
+    },
+    "nativeAcceptance": "NOT RUN; these are advertised runtime tool catalogs, not native acceptance."
+  }
+}

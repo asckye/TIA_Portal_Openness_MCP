@@ -17,6 +17,8 @@ internal sealed class WorkerOutcomeState
     internal void AcceptResult(string operation,JsonObject arguments,JsonNode? result)
     {
         WorkerProtocol.ValidateExchangeResult(operation,arguments,result);
+        if(operation is "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
+            Failed(true,new IOException("External-source outcome is unknown; inspect before a new explicit session."));
         if(operation is "AddDeviceWithFallback" or "ImportFromDocuments" or "ImportBlocksFromDocuments" or "DeletePlcExternalSource" or "ExportAsDocuments" or "ExportBlocksAsDocuments" or "ExportPlcWatchTable" or "ExportTechnologyObject" or "ExportBlocks" or "ExportTypes" or "ImportBlocksFromDirectory" or "ImportPlcProgramFromDirectory" && result?["RequiresSessionReset"]?.GetValue<bool>()==true)
             Failed(true,new IOException("Batch stopped with retained partial outcomes; explicit inspection required."));
     }
@@ -33,6 +35,7 @@ internal static class WorkerProtocol
         if(operation=="DeletePlcExternalSource") { ExternalSourceDeleteContract.Validate(result,arguments); return; }
         if(operation=="SearchHardwareCatalog") { HardwareCatalogContract.Validate(result,arguments); return; }
         if(operation=="PlanPlcExternalSourceImport") { ExternalSourcePlanContract.ValidateRequest(arguments,result); return; }
+        if(operation is "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource") { ExternalSourceWorkflowContract.Validate(operation,arguments,result); return; }
         if(operation=="ExportBlocksAsDocuments") { BatchDocumentExportContract.Validate(result,arguments); return; }
         if(operation=="ExportAsDocuments") { DocumentExportContract.ValidateRequest(arguments,result); return; }
         if(operation is "ExportPlcWatchTable" or "ExportTechnologyObject") { SpecialExportContract.ValidateRequest(operation,arguments,result); return; }

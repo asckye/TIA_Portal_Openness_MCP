@@ -12,6 +12,7 @@
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcFbBlockXmlComposer.cs" Link="PlcFbBlockXmlComposer.cs" />
 
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs" Link="PlcGlobalDbXmlBuilder.cs" />
+    <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcDeclarationXmlFormat.cs" Link="PlcDeclarationXmlFormat.cs" />
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs" Link="StructuredTextXmlBuilder.cs" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />

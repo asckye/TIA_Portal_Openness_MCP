@@ -10,6 +10,7 @@ namespace TiaMcp.PlcWorker
             "ReadState","ReadPortalProcessProjects","ReadPortalConnectReadiness",
             "ReadWatchTableNames","ReadTechnologyObjects",
             "PlanPlcExternalSourceImport","DeletePlcExternalSource","AddDeviceWithFallback",
+            "ImportPlcExternalSource","GenerateBlocksFromExternalSource",
             "ReadSoftwareInfo","ReadSoftwareTree",
             "ReadBlockInfo","ReadTypeInfo","ReadExternalSourceNames",
             "Attach","Disconnect","ListProjects","BindProject","OpenProject","CreateProject","SaveProject","CloseProject","ReadProjectTree",

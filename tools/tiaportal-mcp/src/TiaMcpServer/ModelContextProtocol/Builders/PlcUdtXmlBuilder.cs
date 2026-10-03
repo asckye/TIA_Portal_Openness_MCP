@@ -12,14 +12,14 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     /// <summary>
     /// PLC UDT/PlcStruct XML 构造器。
-    /// 先覆盖 TIA V21 导出里最常见的扁平成员、中文注释和 ExternalWritable 属性。
+    /// 按目标版本接口格式生成扁平成员、中文注释和 ExternalWritable 属性。
     /// </summary>
     public static class PlcUdtXmlBuilder
     {
-        private static readonly XNamespace InterfaceNs = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
-
-        public static XDocument BuildDocument(string udtName, IEnumerable<PlcUdtMemberDefinition> members)
+        public static XDocument BuildDocument(string udtName, IEnumerable<PlcUdtMemberDefinition> members, string outputReleaseKey = "21")
         {
+            var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
+            var interfaceNs = format.InterfaceNamespace;
             if (string.IsNullOrWhiteSpace(udtName))
                 throw new ArgumentException("UDT 名称不能为空。", nameof(udtName));
             var normalizedMembers = members?.ToList() ?? throw new ArgumentNullException(nameof(members));
@@ -31,7 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("Engineering", new XAttribute("version", format.EngineeringVersion)),
                     new XElement("DocumentInfo",
                         new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
                         new XElement("ExportSetting", "None"),
@@ -40,22 +40,22 @@ namespace TiaMcpServer.ModelContextProtocol
                         new XAttribute("ID", "0"),
                         new XElement("AttributeList",
                             new XElement("Interface",
-                                new XElement(InterfaceNs + "Sections",
-                                    new XElement(InterfaceNs + "Section",
+                                new XElement(interfaceNs + "Sections",
+                                    new XElement(interfaceNs + "Section",
                                         new XAttribute("Name", "None"),
-                                        normalizedMembers.Select(BuildMember)))),
+                                        normalizedMembers.Select(member => BuildMember(member, interfaceNs))))),
                             new XElement("Name", udtName),
-                            new XElement("Namespace")))));
+                            format.HasObjectNamespace ? new XElement("Namespace") : null))));
         }
 
         // Backwards-compat: callers without a UDT name fall back to a placeholder.
         public static XDocument BuildDocument(IEnumerable<PlcUdtMemberDefinition> members)
             => BuildDocument("UDT_Generated", members);
 
-        public static string BuildXml(string udtName, IEnumerable<PlcUdtMemberDefinition> members)
+        public static string BuildXml(string udtName, IEnumerable<PlcUdtMemberDefinition> members, string outputReleaseKey = "21")
         {
             using var writer = new Utf8StringWriter();
-            BuildDocument(udtName, members).Save(writer, SaveOptions.None);
+            BuildDocument(udtName, members, outputReleaseKey).Save(writer, SaveOptions.None);
             return writer.ToString();
         }
 
@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static XElement BuildMember(PlcUdtMemberDefinition member)
+        private static XElement BuildMember(PlcUdtMemberDefinition member, XNamespace InterfaceNs)
         {
             var element = new XElement(InterfaceNs + "Member",
                 new XAttribute("Name", member.Name),

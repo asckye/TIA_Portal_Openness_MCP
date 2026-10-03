@@ -10,6 +10,7 @@ internal static class OfflineXmlBuilderTests
 {
     internal static async Task Run(IMcpServer server, Action<bool,string> check)
     {
+        DeclarationXmlFormatTests.Run(check);
         string Wire(string key) => McpJsonUtilities.DefaultOptions.PropertyNamingPolicy?.ConvertName(key) ?? key;
         foreach(var spec in new[]
         {
@@ -20,7 +21,7 @@ internal static class OfflineXmlBuilderTests
             var tool = OfflineXmlTools.Create().Single(t=>t.ProtocolTool.Name==spec.Name);
             var schema = tool.ProtocolTool.InputSchema;
             check(schema.GetProperty("required").GetArrayLength()==2, spec.Name+" requires explicit output format");
-            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum")[0].GetString()=="21", spec.Name+" one explicit output version");
+            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength()==(spec.Name=="BuildPlcUdtXml"?8:1), spec.Name+" explicit supported output versions");
             check(!schema.GetProperty("additionalProperties").GetBoolean(),spec.Name+" closed schema");
             RequestContext<CallToolRequestParams> Request(Dictionary<string,JsonElement> args) => new(server) { Params=new() {Name=spec.Name,Arguments=args} };
             var args = new Dictionary<string,JsonElement>
@@ -52,6 +53,13 @@ internal static class OfflineXmlBuilderTests
             foreach(var version in new[]{"14sp1","15.1","16","17","18","19","20","V21","21 ","","22"})
             {
                 var bad=new Dictionary<string,JsonElement>(args) { ["outputReleaseKey"]=JsonSerializer.SerializeToElement(version) };
+                if (spec.Name=="BuildPlcUdtXml" && TiaMcpServer.ModelContextProtocol.PlcDeclarationXmlFormat.ReleaseKeys.Contains(version))
+                {
+                    var generated = await tool.InvokeAsync(Request(bad));
+                    var generatedPayload = JsonNode.Parse(((TextContentBlock)generated.Content.Single()).Text)!;
+                    check(generatedPayload[Wire("Data")]!["outputReleaseKey"]!.GetValue<string>() == version, spec.Name+" MCP accepts target format "+version);
+                    continue;
+                }
                 await Invalid(bad,"output "+version);
             }
             foreach(var key in args.Keys)

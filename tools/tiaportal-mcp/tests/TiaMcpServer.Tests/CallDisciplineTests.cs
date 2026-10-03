@@ -107,6 +107,7 @@ namespace TiaMcpServer.Tests
             // ---- recipes ----
             check(ToolRecipes.All.Count >= 12 && ToolRecipes.Find("DOWNLOAD-PLCSIM") != null && ToolRecipes.Find("nope") == null, "recipes: table populated, lookup case-insensitive");
             check(ToolRecipes.All.All(x => x.Steps.Count >= 3 && x.Purpose.Length > 0), "recipes: every recipe has purpose and at least 3 steps");
+            check(ToolRecipes.Find("plc-scl-block")!.Steps.All(s => !s.ArgumentsJson.Contains("expectedProjectFile") && !s.ArgumentsJson.Contains("expectedPlanHash")), "recipes: full-engine source flow excludes foundation-only arguments");
             foreach (var recipe in ToolRecipes.All)
                 foreach (var step in recipe.Steps)
                     check(JsonNode.Parse(step.ArgumentsJson) is JsonObject, "recipes: '" + recipe.Topic + "' step " + step.Tool + " is a JSON object");

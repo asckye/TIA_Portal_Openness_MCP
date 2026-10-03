@@ -46,7 +46,7 @@ namespace TiaMcp.PlcFoundation
     internal static class PlcExternalSourceImportPolicy
     {
         internal const int MaximumFileBytes=4*1024*1024;
-        internal const string ApplyBlock="Native CreateFromFile apply is blocked: exact-release no-overwrite and normalization contract, race protection, exact-SDK build and native acceptance remain unverified. Preview is not permission to create.";
+        internal const string ApplyBlock="This compatibility planning tool cannot execute. Use ImportPlcExternalSource and its own preview/confirmation contract to create a source.";
         private static string Hash(byte[] bytes) { using(var sha=SHA256.Create()) return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-","").ToLowerInvariant(); }
         private static string Field(string value)=>value.Length.ToString(System.Globalization.CultureInfo.InvariantCulture)+":"+value;
         internal static string ValidateFile(string file)

@@ -28,6 +28,7 @@ internal sealed class FakeWorker : IFoundationWorker
             "SearchHardwareCatalog"=>JsonSerializer.SerializeToNode(TiaMcp.PlcFoundation.PlcHardwareCatalogPolicy.Search("19",arguments["keyword"]!.GetValue<string>(),arguments["limit"]!.GetValue<int>(),_=>Array.Empty<TiaMcp.PlcFoundation.PlcHardwareCatalogCandidate>())),
             "DeletePlcExternalSource"=>ExternalSourceDeleteTests.Payload(arguments),
             "PlanPlcExternalSourceImport"=>ExternalSourcePlanTests.Payload(arguments),
+            "ImportPlcExternalSource" or "GenerateBlocksFromExternalSource"=>ExternalSourceWorkflowTests.Payload(operation,arguments),
             "ReadState" or "ReadPortalProcessProjects" or "ReadPortalConnectReadiness"=>RuntimeQueryTests.Payload(operation),
             "ReadWatchTableNames" or "ReadTechnologyObjects"=>new JsonObject { ["SoftwarePath"]="devices/D/CPU",["ReleaseKey"]="20",["Scope"]=operation=="ReadWatchTableNames"?SupplementaryReadContract.WatchScope:SupplementaryReadContract.TechnologyScope,["Items"]=new JsonArray() },
             "ReadSoftwareInfo"=>new JsonObject { ["Name"]="PLC",["Attributes"]=new JsonArray(),["Meta"]=new JsonObject { ["softwarePath"]="devices/D/CPU",["scope"]="ordinary PLC" } },
@@ -67,6 +68,7 @@ internal static class Program
         BatchDocumentExportTests.Run(Check);
         ExternalSourcePlanTests.Run(Check);
         ExternalSourceDeleteTests.Run(Check);
+        await ExternalSourceWorkflowTests.Run(server,Check);
         AdapterSourceClosureTests.Run(Check);
         await HardwareCatalogDispatchTests.Run(server,Check);
         await DeviceAddDispatchTests.Run(server,Check);
@@ -91,6 +93,8 @@ internal static class Program
             if(def.Name=="AddDeviceWithFallback") { args["preferredMlfb"]=JsonSerializer.SerializeToElement("6ES7513-1AM03-0AB0");args["preferredVersion"]=JsonSerializer.SerializeToElement("V3.0");args["deviceName"]=JsonSerializer.SerializeToElement("PLC_2"); }
             if(def.Name=="DeletePlcExternalSource") { args["groupPath"]=JsonSerializer.SerializeToElement("");args["externalSourceName"]=JsonSerializer.SerializeToElement("Pump.scl"); }
             if(def.Name=="PlanPlcExternalSourceImport") { args["groupPath"]=JsonSerializer.SerializeToElement(""); args["filePath"]=args["allowedFilePath"]=JsonSerializer.SerializeToElement(@"C:\Sources\Pump.scl"); }
+            if(def.Name=="ImportPlcExternalSource") { args["groupPath"]=JsonSerializer.SerializeToElement(""); args["filePath"]=JsonSerializer.SerializeToElement(@"C:\Sources\Pump.scl"); }
+            if(def.Name=="GenerateBlocksFromExternalSource") args["externalSourceName"]=JsonSerializer.SerializeToElement("Pump.scl");
             var request=new RequestContext<CallToolRequestParams>(server) { Params=new CallToolRequestParams { Name=def.Name,Arguments=args } };
             using var cts=new CancellationTokenSource();
             var before=fake.Calls;

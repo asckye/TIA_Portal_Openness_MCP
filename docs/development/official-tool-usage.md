@@ -42,8 +42,10 @@ response returns an export ID, assemble its `GetExport` pages before parsing JSO
 Languages/formats: external SCL, SIMATIC SD SCL, LAD, FBD, mixed networks, DB, UDT,
 multilingual S7RES, STL, GRAPH text fragments, Unified JavaScript and Classic VBS.
 `language=csharp` lists the complete embedded official C# documents. External SCL
-and SIMATIC SD use separate examples. Foundation profiles currently plan external
-source imports but do not expose native SCL generation.
+and SIMATIC SD use separate examples. Foundation profiles provide ASCII external
+source import and block generation followed by explicit compilation/readback; use
+`sequence/plc-scl-block-foundation` for their preview/confirmation contracts. V14 SP1
+has a void generation API, so its inventory observations are not a native generated-object list.
 
 Return-value variants, document import outcomes, event/global-module scripts,
 compiler diagnostics and other tool details use the same data and retrieval path.
@@ -78,9 +80,11 @@ read/self-description: an invented property name cannot be made valid by an exam
 
 The eight registered release profiles are V14 SP1, V15.1, V16, V17, V18, V19, V20
 and V21. Coverage refers to their actual registered tools; it does not add modern
-tools to older APIs. Some shared offline XML generators still emit V21 candidate
-XML on older hosts; those examples say so explicitly. Changing a file extension or
-an XML version header is not a format conversion.
+tools to older APIs. UDT and GlobalDB declaration builders explicitly select all eight
+output releases, including the corresponding Interface v2/v3/v4/v5 namespace and
+version-dependent object attributes. Other shared offline builders still emit V21
+candidate XML on older hosts; their examples say so explicitly. Changing a file
+extension or an XML version header is not a format conversion.
 
 ## Verification
 
@@ -93,6 +97,9 @@ Full engines additionally execute the Unified button-action example. Tests inspe
 generated declarations, assignment tokens, call targets and dependency order.
 Language-file DB/UDT examples are checked separately. A .NET Framework
 harness retrieves all languages to catch differences from the .NET 8 unit suite.
+When `TIA_MCP_TEST_PUBLIC_API_ROOT` points to the eight supplied SDK directories,
+the foundation tests additionally validate generated UDT/GlobalDB interface fragments
+against each release's official XSD. This does not validate a whole document or native import.
 
 Full/lite and STDIO/HTTP are checked. Foundation fake-worker tests verify retrieval
 does not invoke the worker. The eight-version audit writes the

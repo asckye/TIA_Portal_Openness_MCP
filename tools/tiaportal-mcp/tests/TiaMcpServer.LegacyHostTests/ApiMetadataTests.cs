@@ -14,6 +14,23 @@ internal static class ApiMetadataTests
             CheckMembers(core,"Siemens.Engineering.Online.OnlineProvider",new[]{"State"},true,check);
             if(key!="14sp1") CheckMembers(core,"Siemens.Engineering.Online.RHOnlineProvider",new[]{"PrimaryState","BackupState"},true,check);
             var identity=AssemblyName.GetAssemblyName(core);
+            using(var exceptionStream=File.OpenRead(core))
+            using(var exceptionPe=new PEReader(exceptionStream))
+            {
+                var exceptions=exceptionPe.GetMetadataReader();
+                bool HasEngineeringBase(string name)
+                {
+                    var type=exceptions.TypeDefinitions.Select(exceptions.GetTypeDefinition).Single(t=>exceptions.GetString(t.Namespace)=="Siemens.Engineering" && exceptions.GetString(t.Name)==name);
+                    while(type.BaseType.Kind==HandleKind.TypeDefinition)
+                    {
+                        type=exceptions.GetTypeDefinition((TypeDefinitionHandle)type.BaseType);
+                        if(exceptions.GetString(type.Name)=="EngineeringException" && exceptions.GetString(type.Namespace)=="Siemens.Engineering") return true;
+                    }
+                    return false;
+                }
+                check(HasEngineeringBase("EngineeringTargetInvocationException"),key+" native invocation diagnostics are recoverable EngineeringException");
+                check(!HasEngineeringBase("NonRecoverableException"),key+" fatal native exception is outside the recoverable catch");
+            }
             check(identity.Version!.ToString()==(key=="14sp1"?"14.0.1.0":key=="15.1"?"15.1.0.0":key+".0.0.0"),"Exact core version "+key);
             check(Convert.ToHexString(identity.GetPublicKeyToken()!).ToLowerInvariant()==(key=="21"?"29bfe5fdf4ba5d3b":"d29ec89bac048f84"),"Exact signer "+key);
             CheckMembers(core,"Siemens.Engineering.IEngineeringObject",new[]{"GetAttributeInfos","GetAttribute"},false,check);
@@ -61,6 +78,26 @@ internal static class ApiMetadataTests
             CheckMembers(plc,"Siemens.Engineering.SW.PlcSoftware",new[]{"ExternalSourceGroup"},true,check);
             CheckMembers(plc,"Siemens.Engineering.SW.ExternalSources.PlcExternalSourceGroup",new[]{"ExternalSources"},true,check);
             CheckMembers(plc,"Siemens.Engineering.SW.ExternalSources.PlcExternalSource",new[]{"Name"},true,check);
+            CheckMembers(plc,"Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition",new[]{"CreateFromFile","Find"},false,check);
+            using(var sourceStream=File.OpenRead(plc))
+            using(var sourcePe=new PEReader(sourceStream))
+            {
+                var sourceMd=sourcePe.GetMetadataReader();
+                var sourceType=sourceMd.TypeDefinitions.Select(sourceMd.GetTypeDefinition).Single(t=>sourceMd.GetString(t.Namespace)=="Siemens.Engineering.SW.ExternalSources" && sourceMd.GetString(t.Name)=="PlcExternalSource");
+                var generation=sourceType.GetMethods().Select(sourceMd.GetMethodDefinition).Where(m=>sourceMd.GetString(m.Name)=="GenerateBlocksFromSource").ToArray();
+                var parameterless=generation.Single(m=>m.GetParameters().Select(sourceMd.GetParameter).Count(p=>p.SequenceNumber>0)==0);
+                check(sourceMd.GetBlobBytes(parameterless.Signature)[2]==0x01,key+" native parameterless generation returns void");
+                var withOption=generation.Where(m=>m.GetParameters().Select(sourceMd.GetParameter).Count(p=>p.SequenceNumber>0)==1).ToArray();
+                check(withOption.Length==(key=="14sp1"?0:1),key+" exact native generation option availability");
+                var sourceXml=System.Xml.Linq.XDocument.Load(Path.ChangeExtension(plc,".xml"));
+                var create=sourceXml.Descendants("member").Single(m=>(string?)m.Attribute("name")=="M:Siemens.Engineering.SW.ExternalSources.PlcExternalSourceComposition.CreateFromFile(System.String,System.String)");
+                check(create.Elements("param").Select(p=>(string?)p.Attribute("name")).SequenceEqual(new[]{"name","path"}),key+" official CreateFromFile argument order");
+                if(key!="14sp1")
+                {
+                    var result=sourceXml.Descendants("member").Single(m=>(string?)m.Attribute("name")=="M:Siemens.Engineering.SW.ExternalSources.PlcExternalSource.GenerateBlocksFromSource(Siemens.Engineering.SW.ExternalSources.GenerateBlockOption)");
+                    check(result.Element("returns")!.Value.Contains("IList<Siemens.Engineering.IEngineeringObject>"),key+" official generation returns the actual engineering objects");
+                }
+            }
             CheckMembers(plc,"Siemens.Engineering.SW.Blocks.PlcBlock",new[]{"Name","ProgrammingLanguage","MemoryLayout","IsConsistent","HeaderName","ModifiedDate","IsKnowHowProtected"},true,check);
             CheckMembers(plc,"Siemens.Engineering.SW.Types.PlcType",new[]{"Name","IsConsistent","ModifiedDate","IsKnowHowProtected"},true,check);
             foreach(var apiType in new[]{"Siemens.Engineering.SW.Blocks.PlcBlock","Siemens.Engineering.SW.Types.PlcType","Siemens.Engineering.SW.Tags.PlcTagTable"}) CheckMembers(plc,apiType,new[]{"Export"},false,check);
@@ -104,6 +141,8 @@ internal static class ApiMetadataTests
                 if(filtered) check(md.GetString(parameters[1].Name)=="regexName" && (parameters[1].Attributes & ParameterAttributes.Optional)!=0,"Real optional regex parameter "+key);
             }
             foreach(var pair in new Dictionary<string,string[]> {
+                ["ImportPlcExternalSource"]=new[]{"softwarePath","groupPath","filePath","dryRun","expectedPlanHash","confirm","expectedProjectFile"},
+                ["GenerateBlocksFromExternalSource"]=new[]{"softwarePath","externalSourceName","dryRun","expectedPlanHash","confirm","expectedProjectFile"},
                 ["CompileSoftware"]=new[]{"softwarePath","password","dryRun"},
                 ["ExportBlock"]=new[]{"softwarePath","blockPath","exportPath","preservePath","dryRun"},
                 ["ExportType"]=new[]{"softwarePath","exportPath","typePath","preservePath","dryRun"},

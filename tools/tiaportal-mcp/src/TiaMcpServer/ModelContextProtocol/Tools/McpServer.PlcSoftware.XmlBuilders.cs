@@ -39,13 +39,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcUdtXml"), Description("[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC UDT/PlcStruct XML document from structured JSON. Input: {members:[{name,datatype,externalWritable?,commentZhCn?}]}. It only returns XML; it does not connect to TIA Portal, import types, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcUdtXml"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
         public static ResponseXmlBuild BuildPlcUdtXml(
-            [Description("udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment.")] string udtJson)
+            [Description("udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment.")] string udtJson,
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson), "PLC UDT XML built offline");
+                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildUdt(udtJson, outputReleaseKey), "PLC UDT XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {
@@ -67,13 +68,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "BuildPlcGlobalDbXml"), Description("[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC GlobalDB XML document from structured JSON. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.")]
+        [McpServerTool(Name = "BuildPlcGlobalDbXml"), Description("[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release's interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.")]
         public static ResponseXmlBuild BuildPlcGlobalDbXml(
-            [Description("globalDbJson: JSON object with dbName/name, dbNumber/number, and staticMembers[] or members[].")] string globalDbJson)
+            [Description("globalDbJson: JSON object with dbName/name, dbNumber/number, and staticMembers[] or members[].")] string globalDbJson,
+            [Description("outputReleaseKey: 14sp1|15.1|16|17|18|19|20|21. Target declaration XML format; independent of the connected host. Default 21 preserves existing calls.")] string outputReleaseKey = "21")
         {
             try
             {
-                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson), "PLC GlobalDB XML built offline");
+                return BuildOfflineXmlBuilderReport(PlcBuilderToolJson.BuildGlobalDb(globalDbJson, outputReleaseKey), "PLC GlobalDB XML built offline");
             }
             catch (Exception ex) when (ex is not McpException)
             {

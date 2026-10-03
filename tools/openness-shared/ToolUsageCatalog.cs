@@ -54,7 +54,7 @@ namespace TiaOpenness.Shared
             if (row == null) return null;
             var extension = (string?)Data.Value["calls"]?["releaseExtensions"]?[release] ?? release;
             // Only our explicit format tokens are replaced; braces in JSON/code are preserved.
-            return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension)
+            return JsonNode.Parse(row.ToJsonString().Replace("{extension}", extension).Replace("{release}", release)
                 .Replace("{major}", release == "14sp1" ? "14" : release == "15.1" ? "15" : release))!.AsObject();
         }
 

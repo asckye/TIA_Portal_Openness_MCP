@@ -365,7 +365,7 @@ namespace TiaMcp.PlcFoundation
             var compiler = ((IEngineeringServiceProvider)selected.Value).GetService<ICompilable>()
                 ?? throw new NotSupportedException("The selected software does not provide ICompilable.");
             if(dryRun) return new PlcCompileResult { Executed=false,ProjectFile=Project().Path.FullName };
-            RequireTargetOffline(selected); RequireProjectOffline();
+            RequireTargetOffline(selected); var unobservedDevices=CheckProjectOfflineProviders();
             CompilerResult result;
 #if PLC_SAFETY
             Siemens.Engineering.Safety.SafetyAdministration? admin=null;
@@ -387,7 +387,7 @@ namespace TiaMcp.PlcFoundation
                     loggedOnHere=true;
                 }
             }
-            try { RequireTargetOffline(selected); RequireProjectOffline(); result=compiler.Compile(); }
+            try { RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler.Compile(); }
             catch(Exception ex)
             {
                 if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch { ex.Data["safetyCleanup"]="Safety logoff also failed; inspect the session manually."; } }
@@ -395,9 +395,9 @@ namespace TiaMcp.PlcFoundation
             }
             if(loggedOnHere) { try { admin!.LogoffFromSafetyOfflineProgram(); } catch { throw new InvalidOperationException("Compile returned but safety logoff failed; session outcome is unknown."); } }
 #else
-            RequireTargetOffline(selected); RequireProjectOffline(); result=compiler.Compile();
+            RequireTargetOffline(selected); unobservedDevices=CheckProjectOfflineProviders(); result=compiler.Compile();
 #endif
-            var response=new PlcCompileResult { Executed=true, ProjectFile=Project().Path.FullName, State=result.State.ToString(), ErrorCount=result.ErrorCount,WarningCount=result.WarningCount };
+            var response=new PlcCompileResult { Executed=true, ProjectFile=Project().Path.FullName, State=result.State.ToString(), ErrorCount=result.ErrorCount,WarningCount=result.WarningCount,OfflineStateNotExposedByDevices=unobservedDevices };
             PlcCompilePolicy.Classify(response,Messages(result.Messages,0));
             return response;
         }
@@ -410,12 +410,8 @@ namespace TiaMcp.PlcFoundation
                 if(!string.IsNullOrWhiteSpace(m.Description)) parts.Add("Description="+m.Description);
                 if(!string.IsNullOrWhiteSpace(m.Path)) parts.Add("Path="+m.Path);
                 parts.Add("DateTime="+m.DateTime.ToString("O"));
-                foreach(var attribute in new[]{"Line","Column","BlockName","Severity","ErrorCode","Message","Text","ObjectPath"})
-                {
-                    object? value=null;
-                    try { value=((IEngineeringObject)m).GetAttribute(attribute); } catch { }
-                    if(value!=null && !string.IsNullOrWhiteSpace(value.ToString())) parts.Add(attribute+"="+value);
-                }
+                parts.Add("ErrorCount="+m.ErrorCount);
+                parts.Add("WarningCount="+m.WarningCount);
                 yield return new PlcDiagnostic { State=m.State.ToString(),Description=m.Description ?? "",Formatted=string.Join("; ",parts),HasChildren=m.Messages.Count!=0 };
                 foreach (var child in Messages(m.Messages, depth + 1)) yield return child;
             }

@@ -16,10 +16,10 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class PlcGlobalDbXmlBuilder
     {
-        private static readonly XNamespace InterfaceNs = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
-
-        public static XDocument BuildDocument(string dbName, int dbNumber, IEnumerable<PlcDbMemberDefinition> staticMembers)
+        public static XDocument BuildDocument(string dbName, int dbNumber, IEnumerable<PlcDbMemberDefinition> staticMembers, string outputReleaseKey = "21")
         {
+            var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
+            var interfaceNs = format.InterfaceNamespace;
             if (string.IsNullOrWhiteSpace(dbName))
                 throw new ArgumentException("DB 名称不能为空。", nameof(dbName));
             if (dbNumber <= 0)
@@ -33,7 +33,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return new XDocument(
                 new XDeclaration("1.0", "utf-8", null),
                 new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("Engineering", new XAttribute("version", format.EngineeringVersion)),
                     new XElement("DocumentInfo",
                         new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
                         new XElement("ExportSetting", "None"),
@@ -42,21 +42,21 @@ namespace TiaMcpServer.ModelContextProtocol
                         new XAttribute("ID", "0"),
                         new XElement("AttributeList",
                             new XElement("Interface",
-                                new XElement(InterfaceNs + "Sections",
-                                    new XElement(InterfaceNs + "Section",
+                                new XElement(interfaceNs + "Sections",
+                                    new XElement(interfaceNs + "Section",
                                         new XAttribute("Name", "Static"),
-                                        members.Select(BuildMember)))),
+                                        members.Select(member => BuildMember(member, interfaceNs))))),
                             new XElement("MemoryLayout", "Standard"),
                             new XElement("Name", dbName),
-                            new XElement("Namespace"),
+                            format.HasObjectNamespace ? new XElement("Namespace") : null,
                             new XElement("Number", dbNumber),
                             new XElement("ProgrammingLanguage", "DB")))));
         }
 
-        public static string BuildXml(string dbName, int dbNumber, IEnumerable<PlcDbMemberDefinition> staticMembers)
+        public static string BuildXml(string dbName, int dbNumber, IEnumerable<PlcDbMemberDefinition> staticMembers, string outputReleaseKey = "21")
         {
             using var writer = new Utf8StringWriter();
-            BuildDocument(dbName, dbNumber, staticMembers).Save(writer, SaveOptions.None);
+            BuildDocument(dbName, dbNumber, staticMembers, outputReleaseKey).Save(writer, SaveOptions.None);
             return writer.ToString();
         }
 
@@ -152,7 +152,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static XElement BuildMember(PlcDbMemberDefinition member)
+        private static XElement BuildMember(PlcDbMemberDefinition member, XNamespace InterfaceNs)
         {
             var element = new XElement(InterfaceNs + "Member",
                 new XAttribute("Name", member.Name),

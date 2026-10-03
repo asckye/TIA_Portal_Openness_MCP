@@ -34,8 +34,10 @@ not claim native acceptance from schema validation. Coverage distinguishes param
 complete sources, fragments and exported-module edits; native acceptance is separate.
 The transport audit executes allowlisted in-memory examples on all eight releases.
 Object property paths use `{property,name?}` steps; device/item name paths are a
-different grammar. Shared builders can emit V21 XML on older hosts; preserve their
-output-format notes and exact project extensions such as `.ap15_1`.
+different grammar. UDT/GlobalDB builders select an explicit exact output release;
+other shared builders still emit V21 XML. Preserve output-format notes and exact
+project extensions such as `.ap15_1`. Foundation external-source import/generation
+now have a dedicated profile sequence in the same library, not a separate guide system.
 
 Shared release identities, environment facts and dependency planning live under
 `tools/openness-shared` and the linked version catalog. Native API-bound assemblies
@@ -53,9 +55,17 @@ A [p2051[0] BICO read crash](startdrive-bico-read-regression.md) was reported. T
 read path now avoids detailed property/bit traversal; native acceptance and the actual
 crash cause remain unconfirmed. This report supersedes any blanket BICO-read claim.
 
-The seven pending names in the historical 62-tool migration ledger remain pending;
-that ledger is not the full official API gap count. The version matrix distinguishes
-the migration backlog, missing dedicated API families, and signatures requiring review.
+The historical 62-tool migration ledger is not the full official API gap count.
+Its external-source import/generation routes now have typed implementations; five
+other pending names and broader API families remain. The current functional matrix
+in `reference/version-feature-matrix.json` distinguishes actual routes, SDK evidence,
+partial scope, unsupported versions and native acceptance.
+Foundation compilation now checks top-level, ungrouped and nested project devices
+instead of refusing every execution. It requires positive Offline observations
+for the selected PLC and all observable project providers. HMI/passive devices without
+a provider are listed in `offlineStateNotExposedByDevices`, not asserted Offline; the
+official all-device offline prerequisite still applies. Compiler
+diagnostics use the documented typed fields and recursive message collection.
 VCI uses legacy APIs on V16–V19 and modern APIs on V20/V21; V14 SP1/V15.1 have no VCI.
 Real project import/export, compile and VCI roundtrips still need per-version acceptance.
 
@@ -71,7 +81,9 @@ pwsh -NoProfile -File ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK
 This runs the full build unless `-SkipFullEngines` is explicitly chosen after a fresh
 full build. It then builds workers/Studio, runs functional tests, audits the official
 XML and writes runtime/source hashes. Do not edit compiler inputs during a build.
-Run repository links, dead-tool references and strict bundle validation before commit.
+Set `TIA_MCP_TEST_PUBLIC_API_ROOT` to the SDK root to include eight-release UDT/GlobalDB
+interface-XSD tests; native import/CPU semantics remain separate. Run repository links,
+dead-tool references and strict bundle validation before commit.
 Use explicit `git add` paths, never `git add -A`; preserve local SDKs, handoff files
 and user design references. Keep binaries out of Git. Do not add AI sign-off lines.
 

@@ -6,9 +6,53 @@ using TiaMcp.PlcFoundation;
 
 internal static class CompileContractTests
 {
+    private sealed class Device
+    {
+        internal readonly string Name;
+        internal string? State="Offline";
+        internal bool Covered=true;
+        internal Device(string name) { Name=name; }
+    }
+    private sealed class Group
+    {
+        internal Device[] Devices=Array.Empty<Device>();
+        internal Group[] Children=Array.Empty<Group>();
+    }
     internal static void Run(Action<bool,string> check)
     {
-        { try { PlcOfflinePolicy.RequireReviewedExecution("hardware coverage"); throw new Exception("Incomplete execution review admitted"); } catch(NotSupportedException) { check(true,"Unproven hardware coverage remains blocked"); } }
+        var root=new Device("root"); var ungrouped=new Device("ungrouped"); var nested=new Device("nested");
+        var group=new Group { Children=new[]{new Group { Devices=new[]{nested} }} };
+        var observed=new List<string>(); int compilations=0;
+        void Compile()
+        {
+            PlcOfflinePolicy.RequireProjectDevicesOffline(new[]{root},new[]{ungrouped},new[]{group},
+                g=>g.Devices,g=>g.Children,d=>
+                { observed.Add(d.Name); PlcOfflinePolicy.RequireStates(new[]{d.State},d.Covered,d.Name); });
+            compilations++;
+        }
+        Compile();
+        check(compilations==1 && observed.SequenceEqual(new[]{"root","ungrouped","nested"}),"Positive project-wide offline evidence admits compilation and includes nested/ungrouped devices");
+        foreach(var device in new[]{root,ungrouped,nested})
+        {
+            device.State="Online";
+            try { Compile(); throw new Exception("Online project device admitted"); }
+            catch(InvalidOperationException) { check(compilations==1,"Online device prevents compilation: "+device.Name); }
+            device.State="Offline";
+        }
+        nested.Covered=false;
+        try { Compile(); throw new Exception("Unknown device coverage admitted"); }
+        catch(NotSupportedException) { check(compilations==1,"Unknown PLC device coverage prevents compilation"); }
+        nested.Covered=true;
+        try { PlcOfflinePolicy.RequireProjectDevicesOffline(Array.Empty<Device>(),Array.Empty<Device>(),Array.Empty<Group>(),g=>g.Devices,g=>g.Children,d=>{}); throw new Exception("Empty project admitted"); }
+        catch(NotSupportedException) { check(true,"Empty project cannot prove all devices offline"); }
+        try { PlcOfflinePolicy.RequireProjectDevicesOffline(Array.Empty<Device>(),Array.Empty<Device>(),new[]{group},g=>throw new IOException("inventory read failed"),g=>g.Children,d=>{}); throw new Exception("Unreadable inventory admitted"); }
+        catch(IOException) { check(true,"Device inventory failure propagates before compilation"); }
+        check(!PlcOfflinePolicy.CheckCompileStates(Array.Empty<string>(),true,"HMI"),"A device with no PLC online service is reported unobserved, not falsely treated as Online");
+        check(PlcOfflinePolicy.CheckCompileStates(new[]{"Offline"},true,"PLC"),"Observed offline PLC state is accepted for compilation");
+        try { PlcOfflinePolicy.CheckCompileStates(Array.Empty<string>(),false,"PLC"); throw new Exception("Missing PLC provider admitted"); }
+        catch(NotSupportedException) { check(true,"Missing required PLC provider is distinct from non-PLC devices without that service"); }
+        try { PlcOfflinePolicy.CheckCompileStates(new[]{"Online"},true,"PLC"); throw new Exception("Online PLC admitted"); }
+        catch(InvalidOperationException) { check(true,"Observable online project device still blocks compilation"); }
         foreach(var release in new[]{"14sp1","15.1","16","17","18","19","20","21"}) { PlcOfflinePolicy.RequireDocumentedRelease(release); check(true,"Exact-release offline workflow reviewed "+release); }
         foreach(var release in new[]{"14","15","bogus"})
         { try { PlcOfflinePolicy.RequireDocumentedRelease(release); throw new Exception("Missing manual evidence admitted"); } catch(NotSupportedException) { check(true,"Unreviewed release denied"); } }
@@ -31,7 +75,7 @@ internal static class CompileContractTests
             }
             else { PlcCompilePolicy.RequirePasswordCapability(key,"do-not-echo"); check(true,"Safety login API version admitted "+key); }
         }
-        var result=new PlcCompileResult { Executed=true,ProjectFile=@"C:\Projects\P.ap17",State="Error",ErrorCount=7,WarningCount=3 };
+        var result=new PlcCompileResult { Executed=true,ProjectFile=@"C:\Projects\P.ap17",State="Error",ErrorCount=7,WarningCount=3,OfflineStateNotExposedByDevices=new[]{"HMI_1"} };
         PlcCompilePolicy.Classify(result,new[]{
             new PlcDiagnostic { State="Error",Description="",Formatted="parent",HasChildren=true },
             new PlcDiagnostic { State="Error",Description="Bad symbol",Formatted="error" },
@@ -45,6 +89,7 @@ internal static class CompileContractTests
         var payload=JsonSerializer.SerializeToNode(result)!;
         var output=V17CompileEnvelope.Wrap("CompileAndDiagnosePlc",payload,false);
         check(output[Wire("ErrorCount")]!.GetValue<int>()==7 && !output[Wire("Meta")]!["success"]!.GetValue<bool>(),"Compiler errors cannot be reported as successful compile");
+        check((string?)output[Wire("Meta")]!["offlineStateNotExposedByDevices"]![0]=="HMI_1","Compile output reports devices whose online state was not exposed");
         check(((JsonArray)output[Wire("RawMessages")]!).Count==6 && ((JsonArray)output[Wire("Errors")]!).Count==1,"V17 diagnostic fields preserved");
         output=V17CompileEnvelope.Wrap("CompileSoftware",payload,false);
         check(output[Wire("Messages")] is JsonArray && !output.ContainsKey(Wire("RawMessages")),"Basic compile response uses Messages");

@@ -1,19 +1,19 @@
 {
     "package":  "TIA_MCP_Delivery_v3.1.0_20261003",
-    "generatedAt":  "2026-10-03T10:01:48.0381971+00:00",
+    "generatedAt":  "2026-10-03T10:35:33.1591104+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.1.0.0",
-    "exeSha256":  "703d6daee4be6d990d698ea75f834a90635aa25a3266559f02dd0cfc77598a7f",
+    "exeSha256":  "f668d2a3bcd2cfddf6060f470346db0235e9eb046fd3eb7bf5859f61f4e19862",
     "toolCount":  488,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
-                           "parameters":  2347,
+                           "parameters":  2349,
                            "parametersUndocumented":  868,
                            "parametersFromVocabulary":  868,
                            "toolsWithUndocumentedParameters":  198,
                            "toolsWithEnumHints":  145,
                            "enumHints":  227,
-                           "defaultHints":  1417,
+                           "defaultHints":  1419,
                            "examplesCurated":  87,
                            "recipes":  13
                        },
@@ -5677,9 +5677,10 @@
                       "method":  "BuildPlcGlobalDbXml",
                       "returnType":  "ResponseXmlBuild",
                       "parameters":  [
-                                         "globalDbJson"
+                                         "globalDbJson",
+                                         "outputReleaseKey"
                                      ],
-                      "description":  "[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC GlobalDB XML document from structured JSON. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. It only returns XML; it does not connect to TIA Portal, import blocks, write files, or modify projects.",
+                      "description":  "[L2][PLC-Builders][OFFLINE] Build flat PLC GlobalDB candidate XML using the selected release\u0027s interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {dbName,dbNumber,staticMembers:[{name,datatype,externalWritable?,commentZhCn?,startValue?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.",
                       "example":  null
                   },
                   {
@@ -5775,9 +5776,10 @@
                       "method":  "BuildPlcUdtXml",
                       "returnType":  "ResponseXmlBuild",
                       "parameters":  [
-                                         "udtJson"
+                                         "udtJson",
+                                         "outputReleaseKey"
                                      ],
-                      "description":  "[L2][PLC-Builders][OFFLINE] Build a TIA V21 PLC UDT/PlcStruct XML document from structured JSON. Input: {members:[{name,datatype,externalWritable?,commentZhCn?}]}. It only returns XML; it does not connect to TIA Portal, import types, write files, or modify projects.",
+                      "description":  "[L2][PLC-Builders][OFFLINE] Build flat PLC UDT/PlcStruct candidate XML using the selected release\u0027s interface schema. Explicit outputReleaseKey supports 14sp1, 15.1 and 16-21; default 21 preserves existing calls. Input: {name,members:[{name,datatype,externalWritable?,commentZhCn?}]}. Returns XML only. Runtime XSD and native import validation are separate; it does not connect, import or write files.",
                       "example":  null
                   },
                   {

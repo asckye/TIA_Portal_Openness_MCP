@@ -11,7 +11,8 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ]
     },
     {
@@ -189,12 +190,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "S7-1200/S7-1500. Save as .scl, then register the external source and generate blocks.",
         "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
@@ -235,12 +237,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "S7-1200/S7-1500; TON_TIME and R_TRIG instances belong in static VAR.",
         "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
@@ -286,12 +289,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "S7-1200/S7-1500; every temporary used here is assigned before it is read.",
         "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [
         "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
@@ -730,12 +734,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -768,12 +773,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -806,12 +812,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -844,12 +851,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -882,12 +890,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -920,12 +929,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []
@@ -958,12 +968,13 @@
         "WritePlcSclSourceFile",
         "ManagePlcExternalSources",
         "GenerateBlocksFromExternalSource",
-        "CompileSoftware"
+        "CompileSoftware",
+        "ImportPlcExternalSource"
       ],
       "notes": [
         "Existing project SCL template; keep declarations together with the complete block body.",
         "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
-        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+        "Foundation profiles use ImportPlcExternalSource followed by GenerateBlocksFromExternalSource, then CompileAndDiagnosePlc. Preview/confirmation and PascalCase results differ from full-engine calls; read GetToolUsage for the selected release. V14 SP1 generation has no native returned object list."
       ],
       "sourceUrls": [],
       "corrections": []

@@ -94,5 +94,6 @@ namespace TiaMcp.PlcFoundation
         public string[] Errors { get; internal set; } = new string[0];
         public string[] Warnings { get; internal set; } = new string[0];
         public string[] Info { get; internal set; } = new string[0];
+        public string[] OfflineStateNotExposedByDevices { get; internal set; } = new string[0];
     }
 }

@@ -153,20 +153,21 @@
       "BuildPlcGlobalDbXml": {
         "arguments": {
           "globalDbJson": "{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "{release}"
         },
         "parameters": {
           "globalDbJson": {
             "meaning": "JSON {dbName,dbNumber:positive integer,staticMembers:[{name,datatype,externalWritable?:boolean,commentZhCn?:string,startValue?:string}]}; flat members, 1..1000 rows, strings <=4096. Aliases documented in legacy-offline-composition-candidate.md."
           },
           "outputReleaseKey": {
-            "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "executionTest": "offline-in-memory",
-        "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import.",
         "resultContract": {
           "type": "FoundationCandidateXml",
           "fields": {
@@ -274,20 +275,21 @@
       "BuildPlcUdtXml": {
         "arguments": {
           "udtJson": "{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}",
-          "outputReleaseKey": "21"
+          "outputReleaseKey": "{release}"
         },
         "parameters": {
           "udtJson": {
             "meaning": "udtJson"
           },
           "outputReleaseKey": {
-            "meaning": "Explicit XML output format. Only 21 is implemented; host version does not convert it."
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
           }
         },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "executionTest": "offline-in-memory",
-        "note": "Output is V21 candidate XML even on an older host. Do not import it into the host release or rewrite version headers; obtain a native target-version export.",
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import.",
         "resultContract": {
           "type": "FoundationCandidateXml",
           "fields": {
@@ -425,7 +427,7 @@
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
-        "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals.",
+        "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically.",
         "resultContract": {
           "type": "FoundationCompileDiagnosis",
           "fields": {
@@ -460,7 +462,8 @@
           "scope": "Selected fields of the foundation wire result; other operation fields may be present."
         },
         "resultReading": [
-          "Preview is not compilation. After execution inspect errors and rawMessages including nested diagnostics; do not sum overlapping native counts."
+          "Preview is not compilation. After execution inspect errors and rawMessages including nested diagnostics; do not sum overlapping native counts.",
+          "Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically."
         ]
       },
       "CompileSoftware": {
@@ -493,7 +496,7 @@
           },
           "meaning": "Use only after reviewing this same preview for the intended project."
         },
-        "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals.",
+        "note": "Default preview has state/errorCount/warningCount=null. After execution inspect state, counts and nested diagnostics; do not add overlapping subtree totals. Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically.",
         "resultContract": {
           "type": "FoundationCompile",
           "fields": {
@@ -519,7 +522,8 @@
           "scope": "Selected fields of the foundation wire result; other operation fields may be present."
         },
         "resultReading": [
-          "Preview has null counts/state and meta.executed=false. Actual success requires native state/counts and inspection of nested messages; summary counts overlap."
+          "Preview has null counts/state and meta.executed=false. Actual success requires native state/counts and inspection of nested messages; summary counts overlap.",
+          "Siemens requires all project devices offline before compilation. The wrapper checks the selected PLC and all exposed project OnlineProvider/RHOnlineProvider states, including nested/ungrouped devices. HMI/passive devices without a state provider are listed in meta.offlineStateNotExposedByDevices; absence is not proof of Offline. No connection state is changed automatically."
         ]
       },
       "ComposePlcFbBlockXml": {
@@ -2523,6 +2527,252 @@
         "resultReading": [
           "Inspect Meta.complete/truncated; Items contain exact ArticleNumber, TypeIdentifier and Version. A catalog match is not insertion compatibility."
         ]
+      },
+      "ImportPlcExternalSource": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "filePath": "C:\\Examples\\FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy the exact selected PLC path from GetProjectTree; device/name aliases are not accepted by this operation."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "C:\\Examples\\Example.ap{extension}",
+            "meaning": "Copy ProjectFile from the bound foundation session."
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<PlanHash returned by this operation preview>",
+            "requiresBinding": true,
+            "meaning": "Preview and execution must describe the same source, file/inventory and bound project."
+          },
+          "groupPath": {
+            "exampleValue": "",
+            "meaning": "The native ordinary external-source group is root-only; use an empty string."
+          },
+          "filePath": {
+            "exampleValue": "C:\\Examples\\FC_Add.scl",
+            "meaning": "Absolute Windows path to the actual local ASCII source; import derives the requested source name from this filename."
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "execution": {
+          "arguments": {
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact ProjectFile from this session>",
+            "expectedPlanHash": "<PlanHash from this operation preview>"
+          },
+          "meaning": "Review the intended source/PLC and the preview. Reuse the exact project and this operation's PlanHash; import and generation have separate plans."
+        },
+        "note": "Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups. Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code. Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically.",
+        "resultContract": {
+          "type": "FoundationExternalSourceWorkflow",
+          "fields": {
+            "Operation": {
+              "type": "string"
+            },
+            "Status": {
+              "type": "string"
+            },
+            "Attempted": {
+              "type": "boolean"
+            },
+            "Executed": {
+              "type": "boolean"
+            },
+            "RequiresSessionReset": {
+              "type": "boolean"
+            },
+            "Error": {
+              "type": "string"
+            },
+            "Release": {
+              "type": "string"
+            },
+            "ProjectFile": {
+              "type": "string"
+            },
+            "ProcessId": {
+              "type": "integer"
+            },
+            "SoftwarePath": {
+              "type": "string"
+            },
+            "GroupPath": {
+              "type": "string"
+            },
+            "SourceName": {
+              "type": "string"
+            },
+            "PlanHash": {
+              "type": "string"
+            },
+            "Compilation": {
+              "type": "string"
+            },
+            "Save": {
+              "type": "string"
+            },
+            "Download": {
+              "type": "string"
+            },
+            "FilePath": {
+              "type": "string"
+            },
+            "RequestedSourceName": {
+              "type": "string"
+            },
+            "InputSha256": {
+              "type": "string"
+            },
+            "ByteCount": {
+              "type": "integer"
+            },
+            "SourceNamesAfter": {
+              "type": "array"
+            },
+            "Generation": {
+              "type": "string"
+            }
+          },
+          "scope": "PascalCase raw worker result; generation object rows expose Kind, Path, Name, TypeName, ProgrammingLanguage, IsConsistent and ModifiedDate."
+        },
+        "resultReading": [
+          "Input is one ASCII .scl/.awl/.db/.udt file already written on the TIA host. The ordinary external-source root does not support subgroups.",
+          "Status=completed and Executed=true mean source registration and readback completed. Use returned SourceName verbatim, including any extension, for generation; import does not generate or compile PLC code.",
+          "Status=outcome-unknown is not success. Inspect the project before another explicit session; never repeat the write automatically."
+        ]
+      },
+      "GenerateBlocksFromExternalSource": {
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "externalSourceName": "FC_Add.scl",
+          "dryRun": true,
+          "confirm": false
+        },
+        "parameters": {
+          "softwarePath": {
+            "meaning": "Copy the exact selected PLC path from GetProjectTree; device/name aliases are not accepted by this operation."
+          },
+          "expectedProjectFile": {
+            "exampleValue": "C:\\Examples\\Example.ap{extension}",
+            "meaning": "Copy ProjectFile from the bound foundation session."
+          },
+          "expectedPlanHash": {
+            "exampleValue": "<PlanHash returned by this operation preview>",
+            "requiresBinding": true,
+            "meaning": "Preview and execution must describe the same source, file/inventory and bound project."
+          },
+          "externalSourceName": {
+            "exampleValue": "FC_Add.scl",
+            "meaning": "Copy SourceName from the completed import. Do not strip the file extension or guess the generated block name."
+          }
+        },
+        "operations": {},
+        "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
+        "execution": {
+          "arguments": {
+            "dryRun": false,
+            "confirm": true,
+            "expectedProjectFile": "<exact ProjectFile from this session>",
+            "expectedPlanHash": "<PlanHash from this operation preview>"
+          },
+          "meaning": "Review the intended source/PLC and the preview. Reuse the exact project and this operation's PlanHash; import and generation have separate plans."
+        },
+        "note": "Use the exact SourceName returned by import or GetPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution. Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompileAndDiagnosePlc and inspect state, aggregate counts and nested diagnostics. V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list. Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import. Status=outcome-unknown requires inspection; do not repeat generation automatically.",
+        "resultContract": {
+          "type": "FoundationExternalSourceWorkflow",
+          "fields": {
+            "Operation": {
+              "type": "string"
+            },
+            "Status": {
+              "type": "string"
+            },
+            "Attempted": {
+              "type": "boolean"
+            },
+            "Executed": {
+              "type": "boolean"
+            },
+            "RequiresSessionReset": {
+              "type": "boolean"
+            },
+            "Error": {
+              "type": "string"
+            },
+            "Release": {
+              "type": "string"
+            },
+            "ProjectFile": {
+              "type": "string"
+            },
+            "ProcessId": {
+              "type": "integer"
+            },
+            "SoftwarePath": {
+              "type": "string"
+            },
+            "GroupPath": {
+              "type": "string"
+            },
+            "SourceName": {
+              "type": "string"
+            },
+            "PlanHash": {
+              "type": "string"
+            },
+            "Compilation": {
+              "type": "string"
+            },
+            "Save": {
+              "type": "string"
+            },
+            "Download": {
+              "type": "string"
+            },
+            "SourceIdentity": {
+              "type": "string"
+            },
+            "GenerationOption": {
+              "type": "string"
+            },
+            "ResultBasis": {
+              "type": "string"
+            },
+            "MayOverwriteExistingBlocks": {
+              "type": "boolean"
+            },
+            "SourceContentReviewed": {
+              "type": "boolean"
+            },
+            "ObjectsBefore": {
+              "type": "array"
+            },
+            "ObjectsAfter": {
+              "type": "array"
+            },
+            "GeneratedObjects": {
+              "type": "array"
+            },
+            "ObservedChanges": {
+              "type": "array"
+            }
+          },
+          "scope": "PascalCase raw worker result; generation object rows expose Kind, Path, Name, TypeName, ProgrammingLanguage, IsConsistent and ModifiedDate."
+        },
+        "resultReading": [
+          "Use the exact SourceName returned by import or GetPlcExternalSources. Generation can overwrite existing blocks/types; review the intended source and project before execution.",
+          "Preview inspects source identity and existing block/type metadata, not the source contents. Generation is not full PLC compilation: subsequently call CompileAndDiagnosePlc and inspect state, aggregate counts and nested diagnostics.",
+          "V15.1+ uses GenerateBlockOption.None and maps native returned objects to actual PLC paths. V14 SP1 has only a void method: GeneratedObjects remains empty; ObjectsAfter/ObservedChanges are inventory observations, not a complete generated-object list.",
+          "Status=failed, Attempted=true, Executed=false and RequiresSessionReset=false mean the native generator rejected the source and restored its generation changes. Read Error, correct the source and prepare a fresh preview before an explicit retry. This rollback guarantee applies to generation only, not source import.",
+          "Status=outcome-unknown requires inspection; do not repeat generation automatically."
+        ]
       }
     },
     "full-engine": {
@@ -2848,13 +3098,19 @@
       },
       "BuildPlcGlobalDbXml": {
         "arguments": {
-          "globalDbJson": "{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}"
+          "globalDbJson": "{\"dbName\":\"DB_Status\",\"dbNumber\":10,\"staticMembers\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"startValue\":\"FALSE\"}]}",
+          "outputReleaseKey": "{release}"
         },
-        "parameters": {},
+        "parameters": {
+          "outputReleaseKey": {
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
       },
       "BuildPlcSymbolManifestFromXmlPath": {
         "arguments": {
@@ -2876,13 +3132,19 @@
       },
       "BuildPlcUdtXml": {
         "arguments": {
-          "udtJson": "{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}"
+          "udtJson": "{\"name\":\"UDT_Status\",\"members\":[{\"name\":\"Ready\",\"datatype\":\"Bool\",\"comment\":\"Ready state\"}]}",
+          "outputReleaseKey": "{release}"
         },
-        "parameters": {},
+        "parameters": {
+          "outputReleaseKey": {
+            "exampleValue": "{release}",
+            "meaning": "Explicit candidate XML target release: 14sp1, 15.1, 16, 17, 18, 19, 20 or 21. It is independent of the running host version."
+          }
+        },
         "operations": {},
         "validation": "Parameterized project call example; checked against this engine input schema. Bind target-dependent values before calling. Native execution NOT RUN.",
         "executionTest": "offline-in-memory",
-        "note": "The shared offline generator emits V21 XML (StructuredText/FlgNet emit namespace-scoped fragments), also when hosted by V20. Generation does not prove target-version XSD/import/compile acceptance. Use a native export for target-version formats."
+        "note": "Generate a new flat declaration for the explicit outputReleaseKey. The builder selects the target Interface namespace and version-dependent object attributes. This is not conversion of arbitrary exported XML. Inspect outputReleaseKey/interfaceNamespace; shipped interface XSD tests do not certify the whole document, referenced PLC types or native import."
       },
       "BuildReleaseDiagnosticReport": {
         "arguments": {

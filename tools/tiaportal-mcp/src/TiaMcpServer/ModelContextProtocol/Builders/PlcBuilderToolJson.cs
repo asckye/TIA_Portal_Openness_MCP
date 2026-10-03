@@ -12,7 +12,7 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     internal static class PlcBuilderToolJson
     {
-        public static JsonObject BuildUdt(string json)
+        public static JsonObject BuildUdt(string json, string outputReleaseKey = "21")
         {
             var root = ParseObject(json, "$");
             var udtName = ReadString(root, "$.name", "name", "udtName");
@@ -24,12 +24,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     ReadOptionalString(AsObject(x, "$.members[" + i + "]"), "commentZhCn", "comment", "commentZh")))
                 .ToArray();
 
-            var xml = PlcUdtXmlBuilder.BuildXml(udtName, members);
-            return BuildResult("plc-build-udt-xml", xml, new JsonObject
+            var xml = PlcUdtXmlBuilder.BuildXml(udtName, members, outputReleaseKey);
+            return BuildDeclarationResult("plc-build-udt-xml", xml, new JsonObject
             {
                 ["udtName"] = udtName,
                 ["memberCount"] = members.Length
-            });
+            }, outputReleaseKey);
         }
 
         public static JsonObject BuildTagTable(string json)
@@ -55,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        public static JsonObject BuildGlobalDb(string json)
+        public static JsonObject BuildGlobalDb(string json, string outputReleaseKey = "21")
         {
             var root = ParseObject(json, "$");
             var dbName = ReadString(root, "$.dbName", "dbName", "name");
@@ -77,13 +77,13 @@ namespace TiaMcpServer.ModelContextProtocol
                 })
                 .ToArray();
 
-            var xml = PlcGlobalDbXmlBuilder.BuildXml(dbName, dbNumber, members);
-            return BuildResult("plc-build-global-db-xml", xml, new JsonObject
+            var xml = PlcGlobalDbXmlBuilder.BuildXml(dbName, dbNumber, members, outputReleaseKey);
+            return BuildDeclarationResult("plc-build-global-db-xml", xml, new JsonObject
             {
                 ["dbName"] = dbName,
                 ["dbNumber"] = dbNumber,
                 ["memberCount"] = members.Length
-            });
+            }, outputReleaseKey);
         }
 
         public static JsonObject BuildStructuredText(string json, bool innerOnly = false)
@@ -408,6 +408,20 @@ namespace TiaMcpServer.ModelContextProtocol
             throw new ArgumentException("Missing required StructuredText content: $.structuredTextInnerXml or $.structuredText.operations");
         }
 
+        private static JsonObject BuildDeclarationResult(string mode, string xml, JsonObject summary, string outputReleaseKey)
+        {
+            var format = PlcDeclarationXmlFormat.ForRelease(outputReleaseKey);
+            var result = BuildResult(mode, xml, summary);
+            result["outputReleaseKey"] = format.ReleaseKey;
+            result["interfaceNamespace"] = format.InterfaceNamespace.NamespaceName;
+            result["interfaceSchemaFile"] = format.InterfaceSchemaFile;
+            result["schemaValidated"] = false;
+            result["importValidated"] = false;
+            result["nativeAcceptance"] = "NOT RUN";
+            result["validationScope"] = PlcDeclarationXmlFormat.Warning;
+            return result;
+        }
+
         private static JsonObject BuildResult(string mode, string xml, JsonObject summary)
         {
             var parseOk = true;
@@ -435,6 +449,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 ["ok"] = parseOk,
                 ["mode"] = mode,
                 ["offlineOnly"] = true,
+                ["outputReleaseKey"] = "21",
                 ["xmlParseOk"] = parseOk,
                 ["error"] = string.IsNullOrWhiteSpace(error) ? null : JsonValue.Create(error),
                 ["xml"] = xml,

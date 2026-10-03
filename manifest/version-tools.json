@@ -5,7 +5,7 @@
   "releases": {
     "14sp1": {
       "profile": "plc-foundation",
-      "toolCount": 55,
+      "toolCount": 57,
       "tools": [
         "AttachToOpenProject",
         "Bootstrap",
@@ -34,6 +34,7 @@
         "ExportPlcTagTable",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -50,6 +51,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -66,7 +68,7 @@
     },
     "15.1": {
       "profile": "plc-foundation",
-      "toolCount": 56,
+      "toolCount": 58,
       "tools": [
         "AttachToOpenProject",
         "Bootstrap",
@@ -95,6 +97,7 @@
         "ExportPlcTagTable",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -112,6 +115,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -128,7 +132,7 @@
     },
     "16": {
       "profile": "plc-foundation",
-      "toolCount": 58,
+      "toolCount": 60,
       "tools": [
         "AttachToOpenProject",
         "Bootstrap",
@@ -159,6 +163,7 @@
         "ExportTechnologyObject",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -176,6 +181,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -192,7 +198,7 @@
     },
     "17": {
       "profile": "plc-foundation",
-      "toolCount": 58,
+      "toolCount": 60,
       "tools": [
         "AttachToOpenProject",
         "Bootstrap",
@@ -223,6 +229,7 @@
         "ExportTechnologyObject",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -240,6 +247,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -256,7 +264,7 @@
     },
     "18": {
       "profile": "plc-foundation",
-      "toolCount": 58,
+      "toolCount": 60,
       "tools": [
         "AttachToOpenProject",
         "Bootstrap",
@@ -287,6 +295,7 @@
         "ExportTechnologyObject",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -304,6 +313,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -320,7 +330,7 @@
     },
     "19": {
       "profile": "plc-foundation",
-      "toolCount": 60,
+      "toolCount": 62,
       "tools": [
         "AddDeviceWithFallback",
         "AttachToOpenProject",
@@ -352,6 +362,7 @@
         "ExportTechnologyObject",
         "ExportType",
         "ExportTypes",
+        "GenerateBlocksFromExternalSource",
         "GetBlockInfo",
         "GetBlocks",
         "GetBlocksWithHierarchy",
@@ -369,6 +380,7 @@
         "GetTypes",
         "ImportBlock",
         "ImportBlocksFromDirectory",
+        "ImportPlcExternalSource",
         "ImportPlcProgramFromDirectory",
         "ImportPlcTagTable",
         "ImportType",
@@ -1363,8 +1375,8 @@
     }
   },
   "groupCounts": {
-    "shared-subset": 438,
-    "all-releases": 47,
+    "shared-subset": 436,
+    "all-releases": 49,
     "release-only": 11
   },
   "tools": [
@@ -2857,10 +2869,16 @@
     {
       "name": "GenerateBlocksFromExternalSource",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {
@@ -3579,10 +3597,16 @@
     {
       "name": "ImportPlcExternalSource",
       "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
         "20",
         "21"
       ],
-      "group": "shared-subset",
+      "group": "all-releases",
       "contract": "consult selected host schema; equal names do not guarantee equal contracts"
     },
     {

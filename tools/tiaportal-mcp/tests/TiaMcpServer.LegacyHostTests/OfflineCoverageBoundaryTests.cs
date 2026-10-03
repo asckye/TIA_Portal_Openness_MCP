@@ -96,7 +96,6 @@ internal static class OfflineCoverageBoundaryTests
         foreach(var release in new[]{"14sp1","15.1","16","17","18","19","20","21"})
             PlcOfflinePolicy.RequireDocumentedRelease(release);
         Fail(()=>PlcOfflinePolicy.RequireDocumentedRelease("15"),typeof(NotSupportedException),"Unreviewed release rejected");
-        Fail(()=>PlcOfflinePolicy.RequireReviewedExecution("project-wide compile"),typeof(NotSupportedException),"Target positive case never unlocks all-device compile");
         void Reject(string?[] states, bool covered, Type expected, string label)
         {
             Exception? failure = null;

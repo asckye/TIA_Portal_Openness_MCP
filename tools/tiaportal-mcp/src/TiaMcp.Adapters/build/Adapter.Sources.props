@@ -42,6 +42,8 @@
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcBatchDocumentExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcDocumentExportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExternalSourceImport.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflow.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExternalSourceWorkflowPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcExternalSourceImportPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcDocumentImport.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcDocumentImportPolicy.cs" />

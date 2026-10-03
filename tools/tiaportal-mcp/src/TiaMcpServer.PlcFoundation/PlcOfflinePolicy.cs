@@ -14,9 +14,22 @@ namespace TiaMcp.PlcFoundation
 
     internal static class PlcOfflinePolicy
     {
-        internal static void RequireReviewedExecution(string operation)
+        internal static void RequireProjectDevicesOffline<TDevice,TGroup>(
+            IEnumerable<TDevice> devices,IEnumerable<TDevice> ungrouped,IEnumerable<TGroup> groups,
+            Func<TGroup,IEnumerable<TDevice>> groupDevices,Func<TGroup,IEnumerable<TGroup>> children,
+            Action<TDevice> requireOffline)
         {
-            throw new NotSupportedException("Execution remains blocked for "+operation+": all-device inventory coverage review is incomplete; preview does not establish readiness.");
+            int count=0;
+            void CheckDevices(IEnumerable<TDevice> selected)
+            { foreach(var device in selected) { requireOffline(device); count++; } }
+            void CheckGroups(IEnumerable<TGroup> selected,int depth)
+            {
+                if(depth>128) throw new NotSupportedException("Project device-group tree is too deep.");
+                foreach(var group in selected)
+                { CheckDevices(groupDevices(group)); CheckGroups(children(group),depth+1); }
+            }
+            CheckDevices(devices); CheckDevices(ungrouped); CheckGroups(groups,0);
+            if(count==0) throw new NotSupportedException("An empty device inventory cannot establish all-device offline coverage.");
         }
         // Shared traversal/policy exercised with fake graphs; native service adapters
         // remain separately subject to real SDK builds and native acceptance.
@@ -59,6 +72,16 @@ namespace TiaMcp.PlcFoundation
         {
             if(!new[]{"14sp1","15.1","16","17","18","19","20","21"}.Contains(release))
                 throw new NotSupportedException("Offline-state workflow evidence is incomplete for release "+release+"; execution remains blocked.");
+        }
+        internal static bool CheckCompileStates(IEnumerable<string?> states,bool plcCoverageComplete,string scope)
+        {
+            var observed=states.ToArray();
+            if(!plcCoverageComplete) throw new NotSupportedException("A PLC in "+scope+" has no observable online-state provider.");
+            // OnlineProvider is a PLC service. HMI/passive devices may expose none;
+            // report that limitation rather than treating absence as Online or Offline.
+            if(observed.Length==0) return false;
+            RequireStates(observed,true,scope);
+            return true;
         }
         internal static void RequireStates(IEnumerable<string?> states,bool coverageComplete,string scope)
         {

@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference='Stop'
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $api=(Resolve-Path -LiteralPath $PublicApiRoot).Path
+$env:TIA_MCP_TEST_PUBLIC_API_ROOT=$api
 $logs=Join-Path $repo 'bin-build/multi-version'
 New-Item -ItemType Directory -Force $logs | Out-Null
 $env:DOTNET_GENERATE_ASPNET_CERTIFICATE='false'
@@ -52,7 +53,7 @@ Get-ChildItem -LiteralPath $studioBuild | ForEach-Object {Copy-Item -LiteralPath
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
 $validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
 if($Test) {
-    & $Dotnet run --project (Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj') -c Release *> (Join-Path $logs 'foundation-tests.log')
+    & $Dotnet run --project (Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj') -c Release -- $api (Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcp.Adapters') *> (Join-Path $logs 'foundation-tests.log')
     if($LASTEXITCODE){throw 'Foundation functional tests failed'}
     $fixture=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj'
     & $Dotnet build $fixture -c Release -v:q *> (Join-Path $logs 'fixture-build.log')

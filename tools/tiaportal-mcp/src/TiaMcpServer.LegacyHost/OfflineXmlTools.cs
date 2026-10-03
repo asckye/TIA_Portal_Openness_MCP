@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcp.LegacyHost;
 
@@ -25,11 +26,12 @@ internal sealed class OfflineXmlTool : McpServerTool
     {
         this.name = name;
         this.jsonParameter = jsonParameter;
+        var declaration = name == "BuildPlcUdtXml";
         tool = new Tool
         {
             Name = name,
-            Description = "[offline candidate; native unverified] Generate V21 candidate XML in memory only. Explicit outputReleaseKey='21' required, independent of host release. " +
-                OfflineXmlBuilders.Warning + " JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases.",
+            Description = "[offline candidate; native unverified] Generate XML in memory only; outputReleaseKey explicitly selects its format independently of the host release. " +
+                (declaration ? "Flat UDT generation supports 14sp1, 15.1 and 16-21, with their target interface schema. " + PlcDeclarationXmlFormat.Warning : OfflineXmlBuilders.Warning) + " JSON supports flat UDT members or PLC tags only; no unknown fields or conflicting aliases.",
             InputSchema = JsonSerializer.SerializeToElement(new JsonObject
             {
                 ["type"] = "object", ["additionalProperties"] = false,
@@ -37,8 +39,8 @@ internal sealed class OfflineXmlTool : McpServerTool
                 ["properties"] = new JsonObject
                 {
                     [jsonParameter] = new JsonObject { ["type"] = "string", ["maxLength"] = OfflineXmlBuilders.MaxJsonCharacters },
-                    ["outputReleaseKey"] = new JsonObject { ["type"] = "string", ["enum"] = new JsonArray("21"),
-                        ["description"] = "Required candidate output format, never inferred from the host release. Only exact 21 is available; target XSD/import validation pending." }
+                    ["outputReleaseKey"] = new JsonObject { ["type"] = "string", ["enum"] = declaration ? new JsonArray(PlcDeclarationXmlFormat.ReleaseKeys.Select(key => (JsonNode?)JsonValue.Create(key)).ToArray()) : new JsonArray("21"),
+                        ["description"] = "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate." }
                 }
             })
         };

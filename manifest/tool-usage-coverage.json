@@ -1,13 +1,13 @@
 {
   "basis": "Actual MCP tools/list and GetToolUsage responses for every tool/operation on all eight releases. Parameterized calls, input origins, result contracts, language files, sequence calls and source hashes checked. Allowlisted in-memory call examples execute on every release; target-bound native example operations NOT executed.",
-  "catalogSha256": "4606e7765b4f024673e1e6ec1a39761d95da560fdd71a9f133a71fc5dd0c3f6b",
+  "catalogSha256": "5b27cae462d0d385d8d951235d5183fd0e408a2b459a61b891526d164907c533",
   "uniqueTools": 496,
   "documents": 89,
-  "versionToolPairs": 1310,
+  "versionToolPairs": 1322,
   "offlineCallExecutions": 74,
   "indexedExampleBlocksOrMethods": 381,
   "programmingExamples": 25,
-  "callSequences": 13,
+  "callSequences": 14,
   "languages": [
     "scl",
     "scl-sd",
@@ -48,13 +48,13 @@
   "releases": {
     "14sp1": {
       "releaseKey": "14sp1",
-      "registeredToolCount": 55,
-      "checkedToolCount": 55,
+      "registeredToolCount": 57,
+      "checkedToolCount": 57,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -319,6 +319,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -480,6 +492,18 @@
         },
         {
           "toolName": "ImportBlocksFromDirectory",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -606,13 +630,13 @@
     },
     "15.1": {
       "releaseKey": "15.1",
-      "registeredToolCount": 56,
-      "checkedToolCount": 56,
+      "registeredToolCount": 58,
+      "checkedToolCount": 58,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -877,6 +901,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1050,6 +1086,18 @@
         },
         {
           "toolName": "ImportBlocksFromDirectory",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -1176,13 +1224,13 @@
     },
     "16": {
       "releaseKey": "16",
-      "registeredToolCount": 58,
-      "checkedToolCount": 58,
+      "registeredToolCount": 60,
+      "checkedToolCount": 60,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -1469,6 +1517,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -1642,6 +1702,18 @@
         },
         {
           "toolName": "ImportBlocksFromDirectory",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -1768,13 +1840,13 @@
     },
     "17": {
       "releaseKey": "17",
-      "registeredToolCount": 58,
-      "checkedToolCount": 58,
+      "registeredToolCount": 60,
+      "checkedToolCount": 60,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -2061,6 +2133,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2234,6 +2318,18 @@
         },
         {
           "toolName": "ImportBlocksFromDirectory",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
+          "toolName": "ImportPlcExternalSource",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
           "documents": [
@@ -2360,13 +2456,13 @@
     },
     "18": {
       "releaseKey": "18",
-      "registeredToolCount": 58,
-      "checkedToolCount": 58,
+      "registeredToolCount": 60,
+      "checkedToolCount": 60,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -2653,6 +2749,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2837,6 +2945,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcProgramFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -2952,13 +3072,13 @@
     },
     "19": {
       "releaseKey": "19",
-      "registeredToolCount": 60,
-      "checkedToolCount": 60,
+      "registeredToolCount": 62,
+      "checkedToolCount": 62,
       "documentCount": 89,
       "allSourceTextRetrievedAndHashChecked": false,
       "operationExampleCount": 0,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 0,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -3258,6 +3378,18 @@
           "operations": []
         },
         {
+          "toolName": "GenerateBlocksFromExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "GetBlockInfo",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3442,6 +3574,18 @@
           "operations": []
         },
         {
+          "toolName": "ImportPlcExternalSource",
+          "exampleKind": "parameterized-call-example",
+          "relationship": "related-api-patterns",
+          "documents": [
+            "guides/skills/blocks/SKILL.md",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/ProgramBlocks/ProgramBlockSnippets.cs",
+            "snippets/src/TiaPortal.Openness.CodeSnippets.Plain.Step7/PLC/DataBlockSnippets.cs",
+            "guides/skills/software-hierarchy/SKILL.md"
+          ],
+          "operations": []
+        },
+        {
           "toolName": "ImportPlcProgramFromDirectory",
           "exampleKind": "parameterized-call-example",
           "relationship": "related-api-patterns",
@@ -3576,7 +3720,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 493,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",
@@ -10557,7 +10701,7 @@
       "allSourceTextRetrievedAndHashChecked": true,
       "operationExampleCount": 545,
       "programmingExampleCount": 25,
-      "callSequenceCount": 13,
+      "callSequenceCount": 14,
       "offlineBuilderExamplesExecuted": 2,
       "offlineCallExamplesExecuted": [
         "BuildFlgNetCallXml",

@@ -17,7 +17,8 @@ internal static class OfflineXmlBuilders
 
     internal static JsonObject Build(string toolName, string outputReleaseKey, string json)
     {
-        if (outputReleaseKey != "21")
+        var format = toolName == "BuildPlcUdtXml" ? PlcDeclarationXmlFormat.ForRelease(outputReleaseKey) : null;
+        if (format == null && outputReleaseKey != "21")
             throw new ArgumentException("Only explicit outputReleaseKey='21' candidate output is implemented. Other output releases are unavailable; no version rewriting is performed.");
         if (string.IsNullOrWhiteSpace(json) || json.Length > MaxJsonCharacters)
             throw new ArgumentException("Builder JSON must contain 1 to 262144 characters.");
@@ -36,7 +37,7 @@ internal static class OfflineXmlBuilders
                 return new PlcUdtMemberDefinition(Text(row, true, "name"), Text(row, true, "datatype", "dataType"),
                     Boolean(row, "externalWritable"), Text(row, false, "commentZhCn", "comment", "commentZh"));
             }).ToArray();
-            xml = PlcUdtXmlBuilder.BuildXml(name, members);
+            xml = PlcUdtXmlBuilder.BuildXml(name, members, outputReleaseKey);
             mode = "plc-build-udt-xml";
             summary = new JsonObject { ["udtName"] = name, ["memberCount"] = members.Length };
         }
@@ -62,12 +63,13 @@ internal static class OfflineXmlBuilders
             DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters
         });
         var parsed = XDocument.Load(reader);
-        if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != "V21")
+        if (parsed.Root?.Name != "Document" || (string?)parsed.Root.Element("Engineering")?.Attribute("version") != (format?.EngineeringVersion ?? "V21"))
             throw new InvalidOperationException("Builder returned an unexpected output format.");
         var data = new JsonObject
         {
             ["ok"] = true, ["mode"] = mode, ["offlineOnly"] = true, ["xmlParseOk"] = true,
-            ["schemaValidated"] = false, ["importValidated"] = false, ["outputReleaseKey"] = "21",
+            ["schemaValidated"] = false, ["importValidated"] = false, ["outputReleaseKey"] = outputReleaseKey,
+            ["interfaceNamespace"] = format?.InterfaceNamespace.NamespaceName, ["interfaceSchemaFile"] = format?.InterfaceSchemaFile,
             ["error"] = null, ["xml"] = xml, ["summary"] = summary,
             ["safetyPolicy"] = new JsonObject { ["tia"] = "No connection, import or project modification.", ["write"] = "Returns XML in memory only; no files are read or written." }
         };
@@ -76,12 +78,12 @@ internal static class OfflineXmlBuilders
             ["Message"] = "Candidate XML built in memory; schema and import validation pending.",
             ["Meta"] = new JsonObject
             {
-                ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = "21",
+                ["success"] = true, ["offlineOnly"] = true, ["outputReleaseKey"] = outputReleaseKey,
                 ["schemaValidated"] = false, ["importValidated"] = false, ["nativeAcceptance"] = "NOT RUN",
-                ["provenance"] = "Existing PlcUdtXmlBuilder/PlcTagTableXmlBuilder V21 generator; no version conversion",
+                ["provenance"] = format != null ? "Flat UDT generation with the target release interface schema and object attributes; not an XML converter" : "Existing PlcTagTableXmlBuilder V21 generator; no version conversion",
                 ["validationScope"] = "bounded input and XML well-formedness only"
             },
-            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(Warning),
+            ["Ok"] = true, ["Data"] = data, ["Errors"] = null, ["Warnings"] = new JsonArray(format != null ? PlcDeclarationXmlFormat.Warning : Warning),
             ["OutputPath"] = null, ["OutputFiles"] = null, ["Xml"] = xml
         };
     }

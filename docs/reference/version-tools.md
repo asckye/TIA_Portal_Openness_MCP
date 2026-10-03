@@ -8,12 +8,12 @@ PublicAPI identity; selecting another version does not translate or upgrade a pr
 
 | Version | Advertised full catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 55 | PLC foundation host + V14 SP1 worker |
-| V15.1 | 56 | PLC foundation host + V15.1 worker |
-| V16 | 58 | PLC foundation host + V16 worker |
-| V17 | 58 | PLC foundation host + V17 worker |
-| V18 | 58 | PLC foundation host + V18 worker |
-| V19 | 60 | PLC foundation host + V19 worker |
+| V14 SP1 | 57 | PLC foundation host + V14 SP1 worker |
+| V15.1 | 58 | PLC foundation host + V15.1 worker |
+| V16 | 60 | PLC foundation host + V16 worker |
+| V17 | 60 | PLC foundation host + V17 worker |
+| V18 | 60 | PLC foundation host + V18 worker |
+| V19 | 62 | PLC foundation host + V19 worker |
 | V20 | 477 | Existing full engine |
 | V21 | 488 | Existing full engine |
 
@@ -34,14 +34,22 @@ It returns a plan directly on foundation hosts and under `meta.plan` on full eng
 
 ## Complete grouping
 
-The union contains 496 names: **47 across all eight releases**, **438 shared by a subset**,
+The union contains 496 names: **49 across all eight releases**, **436 shared by a subset**,
 and **11 exclusive to V21**. The foundation profile has eight names absent from the full
 profile; several correspond to full-engine features with different naming/contracts.
 These counts describe advertised names, not the number of independent implementations.
+Across the eight catalogs there are **1,322 version/tool combinations**.
 
 See [every tool and its release keys](version-tool-catalog.md),
 [the JSON catalog](../../manifest/version-tools.json), and
 [the current official API audit](openness-coverage.md).
+
+The [functional gap matrix](openness-coverage.md#functional-review) separately checks
+whether an advertised tool can execute the intended engineering operation. Its
+[machine-readable evidence](../../reference/version-feature-matrix.json) records
+29 reviewed workflows/families across eight releases, exact SDK identifiers and
+source routes. These 232 version/feature cells are an audit scope, not a missing-tool
+count or a claim that every Siemens feature has been reviewed.
 
 ## Version differences
 
@@ -85,11 +93,58 @@ acceptance. Unreferenced members are review candidates, not one missing tool per
 
 ## Remaining tools and acceptance
 
-The historical 62-tool migration ledger still has seven pending names:
-EnsureOpennessUserGroup, PlcBuildAndImport, ImportPlcExternalSource,
-GenerateBlocksFromExternalSource, ImportTechnologyObject,
-ImportTechnologyObjectsFromDirectory, SeedProjectFromReference. The shared planner is
-an additional tool, not a claim that these seven migrations are complete.
+This batch implements `ImportPlcExternalSource` and `GenerateBlocksFromExternalSource`
+on all six foundation profiles. Five names remain unimplemented from the historical
+62-tool migration ledger: EnsureOpennessUserGroup, PlcBuildAndImport,
+ImportTechnologyObject, ImportTechnologyObjectsFromDirectory and
+SeedProjectFromReference. The new source routes have the bounded contracts below;
+they do not claim every old profile behavior or native acceptance. The shared planner
+is an additional tool, not completion of the remaining migrations.
+
+The first implementation batch follows the actual PLC authoring chain:
+
+| Stage | Official API and current gap | Completion evidence |
+|---|---|---|
+| Add external source | `CreateFromFile(string, string)` exists in all eight SDKs. Foundation import now executes for root ASCII SCL/AWL/DB/UDT sources after preview and exact project/hash confirmation. | Read back the actual source name. Existing names are refused. Chinese/non-ASCII source encodings remain unverified for the foundation route. |
+| Generate PLC blocks | Foundation generation now uses the void overload in V14 SP1 and `GenerateBlockOption.None` in V15.1+. Existing block/type names may be overwritten. | V15.1+ returns native generated identities; V14 SP1 reports before/after inventory observations only. A successful import is not block generation, and generation is not full compilation. |
+| Compile and diagnose | `ICompilable.Compile()` exists in all eight SDKs. Foundation execution now checks the selected PLC and observable standard/RH states, and explicitly reports devices without exposed state. | Test valid/invalid sources and typed nested diagnostics. Independently confirm unobserved states; Siemens still requires all devices offline. Native acceptance remains NOT RUN. |
+| Read back | Existing block/type readers already cover the ordinary PLC root and user groups. | Compare expected identities and exported program content with what was generated. |
+| Import technology objects | The exact collection `Import(FileInfo, ImportOptions)` API exists from V16; V14 SP1/V15.1 lack that member. Foundation import is missing at the baseline. | V16-V18 root-only import; V19 adds user groups. Check the actual returned objects and compile diagnostics. |
+| Emit target-version XML | `BuildPlcUdtXml` and `BuildPlcGlobalDbXml` now build explicit output for all eight releases. The six other PLC builders remain V21-only candidates. | Sixteen UDT/DB interface-fragment checks passed against the supplied official XSDs. Whole documents, CPU/type semantics and native import remain unverified. |
+
+Compilation previously had a native call in source and appeared in `tools/list`, yet
+`RequireReviewedExecution` always refused actual execution. This is why advertisement,
+typed compilation and protocol tests are tracked separately from runtime reachability.
+The revised foundation path checks top-level, ungrouped and recursively grouped
+devices. Missing required PLC providers and observed unknown/online states prevent
+execution. HMI/passive devices without a provider do not cause blanket refusal;
+their names are reported in `meta.offlineStateNotExposedByDevices`. Those states
+are unobserved, not confirmed Offline. Siemens' all-devices-offline prerequisite
+still applies; no online state is changed automatically.
+
+For source generation, use the actual full `SourceName` returned by import. The
+preview binds the source identity and existing block/type metadata; it does not
+review the source contents. A V14 SP1 empty `GeneratedObjects` array reflects the
+native void return, not proof that nothing was generated. Check `ObjectsAfter` and
+`ObservedChanges`, then compile and read back expected blocks. Import/generation
+does not save or download. An ordinary native generation `EngineeringException`
+returns `failed` and retains the session; interruption or uncertain post-generation
+readback requires a reset. The old `PlanPlcExternalSourceImport` plan/hash cannot be
+used to execute the new import route.
+
+The two declaration builders construct the target format directly: Interface/v2 for
+V14 SP1, v3 for V15.1, v4 for V16/V17 and v5 for V18-V21, with the mandatory object
+`Namespace` from V18. They do not convert an existing document by changing its
+version marker. Foundation calls require `outputReleaseKey`; full-engine calls
+default to `21` for compatibility. Select the actual intended output release.
+
+The next migration batches can use already present API families: Classic HMI,
+libraries and CAx across all supplied SDKs; software units and VCI from V16; Safety
+offline login from V17; modern drive parameters and SiVArc from V15.1; DCC from V16;
+and CFC/Teamcenter from V18. These boundaries describe the inspected identifiers,
+not blanket support for every action or optional product. V19 Unified APIs are also
+available for review; equivalent earlier interfaces remain unverified. Existing
+Studio VCI implementations are reusable evidence for V16-V19, but are not MCP routes.
 
 That ledger excludes most of the full engine's newer feature families. Dedicated legacy
 wrappers remain incomplete for HMI, libraries/VCI, hardware/network configuration,

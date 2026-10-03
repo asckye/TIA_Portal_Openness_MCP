@@ -20,7 +20,7 @@ internal static class OfflineCompositionTests
             var tool = tools.Single(t => t.ProtocolTool.Name == spec.Name);
             var schema = tool.ProtocolTool.InputSchema;
             check(schema.GetProperty("required").GetArrayLength() == 2 && !schema.GetProperty("additionalProperties").GetBoolean(), spec.Name + " closed explicit schema");
-            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum")[0].GetString() == "21", spec.Name + " explicit V21 candidate");
+            check(schema.GetProperty("properties").GetProperty("outputReleaseKey").GetProperty("enum").GetArrayLength() == (spec.Name == "BuildPlcGlobalDbXml" ? 8 : 1), spec.Name + " explicit supported output versions");
             RequestContext<CallToolRequestParams> Request(Dictionary<string, JsonElement> arguments) => new(server) { Params = new() { Name = spec.Name, Arguments = arguments } };
             Dictionary<string, JsonElement> Args(string json) => new() { [spec.Arg] = JsonSerializer.SerializeToElement(json), ["outputReleaseKey"] = JsonSerializer.SerializeToElement("21") };
             async Task<JsonNode> Invoke(Dictionary<string, JsonElement> args)
@@ -49,6 +49,12 @@ internal static class OfflineCompositionTests
             foreach (var release in new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "V21", "21 ", "22", "" })
             {
                 var args = Args(spec.Json); args["outputReleaseKey"] = JsonSerializer.SerializeToElement(release);
+                if (spec.Name == "BuildPlcGlobalDbXml" && PlcDeclarationXmlFormat.ReleaseKeys.Contains(release))
+                {
+                    var generated = await Invoke(args);
+                    check(generated[Wire("Data")]!["outputReleaseKey"]!.GetValue<string>() == release, spec.Name + " MCP accepts target format " + release);
+                    continue;
+                }
                 await Invalid(args, "unsupported release " + release);
             }
             var missing = Args(spec.Json); missing.Remove("outputReleaseKey"); await Invalid(missing, "missing release");
