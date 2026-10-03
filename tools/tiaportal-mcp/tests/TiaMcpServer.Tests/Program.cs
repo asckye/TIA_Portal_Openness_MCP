@@ -48,6 +48,7 @@ namespace TiaMcpServer.Tests
             if (args.Length == 2 && args[0] == "--local-process-fixture") return McpLocalProcessTests.Child(args[1]);
             PlcFoundationPolicyTests.Run(Check);
             TiaVersionCatalogTests.Run(Check);
+            ImportOrderTests.Run(Check);
             EcosystemTests.Run(Check);
             McpLocalProcessTests.Run(Check);
             TiaMcpServer.ModelContextProtocol.McpServer.CheckScaffoldOperations(Check);

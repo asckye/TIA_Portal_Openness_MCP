@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
+using System.IO;
 
 namespace TiaMcp.Versioning
 {
@@ -15,7 +16,20 @@ namespace TiaMcp.Versioning
         public bool IsRunnable { get; private set; }
         public string RuntimeDirectory { get; private set; }
         public string EngineOutputDirectory { get; private set; }
-        public string SupportState { get { return IsRunnable ? "existing-engine" : "planned"; } }
+        public bool IsFullEngine { get { return MajorVersion >= 20; } }
+        public string SupportState { get { return IsFullEngine ? "existing-engine" : "plc-foundation"; } }
+        public string ApiVersion { get { return Key == "14sp1" ? "14.0.1.0" : Key == "15.1" ? "15.1.0.0" : Key + ".0.0.0"; } }
+        public string ApiFolder { get { return Key == "14sp1" ? "V14 SP1" : "V" + Key; } }
+        public string InstallFolder { get { return "Portal V" + (Key == "14sp1" ? "14" : Key == "15.1" ? "15_1" : Key); } }
+        public string ApiAssembly { get { return MajorVersion == 21 ? "Siemens.Engineering.Base.dll" : "Siemens.Engineering.dll"; } }
+        public string FindApiDirectory(string root)
+        {
+            if (string.IsNullOrWhiteSpace(root)) return null;
+            var folder = Path.Combine(root, "PublicAPI", ApiFolder);
+            var candidates = new[] { root, Path.Combine(folder, "net48"), folder,
+                Path.Combine(root, ApiFolder, "net48"), Path.Combine(root, ApiFolder) };
+            return candidates.FirstOrDefault(p => File.Exists(Path.Combine(p, ApiAssembly)));
+        }
 
         internal TiaVersionDescriptor(string key, string displayName, int majorVersion,
             bool runnable, string runtimeDirectory, string engineOutputDirectory)
@@ -32,7 +46,7 @@ namespace TiaMcp.Versioning
     /// <summary>
     /// Shared by the engines and configurator. Precise keys intentionally distinguish
     /// V14 SP1 and V15.1; original V14 and V15 are outside the target scope.
-    /// Planned entries have no executable paths.
+    /// Legacy entries use the PLC foundation host and one exact-release worker.
     /// Existing-engine means a build target exists, not that every tool was validated.
     /// Keep this file compatible with the configurator's .NET Framework C# 5 compiler.
     /// </summary>
@@ -41,19 +55,19 @@ namespace TiaMcp.Versioning
         private static readonly ReadOnlyCollection<TiaVersionDescriptor> Entries =
             Array.AsReadOnly(new[]
             {
-                Planned("14sp1", "V14 SP1", 14),
-                Planned("15.1", "V15.1", 15),
-                Planned("16", "V16", 16),
-                Planned("17", "V17", 17),
-                Planned("18", "V18", 18),
-                Planned("19", "V19", 19),
+                Foundation("14sp1", "V14 SP1", 14),
+                Foundation("15.1", "V15.1", 15),
+                Foundation("16", "V16", 16),
+                Foundation("17", "V17", 17),
+                Foundation("18", "V18", 18),
+                Foundation("19", "V19", 19),
                 new TiaVersionDescriptor("20", "V20", 20, true, "v20", "bin-v20"),
                 new TiaVersionDescriptor("21", "V21", 21, true, "v21", "bin")
             });
 
-        private static TiaVersionDescriptor Planned(string key, string displayName, int major)
+        private static TiaVersionDescriptor Foundation(string key, string displayName, int major)
         {
-            return new TiaVersionDescriptor(key, displayName, major, false, null, null);
+            return new TiaVersionDescriptor(key, displayName, major, true, "v" + key, null);
         }
 
         public static IEnumerable<TiaVersionDescriptor> All { get { return Entries; } }
@@ -75,16 +89,40 @@ namespace TiaMcp.Versioning
         public static TiaVersionDescriptor RequireRunnable(string key)
         {
             var version = Get(key);
-            if (!version.IsRunnable)
-                throw new InvalidOperationException(version.DisplayName +
-                    " is planned only: no supported engine or native acceptance is available. " +
-                    "This build can run only V20 and V21.");
             return version;
         }
 
         public static TiaVersionDescriptor RequireRunnable(int majorVersion)
         {
             return RequireRunnable(majorVersion.ToString(CultureInfo.InvariantCulture));
+        }
+
+        // UI/registry versions retain SP1 and minor release identity. Original V14/V15 are excluded.
+        public static TiaVersionDescriptor FromApiVersion(string value)
+        {
+            var raw = (value ?? "").Trim();
+            var direct = Entries.FirstOrDefault(v => string.Equals(v.Key, raw, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(v.DisplayName, raw, StringComparison.OrdinalIgnoreCase));
+            if (direct != null) return direct;
+            Version parsed;
+            if (Version.TryParse(raw.TrimStart('V', 'v'), out parsed))
+            {
+                var match = Entries.FirstOrDefault(v => {
+                    var expected = new Version(v.ApiVersion);
+                    return parsed.Major == expected.Major && parsed.Minor == expected.Minor
+                        && (v.Key != "14sp1" || parsed.Build == 1);
+                });
+                if (match != null) return match;
+            }
+            throw new ArgumentException("Unsupported Openness API version: " + value, "value");
+        }
+
+        public static void RequireMatchingEngine(string requestedKey, string compiledKey)
+        {
+            var requested = RequireRunnable(requestedKey);
+            var compiled = RequireRunnable(compiledKey);
+            if (requested.Key != compiled.Key)
+                throw new InvalidOperationException("Requested " + requested.DisplayName + " but this adapter is compiled for " + compiled.DisplayName + ".");
         }
 
         public static void RequireMatchingEngine(int requestedMajor, int compiledMajor)

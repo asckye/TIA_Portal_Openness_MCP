@@ -1,5 +1,10 @@
 # Studio integration and official API audit — 2026-10-03
 
+> Historical implementation snapshot. Current version routing, direct Studio integration,
+> tool counts and validation are maintained in [the release matrix](../reference/version-tools.md).
+> Previous build/runtime restrictions and MCP-backed desktop descriptions below are superseded where that matrix says so.
+
+
 > Superseded for Studio transport by the maintainer's direct-Openness decision on 2026-10-02 (local time). See [native Studio and duplicate review](studio-native-and-duplicates-20261002.md). The following is the historical MCP integration audit; its API inventory and original evidence retain their original scope.
 
 Base: `offline/publicapi-validation`, `db2039e09be6e21b37cff4cbc719162aa502b212`, including the previous uncommitted local validation fixes.

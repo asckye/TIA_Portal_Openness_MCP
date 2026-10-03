@@ -1,0 +1,401 @@
+{
+  "method": "Group actual release catalogs and compare official XML members with compiled native call sites.\n\nRead-only against Siemens SDKs; emits identifiers and hashes, never copies SDK files.\nDirect member-name references are evidence of compiled calls, not end-to-end tool coverage.\nOverloads are counted separately in domainSignatures and together in domainMemberNames.\n",
+  "nativeTiaExecuted": false,
+  "versions": [
+    {
+      "releaseKey": "14sp1",
+      "mcpTools": 54,
+      "xmlFiles": 2,
+      "domainSignatures": 847,
+      "domainMemberNames": 825,
+      "compiledDirectMemberNames": 94,
+      "withoutDirectMemberReference": 731,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering",
+          130
+        ],
+        [
+          "Siemens.Engineering.HW",
+          89
+        ],
+        [
+          "Siemens.Engineering.Hmi.Screen",
+          61
+        ],
+        [
+          "Siemens.Engineering.Library",
+          39
+        ],
+        [
+          "Siemens.Engineering.Library.Types",
+          38
+        ],
+        [
+          "Siemens.Engineering.HW.Features",
+          35
+        ],
+        [
+          "Siemens.Engineering.SW.TechnologicalObjects.Motion",
+          34
+        ],
+        [
+          "Siemens.Engineering.Startdrive",
+          31
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "67892ad36b697bd0919c6b4ac0f4b6fe65b3128235c90333f5f509f4a389b6e6"
+      },
+      "compiledCallInventorySha256": "90a778354b93a38b7838c09c1117060c5dace143dde136d23ec9d9427e81f0da"
+    },
+    {
+      "releaseKey": "15.1",
+      "mcpTools": 55,
+      "xmlFiles": 2,
+      "domainSignatures": 1209,
+      "domainMemberNames": 1161,
+      "compiledDirectMemberNames": 103,
+      "withoutDirectMemberReference": 1058,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering",
+          134
+        ],
+        [
+          "Siemens.Engineering.HW",
+          110
+        ],
+        [
+          "Siemens.Engineering.SiVArc",
+          106
+        ],
+        [
+          "Siemens.Engineering.Hmi.Screen",
+          62
+        ],
+        [
+          "Siemens.Engineering.SW.TechnologicalObjects.Motion",
+          50
+        ],
+        [
+          "Siemens.Engineering.HW.Features",
+          48
+        ],
+        [
+          "Siemens.Engineering.Library",
+          44
+        ],
+        [
+          "Siemens.Engineering.Library.Types",
+          39
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "e6864dad4478bffac958e1d2ce72328d3b5218ccf1447557fa1da6d3469991b6"
+      },
+      "compiledCallInventorySha256": "94d784ddd5e8a43adb2902198c738387a9af1fd45d75856cbe760cdd4ed4d9dd"
+    },
+    {
+      "releaseKey": "16",
+      "mcpTools": 57,
+      "xmlFiles": 2,
+      "domainSignatures": 1476,
+      "domainMemberNames": 1420,
+      "compiledDirectMemberNames": 105,
+      "withoutDirectMemberReference": 1315,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.HW",
+          146
+        ],
+        [
+          "Siemens.Engineering",
+          136
+        ],
+        [
+          "Siemens.Engineering.SiVArc",
+          136
+        ],
+        [
+          "Siemens.Engineering.HW.Features",
+          64
+        ],
+        [
+          "Siemens.Engineering.Hmi.Screen",
+          62
+        ],
+        [
+          "Siemens.Engineering.SW.TechnologicalObjects.Motion",
+          54
+        ],
+        [
+          "Siemens.Engineering.Library",
+          45
+        ],
+        [
+          "Siemens.Engineering.Library.Types",
+          39
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "b2b6542acc3ad33270193487eae57f896e11acd281038377f1bdce1cb478413a"
+      },
+      "compiledCallInventorySha256": "d15c5bafa207f5f8d781db94ecf09843a0e16e867dc938d29ff29cb0f98d1681"
+    },
+    {
+      "releaseKey": "17",
+      "mcpTools": 57,
+      "xmlFiles": 2,
+      "domainSignatures": 1797,
+      "domainMemberNames": 1719,
+      "compiledDirectMemberNames": 113,
+      "withoutDirectMemberReference": 1606,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.SiVArc",
+          157
+        ],
+        [
+          "Siemens.Engineering.HW",
+          146
+        ],
+        [
+          "Siemens.Engineering",
+          142
+        ],
+        [
+          "Siemens.Engineering.Umac",
+          82
+        ],
+        [
+          "Siemens.Engineering.HW.Features",
+          69
+        ],
+        [
+          "Siemens.Engineering.Hmi.Screen",
+          62
+        ],
+        [
+          "Siemens.Engineering.SW.TechnologicalObjects.Motion",
+          54
+        ],
+        [
+          "Siemens.Engineering.Library",
+          50
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "5ab7b2e24b129ede6daa7e28d53dc6e9e724f6ee7f86c13c20625d35190f53fa"
+      },
+      "compiledCallInventorySha256": "46cab8746e61d243e508d7c8c6c0e6602d920910461bd7ce36139f2f67d6fb60"
+    },
+    {
+      "releaseKey": "18",
+      "mcpTools": 57,
+      "xmlFiles": 2,
+      "domainSignatures": 2215,
+      "domainMemberNames": 2113,
+      "compiledDirectMemberNames": 113,
+      "withoutDirectMemberReference": 2000,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.SiVArc",
+          232
+        ],
+        [
+          "Siemens.Engineering.HW",
+          166
+        ],
+        [
+          "Siemens.Engineering",
+          151
+        ],
+        [
+          "Siemens.Engineering.Umac",
+          95
+        ],
+        [
+          "Siemens.Engineering.MC.Drives.Dcc",
+          85
+        ],
+        [
+          "Siemens.Engineering.HW.Features",
+          75
+        ],
+        [
+          "Siemens.Engineering.Hmi.Screen",
+          62
+        ],
+        [
+          "Siemens.Engineering.SW.TechnologicalObjects.Motion",
+          54
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "4ee727da5077757f28081197cb26d222df9bb90329ab2176400fc39c163b5245"
+      },
+      "compiledCallInventorySha256": "46cab8746e61d243e508d7c8c6c0e6602d920910461bd7ce36139f2f67d6fb60"
+    },
+    {
+      "releaseKey": "19",
+      "mcpTools": 59,
+      "xmlFiles": 2,
+      "domainSignatures": 3714,
+      "domainMemberNames": 3586,
+      "compiledDirectMemberNames": 124,
+      "withoutDirectMemberReference": 3462,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.HmiUnified.UI.Parts",
+          296
+        ],
+        [
+          "Siemens.Engineering.SiVArc",
+          231
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Events",
+          213
+        ],
+        [
+          "Siemens.Engineering.HW",
+          169
+        ],
+        [
+          "Siemens.Engineering",
+          152
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Shapes",
+          128
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Widgets",
+          112
+        ],
+        [
+          "Siemens.Engineering.Umac",
+          97
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "a6bf56b1adb638e6b4b7ff9a52e7d89021323ee3b46e52967c95eb3764dae684"
+      },
+      "compiledCallInventorySha256": "d5d613bdba3a7089a694680a5e643473edd26d91b2bd9f984ed1c24224803ae6"
+    },
+    {
+      "releaseKey": "20",
+      "mcpTools": 476,
+      "xmlFiles": 2,
+      "domainSignatures": 4016,
+      "domainMemberNames": 3860,
+      "compiledDirectMemberNames": 1577,
+      "withoutDirectMemberReference": 2283,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.HmiUnified.UI.Parts",
+          304
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Events",
+          213
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Shapes",
+          128
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Widgets",
+          114
+        ],
+        [
+          "Siemens.Engineering",
+          88
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.RuntimeSettings",
+          75
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Features",
+          74
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.Cpm",
+          68
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Hmi.xml": "2303e58255e12fc429f79a14215fab6ed3746d773902f1d0021c34c54394576b",
+        "Siemens.Engineering.xml": "154d83b9cf013c2428b514bbafdb4802946661b177c6323e53e037f05a297cd8"
+      },
+      "compiledCallInventorySha256": "d48e18cd20c055878c73a81bfe0de127985268dde7bc02a403b40c0b6b5283cf"
+    },
+    {
+      "releaseKey": "21",
+      "mcpTools": 487,
+      "xmlFiles": 13,
+      "domainSignatures": 4480,
+      "domainMemberNames": 4323,
+      "compiledDirectMemberNames": 1719,
+      "withoutDirectMemberReference": 2604,
+      "topCandidateNamespaces": [
+        [
+          "Siemens.Engineering.HmiUnified.UI.Parts",
+          370
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Events",
+          243
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Widgets",
+          133
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Shapes",
+          129
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.UI.Controls",
+          120
+        ],
+        [
+          "Siemens.Engineering.HW.CommunicationConnections",
+          90
+        ],
+        [
+          "Siemens.Engineering",
+          89
+        ],
+        [
+          "Siemens.Engineering.HmiUnified.RuntimeSettings",
+          82
+        ]
+      ],
+      "sdkXmlSha256": {
+        "Siemens.Engineering.Base.xml": "0bf27f4ab7918c811a7dfde7f7c294b3133169b5f791e507278bfd27182cea43",
+        "Siemens.Engineering.CFC.xml": "31725d5b281a668fbd25809eacd01f71e22fcac945c2757bbec775fd3f48e330",
+        "Siemens.Engineering.DCC.xml": "7b271a5bb25ec50a8a7593de55208c471327dd15eeed427728ec474d48770444",
+        "Siemens.Engineering.Safety.xml": "b969c90b05c413b9f03b90888b1adcd2b21997005ef4b92db53b85a6b186d98d",
+        "Siemens.Engineering.SafetyValidation.xml": "c435bbf13890630290d8623b6a398437158d7d7dedc5c95867188f7f9f21da96",
+        "Siemens.Engineering.Sivarc.xml": "9b527859205d2c18c56938fc5a965291754db62672a35652bee1436c53bd96b9",
+        "Siemens.Engineering.Startdrive.xml": "a7a1f72b0c7c6aebba4187d21db9931690c6609c154e1b4aa358097ad8f4fa73",
+        "Siemens.Engineering.Step7.xml": "344f0652a1b10fedca6cd3501434ae8b1a8c4c0a014b3ef0ff1ef444f3fddda0",
+        "Siemens.Engineering.TeamcenterGateway.xml": "206ed2ea306c210341c71e856de224e20c3c9c82ebc5dfc7f4fb28895bfc501d",
+        "Siemens.Engineering.TestSuite.xml": "6eeb5842454b70fb9131fe25ce7653472ba9686a5f1db85d0ea35350889c4637",
+        "Siemens.Engineering.WinCC.Extension.xml": "1b7eb100a6900509ceb548bb35c72e81087cf5ab0af1aa850bf04db991f45307",
+        "Siemens.Engineering.WinCC.xml": "2d1c7e1816b43ab10ead3036d37e007d15540ddbddc6a1a239635f71e43e7615",
+        "Siemens.Engineering.WinCCUnified.xml": "894afc507742b3498a3be4273e6818b05677103ecdd4687af1c6d1caa4a5f73b"
+      },
+      "compiledCallInventorySha256": "115e57b626a4e17dcc1a961935eb2fb577d5607c82819881aa3a86132893e96e"
+    }
+  ]
+}

@@ -4,9 +4,9 @@
 
 本文件由 `scripts/generate/Generate-ToolCapabilityMatrix.ps1` 从 `manifest/tools-list.json`（已编译 EXE 的反射清单）生成，分类来自引擎内的 `ToolTaxonomy`；运行时以 `tools/list` 为准。在会话中调用 `ListToolCategories` 可得到同一分类的实时计数，`FindTools(category=…)` / `FindTools(domain=…)` 可按分类检索。
 
-- 生成时间：2026-10-02 22:17:38
+- 生成时间：2026-10-02 23:36:49
 - 引擎文件版本：3.1.0.0
-- 工具数量：486
+- 工具数量：487
 
 ## 读法
 
@@ -15,7 +15,7 @@
 | 操作 | 含义 | 工具数 |
 |---|---|---:|
 | `SESSION` | 会话与发现，不改工程 | 18 |
-| `READ` | 读取已打开工程，不改动 | 143 |
+| `READ` | 读取已打开工程，不改动 | 144 |
 | `WRITE` | 修改离线工程数据，默认预览，不自动保存/编译/下载 | 192 |
 | `FILE` | 导出/导入文件或生成离线产物 | 52 |
 | `OFFLINE` | 纯离线计算，不需要 TIA 会话 | 33 |
@@ -30,7 +30,7 @@
 | 大类 | 名称 | 工具数 | 域 |
 |---|---|---:|---|
 | `session` | 会话与基础设施 / Session & infrastructure | 49 | `Bootstrap` (1)、`Guide` (4)、`Meta` (7)、`Portal` (8)、`Diagnostics` (11)、`Reflection` (7)、`Exports` (5)、`Reports` (6) |
-| `project` | 工程与协作 / Project & collaboration | 68 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (14) |
+| `project` | 工程与协作 / Project & collaboration | 69 | `Project` (25)、`Library` (13)、`VersionControl` (9)、`Security` (7)、`Validation` (15) |
 | `plc` | PLC 软件 / PLC software | 126 | `PLC-Software` (80)、`PLC-Builders` (12)、`PLC-Alarms` (8)、`PLC-TechnologyObjects` (8)、`PLC-OpcUA` (8)、`Safety` (10) |
 | `plc-online` | PLC 在线与传输 / PLC online & transfer | 16 | `PLC-Online` (16) |
 | `hardware` | 硬件与网络 / Hardware & network | 75 | `Hardware` (75) |
@@ -130,7 +130,7 @@
 | `BuildReleaseRunbook` | L2 | OFFLINE* | Build an offline first-user runbook from a previously generated OfflineReleaseValidationSuite JSON report. It does not connect to TIA Portal or modify projects. |
 | `RebuildReleaseHandoffArtifacts` | L2 | FILE* | Rebuild diagnostics, runbook, and manifest files from an existing OfflineReleaseValidationSuite JSON report. Offline-only and does not connect to TIA Portal. |
 
-## project — 工程与协作 / Project & collaboration（68）
+## project — 工程与协作 / Project & collaboration（69）
 
 工程打开/保存/归档、多语言文本、库与主副本、版本控制接口、用户管理与证书、离线校验与文档分析。
 
@@ -208,7 +208,7 @@
 | `ReadProjectProtection` | L2 | READ | Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection. |
 | `ReadProjectUserManagement` | L2 | READ | Paginated UMAC listing of the bound project: category users/anonymousUser/systemRoles/customRoles/engineeringRights/customDeviceRights/umcUsers/umcUserGroups/passwordPolicy/deviceRights/roleDeviceRights. Optional exact name filter; deviceRights/roleDeviceRights need devicePathJson (+itemPathJson) JSON arrays of exact names. Requires the native UmacConfigurator service (protected project); passwords never readable. Nothing modified. |
 
-### [Validation]（14）
+### [Validation]（15）
 
 | 工具 | 层 | 操作 | 说明 |
 |---|---|---|---|
@@ -219,6 +219,7 @@
 | `ExtractPlcBlockMetrics` | L2 | READ | Derive per-block metrics from exported PLC documents (path = absolute file or directory; recursive; extensionsJson default [".xml",".s7dcl",".scl"]): network count and titles/comments, interface members per section, block calls (CallInfo / quoted calls / #instance calls), instructions (LAD/FBD Parts, SCL functions), SCL source lines, comment lines and ratio, and max IF/CASE/FOR/WHILE/REPEAT nesting where SCL text is available (null otherwise). Graphical networks contribute no source lines. The numbers describe the export only; they are NOT a Siemens quality verdict and do not replace TIA compile diagnostics or the programming guidelines. Paginated rows. No TIA Portal connection, nothing is saved, compiled or downloaded. |
 | `GeneratePlcDocumentation` | L2 | FILE | Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensionsJson default [".xml",".s7dcl",".scl"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportBlocksAsDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded. |
 | `LintPlcSclSource` | L2 | OFFLINE | Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {"disable":["SCL007","SCL008"],"maxLineLength":120,"maxNesting":5,"markers":["TODO"]}. Returns findings {rule, severity error\|warning\|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompileSoftware) remains the verdict. Nothing is saved, compiled or downloaded. |
+| `PlanArtifactImportOrder` | L2 | READ | Offline dependency-first import order for 1..256 PLC/HMI artifacts, shared across all release profiles. Input is a JSON array of Id, Target, Priority and Dependencies. Explicit dependencies override numeric priority (lower first). Reports missing dependencies and cycles with no executable order. Does not infer dependencies from source, inspect TIA, validate native import formats or import files. Reuses the MIT EidoTiaWorkbench planner. |
 | `ReadPlcBlockEditCapabilities` | L2 | READ | Inspect one SimaticML PLC block file, or export an exact live block, to report each network's own language/source shape, existing multilingual title/comment targets, library binding and document fingerprint. Exactly one filePath or blockPath (+softwarePath). Describes the supported offline patch operations; never claims a generic rung editor or target CPU/native import validation. No compile/save/write to project. |
 | `RenderPlcBlockDocument` | L2 | OFFLINE | Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards). mermaidDirection LR (default) or TD. Returns the Markdown in Meta.markdown (truncated to maxChars, default 60000, full length in Meta.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded. |
 | `RenderPlcVisualDiff` | L2 | FILE | Compare two single-block SimaticML XML exports with an interface/structural diff and side-by-side LAD graphics highlighting added/removed/changed/rewired components. Writes a NEW absolute .html report. Other languages retain structural diff without claiming LAD rendering. Uses the MIT TiaGitAddIn.Core parser and layout. Offline only; no TIA query, save, compile or download. |

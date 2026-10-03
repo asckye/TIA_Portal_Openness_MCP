@@ -1,0 +1,6131 @@
+{
+  "schemaVersion": 1,
+  "basis": "six host --catalog outputs, compiled full-engine roster and runtime-tested V20/V21 admission policy",
+  "nativeAcceptance": "NOT RUN for the newly enabled targets",
+  "releases": {
+    "14sp1": {
+      "profile": "plc-foundation",
+      "toolCount": 54,
+      "tools": [
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject"
+      ]
+    },
+    "15.1": {
+      "profile": "plc-foundation",
+      "toolCount": 55,
+      "tools": [
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject"
+      ]
+    },
+    "16": {
+      "profile": "plc-foundation",
+      "toolCount": 57,
+      "tools": [
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportTechnologyObject",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject"
+      ]
+    },
+    "17": {
+      "profile": "plc-foundation",
+      "toolCount": 57,
+      "tools": [
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportTechnologyObject",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject"
+      ]
+    },
+    "18": {
+      "profile": "plc-foundation",
+      "toolCount": 57,
+      "tools": [
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportTechnologyObject",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject"
+      ]
+    },
+    "19": {
+      "profile": "plc-foundation",
+      "toolCount": 59,
+      "tools": [
+        "AddDeviceWithFallback",
+        "AttachToOpenProject",
+        "Bootstrap",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildStructuredTextXml",
+        "CloseProject",
+        "CompileAndDiagnosePlc",
+        "CompileSoftware",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "Connect",
+        "CreatePlcTag",
+        "CreatePlcTagTable",
+        "CreatePlcUserConstant",
+        "CreateProject",
+        "DeletePlcExternalSource",
+        "DiagnosePortalConnectReadiness",
+        "Disconnect",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportTechnologyObject",
+        "ExportType",
+        "ExportTypes",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetPlcExternalSources",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTree",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportType",
+        "ListPortalProcessProjects",
+        "OpenProject",
+        "PlanArtifactImportOrder",
+        "PlanPlcExternalSourceImport",
+        "ReadPlcSystemConstants",
+        "ReadPlcTags",
+        "ReadPlcUserConstants",
+        "RunCapabilitySelfTest",
+        "SaveProject",
+        "SearchHardwareCatalog"
+      ]
+    },
+    "20": {
+      "profile": "full-engine",
+      "toolCount": 476,
+      "tools": [
+        "AddDevice",
+        "AddDeviceWithFallback",
+        "AddGsdDeviceWithProbe",
+        "AddHardwareCatalogDeviceWithProbe",
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyToolBatch",
+        "ApplyUnifiedHmiLayout",
+        "ApplyUnifiedHmiScreenDesignJson",
+        "ApplyUnifiedHmiTheme",
+        "ArchiveSavedProject",
+        "AttachDeviceNodeToSubnet",
+        "AttachToOpenProject",
+        "AuditEngineeringExports",
+        "BindUnifiedHmiButtonPressedTag",
+        "BindUnifiedHmiTagDynamization",
+        "Bootstrap",
+        "BuildClassicHmiMinimalPackage",
+        "BuildClassicHmiScreenXml",
+        "BuildClassicHmiTagTableXml",
+        "BuildDeviceAmlDocument",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
+        "BuildStructuredTextXml",
+        "BuildUnifiedHmiButtonActionScript",
+        "BuildUnifiedHmiLayoutDesignJson",
+        "BuildUnifiedHmiTemplateApplyDesignJson",
+        "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "BuildUnifiedHmiThemeDesignJson",
+        "CallTool",
+        "CheckDownloadReadiness",
+        "CheckForUpdate",
+        "CheckLibraryUpdates",
+        "ClearExports",
+        "CloseProject",
+        "CompareLibraries",
+        "CompareLibraryObjects",
+        "ComparePlcBlockDocuments",
+        "CompareProjects",
+        "CompareSoftwareToOnline",
+        "CompareUnifiedGraphicSelections",
+        "CompileAndDiagnoseHmi",
+        "CompileAndDiagnosePlc",
+        "CompileDevice",
+        "CompileSoftware",
+        "ComposePlcAliasAlarmLad",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "ConfigureMotionHardwareConnection",
+        "Connect",
+        "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolated",
+        "ConnectProjectToWorkspace",
+        "ConnectToProject",
+        "CreateLibraryMasterCopy",
+        "CreatePlcBlockGroup",
+        "CreatePlcInstanceDb",
+        "CreatePlcTypeGroup",
+        "CreateProject",
+        "CreateVersionControlWorkspace",
+        "DecodePlcSimaticMl",
+        "DeleteEmptyPlcBlockGroup",
+        "DeleteEmptyUnifiedHmiScreenGroup",
+        "DeleteExport",
+        "DeleteHmiTag",
+        "DeletePlcBlock",
+        "DeletePlcExternalSource",
+        "DeletePlcTagTable",
+        "DeletePlcType",
+        "DeleteUnifiedHmiButtonEvent",
+        "DeleteUnifiedHmiDynamization",
+        "DescribeBlockLogic",
+        "DescribeHmiScreen",
+        "DescribeHmiScreenItem",
+        "DescribeHmiSoftware",
+        "DescribeHmiTag",
+        "DescribeHmiTagTable",
+        "DescribeObject",
+        "DescribeObjectProperty",
+        "DescribeService",
+        "DescribeUnifiedHmiButtonEventScript",
+        "DescribeUnifiedScreenItemType",
+        "Disconnect",
+        "Doctor",
+        "DownloadPlcToFolder",
+        "DownloadToPlc",
+        "DumpDeviceAttributes",
+        "EnsureOpennessUserGroup",
+        "EnsureStartStopUnifiedHmi",
+        "EnsureSubnet",
+        "EnsureUnifiedHmiButtonAction",
+        "EnsureUnifiedHmiButtonEventHandler",
+        "EnsureUnifiedHmiConnection",
+        "EnsureUnifiedHmiDynamization",
+        "EnsureUnifiedHmiScreen",
+        "EnsureUnifiedHmiScreenItem",
+        "EnsureUnifiedHmiTag",
+        "EnsureUnifiedHmiTagTable",
+        "ExchangeCfcCharts",
+        "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextListsXlsx",
+        "ExchangePlcSupervisions",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExchangeTestSuiteCase",
+        "ExchangeUnifiedScriptModules",
+        "ExchangeUnifiedTags",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
+        "ExportAsDocuments",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportBlocksAsDocuments",
+        "ExportDeviceAml",
+        "ExportHmiConnection",
+        "ExportHmiProgram",
+        "ExportHmiScreen",
+        "ExportHmiTagTable",
+        "ExportOpcUaInterface",
+        "ExportPlcProDiagInfo",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportPlcWatchTablesToDirectory",
+        "ExportProjectTexts",
+        "ExportSafetyPrintout",
+        "ExportScadaData",
+        "ExportTechnologyObject",
+        "ExportTechnologyObjectsToDirectory",
+        "ExportType",
+        "ExportTypes",
+        "ExportUnifiedEngineeringList",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
+        "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
+        "GeneratePlcDocumentation",
+        "GeneratePlcLoadableFile",
+        "GeneratePlcSourceFromBlocks",
+        "GenerateSiVArc",
+        "GetAuthoringGuide",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetCrossReferences",
+        "GetDeviceInfo",
+        "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
+        "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetDevices",
+        "GetExport",
+        "GetHmiConnections",
+        "GetHmiProgramInfo",
+        "GetHmiScreens",
+        "GetHmiTagTables",
+        "GetHmiTags",
+        "GetObjectProperty",
+        "GetOnlineState",
+        "GetOpcUaConfig",
+        "GetPlcExternalSources",
+        "GetPlcForceTables",
+        "GetPlcRunStateS7",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTopology",
+        "GetProjectTree",
+        "GetPutGetAccess",
+        "GetRecipe",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "GetUnifiedCrossReferences",
+        "GetVersionControlStatus",
+        "GetVersionControlWorkspaces",
+        "GoOffline",
+        "GoOfflineAll",
+        "GoOnline",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportBlocksFromDocuments",
+        "ImportDeviceAml",
+        "ImportFromDocuments",
+        "ImportHmiConnection",
+        "ImportHmiScreen",
+        "ImportHmiScreensFromDirectory",
+        "ImportHmiTagTable",
+        "ImportHmiTagTablesFromDirectory",
+        "ImportLibraryTypeDocuments",
+        "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
+        "ImportPlcBlockVerified",
+        "ImportPlcExternalSource",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportPlcTagTablesFromDirectory",
+        "ImportPlcWatchTableOffline",
+        "ImportProjectTexts",
+        "ImportSinumerikAlarmTexts",
+        "ImportTechnologyObject",
+        "ImportTechnologyObjectsFromDirectory",
+        "ImportType",
+        "ImportUnifiedEngineeringList",
+        "ImportUnifiedOpcUaAlarms",
+        "InitializeSimotionScripting",
+        "InspectSimaticSdCompatibility",
+        "InstantiatePlcXmlTemplates",
+        "InvokeObject",
+        "InvokeService",
+        "LintPlcSclSource",
+        "ListExports",
+        "ListHmiScreenPaths",
+        "ListObjectChildren",
+        "ListPortalProcessProjects",
+        "ListToolCategories",
+        "ListUnifiedGlobalScripts",
+        "ListUnifiedHmiApiTypes",
+        "ListUnifiedLibraryFolder",
+        "ManageCfcChartProtection",
+        "ManageClassicHmiCycle",
+        "ManageClassicHmiFolder",
+        "ManageClassicHmiScreenObject",
+        "ManageClassicHmiScript",
+        "ManageClassicHmiTextGraphicList",
+        "ManageDcbLibraries",
+        "ManageDccBlock",
+        "ManageDccChart",
+        "ManageDccChartInterface",
+        "ManageDccChartPartition",
+        "ManageDccPin",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveHardwareModule",
+        "ManageDriveSecurity",
+        "ManageDriveTelegrams",
+        "ManageGlobalLibrary",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageLibraryFolder",
+        "ManageLibraryMasterCopy",
+        "ManageLibraryType",
+        "ManageLibraryTypeVersion",
+        "ManageMotionAxis",
+        "ManageMultiuserSession",
+        "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
+        "ManageOpcUaAccessControl",
+        "ManageOpcUaInterface",
+        "ManagePasswordPolicy",
+        "ManagePlcAlarmTextList",
+        "ManagePlcBlockDocuments",
+        "ManagePlcBlockProtection",
+        "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
+        "ManagePlcDocuments",
+        "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
+        "ManagePlcSafety",
+        "ManagePlcSimAdvancedInstance",
+        "ManagePlcSoftwareUnit",
+        "ManagePlcSupervision",
+        "ManagePlcTableEntries",
+        "ManagePlcTagDefinition",
+        "ManagePlcUserGroup",
+        "ManagePortInterconnection",
+        "ManageProjectCompilationSettings",
+        "ManageProjectLanguage",
+        "ManageProjectUserManagement",
+        "ManageSafetyGlobalSettings",
+        "ManageSiVArcRule",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
+        "ManageSivarcBlockDefinition",
+        "ManageSivarcRuleContainer",
+        "ManageSivarcTableRule",
+        "ManageStartdriveParameter",
+        "ManageSyslogServers",
+        "ManageTeamcenterConnection",
+        "ManageTeamcenterDataset",
+        "ManageTeamcenterWorkflow",
+        "ManageTechnologyExtensions",
+        "ManageTechnologyObject",
+        "ManageTestSuiteCase",
+        "ManageTransferArea",
+        "ManageUmcUsers",
+        "ManageUnifiedCwcPackage",
+        "ManageUnifiedDynamization",
+        "ManageUnifiedEngineeringObject",
+        "ManageUnifiedEvent",
+        "ManageUnifiedHmiGroup",
+        "ManageUnifiedListEntries",
+        "ManageUnifiedLoggingTag",
+        "ManageUnifiedObjectParts",
+        "ManageUnifiedOpcUaAlarmType",
+        "ManageUnifiedPlantNode",
+        "ManageUnifiedScreenItem",
+        "ManageUnifiedScreenLayout",
+        "ManageWatchForceTableWebAccess",
+        "MonitorWatchTableLiveS7",
+        "MoveBlockToGroup",
+        "OpenProject",
+        "PatchPlcBlockDocument",
+        "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
+        "PlanHardwareNetworkConfiguration",
+        "PlanOnlineReadOnlyDataProvider",
+        "PlanOnlineReadOnlyMonitoring",
+        "PlcBuildAndImport",
+        "PlugDeviceItem",
+        "PreflightToolCall",
+        "PreviewToolBatch",
+        "ProbeGlobalLibrary",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
+        "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
+        "ReadClassicHmiFaceplates",
+        "ReadClassicHmiGlobalization",
+        "ReadClassicHmiScreenTree",
+        "ReadClassicHmiScripts",
+        "ReadDccCharts",
+        "ReadDccObject",
+        "ReadDeviceAddressing",
+        "ReadDeviceItemChannels",
+        "ReadDriveObjects",
+        "ReadDriveParameters",
+        "ReadHardwareFeatures",
+        "ReadHmiScreenSnapshot",
+        "ReadIoSystems",
+        "ReadLibraryOverview",
+        "ReadLibraryType",
+        "ReadMotionAxisConfiguration",
+        "ReadNativeInvocationLog",
+        "ReadNetworkDomains",
+        "ReadObjectIdentifier",
+        "ReadOnlineDriveParameters",
+        "ReadOpcUaAccessControl",
+        "ReadOpennessCompatibility",
+        "ReadOpennessGuidance",
+        "ReadOpennessWorkerStatus",
+        "ReadPlcBlockEditCapabilities",
+        "ReadPlcBlockFingerprints",
+        "ReadPlcBlockScopes",
+        "ReadPlcChecksums",
+        "ReadPlcLiveValuesOpcUa",
+        "ReadPlcLiveValuesS7",
+        "ReadPlcObjectFingerprints",
+        "ReadPlcSimAdvancedInstances",
+        "ReadPlcSimAdvancedTags",
+        "ReadPlcSoftwareUnits",
+        "ReadPlcSystemGroups",
+        "ReadPlcTagTableConstants",
+        "ReadPlcWatchTableCurrentValuesReadOnly",
+        "ReadPlcWebDiagnostics",
+        "ReadPlcWebVars",
+        "ReadPortalInfo",
+        "ReadProjectProtection",
+        "ReadProjectSettings",
+        "ReadProjectUserManagement",
+        "ReadSafetyBlockSignatures",
+        "ReadSiVArcRules",
+        "ReadSivarcBlockDefinitions",
+        "ReadSivarcRuleTree",
+        "ReadTechnologyObjectTree",
+        "ReadTestSuiteCases",
+        "ReadToolBatch",
+        "ReadTransferAreas",
+        "ReadTransferRoutes",
+        "ReadUnifiedAlarmCommon",
+        "ReadUnifiedAuditSettings",
+        "ReadUnifiedEngineeringObjects",
+        "ReadUnifiedFaceplateInstance",
+        "ReadUnifiedGlobalScript",
+        "ReadUnifiedGraphicSelection",
+        "ReadUnifiedHmiButtonEvent",
+        "ReadUnifiedHmiDynamization",
+        "ReadUnifiedHmiTexts",
+        "ReadUnifiedLibraryType",
+        "ReadUnifiedObjectEvents",
+        "ReadUnifiedObjectProperties",
+        "ReadUnifiedPlantObject",
+        "ReadUnifiedRuntimeAlarms",
+        "ReadUnifiedRuntimeSettings",
+        "ReadUnifiedRuntimeTags",
+        "ReadUnifiedScreenBranch",
+        "ReadUnifiedTagDefinitions",
+        "ReadV21EcosystemCatalog",
+        "RebuildReleaseHandoffArtifacts",
+        "ReleaseUnifiedReadCursor",
+        "RenderPlcBlockDocument",
+        "RenderPlcVisualDiff",
+        "RepairAndReimportBlock",
+        "ResolveSivarcExpression",
+        "RestartOpennessWorker",
+        "RetrieveProjectArchive",
+        "RunCapabilitySelfTest",
+        "RunClassicHmiOfflineValidationSuite",
+        "RunClassicHmiTemporaryImportPreflight",
+        "RunHmiActionScriptRecipeSafetySelfTest",
+        "RunHmiTemplatePlcSyncPrecheckSuite",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
+        "RunTestSuiteCase",
+        "RunToolsInTransaction",
+        "SamplePlcLiveValuesS7",
+        "SaveAsProject",
+        "SaveExport",
+        "SaveProject",
+        "ScaffoldProject",
+        "ScanAccessibleDevices",
+        "ScanPlcSourceAnnotations",
+        "SearchHardwareCatalog",
+        "SearchInstalledGsdDevices",
+        "SeedProjectFromReference",
+        "SetCpuCommonSettings",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
+        "SetPlcUnitObjectAccess",
+        "SetPlcWebOperatingMode",
+        "SetPutGetAccess",
+        "SetUnifiedHmiButtonEventScriptCode",
+        "SetUnifiedLogDuration",
+        "SetWatchTableModifyValue",
+        "ShowObjectInEditor",
+        "SyncVersionControlWorkspace",
+        "SynchronizeLibrary",
+        "TraceTagCause",
+        "TraceTagCauseLive",
+        "UnifiedOpenPipeRequest",
+        "UpdateDeviceAddress",
+        "UpdateDeviceItemChannel",
+        "UpdatePlcProgram",
+        "UpdateUnifiedGlobalScript",
+        "UpdateUnifiedMultilingualProperty",
+        "UpdateUnifiedObjectProperties",
+        "UpdateUnifiedPlantObject",
+        "UpdateUnifiedRuntimeSettings",
+        "UpgradeSivarcDefinitions",
+        "UploadDeviceParameters",
+        "UploadStationFromPlc",
+        "ValidateAutomationContext",
+        "ValidateClassicHmiMinimalPackageFiles",
+        "ValidateClassicHmiMinimalPackagePlcSync",
+        "ValidatePlcXmlSchemas",
+        "ValidateUnifiedObject",
+        "WriteClassicHmiMinimalPackageFiles",
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
+      ]
+    },
+    "21": {
+      "profile": "full-engine",
+      "toolCount": 487,
+      "tools": [
+        "AddDevice",
+        "AddDeviceWithFallback",
+        "AddGsdDeviceWithProbe",
+        "AddHardwareCatalogDeviceWithProbe",
+        "AnalyzeGlobalLibraryPackage",
+        "AnalyzeHmiTemplateReference",
+        "AnalyzePlcReferences",
+        "AnalyzeUnifiedHmiTemplateLayout",
+        "ApplyToolBatch",
+        "ApplyUnifiedHmiLayout",
+        "ApplyUnifiedHmiScreenDesignJson",
+        "ApplyUnifiedHmiTheme",
+        "ArchiveSavedProject",
+        "AttachDeviceNodeToSubnet",
+        "AttachToOpenProject",
+        "AuditEngineeringExports",
+        "BindUnifiedHmiButtonPressedTag",
+        "BindUnifiedHmiTagDynamization",
+        "Bootstrap",
+        "BuildClassicHmiMinimalPackage",
+        "BuildClassicHmiScreenXml",
+        "BuildClassicHmiTagTableXml",
+        "BuildDeviceAmlDocument",
+        "BuildFlgNetCallXml",
+        "BuildPlcGlobalDbXml",
+        "BuildPlcSymbolManifestFromXmlPath",
+        "BuildPlcTagTableXml",
+        "BuildPlcUdtXml",
+        "BuildReleaseDiagnosticReport",
+        "BuildReleaseManifest",
+        "BuildReleaseRunbook",
+        "BuildStructuredTextXml",
+        "BuildUnifiedHmiButtonActionScript",
+        "BuildUnifiedHmiLayoutDesignJson",
+        "BuildUnifiedHmiTemplateApplyDesignJson",
+        "BuildUnifiedHmiTemplateApplyDesignManifest",
+        "BuildUnifiedHmiThemeDesignJson",
+        "CallTool",
+        "CheckDownloadReadiness",
+        "CheckForUpdate",
+        "CheckLibraryUpdates",
+        "ClearExports",
+        "CloseProject",
+        "CompareLibraries",
+        "CompareLibraryObjects",
+        "ComparePlcBlockDocuments",
+        "CompareProjects",
+        "CompareSoftwareToOnline",
+        "CompareUnifiedGraphicSelections",
+        "CompileAndDiagnoseHmi",
+        "CompileAndDiagnosePlc",
+        "CompileDevice",
+        "CompileSoftware",
+        "ComposePlcAliasAlarmLad",
+        "ComposePlcFbBlockXml",
+        "ComposePlcFcBlockXml",
+        "ComposePlcLadFcBlockXml",
+        "ConfigureMotionHardwareConnection",
+        "Connect",
+        "ConnectDeviceNodesToProfinetSubnet",
+        "ConnectIsolated",
+        "ConnectProjectToWorkspace",
+        "ConnectToProject",
+        "CreateLibraryMasterCopy",
+        "CreatePlcBlockGroup",
+        "CreatePlcInstanceDb",
+        "CreatePlcTypeGroup",
+        "CreateProject",
+        "CreateVersionControlWorkspace",
+        "DecodePlcSimaticMl",
+        "DeleteEmptyPlcBlockGroup",
+        "DeleteEmptyUnifiedHmiScreenGroup",
+        "DeleteExport",
+        "DeleteHmiTag",
+        "DeletePlcBlock",
+        "DeletePlcExternalSource",
+        "DeletePlcTagTable",
+        "DeletePlcType",
+        "DeleteUnifiedHmiButtonEvent",
+        "DeleteUnifiedHmiDynamization",
+        "DescribeBlockLogic",
+        "DescribeHmiScreen",
+        "DescribeHmiScreenItem",
+        "DescribeHmiSoftware",
+        "DescribeHmiTag",
+        "DescribeHmiTagTable",
+        "DescribeObject",
+        "DescribeObjectProperty",
+        "DescribeService",
+        "DescribeUnifiedHmiButtonEventScript",
+        "DescribeUnifiedScreenItemType",
+        "Disconnect",
+        "Doctor",
+        "DownloadPlcToFolder",
+        "DownloadToPlc",
+        "DumpDeviceAttributes",
+        "EnsureOpennessUserGroup",
+        "EnsureStartStopUnifiedHmi",
+        "EnsureSubnet",
+        "EnsureUnifiedHmiButtonAction",
+        "EnsureUnifiedHmiButtonEventHandler",
+        "EnsureUnifiedHmiConnection",
+        "EnsureUnifiedHmiDynamization",
+        "EnsureUnifiedHmiScreen",
+        "EnsureUnifiedHmiScreenItem",
+        "EnsureUnifiedHmiTag",
+        "EnsureUnifiedHmiTagTable",
+        "ExchangeCfcCharts",
+        "ExchangeMotionCamData",
+        "ExchangePlcAlarmTextListsXlsx",
+        "ExchangePlcSupervisions",
+        "ExchangeSystemDiagnosticsSettings",
+        "ExchangeTestSuiteCase",
+        "ExchangeUnifiedScriptModules",
+        "ExchangeUnifiedTags",
+        "ExportAlarmClasses",
+        "ExportAlarmInstanceTexts",
+        "ExportAlarmTextLists",
+        "ExportAsDocuments",
+        "ExportBlock",
+        "ExportBlocks",
+        "ExportBlocksAsDocuments",
+        "ExportDeviceAml",
+        "ExportHmiConnection",
+        "ExportHmiProgram",
+        "ExportHmiScreen",
+        "ExportHmiTagTable",
+        "ExportOpcUaInterface",
+        "ExportPlcProDiagInfo",
+        "ExportPlcTagTable",
+        "ExportPlcWatchTable",
+        "ExportPlcWatchTablesToDirectory",
+        "ExportProjectTexts",
+        "ExportSafetyPrintout",
+        "ExportScadaData",
+        "ExportTechnologyObject",
+        "ExportTechnologyObjectsToDirectory",
+        "ExportType",
+        "ExportTypes",
+        "ExportUnifiedEngineeringList",
+        "ExtractPlcBlockMetrics",
+        "FindTools",
+        "GenerateAcceptanceReport",
+        "GenerateBlocksFromExternalSource",
+        "GenerateErrorReport",
+        "GenerateOpcUaModelledInterface",
+        "GeneratePlcDocumentation",
+        "GeneratePlcLoadableFile",
+        "GeneratePlcSourceFromBlocks",
+        "GenerateSiVArc",
+        "GetAuthoringGuide",
+        "GetBlockInfo",
+        "GetBlocks",
+        "GetBlocksWithHierarchy",
+        "GetCrossReferences",
+        "GetDeviceInfo",
+        "GetDeviceIpAddress",
+        "GetDeviceItemInfo",
+        "GetDeviceItemIoAddresses",
+        "GetDeviceItemNetworkInfo",
+        "GetDeviceItemTree",
+        "GetDevicePlugLocations",
+        "GetDevices",
+        "GetExport",
+        "GetHmiConnections",
+        "GetHmiProgramInfo",
+        "GetHmiScreens",
+        "GetHmiTagTables",
+        "GetHmiTags",
+        "GetObjectProperty",
+        "GetOnlineState",
+        "GetOpcUaConfig",
+        "GetPlcExternalSources",
+        "GetPlcForceTables",
+        "GetPlcRunStateS7",
+        "GetPlcTagTables",
+        "GetPlcWatchTables",
+        "GetProject",
+        "GetProjectTopology",
+        "GetProjectTree",
+        "GetPutGetAccess",
+        "GetRecipe",
+        "GetSoftwareInfo",
+        "GetSoftwareTree",
+        "GetState",
+        "GetTechnologyObjects",
+        "GetTypeInfo",
+        "GetTypes",
+        "GetUnifiedCrossReferences",
+        "GetVersionControlStatus",
+        "GetVersionControlWorkspaces",
+        "GoOffline",
+        "GoOfflineAll",
+        "GoOnline",
+        "ImportAlarmClasses",
+        "ImportAlarmTextLists",
+        "ImportBlock",
+        "ImportBlocksFromDirectory",
+        "ImportBlocksFromDocuments",
+        "ImportDeviceAml",
+        "ImportFromDocuments",
+        "ImportHmiConnection",
+        "ImportHmiScreen",
+        "ImportHmiScreensFromDirectory",
+        "ImportHmiTagTable",
+        "ImportHmiTagTablesFromDirectory",
+        "ImportLibraryTypeDocuments",
+        "ImportMasterCopyFromGlobalLibrary",
+        "ImportOpcUaInterface",
+        "ImportPlcAlarmInstanceTexts",
+        "ImportPlcBlockVerified",
+        "ImportPlcExternalSource",
+        "ImportPlcProgramFromDirectory",
+        "ImportPlcTagTable",
+        "ImportPlcTagTablesFromDirectory",
+        "ImportPlcWatchTableOffline",
+        "ImportProjectTexts",
+        "ImportSinumerikAlarmTexts",
+        "ImportTechnologyObject",
+        "ImportTechnologyObjectsFromDirectory",
+        "ImportType",
+        "ImportUnifiedEngineeringList",
+        "ImportUnifiedOpcUaAlarms",
+        "InitializeSimotionScripting",
+        "InspectSimaticSdCompatibility",
+        "InstantiatePlcXmlTemplates",
+        "InvokeObject",
+        "InvokeService",
+        "LintPlcSclSource",
+        "ListExports",
+        "ListHmiScreenPaths",
+        "ListObjectChildren",
+        "ListPortalProcessProjects",
+        "ListToolCategories",
+        "ListUnifiedGlobalScripts",
+        "ListUnifiedHmiApiTypes",
+        "ListUnifiedLibraryFolder",
+        "ManageCfcChartProtection",
+        "ManageClassicHmiCycle",
+        "ManageClassicHmiFolder",
+        "ManageClassicHmiGraphic",
+        "ManageClassicHmiScreenObject",
+        "ManageClassicHmiScript",
+        "ManageClassicHmiTextGraphicList",
+        "ManageCommunicationConnection",
+        "ManageDcbLibraries",
+        "ManageDccBlock",
+        "ManageDccChart",
+        "ManageDccChartInterface",
+        "ManageDccChartPartition",
+        "ManageDccPin",
+        "ManageDeviceServiceObjects",
+        "ManageDeviceUserGroup",
+        "ManageDeviceUsers",
+        "ManageDriveFunctions",
+        "ManageDriveHardwareModule",
+        "ManageDriveSafetyAcceptanceTest",
+        "ManageDriveSecurity",
+        "ManageDriveTelegrams",
+        "ManageGlobalLibrary",
+        "ManageHardwareObject",
+        "ManageHardwareUtilities",
+        "ManageIoSystem",
+        "ManageLibraryFolder",
+        "ManageLibraryMasterCopy",
+        "ManageLibraryType",
+        "ManageLibraryTypeVersion",
+        "ManageMotionAxis",
+        "ManageMultiuserSession",
+        "ManageNetworkDomain",
+        "ManageOnlineDriveFunctions",
+        "ManageOpcUaAccessControl",
+        "ManageOpcUaInterface",
+        "ManagePasswordPolicy",
+        "ManagePlcAlarmTextList",
+        "ManagePlcBlockDocuments",
+        "ManagePlcBlockProtection",
+        "ManagePlcBlockWriteProtection",
+        "ManagePlcCertificate",
+        "ManagePlcDataBlockSnapshot",
+        "ManagePlcDocuments",
+        "ManagePlcExternalSources",
+        "ManagePlcGitRepository",
+        "ManagePlcProtection",
+        "ManagePlcSafety",
+        "ManagePlcSimAdvancedInstance",
+        "ManagePlcSoftwareUnit",
+        "ManagePlcSupervision",
+        "ManagePlcTableEntries",
+        "ManagePlcTagDefinition",
+        "ManagePlcUserGroup",
+        "ManagePortInterconnection",
+        "ManageProjectCompilationSettings",
+        "ManageProjectLanguage",
+        "ManageProjectUserManagement",
+        "ManageSafetyActivationTest",
+        "ManageSafetyActivationTestGroup",
+        "ManageSafetyFunction",
+        "ManageSafetyFunctionCondition",
+        "ManageSafetyGlobalSettings",
+        "ManageSiVArcRule",
+        "ManageSinumerikArchive",
+        "ManageSinumerikSafetyMode",
+        "ManageSivarcBlockDefinition",
+        "ManageSivarcRuleContainer",
+        "ManageSivarcScreenLayout",
+        "ManageSivarcTableRule",
+        "ManageStartdriveParameter",
+        "ManageSyslogServers",
+        "ManageTeamcenterConnection",
+        "ManageTeamcenterDataset",
+        "ManageTeamcenterWorkflow",
+        "ManageTechnologyExtensions",
+        "ManageTechnologyObject",
+        "ManageTestSuiteCase",
+        "ManageTransferArea",
+        "ManageUmcUsers",
+        "ManageUnifiedCwcPackage",
+        "ManageUnifiedDynamization",
+        "ManageUnifiedEngineeringObject",
+        "ManageUnifiedEvent",
+        "ManageUnifiedHmiGroup",
+        "ManageUnifiedListEntries",
+        "ManageUnifiedLoggingTag",
+        "ManageUnifiedObjectParts",
+        "ManageUnifiedOpcUaAlarmType",
+        "ManageUnifiedPlantNode",
+        "ManageUnifiedScreenItem",
+        "ManageUnifiedScreenLayout",
+        "ManageWatchForceTableWebAccess",
+        "MonitorWatchTableLiveS7",
+        "MoveBlockToGroup",
+        "OpenProject",
+        "PatchPlcBlockDocument",
+        "PlanArtifactImportOrder",
+        "PlanGlobalLibraryTemplateReuse",
+        "PlanHardwareNetworkConfiguration",
+        "PlanOnlineReadOnlyDataProvider",
+        "PlanOnlineReadOnlyMonitoring",
+        "PlcBuildAndImport",
+        "PlugDeviceItem",
+        "PreflightToolCall",
+        "PreviewToolBatch",
+        "ProbeGlobalLibrary",
+        "ProbeHardwareHmiConnectionOwnerCandidates",
+        "ProbeHardwareHmiConnectionWhitelistedServices",
+        "ProbePlcMonitorOnlineCapabilities",
+        "ProbeS7CpuIdentity",
+        "ReadClassicHmiFaceplates",
+        "ReadClassicHmiGlobalization",
+        "ReadClassicHmiScreenTree",
+        "ReadClassicHmiScripts",
+        "ReadCommunicationConnections",
+        "ReadDccCharts",
+        "ReadDccObject",
+        "ReadDeviceAddressing",
+        "ReadDeviceItemChannels",
+        "ReadDriveObjects",
+        "ReadDriveParameters",
+        "ReadHardwareFeatures",
+        "ReadHmiScreenSnapshot",
+        "ReadIoSystems",
+        "ReadLibraryOverview",
+        "ReadLibraryType",
+        "ReadMotionAxisConfiguration",
+        "ReadNativeInvocationLog",
+        "ReadNetworkDomains",
+        "ReadObjectIdentifier",
+        "ReadOnlineDriveParameters",
+        "ReadOpcUaAccessControl",
+        "ReadOpennessCompatibility",
+        "ReadOpennessGuidance",
+        "ReadOpennessWorkerStatus",
+        "ReadPlcBlockEditCapabilities",
+        "ReadPlcBlockFingerprints",
+        "ReadPlcBlockScopes",
+        "ReadPlcChecksums",
+        "ReadPlcLiveValuesOpcUa",
+        "ReadPlcLiveValuesS7",
+        "ReadPlcObjectFingerprints",
+        "ReadPlcSimAdvancedInstances",
+        "ReadPlcSimAdvancedTags",
+        "ReadPlcSoftwareUnits",
+        "ReadPlcSystemGroups",
+        "ReadPlcTagTableConstants",
+        "ReadPlcWatchTableCurrentValuesReadOnly",
+        "ReadPlcWebDiagnostics",
+        "ReadPlcWebVars",
+        "ReadPortalInfo",
+        "ReadProjectProtection",
+        "ReadProjectSettings",
+        "ReadProjectUserManagement",
+        "ReadSafetyActivationTests",
+        "ReadSafetyBlockSignatures",
+        "ReadSiVArcRules",
+        "ReadSivarcBlockDefinitions",
+        "ReadSivarcRuleTree",
+        "ReadTechnologyObjectTree",
+        "ReadTestSuiteCases",
+        "ReadToolBatch",
+        "ReadTransferAreas",
+        "ReadTransferRoutes",
+        "ReadUnifiedAlarmCommon",
+        "ReadUnifiedAuditSettings",
+        "ReadUnifiedEngineeringObjects",
+        "ReadUnifiedFaceplateInstance",
+        "ReadUnifiedGlobalScript",
+        "ReadUnifiedGraphicSelection",
+        "ReadUnifiedHmiButtonEvent",
+        "ReadUnifiedHmiDynamization",
+        "ReadUnifiedHmiTexts",
+        "ReadUnifiedLibraryType",
+        "ReadUnifiedObjectEvents",
+        "ReadUnifiedObjectProperties",
+        "ReadUnifiedPlantObject",
+        "ReadUnifiedRuntimeAlarms",
+        "ReadUnifiedRuntimeSettings",
+        "ReadUnifiedRuntimeTags",
+        "ReadUnifiedScreenBranch",
+        "ReadUnifiedTagDefinitions",
+        "ReadV21EcosystemCatalog",
+        "RebuildReleaseHandoffArtifacts",
+        "ReleaseUnifiedReadCursor",
+        "RenderPlcBlockDocument",
+        "RenderPlcVisualDiff",
+        "RepairAndReimportBlock",
+        "ResolveSivarcExpression",
+        "RestartOpennessWorker",
+        "RetrieveProjectArchive",
+        "RunCapabilitySelfTest",
+        "RunClassicHmiOfflineValidationSuite",
+        "RunClassicHmiTemporaryImportPreflight",
+        "RunHmiActionScriptRecipeSafetySelfTest",
+        "RunHmiTemplatePlcSyncPrecheckSuite",
+        "RunOfflineReleaseValidationSuite",
+        "RunOnlineMonitoringSafetySelfTest",
+        "RunPlcCompanionTool",
+        "RunPlcSimAdvancedTestScenario",
+        "RunTestSuiteCase",
+        "RunToolsInTransaction",
+        "SamplePlcLiveValuesS7",
+        "SaveAsProject",
+        "SaveExport",
+        "SaveProject",
+        "ScaffoldProject",
+        "ScanAccessibleDevices",
+        "ScanPlcSourceAnnotations",
+        "SearchHardwareCatalog",
+        "SearchInstalledGsdDevices",
+        "SeedProjectFromReference",
+        "SetCpuCommonSettings",
+        "SetDeviceItemAttribute",
+        "SetDeviceItemIoAddress",
+        "SetOpcUaInterfaceEnabled",
+        "SetPlcUnitObjectAccess",
+        "SetPlcWebOperatingMode",
+        "SetPutGetAccess",
+        "SetUnifiedHmiButtonEventScriptCode",
+        "SetUnifiedLogDuration",
+        "SetWatchTableModifyValue",
+        "ShowObjectInEditor",
+        "SyncVersionControlWorkspace",
+        "SynchronizeLibrary",
+        "TraceTagCause",
+        "TraceTagCauseLive",
+        "UnifiedOpenPipeRequest",
+        "UpdateDeviceAddress",
+        "UpdateDeviceItemChannel",
+        "UpdatePlcProgram",
+        "UpdateUnifiedGlobalScript",
+        "UpdateUnifiedMultilingualProperty",
+        "UpdateUnifiedObjectProperties",
+        "UpdateUnifiedPlantObject",
+        "UpdateUnifiedRuntimeSettings",
+        "UpgradeSivarcDefinitions",
+        "UploadDeviceParameters",
+        "UploadStationFromPlc",
+        "ValidateAutomationContext",
+        "ValidateClassicHmiMinimalPackageFiles",
+        "ValidateClassicHmiMinimalPackagePlcSync",
+        "ValidatePlcXmlSchemas",
+        "ValidateUnifiedObject",
+        "WriteClassicHmiMinimalPackageFiles",
+        "WritePlcSclSourceFile",
+        "WritePlcSimAdvancedTags",
+        "WritePlcWebVars",
+        "WriteUnifiedRuntimeTags"
+      ]
+    }
+  },
+  "groupCounts": {
+    "shared-subset": 438,
+    "all-releases": 46,
+    "release-only": 11
+  },
+  "tools": [
+    {
+      "name": "AddDevice",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AddDeviceWithFallback",
+      "releases": [
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AddGsdDeviceWithProbe",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AddHardwareCatalogDeviceWithProbe",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AnalyzeGlobalLibraryPackage",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AnalyzeHmiTemplateReference",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AnalyzePlcReferences",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AnalyzeUnifiedHmiTemplateLayout",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ApplyToolBatch",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ApplyUnifiedHmiLayout",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ApplyUnifiedHmiScreenDesignJson",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ApplyUnifiedHmiTheme",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ArchiveSavedProject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AttachDeviceNodeToSubnet",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AttachToOpenProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "AuditEngineeringExports",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BindUnifiedHmiButtonPressedTag",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BindUnifiedHmiTagDynamization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "Bootstrap",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildClassicHmiMinimalPackage",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildClassicHmiScreenXml",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildClassicHmiTagTableXml",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildDeviceAmlDocument",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildFlgNetCallXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildPlcGlobalDbXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildPlcSymbolManifestFromXmlPath",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildPlcTagTableXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildPlcUdtXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildReleaseDiagnosticReport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildReleaseManifest",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildReleaseRunbook",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildStructuredTextXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildUnifiedHmiButtonActionScript",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildUnifiedHmiLayoutDesignJson",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildUnifiedHmiTemplateApplyDesignJson",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildUnifiedHmiTemplateApplyDesignManifest",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "BuildUnifiedHmiThemeDesignJson",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CallTool",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CheckDownloadReadiness",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CheckForUpdate",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CheckLibraryUpdates",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ClearExports",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CloseProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompareLibraries",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompareLibraryObjects",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ComparePlcBlockDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompareProjects",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompareSoftwareToOnline",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompareUnifiedGraphicSelections",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompileAndDiagnoseHmi",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompileAndDiagnosePlc",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompileDevice",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CompileSoftware",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ComposePlcAliasAlarmLad",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ComposePlcFbBlockXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ComposePlcFcBlockXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ComposePlcLadFcBlockXml",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConfigureMotionHardwareConnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "Connect",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConnectDeviceNodesToProfinetSubnet",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConnectIsolated",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConnectProjectToWorkspace",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ConnectToProject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreateLibraryMasterCopy",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcBlockGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcInstanceDb",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcTag",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcTagTable",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcTypeGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreatePlcUserConstant",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreateProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "CreateVersionControlWorkspace",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DecodePlcSimaticMl",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteEmptyPlcBlockGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteEmptyUnifiedHmiScreenGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteExport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteHmiTag",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeletePlcBlock",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeletePlcExternalSource",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeletePlcTagTable",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeletePlcType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteUnifiedHmiButtonEvent",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DeleteUnifiedHmiDynamization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeBlockLogic",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeHmiScreen",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeHmiScreenItem",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeHmiSoftware",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeHmiTag",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeHmiTagTable",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeObjectProperty",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeService",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeUnifiedHmiButtonEventScript",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DescribeUnifiedScreenItemType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DiagnosePortalConnectReadiness",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "Disconnect",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "Doctor",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DownloadPlcToFolder",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DownloadToPlc",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "DumpDeviceAttributes",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureOpennessUserGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureStartStopUnifiedHmi",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureSubnet",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiButtonAction",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiButtonEventHandler",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiConnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiDynamization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiScreen",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiScreenItem",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiTag",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "EnsureUnifiedHmiTagTable",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeCfcCharts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeMotionCamData",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangePlcAlarmTextListsXlsx",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangePlcSupervisions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeSystemDiagnosticsSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeTestSuiteCase",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeUnifiedScriptModules",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExchangeUnifiedTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportAlarmClasses",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportAlarmInstanceTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportAlarmTextLists",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportAsDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportBlock",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportBlocks",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportBlocksAsDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportDeviceAml",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportHmiConnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportHmiProgram",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportHmiScreen",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportHmiTagTable",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportOpcUaInterface",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportPlcProDiagInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportPlcTagTable",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportPlcWatchTable",
+      "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportPlcWatchTablesToDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportProjectTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportSafetyPrintout",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportScadaData",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportTechnologyObject",
+      "releases": [
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportTechnologyObjectsToDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportType",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportTypes",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExportUnifiedEngineeringList",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ExtractPlcBlockMetrics",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "FindTools",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GenerateAcceptanceReport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GenerateBlocksFromExternalSource",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GenerateErrorReport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GenerateOpcUaModelledInterface",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GeneratePlcDocumentation",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GeneratePlcLoadableFile",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GeneratePlcSourceFromBlocks",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GenerateSiVArc",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetAuthoringGuide",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetBlockInfo",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetBlocks",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetBlocksWithHierarchy",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetCrossReferences",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceIpAddress",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceItemInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceItemIoAddresses",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceItemNetworkInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDeviceItemTree",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDevicePlugLocations",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetDevices",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetExport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetHmiConnections",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetHmiProgramInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetHmiScreens",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetHmiTagTables",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetHmiTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetObjectProperty",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetOnlineState",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetOpcUaConfig",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPlcExternalSources",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPlcForceTables",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPlcRunStateS7",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPlcTagTables",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPlcWatchTables",
+      "releases": [
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetProjectTopology",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetProjectTree",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetPutGetAccess",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetRecipe",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetSoftwareInfo",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetSoftwareTree",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetState",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetTechnologyObjects",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetTypeInfo",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetTypes",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetUnifiedCrossReferences",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetVersionControlStatus",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GetVersionControlWorkspaces",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GoOffline",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GoOfflineAll",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "GoOnline",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportAlarmClasses",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportAlarmTextLists",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportBlock",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportBlocksFromDirectory",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportBlocksFromDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportDeviceAml",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportFromDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportHmiConnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportHmiScreen",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportHmiScreensFromDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportHmiTagTable",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportHmiTagTablesFromDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportLibraryTypeDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportMasterCopyFromGlobalLibrary",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportOpcUaInterface",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcAlarmInstanceTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcBlockVerified",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcExternalSource",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcProgramFromDirectory",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcTagTable",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcTagTablesFromDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportPlcWatchTableOffline",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportProjectTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportSinumerikAlarmTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportTechnologyObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportTechnologyObjectsFromDirectory",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportType",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportUnifiedEngineeringList",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ImportUnifiedOpcUaAlarms",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "InitializeSimotionScripting",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "InspectSimaticSdCompatibility",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "InstantiatePlcXmlTemplates",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "InvokeObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "InvokeService",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "LintPlcSclSource",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListExports",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListHmiScreenPaths",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListObjectChildren",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListPortalProcessProjects",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListToolCategories",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListUnifiedGlobalScripts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListUnifiedHmiApiTypes",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ListUnifiedLibraryFolder",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageCfcChartProtection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiCycle",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiFolder",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiGraphic",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiScreenObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiScript",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageClassicHmiTextGraphicList",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageCommunicationConnection",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDcbLibraries",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDccBlock",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDccChart",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDccChartInterface",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDccChartPartition",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDccPin",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDeviceServiceObjects",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDeviceUserGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDeviceUsers",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDriveFunctions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDriveHardwareModule",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDriveSafetyAcceptanceTest",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDriveSecurity",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageDriveTelegrams",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageGlobalLibrary",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageHardwareObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageHardwareUtilities",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageIoSystem",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageLibraryFolder",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageLibraryMasterCopy",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageLibraryType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageLibraryTypeVersion",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageMotionAxis",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageMultiuserSession",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageNetworkDomain",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageOnlineDriveFunctions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageOpcUaAccessControl",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageOpcUaInterface",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePasswordPolicy",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcAlarmTextList",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcBlockDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcBlockProtection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcBlockWriteProtection",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcCertificate",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcDataBlockSnapshot",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcDocuments",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcExternalSources",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcGitRepository",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcProtection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcSafety",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcSimAdvancedInstance",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcSoftwareUnit",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcSupervision",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcTableEntries",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcTagDefinition",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePlcUserGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManagePortInterconnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageProjectCompilationSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageProjectLanguage",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageProjectUserManagement",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSafetyActivationTest",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSafetyActivationTestGroup",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSafetyFunction",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSafetyFunctionCondition",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSafetyGlobalSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSiVArcRule",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSinumerikArchive",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSinumerikSafetyMode",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSivarcBlockDefinition",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSivarcRuleContainer",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSivarcScreenLayout",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSivarcTableRule",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageStartdriveParameter",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageSyslogServers",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTeamcenterConnection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTeamcenterDataset",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTeamcenterWorkflow",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTechnologyExtensions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTechnologyObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTestSuiteCase",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageTransferArea",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUmcUsers",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedCwcPackage",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedDynamization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedEngineeringObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedEvent",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedHmiGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedListEntries",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedLoggingTag",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedObjectParts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedOpcUaAlarmType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedPlantNode",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedScreenItem",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageUnifiedScreenLayout",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ManageWatchForceTableWebAccess",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "MonitorWatchTableLiveS7",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "MoveBlockToGroup",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "OpenProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PatchPlcBlockDocument",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanArtifactImportOrder",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "shared-planner; profile-specific envelope"
+    },
+    {
+      "name": "PlanGlobalLibraryTemplateReuse",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanHardwareNetworkConfiguration",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanOnlineReadOnlyDataProvider",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanOnlineReadOnlyMonitoring",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlanPlcExternalSourceImport",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlcBuildAndImport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PlugDeviceItem",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PreflightToolCall",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "PreviewToolBatch",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ProbeGlobalLibrary",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ProbeHardwareHmiConnectionOwnerCandidates",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ProbeHardwareHmiConnectionWhitelistedServices",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ProbePlcMonitorOnlineCapabilities",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ProbeS7CpuIdentity",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadClassicHmiFaceplates",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadClassicHmiGlobalization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadClassicHmiScreenTree",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadClassicHmiScripts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadCommunicationConnections",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDccCharts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDccObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDeviceAddressing",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDeviceItemChannels",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDriveObjects",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadDriveParameters",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadHardwareFeatures",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadHmiScreenSnapshot",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadIoSystems",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadLibraryOverview",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadLibraryType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadMotionAxisConfiguration",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadNativeInvocationLog",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadNetworkDomains",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadObjectIdentifier",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadOnlineDriveParameters",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadOpcUaAccessControl",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadOpennessCompatibility",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadOpennessGuidance",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadOpennessWorkerStatus",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcBlockEditCapabilities",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcBlockFingerprints",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcBlockScopes",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcChecksums",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcLiveValuesOpcUa",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcLiveValuesS7",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcObjectFingerprints",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcSimAdvancedInstances",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcSimAdvancedTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcSoftwareUnits",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcSystemConstants",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcSystemGroups",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcTagTableConstants",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcTags",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcUserConstants",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcWatchTableCurrentValuesReadOnly",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcWebDiagnostics",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPlcWebVars",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadPortalInfo",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadProjectProtection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadProjectSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadProjectUserManagement",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadSafetyActivationTests",
+      "releases": [
+        "21"
+      ],
+      "group": "release-only",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadSafetyBlockSignatures",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadSiVArcRules",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadSivarcBlockDefinitions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadSivarcRuleTree",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadTechnologyObjectTree",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadTestSuiteCases",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadToolBatch",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadTransferAreas",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadTransferRoutes",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedAlarmCommon",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedAuditSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedEngineeringObjects",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedFaceplateInstance",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedGlobalScript",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedGraphicSelection",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedHmiButtonEvent",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedHmiDynamization",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedHmiTexts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedLibraryType",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedObjectEvents",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedObjectProperties",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedPlantObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedRuntimeAlarms",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedRuntimeSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedRuntimeTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedScreenBranch",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadUnifiedTagDefinitions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReadV21EcosystemCatalog",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RebuildReleaseHandoffArtifacts",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ReleaseUnifiedReadCursor",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RenderPlcBlockDocument",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RenderPlcVisualDiff",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RepairAndReimportBlock",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ResolveSivarcExpression",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RestartOpennessWorker",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RetrieveProjectArchive",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunCapabilitySelfTest",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunClassicHmiOfflineValidationSuite",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunClassicHmiTemporaryImportPreflight",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunHmiActionScriptRecipeSafetySelfTest",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunHmiTemplatePlcSyncPrecheckSuite",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunOfflineReleaseValidationSuite",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunOnlineMonitoringSafetySelfTest",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunPlcCompanionTool",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunPlcSimAdvancedTestScenario",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunTestSuiteCase",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "RunToolsInTransaction",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SamplePlcLiveValuesS7",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SaveAsProject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SaveExport",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SaveProject",
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "all-releases",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ScaffoldProject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ScanAccessibleDevices",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ScanPlcSourceAnnotations",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SearchHardwareCatalog",
+      "releases": [
+        "19",
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SearchInstalledGsdDevices",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SeedProjectFromReference",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetCpuCommonSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetDeviceItemAttribute",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetDeviceItemIoAddress",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetOpcUaInterfaceEnabled",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetPlcUnitObjectAccess",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetPlcWebOperatingMode",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetPutGetAccess",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetUnifiedHmiButtonEventScriptCode",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetUnifiedLogDuration",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SetWatchTableModifyValue",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ShowObjectInEditor",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SyncVersionControlWorkspace",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "SynchronizeLibrary",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "TraceTagCause",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "TraceTagCauseLive",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UnifiedOpenPipeRequest",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateDeviceAddress",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateDeviceItemChannel",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdatePlcProgram",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateUnifiedGlobalScript",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateUnifiedMultilingualProperty",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateUnifiedObjectProperties",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateUnifiedPlantObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpdateUnifiedRuntimeSettings",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UpgradeSivarcDefinitions",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UploadDeviceParameters",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "UploadStationFromPlc",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidateAutomationContext",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidateClassicHmiMinimalPackageFiles",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidateClassicHmiMinimalPackagePlcSync",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidatePlcXmlSchemas",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "ValidateUnifiedObject",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "WriteClassicHmiMinimalPackageFiles",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "WritePlcSclSourceFile",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "WritePlcSimAdvancedTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "WritePlcWebVars",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    },
+    {
+      "name": "WriteUnifiedRuntimeTags",
+      "releases": [
+        "20",
+        "21"
+      ],
+      "group": "shared-subset",
+      "contract": "consult selected host schema; equal names do not guarantee equal contracts"
+    }
+  ]
+}

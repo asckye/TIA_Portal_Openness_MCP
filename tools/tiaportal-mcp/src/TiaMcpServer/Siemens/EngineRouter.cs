@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens
                 var candidates = new List<string>();
 
                 var m = Regex.Match(dir, @"^(.*)[\\/]bin(-v20)?[\\/]Release[\\/]net48$", RegexOptions.IgnoreCase);
-                if (m.Success)
+                if (m.Success && target.IsFullEngine)
                 {
                     string binDir = target.EngineOutputDirectory;
                     candidates.Add(Path.Combine(m.Groups[1].Value, binDir, "Release", "net48", exeName));

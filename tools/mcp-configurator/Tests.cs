@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -39,16 +39,8 @@ namespace TiaMcpConfigurator
             Assert(TiaVersionCatalog.All.Select(x => x.Key).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(
                 new[] { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" }),
                 "catalog preserves distinct V14 SP1 and V15.1 planned version keys");
-            Assert(TiaVersionCatalog.Runnable.Select(x => x.Key).SequenceEqual(new[] { "21", "20" }),
+            Assert(TiaVersionCatalog.Runnable.Select(x => x.Key).SequenceEqual(new[] { "21", "20", "19", "18", "17", "16", "15.1", "14sp1" }),
                 "catalog offers only runnable V21 / V20 in descending order");
-            foreach (var planned in TiaVersionCatalog.All.Where(x => !x.IsRunnable))
-            {
-                string fakeEngine = Path.Combine(temp, "runtime", "v" + planned.Key, "TiaMcpServer.exe");
-                Directory.CreateDirectory(Path.GetDirectoryName(fakeEngine)); File.WriteAllText(fakeEngine, "stub");
-                Reject<InvalidOperationException>(() => ConfigCore.Engine(temp, planned.Key),
-                    planned.DisplayName + " remains unavailable even when a matching runtime filename exists");
-            }
-            Reject<InvalidOperationException>(() => ConfigCore.Engine(temp, 19), "integer legacy version cannot launch a planned engine");
             Reject<ArgumentException>(() => ConfigCore.Engine(temp, "22"), "unknown version does not fall back to a runnable engine");
             foreach (string excluded in new[] { "14", "15" })
                 Reject<ArgumentException>(() => ConfigCore.Engine(temp, excluded), "excluded release has no engine: " + excluded);
@@ -57,18 +49,23 @@ namespace TiaMcpConfigurator
             foreach (var version in TiaVersionCatalog.Runnable)
             {
                 Reject<FileNotFoundException>(() => ConfigCore.Engine(temp, version.Key), version.DisplayName + " missing runtime is rejected");
+                if (version.IsFullEngine) {
                 string sourceEngine = Path.Combine(temp, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(sourceEngine)); File.WriteAllText(sourceEngine, "stub");
                 Assert(ConfigCore.Engine(temp, version.Key) == sourceEngine, version.DisplayName + " uses its catalog source-tree fallback");
+                }
                 string runtimeEngine = Path.Combine(temp, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe");
                 Directory.CreateDirectory(Path.GetDirectoryName(runtimeEngine)); File.WriteAllText(runtimeEngine, "stub");
-                Assert(ConfigCore.Engine(temp, version.MajorVersion) == runtimeEngine, version.DisplayName + " packaged runtime takes precedence over source output");
-                var settings = new ServerSettings { Version = version.MajorVersion };
+                Assert(ConfigCore.Engine(temp, version.Key) == runtimeEngine, version.DisplayName + " packaged runtime takes precedence over source output");
+                var settings = new ServerSettings { Version = version.MajorVersion, ReleaseKey = version.Key };
                 string serialized = ConfigCore.Json().Serialize(settings);
                 Assert(serialized.Contains("\"Version\":" + version.MajorVersion) &&
-                    ConfigCore.Json().Deserialize<ServerSettings>(serialized).Version == version.MajorVersion,
+                    ConfigCore.Json().Deserialize<ServerSettings>(serialized).EffectiveReleaseKey == version.Key,
                     version.DisplayName + " settings retain the persisted integer Version schema");
             }
+            var legacy = new ServerSettings { Version = 15, ReleaseKey = "15.1", TiaPath = temp, Address = "127.0.0.1", Port = 8735 };
+            Assert(ConfigCore.Arguments(legacy, "test-key").Contains("--release-key") && ConfigCore.Arguments(legacy, "test-key").Contains("15.1"), "V15.1 launch arguments retain exact minor identity");
+            Assert(ConfigCore.Json().Deserialize<ServerSettings>("{\"Version\":20}").EffectiveReleaseKey == "20", "old saved V20 configuration remains readable");
         }
 
         private static void Probe(bool unauthorized)
@@ -259,7 +256,7 @@ namespace TiaMcpConfigurator
                         "version picker displays catalog names, selects stable keys and defaults to V21");
                     versions.Items.SortDescriptions.Add(new System.ComponentModel.SortDescription("MajorVersion", System.ComponentModel.ListSortDirection.Ascending));
                     versions.SelectedValue = "20";
-                    Assert(versions.SelectedIndex == 0 && ((System.Windows.Controls.TextBlock)window.FindName("LinkServer")).Text.EndsWith("V20"),
+                    Assert(versions.SelectedIndex == versions.Items.Count - 2 && ((System.Windows.Controls.TextBlock)window.FindName("LinkServer")).Text.EndsWith("V20"),
                         "selecting the V20 catalog key uses its identity even when the display order is reversed");
                     versions.Items.SortDescriptions.Clear();
                     versions.SelectedValue = "21";

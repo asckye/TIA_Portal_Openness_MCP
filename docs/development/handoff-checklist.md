@@ -1,5 +1,8 @@
 # 换机器交接单（历史资料；最新状态见交接总页）
 
+> Current multi-version development: [release tools, API audit and build instructions](../reference/version-tools.md). Historical release/VM records below describe their original dates and do not authorize new native operations.
+
+
 **2026-10-01 更新：**用户已授权合并主线并发布 v3.1.0，发布流程和三项 GitHub 工作流均已通过；详见[交接总页](handoff.md)。开发分支 `codex/v3.1-audit-stability` 保留。本次未部署虚拟机或执行新原生测试，旧地址/PID 不代表当前状态。
 
 [交接总页](handoff.md) · [文档目录](../README.md) · [真机台账](../reference/real-machine-ledger.md) · [v2.7.56 发布说明](../releases/v2.7.56.md) · [交接历史](handoff-history.md)

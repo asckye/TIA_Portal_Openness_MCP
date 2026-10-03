@@ -18,7 +18,7 @@ internal static class LegacyHostPassiveDiagnostics
         var names = tools.Select(t => t.ProtocolTool.Name).ToArray();
         bool unique = names.Distinct(StringComparer.Ordinal).Count() == names.Length;
         bool schemas = tools.All(t => ObjectSchema(t.ProtocolTool.InputSchema));
-        bool mappings = FoundationTools.Definitions.All(d => names.Contains(d.Name, StringComparer.Ordinal) && WorkerOperations.Names.Contains(d.Operation));
+        bool mappings = FoundationTools.Definitions.Where(d => FoundationTools.Available(d, releaseKey)).All(d => names.Contains(d.Name, StringComparer.Ordinal) && WorkerOperations.Names.Contains(d.Operation));
         var roster = new JsonArray();
         foreach (var tool in tools.OrderBy(t => t.ProtocolTool.Name, StringComparer.Ordinal))
         {
@@ -33,7 +33,7 @@ internal static class LegacyHostPassiveDiagnostics
             ["contract"] = Contract, ["scope"] = "managed host registration and structural schema checks only",
             ["upstreamResponseCompatible"] = false, ["nativeCertified"] = false,
             ["selectedRelease"] = new JsonObject { ["key"] = release.Key, ["displayName"] = release.DisplayName, ["catalogState"] = release.SupportState, ["catalogMeaning"] = "Build-target metadata only; not installed or accepted capability." },
-            ["host"] = new JsonObject { ["profile"] = "plc-foundation-source-preview", ["productionAccepted"] = false, ["nativeSessionConfigured"] = nativeSessionConfigured, ["nativeCallsDisabledByDefault"] = true, ["nativeCallsDisabledByConfiguration"] = !nativeSessionConfigured, ["nativeGateMeaning"] = "Configuration only; this diagnostic never invokes the worker even when enabled." },
+            ["host"] = new JsonObject { ["profile"] = "plc-foundation", ["productionAccepted"] = false, ["nativeSessionConfigured"] = nativeSessionConfigured, ["nativeCallsDisabledByDefault"] = false, ["nativeCallsDisabledByConfiguration"] = !nativeSessionConfigured, ["nativeGateMeaning"] = "Configuration only; this diagnostic never invokes the worker even when enabled." },
             ["checks"] = new JsonObject { ["uniqueRegisteredNames"] = unique, ["objectSchemaContracts"] = schemas, ["foundationOperationsInSourceAllowlist"] = mappings, ["passed"] = unique && schemas && mappings, ["meaning"] = "Structural checks only; not complete JSON Schema validation, tool execution, PLC semantics or native readiness." },
             ["registeredToolCount"] = tools.Count, ["registeredTools"] = roster, ["probes"] = probes,
             ["sideEffects"] = new JsonObject { ["workerInvoked"] = false, ["tiaLaunchedOrAttached"] = false, ["groupInspectedOrRepaired"] = false, ["persistentSettingsChanged"] = false },
@@ -54,7 +54,8 @@ internal static class LegacyHostToolRegistry
     internal static IReadOnlyList<McpServerTool> Create(IFoundationWorker worker, string releaseKey, bool nativeSessionConfigured)
     {
         TiaVersionCatalog.Get(releaseKey);
-        var tools = FoundationTools.Create(worker).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
+        var tools = FoundationTools.Create(worker, releaseKey).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
+        tools.Add(new ImportOrderTool());
         tools.AddRange(LegacyHostPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools));
         return tools.AsReadOnly();
     }

@@ -19,4 +19,6 @@
 
 2026-09-29 未发布的生态扩展另包含 Siemens 官方指南、Siemens OPC UA 接口生成源代码、Czarnak 的 TiaGitAddIn.Core 和 core-engineering 的 PLC Tools。固定提交、版权、许可及本地改动逐项记录在[第三方组件清单](docs/licenses/THIRD-PARTY-NOTICES.md)。上述作者不因此成为本项目的维护者或背书方。
 
-2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `tools/tia-openness-studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license, file hashes, full source snapshot and Git history are retained there. The integrated desktop uses this repository's MCP engine.
+2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `tools/tia-openness-studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license, file hashes, full source snapshot and Git history are retained there. The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
+
+The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](tools/third-party/eido-import-planner/README.md).

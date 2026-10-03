@@ -1,3 +1,4 @@
+using System.Globalization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -214,12 +215,14 @@ namespace TiaMcpConfigurator
             return profile.Client == "gemini" || profile.Client == "qwen" ? "httpUrl" : "url";
         }
 
-        public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia)
+        public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia) { return Entry(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+
+        public static Dictionary<string, object> Entry(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             string client = profile.Client;
             if (!remote)
             {
-                var localArgs = new[] { "--tia-major-version", version.ToString(), "--tia-portal-location", tia };
+                var localArgs = new[] { ConfigCore.VersionArgument(version), version, "--tia-portal-location", tia };
                 // OpenCode: command is one array that starts with the executable.
                 if (client == "opencode")
                     return new Dictionary<string, object> { { "type", "local" }, { "command", new[] { engine }.Concat(localArgs).ToArray() }, { "enabled", true } };
@@ -238,7 +241,9 @@ namespace TiaMcpConfigurator
             return entry;
         }
 
-        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia)
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, int version, string tia) { Save(profile, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+
+        public static void Save(ClientProfile profile, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             var entry = Entry(profile, remote, address, port, key, engine, version, tia);
             string name = ServerName(profile, remote);
@@ -297,7 +302,9 @@ namespace TiaMcpConfigurator
 
         // Conservative table editor: preserves all unrelated bytes. Complex root/dotted/inline
         // definitions are rejected rather than producing duplicate tables or guessing at user intent.
-        public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, int version, string tia)
+        public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, int version, string tia) { return MergeToml(text, name, remote, address, port, key, engine, version.ToString(CultureInfo.InvariantCulture), tia); }
+
+        public static string MergeToml(string text, string name, bool remote, string address, int port, string key, string engine, string version, string tia)
         {
             string token = "(?:" + Regex.Escape(name) + "|\"" + Regex.Escape(name) + "\"|'" + Regex.Escape(name) + "')";
             string mcp = "(?:mcp_servers|\"mcp_servers\"|'mcp_servers')";
@@ -326,7 +333,7 @@ namespace TiaMcpConfigurator
             else
             {
                 block.AppendLine("command = " + TomlString(engine));
-                block.AppendLine("args = [" + String.Join(", ", new[] { "--tia-major-version", version.ToString(), "--tia-portal-location", tia }.Select(TomlString)) + "]");
+                block.AppendLine("args = [" + String.Join(", ", new[] { ConfigCore.VersionArgument(version), version, "--tia-portal-location", tia }.Select(TomlString)) + "]");
             }
             block.AppendLine("startup_timeout_sec = 120"); block.AppendLine("tool_timeout_sec = 300");
             return kept.ToString() + (kept.Length > 0 ? Environment.NewLine : "") + block;

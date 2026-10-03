@@ -20,6 +20,8 @@ namespace TiaMcpConfigurator
     public sealed class ServerSettings
     {
         public int Version { get; set; }
+        public string ReleaseKey { get; set; }
+        public string EffectiveReleaseKey { get { return string.IsNullOrEmpty(ReleaseKey) ? Version.ToString(CultureInfo.InvariantCulture) : ReleaseKey; } }
         public string Address { get; set; }
         public int Port { get; set; }
         public string TiaPath { get; set; }
@@ -70,9 +72,10 @@ namespace TiaMcpConfigurator
         public static string Engine(string root, string versionKey)
         {
             var version = TiaVersionCatalog.RequireRunnable(versionKey);
-            var candidates = new[] {
+            var candidates = version.IsFullEngine ? new[] {
                 Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe"),
-                Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") };
+                Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") } : new[] {
+                Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
             if (path == null) throw new FileNotFoundException("找不到 " + version.DisplayName + " 引擎。请将配置程序放在完整 Release 包的根目录，与 runtime 文件夹同级。");
             return path;
@@ -83,23 +86,26 @@ namespace TiaMcpConfigurator
         /// TiaPortalLocation 环境变量（须指向该版本）→ 注册表 HKLM\SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{version}\TIA_Opns\Path
         /// → 默认安装目录。返回 (路径, 来源)；找不到返回 (null, 说明)。只读，不抛异常。
         /// </summary>
-        public static KeyValuePair<string, string> DetectTia(int version)
+        public static KeyValuePair<string, string> DetectTia(int version) { return DetectTia(version.ToString(CultureInfo.InvariantCulture)); }
+        public static KeyValuePair<string, string> DetectTia(string releaseKey)
         {
+            var descriptor = TiaVersionCatalog.RequireRunnable(releaseKey);
+            int version = descriptor.MajorVersion;
             string env = Environment.GetEnvironmentVariable("TiaPortalLocation");
-            if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env) && PathMatchesVersion(env, version) && HasOpenness(env, version))
+            if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env) && PathMatchesVersion(env, version) && HasOpenness(env, releaseKey))
                 return new KeyValuePair<string, string>(env, "TiaPortalLocation 环境变量");
             try
             {
-                string regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(Microsoft.Win32.RegistryView.Registry64, version, "TIA_Opns");
-                if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, version))
+                string regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(Microsoft.Win32.RegistryView.Registry64, releaseKey == "15.1" ? "15_1" : version.ToString(CultureInfo.InvariantCulture), "TIA_Opns");
+                if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, releaseKey))
                     return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
             }
             catch (Exception) { }
             foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
             {
                 if (string.IsNullOrEmpty(root)) continue;
-                string candidate = Path.Combine(root, "Siemens", "Automation", "Portal V" + version);
-                if (Directory.Exists(candidate) && HasOpenness(candidate, version)) return new KeyValuePair<string, string>(candidate, "默认安装目录");
+                string candidate = Path.Combine(root, "Siemens", "Automation", descriptor.InstallFolder);
+                if (Directory.Exists(candidate) && HasOpenness(candidate, releaseKey)) return new KeyValuePair<string, string>(candidate, "默认安装目录");
             }
             return new KeyValuePair<string, string>(null, "环境变量、注册表和默认目录都没有 V" + version + " 的 Openness 安装");
         }
@@ -109,17 +115,17 @@ namespace TiaMcpConfigurator
             return TiaOpenness.Shared.OpennessEnvironment.PathMatchesVersion(path, version);
         }
 
-        private static bool HasOpenness(string path, int version)
+        private static bool HasOpenness(string path, string version)
         {
             try { ValidateTia(path, version); return true; } catch (Exception) { return false; }
         }
 
-        public static void ValidateTia(string path, int version)
+        public static void ValidateTia(string path, int version) { ValidateTia(path, version.ToString(CultureInfo.InvariantCulture)); }
+        public static void ValidateTia(string path, string releaseKey)
         {
-            string api = Path.Combine(path, "PublicAPI");
-            string dll = version == 21 ? "Siemens.Engineering.Base.dll" : "Siemens.Engineering.dll";
-            if (!Directory.Exists(api) || !Directory.EnumerateFiles(api, dll, SearchOption.AllDirectories).Any())
-                throw new DirectoryNotFoundException("该目录未找到 V" + version + " Openness API（" + dll + "）。请选择 Portal V" + version + " 安装根目录，不带 Bin，并确认安装了 Openness。");
+            var release = TiaVersionCatalog.RequireRunnable(releaseKey);
+            if (release.FindApiDirectory(path) == null)
+                throw new DirectoryNotFoundException("该目录未找到 " + release.DisplayName + " Openness API（" + release.ApiAssembly + "）。请选择安装根目录或对应 PublicAPI 目录。");
         }
 
         public static void AtomicJson(string path, object value)
@@ -166,10 +172,13 @@ namespace TiaMcpConfigurator
                 { "headers", new Dictionary<string, object> { { "Authorization", "Bearer " + key } } } };
         }
 
+        public static string VersionArgument(string releaseKey)
+        { return TiaVersionCatalog.RequireRunnable(releaseKey).IsFullEngine ? "--tia-major-version" : "--release-key"; }
+
         public static string Arguments(ServerSettings settings, string key)
         {
             ValidateKey(key);
-            return String.Join(" ", new[] { "--tia-major-version", settings.Version.ToString(), "--tia-portal-location", settings.TiaPath,
+            return String.Join(" ", new[] { VersionArgument(settings.EffectiveReleaseKey), settings.EffectiveReleaseKey, "--tia-portal-location", settings.TiaPath,
                 "--transport", "http", "--http-prefix", Prefix(settings.Address, settings.Port), "--http-api-key", key, "--logging", "1" }.Select(Quote));
         }
 

@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework><OutputType>Exe</OutputType><AssemblyName>TiaMcpServer</AssemblyName><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="0.3.0-preview.4" />
     <Compile Include="../TiaMcpServer.PlcFoundation/MutationIdentityPolicy.cs" Link="MutationIdentityPolicy.cs" />
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs" Link="FlgNetCallXmlBuilder.cs" />
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcLadFcBlockXmlComposer.cs" Link="PlcLadFcBlockXmlComposer.cs" />
@@ -17,4 +19,5 @@
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs" Link="PlcUdtXmlBuilder.cs" />
     <Compile Include="../TiaMcpServer/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs" Link="PlcTagTableXmlBuilder.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
 </Project>

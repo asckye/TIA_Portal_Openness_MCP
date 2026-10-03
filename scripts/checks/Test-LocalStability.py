@@ -273,14 +273,14 @@ def main():
     parser.add_argument('--rounds', type=int, default=50)
     parser.add_argument('--concurrency', type=int, default=8)
     parser.add_argument('--isolate-openness', action='store_true', help='Exercise the supervised child host; still no TIA initialization/connection')
-    parser.add_argument('--full-tool-count', type=int, default=None, help='Defaults to the version-aware roster: V20=475, V21=486')
+    parser.add_argument('--full-tool-count', type=int, default=None, help='Defaults to the version-aware roster: V20=476, V21=487')
     parser.add_argument('--lite-tool-count', type=int, default=62)
     parser.add_argument('--max-private-mib', type=int, default=512)
     parser.add_argument('--max-handle-growth', type=int, default=128)
     parser.add_argument('--output', type=Path, required=True, help='Fresh directory for evidence; existing directories are refused')
     args = parser.parse_args()
     if args.full_tool_count is None:
-        args.full_tool_count = 475 if args.major == 20 else 486
+        args.full_tool_count = 476 if args.major == 20 else 487
     require(os.name == 'nt', 'Windows .NET Framework test host required')
     require(1 <= args.rounds <= 10000 and 1 <= args.concurrency <= 32, 'Rounds 1..10000; concurrency 1..32')
     for name in ('exe', 'public_api', 'host_harness', 'output'):

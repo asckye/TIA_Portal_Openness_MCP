@@ -62,7 +62,8 @@ namespace TiaOpenness.Core.Environment
 
         private static Assembly OnAssemblyResolve(object sender, ResolveEventArgs args)
         {
-            var requested = new AssemblyName(args.Name).Name;
+            var identity = new AssemblyName(args.Name);
+            var requested = identity.Name;
             if (requested == null || !requested.StartsWith("Siemens.", StringComparison.OrdinalIgnoreCase))
             {
                 return null;
@@ -71,6 +72,9 @@ namespace TiaOpenness.Core.Environment
             var candidate = Path.Combine(_probeDirectory, requested + ".dll");
             if (File.Exists(candidate))
             {
+                var actual = AssemblyName.GetAssemblyName(candidate);
+                if (!string.Equals(actual.FullName, identity.FullName, StringComparison.OrdinalIgnoreCase))
+                    throw new FileLoadException("The selected PublicAPI does not match the requested assembly: " + identity.FullName, candidate);
                 return Assembly.LoadFrom(candidate);
             }
 

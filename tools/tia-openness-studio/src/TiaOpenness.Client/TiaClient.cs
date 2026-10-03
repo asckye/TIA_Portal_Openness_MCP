@@ -23,9 +23,9 @@ namespace TiaOpenness.Client
 
         public BridgeClient Bridge { get { return _bridge; } }
 
-        public void Start(string bridgeExePath = null, bool forceMock = false)
+        public void Start(string bridgeExePath = null, bool forceMock = false, string opennessVersion = null)
         {
-            _bridge.Start(bridgeExePath, forceMock);
+            _bridge.Start(bridgeExePath, forceMock, opennessVersion);
         }
 
         public Task<DoctorReport> DoctorAsync(CancellationToken ct = default)

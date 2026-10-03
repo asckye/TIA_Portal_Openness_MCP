@@ -13,20 +13,21 @@ The complete original tree and Git history remain under `upstream/` as reference
 Build on Windows with .NET 10 SDK, .NET Framework 4.8 and the authorized PublicAPI directories:
 
 ```powershell
-pwsh ./scripts/build/Build-Studio.ps1 -V20ReferenceRoot 'D:\Project\TIA_Portal_MCP\TIA_V20_PublicAPI\V20' -V21ReferenceRoot 'D:\Project\TIA_Portal_MCP\TIA_V21_PublicAPI\V21\net48' -Test
+pwsh ./scripts/build/Build-Studio.ps1 -PublicApiRoot 'D:\Project\TIA_Portal_MCP' -Test
 & ./tools/tia-openness-studio/src/TiaOpenness.Gui/bin/Release/net10.0-windows/TiaOpenness.exe --lang zh --openness-version 21
 ```
 
 `-NuGetConfig` may select a local restore configuration. Each version compiles the same native
 source against its exact SDK into a separate adapter DLL. The build places them under the app's
-`bridge/adapters/v20` and `bridge/adapters/v21` directories. No Siemens assembly is copied into
+`bridge/adapters/v<release-key>` directories for all eight releases. No Siemens assembly is copied into
 the output; the native bridge resolves the installed version at runtime.
 
 Choose **Connect** to attach to a running instance or start TIA when none is available. The
 Headless option controls a newly started TIA instance. Open, Save and Close now operate through
 the native session. The bridge runs calls sequentially on its STA thread. An explicit
-`--openness-version 20` or `21` selects the release; omission selects the newest supported
-installation. V14 SP1–V19 production support is not enabled.
+`--openness-version 14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20` or `21` selects the release.
+The sidebar release picker selects the same identity before connecting; omission selects the newest
+supported installation. Restart Studio to change the native version after a bridge session starts.
 
 For the synthetic workflow, no PublicAPI or TIA installation is needed:
 
@@ -72,7 +73,7 @@ to the design handoff; see the root `design-qa.md` for comparison notes.
 | Source import | `.scl`, `.db`, `.udt`; requires overwrite confirmation because native generation may replace blocks; temporary source has a unique name |
 | Compile | Native compiler result with counts and messages |
 | Inspection | Shared metadata rules; unused-block inference is skipped without complete reference evidence |
-| VCI | Workspace create/list, preview/map, compare, preview/synchronize; actual support follows the selected API/project |
+| VCI | Unavailable on V14 SP1/V15.1; shared workflow over legacy WorkspaceMapping APIs on V16–V19 and MappedObject APIs on V20/V21 |
 | Git diff | Staged, working-tree and untracked local file changes |
 | Mock | The same typed operations and dispatcher with synthetic PLC/HMI fixtures |
 
@@ -93,7 +94,7 @@ The client suite runs both in-process mock workflows and the real bridge executa
 mock backend, including project lifecycle, browsing, export/import, compile, inspection, VCI,
 progress and error recovery. It also runs Doctor through the ordinary bridge without a TIA
 session. WPF tests render and inspect the actual controls. Native adapters compile against the
-official V20/V21 SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
+official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
-Live TIA project acceptance and release packaging remain pending. Full audit findings are in
+Live TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; `Package-MultiVersion.py` creates a validated local development archive. Full audit findings are in
 [the duplicate-code review](../../docs/development/studio-native-and-duplicates-20261002.md).

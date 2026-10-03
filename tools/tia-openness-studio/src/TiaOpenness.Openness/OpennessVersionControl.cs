@@ -1,3 +1,4 @@
+#if STUDIO_VCI
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +10,9 @@ using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
+#if !STUDIO_VCI_MODERN
+using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
+#endif
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Core.Abstractions;
 
@@ -96,7 +100,12 @@ namespace TiaOpenness.Openness
             }
 
             var group = Keep(Service().WorkspaceGroup);
+#if STUDIO_VCI_INITIAL
+            var workspace = Keep(Keep(group.Workspaces).Create(name.Trim()));
+            workspace.RootPath = directory;
+#else
             var workspace = Keep(Keep(group.Workspaces).Create(name.Trim(), directory));
+#endif
             return Describe(workspace);
         }
 
@@ -214,7 +223,13 @@ namespace TiaOpenness.Openness
                 var digest = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(node.RelativeDirectory + "\n" + node.Name));
                 flat += "_" + BitConverter.ToString(digest, 0, 4).Replace("-", "").ToLowerInvariant();
             }
+#if STUDIO_VCI_MODERN
             workspace.ExportObject(node.Object, new DirectoryInfo(rootPath), flat, format);
+#else
+            var mapping = Keep(Keep(workspace.Mappings).Create(flat + ".xml", node.Object));
+            var service = Keep(mapping.GetService<IndividualObjectSynchronizationStatus>());
+            service.Synchronize(SynchronizationMode.ProjectToWorkspace);
+#endif
             return string.Empty;
         }
 
@@ -229,7 +244,7 @@ namespace TiaOpenness.Openness
                 RootPath = SafeRoot(workspace),
             };
 
-            foreach (var mapped in Keep(workspace.MappedObjects).ToList())
+            foreach (var mapped in Mappings(workspace).ToList())
             {
                 Keep(mapped);
                 report.Total++;
@@ -268,7 +283,7 @@ namespace TiaOpenness.Openness
             };
 
             var targets = new List<MappedObject>();
-            foreach (var mapped in Keep(workspace.MappedObjects).ToList())
+            foreach (var mapped in Mappings(workspace).ToList())
             {
                 Keep(mapped);
                 string ignored;
@@ -291,7 +306,7 @@ namespace TiaOpenness.Openness
 
                 try
                 {
-                    mapped.Synchronize(mode);
+                    Synchronize(mapped, mode);
                     result.Synchronized++;
                     result.Items.Add(new SyncItem { Name = name, Outcome = "synchronized" });
                 }
@@ -315,7 +330,7 @@ namespace TiaOpenness.Openness
             error = null;
             try
             {
-                var state = mapped.GetStatus().CompareState.ToString();
+                var state = ReadStatus(mapped).CompareState.ToString();
                 VcCompareState parsed;
                 if (Enum.TryParse(state, true, out parsed)) return parsed;
 
@@ -455,13 +470,22 @@ namespace TiaOpenness.Openness
         /// <summary>Which formats VCI can write this object as. Empty means it cannot be mapped.</summary>
         private IList<string> SupportedFormats(ref Workspace workspace, IEngineeringObject o)
         {
+#if STUDIO_VCI_MODERN
             var formats = workspace.GetSupportedFileFormats(o);
+#else
+            // The old VCI API exposes individual PLC block/type/tag-table mappings only.
+            IList<string> formats = o is PlcBlock || o is PlcType || o is PlcTagTable ? new[] { "xml" } : new string[0];
+#endif
             return formats == null ? new List<string>() : formats.ToList();
         }
 
         private MappedObject Existing(ref Workspace workspace, IEngineeringObject o)
         {
+#if STUDIO_VCI_MODERN
             return workspace.MappedObjects.Find(o);
+#else
+            return workspace.Mappings.Find(o);
+#endif
         }
 
         /// <summary>s7dcl is the reviewable text format; the others are fallbacks.</summary>
@@ -560,7 +584,7 @@ namespace TiaOpenness.Openness
         private static WorkspaceInfo Describe(Workspace workspace)
         {
             var count = 0;
-            try { count = workspace.MappedObjects.Count(); }
+            try { count = Mappings(workspace).Count(); }
             catch (Exception) { count = 0; }
 
             return new WorkspaceInfo
@@ -584,14 +608,23 @@ namespace TiaOpenness.Openness
 
         private static string SafeLanguage(Workspace workspace)
         {
+#if STUDIO_VCI_MODERN
             try { return workspace.WorkspaceLanguage?.ToString() ?? "-"; } catch (Exception) { return "-"; }
+#else
+            return "-";
+#endif
         }
 
         private static string SafeObjectName(MappedObject mapped)
         {
+#if STUDIO_VCI_MODERN
             try { return mapped.FileNameWithoutExtension ?? "?"; } catch (Exception) { return "?"; }
+#else
+            return Path.GetFileNameWithoutExtension(mapped.RelativeWorkspacePath);
+#endif
         }
 
+#if STUDIO_VCI_MODERN
         private static string SafeFile(MappedObject mapped)
         {
             try
@@ -610,6 +643,41 @@ namespace TiaOpenness.Openness
         private static string SafeFormat(MappedObject mapped)
         {
             try { return mapped.FileFormat?.ToString(); } catch (Exception) { return null; }
+        }
+
+#else
+        private static string SafeFile(MappedObject mapped)
+        {
+            var workspace = (Workspace)mapped.Parent;
+            return Path.Combine(workspace.RootPath.FullName, mapped.RelativeWorkspacePath);
+        }
+        private static string SafeFormat(MappedObject mapped) { return "xml"; }
+#endif
+        private static IEnumerable<MappedObject> Mappings(Workspace workspace)
+        {
+#if STUDIO_VCI_MODERN
+            return workspace.MappedObjects;
+#else
+            return workspace.Mappings;
+#endif
+        }
+        private static IndividualObjectCompareResult ReadStatus(MappedObject mapped)
+        {
+#if STUDIO_VCI_MODERN
+            return mapped.GetStatus();
+#else
+            var service = mapped.GetService<IndividualObjectSynchronizationStatus>();
+            service.UpdateStatus();
+            return service.GetStatus();
+#endif
+        }
+        private static void Synchronize(MappedObject mapped, SynchronizationMode mode)
+        {
+#if STUDIO_VCI_MODERN
+            mapped.Synchronize(mode);
+#else
+            mapped.GetService<IndividualObjectSynchronizationStatus>().Synchronize(mode);
+#endif
         }
 
         private static string Combine(string parent, string child)
@@ -638,3 +706,5 @@ namespace TiaOpenness.Openness
         }
     }
 }
+
+#endif

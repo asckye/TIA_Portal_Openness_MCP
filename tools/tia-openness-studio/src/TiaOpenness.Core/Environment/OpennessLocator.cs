@@ -47,19 +47,17 @@ namespace TiaOpenness.Core.Environment
             {
                 foreach (var install in FromRegistry(view))
                 {
-                    if (!found.ContainsKey(install.Version)) found[install.Version] = install;
+                    AddInstallation(found, install);
                 }
             }
 
             foreach (var install in FromFilesystem())
             {
-                if (!found.ContainsKey(install.Version)) found[install.Version] = install;
+                AddInstallation(found, install);
             }
 
-            foreach (var install in found.Values) FillAssemblies(install);
-
             return found.Values
-                .Where(i => TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == ParseVersion(i.Version).Major))
+                .Where(i => TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.ApiVersion == i.Version))
                 .OrderByDescending(i => ParseVersion(i.Version))
                 .ToList();
         }
@@ -73,6 +71,21 @@ namespace TiaOpenness.Core.Environment
 
             var wanted = Normalize(version);
             return all.FirstOrDefault(i => Normalize(i.Version) == wanted);
+        }
+
+        private static void AddInstallation(Dictionary<string, OpennessInstallation> found, OpennessInstallation install)
+        {
+            try
+            {
+                var identity = System.Reflection.AssemblyName.GetAssemblyName(install.EngineeringDllPath);
+                install.Version = identity.Version.ToString();
+                if (found.ContainsKey(install.Version)) return;
+                FillAssemblies(install);
+                found.Add(install.Version, install);
+            }
+            catch (IOException) { }
+            catch (BadImageFormatException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         // ---- registry ------------------------------------------------------
@@ -94,25 +107,26 @@ namespace TiaOpenness.Core.Environment
             {
                 foreach (var versionName in root.GetSubKeyNames())
                 {
-                    OpennessInstallation install = null;
+                    IReadOnlyList<OpennessInstallation> installs = Array.Empty<OpennessInstallation>();
                     try
                     {
                         using (var versionKey = root.OpenSubKey(versionName))
                         {
-                            if (versionKey != null) install = ReadVersionKey(versionKey, versionName);
+                            if (versionKey != null) installs = ReadVersionKey(versionKey, versionName);
                         }
                     }
                     catch (Exception)
                     {
-                        install = null;
+                        installs = Array.Empty<OpennessInstallation>();
                     }
-                    if (install != null) yield return install;
+                    foreach (var install in installs) yield return install;
                 }
             }
         }
 
-        private static OpennessInstallation ReadVersionKey(RegistryKey versionKey, string versionName)
+        private static IReadOnlyList<OpennessInstallation> ReadVersionKey(RegistryKey versionKey, string versionName)
         {
+            var result = new List<OpennessInstallation>();
             using (var publicApi = versionKey.OpenSubKey("PublicAPI"))
             {
                 if (publicApi != null)
@@ -125,11 +139,11 @@ namespace TiaOpenness.Core.Environment
                         {
                             if (apiKey == null) continue;
 
-                            var modular = ReadModular(apiKey, versionName);
-                            if (modular != null) return modular;
+                            var modular = ReadModular(apiKey, apiVersion);
+                            if (modular != null) { result.Add(modular); continue; }
 
-                            var monolithic = ReadMonolithic(apiKey, versionName);
-                            if (monolithic != null) return monolithic;
+                            var monolithic = ReadMonolithic(apiKey, apiVersion);
+                            if (monolithic != null) result.Add(monolithic);
                         }
                     }
                 }
@@ -141,9 +155,9 @@ namespace TiaOpenness.Core.Environment
                 var path = direct.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
                     ? direct
                     : Path.Combine(direct, MonolithicAssembly);
-                return File.Exists(path) ? Monolithic(versionName, path, "Registry") : null;
+                if (File.Exists(path)) result.Add(Monolithic(versionName, path, "Registry"));
             }
-            return null;
+            return result;
         }
 
         /// <summary>V21+: <c>PublicAPI\21.0.0.0\net48</c>, value <c>Siemens.Engineering.Base</c>.</summary>
@@ -285,11 +299,8 @@ namespace TiaOpenness.Core.Environment
 
         private static string Normalize(string version)
         {
-            var v = (version ?? string.Empty).Trim().TrimStart('V', 'v');
-            // "21.0.0.0" and "21.0" name the same installation.
-            var parts = v.Split('.');
-            if (parts.Length >= 2) return parts[0] + "." + parts[1];
-            return parts.Length == 1 && parts[0].Length > 0 ? parts[0] + ".0" : v;
+            try { return TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(version).ApiVersion; }
+            catch (ArgumentException) { return version ?? string.Empty; }
         }
 
         private static Version ParseVersion(string version)

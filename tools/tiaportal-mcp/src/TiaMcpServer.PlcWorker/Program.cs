@@ -13,10 +13,12 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        // Deliberate native-validation entry point, never executed by offline tests.
+        Console.InputEncoding = new System.Text.UTF8Encoding(false);
+        Console.OutputEncoding = new System.Text.UTF8Encoding(false);
+        // A worker is launched lazily by its exact-release host.
         if (args.Length != 3 || args[0] != "--native-session")
         {
-            Console.Error.WriteLine("This worker is not a production engine. Usage: --native-session <exact-release-key> <verified-public-api-directory>.");
+            Console.Error.WriteLine("Usage: --native-session <exact-release-key> <verified-public-api-directory>.");
             return 2;
         }
         var api = Path.GetFullPath(args[2]);

@@ -30,8 +30,12 @@ namespace TiaOpenness.Openness
         private TiaPortal _portal;
         private Project _project;
         private bool _withUi;
+#if STUDIO_VCI
         private OpennessVersionControl _versionControl;
+#endif
+#if STUDIO_VCI
         private Project _versionControlOwner;
+#endif
 
         /// <summary>Device name -> indexed software. Rebuilt whenever the project changes.</summary>
         private readonly Dictionary<string, PlcContext> _plcs =
@@ -58,6 +62,7 @@ namespace TiaOpenness.Openness
         {
             get
             {
+#if STUDIO_VCI
                 if (_project == null) return null;
 
                 if (_versionControl == null || !ReferenceEquals(_versionControlOwner, _project))
@@ -68,6 +73,9 @@ namespace TiaOpenness.Openness
                     _versionControlOwner = _project;
                 }
                 return _versionControl;
+#else
+                return null;
+#endif
             }
         }
 
@@ -130,8 +138,12 @@ namespace TiaOpenness.Openness
         {
             _plcs.Clear();
             _hmis.Clear();
+#if STUDIO_VCI
             _versionControl = null;
+#endif
+#if STUDIO_VCI
             _versionControlOwner = null;
+#endif
             _project = null;
 
             if (_portal == null) return;
@@ -192,8 +204,12 @@ namespace TiaOpenness.Openness
             finally
             {
                 _project = null;
-                _versionControl = null;
-                _versionControlOwner = null;
+    #if STUDIO_VCI
+            _versionControl = null;
+#endif
+    #if STUDIO_VCI
+            _versionControlOwner = null;
+#endif
                 _plcs.Clear();
             _hmis.Clear();
             }

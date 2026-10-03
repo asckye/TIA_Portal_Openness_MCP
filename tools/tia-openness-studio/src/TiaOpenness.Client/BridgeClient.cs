@@ -71,7 +71,7 @@ namespace TiaOpenness.Client
         /// <summary>Launches the bridge executable.</summary>
         /// <param name="bridgeExePath">Path to TiaOpenness.Bridge.exe. Null uses <see cref="LocateBridge"/>.</param>
         /// <param name="forceMock">Pass --mock so the bridge never touches Siemens.Engineering.</param>
-        public void Start(string bridgeExePath = null, bool forceMock = false)
+        public void Start(string bridgeExePath = null, bool forceMock = false, string opennessVersion = null)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(BridgeClient));
             if (_faulted) throw new InvalidOperationException("The native bridge session failed. Restart Studio before making another native call.");
@@ -98,7 +98,7 @@ namespace TiaOpenness.Client
             var startInfo = new ProcessStartInfo
             {
                 FileName = exe,
-                Arguments = forceMock ? "--mock" : NativeArguments(),
+                Arguments = forceMock ? "--mock" : NativeArguments(opennessVersion),
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
@@ -149,13 +149,17 @@ namespace TiaOpenness.Client
             return null;
         }
 
-        private string NativeArguments()
+        private string NativeArguments(string selectedVersion)
         {
             int index = Array.IndexOf(_args, "--openness-version");
-            if (index < 0) return string.Empty;
-            if (index + 1 >= _args.Length || (_args[index + 1] != "20" && _args[index + 1] != "21"))
-                throw new ArgumentException("--openness-version requires 20 or 21.");
-            return "--openness-version " + _args[index + 1] + ".0";
+            if (string.IsNullOrEmpty(selectedVersion) && index >= 0)
+            {
+                if (index + 1 >= _args.Length) throw new ArgumentException("--openness-version requires an exact release key.");
+                selectedVersion = _args[index + 1];
+            }
+            if (string.IsNullOrEmpty(selectedVersion)) return string.Empty;
+            var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(selectedVersion);
+            return "--openness-version " + release.ApiVersion;
         }
 
         /// <summary>Sends one request and waits for its response.</summary>

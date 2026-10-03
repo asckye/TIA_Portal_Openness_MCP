@@ -34,7 +34,7 @@ class VersionCatalogWiring(unittest.TestCase):
         registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources))
         self.assertFalse(set(excluded) - registered)
         for script in ['Test-WorkerIsolation.py', 'Test-LocalStability.py']:
-            self.assertIn('475 if args.major == 20 else 486', read(ROOT / 'scripts/checks' / script))
+            self.assertIn('476 if args.major == 20 else 487', read(ROOT / 'scripts/checks' / script))
 
     def test_legacy_contract_remains_unbound(self):
         source = read(SERVER / 'Siemens/OpennessReleaseContract.cs')
@@ -55,11 +55,11 @@ class VersionCatalogWiring(unittest.TestCase):
 
     def test_precise_keys_and_existing_engines(self):
         source = read(SERVER / 'Siemens/TiaVersionCatalog.cs')
-        keys = re.findall(r'(?:Planned|new TiaVersionDescriptor)\("([0-9.a-z]+)",', source)
+        keys = re.findall(r'(?:Foundation|new TiaVersionDescriptor)\("([0-9.a-z]+)",', source)
         self.assertEqual(keys, ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'])
         runnable = re.findall(r'new TiaVersionDescriptor\("([^"]+)", "[^"]+", \d+, true,', source)
         self.assertEqual(runnable, ['20', '21'])
-        self.assertIn('false, null, null', source)
+        self.assertIn('major, true, "v" + key, null', source)
 
     def test_guard_precedes_resolution_and_native_host(self):
         source = read(SERVER / 'Program.cs')
@@ -85,7 +85,7 @@ class VersionCatalogWiring(unittest.TestCase):
 
     def test_configurator_uses_keys_not_indices(self):
         source = read(ROOT / 'tools/mcp-configurator/Configurator.cs')
-        selected = source.split('private int Version', 1)[1].split('private string StatePath', 1)[0]
+        selected = source.split('private string Version', 1)[1].split('private string StatePath', 1)[0]
         self.assertIn('selected.Key', selected)
         self.assertNotIn('SelectedIndex', selected)
         self.assertIn('versions.ItemsSource = TiaVersionCatalog.Runnable', source)

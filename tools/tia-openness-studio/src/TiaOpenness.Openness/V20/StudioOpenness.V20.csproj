@@ -1,18 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
-    <AssemblyName>TiaOpenness.Openness</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <DefineConstants>$(DefineConstants);TIA_V20</DefineConstants>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../TiaOpenness.Core/TiaOpenness.Core.csproj" />
-    <Compile Include="../*.cs" />
-    <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />
-    <Reference Include="@(NativeApi)"><Private>false</Private><SpecificVersion>true</SpecificVersion></Reference>
-  </ItemGroup>
-  <Target Name="RequireMatchingPublicApi" BeforeTargets="ResolveReferences">
-    <Error Condition="'$(SiemensEngineeringDirectory)' == ''" Text="Supply the official V20 PublicAPI directory with SiemensEngineeringDirectory." />
-    <GetAssemblyIdentity AssemblyFiles="$(SiemensEngineeringDirectory)/Siemens.Engineering.dll"><Output TaskParameter="Assemblies" ItemName="ApiIdentity" /></GetAssemblyIdentity>
-    <Error Condition="'%(ApiIdentity.Version)' != '20.0.0.0'" Text="This adapter requires exact V20 PublicAPI assemblies." />
-  </Target>
+  <PropertyGroup><StudioReleaseKey>20</StudioReleaseKey><StudioApiVersion>20.0.0.0</StudioApiVersion></PropertyGroup>
+  <Import Project="../Studio.Common.props" />
 </Project>

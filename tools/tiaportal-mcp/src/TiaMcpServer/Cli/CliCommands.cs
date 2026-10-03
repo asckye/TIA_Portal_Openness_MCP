@@ -253,8 +253,8 @@ namespace TiaMcpServer.Cli
             int compiled = TiaMcpServer.Siemens.EngineRouter.CompiledTiaMajorVersion;
 
             int effective = TiaMcpServer.Siemens.Engineering.TiaMajorVersion;
-            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == effective)
-                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == detected.Value));
+            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.IsFullEngine).Any(v => v.MajorVersion == effective)
+                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.IsFullEngine).Any(v => v.MajorVersion == detected.Value));
             Line(supported, "Engine version support", "Selected V" + effective + "; detected " +
                 (detected.HasValue ? "V" + detected.Value : "unknown"),
                 "Only V20/V21 have runnable engines; earlier catalog entries are planned only.");

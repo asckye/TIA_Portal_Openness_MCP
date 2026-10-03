@@ -13,7 +13,7 @@
 ### 在虚拟机上启动服务
 
 1. 用运行 TIA 的 Windows 用户打开 EXE。
-2. 选择 V20/V21。安装根目录会自动探测（`TiaPortalLocation` 环境变量 → 注册表 `TIAP{版本}\TIA_Opns` → 默认安装目录，与引擎相同顺序），也可点“自动检测”重新探测或用“浏览”手动选择（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
+2. 选择准确版本：V14 SP1、V15.1、V16–V21。旧版本使用 PLC 基础目录，完整工具列表以该版本 `tools/list` 为准。安装根目录会自动探测（`TiaPortalLocation` 环境变量 → 注册表 `TIAP{版本}\TIA_Opns` → 默认安装目录，与引擎相同顺序），也可点“自动检测”重新探测或用“浏览”手动选择（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
 3. 填虚拟机 IPv4、端口（默认 8765），在下方密钥条点“生成”，再从 **•••** 菜单点 **保存两端配置**。
 4. **网络权限 → 启动服务**。网络权限按钮会请求 Windows 管理员授权，只为当前用户预留指定 HTTP 地址，并放行本地子网到该地址/端口的 TCP 访问。
 5. 日志出现 listening、连接摘要状态变成“运行中”（English: `running`） 后保持窗口打开。以后打开 EXE，直接点“启动服务”。

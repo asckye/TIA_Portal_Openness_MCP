@@ -168,6 +168,11 @@ def main():
                         state['result'].get('content'), 'GetState failed after resource discovery')
                 passed += 1
                 unknown = rpc('unknown/resource-discovery-test')
+                if profile == 'full':
+                    planned = rpc('tools/call', params={'name': 'PlanArtifactImportOrder', 'arguments': {'artifactsJson': '[{"Id":"FB","Dependencies":["UDT"]},{"Id":"UDT"}]'}})
+                    plan = json.loads(planned['result']['content'][0]['text'])['meta']['plan']
+                    require(plan['Valid'] and plan['Order'] == ['UDT', 'FB'], 'Shared dependency planner failed through real MCP transport')
+                    passed += 1
                 require(unknown.get('error', {}).get('code') == -32601,
                         'Unknown method no longer returns MethodNotFound')
                 passed += 1

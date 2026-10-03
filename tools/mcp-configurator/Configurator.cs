@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -19,7 +19,7 @@ using System.Windows.Threading;
 using TiaMcp.Versioning;
 
 [assembly: AssemblyTitle("TIA MCP Configurator")]
-[assembly: AssemblyDescription("TIA Portal V20/V21 service and AI client configuration")]
+[assembly: AssemblyDescription("TIA Portal V14 SP1-V21 service and AI client configuration")]
 [assembly: AssemblyVersion("3.1.0.0")]
 [assembly: AssemblyFileVersion("3.1.0.0")]
 
@@ -39,13 +39,13 @@ namespace TiaMcpConfigurator
         private bool busy, closing;
         private T Find<T>(string name) where T : FrameworkElement { return (T)Window.FindName(name); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
-        private int Version
+        private string Version
         {
             get
             {
                 var selected = Find<ComboBox>("Version").SelectedItem as TiaVersionDescriptor;
                 if (selected == null) throw new InvalidOperationException("请选择可运行的 TIA Portal 版本。");
-                return TiaVersionCatalog.RequireRunnable(selected.Key).MajorVersion;
+                return TiaVersionCatalog.RequireRunnable(selected.Key).Key;
             }
         }
         private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + Version + ".json"); } }
@@ -211,7 +211,7 @@ namespace TiaMcpConfigurator
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
             Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? T("NoSelection") : selected.Count == 1 ? selected[0].DisplayName : F("Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = String.Join("、", selected.Select(x => x.DisplayName));
-            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal V" + Version;
+            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(Version).DisplayName;
             bool running = server != null && !server.HasExited;
             string address = Text("ServerAddress");
             Find<TextBlock>("LinkEndpoint").Text = !remote ? T("LocalAddress") : address.Length == 0 ? T("NoAddress") : address + ":" + Text("ServerPort");
@@ -262,12 +262,12 @@ namespace TiaMcpConfigurator
         }
         private void LoadServer(bool loadExisting)
         {
-            Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", "Portal V" + Version);
+            Find<TextBox>("TiaPath").Text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Siemens", "Automation", TiaVersionCatalog.Get(Version).InstallFolder);
             Find<TextBox>("ServerAddress").Text = ""; Find<TextBox>("ServerPort").Text = "8765"; SetSecret("");
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
-            if (settings.Version != Version) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");
+            if (settings.EffectiveReleaseKey != Version) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");
             Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
             SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append("已载入 V" + Version + " 服务配置。");
         }
@@ -284,7 +284,7 @@ namespace TiaMcpConfigurator
         {
             int port = Int32.Parse(Text("ServerPort")); ConfigCore.Prefix(Text("ServerAddress"), port);
             ConfigCore.Engine(root, Version); ConfigCore.ValidateTia(Text("TiaPath"), Version);
-            return new ServerSettings { Version = Version, Address = Text("ServerAddress"), Port = port, TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret()) };
+            return new ServerSettings { Version = TiaVersionCatalog.Get(Version).MajorVersion, ReleaseKey = Version, Address = Text("ServerAddress"), Port = port, TiaPath = Text("TiaPath"), ProtectedKey = ConfigCore.Protect(Secret()) };
         }
         // 一页两侧，所以保存也是两侧：客户端侧的连接信息总能保存；服务端配置只在本机确实装了
         // TIA 和引擎时才写，宿主机上校验失败不算错误，只记一行说明。

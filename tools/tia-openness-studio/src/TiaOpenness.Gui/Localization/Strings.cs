@@ -16,6 +16,7 @@ internal static class Strings
     /// <summary>key, English, Chinese.</summary>
     internal static readonly (string Key, string En, string Zh)[] Catalogue =
     [
+        ("Connection.OpennessVersion", "Openness API version (blank: automatic)", "Openness API 版本（留空自动选择）"),
         ("Glass.Disconnected", "Not connected", "未连接"),
         ("Glass.Connected", "●  Connected", "●  已连接"),
         ("Glass.Software", "PLC software", "PLC 软件"),

@@ -47,8 +47,8 @@ Check 'override-project-identity' $v20 $api20 @('-p:AdapterReleaseKey=19','-p:Ti
 Check 'excluded-v14' $cases[0] (Join-Path $apiRoot $cases[0][2]) @('-p:TiaReleaseKey=14') 'Adapter release mismatch'
 Check 'excluded-v15' $cases[1] (Join-Path $apiRoot $cases[1][2]) @('-p:TiaReleaseKey=15') 'Adapter release mismatch'
 Check 'wrong-framework' $v20 $api20 @('-p:TargetFramework=net461') 'Adapter framework mismatch'
-Check 'wrong-platform' $v20 $api20 @('-p:PlatformTarget=x86') 'compile-only x64 library'
-Check 'executable-output' $v20 $api20 @('-p:OutputType=Exe') 'compile-only x64 library'
+Check 'wrong-platform' $v20 $api20 @('-p:PlatformTarget=x86') 'x64 library'
+Check 'executable-output' $v20 $api20 @('-p:OutputType=Exe') 'x64 library'
 Check 'wildcard-sources' $v20 $api20 @('-p:EnableDefaultCompileItems=true') 'explicit allowlist'
 Check 'missing-source' $v20 $api20 @("-p:AdapterSourceRoot=$out/absent-source") 'Missing allowlisted adapter source'
 [IO.File]::WriteAllText((Join-Path $out 'input-results.json'),($results|ConvertTo-Json -Depth 4),[Text.UTF8Encoding]::new($false))

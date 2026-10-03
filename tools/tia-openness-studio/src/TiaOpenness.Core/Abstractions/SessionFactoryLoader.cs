@@ -14,16 +14,16 @@ namespace TiaOpenness.Core.Abstractions
         {
             if (forceMock) { LastDecision = "explicit mock"; return new MockTiaSessionFactory(); }
             var install = OpennessLocator.Resolve(version);
-            if (install == null) return Unavailable("No supported V20/V21 Openness installation was found. Run Doctor.");
-            int major = Version.Parse(install.Version).Major;
-            TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(major);
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adapters", "v" + major, "TiaOpenness.Openness.dll");
-            if (!File.Exists(path)) return Unavailable("Build the V" + major + " native adapter with scripts/build/Build-Studio.ps1 and deploy it under bridge/adapters/v" + major + ".");
+            if (install == null) return Unavailable("No supported V14 SP1, V15.1 or V16-V21 Openness installation was found. Run Doctor.");
+            var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(install.Version);
+            string key = release.Key;
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
+            if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with scripts/build/Build-Studio.ps1 and deploy it under bridge/adapters/v" + key + ".");
             OpennessAssemblyResolver.Install(install.Version);
             var type = Assembly.LoadFrom(path).GetType("TiaOpenness.Openness.OpennessSessionFactory", true);
             var factory = (ITiaSessionFactory)Activator.CreateInstance(type);
             factory.Configure(install.Version);
-            LastDecision = "direct Openness V" + major;
+            LastDecision = "direct Openness V" + key;
             return factory;
         }
         private static ITiaSessionFactory Unavailable(string reason)

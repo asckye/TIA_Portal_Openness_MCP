@@ -9,7 +9,8 @@
 | 构建 | [Prepare-Delivery.ps1](build/Prepare-Delivery.ps1) | 沿用已验证引擎，更新交付与 GUI 记录 |
 | 发布 | [Release.ps1](build/Release.ps1) | 一键发布：前置检查 → 版本号 8 处 → Build-Release → 本地闸门 → 一次提交 → Package-Release → Verify-ReleaseAsset → 推送 → CI（API）→ tag → Publish-Release 上传 → 等验证工作流检查；先手写 CHANGELOG 条目与 `docs/releases/vX.md`（见[发布流程](../docs/development/release-workflow.md)） |
 | 发布 | [Package-Release.py](build/Package-Release.py)、[Publish-Release.ps1](build/Publish-Release.ps1) | 干净提交 + 本机二进制打包；本机建草稿 Release、上传 ZIP 与 `.sha256`、回读校验后发布（2.8.1 起二进制不入库、不再由 Actions 打包） |
-| 构建 | [Build-Studio.ps1](build/Build-Studio.ps1) | 构建 Studio、本地 Bridge 和 V20/V21 原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
+| 构建 | [Build-MultiVersion.ps1](build/Build-MultiVersion.ps1) / [Package-MultiVersion.py](build/Package-MultiVersion.py) | 八版本构建、功能验证、API 对照和本地开发包；不自动发布 |
+| 构建 | [Build-Studio.ps1](build/Build-Studio.ps1) | 构建 Studio、本地 Bridge 和 八版本原生适配器；`-Test` 运行客户端及 WPF 功能测试，不启动 TIA |
 | 检查 | [Check-Repository.py](checks/Check-Repository.py)、[Validate-Bundle.ps1](checks/Validate-Bundle.ps1)、[Verify-ReleaseAsset.py](checks/Verify-ReleaseAsset.py) | 文档/路径与交付内容校验（`--no-binaries` / `-NoBinaries` 用于没有二进制的源码 checkout）；ZIP 与提交树 + 清单哈希逐文件比对（本机上传前、`Verify published release` 工作流发布后各跑一次） |
 | 检查 | [Check-DeadToolReferences.py](checks/Check-DeadToolReferences.py) | 工具描述死引用检查 |
 | 检查 | [Check-LiteProfile.py](checks/Check-LiteProfile.py)、[Test-ResourceDiscovery.py](checks/Test-ResourceDiscovery.py) | 实际 EXE 发现协议，需相应环境或测试 harness |

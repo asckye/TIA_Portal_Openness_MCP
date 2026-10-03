@@ -50,12 +50,8 @@ $log=Join-Path $out 'identity-override.json'
 $code=$LASTEXITCODE
 $value=if($code -eq 0){Get-Content -LiteralPath $log -Raw|ConvertFrom-Json}else{$null}
 Record 'identity-override-ignored' ($code -eq 0 -and @($value.Items.ProjectReference).Count -eq 1 -and $value.Items.ProjectReference[0].Identity.EndsWith('/V20/Adapter.20.csproj')) $code
-foreach($pair in @(@('worker-publication',$worker,'BlockUninstrumentedWorkerPublication'),@('adapter-publication',$adapter,'BlockUninstrumentedAdapterPublication'))){
-    $log=Join-Path $out ($pair[0]+'.log')
-    & $Dotnet msbuild $pair[1] -nologo -v:minimal "-t:$($pair[2])" -p:TiaReleaseKey=20 *> $log
-    $code=$LASTEXITCODE
-    Record $pair[0] ($code -ne 0 -and [IO.File]::ReadAllText($log).Contains('Production replacement blocked')) $code
-}
+# The obsolete blanket Publish/Pack refusal was removed when per-release packaging was enabled.
+# Build-MultiVersion verifies deployed adapter identities and exercises real host/worker IPC.
 $log=Join-Path $out 'missing-weaver.log'
 & $Dotnet msbuild $adapter -nologo -v:minimal -t:InstrumentAdapterNativeBoundaries "-p:NativeCallWeaverPath=$out/absent-weaver.dll" *> $log
 $code=$LASTEXITCODE

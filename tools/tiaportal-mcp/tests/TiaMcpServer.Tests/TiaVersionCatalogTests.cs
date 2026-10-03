@@ -163,7 +163,7 @@ namespace TiaMcpServer.Tests
             check(!CliOptions.IsInformationalCommand(new string[0]), "MCP startup still validates versions");
             string[] keys = { "14sp1", "15.1", "16", "17", "18", "19", "20", "21" };
             check(TiaVersionCatalog.All.Select(v => v.Key).SequenceEqual(keys), "version catalog preserves all exact release identities");
-            check(TiaVersionCatalog.Runnable.Select(v => v.Key).SequenceEqual(new[] { "21", "20" }), "only existing engines are selectable, V21 remains default");
+            check(TiaVersionCatalog.Runnable.Select(v => v.Key).SequenceEqual(keys.AsEnumerable().Reverse()), "all eight releases are selectable, V21 remains default");
             check(TiaVersionCatalog.Get("14sp1").Key == "14sp1", "V14 SP1 remains a target");
             check(TiaVersionCatalog.Get("15.1").Key == "15.1", "V15.1 remains a target despite V15 exclusion");
             check(OpennessReleaseContract.For("14sp1").SclXmlBodyEvidence == "unverified", "SP1 SCL body remains unverified");
@@ -180,9 +180,9 @@ namespace TiaMcpServer.Tests
             foreach (var key in keys.Take(6))
             {
                 var entry = TiaVersionCatalog.Get(key);
-                check(!entry.IsRunnable && entry.SupportState == "planned" && entry.RuntimeDirectory == null && entry.EngineOutputDirectory == null,
-                    key + " is planned with no executable fallback");
-                check(Rejects(() => TiaVersionCatalog.RequireRunnable(key)), key + " cannot be launched");
+                check(entry.IsRunnable && !entry.IsFullEngine && entry.SupportState == "plc-foundation" && entry.RuntimeDirectory == "v" + key && entry.EngineOutputDirectory == null,
+                    key + " uses an exact PLC foundation runtime");
+                check(TiaVersionCatalog.RequireRunnable(key).Key == key, key + " can select its independent runtime");
                 check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-version", key })), key + " CLI fails closed");
             }
             foreach (var key in new[] { "", "0", "22", "15.0", "14.1", "V20", "020", " 20", "14SP1", "../20" })
@@ -199,7 +199,8 @@ namespace TiaMcpServer.Tests
             }
             check(Rejects(() => TiaVersionCatalog.RequireMatchingEngine(20, 21)), "V21 engine cannot execute V20 request after failed redirect");
             check(Rejects(() => TiaVersionCatalog.RequireMatchingEngine(21, 20)), "V20 engine cannot execute V21 request after failed redirect");
-            check(Rejects(() => TiaVersionCatalog.RequireMatchingEngine(19, 19)), "matching planned version still cannot run");
+            TiaVersionCatalog.RequireMatchingEngine("15.1", "15.1");
+            check(Rejects(() => TiaVersionCatalog.RequireMatchingEngine("15.1", "14sp1")), "minor/SP release identity is enforced");
             check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-version" })), "missing precise version rejected");
             check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-major-version", "nonsense" })), "malformed legacy version no longer silently auto-detects");
             check(Rejects(() => CliOptions.ParseArgs(new[] { "--tia-version", "20", "--tia-major-version", "21" })), "conflicting aliases rejected");

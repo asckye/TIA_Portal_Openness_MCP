@@ -1,8 +1,28 @@
-# 运行时
+# Runtime outputs
 
-- V20：`runtime/v20/TiaMcpServer.exe`
-- V21：`runtime/v21/TiaMcpServer.exe`
+`Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Test` produces these ignored local outputs:
 
-每个目录的依赖均需保留，不可只复制引擎 EXE。Siemens PublicAPI 由匹配版本的本机 TIA / Openness 提供，不随包分发。版本与逐文件哈希见 [引擎记录](../manifest/release-build.json)。
+| Release | Executable | Profile |
+|---|---|---|
+| V14 SP1 | `runtime/v14sp1/TiaMcpServer.exe` | PLC foundation |
+| V15.1 | `runtime/v15.1/TiaMcpServer.exe` | PLC foundation |
+| V16–V19 | `runtime/v16` through `runtime/v19`, `TiaMcpServer.exe` | PLC foundation |
+| V20/V21 | `runtime/v20` and `runtime/v21`, `TiaMcpServer.exe` | Full engine |
+| Studio | `runtime/studio/TiaOpenness.exe` | Direct Openness, eight adapters |
 
-交付 ZIP 里这两个目录是完整的；**Git 仓库里没有它们**（2.8.1 起二进制不入库，`.gitignore` 忽略 `runtime/v20`、`runtime/v21` 与根目录的 `TiaMcpConfigurator.exe`）——clone 之后运行 `scripts/build/Build-Release.ps1` 才会生成，发布 ZIP 由维护者本机的 `Release.ps1` 直接上传到 GitHub Release。仓库和 ZIP 使用相同路径，不再附带旧 `tools/.../bin/Release/net48` 副本。旧客户端改为上述引擎绝对路径，或通过 [图形配置器](../docs/getting-started/configuration.md) 重新保存。
+Keep each runtime's dependencies and `worker` directory together. V14 SP1 and V15.1
+must retain their exact keys; original V14 and V15 are outside the target set.
+Foundation hosts require .NET 8 / ASP.NET Core 8 and the worker's .NET Framework;
+full engines require .NET Framework 4.8; Studio also needs .NET 10 Desktop Runtime.
+Matching licensed Siemens PublicAPI assemblies come from the installed TIA product.
+
+The configurator selects and registers the matching executable. Foundation hosts
+support STDIO and authenticated HTTP, `--catalog`, `--public-api` and `--release-key`;
+they do not implement the full engine's `doctor`, `gen`, `--profile` or `CallTool` CLI.
+`--offline` explicitly disables native worker calls. Normal startup does not attach:
+the worker starts on demand when a native tool is called.
+
+[Version tools](../docs/reference/version-tools.md) and
+[build hashes](../manifest/multi-version-build.json) describe the development bundle.
+Native acceptance for the new version routes is still pending. Existing published
+release archives keep their historical V20/V21 scope until a new release is made.

@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="SelectedAdapterProject;SelectedAdapterDirectory;WorkerExpectedFramework">
-  <!-- Source-preview worker only. Full V20/V21 MCP engines remain separate. -->
+  <!-- One PLC foundation worker per release. Full V20/V21 MCP engines remain separate. -->
   <PropertyGroup>
     <WorkerExpectedFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</WorkerExpectedFramework>
     <WorkerExpectedFramework Condition="'$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">net48</WorkerExpectedFramework>
@@ -32,8 +32,5 @@
     <Error Condition="'$(PlatformTarget)' != 'x64' or '$(OutputType)' != 'Exe'" Text="The source-preview worker requires an x64 executable." />
     <Error Condition="'@(ProjectReference->Count())' != '1' or '@(ProjectReference)' != '$(SelectedAdapterProject)'" Text="Worker must reference exactly one selected adapter, never the former Foundation or multiple adapters." />
     <Error Condition="'$(EnableDefaultCompileItems)' != 'false'" Text="Worker sources must use the explicit allowlist." />
-  </Target>
-  <Target Name="BlockUninstrumentedWorkerPublication" BeforeTargets="PrepareForPublish;GenerateNuspec;Publish;Pack">
-    <Error Text="Production replacement blocked: adapter diagnostics are build-verified only; worker IPC correlation, functional coverage and native acceptance remain pending. Existing full V20/V21 engines remain the production path." />
   </Target>
 </Project>

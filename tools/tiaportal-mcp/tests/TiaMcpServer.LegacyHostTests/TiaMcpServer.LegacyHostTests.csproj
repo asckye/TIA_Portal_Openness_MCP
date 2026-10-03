@@ -75,4 +75,6 @@
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBatchDocumentImportPolicy.cs" Link="PlcBatchDocumentImportPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/BatchDocumentImportContract.cs" Link="BatchDocumentImportContract.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/TiaMcpServer.LegacyHost/ImportOrderTool.cs" Link="ImportOrderTool.cs" /><Compile Include="../../src/TiaMcpServer.LegacyHost/HostOptions.cs" Link="HostOptions.cs" /></ItemGroup>
 </Project>

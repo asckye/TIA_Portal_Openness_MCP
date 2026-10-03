@@ -99,11 +99,11 @@ namespace TiaMcpServer.Runtime
 
         internal static Check EngineVersionMatch(int compiled, int? detected, Func<int, string?> findSibling)
         {
-            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == compiled)
-                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Any(v => v.MajorVersion == detected.Value));
+            bool supported = TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.IsFullEngine).Any(v => v.MajorVersion == compiled)
+                && (!detected.HasValue || TiaMcp.Versioning.TiaVersionCatalog.Runnable.Where(v => v.IsFullEngine).Any(v => v.MajorVersion == detected.Value));
             bool ok = supported && (detected == null || detected.Value == compiled
                       || findSibling(detected.Value) != null);
-            string unsupported = "Only V20/V21 have runnable engines; older catalog entries are planned only. No engine is provided for the detected version.";
+            string unsupported = "This full engine targets V20/V21. Select the matching PLC foundation host in the configurator for earlier releases.";
             return new Check
             {
                 Id = "engine-version",

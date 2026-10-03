@@ -1,5 +1,8 @@
 # 文档目录
 
+> Current multi-version development: [release tools, API audit and build instructions](reference/version-tools.md). Historical release/VM records below describe their original dates and do not authorize new native operations.
+
+
 v3.1.0：[V20/V21 补充工具](reference/v20-v21-audit-tools.md) · [PLC 与生态工具](reference/ecosystem-tools.md) · [发布说明](releases/v3.1.0.md)。真实 TIA 验收边界见发布说明。
 
 稳定性重点：[本地压力测试、原生验收边界及 GitHub 接入优先级](development/stability-and-integrations-20260930.md)。

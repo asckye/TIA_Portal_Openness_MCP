@@ -1,5 +1,10 @@
 # Native Studio and duplicate-code review — 2026-10-02
 
+> Historical implementation snapshot. Current version routing, direct Studio integration,
+> tool counts and validation are maintained in [the release matrix](../reference/version-tools.md).
+> Previous build/runtime restrictions and MCP-backed desktop descriptions below are superseded where that matrix says so.
+
+
 Follow-up implementation and updated dispositions: [project deduplication review](project-dedup-20261002.md).
 
 The maintainer explicitly selected a Studio implementation that does not use MCP and calls

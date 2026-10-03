@@ -53,7 +53,8 @@
                     </TextBlock.Style>
                   </TextBlock>
                 </Border>
-                <TextBlock Text="{Binding OpennessBadge, Converter={StaticResource Glass.Value}, ConverterParameter=version}" Style="{StaticResource Glass.Muted}" FontSize="10" Margin="8,0,0,0"/>
+                <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
+                          SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
               </StackPanel>
               <StackPanel Grid.Row="1">
                 <Button Content="{l:Tr Project.Label}" Style="{StaticResource Glass.NavAction}" Click="OnProjectOptions"/>

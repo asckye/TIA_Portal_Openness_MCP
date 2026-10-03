@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><StudioReleaseKey>14sp1</StudioReleaseKey><StudioApiVersion>14.0.1.0</StudioApiVersion></PropertyGroup>
+  <Import Project="../Studio.Common.props" />
+</Project>

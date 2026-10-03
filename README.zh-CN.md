@@ -4,11 +4,11 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
 
-通过西门子官方 Openness API，让 AI 客户端连接 TIA Portal V20 / V21。包含 MCP 服务、WPF 图形配置器、JSON/YAML 命令行工程生成流程及通用 PLC / WinCC Unified 模板。
+通过西门子官方 Openness API，按版本连接 TIA Portal V14 SP1、V15.1、V16–V21。V14 SP1–V19 使用 PLC 基础工具集，V20/V21 保留完整引擎；共用和独立工具见[逐版本矩阵](docs/reference/version-tools.md)。包含 MCP 服务、WPF 图形配置器、JSON/YAML 命令行工程生成流程及通用 PLC / WinCC Unified 模板。
 
 ![TIA Portal MCP 架构图](docs/assets/architecture.svg)
 
-完整 ZIP 包含 V20、V21 运行时和依赖。TIA Portal、Openness 和许可证需自行安装；服务端需要 Windows、.NET Framework 4.8，并将运行用户加入 `Siemens TIA Openness` 组，加入后注销重登。
+已发布 ZIP 仍按其发布时的 V20/V21 范围提供。八版本开发包使用 `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK根目录> -Test` 构建。TIA Portal、Openness 和许可证需自行安装。完整引擎需要 .NET Framework 4.8；旧版本宿主还需 .NET 8 和 ASP.NET Core 8；Studio 需 .NET 10 Desktop Runtime。新增版本尚待真实 TIA 工程验收。
 
 ## 从这里开始
 
@@ -38,11 +38,11 @@
 
 ## 能力与验证范围
 
-当前静态清单共 **486 个工具**，分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **62 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+V21 完整引擎静态清单共 **487 个工具**（V20 可用 476 个），分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **62 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
 
 3.1.0 提供可选[工作进程隔离](docs/guides/openness-worker-isolation.md)：`--isolate-openness` 默认关闭，工作进程故障后仍可查询宿主诊断。真实 TIA 验收、精确工程身份绑定及不同 MCP 服务间的协调仍未完成。
 
-`master` 是唯一维护分支，包含当前 V20/V21 引擎。原 `v17`–`v21` 分支头和完整历史备份见[版本历史与适用范围](docs/reference/version-branches.md)。V14 SP1–V19 生产路由仍禁用，Adapter 编译通过不等于原生兼容性验收。
+`master` 是唯一维护分支。配置器可选择全部八个版本，各旧版本运行包只带一个准确匹配的 Worker；Studio 通过对应适配器直接调用 Openness，保持中英双语。原分支备份见[版本历史](docs/reference/version-branches.md)。工具可选、SDK 编译检查和真实 TIA 验收分别记录。
 
 覆盖工程/会话、PLC 块/类型/变量、硬件网络、Unified HMI、文件交换、库、版本控制及在线只读监视。详细范围见 [工具矩阵](docs/reference/tool-matrix.md) 和 [能力边界](docs/reference/capabilities.md)。实现工具、API 签名检查与真实工程验收是不同状态，不代表覆盖西门子全部 API。
 

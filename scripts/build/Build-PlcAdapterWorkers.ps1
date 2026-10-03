@@ -63,8 +63,8 @@ foreach($key in $ReleaseKeys){
     if($adapters.Count -ne 1 -or $adapters[0].Name -cne "TiaMcp.Adapter.$key.dll"){throw "Worker output must contain exactly its selected adapter: $output"}
     if(@(Get-ChildItem -LiteralPath $output -File | Where-Object {$_.Name -like 'Siemens*.dll' -or $_.Name -like 'TiaMcp.PlcFoundation*.dll'}).Count){throw "Unexpected Siemens/old Foundation dependency copied to $output"}
     $core=Join-Path $api ($release[2]+'.dll')
-    $results+=[ordered]@{releaseKey=$key;targetFramework=$release[1];referenceIdentity=[Reflection.AssemblyName]::GetAssemblyName($core).FullName;referenceSha256=(Get-FileHash -LiteralPath $core).Hash;workerSha256=(Get-FileHash -LiteralPath $worker).Hash;adapterSha256=(Get-FileHash -LiteralPath $adapter).Hash;compile='passed';nativeAcceptance='NOT RUN';nativeCallInstrumentation='Adapter DLL weave and verify required by build';productionReplacement='BLOCKED';scope='PLC subset source-preview worker only'}
-    Write-Output "$key worker + single adapter compiled; native NOT RUN; production replacement BLOCKED"
+    $results+=[ordered]@{releaseKey=$key;targetFramework=$release[1];referenceIdentity=[Reflection.AssemblyName]::GetAssemblyName($core).FullName;referenceSha256=(Get-FileHash -LiteralPath $core).Hash;workerSha256=(Get-FileHash -LiteralPath $worker).Hash;adapterSha256=(Get-FileHash -LiteralPath $adapter).Hash;compile='passed';nativeAcceptance='NOT RUN';nativeCallInstrumentation='Adapter DLL weave and verify required by build';deployment='Use Build-MultiVersion.ps1';scope='PLC foundation worker; full engines remain separate'}
+    Write-Output "$key worker + single adapter compiled; native acceptance NOT RUN; ready for foundation bundle tests"
 }
 $evidence=[ordered]@{generatedAt=[DateTimeOffset]::UtcNow.ToString('o');scope='compile only; no worker/TIA launch, no change to full V20/V21 engines';results=$results}
 [IO.File]::WriteAllText((Join-Path $out 'summary.json'),($evidence|ConvertTo-Json -Depth 6),[Text.UTF8Encoding]::new($false))

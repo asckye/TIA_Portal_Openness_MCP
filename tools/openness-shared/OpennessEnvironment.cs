@@ -14,6 +14,9 @@ namespace TiaOpenness.Shared
         }
 
         public static string InstalledPath(RegistryView view, int version, string section)
+        { return InstalledPath(view, version.ToString(System.Globalization.CultureInfo.InvariantCulture), section); }
+
+        public static string InstalledPath(RegistryView view, string version, string section)
         {
             using (var key = OpenLocalMachineKey(view, @"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP" + version + @"\" + section))
                 return key == null ? null : Convert.ToString(key.GetValue("Path"));

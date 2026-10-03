@@ -1,5 +1,10 @@
 # Project deduplication review — 2026-10-02
 
+> Historical implementation snapshot. Current version routing, direct Studio integration,
+> tool counts and validation are maintained in [the release matrix](../reference/version-tools.md).
+> Previous build/runtime restrictions and MCP-backed desktop descriptions below are superseded where that matrix says so.
+
+
 Baseline: `701afc5187c70873c87637b4ed6521b563240c28`.
 
 ## Implemented

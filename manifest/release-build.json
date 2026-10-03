@@ -3,16 +3,16 @@
   "releaseDate": "20261002",
   "fileVersion": "3.1.0.0",
   "package": "TIA_MCP_Delivery_v3.1.0_20261002",
-  "generatedAt": "2026-10-03T05:17:41.5348084+00:00",
+  "generatedAt": "2026-10-03T06:36:52.0790393+00:00",
   "validation": {
-    "offlinePassed": 3048,
-    "offlineV20Passed": 3048,
+    "offlinePassed": 3055,
+    "offlineV20Passed": 3055,
     "versionPolicySdkPassed": 10,
     "runtimes": {
       "V20": {
         "httpPassed": 28,
         "hmiPassed": 18,
-        "resourceDiscoveryPassed": 42,
+        "resourceDiscoveryPassed": 44,
         "nativeExportRemotingPassed": 8,
         "migrationAssembly": "passed",
         "realProjectAcceptance": "NOT PERFORMED for this release",
@@ -23,18 +23,18 @@
           "compiled": true,
           "safetyChecksPassed": 25,
           "supervisorChecksPassed": 22,
-          "exeSha256": "54cbf08f96512e8400cf8f6a8aafe97f4e3ae62b16edd44e6b09f45b8b3c8158",
+          "exeSha256": "a34f58a0c8301eab59e56969eac968e81c56369b7730d59a6413d4f08473ea12",
           "supervisorSha256": "b6a638100ff41a200b6d22e3484454179ff3138af2728998d2670955052190fa",
           "liveAcceptance": "NOT RUN; explicit opt-in required"
         },
         "localStability": {
           "schemaVersion": 1,
           "major": 20,
-          "startedAtUtc": "2026-10-02T22:14:06.039251-07:00",
-          "runtimeSha256": "286335249afdda7255ddf846483cb8c5b4353b774e2a297dbe7f1b9b153eb72b",
-          "harnessSha256": "93ada145bc220cc66c7f21c1bb99797c3fb0afdf88a87e13e3d247359247643f",
-          "scriptSha256": "0ed97c4f7313700fb29b9af7ef81647c3ce2368c2a03b9d85d96b72c6bead085",
-          "resourceHelperSha256": "4a7fdc77bb04ef05e45d7bb5161b5493e9ad7cd7bda768086bb2033e8e01c29d",
+          "startedAtUtc": "2026-10-02T23:33:00.840153-07:00",
+          "runtimeSha256": "ad941aabadcd17a793c5c0e3e813a8757a45fbca62e4a78b95316540d06e675e",
+          "harnessSha256": "26d1e2d99e23a66d96a1d7a64045eaaa3531621c2b44e1af991add1e5c5e8d9e",
+          "scriptSha256": "ecc1449b7ea83d8335d2426ca7af715e6506a9381bdc0d03b927e66e3cfc4d12",
+          "resourceHelperSha256": "359f4f6c730932d262e0b75693c871a8a4cb77cc9d1a7443d5619997b1fbc034",
           "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
           "rounds": 50,
           "isolatedWorker": false,
@@ -47,7 +47,7 @@
               "transport": "stdio",
               "profile": "full",
               "concurrency": 1,
-              "toolCount": 475,
+              "toolCount": 476,
               "workerSamples": [],
               "measuredToolCalls": 1050,
               "warmupToolCalls": 21,
@@ -76,42 +76,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 3.688,
+              "elapsedSeconds": 4.203,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
-                "max": 46.0
+                "max": 31.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 55414784,
-                  "workingSetBytes": 78508032,
-                  "handleCount": 480
+                  "privateBytes": 55259136,
+                  "workingSetBytes": 75350016,
+                  "handleCount": 490
                 },
                 {
-                  "privateBytes": 54673408,
-                  "workingSetBytes": 77877248,
-                  "handleCount": 487
+                  "privateBytes": 57843712,
+                  "workingSetBytes": 78061568,
+                  "handleCount": 492
                 },
                 {
-                  "privateBytes": 54804480,
-                  "workingSetBytes": 77983744,
-                  "handleCount": 487
+                  "privateBytes": 58040320,
+                  "workingSetBytes": 78356480,
+                  "handleCount": 492
                 },
                 {
-                  "privateBytes": 54804480,
-                  "workingSetBytes": 78028800,
-                  "handleCount": 487
+                  "privateBytes": 58040320,
+                  "workingSetBytes": 78356480,
+                  "handleCount": 492
                 },
                 {
-                  "privateBytes": 54804480,
-                  "workingSetBytes": 78028800,
-                  "handleCount": 487
+                  "privateBytes": 58040320,
+                  "workingSetBytes": 78364672,
+                  "handleCount": 492
                 },
                 {
-                  "privateBytes": 54804480,
-                  "workingSetBytes": 78041088,
-                  "handleCount": 487
+                  "privateBytes": 58105856,
+                  "workingSetBytes": 78368768,
+                  "handleCount": 492
                 }
               ],
               "journalEntries": 2242,
@@ -154,41 +154,41 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 4.172,
+              "elapsedSeconds": 4.907,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
-                "max": 47.0
+                "max": 32.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 45330432,
-                  "workingSetBytes": 69443584,
-                  "handleCount": 475
+                  "privateBytes": 45510656,
+                  "workingSetBytes": 69591040,
+                  "handleCount": 480
                 },
                 {
-                  "privateBytes": 46047232,
-                  "workingSetBytes": 70266880,
-                  "handleCount": 487
-                },
-                {
-                  "privateBytes": 46047232,
+                  "privateBytes": 46051328,
                   "workingSetBytes": 70283264,
+                  "handleCount": 482
+                },
+                {
+                  "privateBytes": 46116864,
+                  "workingSetBytes": 70393856,
+                  "handleCount": 482
+                },
+                {
+                  "privateBytes": 46198784,
+                  "workingSetBytes": 70475776,
                   "handleCount": 487
                 },
                 {
-                  "privateBytes": 46047232,
-                  "workingSetBytes": 70295552,
+                  "privateBytes": 46198784,
+                  "workingSetBytes": 70483968,
                   "handleCount": 487
                 },
                 {
-                  "privateBytes": 46047232,
-                  "workingSetBytes": 70303744,
-                  "handleCount": 487
-                },
-                {
-                  "privateBytes": 46047232,
-                  "workingSetBytes": 70307840,
+                  "privateBytes": 46198784,
+                  "workingSetBytes": 70488064,
                   "handleCount": 487
                 }
               ],
@@ -203,7 +203,7 @@
               "transport": "http",
               "profile": "full",
               "concurrency": 8,
-              "toolCount": 475,
+              "toolCount": 476,
               "workerSamples": [],
               "measuredToolCalls": 1050,
               "warmupToolCalls": 21,
@@ -232,42 +232,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 7.14,
+              "elapsedSeconds": 8.063,
               "latencyMilliseconds": {
                 "median": 16.0,
-                "p95": 32.0,
+                "p95": 47.0,
                 "max": 63.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 62369792,
-                  "workingSetBytes": 87658496,
-                  "handleCount": 534
+                  "privateBytes": 62136320,
+                  "workingSetBytes": 87474176,
+                  "handleCount": 530
                 },
                 {
-                  "privateBytes": 63143936,
-                  "workingSetBytes": 88461312,
+                  "privateBytes": 63070208,
+                  "workingSetBytes": 88428544,
                   "handleCount": 561
                 },
                 {
-                  "privateBytes": 63234048,
-                  "workingSetBytes": 88567808,
-                  "handleCount": 567
+                  "privateBytes": 63320064,
+                  "workingSetBytes": 88641536,
+                  "handleCount": 573
                 },
                 {
-                  "privateBytes": 63270912,
-                  "workingSetBytes": 88608768,
-                  "handleCount": 567
+                  "privateBytes": 63320064,
+                  "workingSetBytes": 88649728,
+                  "handleCount": 573
                 },
                 {
-                  "privateBytes": 63270912,
-                  "workingSetBytes": 88621056,
-                  "handleCount": 567
+                  "privateBytes": 63635456,
+                  "workingSetBytes": 88920064,
+                  "handleCount": 591
                 },
                 {
-                  "privateBytes": 63270912,
-                  "workingSetBytes": 88637440,
-                  "handleCount": 567
+                  "privateBytes": 63635456,
+                  "workingSetBytes": 88920064,
+                  "handleCount": 591
                 }
               ],
               "journalEntries": 2242,
@@ -310,41 +310,41 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 7.75,
+              "elapsedSeconds": 8.719,
               "latencyMilliseconds": {
-                "median": 16.0,
-                "p95": 47.0,
-                "max": 63.0
+                "median": 31.0,
+                "p95": 62.0,
+                "max": 94.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 46415872,
-                  "workingSetBytes": 72818688,
-                  "handleCount": 527
+                  "privateBytes": 46514176,
+                  "workingSetBytes": 72921088,
+                  "handleCount": 529
                 },
                 {
-                  "privateBytes": 47566848,
-                  "workingSetBytes": 74043392,
-                  "handleCount": 550
+                  "privateBytes": 47644672,
+                  "workingSetBytes": 74133504,
+                  "handleCount": 556
                 },
                 {
-                  "privateBytes": 47988736,
-                  "workingSetBytes": 74436608,
-                  "handleCount": 555
+                  "privateBytes": 48078848,
+                  "workingSetBytes": 74526720,
+                  "handleCount": 562
                 },
                 {
-                  "privateBytes": 48054272,
-                  "workingSetBytes": 74543104,
-                  "handleCount": 555
+                  "privateBytes": 48214016,
+                  "workingSetBytes": 74637312,
+                  "handleCount": 567
                 },
                 {
-                  "privateBytes": 48381952,
-                  "workingSetBytes": 74891264,
-                  "handleCount": 555
+                  "privateBytes": 48607232,
+                  "workingSetBytes": 75055104,
+                  "handleCount": 567
                 },
                 {
-                  "privateBytes": 48734208,
-                  "workingSetBytes": 75231232,
+                  "privateBytes": 48697344,
+                  "workingSetBytes": 75173888,
                   "handleCount": 567
                 }
               ],
@@ -357,7 +357,7 @@
             }
           ],
           "status": "passed",
-          "finishedAtUtc": "2026-10-02T22:14:28.803902-07:00"
+          "finishedAtUtc": "2026-10-02T23:33:26.767152-07:00"
         },
         "v21EcosystemAdapters": {
           "status": "passed",
@@ -365,18 +365,18 @@
           "major": 20,
           "nativeTiaExecuted": false,
           "selfTestOnly": false,
-          "runtimeSha256": "286335249afdda7255ddf846483cb8c5b4353b774e2a297dbe7f1b9b153eb72b",
+          "runtimeSha256": "ad941aabadcd17a793c5c0e3e813a8757a45fbca62e4a78b95316540d06e675e",
           "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
           "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
         },
         "isolatedLocalStability": {
           "schemaVersion": 1,
           "major": 20,
-          "startedAtUtc": "2026-10-02T22:14:28.917384-07:00",
-          "runtimeSha256": "286335249afdda7255ddf846483cb8c5b4353b774e2a297dbe7f1b9b153eb72b",
-          "harnessSha256": "93ada145bc220cc66c7f21c1bb99797c3fb0afdf88a87e13e3d247359247643f",
-          "scriptSha256": "0ed97c4f7313700fb29b9af7ef81647c3ce2368c2a03b9d85d96b72c6bead085",
-          "resourceHelperSha256": "4a7fdc77bb04ef05e45d7bb5161b5493e9ad7cd7bda768086bb2033e8e01c29d",
+          "startedAtUtc": "2026-10-02T23:33:26.928092-07:00",
+          "runtimeSha256": "ad941aabadcd17a793c5c0e3e813a8757a45fbca62e4a78b95316540d06e675e",
+          "harnessSha256": "26d1e2d99e23a66d96a1d7a64045eaaa3531621c2b44e1af991add1e5c5e8d9e",
+          "scriptSha256": "ecc1449b7ea83d8335d2426ca7af715e6506a9381bdc0d03b927e66e3cfc4d12",
+          "resourceHelperSha256": "359f4f6c730932d262e0b75693c871a8a4cb77cc9d1a7443d5619997b1fbc034",
           "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
           "rounds": 50,
           "isolatedWorker": true,
@@ -389,37 +389,37 @@
               "transport": "stdio",
               "profile": "full",
               "concurrency": 1,
-              "toolCount": 475,
+              "toolCount": 476,
               "workerSamples": [
                 {
-                  "privateBytes": 53813248,
-                  "workingSetBytes": 75948032,
-                  "handleCount": 465
+                  "privateBytes": 54882304,
+                  "workingSetBytes": 73981952,
+                  "handleCount": 470
                 },
                 {
-                  "privateBytes": 54833152,
-                  "workingSetBytes": 76963840,
-                  "handleCount": 466
+                  "privateBytes": 57200640,
+                  "workingSetBytes": 76451840,
+                  "handleCount": 471
                 },
                 {
-                  "privateBytes": 54902784,
-                  "workingSetBytes": 77049856,
-                  "handleCount": 466
+                  "privateBytes": 57462784,
+                  "workingSetBytes": 76726272,
+                  "handleCount": 471
                 },
                 {
-                  "privateBytes": 54902784,
-                  "workingSetBytes": 77053952,
-                  "handleCount": 466
+                  "privateBytes": 57462784,
+                  "workingSetBytes": 76746752,
+                  "handleCount": 471
                 },
                 {
-                  "privateBytes": 54902784,
-                  "workingSetBytes": 77070336,
-                  "handleCount": 466
+                  "privateBytes": 57462784,
+                  "workingSetBytes": 76763136,
+                  "handleCount": 471
                 },
                 {
-                  "privateBytes": 54902784,
-                  "workingSetBytes": 77078528,
-                  "handleCount": 466
+                  "privateBytes": 57462784,
+                  "workingSetBytes": 76763136,
+                  "handleCount": 471
                 }
               ],
               "measuredToolCalls": 1050,
@@ -449,41 +449,41 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 6.579,
+              "elapsedSeconds": 7.766,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
-                "max": 32.0
+                "max": 16.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 60157952,
-                  "workingSetBytes": 79806464,
+                  "privateBytes": 60125184,
+                  "workingSetBytes": 79781888,
                   "handleCount": 499
                 },
                 {
-                  "privateBytes": 61665280,
-                  "workingSetBytes": 81543168,
-                  "handleCount": 501
-                },
-                {
-                  "privateBytes": 61861888,
-                  "workingSetBytes": 81764352,
-                  "handleCount": 501
-                },
-                {
-                  "privateBytes": 62140416,
-                  "workingSetBytes": 81993728,
+                  "privateBytes": 61820928,
+                  "workingSetBytes": 81846272,
                   "handleCount": 511
                 },
                 {
-                  "privateBytes": 62205952,
-                  "workingSetBytes": 82059264,
+                  "privateBytes": 62017536,
+                  "workingSetBytes": 82022400,
                   "handleCount": 511
                 },
                 {
-                  "privateBytes": 62205952,
-                  "workingSetBytes": 82083840,
+                  "privateBytes": 62156800,
+                  "workingSetBytes": 82227200,
+                  "handleCount": 511
+                },
+                {
+                  "privateBytes": 62222336,
+                  "workingSetBytes": 82251776,
+                  "handleCount": 511
+                },
+                {
+                  "privateBytes": 62222336,
+                  "workingSetBytes": 82255872,
                   "handleCount": 511
                 }
               ],
@@ -501,33 +501,33 @@
               "toolCount": 62,
               "workerSamples": [
                 {
-                  "privateBytes": 44294144,
-                  "workingSetBytes": 67391488,
+                  "privateBytes": 44576768,
+                  "workingSetBytes": 67645440,
                   "handleCount": 465
                 },
                 {
-                  "privateBytes": 45355008,
-                  "workingSetBytes": 68571136,
-                  "handleCount": 471
+                  "privateBytes": 45510656,
+                  "workingSetBytes": 68718592,
+                  "handleCount": 466
                 },
                 {
-                  "privateBytes": 45555712,
-                  "workingSetBytes": 68759552,
-                  "handleCount": 471
+                  "privateBytes": 45576192,
+                  "workingSetBytes": 68763648,
+                  "handleCount": 466
                 },
                 {
-                  "privateBytes": 45555712,
-                  "workingSetBytes": 68771840,
-                  "handleCount": 471
-                },
-                {
-                  "privateBytes": 45621248,
+                  "privateBytes": 45576192,
                   "workingSetBytes": 68784128,
+                  "handleCount": 466
+                },
+                {
+                  "privateBytes": 45756416,
+                  "workingSetBytes": 68890624,
                   "handleCount": 471
                 },
                 {
-                  "privateBytes": 45621248,
-                  "workingSetBytes": 68788224,
+                  "privateBytes": 45756416,
+                  "workingSetBytes": 68907008,
                   "handleCount": 471
                 }
               ],
@@ -558,41 +558,41 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 6.796,
+              "elapsedSeconds": 8.39,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
-                "max": 16.0
+                "max": 31.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 44519424,
-                  "workingSetBytes": 68190208,
-                  "handleCount": 494
+                  "privateBytes": 44593152,
+                  "workingSetBytes": 68349952,
+                  "handleCount": 495
                 },
                 {
-                  "privateBytes": 46145536,
-                  "workingSetBytes": 70049792,
+                  "privateBytes": 46166016,
+                  "workingSetBytes": 70119424,
                   "handleCount": 496
                 },
                 {
-                  "privateBytes": 46432256,
-                  "workingSetBytes": 70320128,
+                  "privateBytes": 46383104,
+                  "workingSetBytes": 70369280,
                   "handleCount": 496
                 },
                 {
-                  "privateBytes": 46530560,
-                  "workingSetBytes": 70426624,
-                  "handleCount": 501
+                  "privateBytes": 46383104,
+                  "workingSetBytes": 70369280,
+                  "handleCount": 496
                 },
                 {
-                  "privateBytes": 46530560,
-                  "workingSetBytes": 70443008,
-                  "handleCount": 501
+                  "privateBytes": 46448640,
+                  "workingSetBytes": 70381568,
+                  "handleCount": 496
                 },
                 {
-                  "privateBytes": 46530560,
-                  "workingSetBytes": 70443008,
+                  "privateBytes": 46522368,
+                  "workingSetBytes": 70455296,
                   "handleCount": 501
                 }
               ],
@@ -607,37 +607,37 @@
               "transport": "http",
               "profile": "full",
               "concurrency": 8,
-              "toolCount": 475,
+              "toolCount": 476,
               "workerSamples": [
                 {
-                  "privateBytes": 53960704,
-                  "workingSetBytes": 76099584,
-                  "handleCount": 467
+                  "privateBytes": 54652928,
+                  "workingSetBytes": 73760768,
+                  "handleCount": 471
                 },
                 {
-                  "privateBytes": 55148544,
-                  "workingSetBytes": 77303808,
+                  "privateBytes": 57098240,
+                  "workingSetBytes": 76374016,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 55148544,
-                  "workingSetBytes": 77324288,
-                  "handleCount": 472
+                  "privateBytes": 57368576,
+                  "workingSetBytes": 76632064,
+                  "handleCount": 477
                 },
                 {
-                  "privateBytes": 55148544,
-                  "workingSetBytes": 77340672,
-                  "handleCount": 472
+                  "privateBytes": 57368576,
+                  "workingSetBytes": 76644352,
+                  "handleCount": 477
                 },
                 {
-                  "privateBytes": 55148544,
-                  "workingSetBytes": 77344768,
-                  "handleCount": 472
+                  "privateBytes": 57368576,
+                  "workingSetBytes": 76664832,
+                  "handleCount": 477
                 },
                 {
-                  "privateBytes": 55148544,
-                  "workingSetBytes": 77344768,
-                  "handleCount": 472
+                  "privateBytes": 57368576,
+                  "workingSetBytes": 76693504,
+                  "handleCount": 477
                 }
               ],
               "measuredToolCalls": 1050,
@@ -667,42 +667,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 9.657,
+              "elapsedSeconds": 10.203,
               "latencyMilliseconds": {
-                "median": 16.0,
-                "p95": 47.0,
-                "max": 109.0
+                "median": 31.0,
+                "p95": 62.0,
+                "max": 94.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 66646016,
-                  "workingSetBytes": 88166400,
-                  "handleCount": 552
+                  "privateBytes": 66490368,
+                  "workingSetBytes": 88059904,
+                  "handleCount": 547
                 },
                 {
-                  "privateBytes": 69431296,
-                  "workingSetBytes": 91054080,
-                  "handleCount": 610
+                  "privateBytes": 69750784,
+                  "workingSetBytes": 91533312,
+                  "handleCount": 611
                 },
                 {
-                  "privateBytes": 69828608,
-                  "workingSetBytes": 91480064,
-                  "handleCount": 610
+                  "privateBytes": 70266880,
+                  "workingSetBytes": 92061696,
+                  "handleCount": 611
                 },
                 {
-                  "privateBytes": 69922816,
-                  "workingSetBytes": 91586560,
-                  "handleCount": 610
+                  "privateBytes": 70279168,
+                  "workingSetBytes": 92143616,
+                  "handleCount": 611
                 },
                 {
-                  "privateBytes": 70414336,
-                  "workingSetBytes": 92057600,
-                  "handleCount": 616
+                  "privateBytes": 71000064,
+                  "workingSetBytes": 92868608,
+                  "handleCount": 611
                 },
                 {
-                  "privateBytes": 71204864,
-                  "workingSetBytes": 92876800,
-                  "handleCount": 616
+                  "privateBytes": 71335936,
+                  "workingSetBytes": 93179904,
+                  "handleCount": 611
                 }
               ],
               "journalEntries": 4078,
@@ -719,34 +719,34 @@
               "toolCount": 62,
               "workerSamples": [
                 {
-                  "privateBytes": 44351488,
-                  "workingSetBytes": 67424256,
-                  "handleCount": 467
+                  "privateBytes": 44400640,
+                  "workingSetBytes": 67518464,
+                  "handleCount": 466
                 },
                 {
-                  "privateBytes": 45391872,
-                  "workingSetBytes": 68583424,
-                  "handleCount": 467
+                  "privateBytes": 45461504,
+                  "workingSetBytes": 68694016,
+                  "handleCount": 472
                 },
                 {
-                  "privateBytes": 45457408,
-                  "workingSetBytes": 68710400,
-                  "handleCount": 467
+                  "privateBytes": 45592576,
+                  "workingSetBytes": 68771840,
+                  "handleCount": 472
                 },
                 {
-                  "privateBytes": 45457408,
-                  "workingSetBytes": 68710400,
-                  "handleCount": 467
+                  "privateBytes": 45662208,
+                  "workingSetBytes": 68780032,
+                  "handleCount": 472
                 },
                 {
-                  "privateBytes": 45457408,
-                  "workingSetBytes": 68714496,
-                  "handleCount": 467
+                  "privateBytes": 45662208,
+                  "workingSetBytes": 68796416,
+                  "handleCount": 472
                 },
                 {
-                  "privateBytes": 45457408,
-                  "workingSetBytes": 68714496,
-                  "handleCount": 467
+                  "privateBytes": 45662208,
+                  "workingSetBytes": 68804608,
+                  "handleCount": 472
                 }
               ],
               "measuredToolCalls": 1050,
@@ -776,42 +776,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 9.484,
+              "elapsedSeconds": 10.5,
               "latencyMilliseconds": {
-                "median": 16.0,
+                "median": 31.0,
                 "p95": 63.0,
-                "max": 94.0
+                "max": 110.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 45473792,
-                  "workingSetBytes": 71041024,
+                  "privateBytes": 45481984,
+                  "workingSetBytes": 71155712,
                   "handleCount": 542
                 },
                 {
-                  "privateBytes": 48435200,
-                  "workingSetBytes": 74022912,
-                  "handleCount": 605
+                  "privateBytes": 48521216,
+                  "workingSetBytes": 74297344,
+                  "handleCount": 593
                 },
                 {
-                  "privateBytes": 49209344,
-                  "workingSetBytes": 74829824,
-                  "handleCount": 605
+                  "privateBytes": 49041408,
+                  "workingSetBytes": 74797056,
+                  "handleCount": 595
                 },
                 {
-                  "privateBytes": 49713152,
-                  "workingSetBytes": 75378688,
-                  "handleCount": 605
+                  "privateBytes": 49483776,
+                  "workingSetBytes": 75255808,
+                  "handleCount": 595
                 },
                 {
-                  "privateBytes": 50147328,
-                  "workingSetBytes": 75821056,
-                  "handleCount": 605
+                  "privateBytes": 49840128,
+                  "workingSetBytes": 75624448,
+                  "handleCount": 595
                 },
                 {
-                  "privateBytes": 50216960,
-                  "workingSetBytes": 75857920,
-                  "handleCount": 605
+                  "privateBytes": 49905664,
+                  "workingSetBytes": 75694080,
+                  "handleCount": 595
                 }
               ],
               "journalEntries": 4996,
@@ -823,7 +823,7 @@
             }
           ],
           "status": "passed",
-          "finishedAtUtc": "2026-10-02T22:15:01.454665-07:00"
+          "finishedAtUtc": "2026-10-02T23:34:03.822373-07:00"
         },
         "sessionStability": {
           "processLeaseChecksPassed": 2,
@@ -833,26 +833,26 @@
         },
         "nativeDiagnostics": {
           "status": "passed",
-          "sites": 15086,
+          "sites": 15116,
           "categories": {
             "direct": 4271,
-            "enumeration-input": 4735,
-            "interface": 3872,
+            "enumeration-input": 4748,
+            "interface": 3889,
             "object-dispatch": 1927,
             "reflection": 281
           },
           "uncoveredSupportedBoundaries": 0,
-          "coverageSha256": "565a6fd7073bba5b9bd610f52d288b45ac63f5efc45e6f3958d3702fcc843b04",
-          "instrumenterSha256": "f0a7e23a6ccff0fdab4f51bd0019c23260df7f9f4550ee67c6722c2e18d62b34",
-          "jitPrepared": 14967,
+          "coverageSha256": "d48e18cd20c055878c73a81bfe0de127985268dde7bc02a403b40c0b6b5283cf",
+          "instrumenterSha256": "3f7d005ce10b9991e006d5eabb73586e7aa646ee581154c79fdbff5a749e717e",
+          "jitPrepared": 14997,
           "openGenericWrappers": 119,
           "fixture": {
             "behaviorChecks": 36,
             "abruptExitChecks": 2,
             "idempotenceChecks": 1,
             "rejectionChecks": 5,
-            "fixtureSha256": "344d36c3f1b6ca8ae701041be3860591782d8b56e1c8961e53bae45f2d5e5876",
-            "weaverSha256": "f0a7e23a6ccff0fdab4f51bd0019c23260df7f9f4550ee67c6722c2e18d62b34",
+            "fixtureSha256": "981640383bb5b21c07f29ec06aa8de9a2628a458bdc8950d4ffb6e9b9a2eef3b",
+            "weaverSha256": "3f7d005ce10b9991e006d5eabb73586e7aa646ee581154c79fdbff5a749e717e",
             "nativeTiaExecuted": false
           },
           "scriptSha256": "64e62ee2c1c8d5400ad653114c2502e1acf2d436f958f60b2df945312f1d89c5",
@@ -864,7 +864,7 @@
           "faultChecksPassed": 25,
           "protocolChecksPassed": 60,
           "nativeAcceptance": "NOT RUN",
-          "protocolScriptSha256": "c138ecf97fb539c7f08165226919e597b8ab25368e422dfe9e4c4de539fb3568"
+          "protocolScriptSha256": "b82a38284d45971db4fb43897c860a24b84327438a2a875b30e2163824955fc4"
         },
         "engineeringLiveEdits": "NOT TESTED; preview/API shape and offline behavior only",
         "unifiedGraphicLists": "not exposed by supplied V20 API",
@@ -877,7 +877,7 @@
       "V21": {
         "httpPassed": 28,
         "hmiPassed": 18,
-        "resourceDiscoveryPassed": 42,
+        "resourceDiscoveryPassed": 44,
         "nativeExportRemotingPassed": 8,
         "migrationAssembly": "passed",
         "realProjectAcceptance": "NOT PERFORMED for this release",
@@ -888,18 +888,18 @@
           "compiled": true,
           "safetyChecksPassed": 25,
           "supervisorChecksPassed": 22,
-          "exeSha256": "dc505e17982e65970d478cb154e69754460ea370532645e3e62a63c9f73f1ae8",
+          "exeSha256": "9767d004f8e856e012c22a8f8c33634ce8ced11c56ebf8753b22ccacfeb0f4bb",
           "supervisorSha256": "b6a638100ff41a200b6d22e3484454179ff3138af2728998d2670955052190fa",
           "liveAcceptance": "NOT RUN; explicit opt-in required"
         },
         "localStability": {
           "schemaVersion": 1,
           "major": 21,
-          "startedAtUtc": "2026-10-02T22:16:30.064573-07:00",
-          "runtimeSha256": "25dbac8507862b3f26b8a877f73f248fae066e310481fab547ba4e9e4e74b578",
-          "harnessSha256": "93ada145bc220cc66c7f21c1bb99797c3fb0afdf88a87e13e3d247359247643f",
-          "scriptSha256": "0ed97c4f7313700fb29b9af7ef81647c3ce2368c2a03b9d85d96b72c6bead085",
-          "resourceHelperSha256": "4a7fdc77bb04ef05e45d7bb5161b5493e9ad7cd7bda768086bb2033e8e01c29d",
+          "startedAtUtc": "2026-10-02T23:35:32.228275-07:00",
+          "runtimeSha256": "f39f1ba2d30c131b0d02e63d3e16a3f3f69510c3ba7bf645e17bf0eeab65601d",
+          "harnessSha256": "26d1e2d99e23a66d96a1d7a64045eaaa3531621c2b44e1af991add1e5c5e8d9e",
+          "scriptSha256": "ecc1449b7ea83d8335d2426ca7af715e6506a9381bdc0d03b927e66e3cfc4d12",
+          "resourceHelperSha256": "359f4f6c730932d262e0b75693c871a8a4cb77cc9d1a7443d5619997b1fbc034",
           "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
           "rounds": 50,
           "isolatedWorker": false,
@@ -912,7 +912,7 @@
               "transport": "stdio",
               "profile": "full",
               "concurrency": 1,
-              "toolCount": 486,
+              "toolCount": 487,
               "workerSamples": [],
               "measuredToolCalls": 1050,
               "warmupToolCalls": 21,
@@ -941,7 +941,7 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 3.687,
+              "elapsedSeconds": 4.25,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
@@ -949,34 +949,34 @@
               },
               "processSamples": [
                 {
-                  "privateBytes": 55402496,
-                  "workingSetBytes": 78598144,
+                  "privateBytes": 55357440,
+                  "workingSetBytes": 78540800,
                   "handleCount": 481
                 },
                 {
-                  "privateBytes": 56504320,
-                  "workingSetBytes": 79822848,
+                  "privateBytes": 56373248,
+                  "workingSetBytes": 79691776,
                   "handleCount": 482
                 },
                 {
-                  "privateBytes": 56664064,
-                  "workingSetBytes": 80007168,
-                  "handleCount": 487
+                  "privateBytes": 56373248,
+                  "workingSetBytes": 79712256,
+                  "handleCount": 482
                 },
                 {
-                  "privateBytes": 56664064,
-                  "workingSetBytes": 80015360,
-                  "handleCount": 487
+                  "privateBytes": 56373248,
+                  "workingSetBytes": 79732736,
+                  "handleCount": 482
                 },
                 {
-                  "privateBytes": 55496704,
-                  "workingSetBytes": 78843904,
-                  "handleCount": 492
+                  "privateBytes": 56373248,
+                  "workingSetBytes": 79745024,
+                  "handleCount": 482
                 },
                 {
-                  "privateBytes": 55529472,
-                  "workingSetBytes": 78880768,
-                  "handleCount": 492
+                  "privateBytes": 56438784,
+                  "workingSetBytes": 79765504,
+                  "handleCount": 482
                 }
               ],
               "journalEntries": 2242,
@@ -1019,7 +1019,7 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 4.0,
+              "elapsedSeconds": 4.906,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
@@ -1027,34 +1027,34 @@
               },
               "processSamples": [
                 {
-                  "privateBytes": 45010944,
-                  "workingSetBytes": 69185536,
-                  "handleCount": 481
+                  "privateBytes": 45031424,
+                  "workingSetBytes": 69246976,
+                  "handleCount": 480
                 },
                 {
-                  "privateBytes": 45821952,
+                  "privateBytes": 45711360,
+                  "workingSetBytes": 70082560,
+                  "handleCount": 482
+                },
+                {
+                  "privateBytes": 45711360,
+                  "workingSetBytes": 70119424,
+                  "handleCount": 482
+                },
+                {
+                  "privateBytes": 45711360,
                   "workingSetBytes": 70131712,
-                  "handleCount": 487
+                  "handleCount": 482
                 },
                 {
-                  "privateBytes": 45879296,
-                  "workingSetBytes": 70230016,
-                  "handleCount": 487
+                  "privateBytes": 45711360,
+                  "workingSetBytes": 70160384,
+                  "handleCount": 482
                 },
                 {
-                  "privateBytes": 45879296,
-                  "workingSetBytes": 70234112,
-                  "handleCount": 487
-                },
-                {
-                  "privateBytes": 45944832,
-                  "workingSetBytes": 70275072,
-                  "handleCount": 487
-                },
-                {
-                  "privateBytes": 45944832,
-                  "workingSetBytes": 70283264,
-                  "handleCount": 487
+                  "privateBytes": 45711360,
+                  "workingSetBytes": 70164480,
+                  "handleCount": 482
                 }
               ],
               "journalEntries": 3160,
@@ -1068,7 +1068,7 @@
               "transport": "http",
               "profile": "full",
               "concurrency": 8,
-              "toolCount": 486,
+              "toolCount": 487,
               "workerSamples": [],
               "measuredToolCalls": 1050,
               "warmupToolCalls": 21,
@@ -1097,42 +1097,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 7.844,
+              "elapsedSeconds": 8.313,
               "latencyMilliseconds": {
                 "median": 16.0,
-                "p95": 46.0,
-                "max": 63.0
+                "p95": 47.0,
+                "max": 62.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 63094784,
-                  "workingSetBytes": 88494080,
-                  "handleCount": 527
+                  "privateBytes": 60665856,
+                  "workingSetBytes": 86163456,
+                  "handleCount": 532
                 },
                 {
-                  "privateBytes": 64208896,
-                  "workingSetBytes": 89616384,
-                  "handleCount": 573
+                  "privateBytes": 62484480,
+                  "workingSetBytes": 87916544,
+                  "handleCount": 580
                 },
                 {
-                  "privateBytes": 64290816,
-                  "workingSetBytes": 89698304,
-                  "handleCount": 573
+                  "privateBytes": 62767104,
+                  "workingSetBytes": 88244224,
+                  "handleCount": 580
                 },
                 {
-                  "privateBytes": 64299008,
-                  "workingSetBytes": 89710592,
-                  "handleCount": 573
+                  "privateBytes": 63053824,
+                  "workingSetBytes": 88555520,
+                  "handleCount": 580
                 },
                 {
-                  "privateBytes": 64315392,
-                  "workingSetBytes": 89743360,
-                  "handleCount": 573
+                  "privateBytes": 63307776,
+                  "workingSetBytes": 88776704,
+                  "handleCount": 585
                 },
                 {
-                  "privateBytes": 64315392,
-                  "workingSetBytes": 89751552,
-                  "handleCount": 573
+                  "privateBytes": 63574016,
+                  "workingSetBytes": 89059328,
+                  "handleCount": 585
                 }
               ],
               "journalEntries": 2242,
@@ -1175,42 +1175,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 7.641,
+              "elapsedSeconds": 8.593,
               "latencyMilliseconds": {
-                "median": 16.0,
-                "p95": 47.0,
-                "max": 63.0
+                "median": 31.0,
+                "p95": 62.0,
+                "max": 79.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 46407680,
-                  "workingSetBytes": 72826880,
+                  "privateBytes": 46292992,
+                  "workingSetBytes": 72781824,
                   "handleCount": 534
                 },
                 {
-                  "privateBytes": 47484928,
-                  "workingSetBytes": 73998336,
-                  "handleCount": 550
-                },
-                {
-                  "privateBytes": 47919104,
-                  "workingSetBytes": 74440704,
-                  "handleCount": 556
-                },
-                {
-                  "privateBytes": 48041984,
-                  "workingSetBytes": 74547200,
+                  "privateBytes": 47419392,
+                  "workingSetBytes": 73936896,
                   "handleCount": 561
                 },
                 {
-                  "privateBytes": 48488448,
-                  "workingSetBytes": 74977280,
-                  "handleCount": 578
+                  "privateBytes": 47861760,
+                  "workingSetBytes": 74403840,
+                  "handleCount": 567
                 },
                 {
-                  "privateBytes": 48750592,
-                  "workingSetBytes": 75227136,
-                  "handleCount": 579
+                  "privateBytes": 47992832,
+                  "workingSetBytes": 74526720,
+                  "handleCount": 567
+                },
+                {
+                  "privateBytes": 48386048,
+                  "workingSetBytes": 74903552,
+                  "handleCount": 567
+                },
+                {
+                  "privateBytes": 48455680,
+                  "workingSetBytes": 74993664,
+                  "handleCount": 567
                 }
               ],
               "journalEntries": 3160,
@@ -1222,7 +1222,7 @@
             }
           ],
           "status": "passed",
-          "finishedAtUtc": "2026-10-02T22:16:53.258443-07:00"
+          "finishedAtUtc": "2026-10-02T23:35:58.350769-07:00"
         },
         "v21EcosystemAdapters": {
           "status": "passed",
@@ -1230,18 +1230,18 @@
           "major": 21,
           "nativeTiaExecuted": false,
           "selfTestOnly": false,
-          "runtimeSha256": "25dbac8507862b3f26b8a877f73f248fae066e310481fab547ba4e9e4e74b578",
+          "runtimeSha256": "f39f1ba2d30c131b0d02e63d3e16a3f3f69510c3ba7bf645e17bf0eeab65601d",
           "scriptSha256": "bcdeb07d501c382bc7b212b2a0621d96ca15010804c126322157770876b2d70a",
           "scope": "Synthetic decoder fixtures, real local PublicAPI fragment schemas and offline MCP transport dispatch; no TIA attach, writes or runtime CWC deployment."
         },
         "isolatedLocalStability": {
           "schemaVersion": 1,
           "major": 21,
-          "startedAtUtc": "2026-10-02T22:16:53.373247-07:00",
-          "runtimeSha256": "25dbac8507862b3f26b8a877f73f248fae066e310481fab547ba4e9e4e74b578",
-          "harnessSha256": "93ada145bc220cc66c7f21c1bb99797c3fb0afdf88a87e13e3d247359247643f",
-          "scriptSha256": "0ed97c4f7313700fb29b9af7ef81647c3ce2368c2a03b9d85d96b72c6bead085",
-          "resourceHelperSha256": "4a7fdc77bb04ef05e45d7bb5161b5493e9ad7cd7bda768086bb2033e8e01c29d",
+          "startedAtUtc": "2026-10-02T23:35:58.464327-07:00",
+          "runtimeSha256": "f39f1ba2d30c131b0d02e63d3e16a3f3f69510c3ba7bf645e17bf0eeab65601d",
+          "harnessSha256": "26d1e2d99e23a66d96a1d7a64045eaaa3531621c2b44e1af991add1e5c5e8d9e",
+          "scriptSha256": "ecc1449b7ea83d8335d2426ca7af715e6506a9381bdc0d03b927e66e3cfc4d12",
+          "resourceHelperSha256": "359f4f6c730932d262e0b75693c871a8a4cb77cc9d1a7443d5619997b1fbc034",
           "scope": "Actual MCP host methods / SDK dispatch with local and refused calls only; no TIA connection, no native crash/hang injection, no production bootstrap, no long-duration leak proof.",
           "rounds": 50,
           "isolatedWorker": true,
@@ -1254,36 +1254,36 @@
               "transport": "stdio",
               "profile": "full",
               "concurrency": 1,
-              "toolCount": 486,
+              "toolCount": 487,
               "workerSamples": [
                 {
-                  "privateBytes": 54255616,
-                  "workingSetBytes": 76468224,
-                  "handleCount": 470
+                  "privateBytes": 54374400,
+                  "workingSetBytes": 76595200,
+                  "handleCount": 466
                 },
                 {
-                  "privateBytes": 55947264,
-                  "workingSetBytes": 78213120,
-                  "handleCount": 471
+                  "privateBytes": 56090624,
+                  "workingSetBytes": 78356480,
+                  "handleCount": 466
                 },
                 {
-                  "privateBytes": 56016896,
-                  "workingSetBytes": 78303232,
-                  "handleCount": 471
-                },
-                {
-                  "privateBytes": 56016896,
-                  "workingSetBytes": 78340096,
-                  "handleCount": 471
-                },
-                {
-                  "privateBytes": 56016896,
-                  "workingSetBytes": 78348288,
-                  "handleCount": 471
-                },
-                {
-                  "privateBytes": 56016896,
+                  "privateBytes": 56090624,
                   "workingSetBytes": 78360576,
+                  "handleCount": 466
+                },
+                {
+                  "privateBytes": 56090624,
+                  "workingSetBytes": 78372864,
+                  "handleCount": 466
+                },
+                {
+                  "privateBytes": 56172544,
+                  "workingSetBytes": 78422016,
+                  "handleCount": 471
+                },
+                {
+                  "privateBytes": 56262656,
+                  "workingSetBytes": 78471168,
                   "handleCount": 471
                 }
               ],
@@ -1314,7 +1314,7 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 6.437,
+              "elapsedSeconds": 7.907,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
@@ -1323,33 +1323,33 @@
               "processSamples": [
                 {
                   "privateBytes": 59785216,
-                  "workingSetBytes": 79671296,
+                  "workingSetBytes": 79831040,
                   "handleCount": 501
                 },
                 {
-                  "privateBytes": 61841408,
-                  "workingSetBytes": 81924096,
+                  "privateBytes": 61902848,
+                  "workingSetBytes": 82100224,
                   "handleCount": 501
                 },
                 {
-                  "privateBytes": 61906944,
-                  "workingSetBytes": 82042880,
+                  "privateBytes": 61968384,
+                  "workingSetBytes": 82186240,
                   "handleCount": 501
                 },
                 {
-                  "privateBytes": 61906944,
-                  "workingSetBytes": 82075648,
+                  "privateBytes": 61968384,
+                  "workingSetBytes": 82198528,
                   "handleCount": 501
                 },
                 {
-                  "privateBytes": 61972480,
-                  "workingSetBytes": 82083840,
-                  "handleCount": 501
+                  "privateBytes": 62124032,
+                  "workingSetBytes": 82276352,
+                  "handleCount": 506
                 },
                 {
-                  "privateBytes": 61972480,
-                  "workingSetBytes": 82092032,
-                  "handleCount": 501
+                  "privateBytes": 62124032,
+                  "workingSetBytes": 82292736,
+                  "handleCount": 506
                 }
               ],
               "journalEntries": 4078,
@@ -1366,34 +1366,34 @@
               "toolCount": 62,
               "workerSamples": [
                 {
-                  "privateBytes": 43278336,
-                  "workingSetBytes": 66396160,
+                  "privateBytes": 43298816,
+                  "workingSetBytes": 66482176,
                   "handleCount": 465
                 },
                 {
-                  "privateBytes": 45121536,
-                  "workingSetBytes": 68407296,
+                  "privateBytes": 45187072,
+                  "workingSetBytes": 68444160,
                   "handleCount": 466
                 },
                 {
-                  "privateBytes": 45387776,
-                  "workingSetBytes": 68669440,
+                  "privateBytes": 45318144,
+                  "workingSetBytes": 68554752,
                   "handleCount": 466
                 },
                 {
-                  "privateBytes": 45387776,
-                  "workingSetBytes": 68673536,
+                  "privateBytes": 45318144,
+                  "workingSetBytes": 68554752,
                   "handleCount": 466
                 },
                 {
-                  "privateBytes": 45387776,
-                  "workingSetBytes": 68673536,
+                  "privateBytes": 45318144,
+                  "workingSetBytes": 68587520,
                   "handleCount": 466
                 },
                 {
-                  "privateBytes": 45498368,
-                  "workingSetBytes": 68763648,
-                  "handleCount": 471
+                  "privateBytes": 45318144,
+                  "workingSetBytes": 68599808,
+                  "handleCount": 466
                 }
               ],
               "measuredToolCalls": 1050,
@@ -1423,42 +1423,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 6.781,
+              "elapsedSeconds": 8.406,
               "latencyMilliseconds": {
                 "median": 0.0,
                 "p95": 16.0,
-                "max": 32.0
+                "max": 31.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 44396544,
-                  "workingSetBytes": 68329472,
+                  "privateBytes": 44285952,
+                  "workingSetBytes": 68251648,
                   "handleCount": 494
                 },
                 {
-                  "privateBytes": 45981696,
-                  "workingSetBytes": 70160384,
+                  "privateBytes": 45895680,
+                  "workingSetBytes": 70074368,
                   "handleCount": 496
                 },
                 {
-                  "privateBytes": 46133248,
-                  "workingSetBytes": 70316032,
+                  "privateBytes": 46034944,
+                  "workingSetBytes": 70246400,
                   "handleCount": 496
                 },
                 {
-                  "privateBytes": 46206976,
+                  "privateBytes": 46174208,
                   "workingSetBytes": 70397952,
-                  "handleCount": 496
+                  "handleCount": 501
                 },
                 {
-                  "privateBytes": 46272512,
-                  "workingSetBytes": 70410240,
-                  "handleCount": 496
+                  "privateBytes": 46313472,
+                  "workingSetBytes": 70467584,
+                  "handleCount": 506
                 },
                 {
-                  "privateBytes": 46272512,
-                  "workingSetBytes": 70438912,
-                  "handleCount": 496
+                  "privateBytes": 46321664,
+                  "workingSetBytes": 70483968,
+                  "handleCount": 506
                 }
               ],
               "journalEntries": 4996,
@@ -1472,37 +1472,37 @@
               "transport": "http",
               "profile": "full",
               "concurrency": 8,
-              "toolCount": 486,
+              "toolCount": 487,
               "workerSamples": [
                 {
-                  "privateBytes": 54128640,
-                  "workingSetBytes": 76353536,
-                  "handleCount": 466
-                },
-                {
-                  "privateBytes": 55926784,
-                  "workingSetBytes": 78221312,
+                  "privateBytes": 54661120,
+                  "workingSetBytes": 76840960,
                   "handleCount": 467
                 },
                 {
-                  "privateBytes": 56025088,
-                  "workingSetBytes": 78295040,
+                  "privateBytes": 56385536,
+                  "workingSetBytes": 78589952,
+                  "handleCount": 467
+                },
+                {
+                  "privateBytes": 56385536,
+                  "workingSetBytes": 78618624,
+                  "handleCount": 467
+                },
+                {
+                  "privateBytes": 56385536,
+                  "workingSetBytes": 78675968,
+                  "handleCount": 467
+                },
+                {
+                  "privateBytes": 56467456,
+                  "workingSetBytes": 78729216,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 56094720,
-                  "workingSetBytes": 78307328,
+                  "privateBytes": 56557568,
+                  "workingSetBytes": 78798848,
                   "handleCount": 472
-                },
-                {
-                  "privateBytes": 56168448,
-                  "workingSetBytes": 78385152,
-                  "handleCount": 477
-                },
-                {
-                  "privateBytes": 56168448,
-                  "workingSetBytes": 78397440,
-                  "handleCount": 477
                 }
               ],
               "measuredToolCalls": 1050,
@@ -1532,42 +1532,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 9.594,
+              "elapsedSeconds": 10.782,
               "latencyMilliseconds": {
-                "median": 16.0,
-                "p95": 47.0,
+                "median": 31.0,
+                "p95": 63.0,
                 "max": 94.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 67145728,
-                  "workingSetBytes": 88924160,
-                  "handleCount": 554
+                  "privateBytes": 67260416,
+                  "workingSetBytes": 89088000,
+                  "handleCount": 555
                 },
                 {
-                  "privateBytes": 71012352,
-                  "workingSetBytes": 92971008,
-                  "handleCount": 594
-                },
-                {
-                  "privateBytes": 71352320,
-                  "workingSetBytes": 93233152,
-                  "handleCount": 617
-                },
-                {
-                  "privateBytes": 71389184,
-                  "workingSetBytes": 93282304,
-                  "handleCount": 617
+                  "privateBytes": 71340032,
+                  "workingSetBytes": 93265920,
+                  "handleCount": 609
                 },
                 {
                   "privateBytes": 71393280,
-                  "workingSetBytes": 93298688,
-                  "handleCount": 617
+                  "workingSetBytes": 93327360,
+                  "handleCount": 609
                 },
                 {
-                  "privateBytes": 71401472,
-                  "workingSetBytes": 93323264,
-                  "handleCount": 617
+                  "privateBytes": 71417856,
+                  "workingSetBytes": 93368320,
+                  "handleCount": 609
+                },
+                {
+                  "privateBytes": 71569408,
+                  "workingSetBytes": 93483008,
+                  "handleCount": 622
+                },
+                {
+                  "privateBytes": 71753728,
+                  "workingSetBytes": 93687808,
+                  "handleCount": 622
                 }
               ],
               "journalEntries": 4078,
@@ -1584,33 +1584,33 @@
               "toolCount": 62,
               "workerSamples": [
                 {
-                  "privateBytes": 43220992,
-                  "workingSetBytes": 66392064,
-                  "handleCount": 466
+                  "privateBytes": 43216896,
+                  "workingSetBytes": 66400256,
+                  "handleCount": 467
                 },
                 {
-                  "privateBytes": 45260800,
-                  "workingSetBytes": 68485120,
+                  "privateBytes": 45297664,
+                  "workingSetBytes": 68509696,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 45416448,
-                  "workingSetBytes": 68644864,
+                  "privateBytes": 45363200,
+                  "workingSetBytes": 68636672,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 45416448,
-                  "workingSetBytes": 68669440,
+                  "privateBytes": 45363200,
+                  "workingSetBytes": 68636672,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 45416448,
-                  "workingSetBytes": 68669440,
+                  "privateBytes": 45428736,
+                  "workingSetBytes": 68657152,
                   "handleCount": 472
                 },
                 {
-                  "privateBytes": 45416448,
-                  "workingSetBytes": 68669440,
+                  "privateBytes": 45428736,
+                  "workingSetBytes": 68661248,
                   "handleCount": 472
                 }
               ],
@@ -1641,42 +1641,42 @@
                 "bridge_unknown_tool": 50,
                 "unknown_tool": 50
               },
-              "elapsedSeconds": 9.344,
+              "elapsedSeconds": 10.843,
               "latencyMilliseconds": {
-                "median": 16.0,
-                "p95": 62.0,
-                "max": 93.0
+                "median": 31.0,
+                "p95": 63.0,
+                "max": 94.0
               },
               "processSamples": [
                 {
-                  "privateBytes": 45375488,
-                  "workingSetBytes": 71135232,
-                  "handleCount": 547
+                  "privateBytes": 45563904,
+                  "workingSetBytes": 71352320,
+                  "handleCount": 560
                 },
                 {
-                  "privateBytes": 48099328,
-                  "workingSetBytes": 73945088,
-                  "handleCount": 595
-                },
-                {
-                  "privateBytes": 48771072,
-                  "workingSetBytes": 74625024,
+                  "privateBytes": 48324608,
+                  "workingSetBytes": 74182656,
                   "handleCount": 606
                 },
                 {
-                  "privateBytes": 48885760,
-                  "workingSetBytes": 74756096,
+                  "privateBytes": 48857088,
+                  "workingSetBytes": 74743808,
                   "handleCount": 606
                 },
                 {
-                  "privateBytes": 49487872,
-                  "workingSetBytes": 75264000,
-                  "handleCount": 629
+                  "privateBytes": 49283072,
+                  "workingSetBytes": 75182080,
+                  "handleCount": 606
                 },
                 {
-                  "privateBytes": 49565696,
-                  "workingSetBytes": 75382784,
-                  "handleCount": 629
+                  "privateBytes": 49696768,
+                  "workingSetBytes": 75624448,
+                  "handleCount": 606
+                },
+                {
+                  "privateBytes": 50475008,
+                  "workingSetBytes": 76300288,
+                  "handleCount": 635
                 }
               ],
               "journalEntries": 4996,
@@ -1688,7 +1688,7 @@
             }
           ],
           "status": "passed",
-          "finishedAtUtc": "2026-10-02T22:17:25.546328-07:00"
+          "finishedAtUtc": "2026-10-02T23:36:36.427011-07:00"
         },
         "sessionStability": {
           "processLeaseChecksPassed": 2,
@@ -1698,26 +1698,26 @@
         },
         "nativeDiagnostics": {
           "status": "passed",
-          "sites": 15515,
+          "sites": 15545,
           "categories": {
             "direct": 4583,
-            "enumeration-input": 4830,
-            "interface": 3882,
+            "enumeration-input": 4843,
+            "interface": 3899,
             "object-dispatch": 1939,
             "reflection": 281
           },
           "uncoveredSupportedBoundaries": 0,
-          "coverageSha256": "53764d9f98514235a80988891c764b811a854e59c37c9d5283c37bfa8c6988f0",
-          "instrumenterSha256": "f0a7e23a6ccff0fdab4f51bd0019c23260df7f9f4550ee67c6722c2e18d62b34",
-          "jitPrepared": 15396,
+          "coverageSha256": "115e57b626a4e17dcc1a961935eb2fb577d5607c82819881aa3a86132893e96e",
+          "instrumenterSha256": "3f7d005ce10b9991e006d5eabb73586e7aa646ee581154c79fdbff5a749e717e",
+          "jitPrepared": 15426,
           "openGenericWrappers": 119,
           "fixture": {
             "behaviorChecks": 36,
             "abruptExitChecks": 2,
             "idempotenceChecks": 1,
             "rejectionChecks": 5,
-            "fixtureSha256": "344d36c3f1b6ca8ae701041be3860591782d8b56e1c8961e53bae45f2d5e5876",
-            "weaverSha256": "f0a7e23a6ccff0fdab4f51bd0019c23260df7f9f4550ee67c6722c2e18d62b34",
+            "fixtureSha256": "981640383bb5b21c07f29ec06aa8de9a2628a458bdc8950d4ffb6e9b9a2eef3b",
+            "weaverSha256": "3f7d005ce10b9991e006d5eabb73586e7aa646ee581154c79fdbff5a749e717e",
             "nativeTiaExecuted": false
           },
           "scriptSha256": "64e62ee2c1c8d5400ad653114c2502e1acf2d436f958f60b2df945312f1d89c5",
@@ -1729,7 +1729,7 @@
           "faultChecksPassed": 25,
           "protocolChecksPassed": 60,
           "nativeAcceptance": "NOT RUN",
-          "protocolScriptSha256": "c138ecf97fb539c7f08165226919e597b8ab25368e422dfe9e4c4de539fb3568"
+          "protocolScriptSha256": "b82a38284d45971db4fb43897c860a24b84327438a2a875b30e2163824955fc4"
         },
         "engineeringLiveEdits": "NOT TESTED; preview/API shape and offline behavior only",
         "unifiedGraphicLists": "API present; native import not live-tested",
@@ -2055,12 +2055,12 @@
     {
       "path": "runtime/v20/TiaGitAddIn.Core.dll",
       "length": 210432,
-      "sha256": "8edf5f790f19d9ac02b27e18128cf1fb2ddbf73478917ad40cac637e87a56cc6"
+      "sha256": "38471c0b571c0f3d7ef1e08c9042601b0f7966584c3a90991c912a7634f83401"
     },
     {
       "path": "runtime/v20/TiaMcpServer.exe",
-      "length": 21249024,
-      "sha256": "286335249afdda7255ddf846483cb8c5b4353b774e2a297dbe7f1b9b153eb72b"
+      "length": 21314048,
+      "sha256": "ad941aabadcd17a793c5c0e3e813a8757a45fbca62e4a78b95316540d06e675e"
     },
     {
       "path": "runtime/v20/TiaMcpServer.exe.config",
@@ -2390,12 +2390,12 @@
     {
       "path": "runtime/v21/TiaGitAddIn.Core.dll",
       "length": 210432,
-      "sha256": "8edf5f790f19d9ac02b27e18128cf1fb2ddbf73478917ad40cac637e87a56cc6"
+      "sha256": "38471c0b571c0f3d7ef1e08c9042601b0f7966584c3a90991c912a7634f83401"
     },
     {
       "path": "runtime/v21/TiaMcpServer.exe",
-      "length": 21801984,
-      "sha256": "25dbac8507862b3f26b8a877f73f248fae066e310481fab547ba4e9e4e74b578"
+      "length": 21867520,
+      "sha256": "f39f1ba2d30c131b0d02e63d3e16a3f3f69510c3ba7bf645e17bf0eeab65601d"
     },
     {
       "path": "runtime/v21/TiaMcpServer.exe.config",
@@ -2427,6 +2427,10 @@
       "sha256": "2b6331f3aa6eea0179ca1d572e12ffca9b03cad715f9421ac5ff2faf1e365bdb"
     },
     {
+      "path": "tools/openness-shared/ImportDependencyPlanner.cs",
+      "sha256": "c6fe3eb5f627893b601e06d91832c0e4ea051e604548cdf167f478b5ce777b44"
+    },
+    {
       "path": "tools/openness-shared/LocalProcess.cs",
       "sha256": "0f00544e802c40fef86896b51ce7e4c552ed2b3afe1c5830e69ccae3c75f8102"
     },
@@ -2436,7 +2440,7 @@
     },
     {
       "path": "tools/openness-shared/OpennessEnvironment.cs",
-      "sha256": "9bf93521204faec2d385e3a10a8f56f469f31a0d92dbe00493e759a2f2a4c03a"
+      "sha256": "aed613dfd7c9f2d91346ba15b4aa0a1ba556861e476cb65c69104f87621c544c"
     },
     {
       "path": "tools/openness-shared/ProcessArguments.cs",
@@ -2868,7 +2872,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Adapter.Common.targets",
-      "sha256": "04f83d2afb367245b7c616c22dee9219647d62b438bd51867e76815cca338121"
+      "sha256": "f9a812a84bf61dc3126cc769ad9ea7c5c9fdfe3d0e17fefbc055fab6605ea7d8"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Adapter.Sources.props",
@@ -3084,15 +3088,23 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs",
-      "sha256": "019e6b9923b29874f089f48987c2c8149e41dc433159cb9fb51b0688648734d8"
+      "sha256": "921bbc8a3b5c4610f3647803debc402b40ed656858a8eb46405c2cd4a281bbf9"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/HardwareCatalogContract.cs",
       "sha256": "4312b964048f3592d7107a766ccfbb21e4b8ce9d797d66d87a64f4645fd4204f"
     },
     {
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/HostOptions.cs",
+      "sha256": "49060da7e8c1cdaf8e19ade2266c1e87236d53be7885575f926f1e932e8399f8"
+    },
+    {
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/ImportOrderTool.cs",
+      "sha256": "e79caf91528da824d24e3f8f1d4bd2a2c35897bd740449ed335e353434ecef7b"
+    },
+    {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/LegacyHostPassiveDiagnostics.cs",
-      "sha256": "a29c4003f3eaa6e53d463cedde29edf43adc1ad2d6fffe1effcbfb4184a6b9f4"
+      "sha256": "efe0455a433c2b731f41aaf32f07b051b6c1b950fe5dec5acc1fe4303ec6603e"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/LegacyHostPassiveDiagnosticTools.cs",
@@ -3140,7 +3152,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/Program.cs",
-      "sha256": "a844c4c5676ce10db968dd5fdee6748bc668266db132e3fa78a33078d3c5d3d4"
+      "sha256": "2e010fe60f5990959debfd353fa88b6502481956716b30dbb7fd26321a377ac7"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/RuntimeQueryContract.cs",
@@ -3160,7 +3172,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj",
-      "sha256": "b3c4be51e2712227288e01c18ac6e5f1e91a9cae1aa8750492ded81f870ae031"
+      "sha256": "1a97347fd08025ea568f9e34453ea54613d07d1db7907ae3ec8d7d6085b122c8"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/V17CompileEnvelope.cs",
@@ -3180,7 +3192,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/WorkerClient.cs",
-      "sha256": "b6c5c9cae7fddc6c42c96f01bd880e7abaab5dcf022526e8ef5c3a52bbe14eaa"
+      "sha256": "e6c7bed1445423d19c25aa071f2b1d3f7f5e879fc531d93b6f8fc4974a6aa7ff"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/WorkerProtocol.cs",
@@ -3376,11 +3388,11 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/Program.cs",
-      "sha256": "902778e546b70afff290b878a06e572a7a7d66e13aafb8c9dfb83c7b38a8f703"
+      "sha256": "7326da9a85631b80af8be27aea2f4a0d46783570a2669e5af3ac130258c2ccb6"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
-      "sha256": "dceb93193769cf683d349be95597d819a9b383598efa79563c17e538cd0ae5ab"
+      "sha256": "412923594c402ccf7609168163763aca91a22cbba1d56afef84f1108852fe676"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/WorkerOperations.cs",
@@ -3392,7 +3404,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs",
-      "sha256": "f63b8e9c461f2045a313d519a03c2486d554b584beb749347dbf7df10c326afb"
+      "sha256": "0d0fde5038c4c7500591286132f7c240bd4a56bd07b5db353fffe64e743cf671"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs",
@@ -3412,7 +3424,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/CliOptions.cs",
-      "sha256": "e75c25f9cf1ce2e78bd14a905960ec48a18bd646cb0f0f9f8cca790a62962ccd"
+      "sha256": "4af2b6586cd55539d6194f1662e1a4c8ff93c08f68d5aac19d7c89868ff73923"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Directory.Build.props",
@@ -3851,6 +3863,10 @@
       "sha256": "233bef77d03cb4fe61c72d80b5cff1e7751678a2743753e414371345c51f46d4"
     },
     {
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ImportOrder.cs",
+      "sha256": "8bc1eed07155221308387d648559a612a33ed3082132f0a80906183013315b2c"
+    },
+    {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.LibraryDeep.cs",
       "sha256": "24d7ec203b5e84eaa82e7ae4cdbc3d6ae13b9029e6c485fd2d675e51e6b11db9"
     },
@@ -4108,7 +4124,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/EnvironmentDoctor.cs",
-      "sha256": "855f2697277cd326bdcb26c5934e20bf398d7a14d508aead9adcfe307be395a8"
+      "sha256": "e5716fe6bb7389e23fe949bc22024bbf6931e2ec6b1d0c91d8ba6a3f3d60120a"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/OpcUaLiveReader.cs",
@@ -4212,7 +4228,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineRouter.cs",
-      "sha256": "e42767b27dbf960fb45ce88b4075040dc69633ec2ae25e56ce6234cc08e7fa3f"
+      "sha256": "84d93cfeff46ed60d26b3be0c9266c36e18c9395927eeafee272dd1874abe592"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ExactSoftwareMatch.cs",
@@ -4800,7 +4816,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs",
-      "sha256": "21272e1a73e19b1e6aca803dd7816234801133b7da782b95d41651507693e9b7"
+      "sha256": "6e34b9a4b88bb308397d509ddd08feccba475cbc9c3e0f4ef3939bbcd0b85772"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TimedAttachment.cs",
@@ -4808,7 +4824,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolVersionPolicy.cs",
-      "sha256": "878b12d3cef04af51af92bc0ef59150b75f8d6de7de69c7e3b1808408191482e"
+      "sha256": "fff095ec9c9a1f16b8d00ced48bcf4fd69357ad4e6a3f7a7ac8ee4627846ebd7"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/WatchTableEntryXml.cs",
@@ -4820,11 +4836,11 @@
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
-      "sha256": "f1ea40ed1ca20d7dbd7f171700932212193424fbd9b63bd5895480de10be2dda"
+      "sha256": "c1e6a07ad1692655a1fdfb28b6d438bebe7ef7f50729c97a962e0b3163799a12"
     },
     {
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
-      "sha256": "db7f834cab84886e25dfd79252bfcddf8de9e37d4859aa999c9331e7a5b8e279"
+      "sha256": "6ceef323c4e4254d6c1dcb412da5526a3be029562b1bd6d56ac25fdfe0a6c98c"
     },
     {
       "path": "tools/tiaportal-mcp/tests/BindingSnapshot.Tests/BindingSnapshot.Tests.csproj",
@@ -5276,7 +5292,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/Program.cs",
-      "sha256": "280b7c4c1532bfeb23777dfe3e3f4de2cd9836409ea8dcc9f49a7e8cd06e0af5"
+      "sha256": "c51d558d9d3f722a7c72477a6102fe758475cdb01a74bc546d8b200f24aa70f2"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/RuntimeQueryTests.cs",
@@ -5300,7 +5316,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-      "sha256": "71ee4bd4caa49223095b560511f705aee46847b15b6f12f38fbd4fc5f337a75f"
+      "sha256": "76a5cc879c9b6ae9d39445ebb7dced28a8692ba7c66a5d94f9ca77bd46562702"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/V17ContractTests.cs",
@@ -5471,6 +5487,10 @@
       "sha256": "8177dc83612763e6fe9f86db6a4e4bd2a61d5b272c9dac759a027a39de22eec7"
     },
     {
+      "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ImportOrderTests.cs",
+      "sha256": "75e9949eabca8189aaa8bcec35f423c768653a19e6e298fbc140f8fe56eafa4c"
+    },
+    {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/LadTextRendererTests.cs",
       "sha256": "6d3c23d11d867733390f1bba41555e44db164850f1341989613ccb73d8b4505f"
     },
@@ -5548,7 +5568,7 @@
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs",
-      "sha256": "cdf4be13e81b8207486ed9d3ddebeedae55247f59b7c90e2ca75f69151805449"
+      "sha256": "fa5a45411ea0ee1154c50b6244937b88ec094a7f7e88ecf5641cf30e5f685bb8"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ProjectSecurityTests.cs",
@@ -5616,11 +5636,11 @@
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
-      "sha256": "bd9fd50b332b33447140468451c5145b05393222af0aab6dcd0c90f8c6669292"
+      "sha256": "b4aada408e92f2c79cddc63d334318afb6a41ed4bdceeca1ffa2070723a512cc"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaVersionCatalogTests.cs",
-      "sha256": "caf0fd5305894fc27e51500863d592382588088f0a4a6f092d93b40327e3c807"
+      "sha256": "4016ff1d2224d86b2ae42274bc9a9ff5031c1606dcfe3f3bdf718388f5a88ba1"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/ToolBridgeFixtures.cs",
@@ -5653,6 +5673,14 @@
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/V21EcosystemTests.cs",
       "sha256": "51ba38cc5ea00d7909912f8e9c610d59cbdac230f5f4e729d900663924cf01ef"
+    },
+    {
+      "path": "tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/Program.cs",
+      "sha256": "298b26cac262ceaa248f6d15902c6d1e04f981bf7989d410ce4bc01f6e60510d"
+    },
+    {
+      "path": "tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj",
+      "sha256": "84823bcc1a8502d081af66d187aa68288c23daf9fc64261505ba5e22b7c433aa"
     },
     {
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/Program.cs",

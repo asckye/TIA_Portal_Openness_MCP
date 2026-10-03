@@ -1,9 +1,11 @@
-# Explicit release adapters and source-preview worker builds
+# Explicit release adapters and PLC foundation workers
 
 These eight peer projects compile the existing real PLC foundation subset into
 separate typed libraries. V20 and V21 have exactly the same project structure as
-the earlier releases. They do not replace the full V20/V21 engines, publish an
-MCP tool catalog, start a worker, or enable a release in the configurator. The standalone preview worker now references exactly one selected adapter.
+the earlier releases. The foundation host publishes the matching subset for V14 SP1–V19,
+while V20/V21 retain their full engines. Each worker references exactly one selected adapter.
+Use `scripts/build/Build-MultiVersion.ps1` from the repository root to build, test and deploy
+the eight-version distribution. Native TIA acceptance remains pending.
 
 The native source allowlist is shared by source, not by an API-bound binary.
 It is intentionally transitional: `PlcReadContracts.cs` still contains typed
@@ -62,23 +64,16 @@ common diagnostic abstraction removes the duplication, not eight runtime copies.
 
 ## Integration and remaining work
 
-The Worker csproj selects one exact Adapter and rejects unknown/missing release
-keys, framework replacement and multiple project references. No `else` selects
-V21. Host, Worker Program/protocol, TiaVersionCatalog, UI and full V20/V21 engine
-projects remain untouched. Do not reference both this adapter and
-the old PLC foundation assembly in one process: they intentionally expose the
-same transitional implementation types. A future worker must reference exactly
-one selected adapter and preserve its exact resolver, STA and session guards.
+Each worker selects one exact adapter and preserves its resolver and STA session model.
+The host and configurator now select the eight precise release keys. V14 SP1–V19 use
+the foundation catalog; V20/V21 retain their full engines. `Build-MultiVersion.ps1`
+assembles the runtime directories, tests real STDIO/HTTP against synthetic child workers,
+and records hashes. The former blanket Publish/Pack refusal has been removed.
 
-Adapter and Worker Publish/Pack are blocked. Static weave/verify is not end-to-end
-diagnostic acceptance: Worker IPC correlation and binding snapshot hooks are not
-wired, and the process-loss observer remains unset. Existing request failure
-handling is unchanged. No claim of complete production replacement or native
-runtime compatibility follows from the compile and offline diagnostic tests.
-
-Compile success establishes type compatibility only. Official workflow evidence,
-per-tool capability admission, complete functional coverage, IPC integration and
-native acceptance are separate gates; none is claimed by this increment.
+Do not load both the old PLC foundation assembly and a typed adapter in one process;
+their implementation types intentionally overlap during this migration. Native call
+instrumentation remains required. Complete native diagnostic correlation and actual
+Siemens import/export/compile roundtrips still require separate validation.
 
 ## Input regression checks
 
@@ -95,7 +90,7 @@ compiler process has a different sandbox identity.
 After eight builds, `build/Test-WorkerIsolation.ps1 -EvidenceDirectory <output>
 -NativeCallWeaverPath <weaver.dll>` checks project selection, copied PE coverage,
 five deliberate coverage corruptions per release, invalid worker configurations,
-missing instrumentation tooling and publication gates.
+missing instrumentation tooling.
 
 `Diagnostics.Tests` builds only the API-independent runtime against net8.0. Run
 its DLL with `<worker-bin-root> <new-writable-journal-directory>` to exercise

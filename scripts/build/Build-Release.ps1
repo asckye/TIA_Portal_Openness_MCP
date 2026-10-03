@@ -233,7 +233,7 @@ $manifest.capabilities.liteProfile.toolCount=$liteNames.Count
 $manifest.capabilities.liteProfile.note='Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative.'
 $manifest.validationStatus='Both runtimes compiled and tested locally; new real-project acceptance remains pending'
 WriteJson $manifestPath $manifest
-$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime') -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config'} | Sort-Object FullName | ForEach-Object {
+$runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo 'runtime/v21') -File -Recurse | Where-Object {$_.Extension -in '.exe','.dll','.config'} | Sort-Object FullName | ForEach-Object {
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.

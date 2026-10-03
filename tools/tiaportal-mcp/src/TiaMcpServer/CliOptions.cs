@@ -155,6 +155,7 @@ namespace TiaMcpServer
                         if (++i >= args.Length)
                             throw new System.ArgumentException("A canonical TIA version key is required after " + args[i - 1] + ".");
                         var selectedVersion = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(args[i]);
+                        if (!selectedVersion.IsFullEngine) throw new System.ArgumentException("Use the matching PLC foundation host selected in the configurator for " + selectedVersion.DisplayName + ".");
                         if (options.TiaMajorVersion.HasValue && options.TiaMajorVersion.Value != selectedVersion.MajorVersion)
                             throw new System.ArgumentException("Conflicting TIA version options are not allowed.");
                         options.TiaMajorVersion = selectedVersion.MajorVersion;

@@ -139,6 +139,8 @@ def main():
     gui_inputs = {n for n in files if n.startswith('tools/ui-glass/') or (n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml'))} | {
         'scripts/build/Build-Configurator.ps1',
         'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs',
+        'tools/openness-shared/OpennessEnvironment.cs',
+        'tools/openness-shared/ProcessArguments.cs',
     }
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:

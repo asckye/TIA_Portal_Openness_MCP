@@ -1,5 +1,8 @@
 # 清单与验证记录
 
+> Current multi-version development: [release tools, API audit and build instructions](../docs/reference/version-tools.md). Historical release/VM records below describe their original dates and do not authorize new native operations.
+
+
 | 文件 | 含义 |
 |---|---|
 | [package-manifest.json](package-manifest.json) | 交付版本、入口、模板和工具统计 |

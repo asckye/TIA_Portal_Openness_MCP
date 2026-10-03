@@ -19,8 +19,8 @@ internal static class FoundationTools
         new("DiagnosePortalConnectReadiness","ReadPortalConnectReadiness","[runtime-query-candidate] Explicit processId metadata diagnosis without attach. Found never proves readiness or permission; those remain unknown/not-probed. No startup, repairs or project open.",new[]{new Argument("processId","integer")},"RuntimeQuery"),
         new("AddDeviceWithFallback","AddDeviceWithFallback","[bounded-device-add-candidate] V19–21 exact catalog selection only: explicit ArticleNumber+Version or full OrderNumber TypeIdentifier with empty version. Only documented CPU 1211C 6ES7211-1BE40-0XB0 or CPU 1513 6ES7513-1AM03-0AB0 with matching S7-1200/S7-1500 family accepted. No approximate/default/family fallback, insertion probing, HMI hint or retries. Complete bounded root/grouped/ungrouped inventory; collision fails closed. Default preview, exact project/hash confirmation; one native create. Unknown outcome poisons session. No save, download, configuration or online calls; native acceptance NOT RUN.",new[]{S("preferredMlfb"),S("preferredVersion"),S("deviceName"),new Argument("family","string",false,"S7-1500"),Dry(),new Argument("expectedPlanHash","string",false,"")},"DeviceAdd"),
         new("SearchHardwareCatalog","SearchHardwareCatalog","[hardware-catalog-candidate] V19–21 only. Existing explicit attached portal and open bound project required. One literal query, bounded client traversal/results with explicit truncation. Native Find has no server-side limit/cancellation. No insertion, compatibility probe, catalog repair or launch. V18 semantics gated; V14 SP1–17 API absent.",new[]{S("keyword"),new Argument("limit","integer",false,50)},"HardwareCatalog"),
-        new("GetPlcWatchTables","ReadWatchTableNames","[supplementary-read-candidate] V15.1–V21 ordinary PLC root/user-group escaped watch-table paths; no force tables or values. V14 SP1 API lacks this property; typed rebuild pending.",new[]{S("softwarePath")},"SupplementaryRead"),
-        new("GetTechnologyObjects","ReadTechnologyObjects","[supplementary-read-candidate] V14 SP1–V21 ordinary PLC technology metadata; root-only through V18, root/user groups V19–V21. Unavailable optional attributes reported; no live values. Typed rebuild pending.",new[]{S("softwarePath")},"SupplementaryRead"),
+        new("GetPlcWatchTables","ReadWatchTableNames","[supplementary-read-candidate] V15.1–V21 ordinary PLC root/user-group escaped watch-table paths; no force tables or values. V14 SP1 API lacks this property; typed adapters compiled; native acceptance pending.",new[]{S("softwarePath")},"SupplementaryRead"),
+        new("GetTechnologyObjects","ReadTechnologyObjects","[supplementary-read-candidate] V14 SP1–V21 ordinary PLC technology metadata; root-only through V18, root/user groups V19–V21. Unavailable optional attributes reported; no live values. Typed adapters compiled; native acceptance pending.",new[]{S("softwarePath")},"SupplementaryRead"),
         new("GetSoftwareInfo","ReadSoftwareInfo","[software-read-candidate] Ordinary PLC Name, Attributes and Description with exact software identity; no live values. Windows typed rebuild/native acceptance pending.",new[]{S("softwarePath")},"SoftwareRead"),
         new("GetSoftwareTree","ReadSoftwareTree","[software-read-candidate] Ordinary PLC root/user block and type tree with exact addresses, including empty groups. System groups and software units excluded; incomplete traversal fails. Windows typed rebuild/native acceptance pending.",new[]{S("softwarePath")},"SoftwareRead"),
         new("GetBlockInfo","ReadBlockInfo","[v17-object-read-safe-v1; manual reconciliation pending] Read exact group-qualified block details; no fallback or write.",new[]{S("softwarePath"),S("blockPath")},"BlockInfo"),
@@ -66,6 +66,18 @@ internal static class FoundationTools
         new("CompileSoftware","CompileSoftware","[v17-compile-safe-v1] Preview by default. Actual PLC compilation returns native counts and nested messages; no download. Nonempty safety password requires supplied V17+ SafetyAdministration API and service; never ignored.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile"),
         new("CompileAndDiagnosePlc","CompileSoftware","[v17-compile-safe-v1] Actual counts plus error/warning/info diagnostics, preserving summary lines in raw messages. Preview by default; exact project confirmation required for execution.",new[]{S("softwarePath"),new Argument("password","string",false,""),Dry()},"Compile")
     };
+    internal static bool Available(Definition definition, string releaseKey)
+    {
+        var major = TiaMcp.Versioning.TiaVersionCatalog.Get(releaseKey).MajorVersion;
+        switch (definition.ResponseMember)
+        {
+            case "HardwareCatalog": case "DeviceAdd": return major >= 19;
+            case "SpecialExport": return major >= 16;
+            case "DocumentExport": case "BatchDocumentExport": case "DocumentImport": case "BatchDocumentImport": return major >= 20;
+        }
+        return definition.Name != "GetPlcWatchTables" || releaseKey != "14sp1";
+    }
+    internal static IList<McpServerTool> Create(IFoundationWorker worker, string releaseKey) => Definitions.Where(d => Available(d, releaseKey)).Select(d => (McpServerTool)new FoundationTool(d, worker)).ToArray();
     internal static IList<McpServerTool> Create(IFoundationWorker worker) => Definitions.Select(d => (McpServerTool)new FoundationTool(d,worker)).ToArray();
 }
 
@@ -81,7 +93,7 @@ internal sealed class FoundationTool : McpServerTool
         var properties=new JsonObject();
         foreach(var p in definition.Arguments) { var schema=new JsonObject { ["type"]=p.Type, ["description"]="Exact foundation argument: "+p.Name }; if(p.Type=="array") schema["items"]=new JsonObject { ["type"]="string" }; if(!p.Required) schema["default"]=JsonSerializer.SerializeToNode(p.Default); properties[p.Name]=schema; }
         var schemaRoot=new JsonObject { ["type"]="object", ["properties"]=properties, ["additionalProperties"]=false, ["required"]=new JsonArray(definition.Arguments.Where(p=>p.Required).Select(p=>(JsonNode?)JsonValue.Create(p.Name)).ToArray()) };
-        tool=new Tool { Name=definition.Name, Description="[Source preview; native unverified] "+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
+        tool=new Tool { Name=definition.Name, Description="[PLC foundation; native unverified] "+definition.Description, InputSchema=JsonSerializer.SerializeToElement(schemaRoot) };
     }
     public override Tool ProtocolTool=>tool;
     public override async ValueTask<CallToolResult> InvokeAsync(RequestContext<CallToolRequestParams> request,CancellationToken cancellationToken=default)

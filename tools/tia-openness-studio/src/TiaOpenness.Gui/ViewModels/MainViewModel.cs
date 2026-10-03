@@ -58,6 +58,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private readonly TiaClient _client = new();
     private bool _started;
+    private string _selectedReleaseKey;
+    public IEnumerable<TiaMcp.Versioning.TiaVersionDescriptor> Releases => TiaMcp.Versioning.TiaVersionCatalog.Runnable;
+    public bool CanSelectRelease => !_started && !Busy;
+    public string SelectedReleaseKey
+    {
+        get => _selectedReleaseKey;
+        set { if (CanSelectRelease) Set(ref _selectedReleaseKey, value); }
+    }
 
     private string _projectPath = string.Empty;
     private string _projectName = string.Empty;
@@ -242,7 +250,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public int ProgressValue { get => _progressValue; private set => Set(ref _progressValue, value); }
     public int ProgressMax { get => _progressMax; private set => Set(ref _progressMax, value); }
 
-    public bool Busy { get => _busy; private set => Set(ref _busy, value); }
+    public bool Busy { get => _busy; private set { if (Set(ref _busy, value)) Raise(nameof(CanSelectRelease)); } }
 
     public bool UseMock
     {
@@ -413,8 +421,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private async Task DoctorAsync() => await Guarded("Status.CheckingEnvironment", async () =>
     {
-        EnsureBridge();
-        var report = await _client.DoctorAsync();
+        var report = await Task.Run(TiaOpenness.Core.Environment.OpennessDoctor.Run);
 
         Append(Loc.Current["Log.EnvironmentHeader"]);
         Append($"{report.MachineName} / {report.UserName} / {(report.Is64BitProcess ? "x64" : "x86")}");
@@ -667,8 +674,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        _client.Start(forceMock: UseMock);
+        _client.Start(forceMock: UseMock, opennessVersion: SelectedReleaseKey);
         _started = true;
+        Raise(nameof(CanSelectRelease));
         Append(Loc.Current.T("Log.BridgeStarted", UseMock ? "mock" : "openness"));
     }
 

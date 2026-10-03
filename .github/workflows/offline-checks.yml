@@ -51,3 +51,31 @@ jobs:
         run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo
       - name: Studio WPF functional tests
         run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo
+
+  foundation-transport:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Foundation contracts and functional tests
+        run: dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj -c Release
+      - name: Build host and synthetic worker without Siemens SDKs
+        shell: pwsh
+        run: |
+          dotnet publish tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/ci-foundation
+          if ($LASTEXITCODE) { throw 'Host build failed' }
+          dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
+          if ($LASTEXITCODE) { throw 'Fixture build failed' }
+          foreach ($key in @('14sp1','15.1','16','17','18','19')) {
+            $target = "runtime/v$key"
+            New-Item -ItemType Directory -Force $target | Out-Null
+            Get-ChildItem bin-build/ci-foundation -File | Copy-Item -Destination $target
+            [IO.File]::WriteAllText((Join-Path $target 'release-key.txt'), $key)
+          }
+      - name: Six real STDIO hosts and isolated HTTP sessions
+        run: python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/bin/Release/net8.0/TransportFixture.exe --output bin-build/ci-foundation-results

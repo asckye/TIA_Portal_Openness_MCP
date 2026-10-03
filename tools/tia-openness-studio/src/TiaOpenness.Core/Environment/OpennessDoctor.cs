@@ -83,7 +83,7 @@ namespace TiaOpenness.Core.Environment
                     Title = "TIA Portal Openness installed",
                     Status = CheckStatus.Fail,
                     Detail = "no installation found",
-                    Remedy = "Install TIA Portal V20 or V21 with the Openness option enabled. " +
+                    Remedy = "Install TIA Portal V14 SP1, V15.1 or V16-V21 with the Openness option enabled. " +
                              "The bridge looks in HKLM\\SOFTWARE\\Siemens\\Automation\\Openness and in " +
                              "%ProgramFiles%\\Siemens\\Automation\\Portal V**\\PublicAPI.",
                 };

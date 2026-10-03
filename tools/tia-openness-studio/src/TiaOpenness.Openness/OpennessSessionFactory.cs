@@ -20,14 +20,10 @@ namespace TiaOpenness.Openness
 
         public void Configure(string opennessVersion)
         {
-#if TIA_V20
-            const int compiledMajor = 20;
-#else
-            const int compiledMajor = 21;
-#endif
-            int requestedMajor = string.IsNullOrWhiteSpace(opennessVersion) ? compiledMajor : Version.Parse(opennessVersion).Major;
-            TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(requestedMajor, compiledMajor);
-            _installation = OpennessAssemblyResolver.Install(compiledMajor + ".0");
+            var compiled = TiaMcp.Versioning.TiaVersionCatalog.Get(StudioRelease.Key);
+            var requested = string.IsNullOrWhiteSpace(opennessVersion) ? compiled : TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(opennessVersion);
+            TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(requested.Key, compiled.Key);
+            _installation = OpennessAssemblyResolver.Install(compiled.ApiVersion);
         }
 
         public ITiaSession Create()
