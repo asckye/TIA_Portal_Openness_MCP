@@ -1,15 +1,15 @@
 {
-    "generatedAt":  "2026-10-03T03:26:34.1605653+00:00",
-    "testsPassed":  137,
+    "generatedAt":  "2026-10-03T04:33:21.0252324+00:00",
+    "testsPassed":  144,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "67811112105340440a12c86ecd6b2a7922adc9bfd39bab96c0b6635e8224a07f"
+                       "sha256":  "b8129f80f0075332713672743ba320926e0b4eae17b41cf9f8880107b9f9bcf9"
                    },
     "sourceFiles":  [
                         {
                             "path":  "scripts/build/Build-Configurator.ps1",
-                            "sha256":  "267a0d8f61a17c72d98cbfbecaae1c160e8b1b531f81a3926ad44a58734c68a2"
+                            "sha256":  "e4a6c12ebf7421fb20d2ff2b0300305f327aceb6fa03ca3429336845fc2075f5"
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
@@ -21,15 +21,31 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
-                            "sha256":  "4dd9980331d6cfcef2b75ad58cf0ca6741cfe688a1ddac337af5b8a32066b787"
+                            "sha256":  "e0f8d712d9ff6ee3812e19790b7e5972d0e6652de03e54d30e0228846d0465fd"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/Glass.Dark.xaml",
+                            "sha256":  "e5ec2908ce03596cb5d2f5eb33c5cc0ec433937f6976b597ef0c378e5cf5e81b"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/Glass.Light.xaml",
+                            "sha256":  "ef2df1a14662f2cd76588d8dd00d8df4ed4d0e3288ce92f10d118b548fa72ff1"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/Glass.Strings.en.xaml",
+                            "sha256":  "dcb0bca8fc593ac4096222dfa7a1374cd1cb36bab621601661e997749152f045"
+                        },
+                        {
+                            "path":  "tools/mcp-configurator/Glass.Strings.zh.xaml",
+                            "sha256":  "cecb6a86b37e6faa1aad3b152c5e1e3831230b9546db138b91da76afd5a568c2"
                         },
                         {
                             "path":  "tools/mcp-configurator/MainWindow.xaml",
-                            "sha256":  "0e9baec6f53e9346b432d9bd9d5d7888858216b55c252ecd5e4517bcedfa706c"
+                            "sha256":  "208e80aeea09c4799c8edf24d0453de5a3418a0561adf5611f04054f36a304cf"
                         },
                         {
                             "path":  "tools/mcp-configurator/Tests.cs",
-                            "sha256":  "419decccd137aaf4b722c2ea84c4276a8cd30bdfb693d809eadb01d6163f2a42"
+                            "sha256":  "f18df25d52ca53deb3e91b60e5e026ce1420d11cbe47bff79b5b6c64e675b42b"
                         },
                         {
                             "path":  "tools/mcp-configurator/UpdateCheck.cs",
@@ -38,6 +54,50 @@
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs",
                             "sha256":  "21272e1a73e19b1e6aca803dd7816234801133b7da782b95d41651507693e9b7"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/JetBrainsMono-Medium.ttf",
+                            "sha256":  "d16e6dc99672734698d629705f617c79f6eb6040f5113efe3a145204dc988109"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/JetBrainsMono-OFL.txt",
+                            "sha256":  "a76abf002c49097d146e86740a3105a5d00450b1592e820a1109a8c5680cd697"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/JetBrainsMono-Regular.ttf",
+                            "sha256":  "e6fd0d7e91550b3ed2b735d4312474362c4716edc4fc0577a0f61ed782d5aed1"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/Manrope-Bold.ttf",
+                            "sha256":  "fbd7be7920420c6b578fed97bf3cf5f290ccc57d6d5133f2e7b86f8e920bc428"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/Manrope-Medium.ttf",
+                            "sha256":  "35bdfc2887027213040e5767c6bc15a0294686a637fff516e5517e51bd59d577"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/Manrope-OFL.txt",
+                            "sha256":  "58172e0c0fac2cda8a37b348164bb55e44b0e69051e557e92b1d3f6910141f7b"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/Manrope-Regular.ttf",
+                            "sha256":  "d51189da4d8784379aa44ef261730c24c241e98ed272d1c4c513789a1f448f6e"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/Manrope-SemiBold.ttf",
+                            "sha256":  "857ad79181f4aff33a51bdaaeedbae6595888086580295ff438fc331c7ba4dba"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Fonts/SOURCES.txt",
+                            "sha256":  "edc3f81a7ccbd77f2d12e2a9432898ab5f7f1ff90a88cb473195a0efbe91f545"
+                        },
+                        {
+                            "path":  "tools/ui-glass/Glass.xaml",
+                            "sha256":  "4c285c4ea9742ea8403cba925b5d56c512869c1c3ba67fa77cc72d5026753125"
+                        },
+                        {
+                            "path":  "tools/ui-glass/GlassLogView.cs",
+                            "sha256":  "cb89d5dd6e41c5be9f66c5090998f82d8f5076147edabdf024ad75155d50bc98"
                         }
                     ]
 }

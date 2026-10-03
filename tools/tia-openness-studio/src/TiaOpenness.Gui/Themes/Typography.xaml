@@ -1,24 +1,14 @@
-<!--
-  Type ramp and metrics.
-
-  Two families do all the work: a CJK-capable humanist sans for everything a person reads, and a
-  monospace for everything that is a value - file paths, versions, counts, the log. Setting paths
-  in mono is not decoration: it makes a backslash, a dot and an underscore unambiguous.
-
-  Each family is a fallback chain because none of the preferred faces ship with Windows; WPF walks
-  the chain per glyph, so Latin lands on the first installed sans and CJK falls through to
-  PingFang or YaHei rather than to a tofu box.
--->
+<!-- Embedded Manrope UI faces and JetBrains Mono values; Windows fonts supply CJK fallback. -->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
 
-  <FontFamily x:Key="Ui.Font">Noto Sans SC, Source Han Sans SC, PingFang SC, Microsoft YaHei UI, Microsoft YaHei, Segoe UI Variable Text, Segoe UI</FontFamily>
-  <FontFamily x:Key="Ui.FontMono">IBM Plex Mono, JetBrains Mono, Cascadia Mono, Consolas, Courier New</FontFamily>
+  <FontFamily x:Key="Ui.Font">/TiaOpenness;component/Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI</FontFamily>
+  <FontFamily x:Key="Ui.FontMono">/TiaOpenness;component/Fonts/#JetBrains Mono, Consolas</FontFamily>
 
-  <sys:Double x:Key="Ui.FontSize.Caption">11.5</sys:Double>
-  <sys:Double x:Key="Ui.FontSize.Small">12.5</sys:Double>
-  <sys:Double x:Key="Ui.FontSize.Body">13.5</sys:Double>
+  <sys:Double x:Key="Ui.FontSize.Caption">11</sys:Double>
+  <sys:Double x:Key="Ui.FontSize.Small">11</sys:Double>
+  <sys:Double x:Key="Ui.FontSize.Body">12</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Title">17</sys:Double>
   <sys:Double x:Key="Ui.FontSize.Heading">22</sys:Double>
 

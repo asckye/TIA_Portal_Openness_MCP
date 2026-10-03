@@ -71,3 +71,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 - Integrated WPF UI, contracts, typed client, mock, inspection/diff helpers and tests. Replaced the upstream native bridge with the existing MCP engine transport. No upstream native DLL or Siemens SDK is included in the desktop build.
 - [Provenance and archive hashes](../../tools/tia-openness-studio/upstream.json); [integration and behavior](../../tools/tia-openness-studio/README.md). The full original source and complete Git history are retained as reference archives.
 - Runtime NuGet dependency: Newtonsoft.Json 13.0.3, MIT (already listed in this repository). Test-only: Microsoft.NET.Test.Sdk 17.12.0, xUnit 2.9.2 and Visual Studio runner 2.8.2.
+
+## Glass Layers desktop fonts
+
+Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains Mono (JetBrains) are embedded in the WPF desktop applications under SIL Open Font License 1.1. The font files, original licenses, source URLs and file hashes are under `tools/ui-glass/Fonts/`. Manrope's variable font is instantiated at weights 400, 500, 600 and 700 for .NET Framework WPF. JetBrains Mono uses the upstream Regular and Medium TTFs. No fonts are installed system-wide.

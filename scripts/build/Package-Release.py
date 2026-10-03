@@ -136,13 +136,15 @@ def main():
     gui = json.loads(files['manifest/configurator-build.json'].decode('utf-8-sig'))
     require(gui['testsPassed'] > 0, 'Missing configurator test result')
     require(sha(files[gui['executable']['path']]) == gui['executable']['sha256'], 'Configurator EXE changed after validation')
-    gui_inputs = {n for n in files if n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml')} | {
+    gui_inputs = {n for n in files if n.startswith('tools/ui-glass/') or (n.startswith('tools/mcp-configurator/') and Path(n).suffix in ('.cs', '.xaml'))} | {
         'scripts/build/Build-Configurator.ps1',
         'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs',
     }
     require(gui_inputs == {r['path'] for r in gui['sourceFiles']}, 'Configurator input inventory changed')
     for row in gui['sourceFiles']:
-        data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
+        data = files[row['path']]
+        if not row['path'].endswith('.ttf'):
+            data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = ('docs/README.md',

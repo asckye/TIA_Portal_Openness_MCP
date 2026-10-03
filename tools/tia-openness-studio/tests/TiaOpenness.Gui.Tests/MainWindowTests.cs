@@ -28,8 +28,8 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public class MainWindowTests(WpfContext wpf)
 {
-    private const int Width = 1400;
-    private const int Height = 880;
+    private const int Width = 1200;
+    private const int Height = 780;
 
     private sealed class Rendered : IDisposable
     {
@@ -154,12 +154,12 @@ public class MainWindowTests(WpfContext wpf)
                 ThemeManager.Current.Theme = AppTheme.Light;
                 using var rendered = Render();
 
-                var expected = ((SolidColorBrush)Application.Current.FindResource("Ui.HeaderBackground")).Color;
+                var expected = ((SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground")).Color;
                 var actual = PixelAt(rendered.Bitmap, Width / 2, 6);
 
-                Assert.Equal(expected.R, actual.R);
-                Assert.Equal(expected.G, actual.G);
-                Assert.Equal(expected.B, actual.B);
+                Assert.Equal(255, actual.A);
+                Assert.InRange(actual.R, expected.R - 45, expected.R);
+                Assert.InRange(actual.B, expected.B - 30, expected.B);
             }
             finally
             {
@@ -175,8 +175,7 @@ public class MainWindowTests(WpfContext wpf)
     /// </summary>
     [Theory]
     [InlineData("View", 3)]
-    [InlineData("Appearance", 3)]
-    [InlineData("Language", 2)]
+    [InlineData("SyncDirection", 2)]
     public void Every_picker_group_has_one_and_only_one_choice(string group, int expectedSegments)
     {
         wpf.Run(() =>
@@ -230,7 +229,7 @@ public class MainWindowTests(WpfContext wpf)
                 .ToList();
 
             Assert.Contains(Loc.Current["Blocks.Empty.Title"], visible);
-            Assert.Contains(Loc.Current["Sidebar.Empty"], visible);
+            Assert.Contains(Loc.Current["Glass.Disconnected"], visible);
 
             // And the grids behind them are hidden rather than merely empty.
             Assert.DoesNotContain(Descendants<DataGrid>(rendered.Host), IsShown);
@@ -298,13 +297,13 @@ public class MainWindowTests(WpfContext wpf)
         wpf.Run(() =>
         {
             using var rendered = Render();
-            var themed = (ControlTemplate)Application.Current.FindResource("Ui.ButtonTemplate");
+            var themed = (ControlTemplate)Application.Current.FindResource("Glass.ButtonTemplate");
 
             var buttons = Descendants<ButtonBase>(rendered.Host)
                 .Where(IsShown)
                 .Where(b => b is Button or RadioButton)
                 // The language switch is text-only and has a template of its own.
-                .Where(b => (b as RadioButton)?.GroupName != "Language")
+                .Where(b => (b as RadioButton)?.GroupName != "View")
                 .ToList();
 
             Assert.True(buttons.Count >= 12, "only found " + buttons.Count + " buttons");

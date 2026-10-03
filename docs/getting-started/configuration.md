@@ -2,21 +2,21 @@
 
 本地 3.1.0 候选的可选工作进程隔离需在服务端命令或 MCP 条目中添加 `--isolate-openness`；配置器暂没有对应勾选项。启用前阅读[隔离模式及故障恢复](../guides/openness-worker-isolation.md)。
 
-双击 `TiaMcpConfigurator.exe` 打开连接中心。界面是一页两栏：左 **A 服务端**、右 **B AI 客户端**，中间的连线条实时显示当前端点与状态，下方是共用密钥和运行日志；右上角切换 **虚拟机 ↔ 宿主机** 与 **同一台电脑** 两种模式。日常配置与启动无需 CMD/BAT。需要 Windows .NET Framework 4.8。服务端把此 EXE 放在完整 Release 包根目录（与 `runtime` 文件夹同级）；宿主机配置客户端时只需此 EXE，不用安装 TIA。
+双击 `TiaMcpConfigurator.exe` 打开连接中心。Glass Layers 界面左侧依次为连接模式、TIA 安装、HTTP 服务和 AI 客户端卡片；右侧为连接摘要与活动日志。顶部模式卡片切换 **虚拟机 ↔ 宿主机** 与 **同一台电脑**。右上角 **•••** 菜单可切换中文 / English、浅色 / 深色 / 跟随系统，并保存两端配置；中文 Windows 默认使用中文。切换语言和主题会保留当前输入与选择。日常配置与启动无需 CMD/BAT。需要 Windows .NET Framework 4.8。服务端把此 EXE 放在完整 Release 包根目录（与 `runtime` 文件夹同级）；宿主机配置客户端时只需此 EXE，不用安装 TIA。
 
-两种模式的差别只有传输方式：**虚拟机 ↔ 宿主机** 走 HTTP，需要地址、端口和密钥；**同一台电脑** 走 stdio，由客户端按需启动引擎，A 栏只剩版本与安装目录，地址、密钥和服务按钮随之隐藏。
+两种模式的差别只有传输方式：**虚拟机 ↔ 宿主机** 走 HTTP，需要地址、端口和密钥；**同一台电脑** 走 stdio，由客户端按需启动引擎，安装卡片保留版本与安装目录，地址、密钥和服务按钮随之隐藏。
 
 ## 虚拟机 ↔ 宿主机模式
 
-同一页的两栏分别在两台机器上填：A 栏在装有 TIA 的虚拟机上操作，B 栏在宿主机上操作，两侧密钥必须相同。
+在安装 TIA 的虚拟机上配置并启动 HTTP 服务，在宿主机上选择 AI 客户端并写入连接信息，两端密钥必须相同。
 
-### A 栏：在虚拟机上启动服务
+### 在虚拟机上启动服务
 
 1. 用运行 TIA 的 Windows 用户打开 EXE。
 2. 选择 V20/V21。安装根目录会自动探测（`TiaPortalLocation` 环境变量 → 注册表 `TIAP{版本}\TIA_Opns` → 默认安装目录，与引擎相同顺序），也可点“自动检测”重新探测或用“浏览”手动选择（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
-3. 填虚拟机 IPv4、端口（默认 8765），在下方密钥条点“生成密钥”，再点 **保存两端配置**。
+3. 填虚拟机 IPv4、端口（默认 8765），在下方密钥条点“生成”，再从 **•••** 菜单点 **保存两端配置**。
 4. **网络权限 → 启动服务**。网络权限按钮会请求 Windows 管理员授权，只为当前用户预留指定 HTTP 地址，并放行本地子网到该地址/端口的 TCP 访问。
-5. 日志出现 listening、连线条状态变成 `running` 后保持窗口打开。以后打开 EXE，直接点“启动服务”。
+5. 日志出现 listening、连接摘要状态变成“运行中”（English: `running`） 后保持窗口打开。以后打开 EXE，直接点“启动服务”。
 
 日常打开程序不需要管理员身份。用户须属于 `Siemens TIA Openness` 组，新增组后注销重登；首次访问 TIA 时处理 Openness 提示。跨路由/VPN 子网连接需管理员另配实际源地址的防火墙规则。程序不关闭防火墙、不覆盖其它用户的 URL 授权。
 
@@ -24,21 +24,21 @@
 
 关闭窗口会询问是否停止本窗口启动的 MCP。停止前确认没有工程操作进行中；不主动关闭博途，也不配置开机自启。
 
-### B 栏：在宿主机上写入客户端
+### 在宿主机上写入客户端
 
-1. 在宿主机打开同一个 EXE，在 A 栏填虚拟机 IPv4、端口，在密钥条粘贴服务端的同一把密钥。宿主机没有 TIA 时，**保存两端配置** 只记录客户端侧连接信息，并在日志里说明服务端校验未通过，这是正常的。
-2. 在 B 栏点击选择一个或多个客户端。
+1. 在宿主机打开同一个 EXE，在 HTTP 服务卡片填虚拟机 IPv4、端口，在密钥条粘贴服务端的同一把密钥。宿主机没有 TIA 时，**保存两端配置** 只记录客户端侧连接信息，并在日志里说明服务端校验未通过，这是正常的。
+2. 在 AI 客户端卡片点击选择一个或多个客户端。
 3. 点击 **测试连接**。它检查 HTTP、鉴权与 MCP 就绪状态，不修改工程。
 4. 退出选中的 AI 客户端，再点击 **写入客户端配置**。确认窗口会展示具体写入位置。
 5. 重启对应客户端，新建会话，使用 `tia-portal-vm` 读取工程树。不要让多个 AI 同时修改同一工程。
 
 ## 同一台电脑模式
 
-右上角切到 **同一台电脑**：A 栏只需版本与安装目录，B 栏选客户端后点 **写入客户端配置** 即可。客户端通过 stdio 自动启动包内引擎，服务器名为 `tia-portal`，无需地址、端口、密钥、网络权限和“启动服务”。
+顶部模式卡片切到 **同一台电脑**：安装卡片只需版本与安装目录，在 AI 客户端卡片选客户端后点 **写入客户端配置** 即可。客户端通过 stdio 自动启动包内引擎，服务器名为 `tia-portal`，无需地址、端口、密钥、网络权限和“启动服务”。
 
 ## 客户端卡片
 
-客户端卡片支持多选，B 栏右上角实时显示选择结果；点击该文字可查看所选客户端的使用说明，连线条左侧同步显示当前选择。卡片区在卡内上下滚动，B 栏因此与 A 栏等高、两栏按钮底部对齐；窗口缩小时卡片自动由三列换成两列。卡片顺序：CLI 在前（Claude Code、Codex 居首），桌面助理其次，IDE 在后。
+客户端卡片支持多选，标题旁实时显示已选数量；点击该文字可查看所选客户端的使用说明，右侧连接摘要同步显示当前选择。12 张卡片按四列排布，在卡内上下滚动。窗口最小尺寸为 1200×780；地址、路径和说明可通过悬停查看。卡片顺序：CLI 在前（Claude Code、Codex 居首），桌面助理其次，IDE 在后。
 
 **本机检测（2.7.61）**：配置器启动时逐张卡片检测客户端在**这台电脑**上的痕迹——它要写的配置文件 / 目录是否存在、可执行文件是否在 PATH 上（npm 装的 CLI 是 `.cmd`）、已知安装目录（`%LOCALAPPDATA%\Programs\...`、`Program Files`）、控制面板卸载项——卡片副标题显示“已检测 / 未检测到”，鼠标悬停显示找到了什么和将写入的文件，日志里列出全部结果，默认选中第一张检测到的卡片。未检测到的卡片仍可写入（先写配置、后装客户端也行）。写入位置全部按当前用户解析（`%USERPROFILE%`、`%APPDATA%`、`CODEX_HOME` / `KIMI_CODE_HOME` 环境变量；VS Code 只有 Insiders 时写 Insiders 的用户目录），所以同一个 EXE 拷到任何电脑都写到那台电脑的正确位置。
 
@@ -76,7 +76,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 ## 菜单栏：更新与帮助（2.8.0）
 
-窗口顶部的菜单栏不占页面：**更新**菜单第一行是引擎版本与包名（读配置器旁边的 `manifest\delivery.json`），第二行是检查结果——启动时后台联网比对一次 GitHub 最新版（API 限流时读发布页），有新版本时菜单标题变成“更新 · 有新版本 X”。“检查更新”随时重查；“更新引擎…”在确认后关闭配置器、在新的 PowerShell 窗口里运行 `scripts\operations\Update-Engine.ps1`（下载 ZIP 与 `.sha256`、校验、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件），完成或失败后自动重新打开配置器；更新器窗口保留日志。它会拒绝的情况：本窗口启动的 MCP 还在跑（先点“停止”）、机器上有别的 `TiaMcpServer.exe`（列出 pid，可能是某个 AI 客户端启动的，关掉那个会话）、目录里有 `.git`（源码仓库不在这里更新）。“打开 GitHub Releases”看发布说明。**帮助**菜单：所选客户端的使用说明、项目主页、关于。虚拟机上更新后记得再点“启动服务”。
+窗口右上角 **•••** 菜单收纳更新、帮助、语言、主题与保存入口：**更新**菜单第一行是引擎版本与包名（读配置器旁边的 `manifest\delivery.json`），第二行是检查结果——启动时后台联网比对一次 GitHub 最新版（API 限流时读发布页），有新版本时菜单标题变成“更新 · 有新版本 X”。“检查更新”随时重查；“更新引擎…”在确认后关闭配置器、在新的 PowerShell 窗口里运行 `scripts\operations\Update-Engine.ps1`（下载 ZIP 与 `.sha256`、校验、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件），完成或失败后自动重新打开配置器；更新器窗口保留日志。它会拒绝的情况：本窗口启动的 MCP 还在跑（先点“停止”）、机器上有别的 `TiaMcpServer.exe`（列出 pid，可能是某个 AI 客户端启动的，关掉那个会话）、目录里有 `.git`（源码仓库不在这里更新）。“打开 GitHub Releases”看发布说明。帮助入口包括：所选客户端的使用说明、项目主页、关于。虚拟机上更新后记得再点“启动服务”。
 
 ## 故障处理与验证边界
 
@@ -92,7 +92,7 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 
 ## 工具显示与手动 HTTP 启动
 
-默认 lite 档显示 52 个常用工具，其余通过 `FindTools` / `CallTool` 使用；静态完整清单为 298 个，实际以服务的 `tools/list` 为准。需要全量直接显示时给服务传 `--profile full`。修改档位后重启服务与客户端并新建会话，避免读取旧缓存。
+默认 lite 档显示 52 个常用工具，其余通过 `FindTools` / `CallTool` 使用；静态完整清单为 486 个，实际以服务的 `tools/list` 为准。需要全量直接显示时给服务传 `--profile full`。修改档位后重启服务与客户端并新建会话，避免读取旧缓存。
 
 如需排查，可在安装 TIA 的电脑上从完整包根目录直接启动（示例 IP/密钥须替换）：
 
@@ -126,8 +126,10 @@ AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置�
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
 ```
 
-使用 Windows 自带 .NET Framework 编译器，XAML 嵌入单个 EXE。测试输出在 `bin-build/configurator-tests`；不修改真实 AI 配置、防火墙或工程。
+使用 Windows 自带 .NET Framework 编译器，XAML、中英文资源与字体嵌入单个 EXE。两套桌面应用共用 `tools/ui-glass` 中的控件样式、日志呈现和 OFL 字体资源。测试输出在 `bin-build/configurator-tests`；不修改真实 AI 配置、防火墙或工程。
 
 手动配置示例：[cursor.example.json](cursor.example.json) 是本机 V21 stdio 示例，把 `command` 替换为交付包中 `runtime/v21/TiaMcpServer.exe` 的绝对路径；V20 同时修改路径与版本参数。宿主机连接虚拟机及其他客户端优先使用 `TiaMcpConfigurator.exe`。示例不含现场 IP、密钥或用户配置，不能直接当作已配置文件使用。
 
 配置格式依据：[Claude Code](https://code.claude.com/docs/en/mcp)、[Codex](https://developers.openai.com/codex/mcp)、[Cursor](https://cursor.com/docs/mcp)、[VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)、[Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)、[Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/features/mcp/)、[Kimi Code CLI](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html)、[CodeBuddy Code](https://www.codebuddy.cn/docs/cli/mcp)、[OpenCode](https://opencode.ai/docs/mcp-servers/)。
+
+设置 `TIA_GLASS_SCREENSHOTS` 为输出目录后运行上面的测试，可生成中英文、浅色和深色的 1200×780 WPF 截图。截图使用合成数据，不连接 TIA、不启动 MCP 服务。

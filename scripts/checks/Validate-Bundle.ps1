@@ -261,9 +261,9 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
     foreach ($row in @($gui.sourceFiles) + @($build.sourceFiles)) {
         $file = Join-Path $root $row.path
         if (!(Test-Path -LiteralPath $file)) { Fail "Validated source missing: $($row.path)"; continue }
-        $text = [IO.File]::ReadAllText($file).Replace("`r`n", "`n")
+        $bytes = if ([IO.Path]::GetExtension($file) -eq ".ttf") { [IO.File]::ReadAllBytes($file) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($file).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()
-        try { $digest = [BitConverter]::ToString($algorithm.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','') }
+        try { $digest = [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-','') }
         finally { $algorithm.Dispose() }
         if ($digest -ne $row.sha256) { Fail "Source changed after validation: $($row.path)" }
     }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -308,7 +308,7 @@ namespace TiaMcpConfigurator
                     var serverPane = (System.Windows.Controls.Border)window.FindName("ServerPane");
                     var clientPane = (System.Windows.Controls.Border)window.FindName("ClientPane");
                     Assert(list.ActualHeight <= list.MaxHeight + 1 && list.MaxHeight < 400, "client list is capped so it scrolls inside its card");
-                    Assert(Math.Abs(serverPane.ActualHeight - clientPane.ActualHeight) < 1 && clientPane.ActualHeight < 460, "both panes render at the same, bounded height");
+                    Assert(Math.Abs(serverPane.ActualHeight - 176) < 1 && clientPane.ActualHeight > 250 && clientPane.ActualHeight < 400, "Glass service and client cards use the handoff heights");
                     // 截图曾按面板宽度建位图却在其外边距偏移处绘制，右边 18px 连同状态胶囊一起被切掉。
                     var shell = (System.Windows.FrameworkElement)window.Content;
                     var pill = (System.Windows.Controls.TextBlock)window.FindName("Status");
@@ -319,9 +319,70 @@ namespace TiaMcpConfigurator
                         Assert(System.Windows.Media.Imaging.BitmapFrame.Create(png, System.Windows.Media.Imaging.BitmapCreateOptions.None, System.Windows.Media.Imaging.BitmapCacheOption.OnLoad).PixelWidth
                             >= shell.ActualWidth + shell.Margin.Left + shell.Margin.Right - 1, "capture covers the full window, margins included");
                     form.CapturePage(Path.Combine(output, "remote-bottom.png"), 0, true);
-                    window.Width = 1000; window.Height = 720;
+                    window.MinWidth = 1000; window.MinHeight = 720; window.Width = 1000; window.Height = 720;
                     form.CapturePage(Path.Combine(output, "remote-compact.png"), 0);
                     Assert((int)window.Resources["ClientColumns"] == 2, "compact window uses two client columns");
+                    window.Width = 1200; window.Height = 780;
+                    var font = new System.Windows.Media.FontFamily(new Uri("pack://application:,,,/Tests;component/"), "./Fonts/#Manrope");
+                    System.Windows.Media.GlyphTypeface glyph;
+                    Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
+                        && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");
+                    form.ApplyTheme("Dark");
+                    Assert(((System.Windows.Media.SolidColorBrush)window.Resources["Ui.WindowBackground"]).Color.ToString() == "#FF0B1420", "dark palette switches live");
+                    form.ApplyTheme("Light");
+                    Assert(((System.Windows.Media.SolidColorBrush)window.Resources["Ui.WindowBackground"]).Color.ToString() == "#FFE7ECF1", "light palette switches live");
+                    string preservedSecret = "language-switch-fixture";
+                    password.Password = preservedSecret;
+                    form.ApplyLanguage("zh");
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
+                        && ((System.Windows.Controls.Button)window.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
+                        && ((System.Windows.Controls.TextBlock)window.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
+                    Assert(password.Password == preservedSecret && ((System.Windows.Controls.TextBox)window.FindName("ServerAddress")).Text == "192.0.2.10"
+                        && choices.SelectedItems.Count == 1 && (string)versions.SelectedValue == "21", "language switch preserves the secret, address, client and version");
+                    ((System.Windows.Controls.RadioButton)window.FindName("LocalNav")).IsChecked = true;
+                    Assert(((System.Windows.Controls.TextBlock)window.FindName("PageTitle")).Text == "同机连接，一次配置"
+                        && ((System.Windows.Controls.TextBlock)window.FindName("LinkState")).Text == "本地", "Chinese local mode is localized");
+                    form.ApplyLanguage("en");
+                    Assert(((System.Windows.Controls.RadioButton)window.FindName("LocalNav")).IsChecked == true
+                        && ((System.Windows.Controls.TextBlock)window.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
+                    ((System.Windows.Controls.RadioButton)window.FindName("RemoteNav")).IsChecked = true;
+                    // Synthetic screenshot fixture only; the shipping view always uses ClientProfiles.All().
+                    string capture = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
+                    if (!String.IsNullOrEmpty(capture))
+                    {
+                        Directory.CreateDirectory(capture);
+                        var fixture = new[] {
+                            new ClientProfile("claude-code", "Claude Code", @"~\.claude.json", "fixture") { Detected=true },
+                            new ClientProfile("codex", "Codex", @"~\.codex\config.toml", "fixture") { Detected=true },
+                            new ClientProfile("vscode", "VS Code", @"%AppData%\Code\User\mcp.json", "fixture") { Detected=true },
+                            new ClientProfile("cursor", "Cursor", @"~\.cursor\mcp.json", "fixture")
+                        };
+                        list.ItemsSource = fixture;
+                        for (int i=0;i<3;i++) list.SelectedItems.Add(fixture[i]);
+                        password.Password="visual-fixture-not-a-real-secret";
+                        ((System.Windows.Controls.TextBlock)window.FindName("DetectionSource")).Text="● Detected via registry";
+                        ((System.Windows.Controls.TextBlock)window.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                        ((System.Windows.Controls.TextBlock)window.FindName("LastTest")).Text="Last test · HTTP reachable, auth passed, MCP ready. Version 1.4.2. TIA project connection not yet verified.";
+                        ((System.Windows.Controls.TextBox)window.FindName("Log")).Text="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
+                        ((System.Windows.Controls.TextBlock)window.FindName("LogCount")).Text="7 entries";
+                        form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
+                        form.ApplyTheme("Dark");
+                        form.CapturePage(Path.Combine(capture,"configurator-dark.png"),0);
+                        form.CapturePage(Path.Combine(capture,"configurator-local-dark.png"),1);
+                        form.ApplyLanguage("zh");
+                        ((System.Windows.Controls.TextBlock)window.FindName("DetectionSource")).Text="● 已通过注册表检测";
+                        ((System.Windows.Controls.TextBlock)window.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
+                        ((System.Windows.Controls.TextBlock)window.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
+                        ((System.Windows.Controls.TextBox)window.FindName("Log")).Text="09:41:02   配置已载入 · tia-portal-vm\n09:41:03   已检测到安装路径（注册表）\n09:41:03   客户端扫描 · 已检测到 3 个\n09:42:17   密钥已生成 · [redacted]\n09:42:40   两端配置已保存\n09:43:05   测试 · HTTP 正常 · 鉴权通过 · MCP 就绪\n09:43:05   状态 · 连接正常";
+                        ((System.Windows.Controls.TextBlock)window.FindName("LogCount")).Text="7 条记录";
+                        form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
+                        form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);
+                        form.ApplyTheme("Light");
+                        form.CapturePage(Path.Combine(capture,"configurator-zh-light.png"),0);
+                        form.CapturePage(Path.Combine(capture,"configurator-local-zh-light.png"),1);
+
+                    }
+
                 }
                 Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
                 Console.WriteLine("Passed: " + passed); return 0;

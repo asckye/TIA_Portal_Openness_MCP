@@ -133,7 +133,7 @@
     {
       "path": "src/TiaOpenness.Gui/App.xaml",
       "upstreamSha256": "fe66f55ca1ff0f9ac34a256933d7cfa04e788f94c63dca9a36fb771b08152e4e",
-      "integratedSha256": "fe66f55ca1ff0f9ac34a256933d7cfa04e788f94c63dca9a36fb771b08152e4e"
+      "integratedSha256": "a222778393d69d33388b1178592edbfed9f9e6d0ee55403d3c01428a4fafd867"
     },
     {
       "path": "src/TiaOpenness.Gui/App.xaml.cs",
@@ -173,7 +173,7 @@
     {
       "path": "src/TiaOpenness.Gui/Localization/Strings.cs",
       "upstreamSha256": "cac911faa3d47a32544f3a295274e5935440b58d0aa3127ff759312a9f29c6be",
-      "integratedSha256": "fc4866fbde46982e8bb756f3d542802d9ab670cead355f51bb2538de537e4a23"
+      "integratedSha256": "f6263072b749c6465a3c76daaaf83d261f46247bcf8424c1e309fcfb577b5467"
     },
     {
       "path": "src/TiaOpenness.Gui/Localization/TrExtension.cs",
@@ -183,12 +183,12 @@
     {
       "path": "src/TiaOpenness.Gui/MainWindow.xaml",
       "upstreamSha256": "fb0705b4ef222a3d4350bb4c23c7aab11a27de96f87b69e0eceef396d4f5f5c8",
-      "integratedSha256": "fb0705b4ef222a3d4350bb4c23c7aab11a27de96f87b69e0eceef396d4f5f5c8"
+      "integratedSha256": "3c65ccb2a58c27a0e0bf29c657fcf80c58bfb50f1d615142f60678a3725d820e"
     },
     {
       "path": "src/TiaOpenness.Gui/MainWindow.xaml.cs",
       "upstreamSha256": "2e26358491ef53084693578e77417b7cf5d1ff6c84d1b5f42735292deec6686d",
-      "integratedSha256": "2e26358491ef53084693578e77417b7cf5d1ff6c84d1b5f42735292deec6686d"
+      "integratedSha256": "5e68842ae8a71ce034b79c6086f56d3d699d7408eddac4ed27fb45752a9de271"
     },
     {
       "path": "src/TiaOpenness.Gui/Settings/UiSettings.cs",
@@ -223,12 +223,12 @@
     {
       "path": "src/TiaOpenness.Gui/Themes/Palette.Dark.xaml",
       "upstreamSha256": "41f22a6c754c7294db3bd02ff1932d783f4aee1e750640afb9299b70279b38f7",
-      "integratedSha256": "41f22a6c754c7294db3bd02ff1932d783f4aee1e750640afb9299b70279b38f7"
+      "integratedSha256": "5909a66d217678e78188949a9716d1829fc02d9ef3aa4710a257e018acd5509e"
     },
     {
       "path": "src/TiaOpenness.Gui/Themes/Palette.Light.xaml",
       "upstreamSha256": "82569bf4d1408a0c0b27dc35331068ab0327e8eb936c39df2f81b021e4517cc7",
-      "integratedSha256": "82569bf4d1408a0c0b27dc35331068ab0327e8eb936c39df2f81b021e4517cc7"
+      "integratedSha256": "b48e7ad298d943dd8038dc16fc75d0172cf42b5402381fe401e98a2c4146a71b"
     },
     {
       "path": "src/TiaOpenness.Gui/Themes/ThemeManager.cs",
@@ -238,7 +238,7 @@
     {
       "path": "src/TiaOpenness.Gui/Themes/Typography.xaml",
       "upstreamSha256": "3e4a086011919cded2c423c3992bbda9df81d1af12b48b7f1f8b3554e6190ee8",
-      "integratedSha256": "3e4a086011919cded2c423c3992bbda9df81d1af12b48b7f1f8b3554e6190ee8"
+      "integratedSha256": "e5be48512974678cf1cb9e856ae53f6250865a91f76703938f7a008062dcfa2d"
     },
     {
       "path": "src/TiaOpenness.Gui/Themes/Window.xaml",
@@ -248,7 +248,7 @@
     {
       "path": "src/TiaOpenness.Gui/TiaOpenness.Gui.csproj",
       "upstreamSha256": "a6ab514c1784e8b81cb4c8000d0e04b6ec22620f6ac97600d7b793f6a85b5327",
-      "integratedSha256": "8005bebd29d294524760fba3c5cbaa5e1a1d14c56efd5c8a8c8b7b546625a8c7"
+      "integratedSha256": "7194eea126df2b1d2aae56e4e6813d9991d5ce2892ad06621e0e4222ff117795"
     },
     {
       "path": "src/TiaOpenness.Gui/ViewModels/BlockNode.cs",
@@ -328,7 +328,7 @@
     {
       "path": "tests/TiaOpenness.Gui.Tests/MainWindowTests.cs",
       "upstreamSha256": "b50b3ff1a9bcaa71bd61538b910b15eb370d45d12b9234d335290eda8be3351f",
-      "integratedSha256": "b50b3ff1a9bcaa71bd61538b910b15eb370d45d12b9234d335290eda8be3351f"
+      "integratedSha256": "a68c07afb6ef8902b40914419b79603b95d21108831f5d1e832a6f80364d9604"
     },
     {
       "path": "tests/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs",

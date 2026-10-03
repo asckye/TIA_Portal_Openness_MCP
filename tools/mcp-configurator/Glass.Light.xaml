@@ -55,5 +55,4 @@
  <BlurEffect x:Key="Glass.CardShadow" Radius="15" RenderingBias="Quality"/>
  <DropShadowEffect x:Key="Glass.AccentShadow" Color="#0B7A99" BlurRadius="16" ShadowDepth="6" Direction="270" Opacity="0.22"/>
 <SolidColorBrush x:Key="Ui.CardShadowFill" Color="#1415202B"/>
- <SolidColorBrush x:Key="Ui.GitBackground" Color="#EB15202B"/>
 </ResourceDictionary>

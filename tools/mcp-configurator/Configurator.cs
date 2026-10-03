@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -33,6 +33,9 @@ namespace TiaMcpConfigurator
         private UpdateInfo latest;   // 2.8.0: last successful update check
         private string runningKey;
         private int logEntries;
+        private bool tiaDetected;
+        private string lastTestResult;
+        private bool lastTestFailed;
         private bool busy, closing;
         private T Find<T>(string name) where T : FrameworkElement { return (T)Window.FindName(name); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
@@ -46,19 +49,33 @@ namespace TiaMcpConfigurator
             }
         }
         private string StatePath { get { return Path.Combine(ConfigCore.StateDirectory, "http-v" + Version + ".json"); } }
-        // 虚拟机 ↔ 宿主机（HTTP）或同一台电脑（stdio）。两种模式共用同一页的 A/B 两栏。
+        // Both transports use the same configuration page.
         private bool Remote { get { return Find<RadioButton>("RemoteNav").IsChecked == true; } }
         private string Secret() { return Find<CheckBox>("ShowKey").IsChecked == true ? Text("KeyVisible") : Find<PasswordBox>("Key").Password; }
         private void SetSecret(string value) { Find<TextBox>("KeyVisible").Text = value; Find<PasswordBox>("Key").Password = value; }
 
         public ConfigWindow(bool loadExisting = true)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("MainWindow.xaml")) Window = (Window)XamlReader.Load(stream);
+            string markup = ReadViewResource("MainWindow.xaml").Replace("__VIEW_ASSEMBLY__", Assembly.GetExecutingAssembly().GetName().Name);
+            string resources = DictionaryBody(ReadViewResource("Glass.Light.xaml")) + DictionaryBody(ReadViewResource("Glass.Strings.en.xaml")) + DictionaryBody(ReadViewResource("Glass.xaml"));
+            Window = (Window)XamlReader.Parse(markup.Replace("<!-- GLASS RESOURCES -->", resources));
+            string assembly = Assembly.GetExecutingAssembly().GetName().Name;
+            Window.Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
+            Window.Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
+            Click("Minimize", delegate { Window.WindowState = WindowState.Minimized; });
+            Click("Maximize", delegate { Window.WindowState = Window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized; });
+            Click("Close", delegate { Window.Close(); });
+            MenuClick("ThemeLight", delegate { ApplyTheme("Light"); });
+            MenuClick("ThemeDark", delegate { ApplyTheme("Dark"); });
+            MenuClick("ThemeAuto", delegate { MenuClick("LanguageEnglish", delegate { ApplyLanguage("en"); });
+            MenuClick("LanguageChinese", delegate { ApplyLanguage("zh"); });
+            ApplyTheme("Auto"); });
+            ApplyTheme("Auto");
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = "21";
-            Window.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 3;
-            Window.SizeChanged += delegate { Window.Resources["ClientColumns"] = Window.ActualWidth < 1180 ? 2 : 3; };
+            Window.Resources["ClientColumns"] = Window.Width < 1180 ? 2 : 4;
+            Window.SizeChanged += delegate { Window.Resources["ClientColumns"] = Window.ActualWidth < 1180 ? 2 : 4; };
             var choices = Find<ListBox>("ClientChoices");
             var cards = ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
@@ -108,10 +125,51 @@ namespace TiaMcpConfigurator
                 var ignored = CheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
             else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
-            UpdateInstructions(); Mode(true);
-            Append("就绪。两侧配置在同一页完成：A 为服务端，B 为客户端，共用下方密钥。");
+            ApplyLanguage(loadExisting && System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh" : "en");
+            Append("就绪。服务与客户端配置在同一页完成，两端使用同一密钥。");
             Window.Closing += OnClosing;
         }
+
+        private static string ReadViewResource(string name)
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name))
+            using (var reader = new StreamReader(stream)) return reader.ReadToEnd();
+        }
+        private static string DictionaryBody(string markup)
+        { return markup.Substring(markup.IndexOf('>') + 1).Replace("</ResourceDictionary>", ""); }
+        public void ApplyTheme(string theme)
+        {
+            string resolved = theme;
+            if (theme == "Auto")
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
+                    resolved = key != null && Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) == 0 ? "Dark" : "Light";
+            }
+            var palette = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass." + resolved + ".xaml"));
+            foreach (object key in palette.Keys) Window.Resources[key] = palette[key];
+            foreach (string choice in new[] { "Light", "Dark", "Auto" }) Find<MenuItem>("Theme" + choice).IsChecked = choice == theme;
+        }
+
+        private string T(string key) { return (string)Window.Resources["Text." + key]; }
+        private string F(string key, object value) { return String.Format(T(key), value); }
+        public void ApplyLanguage(string language)
+        {
+            var strings = (ResourceDictionary)XamlReader.Parse(ReadViewResource("Glass.Strings." + language + ".xaml"));
+            foreach (object key in strings.Keys) Window.Resources[key] = strings[key];
+            Find<MenuItem>("LanguageEnglish").IsChecked = language == "en";
+            Find<MenuItem>("LanguageChinese").IsChecked = language == "zh";
+            Window.Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
+            Mode(Remote); UpdateInstructions(); UpdateDetectionLabel(); UpdateLastTest(); UpdateLogCount();
+        }
+        private void UpdateDetectionLabel()
+        {
+            Find<TextBlock>("DetectionSource").Text = tiaDetected ? "● " + T("Detected") : T("NotDetected");
+            Find<TextBlock>("DetectionSource").SetResourceReference(TextBlock.ForegroundProperty, tiaDetected ? "Ui.Accent" : "Ui.TertiaryLabel");
+        }
+        private void UpdateLastTest()
+        { Find<TextBlock>("LastTest").Text = F("LastTest", lastTestResult ?? T(lastTestFailed ? "TestFailed" : "TestNotRun")); }
+        private void UpdateLogCount()
+        { Find<TextBlock>("LogCount").Text = F(logEntries == 1 ? "Entry" : "Entries", logEntries); }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
         private void MenuClick(string name, Action action) { Find<MenuItem>(name).Click += delegate { Guard(action); }; }
@@ -119,23 +177,25 @@ namespace TiaMcpConfigurator
         private void Status(string status) { Find<TextBlock>("Status").Text = status; }
         private void ServiceStatus(bool active)
         {
-            Find<System.Windows.Shapes.Ellipse>("StatusDot").Fill = new SolidColorBrush(active ? Color.FromRgb(74, 145, 110) : Color.FromRgb(180, 183, 174));
+            Find<System.Windows.Shapes.Ellipse>("StatusDot").SetResourceReference(System.Windows.Shapes.Shape.FillProperty, active ? "Ui.Accent" : "Ui.StatusIdle");
             UpdateLink();
         }
         private void UpdateKeyPlaceholder() { Find<TextBlock>("KeyPlaceholder").Visibility = String.IsNullOrEmpty(Secret()) ? Visibility.Visible : Visibility.Collapsed; }
 
-        // 模式切换只改文案与可见性：A/B 两栏本身在两种模式下都在同一页上。
+        // Mode changes only presentation; existing configuration values stay in place.
         private void Mode(bool remote)
         {
-            Find<TextBlock>("PageStep").Text = remote ? "TWO SIDES · ONE PASS" : "SINGLE MACHINE · ONE PASS";
-            Find<TextBlock>("PageTitle").Text = remote ? "在一页里连接 TIA 与 AI" : "同机直连，一次配置完成";
-            Find<TextBlock>("PageSubtitle").Text = remote
-                ? "A 侧在装有 TIA 的虚拟机上启动服务，B 侧在宿主机上选择客户端，两侧共用同一把密钥。"
-                : "TIA Portal 与 AI 客户端在同一台电脑上：客户端通过 stdio 自动启动引擎，不需要 IP、端口和密钥。";
-            Find<TextBlock>("LinkLeftLabel").Text = remote ? "HOST · 客户端侧" : "LOCAL · 客户端侧";
-            Find<TextBlock>("LinkRightLabel").Text = remote ? "VIRTUAL MACHINE · 服务侧" : "LOCALHOST · 服务侧";
-            Find<TextBlock>("ServerCardTitle").Text = remote ? "虚拟机服务端" : "本机引擎";
-            Find<TextBlock>("ServerCardNote").Text = remote ? "装有 TIA 的机器" : "stdio · 本机";
+            var eyebrow = Find<TextBlock>("PageStep"); eyebrow.Inlines.Clear();
+            foreach (char character in T("Eyebrow"))
+            {
+                eyebrow.Inlines.Add(new System.Windows.Documents.Run(character.ToString()));
+                eyebrow.Inlines.Add(new System.Windows.Documents.InlineUIContainer(new Border { Width = 1.54 }));
+            }
+            Find<TextBlock>("PageTitle").Text = T(remote ? "RemoteTitle" : "LocalTitle");
+            Find<TextBlock>("PageSubtitle").Text = T(remote ? "RemoteSubtitle" : "LocalSubtitle");
+            Find<TextBlock>("ServerCardTitle").Text = T(remote ? "HttpService" : "LocalEngine");
+            Find<TextBlock>("ServerCardNote").Text = remote ? "HTTP" : "stdio";
+            Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
             Find<Grid>("AddressRow").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
             Find<Grid>("ServerActions").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
             Find<Border>("LocalNote").Visibility = remote ? Visibility.Collapsed : Visibility.Visible;
@@ -149,18 +209,18 @@ namespace TiaMcpConfigurator
         {
             bool remote = Remote;
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? "尚未选择" : selected.Count == 1 ? selected[0].DisplayName : selected.Count + " 个客户端";
+            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? T("NoSelection") : selected.Count == 1 ? selected[0].DisplayName : F("Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = String.Join("、", selected.Select(x => x.DisplayName));
-            Find<TextBlock>("LinkServer").Text = "MCP 服务 · TIA Portal V" + Version;
+            Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal V" + Version;
             bool running = server != null && !server.HasExited;
             string address = Text("ServerAddress");
-            Find<TextBlock>("LinkEndpoint").Text = !remote ? "stdio · 无需网络" : address.Length == 0 ? "等待填写地址" : address + ":" + Text("ServerPort");
-            Find<TextBlock>("LinkState").Text = !remote ? "local" : running ? "running" : "idle";
+            Find<TextBlock>("LinkEndpoint").Text = !remote ? T("LocalAddress") : address.Length == 0 ? T("NoAddress") : address + ":" + Text("ServerPort");
+            Find<TextBlock>("LinkState").Text = T(!remote ? "Local" : running ? "Running" : "Idle");
         }
         private void UpdateInstructions()
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("ClientSelection").Text = selected.Count == 0 ? "可多选" : "已选 " + (selected.Count == 1 ? selected[0].DisplayName : selected.Count + " 个客户端");
+            Find<TextBlock>("ClientSelection").Text = F("Selected", selected.Count);
             Find<TextBlock>("ClientInstructions").Text = selected.Count == 0 ? "选择一个或多个客户端，保存后将自动写入对应配置。" :
                 String.Join("\n", selected.Select(x => x.Name + "：" + x.Hint + "（" + (x.Detected ? "已检测到：" : "未检测到：") + x.Evidence + "）"));
             Find<TextBlock>("ClientSelection").ToolTip = Find<TextBlock>("ClientInstructions").Text;
@@ -173,7 +233,7 @@ namespace TiaMcpConfigurator
             if (!String.IsNullOrEmpty(runningKey)) message = message.Replace(runningKey, "[redacted]");
             var log = Find<TextBox>("Log"); if (log.Text.Length > 40000) { log.Clear(); logEntries = 0; }
             log.AppendText(DateTime.Now.ToString("HH:mm:ss") + "   " + message + Environment.NewLine); log.ScrollToEnd();
-            logEntries++; Find<TextBlock>("LogCount").Text = logEntries + (logEntries == 1 ? " entry" : " entries");
+            logEntries++; UpdateLogCount();
         }
         private void Report(Exception ex)
         {
@@ -195,6 +255,8 @@ namespace TiaMcpConfigurator
         private void DetectTiaPath(bool explicitRequest)
         {
             var found = ConfigCore.DetectTia(Version);
+            tiaDetected = found.Key != null; UpdateDetectionLabel();
+            Find<TextBlock>("DetectionSource").ToolTip = found.Value;
             if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + Version + " 安装目录（" + found.Value + "）：" + found.Key); }
             else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + Version + " 安装根目录。");
         }
@@ -326,9 +388,11 @@ namespace TiaMcpConfigurator
             {
                 string ip = Text("ServerAddress"), secret = Secret(); int port = Int32.Parse(Text("ServerPort"));
                 SetBusy(true); Status("正在测试…");
-                Append(await Task.Run(() => ConfigCore.TestRemote(ip, port, secret))); Status("连接正常");
+                string result = await Task.Run(() => ConfigCore.TestRemote(ip, port, secret));
+                lastTestResult = result; lastTestFailed = false; UpdateLastTest();
+                Append(result); Status("连接正常");
             }
-            catch (Exception ex) { Report(ex); }
+            catch (Exception ex) { lastTestResult = null; lastTestFailed = true; UpdateLastTest(); Report(ex); }
             finally { SetBusy(false); }
         }
         private async Task Network()

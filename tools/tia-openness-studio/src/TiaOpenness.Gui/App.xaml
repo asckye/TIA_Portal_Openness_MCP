@@ -17,6 +17,8 @@
         <ResourceDictionary Source="Themes/Controls.Collections.xaml" />
         <ResourceDictionary Source="Themes/Controls.Navigation.xaml" />
         <ResourceDictionary Source="Themes/Window.xaml" />
+        <ResourceDictionary Source="Themes/Glass.xaml" />
+        <ResourceDictionary Source="Themes/Glass.Studio.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
       <BooleanToVisibilityConverter x:Key="BoolToVisibility" />

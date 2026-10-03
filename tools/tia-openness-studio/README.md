@@ -39,6 +39,28 @@ The GUI build also builds and deploys the API-independent bridge. Native adapter
 by the explicit SDK build above. Runtime compiler downloads and automatic adapter compilation
 are removed. Doctor remains available without loading a native TIA session.
 
+## Glass Layers interface
+
+The native WPF view uses the shared `tools/ui-glass` styles and bundled OFL fonts. The minimum
+window size is 1200 x 780; the center column expands with the window. The sidebar footer selects
+English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
+project session, selection and commands.
+
+Project opens the existing connection/project options; Export / Import opens format and output
+options; Inspect opens the existing inspection rules. Program blocks retain filtering, selection,
+export/import and compile actions. VCI keeps mapping and synchronization previews separate from
+execution. The direction selector chooses the existing push/pull commands; this is not Git push.
+Git diff includes staged, unstaged and untracked local changes.
+
+Compile and inspection cards display results already recorded by the existing operation log.
+Clearing that log returns the cards to Not run. Object names, paths, code and native diagnostic
+messages keep their original text when the interface language changes. Studio has no MCP tools page.
+
+Set `TIA_GLASS_SCREENSHOTS` to a local output directory before running the WPF tests below to
+capture the English and Chinese fixtures in both themes. These are actual WPF renderings at
+1200 x 780 with synthetic data, without connecting to TIA. The reference package remains local
+to the design handoff; see the root `design-qa.md` for comparison notes.
+
 ## Workflows and boundaries
 
 | Workflow | Implementation |
