@@ -18,6 +18,8 @@
 - 移动或重命名源文件时同步更新所有 `<Compile Include>` 链接、测试工程和文档中的路径。
 - 控制台测试工程用 `dotnet run --project <csproj> -c Release` 执行；`dotnet test` 不执行其断言。
 - 需要 Siemens 程序集的编译使用任务说明给出的 `-p:SiemensEngineeringDirectory=<绝对路径>`。
+- 删除、移动或新增文件的任务都要运行 `Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes` 与
+  `Check-Repository.py --no-binaries`；两者含必需文件清单，`Package-Release.py` 另有一份同类清单。
 
 ## 提交
 
