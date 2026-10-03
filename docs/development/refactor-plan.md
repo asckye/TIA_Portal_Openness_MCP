@@ -68,7 +68,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | done |
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（维护者决定暂不进行真机实测） | deferred |
 | P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | todo |
-| P0-06 | 离线返回结构快照：不连接 TIA 即可调用的工具（FindTools、ListToolCategories、PreflightToolCall、断开时的 GetState、离线构造器等）的返回结构基线与对比 | todo |
+| P0-06 | 离线返回结构快照：不连接 TIA 即可调用的工具（FindTools、ListToolCategories、PreflightToolCall、断开时的 GetState、离线构造器等）的返回结构基线与对比 | doing |
 | P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
 
 ### 阶段 1：构建与验证
@@ -117,8 +117,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | ID | 任务 | 状态 |
 |---|---|---|
 | P5-01 | 配置器改为编译型 UserControl，去掉运行时 XAML 改写；去掉仅供测试的 .NET Framework 配置器构建（启动器仍由 csc 编译，`configurator-build.json` 格式不变） | done |
-| P5-02 | 单一主题引擎与单一本地化方案 | todo |
-| P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | todo |
+| P5-02 | 单一主题引擎与单一本地化方案 | done |
+| P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | doing |
 
 ### 阶段 6：破坏性变更（4.0）
 
