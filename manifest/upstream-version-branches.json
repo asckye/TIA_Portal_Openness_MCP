@@ -2,7 +2,7 @@
   "sourceRepository": "https://github.com/bulaofen0036-coder/TIA_Portal_Openness_MCP",
   "destinationRepository": "https://github.com/asckye/TIA_Portal_Openness_MCP",
   "synchronizedOn": "2026-09-29",
-  "mode": "One-time exact branch snapshots, independently retained; no automatic synchronization",
+  "mode": "One-time exact upstream snapshots; historical branch refs retired under the 2026-10-02 master-only policy; no automatic synchronization",
   "afterRelease": "v3.0.0",
   "releasedMasterCommit": "32856cf2a35bc9f378bd31b43150ddc90802fc61",
   "branchHeadsVerifiedAgainstSource": true,
@@ -11,31 +11,38 @@
       "branch": "v17",
       "commit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
       "status": "PLC Software Phase 1; upstream documents a 62-tool profile; not locally compiled or live-tested",
-      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/tree/v17"
+      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/commit/70758f2b7359021fefb674c099c1c8eddbba44e1"
     },
     {
       "branch": "v18",
       "commit": "5c621e4b3921e8e17a5b1cbe0cb2e268d0d70398",
       "status": "Historical v2.2.1 snapshot; no V18 project; same commit as v19",
-      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/tree/v18"
+      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/commit/5c621e4b3921e8e17a5b1cbe0cb2e268d0d70398"
     },
     {
       "branch": "v19",
       "commit": "5c621e4b3921e8e17a5b1cbe0cb2e268d0d70398",
       "status": "Historical v2.2.1 snapshot; no V19 project; same commit as v18",
-      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/tree/v19"
+      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/commit/5c621e4b3921e8e17a5b1cbe0cb2e268d0d70398"
     },
     {
       "branch": "v20",
       "commit": "b5b0a68b3d8d747fc81473fd46ac7ddd2ed260f3",
       "status": "Historical v2.3.2 snapshot; current V20 release is maintained on master",
-      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/tree/v20"
+      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/commit/b5b0a68b3d8d747fc81473fd46ac7ddd2ed260f3"
     },
     {
       "branch": "v21",
       "commit": "af7f7a7f8d6a08cd5eafabfda6b379837c82014e",
       "status": "Historical v2.5.2 snapshot; current V21 release is maintained on master",
-      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/tree/v21"
+      "destination": "https://github.com/asckye/TIA_Portal_Openness_MCP/commit/af7f7a7f8d6a08cd5eafabfda6b379837c82014e"
     }
-  ]
+  ],
+  "maintenancePolicy": {
+    "effectiveOn": "2026-10-02",
+    "activeBranch": "master",
+    "backupFile": "TIA_Portal_MCP_before_master_cleanup_20261002.bundle",
+    "backupSha256": "efe1b6b9a9ab8ea920483d7a80ae1a72955aeef59f87371712aff64bad312b50",
+    "backupScope": "Verified complete Git bundle of all local refs, fetched remote branches and tags before cleanup; retained by the maintainer outside the repository"
+  }
 }

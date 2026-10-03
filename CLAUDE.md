@@ -4,4 +4,4 @@
 - 换了机器接手：先读 `docs/development/handoff-checklist.md`（新机器准备、虚拟机现状、部署后按序要做的事、真机批跑工具 `scripts/diagnostics/campaign/`）。
 - 提交信息、PR、Release 正文不加任何 AI 署名行（`Co-Authored-By`、"Generated with …"）。
 - 不要 `git add -A`；引擎或测试源码改动后必须重跑 `scripts/build/Build-Release.ps1` 再提交清单（见 handoff §4）。二进制（`runtime/v20`、`runtime/v21`、`TiaMcpConfigurator.exe`）不入库，clone 后先跑 Build-Release 才有。
-- 发版走 `scripts/build/Release.ps1 -Version X.Y.Z -Summary "…"`（先手写 CHANGELOG 顶部条目与 `docs/releases/vX.md`；脚本自己做版本号、Build-Release、闸门、一次提交、打包、推送、CI、tag、从本机上传 ZIP、等验证工作流）。主线为 master；按维护者 2026-09-29 要求另保留上游 v17–v21 独立版本分支，范围与同步提交见 `docs/reference/version-branches.md`，不得将历史分支的版本号当作已验证的支持能力；英文文档不含中文；提交说明英文。
+- 发版走 `scripts/build/Release.ps1 -Version X.Y.Z -Summary "…"`（先手写 CHANGELOG 顶部条目与 `docs/releases/vX.md`；脚本自己做版本号、Build-Release、闸门、一次提交、打包、推送、CI、tag、从本机上传 ZIP、等验证工作流）。按维护者 2026-10-02 最新要求只维护 master 分支；原 v17–v21 分支历史保存在删除前的完整 Git bundle，范围、提交和恢复说明见 `docs/reference/version-branches.md`，不得将历史分支的版本号当作已验证的支持能力；英文文档不含中文；提交说明英文。

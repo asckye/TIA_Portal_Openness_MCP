@@ -1,5 +1,7 @@
 # 接续工作交接（2026-10-01，3.1.0 已发布）
 
+> **2026-10-02 接续更新：** 当前开发源码完成完整本地构建校验，Studio 已加入 Windows CI；按维护者最新授权收敛为仅维护 `master`。当前证据、执行边界和剩余验收见 [master 收敛记录](master-consolidation-20261002.md)，历史分支备份见 [版本历史](../reference/version-branches.md)。以下 2026-10-01 发布数据及保留独立分支的描述是历史记录；分支策略以本次更新为准。当前本地构建清单已刷新，既有 v3.1.0 发布标签和附件未更新；新增真实 TIA 验收仍未执行。
+
 当前主线已按用户授权合并开发分支并发布 v3.1.0，完整包和 SHA-256 已上传，发布前两项 CI 及发布后独立验包通过。此前仅本地保存/不推送的限制已被后续授权更新。本次未连接或部署虚拟机；可选工作进程隔离与新原生写入仍有待验收，见[剩余关卡](openness-worker-isolation-plan.md)。旧 VM 地址/PID 均为历史资料，不能直接作为连接目标。
 
 [文档目录](../README.md) · **[换机器交接单](handoff-checklist.md)** · [交接历史](handoff-history.md) · [路线图 §2.0](roadmap.md#20-官方-api-全量对齐计划) · [发布流程](release-workflow.md) · [覆盖清单](../reference/openness-coverage.md)

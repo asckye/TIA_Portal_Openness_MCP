@@ -44,7 +44,7 @@ The static inventory contains **486 tools** in 7 categories (session, project, p
 
 Version 3.1.0 offers opt-in [Openness worker isolation](docs/guides/openness-worker-isolation.md) with `--isolate-openness`. It keeps host diagnostics available after worker failure; real TIA acceptance and coordination between separate MCP services remain pending.
 
-`master` provides the current V20/V21 release. Independent upstream snapshots are also retained on `v17`–`v21`; V17 is a limited PLC phase, and V18/V19 do not yet contain dedicated implementations. See [version branches and scope](docs/reference/version-branches.md).
+`master` is the only maintained branch and contains the current V20/V21 engines. Historical `v17`–`v21` branch heads and full-history backup details are recorded in [version history and scope](docs/reference/version-branches.md). V14 SP1–V19 production routes remain disabled; adapter compilation does not establish native compatibility.
 
 Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
 

@@ -1,10 +1,10 @@
 {
     "schemaVersion":  "2026-05-25",
     "bundleVersion":  "3.1.0",
-    "packageName":  "TIA_MCP_Delivery_v3.1.0_20261001",
+    "packageName":  "TIA_MCP_Delivery_v3.1.0_20261002",
     "packageType":  "tia-portal-mcp-complete-offline-delivery-bundle",
     "generatedAt":  "2026-05-31T05:30:00-07:00",
-    "refreshedAt":  "2026-10-02T03:05:34.1446170+00:00",
+    "refreshedAt":  "2026-10-03T02:52:34.6129377+00:00",
     "target":  {
                    "tiaPortalMajorVersion":  [
                                                  20,
@@ -86,9 +86,9 @@
     "capabilities":  {
                          "mcpToolCount":  486,
                          "mcpToolLayers":  {
+                                               "L0":  18,
                                                "L1":  45,
-                                               "L2":  423,
-                                               "L0":  18
+                                               "L2":  423
                                            },
                          "hmiTemplateJsonCount":  8,
                          "plcTemplateJsonCount":  9,
@@ -112,7 +112,7 @@
                                              "isDefault":  true,
                                              "scope":  "L0+L1 essentials + FindTools/CallTool; covers the full golden path",
                                              "optOut":  "--profile full (or TIA_MCP_PROFILE=full)",
-                                             "note":  "All other attributed tools remain reachable through FindTools + CallTool; runtime tools/list is authoritative."
+                                             "note":  "Other available tools remain reachable through FindTools + CallTool; per-version admission excludes unsupported routes and runtime tools/list is authoritative."
                                          }
                      },
     "fileVersion":  "3.1.0.0",

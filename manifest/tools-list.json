@@ -1,19 +1,19 @@
 {
-    "package":  "TIA_MCP_Delivery_v3.1.0_20261001",
-    "generatedAt":  "2026-10-02T03:05:27.2638087+00:00",
+    "package":  "TIA_MCP_Delivery_v3.1.0_20261002",
+    "generatedAt":  "2026-10-03T02:52:26.6252003+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.1.0.0",
-    "exeSha256":  "2fe900d2653c62227108585b9bff5194d68ef256dcd9379bc5adf2b72bf8919e",
+    "exeSha256":  "cf9f2b1b625363d98ffe3af0e52caa8ba87feba06b72c6a0c0eb471db65a2d67",
     "toolCount":  486,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
-                           "parameters":  2337,
+                           "parameters":  2338,
                            "parametersUndocumented":  894,
                            "parametersFromVocabulary":  894,
                            "toolsWithUndocumentedParameters":  198,
                            "toolsWithEnumHints":  124,
                            "enumHints":  192,
-                           "defaultHints":  1408,
+                           "defaultHints":  1409,
                            "examplesCurated":  83,
                            "recipes":  12
                        },
@@ -1842,7 +1842,7 @@
                                          "regexName",
                                          "importOption"
                                      ],
-                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer.",
+                      "description":  "[L2][PLC-Software] PREFERRED on V21+ for batch import. Imports multiple program blocks from SIMATIC SD textual / SCL documents (.s7dcl + .s7res) into PLC software. Requires TIA Portal V20 or newer. Stops after the first native failure or unknown result; partial project changes are possible and must not be retried automatically.",
                       "example":  "{\"softwarePath\":\"PLC_1\",\"groupPath\":\"\",\"importPath\":\"C:\\\\Temp\\\\docs\",\"regexName\":\"\"}"
                   },
                   {
@@ -2791,7 +2791,7 @@
                                          "regexName",
                                          "overwrite"
                                      ],
-                      "description":  "[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks auto-ordered → ImportPlcProgramFromDirectory; a single XML file → ImportBlock.",
+                      "description":  "[L2][PLC-Software] Batch import PLC block .xml (SimaticML) files from a directory into a block group. Pick the right tool: SCL/.s7dcl text → ImportBlocksFromDocuments; a full mixed program with UDTs+tag tables+blocks in types-first lexical order (not dependency resolution) → ImportPlcProgramFromDirectory; a single XML file → ImportBlock.",
                       "example":  null
                   },
                   {
@@ -2815,7 +2815,7 @@
                                          "stopOnImportFailure",
                                          "dryRun"
                                      ],
-                      "description":  "[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/Block, imports in correct dependency order (UDTs first, then tag tables, then blocks), and optionally compiles. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks.",
+                      "description":  "[L2][PLC-Software] HIGH-LEVEL batch import tool. Recursively scans a directory for PLC XML files, auto-classifies them as UDT/TagTable/TechnologyObject/Block, rejects duplicate kind/name candidates before import, and optionally compiles. Uses types-first lexical scheduling, not dependency resolution: types, tag tables, technology objects, then blocks by subtype and lexical file path. Requires: Connect + OpenProject. Best for importing a full exported PLC program or a set of generated XML blocks.",
                       "example":  null
                   },
                   {
@@ -3038,7 +3038,7 @@
                       "method":  "GetDevices",
                       "returnType":  "ResponseDevices",
                       "parameters":  [
-
+                                         "includePlcSoftware"
                                      ],
                       "description":  "[L1][Hardware] List all hardware devices (PLCs, HMI panels, drives) in the project with their attributes. Requires: Connect + OpenProject. Prefer GetProjectTree for a visual overview; use this when you need the exact device Name and attribute values for subsequent operations like AddDevice or SetDeviceItemAttribute.",
                       "example":  null
@@ -5993,7 +5993,7 @@
                                          "name",
                                          "argumentsJson"
                                      ],
-                      "description":  "[L0][Meta] Invoke ANY tool in the full roster by name, including ones not listed in this session. Use FindTools first to get the exact name and parameter signature. Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. Example: name=\u0027ExportPlcWatchTable\u0027, argumentsJson=\u0027{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}\u0027.",
+                      "description":  "[L0][Meta] Invoke any available tool for this engine version by name, including non-lite tools. Use FindTools first to get the exact name and parameter signature. Message contains the direct tool JSON. Meta.bridgeSuccess only confirms dispatch/serialization; Meta.operationSuccess reflects inner Meta.success, or null if unknown. Never infer business success from MCP isError=false. Example: name=\u0027ExportPlcWatchTable\u0027, argumentsJson=\u0027{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\"}\u0027.",
                       "example":  "{\"name\":\"ExportPlcWatchTable\",\"argumentsJson\":{\"softwarePath\":\"PLC_1\",\"watchTableName\":\"WT1\",\"exportPath\":\"C:\\\\Temp\\\\WT1.xml\"}}"
                   },
                   {

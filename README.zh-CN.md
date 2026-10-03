@@ -42,7 +42,7 @@
 
 3.1.0 提供可选[工作进程隔离](docs/guides/openness-worker-isolation.md)：`--isolate-openness` 默认关闭，工作进程故障后仍可查询宿主诊断。真实 TIA 验收、精确工程身份绑定及不同 MCP 服务间的协调仍未完成。
 
-`master` 提供当前 V20/V21 最新发布；另保留上游 `v17`–`v21` 独立分支。V17 目前仅 PLC 第一阶段，V18/V19 尚无对应实现，见[版本分支与适用范围](docs/reference/version-branches.md)。
+`master` 是唯一维护分支，包含当前 V20/V21 引擎。原 `v17`–`v21` 分支头和完整历史备份见[版本历史与适用范围](docs/reference/version-branches.md)。V14 SP1–V19 生产路由仍禁用，Adapter 编译通过不等于原生兼容性验收。
 
 覆盖工程/会话、PLC 块/类型/变量、硬件网络、Unified HMI、文件交换、库、版本控制及在线只读监视。详细范围见 [工具矩阵](docs/reference/tool-matrix.md) 和 [能力边界](docs/reference/capabilities.md)。实现工具、API 签名检查与真实工程验收是不同状态，不代表覆盖西门子全部 API。
 

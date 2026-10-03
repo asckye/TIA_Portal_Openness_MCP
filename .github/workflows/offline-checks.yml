@@ -1,8 +1,8 @@
 name: offline-checks
 
 # 这个仓库的引擎本体编译需要 Siemens.Engineering.dll（要装 TIA Portal），
-# GitHub 托管的 runner 上没有，所以**编译类 CI 在这里不可能有**。
-# 这里跑的是不需要 TIA 的那两类检查：零依赖回归用例，和面向调用方的文案一致性。
+# GitHub 托管 runner 无法编译完整引擎；这里运行离线回归、文案检查，
+# 以及不依赖 Siemens DLL 的 Studio 客户端构建和 WPF 功能测试。
 
 on:
   push:
@@ -33,3 +33,17 @@ jobs:
       - uses: actions/checkout@v7
       - name: Descriptions must not name unregistered tools
         run: python3 scripts/checks/Check-DeadToolReferences.py
+
+  studio-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build Studio
+        run: dotnet build tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj -c Release --nologo
+      - name: Studio client functional tests
+        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj -c Release --nologo
+      - name: Studio WPF functional tests
+        run: dotnet test tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj -c Release --nologo
