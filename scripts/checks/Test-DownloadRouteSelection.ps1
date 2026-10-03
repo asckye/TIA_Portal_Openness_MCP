@@ -9,14 +9,17 @@
 #
 # Usage:  build the V21 exe, then:  powershell -File scripts\checks\Test-DownloadRouteSelection.ps1
 # Exit code 0 = all pass, 1 = a case failed or the exe is missing.
-param([string]$PublicApiDirectory = '')   # 显式 PublicAPI 目录；未给时回退到注册表
+param([string]$PublicApiDirectory = '', [string]$Exe = '')   # 显式 PublicAPI 目录；未给时回退到注册表
 $ErrorActionPreference = "Stop"
 
-$srcDir = Join-Path $PSScriptRoot "..\..\runtime\v21"
+$srcDir = if ($Exe) { Split-Path -Parent (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21" }
 if (-not (Test-Path -LiteralPath (Join-Path $srcDir "TiaMcpServer.exe"))) {
   Write-Host "FAIL: build the V21 exe first (not found: $srcDir\TiaMcpServer.exe)"; exit 1
 }
 $tmp = Join-Path $env:TEMP ("tia_routetest_{0}" -f [guid]::NewGuid().ToString("N"))
+$tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
+$tmp = [IO.Path]::GetFullPath($tmp)
+if (-not $tmp.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Test directory escaped TEMP.' }
 Copy-Item -LiteralPath $srcDir -Destination $tmp -Recurse -Force
 
 # Loading the Portal type pulls in Siemens.Engineering, which lives in the TIA install (the build

@@ -61,7 +61,7 @@ internal static class SoftwareLookupRuntimeTests
                 if ((il[i] == 0x28 || il[i] == 0x6f) && BitConverter.ToInt32(il, i + 1) == token) shared = true;
         }
         check(shared, "EXE listing calls shared GetPlcSoftware resolver, including enumeration fallback");
-        var match = server.GetType("TiaMcpServer.Siemens.Guard", true)!.GetMethod("MatchPlcName")!;
+        var match = Program.FindServerType(server, "TiaMcpServer.Siemens.Guard").GetMethod("MatchPlcName")!;
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally before single-PLC fallback");
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" })! == "+S1-K1", "EXE shared single-PLC fallback resolves station alias");
         var findBlock = server.GetType("TiaMcpServer.Siemens.PlcBlockLookup", true)!.GetMethod("Find", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(BlockGroup), typeof(string));
@@ -133,7 +133,7 @@ internal static class SoftwareLookupRuntimeTests
         int reads=0;check(Refused(()=>ExecuteDelete(false,_=>++reads==1?0:1)) && deletes==2,"EXE rechecks emptiness immediately before deletion");
         var deleteTool=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("DeleteEmptyPlcBlockGroup")!;
         check((bool)deleteTool.GetParameters()[2].DefaultValue!,"EXE deletion tool defaults to dryRun=true");
-        var rt = server.GetType("TiaMcpServer.Siemens.PlcListingRead", true)!;
+        var rt = Program.FindServerType(server, "TiaMcpServer.Siemens.PlcListingRead");
         var reader = Activator.CreateInstance(rt, true)!;
         var optional = rt.GetMethod("Optional", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));
         var required = rt.GetMethod("Required", BindingFlags.Instance | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(string));

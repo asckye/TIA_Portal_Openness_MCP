@@ -25,23 +25,17 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
     <Compile Include="..\..\src\TiaMcpServer\CliOptions.cs" Link="CliOptions.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectBindingIdentity.cs" Link="ProjectBindingIdentity.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\PortalProcessLease.cs" Link="PortalProcessLease.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\TimedAttachment.cs" Link="TimedAttachment.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Engineering.cs" Link="Engineering.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectOwnership.cs" Link="ProjectOwnership.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\TransactionExecution.cs" Link="TransactionExecution.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeOutcome.cs" Link="NativeOutcome.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeFileOutput.cs" Link="NativeFileOutput.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringObjectAddress.cs" Link="EngineeringObjectAddress.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcTypeGroupCreation.cs" Link="PlcTypeGroupCreation.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringGroupOperations.cs" Link="EngineeringGroupOperations.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringScalarProperties.cs" Link="EngineeringScalarProperties.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\WatchTableImportValidation.cs" Link="WatchTableImportValidation.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcListingRead.cs" Link="PlcListingRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareContainerLookup.cs" Link="SoftwareContainerLookup.cs" />
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
@@ -56,7 +50,6 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationPages.cs" Link="MigrationPages.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MigrationRead.cs" Link="MigrationRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedTagDefinitions.cs" Link="UnifiedTagDefinitions.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\JavaScriptEvidence.cs" Link="JavaScriptEvidence.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\NativeExportCapture.cs" Link="NativeExportCapture.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedNativeRead.cs" Link="UnifiedNativeRead.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScriptAccess.cs" Link="UnifiedScriptAccess.cs" />
@@ -66,13 +59,10 @@
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectArchive.cs" Link="ProjectArchive.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiExactAccess.cs" Link="HmiExactAccess.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiSnapshot.cs" Link="HmiSnapshot.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiReadSafety.cs" Link="HmiReadSafety.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.HmiInspection.cs" Link="Portal.HmiInspection.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\Portal.HmiOperation.cs" Link="Portal.HmiOperation.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Tools\McpServer.HmiInspection.cs" Link="McpServer.HmiInspection.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiEventAccess.cs" Link="HmiEventAccess.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\PortalException.cs" Link="PortalException.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Portal\PortalErrorCode.cs" Link="PortalErrorCode.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\PropertyPathReader.cs" Link="PropertyPathReader.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringExport.cs" Link="EngineeringExport.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\CompilerDiagnostics.cs" Link="CompilerDiagnostics.cs" />
@@ -81,40 +71,17 @@
     <!-- Shared Classic / Unified screen traversal, with no Siemens runtime dependency. -->
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiScreenTraversal.cs" Link="HmiScreenTraversal.cs" />
     <!-- 新工具族的纯逻辑（无 Siemens.Engineering 依赖）：参数校验、JSON 解析、提示应答决策、离线 SimaticML 分析 -->
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\DownloadPromptPolicy.cs" Link="DownloadPromptPolicy.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcBlockServicesLogic.cs" Link="PlcBlockServicesLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\WatchTableEntryXml.cs" Link="WatchTableEntryXml.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\SafetyLogic.cs" Link="SafetyLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareServicesLogic.cs" Link="HardwareServicesLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareNetworkLogic.cs" Link="HardwareNetworkLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\LibraryDeepLogic.cs" Link="LibraryDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\SecurityDeepLogic.cs" Link="SecurityDeepLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\BaseLeftoversLogic.cs" Link="BaseLeftoversLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcProtectionLogic.cs" Link="PlcProtectionLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\ConnectLogic.cs" Link="ConnectLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\ToolExamples.cs" Link="ToolExamples.cs" />
-    <!-- 2.9.1: cross-reference guard (refuse the query while blocks are uncompiled), zero dependencies. -->
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\CrossReferenceGuardLogic.cs" Link="CrossReferenceGuardLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAuditLogic.cs" Link="EngineeringAuditLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\InvocationJournal.cs" Link="InvocationJournal.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\SoftwareUnitDeepLogic.cs" Link="SoftwareUnitDeepLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Step7LeftoversLogic.cs" Link="Step7LeftoversLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\ClassicHmiFoldersLogic.cs" Link="ClassicHmiFoldersLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\SivarcLogic.cs" Link="SivarcLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\StartdriveLogic.cs" Link="StartdriveLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\DccLogic.cs" Link="DccLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\SafetyValidationLogic.cs" Link="SafetyValidationLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\TestSuiteLogic.cs" Link="TestSuiteLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\TeamcenterLogic.cs" Link="TeamcenterLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\CfcLogic.cs" Link="CfcLogic.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\PlcTagEditingLogic.cs" Link="PlcTagEditingLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectSecurityLogic.cs" Link="ProjectSecurityLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedUiModelLogic.cs" Link="UnifiedUiModelLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedScreenItemLogic.cs" Link="UnifiedScreenItemLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedExchangeLogic.cs" Link="UnifiedExchangeLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\MotionProDiagClassicHmiLogic.cs" Link="MotionProDiagClassicHmiLogic.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\PlcSimAdvancedChannel.cs" Link="PlcSimAdvancedChannel.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\HardwareAmlLogic.cs" Link="HardwareAmlLogic.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />

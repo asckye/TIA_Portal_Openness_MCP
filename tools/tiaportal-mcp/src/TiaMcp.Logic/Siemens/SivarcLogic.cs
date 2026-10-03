@@ -55,8 +55,8 @@ namespace TiaMcpServer.Siemens
             AnchorProperty(category);
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
             HardwareServicesLogic.ValidatePagination(offset, limit);
-            if (!string.IsNullOrEmpty(folderPath)) EngineeringGroupOperations.Parts(folderPath);
-            if (!string.IsNullOrEmpty(tablePath)) EngineeringGroupOperations.Parts(tablePath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
+            if (!string.IsNullOrEmpty(tablePath)) EngineeringPath.Parts(tablePath);
             if (!string.IsNullOrEmpty(folderPath) && !string.IsNullOrEmpty(tablePath)) throw new ArgumentException("Give folderPath (folder subtree) or tablePath (one table's groups and rules), not both.");
         }
 
@@ -67,11 +67,11 @@ namespace TiaMcpServer.Siemens
         internal static bool ValidateContainerRequest(string category, string kind, string path, string action, string typePath, string typeVersion, bool confirmDelete, bool dryRun)
         {
             AnchorProperty(category); RequireOneOf(kind, ContainerKinds, "kind"); RequireOneOf(action, ContainerActions, "action");
-            RequireName(path, "path", 1024); EngineeringGroupOperations.Parts(path);
+            RequireName(path, "path", 1024); EngineeringPath.Parts(path);
             if (action == "createFromType")
             {
                 if (kind != "table") throw new ArgumentException("createFromType applies to kind table (rule tables are instantiated from a *RuleTableType version).");
-                RequireName(typePath, "typePath", 1024); EngineeringGroupOperations.Parts(typePath); RequireName(typeVersion, "typeVersion", 32);
+                RequireName(typePath, "typePath", 1024); EngineeringPath.Parts(typePath); RequireName(typeVersion, "typeVersion", 32);
             }
             else { Refuse(typePath, "typePath", "applies to action createFromType only."); Refuse(typeVersion, "typeVersion", "applies to action createFromType only."); }
             if (action == "delete") HardwareServicesLogic.RequireConfirmation(confirmDelete, "confirmDelete", dryRun);
@@ -111,17 +111,17 @@ namespace TiaMcpServer.Siemens
             string deviceSelectionJson, string masterCopyPath, string createOption, bool confirmDelete, bool dryRun)
         {
             AnchorProperty(category); RequireOneOf(kind, RuleKinds, "kind"); RequireOneOf(action, RuleActions, "action");
-            RequireName(tablePath, "tablePath", 1024); EngineeringGroupOperations.Parts(tablePath);
+            RequireName(tablePath, "tablePath", 1024); EngineeringPath.Parts(tablePath);
             RequireOneOf(createOption, CreateOptionNames, "createOption");
             if (action == "createFromMasterCopy")
             {
                 // rulePath is the target group path (empty = the table itself); the master copy supplies the name
-                if (!string.IsNullOrEmpty(rulePath)) EngineeringGroupOperations.Parts(rulePath);
-                RequireName(masterCopyPath, "masterCopyPath", 1024); EngineeringGroupOperations.Parts(masterCopyPath);
+                if (!string.IsNullOrEmpty(rulePath)) EngineeringPath.Parts(rulePath);
+                RequireName(masterCopyPath, "masterCopyPath", 1024); EngineeringPath.Parts(masterCopyPath);
             }
             else
             {
-                RequireName(rulePath, "rulePath", 1024); EngineeringGroupOperations.Parts(rulePath);
+                RequireName(rulePath, "rulePath", 1024); EngineeringPath.Parts(rulePath);
                 Refuse(masterCopyPath, "masterCopyPath", "applies to action createFromMasterCopy only.");
             }
             var properties = ParseObject(propertiesJson, "propertiesJson"); var references = ParseObject(referencesJson, "referencesJson"); var devices = ParseObject(deviceSelectionJson, "deviceSelectionJson");
@@ -173,7 +173,7 @@ namespace TiaMcpServer.Siemens
             };
             if (reference.Kind == "plcBlock") { RequireName(reference.SoftwarePath, parameter + ".softwarePath", 1024); Refuse(reference.LibraryName, parameter + ".libraryName", "does not apply to plcBlock."); }
             else Refuse(reference.SoftwarePath, parameter + ".softwarePath", "applies to kind plcBlock only.");
-            RequireName(reference.Path, parameter + ".path", 1024); EngineeringGroupOperations.Parts(reference.Path);
+            RequireName(reference.Path, parameter + ".path", 1024); EngineeringPath.Parts(reference.Path);
             return reference;
         }
 
@@ -191,7 +191,7 @@ namespace TiaMcpServer.Siemens
         };
         internal static bool ValidateDefinitionRequest(string blockPath, string kind, string name, string action, string propertiesJson, string textsJson, bool confirmDelete, bool dryRun)
         {
-            RequireName(blockPath, "blockPath", 1024); EngineeringGroupOperations.Parts(blockPath);
+            RequireName(blockPath, "blockPath", 1024); EngineeringPath.Parts(blockPath);
             RequireOneOf(kind, DefinitionKinds, "kind"); RequireOneOf(action, DefinitionActions, "action");
             bool named = kind == "tagDefinition" || kind == "textDefinition" || kind == "blockParameter";
             if (named) { RequireName(name, "name", 128); }
@@ -219,9 +219,9 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] LibraryItemKinds = { "masterCopy", "libraryType" };
         internal static void ValidateExpressionRequest(string blockPath, string devicePathJson, string itemPathJson, string libraryItemKind, string libraryItemPath, string expression, int maxResults)
         {
-            RequireName(blockPath, "blockPath", 1024); EngineeringGroupOperations.Parts(blockPath);
+            RequireName(blockPath, "blockPath", 1024); EngineeringPath.Parts(blockPath);
             if (ParseNames(devicePathJson, "devicePathJson").Length == 0 || ParseNames(itemPathJson, "itemPathJson").Length == 0) throw new ArgumentException("devicePathJson and itemPathJson identify the HMI device item (the PNV HMI device).");
-            RequireOneOf(libraryItemKind, LibraryItemKinds, "libraryItemKind"); RequireName(libraryItemPath, "libraryItemPath", 1024); EngineeringGroupOperations.Parts(libraryItemPath);
+            RequireOneOf(libraryItemKind, LibraryItemKinds, "libraryItemKind"); RequireName(libraryItemPath, "libraryItemPath", 1024); EngineeringPath.Parts(libraryItemPath);
             if (string.IsNullOrWhiteSpace(expression) || expression.Length > 4000) throw new ArgumentException("expression (SiVArc expression text, max 4000 chars) required.");
             if (maxResults < 1 || maxResults > 5000) throw new ArgumentException("maxResults 1..5000 required.");
         }

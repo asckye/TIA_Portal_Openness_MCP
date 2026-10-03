@@ -25,7 +25,11 @@ try {
         $attributes=[Reflection.CustomAttributeData]::GetCustomAttributes($method)
         if(!($attributes | Where-Object {$_.AttributeType.Name -eq 'McpServerToolAttribute'})){throw "Unregistered tool: $name"}
     }
-    $reader=$assembly.GetType('TiaMcpServer.Siemens.JavaScriptEvidence',$true)
+    $reader=$assembly.GetType('TiaMcpServer.Siemens.JavaScriptEvidence',$false)
+    if(!$reader){
+        $logic=[Reflection.Assembly]::LoadFrom((Join-Path $runtimeDirectory 'TiaMcp.Logic.dll'))
+        $reader=$logic.GetType('TiaMcpServer.Siemens.JavaScriptEvidence',$true)
+    }
     $parse=$reader.GetMethod('Analyze',[Reflection.BindingFlags]'NonPublic,Static')
     $source="import * as C from 'Colors'; export function f(x) { return Tags(x+'.v').Read(); }"
     $result=$parse.Invoke($null,@($source,'fixture.js'))

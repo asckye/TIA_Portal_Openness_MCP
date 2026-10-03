@@ -1,22 +1,30 @@
 ﻿# Offline deterministic test of Guard.MatchPlcName (the tolerant softwarePath matcher).
 # No TIA Portal needed: reflects over the built V21 assembly and invokes the pure static.
-# The assembly is copied to an ASCII %TEMP% path first so Windows PowerShell 5.1 can
+# The assembly and dependencies are copied to an ASCII %TEMP% path so Windows PowerShell 5.1 can
 # LoadFrom it even when the repo lives under a non-ASCII (e.g. Chinese) path.
 #
 # Usage:  build the V21 exe, then:  powershell -File scripts\checks\Test-MatchPlcName.ps1
 # Exit code 0 = all pass, 1 = a case failed or the exe is missing.
+param([string]$Exe = '')
 $ErrorActionPreference = "Stop"
 
-$srcExe = Join-Path $PSScriptRoot "..\..\runtime\v21\TiaMcpServer.exe"
+$srcExe = if ($Exe) { (Resolve-Path -LiteralPath $Exe).Path } else { Join-Path $PSScriptRoot "..\..\runtime\v21\TiaMcpServer.exe" }
 if (-not (Test-Path -LiteralPath $srcExe)) {
   Write-Host "FAIL: build the V21 exe first (not found: $srcExe)"; exit 1
 }
-$tmp = Join-Path $env:TEMP ("tia_matchtest_{0}.exe" -f [guid]::NewGuid().ToString("N"))
-Copy-Item -LiteralPath $srcExe -Destination $tmp -Force
+$tmp = Join-Path $env:TEMP ("tia_matchtest_{0}" -f [guid]::NewGuid().ToString("N"))
+$tempRoot = [IO.Path]::GetFullPath($env:TEMP).TrimEnd('\') + '\'
+$tmp = [IO.Path]::GetFullPath($tmp)
+if (-not $tmp.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase)) { throw 'Test directory escaped TEMP.' }
+Copy-Item -LiteralPath (Split-Path -Parent $srcExe) -Destination $tmp -Recurse -Force
 
 try {
-  $asm = [Reflection.Assembly]::LoadFrom($tmp)
+  $asm = [Reflection.Assembly]::LoadFrom((Join-Path $tmp (Split-Path -Leaf $srcExe)))
   $guard = $asm.GetType("TiaMcpServer.Siemens.Guard")
+  if (-not $guard) {
+    $logic = [Reflection.Assembly]::LoadFrom((Join-Path $tmp "TiaMcp.Logic.dll"))
+    $guard = $logic.GetType("TiaMcpServer.Siemens.Guard")
+  }
   if (-not $guard) { Write-Host "FAIL: Guard type not found"; exit 1 }
   $mi = $guard.GetMethod("MatchPlcName", [Reflection.BindingFlags]"Public,Static")
   if (-not $mi) { Write-Host "FAIL: MatchPlcName method not found"; exit 1 }
@@ -67,4 +75,4 @@ try {
   Write-Host "RESULT: $pass passed, $fail failed"
   if ($fail -gt 0) { exit 1 } else { exit 0 }
 }
-finally { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+finally { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }

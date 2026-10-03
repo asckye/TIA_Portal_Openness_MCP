@@ -106,7 +106,7 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 
 ## G9：单 PLC 工程的模糊匹配
 
-`Siemens/Guard.cs` 第 63–64 行的规则（单 PLC 工程中任意名称都解析到唯一 PLC）只经由
+`TiaMcp.Logic/Siemens/Guard.cs` 第 63–64 行的规则（单 PLC 工程中任意名称都解析到唯一 PLC）只经由
 `Portal.GetPlcSoftware` → `ResolvePlcSoftwareFuzzy`（P.Software.cs 第 44–76 行）在精确解析失败后生效。
 这 42 处调用包括下载、在线、删除、PLC 表、OPC UA、报警和工艺对象等写入或在线路径；HTTP 会话共享同一
 Portal，其他客户端改绑后，请求的名称可能静默解析到对方工程的 PLC。

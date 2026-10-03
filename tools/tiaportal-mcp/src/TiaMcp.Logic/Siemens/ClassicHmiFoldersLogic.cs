@@ -29,7 +29,7 @@ namespace TiaMcpServer.Siemens
             RequireOneOf(kind, ScreenTreeKinds, "kind");
             if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
             if (!string.IsNullOrEmpty(folderPath) && kind != "screens" && kind != "popups" && kind != "templates") throw new ArgumentException("folderPath applies to kind screens / popups / templates (slide-ins have no folders).");
-            if (!string.IsNullOrEmpty(folderPath)) EngineeringGroupOperations.Parts(folderPath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
         }
 
         // ---- screen objects ----
@@ -51,13 +51,13 @@ namespace TiaMcpServer.Siemens
             {
                 // the target folder; empty = the system folder (slide-ins always import into the system folder)
                 if (objectKind == "slidein") Refuse(objectPath, "objectPath", "does not apply to slide-in import (the slide-in system folder is the only target).");
-                else if (!string.IsNullOrEmpty(objectPath)) EngineeringGroupOperations.Parts(objectPath);
+                else if (!string.IsNullOrEmpty(objectPath)) EngineeringPath.Parts(objectPath);
             }
             else
             {
                 RequireName(objectPath, "objectPath", 1024);
                 if (objectKind == "slidein") { RequireOneOf(objectPath, SlideinTypes, "objectPath (slide-ins are addressed by SlideinType)"); if (action == "delete") throw new ArgumentException("Slide-in screens cannot be deleted (no native Delete)."); }
-                else EngineeringGroupOperations.Parts(objectPath);
+                else EngineeringPath.Parts(objectPath);
             }
             if (action == "export" || action == "import") RequireAbsoluteFile(filePath, "filePath"); else Refuse(filePath, "filePath", "applies to export / import only.");
             if (action == "import") RequireOneOf(importOptions, ImportOptionNames, "importOptions");
@@ -75,7 +75,7 @@ namespace TiaMcpServer.Siemens
         {
             RequireOneOf(folderKind, FolderKinds, "folderKind");
             RequireOneOf(action, FolderActions, "action");
-            if (!string.IsNullOrEmpty(folderPath)) EngineeringGroupOperations.Parts(folderPath);
+            if (!string.IsNullOrEmpty(folderPath)) EngineeringPath.Parts(folderPath);
             if (action == "create") { RequireName(newName, "newName"); if (newName.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("newName is one folder segment."); }
             else Refuse(newName, "newName", "applies to create only.");
             if (action == "delete" && string.IsNullOrEmpty(folderPath)) throw new ArgumentException("The system folder cannot be deleted; folderPath must name a user folder.");

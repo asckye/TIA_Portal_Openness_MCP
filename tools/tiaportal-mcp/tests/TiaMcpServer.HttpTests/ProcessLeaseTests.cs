@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 internal static partial class Program
 {
-    private static object AcquireTestLease(string root, long ticks) => Server.GetType("TiaMcpServer.Siemens.PortalProcessLease", true)!
+    private static object AcquireTestLease(string root, long ticks) => Program.FindServerType(Server, "TiaMcpServer.Siemens.PortalProcessLease")
         .GetMethod("Acquire", All)!.Invoke(null, new object[] { root, 54321, ticks })!;
     private static void CleanLease(object lease) => lease.GetType().GetMethod("ReleaseCleanly", All)!.Invoke(lease, null);
     private static int LeaseFixture(string[] args)

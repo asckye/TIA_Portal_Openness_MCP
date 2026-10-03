@@ -51,6 +51,6 @@ internal static class DeviceTransferShapeChecks
         foreach(var t in new[]{"BlockBindingPassword","OverwriteTargetLanguages","UpgradeTargetDevice","DownloadWebApplication","DeleteWebApplication"}) check(step7.GetType("Siemens.Engineering.Download.Configurations."+t)!=null,"Step7 download prompt type "+t);
         check(T(core,"Siemens.Engineering.Download.Configurations.DownloadConfiguration").GetProperty("Message")!=null,"DownloadConfiguration.Message (recorded for unanswered prompts)");
         check(T(core,"Siemens.Engineering.Upload.Configurations.UploadConfiguration").GetProperty("Message")!=null,"UploadConfiguration.Message");
-        check(server.GetType("TiaMcpServer.Siemens.DownloadPromptPolicy")!=null,"engine carries DownloadPromptPolicy");
+        check(Program.FindServerType(server, "TiaMcpServer.Siemens.DownloadPromptPolicy")!=null,"engine carries DownloadPromptPolicy");
     }
 }

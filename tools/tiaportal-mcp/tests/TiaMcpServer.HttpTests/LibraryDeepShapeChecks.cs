@@ -118,7 +118,7 @@ internal static class LibraryDeepShapeChecks
         // Engine surface
         var portal=server.GetType("TiaMcpServer.Siemens.Portal")!;
         // Execute only our pure metadata guard against the real SDK Type, never a native setter.
-        var guard=server.GetType("TiaMcpServer.Siemens.LibraryDeepLogic")!.GetMethod("GuardKnownTypeWrites",BindingFlags.Static|BindingFlags.NonPublic)!;
+        var guard=Program.FindServerType(server, "TiaMcpServer.Siemens.LibraryDeepLogic").GetMethod("GuardKnownTypeWrites",BindingFlags.Static|BindingFlags.NonPublic)!;
         var scriptModuleType=T("Siemens.Engineering.HmiUnified.Library.ScriptModuleType",unified);
         bool renameBlocked=false;
         try { guard.Invoke(null,new object[]{21,scriptModuleType,new[]{"Name"}}); }

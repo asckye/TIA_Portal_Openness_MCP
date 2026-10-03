@@ -90,7 +90,7 @@ namespace TiaMcpServer.Siemens
                 bool folder = obj.ContainsKey("folder");
                 var path = (obj[folder ? "folder" : "type"] as JsonValue)?.TryGetValue<string>(out var s) == true ? s!.Trim().Trim('/') : throw new ArgumentException("selectionJson paths must be strings.");
                 if (!folder && path.Length == 0) throw new ArgumentException("selectionJson: a type entry needs a non-empty path.");
-                if (path.Length > 0) EngineeringGroupOperations.Parts(path);
+                if (path.Length > 0) EngineeringPath.Parts(path);
                 result.Add(new Selection(folder, path));
             }
             if (result.Select(s => (s.IsFolder ? "F:" : "T:") + s.Path).Distinct(StringComparer.OrdinalIgnoreCase).Count() != result.Count) throw new ArgumentException("selectionJson: duplicate entry.");

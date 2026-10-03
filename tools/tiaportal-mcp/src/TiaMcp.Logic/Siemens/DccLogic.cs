@@ -22,7 +22,7 @@ namespace TiaMcpServer.Siemens
         internal static JsonObject ParseObject(string json, string parameter)
             => (string.IsNullOrWhiteSpace(json) ? new JsonObject() : JsonNode.Parse(json) as JsonObject) ?? throw new ArgumentException(parameter + " must be a JSON object.");
         // Chart paths are Root/Sub/Sub relative to DriveControlChartContainer.Charts (subcharts through DriveControlChart.Subcharts).
-        internal static string[] ChartParts(string chartPath) { RequireText(chartPath, "chartPath", 1024); return EngineeringGroupOperations.Parts(chartPath); }
+        internal static string[] ChartParts(string chartPath) { RequireText(chartPath, "chartPath", 1024); return EngineeringPath.Parts(chartPath); }
 
         internal static readonly string[] ImportOptions = { "None", "RenameOnConflict" };
         // Writable scalars per DCC object class (official attribute tables); Name of a chart / block is renamed through propertiesJson.Name.

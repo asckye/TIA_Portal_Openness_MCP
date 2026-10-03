@@ -46,6 +46,6 @@ internal static class SimulationDocumentationShapeChecks
             check(Tool(name).GetParameters().All(p => p.Name != "dryRun"), name + " has no dryRun (pure offline tool)");
         var docLogic = Program.FindServerType(server, "TiaMcpServer.ModelContextProtocol.PlcDocumentationLogic");
         check(docLogic.GetMethod("RuleCatalog") != null && docLogic.GetMethod("ParseFlgNet") != null && docLogic.GetMethod("Mermaid") != null, "PlcDocumentationLogic rendering/lint entry points");
-        check(server.GetType("TiaMcpServer.Siemens.HardwareAmlLogic", true)!.GetMethod("BuiltinSkeleton") != null, "HardwareAmlLogic.BuiltinSkeleton");
+        check(Program.FindServerType(server, "TiaMcpServer.Siemens.HardwareAmlLogic").GetMethod("BuiltinSkeleton") != null, "HardwareAmlLogic.BuiltinSkeleton");
     }
 }
