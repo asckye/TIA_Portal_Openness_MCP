@@ -119,7 +119,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P4-B | 第 B 步：`TiaMcp.Adapters.Contracts`（原样迁移 DTO、错误类型、黄金 JSON 测试；适配器内 `TiaVersionCatalog` 改为 internal）；48 个类型原样迁移，`adapter-contracts` 套件 232 项 | done |
 | P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变；`tools/openness-shared/TiaFeatures.props` + `Check-TiaFeatures.py`（validate 流程） | done |
 | P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48（P4-E1 完成，三个旧版本冒烟通过，真机验收已登记）与协议 2（P4-E2 完成：`TiaMcp.WorkerChannel`、握手与不重放规则、`worker-channel` 套件 98 项，预览规则逐条映射；P4-A 完成：删除 `TiaMcp.WorkerProtocol.*`（约 10,700 行、6,676 个断言），删除前补 155 项规则测试，`worker-channel` 253 项）） | doing |
-| P4-03 | Studio 桥接进程迁移到共享适配器（第 F 步：桥接改用 `TiaMcp.WorkerChannel`，进行中；第 G 步：基于共享适配器重写会话，构建开关后） | doing |
+| P4-03 | Studio 桥接进程迁移到共享适配器（第 F 步完成：桥接改用 `TiaMcp.WorkerChannel` 协议 2 的 Studio profile，方法名、DTO 与 UI 错误文本不变，已处理错误保持会话；Core 108、GUI 1388、配置 197、三版桥接冒烟 15、worker-channel 253；真机验收前不发布；第 G 步：基于共享适配器重写会话，构建开关后） | doing |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
 
 ### 阶段 5：桌面端
