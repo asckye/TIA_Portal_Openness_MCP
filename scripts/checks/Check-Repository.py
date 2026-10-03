@@ -80,6 +80,10 @@ def check(root, no_binaries=False):
     result = subprocess.run([sys.executable, str(swallowed), '--root', str(root)])
     if result.returncode:
         errors.append('Swallowed-exception baseline check failed (see diagnostics above)')
+    envelopes = Path(__file__).with_name('Inventory-ResponseEnvelopes.py')
+    result = subprocess.run([sys.executable, str(envelopes), '--root', str(root)])
+    if result.returncode:
+        errors.append('Response-envelope baseline check failed (see diagnostics above)')
     return count, errors
 
 

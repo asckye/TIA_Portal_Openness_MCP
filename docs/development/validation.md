@@ -59,6 +59,8 @@ python scripts/checks/Check-Repository.py
 python scripts/checks/Check-DeadToolReferences.py
 python scripts/checks/Check-SwallowedExceptions.py --self-test
 python scripts/checks/Check-SwallowedExceptions.py
+python scripts/checks/Inventory-ResponseEnvelopes.py --self-test
+python scripts/checks/Inventory-ResponseEnvelopes.py
 python scripts/checks/Check-TiaFeatures.py
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
 python scripts/checks/Test-DotnetSuites.py --self-test
@@ -92,8 +94,38 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 该命令拒绝任何新增指纹或重复次数增长，即使总数减少。`--allow-growth` 仅用于经审查的首次建基线。
 可用 `--root <scratch-copy>` 和 `--baseline <json>` 对临时副本验证；自检在 worktree 的 `bin-build` 创建并清理夹具。
 
+`Check-Repository.py` 也运行 [响应信封清点](../../scripts/checks/Inventory-ResponseEnvelopes.py)。
+它扫描 `tools/tiaportal-mcp/src` 的全部 C# 条件分支，使用与吞异常检查相同的词法器及生成文件/构建目录排除规则，
+但包含 WorkerProtocol。输出按路径排序的逐文件计数和总数；`--json` 输出同样确定的 JSON。
+计数分别列出 `timestamp`/`success`/`ok` 索引器出现次数（含读取）和赋值次数、对象构造、两类异常抛出，以及六种时间编码。
+`timestamp_now_assignments` 包含 `DateTime.Now.ToString("O")`；`timestamp_local_datetime` 只计直接赋入的 Local DateTime。
+`datetime_utcnow` 计所有 `DateTime.UtcNow` 取值；两个 DateTimeOffset round-trip 计数接受 `o` 和 `O`；
+`created_utc_custom` 识别 `createdUtc` 的 `ToString("yyyy-MM-dd HH:mm:ss") + "Z"`。
+
+B1–B9 是可重叠的词法提示，不是工具分类的精确总数：B1 为仅 timestamp/success，B2 为仅 timestamp，
+B3 为 success 位于第三个或更后面的键；这三种只识别直接的 Local DateTime 初始化器。
+B4、B5a/c/d 按 `RunHmiStepTool`、`RunOfflineAnalysisTool`、`BatchResult`、`BuildOfflineXmlBuilderReport`
+中的 timestamp/success 初始化器识别；B5b 识别 `RunPlcSimTool` 内的 `RuntimeMeta` 调用；
+B6 识别 `*Meta`/`Create` 方法中的 timestamp/success 工厂；B7 识别含 ok、没有 timestamp/success 的初始化器；
+B8 识别没有 Meta 且字面消息含失败/拒绝提示的 `ResponseMessage`；B9 识别 timestamp 的 Local round-trip 字符串赋值。
+间接赋值、变量中的消息、包装层 B10 和运行时控制流不由这些提示推断。
+
+[响应信封基线](../../scripts/checks/response-envelope-baseline.json)按两项全局总数守护手写赋值：
+`timestamp_now_assignments` 245、`success_assignments` 306；路径变化不会改变门禁结果。
+中央 `TiaMcpServer.ModelContextProtocol.ResponseMeta` 类型自身仍出现在清点中，但不计作手写调用点；此识别与路径无关。
+任一总数增长即失败，减少允许且报告；`--update-baseline` 仅收缩上限，首次经审查建立基线才使用 `--allow-growth`。
+
+`ResponseMetaTests` 在 offline/offline-v20 各增加 249 项 E2 检查。每种构造器与注明文件/行号的原初始化器
+在同一固定时钟下比较四条序列化路径的 UTF-8 字节；测试的选项与 POCO 替身另对照 HttpTests/Golden 中
+V20/V21 的全部 36 项 E1 序列化记录。覆盖键追加、success 原位覆盖、null Meta、Local/UTC、数值 CLR 类型及异步时钟隔离。
+`ResponseClock.Pin` 仅在当前执行上下文生效，可嵌套并在释放时恢复；测试进程临时固定 +08:00 时区并恢复 BCL 缓存。
+`Complete(meta)` 保留 HMI 的 operationSuccess，显式 bool 重载用于无条件完成；`Failed(meta)` 只追加
+operationSuccess/apiCallSuccess/dataComplete，异常文本、状态和 success 的家族差异由原调用点保留。
+本阶段构造器尚未接入现有调用点，POCO 和引擎返回保持原样。
+
 已迁移的套件使用 xunit，每个原有 Check 对应一条结果；
-[最低数量表](../../tools/tiaportal-mcp/tests/test-suites.json)要求 offline、offline-v20、version-policy 至少 3096、3096、10 项通过，均不允许跳过。
+[最低数量表](../../tools/tiaportal-mcp/tests/test-suites.json)要求 offline、offline-v20、version-policy 至少 4420、4420、10 项通过，均不允许跳过。
+两种 offline 套件的 Linux 下限均为 4419（少一项仅 Windows 可运行的 apartment 检查）。
 ImportSelection 的 10 项已并入 offline；BindingSnapshot、ExternalSourcePlan、ExternalSourceDelete 的 199 项已并入 foundation。
 foundation 至少 6521 项通过、最多 1 项跳过；foundation-api 至少 7566 项通过、最多 1 项跳过。PromptRegistration、SoftwareRead、SpecialExportShape、DeviceAdd、HardwareCatalog、DiagnosticMembership 分别要求 134、39、11、124、56、4 项通过，均不允许跳过。
 门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；

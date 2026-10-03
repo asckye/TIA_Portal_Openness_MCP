@@ -94,5 +94,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
+    <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v20.txt" LogicalName="ResponseGolden.v20.txt" />
+    <EmbeddedResource Include="../TiaMcpServer.HttpTests/Golden/response-bytes-v21.txt" LogicalName="ResponseGolden.v21.txt" />
   </ItemGroup>
 </Project>

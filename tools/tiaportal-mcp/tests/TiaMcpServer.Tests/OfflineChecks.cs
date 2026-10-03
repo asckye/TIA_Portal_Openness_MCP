@@ -17,6 +17,7 @@ namespace TiaMcpServer.Tests
         public static IEnumerable<object[]> Rows()
         {
             ToolBridgeFixture.Configure();
+            foreach (var row in CheckSuite.Run(nameof(ResponseMetaTests), ResponseMetaTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(ImportSelectionTests), ImportSelectionTests.Run)) yield return row;
             foreach (var row in CheckSuite.Run(nameof(ArgumentRulesCharacterizationTests), ArgumentRulesCharacterizationTests.Run)) yield return row;
             // Preserve the console runner's suite order, including suites that mutate shared state.
