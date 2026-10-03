@@ -84,13 +84,31 @@ def evaluate_trx(path, minimum, maximum):
     return result, errors
 
 
-def load_catalog(path):
+def current_platform():
+    return {'win32': 'windows', 'linux': 'linux', 'darwin': 'macos'}.get(sys.platform, sys.platform)
+
+
+def load_catalog(path, platform=None):
     catalog = json.loads(path.read_text(encoding='utf-8-sig'))
     if not isinstance(catalog, dict) or not catalog:
         raise ValueError('Suite catalog must be a nonempty object')
+    platform = platform or current_platform()
     for name, suite in catalog.items():
         if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', name):
             raise ValueError(f'Invalid suite name: {name}')
+        # A check that only exists on one OS lowers the count elsewhere; the override names that
+        # OS and the reason, so a lost check is still caught there.
+        overrides = suite.get('platforms', {})
+        if not isinstance(overrides, dict):
+            raise ValueError(f'{name}: platforms must be an object')
+        for os_name, override in overrides.items():
+            if os_name not in ('windows', 'linux', 'macos') or not isinstance(override, dict) \
+                    or not set(override) <= {'minimumPassed', 'maximumSkipped', 'reason'} \
+                    or not isinstance(override.get('reason'), str) or not override['reason'].strip():
+                raise ValueError(f'{name}: invalid platform override {os_name}')
+        for key, value in overrides.get(platform, {}).items():
+            if key != 'reason':
+                suite[key] = value
         for key in ('minimumPassed', 'maximumSkipped'):
             if type(suite[key]) is not int or suite[key] < (1 if key == 'minimumPassed' else 0):
                 raise ValueError(f'{name}: invalid {key}')
@@ -171,6 +189,17 @@ class GateTests(unittest.TestCase):
     def check_result(self, outcomes, minimum=2, maximum=0, **overrides):
         synthetic_trx(self.trx, outcomes, **overrides)
         return evaluate_trx(self.trx, minimum, maximum)
+
+    def test_platform_override(self):
+        catalog = self.directory / 'catalog.json'
+        catalog.write_text(json.dumps({'example': dict(project='scripts/checks/Test-DotnetSuites.py', minimumPassed=3,
+            maximumSkipped=0, arguments=[], platforms={'linux': {'minimumPassed': 2, 'reason': 'one Windows-only check'}})}))
+        self.assertEqual(load_catalog(catalog, 'linux')['example']['minimumPassed'], 2)
+        self.assertEqual(load_catalog(catalog, 'windows')['example']['minimumPassed'], 3)
+        catalog.write_text(json.dumps({'example': dict(project='scripts/checks/Test-DotnetSuites.py', minimumPassed=3,
+            maximumSkipped=0, arguments=[], platforms={'linux': {'minimumPassed': 2}})}))
+        with self.assertRaises(ValueError):
+            load_catalog(catalog, 'linux')
 
     def test_minimum_and_growth(self):
         for count in (2, 3):
