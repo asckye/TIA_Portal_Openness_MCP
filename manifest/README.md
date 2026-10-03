@@ -9,6 +9,7 @@
 | [configurator-build.json](configurator-build.json) | WPF 配置器测试、源码和 EXE 哈希 |
 | [version-tools.json](version-tools.json) | 八版工具分组及完整列表 |
 | [tools-list.json](tools-list.json) | V21 完整引擎目录；实际连接仍以 tools/list 为准 |
+| `contracts/baseline/*.json` | 八版离线工具契约基线，记录输入 schema、描述哈希及 V20/V21 lite 名单；用 `scripts/checks/Snapshot-ToolContracts.py capture` 生成，`compare --baseline manifest/contracts/baseline --current <目录>` 检查兼容性，破坏性变化返回 1 |
 | [version-api-audit.json](version-api-audit.json) | 官方 SDK 与编译调用成员的对照，不代表原生功能覆盖率 |
 | [tool-usage-coverage.json](tool-usage-coverage.json) | 各版本工具、操作、编程示例和官方来源的检索检查 |
 
