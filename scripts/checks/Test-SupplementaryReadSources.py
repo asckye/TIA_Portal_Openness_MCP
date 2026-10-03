@@ -35,6 +35,9 @@ for forbidden in ['GetAttributeInfos', 'GetAttribute(', 'SetAttribute(', 'IEngin
  assert forbidden not in native, f'Technology metadata must use typed getters only: {forbidden}'
 assert not re.search(r'item\.OfSystemLib(?:Element|Version)\s*=',native), 'No metadata setter permitted'
 worker=(src/'TiaMcpServer.PlcWorker/Program.cs').read_text(encoding='utf-8-sig')
+# The read-only dispatch list lives in WorkerOperations.IsReadOnly; the worker loop must use it.
+assert 'WorkerOperations.IsReadOnly(name)' in worker
+readonly_list=re.search(r'IsReadOnly\(string name\)\s*=>(.*?);',(src/'TiaMcpServer.PlcWorker/WorkerOperations.cs').read_text(encoding='utf-8-sig'),re.S).group(1)
 for name in ['ReadWatchTableNames','ReadTechnologyObjects','ReadState','ReadPortalProcessProjects','ReadPortalConnectReadiness']:
- assert f'name=="{name}"' in worker
+ assert f'name=="{name}"' in readonly_list, name
 print(f'PASS: {len(ops)} worker operations wired to explicit shared adapter sources; five supplementary/runtime read-only dispatch guards; eight release-symbol gates. Source checks only.')

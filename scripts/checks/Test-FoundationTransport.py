@@ -1,10 +1,12 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
 import argparse
+from contextlib import nullcontext
 from tool_usage_checks import check_usage
 import json
 import os
 from pathlib import Path
 import queue
+import re
 import socket
 import subprocess
 import tempfile
@@ -117,10 +119,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--fixture', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--temp-root', type=Path, help='New worktree directory for retained fixture logs; avoids restricted system TEMP directories')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     counts = {}
-    with tempfile.TemporaryDirectory(prefix='tia-foundation-wire-') as temp:
+    if args.temp_root:
+        args.temp_root.mkdir(parents=True, exist_ok=False)
+    with (nullcontext(args.temp_root.resolve()) if args.temp_root else tempfile.TemporaryDirectory(prefix='tia-foundation-wire-')) as temp:
         temp = Path(temp)
         for key in KEYS:
             logfile = temp / f'{key}.jsonl'
@@ -135,11 +140,15 @@ def main():
                         client.p.terminate(); client.p.wait(10)
             records = [json.loads(line) for line in logfile.read_text('utf-8').splitlines()]
             worker_args = records[0]['args']
-            assert len(worker_args) == 3 and worker_args[:2] == ['--native-session', key], worker_args
+            assert len(worker_args) == 4 and worker_args[:2] == ['--native-session', key], worker_args
+            assert re.fullmatch('[0-9a-f]{64}', worker_args[3]), worker_args
             # Windows can expand a runner's short TEMP name in Path.GetFullPath.
             # Verify the directory identity while keeping the release/argument checks exact.
             assert Path(worker_args[2]).samefile(temp), worker_args
             assert [r['operation'] for r in records if r['stage'] == 'call'] == ['Attach', 'ReadProjectTree', 'Disconnect']
+            calls = [r for r in records if r['stage'] == 'call']
+            assert [r['Id'] for r in calls] == [1, 2, 3], calls
+            assert all(r['Method'] == 'adapter.' + r['operation'] for r in calls), calls
         with socket.socket() as port:
             port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]
         url = f'http://127.0.0.1:{number}'
@@ -176,10 +185,11 @@ def main():
                 assert first.sid and second.sid and first.sid != second.sid
                 starts = [json.loads(line) for line in logfile.read_text('utf-8').splitlines() if '"start"' in line]
                 assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
+                assert starts[0]['args'][3] != starts[1]['args'][3]
             finally:
                 p.terminate(); p.wait(10)
     (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
-    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 2, 'unicodeRoundTrip': True, 'workerArguments': 'exact release keys', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
+    (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 2, 'unicodeRoundTrip': True, 'workerProtocol': 2, 'workerArguments': 'exact release keys and distinct launch nonces', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
     print('PASS: six STDIO releases, two isolated HTTP sessions, dependency planning and Chinese worker roundtrip; native TIA NOT RUN')
 
 

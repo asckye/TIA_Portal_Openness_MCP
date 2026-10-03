@@ -239,6 +239,23 @@ pwsh -NoProfile -File tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Test-Adapter
 脚本只执行 `ValidateAdapterInputs`，不还原、不编译、不启动 worker 或 TIA，并检查每个用例的独立输出路径没有生成文件。
 缺少 SDK 目录或核心程序集时，先由 `TiaPublicApi.props` 拒绝；其余配置继续由适配器目标校验。
 逐项日志和 `input-results.json` 写入证据目录。本检查手动运行，未接入 CI。
+## Foundation 协议 2
+
+`TiaMcp.WorkerChannel` 同时以 net48/net8.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
+
+```powershell
+python scripts/checks/Test-DotnetSuites.py --suite worker-channel
+dotnet publish tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/foundation-host
+dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
+# 如 CI foundation-transport：将 publish 文件复制到 runtime/v14sp1、v15.1、v16、v17、v18、v19，并写入各自 release-key.txt。
+python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/bin/Release/net8.0/TransportFixture.exe --output bin-build/foundation-transport
+```
+
+`worker-channel` 最低 98 项通过、0 跳过，验证 hello 的全部身份字段、双向帧限制、绑定纪元、单次分派、取消、超时、管道故障、迟到进度、未知/重复回复和 ReadFailed。夹具用 `TIA_FIXTURE_FAULT` 注入故障；正常传输另验证六个 STDIO 版本、两个独立 HTTP 会话、nonce 隔离及中文往返。系统 TEMP 受限时可加 `--temp-root <新的 worktree 目录>`，保留可审查的夹具日志。HTTP 只连接该脚本启动的本地模拟服务，不连接 TIA。
+
+构建八版 adapter/worker 后比较每版 weave inventory；WorkerChannel 在织入程序集之外，PlcWorker 本身不织入。worker 离线冒烟以 `--native-session <key> <PublicAPI绝对目录> <64位十六进制nonce>` 启动，先核对 hello（包括实际文件 SHA-256），再以协议 2 调用 `adapter.ReadState` 和空闲 `adapter.Disconnect`。这些调用不连接 TIA；V21 使用拆分后的 `Siemens.Engineering.Base.dll` / Step7。发布文件清单要求 Foundation 宿主及 worker 各自携带 WorkerChannel、STJ 和对应依赖，SDK DLL 不进入 runtime。
+
+P4-E2 仍要求六版 Foundation 响应快照 `changed=0, rawChanged=0`、八版工具契约零差异和 foundation/foundation-api 等既有套件门禁。[真机台账](../reference/real-machine-ledger.md)中的逐版本协议 2 验收在发布前完成；上述离线检查不替代它。
 
 ## 完整八版本构建
 

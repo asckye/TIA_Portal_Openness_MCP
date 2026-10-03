@@ -2,6 +2,7 @@
   <Import Project="../Shared/Xunit.props" />
   <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.WorkerChannel/TiaMcp.WorkerChannel.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="../../src/TiaMcp.Adapters/Native/Session/BindingSnapshotContract.cs" Link="BindingSnapshotContract.cs" />
     <Compile Include="../../src/TiaMcp.Adapters/Native/Session/BindingSnapshotProcessSource.cs" Link="BindingSnapshotProcessSource.cs" />

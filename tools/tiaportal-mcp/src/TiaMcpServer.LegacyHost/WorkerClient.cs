@@ -1,6 +1,9 @@
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TiaMcp.WorkerChannel;
+using TiaMcp.PlcWorker;
+using TiaMcpServer.Siemens;
 
 namespace TiaMcp.LegacyHost;
 
@@ -13,7 +16,7 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
 {
     private readonly SemaphoreSlim serial = new(1, 1);
     private Process? process;
-    private long sequence;
+    private ChannelClient? channel;
     private int? attachedProcessId;
     private JsonObject? disconnectAcknowledgement;
     private readonly WorkerOutcomeState outcome=new();
@@ -46,38 +49,59 @@ internal sealed class WorkerClient(string releaseKey, string workerExe, string a
             if (process == null)
             {
                 if (!File.Exists(workerExe) || !Directory.Exists(apiDirectory)) throw new FileNotFoundException("Select the compiled worker and authorized PublicAPI directory explicitly.");
+                var adapterFile=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(workerExe))!,"TiaMcp.Adapter."+releaseKey+".dll");
+                var workerHash=ArgumentRules.HashFile(workerExe,FileShare.Read);
+                var adapterHash=ArgumentRules.HashFile(adapterFile,FileShare.Read);
+                var nonce=Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
                 var start = new ProcessStartInfo(Path.GetFullPath(workerExe)) { UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, StandardInputEncoding = new System.Text.UTF8Encoding(false), StandardOutputEncoding = new System.Text.UTF8Encoding(false), StandardErrorEncoding = new System.Text.UTF8Encoding(false) };
                 start.ArgumentList.Add("--native-session"); start.ArgumentList.Add(releaseKey); start.ArgumentList.Add(Path.GetFullPath(apiDirectory));
+                start.ArgumentList.Add(nonce);
                 process = Process.Start(start) ?? throw new IOException("Worker failed to start.");
                 process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (diagnostics) { diagnostics.Enqueue(e.Data); while (diagnostics.Count > 8) diagnostics.Dequeue(); } };
                 process.BeginErrorReadLine();
+                channel=new ChannelClient(process.StandardOutput.BaseStream,process.StandardInput.BaseStream,
+                    new ChannelIdentity(releaseKey,workerHash,adapterHash,process.Id,nonce));
             }
-            var id = ++sequence;
+            await channel!.ConnectAsync(TimeSpan.FromMinutes(2),token);
             token.ThrowIfCancellationRequested();
-            var line = new JsonObject { ["id"] = id, ["operation"] = operation, ["arguments"] = arguments.DeepClone() }.ToJsonString();
-            if (line.Length > 1024 * 1024) throw new ArgumentException("Worker request exceeds one MiB.");
-            sent = true;
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-            timeout.CancelAfter(TimeSpan.FromMinutes(2));
-            await process.StandardInput.WriteLineAsync(line.AsMemory(),timeout.Token);
-            await process.StandardInput.FlushAsync(timeout.Token);
-            var response = await process.StandardOutput.ReadLineAsync(timeout.Token);
-            if (response == null) throw new IOException("Worker exited; native outcome is unknown.");
-            var result=WorkerProtocol.Decode(response,id);
+            var dryRun=arguments["dryRun"]?.GetValue<bool>() ?? true;
+            var change=operation is "Attach" or "BindProject" || (!dryRun && operation is "OpenProject" or "CreateProject" or "CloseProject")
+                ? BindingChange.Advance : operation=="Disconnect" ? BindingChange.MayAdvance : BindingChange.None;
+            string response;
+            try
+            {
+                response=await channel.CallAsync("adapter."+operation,arguments.ToJsonString(),change,
+                    WorkerOperations.IsReadOnly(operation) || arguments["dryRun"]?.GetValue<bool>()==true,TimeSpan.FromMinutes(2),token);
+                sent=true;
+            }
+            catch(ChannelFailure failure)
+            {
+                sent=true;
+                var detail=failure.Message;
+                if(failure.EvidenceJson!="null") detail+="; failure evidence: "+failure.EvidenceJson;
+                throw new WorkerOperationException(detail,failure.Code,failure.Outcome==ChannelOutcome.RejectedBeforeNative ? "rejected-before-operation" : failure.Outcome==ChannelOutcome.ReadFailed ? "read-failed" : "unknown");
+            }
+            var result=JsonNode.Parse(response);
             outcome.AcceptResult(operation,arguments,result);
             if(operation=="Attach") attachedProcessId=arguments["processId"]!.GetValue<int>();
             if(operation=="Disconnect")
                 disconnectAcknowledgement=(JsonObject)DisconnectContract.Validate(result,true,attachedProcessId,true).DeepClone();
             return result;
         }
-        catch(Exception ex) { outcome.Failed(sent,ex); throw; }
+        catch(Exception ex)
+        {
+            if(channel?.Poisoned==true) outcome.Failed(true,new IOException("Worker channel is poisoned."));
+            outcome.Failed(sent,ex);
+            if(outcome.Poisoned) channel?.Invalidate(ex);
+            throw;
+        }
         finally { serial.Release(); }
     }
 
     public void Dispose()
     {
         // Close our input only. Never kill a TIA process or replay a timed-out call.
-        if (process != null) { try { process.StandardInput.Close(); } catch (IOException) /* swallow(teardown): a broken worker input pipe must not prevent releasing local process and semaphore resources */ { } process.Dispose(); }
+        if (process != null) { try { if(channel!=null) channel.Dispose(); else process.StandardInput.Close(); } catch (IOException) /* swallow(teardown): a broken worker input pipe must not prevent releasing local process and semaphore resources */ { } process.Dispose(); }
         serial.Dispose();
     }
 }

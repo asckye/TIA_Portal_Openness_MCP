@@ -215,6 +215,10 @@ def main():
                 'scripts/operations/预热.bat', 'scripts/operations/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
                 'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json')
+    required += ['tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
+    for key in ('14sp1', '15.1', '16', '17', '18', '19'):
+        required += [f'runtime/v{key}/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll')]
+        required += [f'runtime/v{key}/worker/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]
     require(all(n in files for n in required), 'Full delivery entries or documentation missing')
     require(any(n.startswith('templates/plc/') for n in files) and any(n.startswith('templates/hmi/') for n in files), 'PLC/HMI templates missing')
     files['RELEASE_STATUS.txt'] = (

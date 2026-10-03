@@ -75,24 +75,39 @@
 
 ## Worker 协议
 
-| | 引擎隔离 | Foundation v1 | Studio 桥接 | 预览 v2（`TiaMcp.WorkerProtocol.*`） |
+| | 引擎隔离 | Foundation 协议 2 | Studio 桥接 | 预览 v2（`TiaMcp.WorkerProtocol.*`） |
 |---|---|---|---|---|
 | 分帧 | 换行 | 换行 | 换行 | 4 字节长度前缀 + 终止符；nonce/PID 前导 |
-| 信封 | MCP JSON-RPC（`initialize`、`tools/list`、`tools/call`），id 为 `worker_N` | `{id, operation, arguments}` | JSON-RPC 2.0，点号方法名 | 类型化 v2 帧 |
-| 握手 | hello（协议 1、引擎 SHA、pid）+ 目录比对 | 无 | 无 | hello：版本、哈希、令牌、绑定纪元 |
-| 失败模型 | nativeOutcomeUnknown、代次 | outcome + 证据 | 代码 + 堆栈 | ReadFailed / 失效 |
-| JSON 库 | STJ | worker Newtonsoft / 宿主 STJ | Newtonsoft | 两套编解码 |
-| 状态 | 已发布（可选） | 已发布（V14 SP1–V19） | 已发布 | 未接入 |
+| 信封 | MCP JSON-RPC（`initialize`、`tools/list`、`tools/call`），id 为 `worker_N` | JSON-RPC 2.0，`adapter.*` | JSON-RPC 2.0，点号方法名 | 类型化 v2 帧 |
+| 握手 | hello（协议 1、引擎 SHA、pid）+ 目录比对 | hello：版本、worker/adapter SHA-256、PID、nonce、初始纪元 | 无 | hello：版本、哈希、令牌、绑定纪元 |
+| 失败模型 | nativeOutcomeUnknown、代次 | `error.data` 的 outcome + 证据、失效后不重放 | 代码 + 堆栈 | ReadFailed / 失效 |
+| JSON 库 | STJ | 信封 STJ；DTO worker Newtonsoft / 宿主 STJ | Newtonsoft | 两套编解码 |
+| 状态 | 已发布（可选） | P4-E2 已实现，真机验收前不发布 | 已发布 | 未接入 |
 
-**协议 2（建议）**：
+**协议 2（P4-E2 实现）**：
 
 - 换行分隔的 JSON-RPC 2.0。三套已发布协议中两套已在用，并在 Windows 上验证过。
 - 必须先发 hello 行：版本键、worker 与适配器 SHA-256、pid、宿主提供的启动 nonce。
 - 同时只有一个请求，id 严格递增。`error.data = {outcome, evidence}`，沿用 Foundation 的 outcome 语义。支持进度通知。
 - 大小上限：请求 1 MiB，响应 16 MiB。
-- Foundation worker 和 Studio 桥接进程通过共享库 `TiaMcp.WorkerChannel`（宿主侧 net8.0/net48，worker 侧 net461/net48）使用
+- Foundation worker 和 Studio 桥接进程通过共享库 `TiaMcp.WorkerChannel`（net48;net8.0，无 Siemens 引用）使用
   `adapter.*` 方法，取代 `WorkerClient`、`BridgeClient` 和 PlcWorker 的读取循环。
 - 引擎隔离子进程代理全部 488 个工具，继续使用 MCP 方法，但采用同样的 hello、上限和 outcome 规则。
+
+Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）：
+
+- `hello` 是无 id 通知，`params` 包含 `protocol:2`、`releaseKey`、`workerSha256`、`adapterSha256`、`pid`、64 位十六进制 `nonce`、`bindingEpoch:0` 和 `bound:false`。worker 必须新建且未绑定。宿主用启动文件的实际哈希、子进程 PID 和每次启动随机生成的 32 字节 nonce 核对；不接受协议降级。
+- 请求包含 `jsonrpc:"2.0"`、严格递增的正整数 `id`、`method:"adapter.<operation>"`、原有参数对象 `params`、`bindingEpoch`。宿主先完成 hello 验证，再发送请求。通道只允许一个在途调用，重入或并发使用使会话失效；LegacyHost 的既有串行调度仍在通道之外。
+- 回复包含相同 id、`bindingEpochBefore`、`bindingEpochAfter`，以及唯一的 `result` 或 `error`。`error` 含原有 code/message，`data` 必须有 `outcome`（`RejectedBeforeNative` / `ReadFailed` / `Unknown`）和 `evidence`（对象或 null）。LegacyHost 将其映射回原有 MCP 错误码、消息和 evidence 文本。
+- `progress` 是无 id 通知，`params` 包含 `requestId`、从 1 递增的 `sequence`、0–100 的 `percent`，每次请求至多 1024 个通知；只有匹配的在途请求可以接收。同步 server 拒绝跨线程、回调结束后的进度。客户端持续读取 stdout，空闲期间的进度、旧/未知 id、重复回复和再次 hello 同样导致失效。
+- 请求上限 1 MiB、worker 输出行上限 16 MiB，均按 UTF-8 字节计（不含 LF）；读取时先限长，再验证 UTF-8 和解析 JSON。缺少换行的末尾、空行、BOM、重复/未知信封字段都拒绝。发送也检查相同上限。
+- 取消发生在分派前时不发送、不消耗 id、不使会话失效。分派后的写入/读取错误、超时、取消或会话错误一律为 Unknown，不重试、不自动重启；进度不延长调用预算。通道释放只关闭自己的管道，不结束 worker 或 TIA 进程。
+
+绑定纪元来自 worker 在每次分派前后读取的 `PlcFoundationEngine.ReadState()` **纯托管缓存**（PID、项目路径、项目所有权、LocalSession 标志）。这些字段改变时纪元加一；成功 Disconnect 后使用终止状态，避免再次调用已终止的适配器。宿主按 Attach/BindProject、非 dryRun 的 Open/Create/Close 预期加一，Disconnect 允许零或一次递增，其余成功调用及已知失败要求不变。每个回复的 before 必须等于宿主保存的纪元，异常变更使会话失效。这不提供外部 TIA 进程启动时间或其他客户端改绑的验证；原有 BindingSnapshot 生命周期接线仍属于后续任务。
+
+信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
+
+[worker-channel 回归套件及预览规则映射](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；无 `Server` 前缀的预览夹具和项目在第 A 步之前保留。
 
 **删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录（约 1,430 行）、7 个测试项目（约 6,600 个断言）以及
 `TiaMcp.TransportFixture`/`TiaMcp.EndpointFixture`。理由：生产中没有使用；长度前缀分帧只在 Linux 上验证过；维护两套并行编解码，
@@ -105,7 +120,7 @@
 - 适配器和契约不使用 JSON 库。适配器日志目前用 Newtonsoft `JObject`，改为扁平行写入器；`BindingSnapshot` 改为 `Func<string?>`。
 - 只在进程边界序列化，每侧一个编解码文件：宿主侧（引擎、LegacyHost、Studio 桌面端）用 System.Text.Json；worker 侧（PlcWorker、
   Studio 桥接）在 14sp1–16 仍为 net461 期间用 Newtonsoft 13.0.4（STJ 7 起不再支持 net461）。D4 已决定把所有 worker 改为 net48，
-  改完后全部用 STJ 8.x 并删除 Newtonsoft。
+  P4-E2 仅把信封改为宿主已有 STJ 版本，DTO 继续用原有 codec；全部 DTO 统一及删除 Newtonsoft 留到 P2-04。
 - Studio 的 Contracts、RpcDispatcher 和 BridgeClient 改用 STJ，显式配置 PascalCase 和字符串枚举。
 - 每个 DTO 有 worker 编解码 ↔ 宿主编解码的黄金样本测试，保护 P0-06 响应快照。
 
@@ -123,7 +138,7 @@
 | B | 新建 `TiaMcp.Adapters.Contracts`：原样移动 DTO，增加错误类型和黄金 JSON 测试；适配器源码链接的公开 `TiaMcp.Versioning.TiaVersionCatalog` 改为 internal | 无（各版本织入清单不变） | 是 | 独立 |
 | C | `build/TiaFeatures.props`，并用评估测试证明各项目 DefineConstants 不变 | 无（IL 相同） | 是 | 只动引擎 props |
 | D（P4-02） | F 移到 `Native/` 与 `Policy/`，扩展面以委托实现；更新 `Adapter.Sources.props`、`AdapterSourceClosureTests`、5 个假 SDK 测试项目和 `Test-WorkerIsolation.ps1` | 无 | 是 | 独立 |
-| E（P4-02） | PlcWorker、LegacyHost、TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 在 8 个真实 PublicAPI 上做 worker 冒烟测试后（hello / ReadState / 空闲断开，不需要 TIA） | P2-04 决定之后 |
+| E（P4-02） | PlcWorker、LegacyHost、TransportFixture 和 `Test-FoundationTransport.py` 改用 WorkerChannel + 协议 2 | 低（解析改变，原生分派不变） | 八版 PublicAPI 构建和离线冒烟后仍须按真机台账逐 Foundation 版本验收 | P4-E1 已统一 net48；P4-E2 信封先用 STJ，DTO codec 留给 P2-04 |
 | F（P4-03） | Studio 桥接进程和客户端改用通道；方法名不变 | 无 | 是 | 独立 |
 | G（P4-03） | Studio `ITiaSession` 在 `TiaOpenness.Core` 中基于扩展面重新实现；桥接进程加载织入的 `TiaMcp.Adapter.<key>`；删除 `StudioOpenness.V*` | 高（替换连接和遍历代码，新增织入） | 否（构建开关） | 独立 |
 | H（P4-04） | 引擎引用 `Adapter.20/21`，打包并校验 DLL；日志输出接口；`EngineSurface` 也搜索适配器 | 无（尚无调用） | 是 | P2-04 日志合并及阶段 3 第 3–4 步之后 |

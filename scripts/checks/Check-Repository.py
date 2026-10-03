@@ -60,6 +60,13 @@ def check(root, no_binaries=False):
     required('tools/openness-shared/BundleLayout.cs', 'bundle layout')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
+    for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json'):
+        required('tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + name, 'worker channel source')
+    for key in ('14sp1', '15.1', '16', '17', '18', '19'):
+        for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll'):
+            required(f'runtime/v{key}/' + name, 'worker channel host')
+        for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll'):
+            required(f'runtime/v{key}/worker/' + name, 'worker channel dependency')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
         required(name, 'blueprint')
     studio = 'tools/tia-openness-studio/src/'

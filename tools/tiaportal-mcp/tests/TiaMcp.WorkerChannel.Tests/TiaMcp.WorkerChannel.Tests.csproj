@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile>
+    <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/TiaMcp.WorkerChannel/TiaMcp.WorkerChannel.csproj" />
+    <ProjectReference Include="../TiaMcpServer.TransportFixture/TransportFixture.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

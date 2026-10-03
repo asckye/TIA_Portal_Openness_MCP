@@ -5,6 +5,8 @@ namespace TiaMcp.PlcWorker
 {
     internal static class WorkerOperations
     {
+        internal static bool IsReadOnly(string name) => name=="SearchHardwareCatalog" || name=="PlanPlcExternalSourceImport" || name=="ReadState" || name=="ReadPortalProcessProjects" || name=="ReadPortalConnectReadiness" || name=="ReadWatchTableNames" || name=="ReadTechnologyObjects" || name=="ReadSoftwareInfo" || name=="ReadSoftwareTree" || name=="ReadExternalSourceNames" || name=="ListTags" || name=="ListUserConstants" || name=="ListSystemConstants" || name=="ReadBlockInfo" || name=="ReadTypeInfo" || name=="ReadBlocks" || name=="ReadTypes" || name=="ReadTagTableNames" || name=="ReadBlockHierarchy" || name=="ReadProjectTree" || name=="ListProjects";
+
         internal static readonly HashSet<string> Names=new HashSet<string>(StringComparer.Ordinal) {
             "SearchHardwareCatalog",
             "ReadState","ReadPortalProcessProjects","ReadPortalConnectReadiness",

@@ -87,5 +87,11 @@
     "minimumPassed": 232,
     "maximumSkipped": 0,
     "arguments": []
+  },
+  "worker-channel": {
+    "project": "tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj",
+    "minimumPassed": 98,
+    "maximumSkipped": 0,
+    "arguments": []
   }
 }

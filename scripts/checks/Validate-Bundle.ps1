@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
     Offline validation: required files, JSON parse, blueprint bundle list, tool roster count.
@@ -109,6 +109,21 @@ foreach ($guiFile in @(
     if ($NoBinaries -and $guiFile -eq 'TiaMcpConfigurator.exe') { continue }
     if (Test-Path -LiteralPath (Join-Path $root $guiFile)) { Ok "GUI entry present: $guiFile" }
     else { Fail "Missing GUI entry: $guiFile" }
+}
+
+foreach ($name in @('ChannelMessage.cs','LineFraming.cs','ChannelCodec.cs','ChannelClient.cs','ChannelServer.cs','TiaMcp.WorkerChannel.csproj','packages.lock.json')) {
+    $path = 'tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + $name
+    if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing worker channel source: $path" }
+}
+if (!$NoBinaries) {
+    foreach ($key in @('14sp1','15.1','16','17','18','19')) {
+        foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll')) {
+            if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$key/$name"))) { Fail "Missing worker channel host dependency: v$key/$name" }
+        }
+        foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
+            if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$key/worker/$name"))) { Fail "Missing worker channel dependency: v$key/worker/$name" }
+        }
+    }
 }
 
 # The checkout and delivery use the same canonical runtime paths.
