@@ -36,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return list;
                     }
                 }
-                catch { /* fall through to delimiter split */ }
+                catch { /* swallow(parse-fallback): malformed JSON falls back to the supported delimiter-separated address list. */ }
             }
             foreach (var part in s.Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
             {
@@ -122,7 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             };
                         }
                     }
-                    catch { /* precheck is best-effort; fall through to the read */ }
+                    catch { /* swallow(fail-open-guard): an unavailable PUT/GET precheck leaves the direct S7 read to report its own result. */ }
                 }
 
                 var r = S7LiveReader.ReadItems(ip, rack, slot, specs, string.IsNullOrWhiteSpace(expectModuleContains) ? null : expectModuleContains);

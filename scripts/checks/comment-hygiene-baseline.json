@@ -15,12 +15,6 @@
       "line": 769
     },
     {
-      "kind": "product-version",
-      "fingerprint": "2361fd152c56e3245d61777e5709e1ff1b195d5c701d263e3cbc01068df82bc4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 38
-    },
-    {
       "kind": "old-phase",
       "fingerprint": "29cc17b90a63437ee0de6ba91385b5ff20c74f3b33ca160ddcba287142ff26bb",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
@@ -127,18 +121,6 @@
       "fingerprint": "8286ef02aaa9f8f289b0bb80b9ccb15a5a8021ac5c78fba3fd0080232d07ba92",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/CfcService.cs",
       "line": 13
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "864312163a2b0ca45dcf1e871a8522e095d64aa650d303ecb5a78ad4a69a31dc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 133
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "88bec45eeed28fd87f71fe27dcf974bfa271ac37277d5c081aab2b53456638aa",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 324
     },
     {
       "kind": "tombstone",

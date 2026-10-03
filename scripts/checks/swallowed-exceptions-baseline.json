@@ -69,18 +69,6 @@
       "line": 61
     },
     {
-      "fingerprint": "328ce9109bf550cf3bd3dac3b65c3fa4e7b64288f2bfb51a9c251f89645c2a84",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
-      "line": 368
-    },
-    {
-      "fingerprint": "33a4ddccfdacaadb1634d4d71aa4678816d2b909def031f07e74006075e81e0d",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Runtime.cs",
-      "line": 125
-    },
-    {
       "fingerprint": "34242de43e7dc8f0f5b6e1f15677bb15d98d3f4b22b883bf87332565a625155c",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
@@ -285,12 +273,6 @@
       "line": 11
     },
     {
-      "fingerprint": "b981970aeb110eceea15990be01a2481f43116a77296e4a788e51aa4c02cfab7",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/EnvironmentDoctor.cs",
-      "line": 156
-    },
-    {
       "fingerprint": "bbae8115d45768ea7ff8758330b340f0a975b8034bff5160fbee4d3f5764d263",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.CausalTrace.cs",
@@ -343,12 +325,6 @@
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 573
-    },
-    {
-      "fingerprint": "c3a80e510e0fa4ef724f7fb465837fc4d6efb065bda77568d14f3d3c7892a15f",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Runtime.cs",
-      "line": 39
     },
     {
       "fingerprint": "cd4e6f739c53a7797f5e61e2e9c3502f612c94c8302a00f699f80d8811b7f44f",
@@ -433,12 +409,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 819
-    },
-    {
-      "fingerprint": "f9c3a2aab821d5a9eb68aec605c0416ac7f79f472514f5c7aede7017863607d9",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Runtime/EnvironmentDoctor.cs",
-      "line": 199
     }
   ]
 }

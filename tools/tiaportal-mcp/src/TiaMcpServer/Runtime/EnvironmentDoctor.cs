@@ -153,7 +153,7 @@ namespace TiaMcpServer.Runtime
                     }
                 }
             }
-            catch { }
+            catch /* swallow(env-probe): an unreadable engine directory leaves the other environment checks available. */ { }
 
             bool ok = blocked.Count == 0;
             string list = string.Join(", ", blocked);
@@ -196,7 +196,7 @@ namespace TiaMcpServer.Runtime
                                 IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
                 return h != invalid;
             }
-            catch { return false; }
+            catch /* swallow(env-probe): an unavailable alternate-stream probe cannot establish that the file is blocked. */ { return false; }
             finally { if (h != invalid && h != IntPtr.Zero) CloseHandle(h); }
         }
     }

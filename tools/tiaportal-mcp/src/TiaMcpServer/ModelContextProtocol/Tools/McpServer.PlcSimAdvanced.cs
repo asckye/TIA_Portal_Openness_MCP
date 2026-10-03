@@ -35,7 +35,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var message = body(data, meta);
-                // 2.7.49: a body may downgrade the verdict itself (tags not written, scenario assertions failed) - keep it.
+                // A body may downgrade the verdict itself (tags not written, scenario assertions failed) - keep it.
                 // envelope: legacy-plcsim-complete: Complete would replace the body's operationSuccess with the API verdict.
                 meta["success"] = true; meta["apiCallSuccess"] = true;
                 if (meta["operationSuccess"] == null) meta["operationSuccess"] = true;
@@ -130,7 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         instance = PlcSimAdvancedChannel.Acquire(api, name);
                         if (!string.IsNullOrWhiteSpace(communicationInterface))
                         {
-                            // 2.7.49: the instance exists from here on - a setter failure must say so instead of looking like a failed registration.
+                            // The instance exists from here on - a setter failure must say so instead of looking like a failed registration.
                             var detail = new JsonObject(); data["communicationInterfaceRoute"] = detail;
                             try { data["communicationInterface"] = PlcSimAdvancedChannel.SetCommunicationInterface(api, instance, communicationInterface, detail); }
                             catch (Exception ex) { throw new InvalidOperationException("Instance '" + name + "' was registered, but communicationInterface '" + communicationInterface + "' could not be applied: " + ex.Message + " (powerOff + unregister it, or keep its current setting).", ex); }
@@ -321,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
                                 case "cycles":
                                     if (scenario.Mode == "singleStep")
                                     {
-                                        // 2.7.55: step-and-wait - each RunToNextSyncPoint is followed by a wait for Freeze (see StepCycles).
+                                        // Each RunToNextSyncPoint is followed by a wait for Freeze (see StepCycles).
                                         var (done, waitedMs, finalState, failure) = PlcSimAdvancedChannel.StepCycles(instance, step.Count, PlcSimAdvancedLogic.SyncPointWaitMs, PlcSimAdvancedLogic.SyncPointPollMs);
                                         r["cyclesStepped"] = done; r["waitedMs"] = waitedMs; r["stateAfterSteps"] = finalState;
                                         if (failure != null) { r["error"] = failure; stepOk = false; }
@@ -365,7 +365,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         try { PlcSimAdvancedChannel.SetOperatingMode(api, instance, originalMode); data["operatingModeRestored"] = originalMode; }
                         catch (Exception ex) { data["operatingModeRestoreError"] = ex.Message; }
                     }
-                    if (instance != null) { try { data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance); } catch (Exception) { PlcSimAdvancedChannel.Forget(scenario.Instance); } }
+                    if (instance != null) { try { data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance); } catch (Exception) /* swallow(probe-optional): a failed final-state probe invalidates the cached interface without replacing the scenario result. */ { PlcSimAdvancedChannel.Forget(scenario.Instance); } }
                 }
                 data["steps"] = results; data["executed"] = true;
                 data["executedSteps"] = executedSteps; data["assertionsPassed"] = passed; data["failedSteps"] = failed;
