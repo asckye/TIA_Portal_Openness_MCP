@@ -81,6 +81,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
 | P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | doing |
 | P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；两个 TransportFixture 协议不同，不合并、不改名，文档说明区别 | done |
+| P1-07 | 目录整理第一批：`design-qa.md` 移入 `docs/`；`tools/mcp-configurator` 的启动器并入 Studio；`tools/ui-glass` 并入 Studio 主题；`manifest` 中带日期的历史证据移到 `manifest/history/`。整体目录重组在阶段 4 之后、G7 解耦之后进行 | todo |
 
 ### 阶段 2：公共层（兼容）
 
@@ -99,7 +100,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P3-01 | 设计：见[完整引擎拆分设计](engine-decomposition.md)（12 个领域、内核接口、`ToolCatalog`/依赖注入、17 步迁移顺序与验收） | done |
 | P3-02… | 按设计文档的迁移顺序逐步执行；每步兼容快照 0 差异（含描述），织入覆盖的西门子成员集合不变 | todo |
-| P3-xx | 会话层去掉静态服务定位器；G9 修复（行为变更，需维护者确认是否在兼容阶段做） | blocked |
+| P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明 | todo |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
 | P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构 | todo |
 
@@ -129,8 +130,6 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 1. P0-03：恢复真机实测的时间、VM 上的 TIA 版本、测试工程和授权范围（当前暂缓）。
 2. 重构期间是否暂停新功能和发版。
-3. 验收通过后 Claude 是否可以推送 master（本地提交已获准）。
-4. G9 是否在兼容阶段修复（会把“静默解析到唯一 PLC”改为明确拒绝）。
 
 ## 风险
 
