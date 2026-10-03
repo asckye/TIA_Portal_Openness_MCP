@@ -42,30 +42,16 @@ namespace TiaMcpServer.Siemens
         #region software
 
         public PlcSoftware? GetPlcSoftware(string softwarePath)
-        {
-            _logger?.LogInformation($"Getting software by path: {softwarePath}");
+            => ResolvePlc(softwarePath, PlcAccess.Read);
 
-            if (IsProjectNull())
-            {
-                return null;
-            }
-
-            var softwareContainer = GetSoftwareContainer(softwarePath);
-
-            if (softwareContainer?.Software is PlcSoftware plcSoftware)
-            {
-                return plcSoftware;
-            }
-
-            // Low-barrier fallback: tolerate a sloppy softwarePath (wrong case / extra spaces /
-            // a single-PLC project / a unique substring like "PLC" -> "PLC_1"). Exact resolution
-            // above is tried first, so this only runs when it misses.
-            return ResolvePlcSoftwareFuzzy(softwarePath);
-        }
-
+        // Compatibility entry point; matching policy lives in the session kernel.
         private PlcSoftware? ResolvePlcSoftwareFuzzy(string softwarePath)
+            => ResolvePlc(softwarePath, PlcAccess.Read);
+
+        private PlcSoftware? MatchAvailablePlcSoftware(string softwarePath)
         {
-            var all = GetAllPlcSoftware();
+            var all = EnumerateSoftwareContainersForExactLookup()
+                .Select(c => c.Software).OfType<PlcSoftware>().Distinct().ToList();
             if (all.Count == 0) return null;
 
             var matched = Guard.MatchPlcName(all.Select(p => p.Name).ToList(), softwarePath);
@@ -76,7 +62,7 @@ namespace TiaMcpServer.Siemens
         }
 
         // Enumerate every PlcSoftware in the open project (devices + device groups), de-duplicated by
-        // name. Used for tolerant softwarePath resolution and "Available PLC paths" error hints.
+        // name. Used for desktop enumeration and "Available PLC paths" error hints.
         public List<PlcSoftware> GetAllPlcSoftware()
         {
             var result = new List<PlcSoftware>();
@@ -123,6 +109,7 @@ namespace TiaMcpServer.Siemens
         // " Available PLC paths: a, b, c" suffix for not-found error messages (empty when none).
         public string AvailablePlcPathsSuffix()
         {
+            if (_plcLookupPathsSuffix != null) return _plcLookupPathsSuffix;
             try
             {
                 var names = GetAllPlcSoftware().Select(p => p.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToList();

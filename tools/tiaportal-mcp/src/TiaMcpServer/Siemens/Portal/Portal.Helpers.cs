@@ -639,12 +639,15 @@ namespace TiaMcpServer.Siemens
 
         private void InvalidateHmiSoftwareCache()
         {
+            _plcLookupPathsSuffix = null;
             _softwareContainerCache.Clear();
+            _plcResolutionCache.Clear();
             _softwareCacheProject = null;
         }
 
         private SoftwareContainer? GetSoftwareContainer(string softwarePath)
         {
+            _plcLookupPathsSuffix = null;
             // 清空点必须在这里、不能放到 ResolveSoftwareContainerUncached 里：下面有缓存，
             // 命中缓存时根本不进 Uncached，在那里清会让上一次的错误跨调用残留，
             // 把一次早已成功的解析说成"遍历出错"。放在入口＝每次对外解析都从干净状态开始。
@@ -652,7 +655,7 @@ namespace TiaMcpServer.Siemens
 
             if (_project == null)
             {
-                if (_softwareCacheProject != null) { _softwareContainerCache.Clear(); _softwareCacheProject = null; }
+                if (_softwareCacheProject != null) { _softwareContainerCache.Clear(); _plcResolutionCache.Clear(); _softwareCacheProject = null; }
                 return null;
             }
 
@@ -661,6 +664,7 @@ namespace TiaMcpServer.Siemens
             if (!ReferenceEquals(_project, _softwareCacheProject))
             {
                 _softwareContainerCache.Clear();
+                _plcResolutionCache.Clear();
                 _softwareCacheProject = _project;
             }
 
@@ -860,6 +864,8 @@ namespace TiaMcpServer.Siemens
             catch { return null; }
         }
 
+        private static string SoftwareLookupGroupName(DeviceUserGroup group) => group.Name;
+
         private SoftwareContainer? GetSoftwareContainerInGroups(DeviceUserGroupComposition groups, string[] pathSegments, int index)
         {
             if (index >= pathSegments.Length)
@@ -870,7 +876,7 @@ namespace TiaMcpServer.Siemens
 
             if (groups != null)
             {
-                var group = groups.FirstOrDefault(g => g.Name.Equals(segment));
+                var group = groups.FirstOrDefault(g => SoftwareLookupGroupName(g).Equals(segment));
                 if (group != null)
                 {
                     // when segment matched
@@ -1598,8 +1604,9 @@ namespace TiaMcpServer.Siemens
 
         #region meta (reflection helpers)
 
-        private object? ResolveObject(string objectKind, string objectPath, string softwarePath)
+        private object? ResolveObject(string objectKind, string objectPath, string softwarePath, PlcAccess access = PlcAccess.Read)
         {
+            _plcLookupPathsSuffix = null;
             if (IsProjectNull()) return null;
 
             switch ((objectKind ?? string.Empty).Trim().ToLowerInvariant())
@@ -1624,15 +1631,17 @@ namespace TiaMcpServer.Siemens
                 case "plc-software":
                 {
                     // PLC 优先
-                    var plcsw = GetPlcSoftware(objectPath);
+                    var plcsw = ResolvePlc(objectPath, access);
                     if (plcsw != null) return plcsw;
+                    var plcPaths = _plcLookupPathsSuffix;
                     // HMI 兜底（Unified / Classic），让 DescribeObject/InvokeObject 也能操作 HMI
                     try
                     {
                         var sc = GetSoftwareContainer(objectPath);
-                        if (sc?.Software != null) return sc.Software;
+                        if (sc?.Software is { } software && software is not PlcSoftware) return sc.Software;
                     }
                     catch { }
+                    _plcLookupPathsSuffix = plcPaths;
                     return null;
                 }
 
@@ -1864,7 +1873,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
 
             return new ModelContextProtocol.ResponseObjectDescribe
@@ -1889,7 +1898,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
 
             var v = GetPropertyPathValue(o, propertyPath);
@@ -1921,7 +1930,7 @@ namespace TiaMcpServer.Siemens
             var o = ResolveObject(objectKind, objectPath, softwarePath);
             var read = PropertyPathReader.Read(o, propertyPath);
             if (!read.Success) return new ModelContextProtocol.ResponseObjectValue {
-                Message = read.Status, ObjectKind = objectKind, ObjectPath = objectPath, Meta = read.Metadata() };
+                Message = read.Status + (o == null ? _plcLookupPathsSuffix ?? string.Empty : string.Empty), ObjectKind = objectKind, ObjectPath = objectPath, Meta = read.Metadata() };
             var v = read.Value;
             var vt = v?.GetType();
 
@@ -1965,7 +1974,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
 
             var v = GetPropertyPathValue(o, collectionProperty);
@@ -2197,7 +2206,7 @@ namespace TiaMcpServer.Siemens
         public ModelContextProtocol.ResponseObjectValue InvokeObject(string objectKind, string objectPath, string methodName, JsonArray? args = null, string softwarePath = "", bool allowWrite = false)
         {
             DenyCrossReferenceReflection(null, methodName);
-            var o = ResolveObject(objectKind, objectPath, softwarePath);
+            var o = ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
             if (o == null)
             {
                 // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
@@ -2207,7 +2216,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
             return InvokeOnInstance(o, objectKind, objectPath, methodName, args, allowWrite);
         }
@@ -2277,7 +2286,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
 
             var st = FindTypeBySuffix(serviceTypeSuffix!);
@@ -2330,7 +2339,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var o = ResolveObject(objectKind, objectPath, softwarePath);
+            var o = ResolveObject(objectKind, objectPath, softwarePath, allowWrite ? PlcAccess.Write : PlcAccess.Read);
             if (o == null)
             {
                 // 「找不到」必须是失败。原来这里返回一条 Message="Object not found" 的**正常**响应：
@@ -2340,7 +2349,7 @@ namespace TiaMcpServer.Siemens
                 throw new PortalException(PortalErrorCode.NotFound,
                     $"{objectKind} '{objectPath}' not found. Resolve the exact path first "
                     + "(GetProjectTree / GetDeviceItemTree / GetSoftwareTree / GetBlocksWithHierarchy); "
-                    + "for objectKind=Block/Type also pass softwarePath.");
+                    + "for objectKind=Block/Type also pass softwarePath." + (_plcLookupPathsSuffix ?? string.Empty));
             }
 
             var st = FindTypeBySuffix(serviceTypeSuffix!);

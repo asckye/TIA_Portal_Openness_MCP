@@ -94,7 +94,7 @@ namespace TiaMcpServer.Siemens
             error = null;
             if (IsProjectNull()) { error = "no project is open"; return false; }
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) { error = $"PLC software not found at '{softwarePath}'"; return false; }
+            if (plc == null) { error = $"PLC software not found at '{softwarePath}'" + AvailablePlcPathsSuffix(); return false; }
 
             var group = ResolvePlcTagTableGroup(plc);
             if (group == null) { error = $"tag table group not found on '{softwarePath}'"; return false; }
@@ -239,8 +239,8 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
 
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'" + AvailablePlcPathsSuffix());
 
             try
             {
@@ -367,7 +367,7 @@ namespace TiaMcpServer.Siemens
                 var names = GetPlcWatchTables(softwarePath);
                 if (names == null)
                 {
-                    failed.Add(new ImportFailure { Path = softwarePath, Error = "PLC software not found" });
+                    failed.Add(new ImportFailure { Path = softwarePath, Error = "PLC software not found" + AvailablePlcPathsSuffix() });
                     return new ResponseImportBatch { Imported = exported, Failed = failed };
                 }
 
@@ -452,8 +452,8 @@ namespace TiaMcpServer.Siemens
             string trigger = "Permanent")
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
             if (string.IsNullOrWhiteSpace(tableName) || string.IsNullOrWhiteSpace(address)) return new ResponseMessage { Message = "tableName and address are required." };
             var triggerType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
             object triggerValue;
@@ -575,8 +575,8 @@ namespace TiaMcpServer.Siemens
             string forceValue)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -774,7 +774,7 @@ namespace TiaMcpServer.Siemens
 
                 var plc = GetPlcSoftware(softwarePath);
                 if (plc == null)
-                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "PLC software not found at '" + softwarePath + "'", Data = data };
+                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "PLC software not found at '" + softwarePath + "'" + AvailablePlcPathsSuffix(), Data = data };
 
                 var group = ResolvePlcWatchAndForceTableGroup(plc);
                 if (group == null)
@@ -842,8 +842,8 @@ namespace TiaMcpServer.Siemens
                 var plc = GetPlcSoftware(softwarePath);
                 if (plc == null)
                 {
-                    data["warnings"] = new JsonArray("PLC software not found.");
-                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "PLC software not found", Data = data };
+                    data["warnings"] = new JsonArray("PLC software not found." + AvailablePlcPathsSuffix());
+                    return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "PLC software not found" + AvailablePlcPathsSuffix(), Data = data };
                 }
 
                 data["plcType"] = plc.GetType().FullName ?? plc.GetType().Name;

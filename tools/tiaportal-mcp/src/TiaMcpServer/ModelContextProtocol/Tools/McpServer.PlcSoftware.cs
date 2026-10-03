@@ -52,7 +52,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
                 else
                 {
-                    throw new McpException($"Software not found at '{softwarePath}'", McpErrorCode.InternalError);
+                    throw new McpException($"Software not found at '{softwarePath}'" + Portal.AvailablePlcPathsSuffix(), McpErrorCode.InternalError);
                 }
             }
             catch (Exception ex) when (ex is not McpException)

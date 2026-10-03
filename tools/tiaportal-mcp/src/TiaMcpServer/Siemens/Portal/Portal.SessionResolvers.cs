@@ -1,7 +1,9 @@
 using System;
+using Microsoft.Extensions.Logging;
 using System.Linq;
 using System.Text.Json.Nodes;
 using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Online;
 using Siemens.Engineering.SW;
 
@@ -9,10 +11,59 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
+        private string? _plcLookupPathsSuffix;
+
+        // Read and Write record intent only; both use the same exact/structural alias policy.
+        private PlcSoftware? ResolvePlc(string softwarePath, PlcAccess access)
+        {
+            _logger?.LogInformation("Resolving PLC for {Access}: {SoftwarePath}", access, softwarePath);
+            _plcLookupPathsSuffix = null;
+            if (IsProjectNull()) return null;
+            _deviceScanFirstError = null;
+            if (!ReferenceEquals(_project, _softwareCacheProject))
+            {
+                _softwareContainerCache.Clear();
+                _plcResolutionCache.Clear();
+                _softwareCacheProject = _project;
+            }
+            return ResolveCachedPlc(softwarePath, path => ResolveSoftwareLookup(path, true),
+                container => container.Software as PlcSoftware)
+                ?? MatchAvailablePlcSoftware((softwarePath ?? string.Empty).Trim());
+        }
+
+        private PlcSoftware? ResolveCachedPlc(string softwarePath,
+            Func<string, SoftwareContainer?> lookup, Func<SoftwareContainer, PlcSoftware?> software)
+        {
+            var cacheKey = softwarePath ?? string.Empty;
+            var path = cacheKey.Trim();
+            _softwareContainerCache.Remove(cacheKey);
+            if (_plcResolutionCache.TryGetValue(path, out var cached))
+            {
+                var plc = software(cached);
+                if (plc != null)
+                {
+                    _softwareContainerCache[cacheKey] = cached;
+                    return plc;
+                }
+                _plcResolutionCache.Remove(path);
+            }
+            var container = lookup(path);
+            if (container == null) return null;
+            var resolved = software(container);
+            if (resolved != null)
+            {
+                // Only a complete, unique strict lookup can populate the PLC cache.
+                // Service lookup uses this same CPU, including on normalized cache hits.
+                _plcResolutionCache[path] = container;
+                _softwareContainerCache[cacheKey] = container;
+            }
+            return resolved;
+        }
+
         private PlcSoftware ExactPlcForEngineering(string softwarePath, bool writing)
         {
-            var plc = ResolveSoftwareContainerUncached(softwarePath)?.Software as PlcSoftware
-                ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath);
+            var plc = ResolvePlc(softwarePath, writing ? PlcAccess.Write : PlcAccess.Read)
+                ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + AvailablePlcPathsSuffix());
             if (writing && ResolvePlcService<OnlineProvider>(softwarePath, plc)?.State.ToString() != "Offline")
                 throw new PortalException(PortalErrorCode.InvalidState, "Confirmed Offline state is required.");
             return plc;

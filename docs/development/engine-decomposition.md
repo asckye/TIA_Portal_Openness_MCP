@@ -111,12 +111,54 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 
 ## G9：单 PLC 工程的模糊匹配
 
-`TiaMcp.Logic/Siemens/Guard.cs` 第 63–64 行的规则（单 PLC 工程中任意名称都解析到唯一 PLC）只经由
-`Portal.GetPlcSoftware` → `ResolvePlcSoftwareFuzzy`（P.Software.cs 第 44–76 行）在精确解析失败后生效。
-这 42 处调用包括下载、在线、删除、PLC 表、OPC UA、报警和工艺对象等写入或在线路径；HTTP 会话共享同一
-Portal，其他客户端改绑后，请求的名称可能静默解析到对方工程的 PLC。
+维护者于 2026-10-03 批准的 G9 行为调整由 `IEngineeringSession.ResolvePlc(path, PlcAccess)` 实施。
+`GetPlcSoftware`、兼容入口 `ResolvePlcSoftwareFuzzy`、`ExactPlcForEngineering` 和列表解析都进入此内核；
+导入、删除、下载和在线状态变更入口记录 `Write`，普通读取记录 `Read`。访问意图只用于诊断，匹配规则相同；
+`ExactPlcForEngineering` 原有的写入前确认 Offline 检查仍在解析之后执行。通用反射入口的 Software
+解析也进入内核，其 HMI 回退不能返回已经被内核拒绝的 PLC；`allowWrite` 决定反射调用的访问意图。
 
-修复放在步骤 4 之后，由内核统一的 `ResolvePlc(path, Read|Write)` 完成：非空名称不再适用该规则，写入只接受
-精确或别名匹配，错误名称返回 NotFound 与可用 PLC 路径提示。维护者已决定（2026-10-03）：空 `softwarePath`（12 个参数默认空串）
-仍表示“唯一 PLC”；非空名称在读取和写入中都只接受精确或别名匹配，不保留唯一子串匹配。修复不改 schema，但改变错误语义，需要发布说明，
-`SoftwareLookupRuntimeTests.cs` 第 66 行的期望随之反转。
+**精确**表示整个输入和候选名去除首尾空白后，使用 `OrdinalIgnoreCase` 比较；不解释正则、子串或相似字符。
+**别名**表示 PLC 自身的软件名、拥有软件的 CPU `DeviceItem` 名、包含该 CPU 的硬件祖先名，以及恰好拥有一个
+PLC 的设备/站点名。设备组只用于限定路径，组名本身不代表 PLC。多个结构候选即为歧义，包括软件名与另一 PLC
+的站点别名同名；不会优先返回第一次遇到的候选。容器以对象身份去重，不能按软件名称合并两个 PLC。
+
+内核使用独立的严格 PLC 缓存（Trim + OrdinalIgnoreCase）；命中后确认 Software 仍为 PLC 即返回，未命中才在
+现有设备/设备组树上完整、有界地扫描，不读取块或类型组。只有完整、唯一且成功的解析才进入此缓存；它与通用
+软件容器缓存在工程实例变化、HMI 缓存失效及断开连接时同步清理。内核不从通用缓存选择 PLC，但仍将已验证的
+容器写回通用缓存，确保随后的 `ResolvePlcService` 对规范化名称/结构别名使用同一 CPU。未完成扫描仍报告
+`OpennessError`，不能将部分结果当作唯一结果。`Portal.Software.cs` 的旧枚举 catch 保持不变；它不再承担
+内核的匹配职责。类型化备用枚举使用已有的严格枚举器，`Guard.MatchPlcName` 只保留精确匹配和空串选唯一 PLC。
+没有工程时沿用各入口现有错误；空串有零个或多个 PLC 时返回未解析，由原有入口产生其失败响应。
+
+以下“之前”区分通用 `GetPlcSoftware`（含 Guard 回退）与旧精确容器入口。示例树为
+`Line / ET 200SP station_1 / CPU_1`，软件名为 `PLC_1`；重复站点位于另一组。
+
+| 输入形式与例子 | 之前 | G9 之后（读写相同） |
+|---|---|---|
+| 软件全名 `PLC_1`、IEC 名 `+S1-K1`、中文名 `5T车` | 大小写不敏感的字面匹配 | 保留，必须唯一 |
+| 大小写/首尾空白 ` plc_1 ` | 通用入口经 Guard 成功；精确容器不去空白 | 统一为精确匹配 |
+| CPU 自身名称 `CPU_1` | 结构别名 | 保留，必须唯一 |
+| 硬件祖先名称 `Rack_1`（其下仅一个 PLC） | 裸名遍历继承别名 | 保留，必须唯一 |
+| 站点名 `ET 200SP station_1`（实际拥有该 PLC） | 实际结构存在时可经容器解析；仅传软件名给 Guard 的旧测试靠单 PLC 猜测 | 只接受真实结构别名；Guard 单独收到站点名返回 null |
+| 分组限定 CPU `Line/CPU_1`，可嵌套 `Area/Line/CPU_1` | 组/硬件路径；组名大小写敏感 | 保留，整体大小写不敏感 |
+| 站点/CPU `ET 200SP station_1/CPU_1` | 顶层设备可成功，CPU 可在机架下 | 保留结构关系，不能忽略错误尾部 |
+| 分组限定站点或站点/CPU `Line/ET 200SP station_1[/CPU_1]` | 原路径遍历支持；多个软件时可能取第一个 | 只接受唯一结构候选 |
+| 分组/软件名 `Line/PLC_1`（软件名不同于 CPU） | 原硬件路径不保证成功；通用入口可能通过单 PLC/子串回退 | 作为完整结构限定别名接受 |
+| 完整硬件/软件链 `Line/ET 200SP station_1/CPU_1/PLC_1` | 原路径遍历可能忽略多余尾部 | 精确对应完整结构链时接受 |
+| 名称内含 `/`，如 `S7-1500/ET200MP station_1` | 容器拆分斜线；通用入口可能只靠单 PLC 回退 | 整个真实名称也是结构别名，歧义仍拒绝 |
+| 空串、空白或内部 null | Guard 选唯一 PLC；旧空串硬件路径另有取首个容器的旁路 | 只选唯一 PLC，零个/多个保留失败返回 |
+| 单 PLC 下错误名 `WrongPLC` | 通用入口选唯一 PLC | 未找到，附可用 PLC 路径 |
+| 短子串 `PLC`、长包含串 `prefix_PLC_1_suffix` | 通用入口唯一子串双向匹配 | 未找到，附可用 PLC 路径 |
+| 错误限定路径 `Wrong/PLC_1` 或 `Line/CPU_1/garbage` | 可能被单 PLC、子串或忽略尾部的旁路接受 | 内核拒绝 |
+| 重复名称/别名 `Station` 对应两个 PLC | 裸容器路径报告歧义；旧枚举会按软件名去重 | `InvalidParams`，列出两个完整候选路径 |
+
+当前完整引擎的 `GetSoftwareContainer` 没有 URI 百分号或反斜线转义解码规则；这些字符一直按字面解释。
+G9 不引入 Foundation 的另一套路径语法，已有字面字符名称仍有效。LegacyHost/Foundation 另使用规范转义路径：
+读取允许唯一别名，写入核对 `ExactPath`，没有 Guard 的单 PLC/子串规则，本次不改动它。
+
+错误继续使用现有响应类型和错误码。新的歧义文本为
+`Ambiguous PLC software name '<input>': <candidate paths>. Use a group-qualified device/software path.`；
+未找到保留调用入口的前缀和错误类型，追加 ` Available PLC paths: <paths>`，例如
+`Exact PLC software not found: WrongPLC Available PLC paths: Line/ET 200SP station_1/CPU_1/PLC_1`。
+无候选时不追加空路径列表。工具 schema 与描述未改变。P0-06 的调用前拒绝快照不经过此解析器；
+它和模拟硬件树测试均不能代替真实 TIA 验收，真实 TIA 验收仍待维护者执行。

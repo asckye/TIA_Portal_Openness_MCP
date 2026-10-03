@@ -196,7 +196,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     // 是完全不同的结论，而它分辨不出来。
                     throw new McpException(
                         $"GetPlcForceTables: PLC software not found at '{softwarePath}'. "
-                        + "Use GetProjectTree to get the exact PLC path.",
+                        + "Use GetProjectTree to get the exact PLC path." + Portal.AvailablePlcPathsSuffix(),
                         McpErrorCode.InvalidParams);
                 }
 
@@ -286,7 +286,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     };
                 }
 
-                throw new McpException($"Failed exporting PLC watch table '{watchTableName}' from '{softwarePath}'", McpErrorCode.InternalError);
+                throw new McpException($"Failed exporting PLC watch table '{watchTableName}' from '{softwarePath}'" + Portal.AvailablePlcPathsSuffix(), McpErrorCode.InternalError);
             }
             catch (Exception ex) when (ex is not McpException)
             {

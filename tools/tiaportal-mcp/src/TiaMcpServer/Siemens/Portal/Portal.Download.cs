@@ -81,9 +81,9 @@ namespace TiaMcpServer.Siemens
                 return new ResponseDownload { Ok = false, Message = "Invalid download prompt parameters: " + ex.Message, Errors = new[] { ex.Message } };
             }
 
-            var plcSoftware = GetPlcSoftware(softwarePath);
+            var plcSoftware = ResolvePlc(softwarePath, PlcAccess.Write);
             if (plcSoftware == null)
-                return new ResponseDownload { Ok = false, Message = $"PLC software not found: '{softwarePath}'." };
+                return new ResponseDownload { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             // Declared outside the try so the catch can report which PG/PC route was used.
             DownloadRouteSelection? routeDiagnostics = null;
@@ -624,7 +624,7 @@ namespace TiaMcpServer.Siemens
 
             var plcSoftware = GetPlcSoftware(softwarePath);
             if (plcSoftware == null)
-                return new ResponseCheckDownload { Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." } };
+                return new ResponseCheckDownload { Ready = false, Issues = new[] { $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() } };
 
             bool hasProvider = false;
             bool hasConfig = false;

@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 internal static class SoftwareLookupRuntimeTests
 {
     public sealed class Node
     {
         public string? Alias;
+        public bool IsGroup;
         public object? Container;
         public string SoftwareName = "+S1-K1";
         public List<object> Children = new List<object>();
@@ -61,8 +63,9 @@ internal static class SoftwareLookupRuntimeTests
         }
         EngineSurface.CheckIl(check, shared, "EXE listing calls shared GetPlcSoftware resolver, including enumeration fallback", listing, resolver);
         var match = Program.FindServerType(server, "TiaMcpServer.Siemens.Guard").GetMethod("MatchPlcName")!;
-        check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally before single-PLC fallback");
-        check((string)match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" })! == "+S1-K1", "EXE shared single-PLC fallback resolves station alias");
+        check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally");
+        check(match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" }) == null, "EXE Guard no longer guesses a station alias from a sole software name");
+        StrictPlcChecks(server, check);
         var findBlock = server.GetType("TiaMcpServer.Siemens.PlcBlockLookup", true)!.GetMethod("Find", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(BlockGroup), typeof(string));
         var root = new BlockGroup();
         root.Groups.Add(new BlockGroup { Name = "03_OPMode", Blocks = new List<string> { "OPMODE01_FC" } });
@@ -106,7 +109,7 @@ internal static class SoftwareLookupRuntimeTests
         bool scanStopped = false;
         try { Select(BrokenScan(), "+S1-K1"); } catch (TargetInvocationException ex) { scanStopped = ex.ToString().Contains("scan interrupted"); }
         check(scanStopped, "EXE write resolver never returns early before uniqueness scan completes");
-        var bareResolver = portal.Method("ResolveBareSoftwareContainer", BindingFlags.Instance | BindingFlags.NonPublic);
+        var bareResolver = portal.Method("ResolveSoftwareLookup", BindingFlags.Instance | BindingFlags.NonPublic);
         var bareIl = bareResolver.GetMethodBody()!.GetILAsByteArray()!;
         var enumeration = portal.Method("EnumerateSoftwareContainersForExactLookup", BindingFlags.Instance | BindingFlags.NonPublic);
         int enumerationToken = enumeration.MetadataToken;
@@ -161,5 +164,190 @@ internal static class SoftwareLookupRuntimeTests
         catch (TargetInvocationException ex) { typeRootFailure = ex.InnerException!.Message.Contains("+S1-K1/TypeGroup"); }
         check(typeRootFailure, "EXE preserves TypeGroup failure stage");
         check((int)new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Dictionary<string, object>>(metadata.Invoke(reader, new object[] { "user blocks" })!.ToString())["failureCount"] == 1, "fatal failures are not downgraded to optional warnings");
+    }
+    private static void StrictPlcChecks(Assembly server, Action<bool, string> check)
+    {
+        var portal = EngineSurface.For(server);
+        var kernel = portal.Method("ResolvePlc", BindingFlags.Instance | BindingFlags.NonPublic);
+        bool Calls(MethodInfo source, MethodInfo target, int? access = null)
+        {
+            var il = source.GetMethodBody()!.GetILAsByteArray()!;
+            for (int i = 0; i + 4 < il.Length; i++)
+                if ((il[i] == 0x28 || il[i] == 0x6f) && BitConverter.ToInt32(il, i + 1) == target.MetadataToken
+                    && (access == null || (i > 0 && il[i - 1] == 0x16 + access))) return true;
+            return false;
+        }
+        foreach (var name in new[] { "GetPlcSoftware", "ResolvePlcSoftwareFuzzy", "ExactPlcForEngineering" })
+        {
+            var entry = portal.Method(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            EngineSurface.CheckIl(check, Calls(entry, kernel), "EXE PLC entry uses session kernel: " + name, entry, kernel);
+        }
+        var objectResolver = portal.Method("ResolveObject", BindingFlags.Instance | BindingFlags.NonPublic);
+        EngineSurface.CheckIl(check, Calls(objectResolver, kernel), "EXE reflection software resolution uses the PLC kernel", objectResolver, kernel);
+        var objectIl = objectResolver.GetMethodBody()!.GetILAsByteArray()!;
+        bool excludesPlcFallback = false;
+        for (int i = 0; i + 4 < objectIl.Length; i++)
+        {
+            if (objectIl[i] != 0x75) continue; // isinst
+            try { if (objectResolver.Module.ResolveType(BitConverter.ToInt32(objectIl, i + 1)).FullName == "Siemens.Engineering.SW.PlcSoftware") excludesPlcFallback = true; }
+            catch (ArgumentException) { }
+        }
+        EngineSurface.CheckIl(check, excludesPlcFallback, "EXE HMI reflection fallback cannot return a PLC rejected by strict resolution", objectResolver);
+        var accessType = server.GetType("TiaMcpServer.Siemens.PlcAccess", true)!;
+        var session = server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!;
+        check(session.GetMethod("ResolvePlc")!.GetParameters()[1].ParameterType == accessType,
+            "EXE session exposes PLC resolution with explicit access intent");
+        foreach (var name in new[] { "ImportPlcTagTable", "ImportAlarmClasses", "SetOpcUaInterfaceEnabled", "DownloadToPlc", "GoOnline" })
+        {
+            var writer = name == "GoOnline"
+                ? portal.Method(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })
+                : portal.Method(name);
+            EngineSurface.CheckIl(check, Calls(writer, kernel, 1), "EXE write path records Write through same PLC kernel: " + name, writer, kernel);
+        }
+        EngineSurface.CheckIl(check, Calls(portal.Method("GetPlcSoftware"), kernel, 0), "EXE read path records Read through same PLC kernel", kernel);
+        var strict = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!
+            .GetMethod("FindPlc", BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(object));
+        var cpu = new Node { Alias = "CPU_1", SoftwareName = "PLC_1" }; cpu.Container = cpu;
+        var station = new Node { Alias = "ET 200SP station_1", Children = new List<object> { cpu } };
+        var group = new Node { Alias = "Line", IsGroup = true, Children = new List<object> { station } };
+        string paths = "";
+        object? Resolve(string name, object[]? roots = null, int limit = 100, Func<object, IEnumerable<object>>? children = null)
+            => strict.Invoke(null, new object[] { roots ?? new object[] { group },
+                children ?? new Func<object, IEnumerable<object>>(n => ((Node)n).Children),
+                new Func<object, string?>(n => ((Node)n).Alias),
+                new Func<object, object?>(n => ((Node)n).Container),
+                new Func<object, string?>(n => ((Node)n).SoftwareName),
+                new Func<object, bool>(n => ((Node)n).IsGroup), name, new Action<string>(value => paths = value), limit });
+        foreach (var name in new[] { "WrongPLC", "PLC", "Prefix_PLC_1_suffix", "Line", "Wrong/PLC_1", "Line/CPU_1/garbage", ".*" })
+            check(Resolve(name) == null && paths == " Available PLC paths: Line/ET 200SP station_1/CPU_1/PLC_1",
+                "EXE read/write policy rejects unknown PLC with available paths: " + name);
+        foreach (var name in new[] { "PLC_1", " plc_1 ", "CPU_1", "ET 200SP station_1", " line/et 200sp station_1 ", "Line/CPU_1", "Line/ET 200SP station_1/CPU_1", "Line/PLC_1", "" })
+            check(ReferenceEquals(Resolve(name), cpu), "EXE read/write policy resolves exact or structural PLC alias: " + name);
+        var other = new Node { Alias = "CPU_2", SoftwareName = "PLC_2" }; other.Container = other;
+        var station2 = new Node { Alias = station.Alias, Children = new List<object> { other } };
+        var both = new object[] { group, station2 };
+        check(Resolve("", both) == null && paths.Contains("PLC_1") && paths.Contains("PLC_2"), "EXE read/write empty name retains multiple-PLC failure");
+        bool ambiguous = false;
+        try { Resolve(station.Alias!, both); }
+        catch (TargetInvocationException ex) { ambiguous = ex.InnerException?.GetType().GetProperty("Code")?.GetValue(ex.InnerException)?.ToString() == "InvalidParams"
+            && ex.InnerException.Message == "Ambiguous PLC software name 'ET 200SP station_1': ET 200SP station_1/CPU_2/PLC_2, Line/ET 200SP station_1/CPU_1/PLC_1. Use a group-qualified device/software path."; }
+        check(ambiguous, "EXE read/write duplicate station alias is ambiguous and lists both candidates verbatim");
+        check(ReferenceEquals(Resolve("Line/ET 200SP station_1", both), cpu), "EXE read/write group qualification disambiguates duplicate station alias");
+        other.SoftwareName = "PLC_1";
+        ambiguous = false;
+        try { Resolve("PLC_1", both); } catch (TargetInvocationException ex) { ambiguous = ex.InnerException!.Message.Contains("Ambiguous PLC software name"); }
+        check(ambiguous, "EXE read/write duplicate software names are not collapsed by name");
+        check(Resolve("", Array.Empty<object>()) == null && paths == "", "EXE empty project has no sole PLC");
+        bool incomplete = false;
+        try { Resolve("PLC_1", null, 1); } catch (TargetInvocationException ex) { incomplete = ex.InnerException?.GetType().GetProperty("Code")?.GetValue(ex.InnerException)?.ToString() == "OpennessError"; }
+        check(incomplete, "EXE strict PLC policy reports incomplete bounded scan as error");
+        bool interrupted = false;
+        try { Resolve("PLC_1", null, 100, n => ReferenceEquals(n, cpu) ? throw new InvalidOperationException("scan interrupted") : ((Node)n).Children); }
+        catch (TargetInvocationException ex) { interrupted = ex.InnerException!.Message.Contains("scan interrupted"); }
+        check(interrupted, "EXE strict PLC policy cannot return early before the scan completes");
+        Resolve("WrongPLC");
+        var instance = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(kernel.DeclaringType!);
+        portal.Field("_plcLookupPathsSuffix", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(instance, paths);
+        check((string)portal.Method("AvailablePlcPathsSuffix").Invoke(instance, null)! == paths,
+            "EXE missing PLC diagnostics use the completed strict scan's available paths");
+        var guard = Program.FindServerType(server, "TiaMcpServer.Siemens.Guard").GetMethod("MatchPlcName")!;
+        foreach (var name in new[] { "WrongPLC", "PLC", "Prefix_PLC_1_suffix" })
+            check(guard.Invoke(null, new object[] { new[] { "PLC_1" }, name }) == null, "EXE enumeration fallback also refuses fuzzy token: " + name);
+        check((string)guard.Invoke(null, new object[] { new[] { "PLC_1" }, " plc_1 " })! == "PLC_1", "EXE enumeration fallback retains case and whitespace normalization");
+        check((string)guard.Invoke(null, new object[] { new[] { "PLC_1" }, "" })! == "PLC_1", "EXE enumeration fallback retains empty sole-PLC resolution");
+        check(guard.Invoke(null, new object[] { new[] { "PLC_1", "PLC_2" }, "" }) == null, "EXE enumeration fallback rejects empty multiple-PLC resolution");
+        var cached = portal.Method("ResolveCachedPlc", BindingFlags.Instance | BindingFlags.NonPublic);
+        EngineSurface.CheckIl(check, Calls(kernel, cached), "EXE PLC kernel uses the verified resolution cache", kernel, cached);
+        typeof(SoftwareLookupRuntimeTests).GetMethod(nameof(CachedPlcChecks), BindingFlags.Static | BindingFlags.NonPublic)!
+            .MakeGenericMethod(cached.GetParameters()[1].ParameterType.GetGenericArguments()[1], cached.ReturnType)
+            .Invoke(null, new object[] { server, check });
+    }
+
+    private static void CachedPlcChecks<TContainer, TSoftware>(Assembly server, Action<bool, string> check)
+        where TContainer : class where TSoftware : class
+    {
+        var portal = EngineSurface.For(server);
+        var cached = portal.Method("ResolveCachedPlc", BindingFlags.Instance | BindingFlags.NonPublic);
+        var strict = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!
+            .GetMethod("FindPlc", BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(typeof(TContainer));
+        // Uninitialized SDK objects are identity tokens only: the delegates never access native properties.
+        object Uninitialized(Type type) => System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+        var instance = Uninitialized(cached.DeclaringType!);
+        var cache = new Dictionary<string, TContainer>(StringComparer.OrdinalIgnoreCase);
+        var generic = new Dictionary<string, TContainer>(StringComparer.OrdinalIgnoreCase);
+        portal.Field("_plcResolutionCache").SetValue(instance, cache);
+        portal.Field("_softwareContainerCache").SetValue(instance, generic);
+        var first = (TContainer)Uninitialized(typeof(TContainer));
+        var second = (TContainer)Uninitialized(typeof(TContainer));
+        var plc = (TSoftware)Uninitialized(typeof(TSoftware));
+        bool firstIsPlc = true, secondIsPlc = true;
+        var cpu = new Node { Alias = "CPU_1", SoftwareName = "PLC_1", Container = first };
+        var roots = new List<object> { new Node { Alias = "Station", Children = new List<object> { cpu } } };
+        int scans = 0, reads = 0, limit = 100;
+        Func<string, TContainer?> lookup = name =>
+        {
+            scans++;
+            return (TContainer?)strict.Invoke(null, new object[] { roots,
+                new Func<object, IEnumerable<object>>(n => ((Node)n).Children),
+                new Func<object, string?>(n => ((Node)n).Alias),
+                new Func<object, TContainer?>(n => (TContainer?)((Node)n).Container),
+                new Func<TContainer, string?>(_ => "PLC_1"),
+                new Func<object, bool>(n => ((Node)n).IsGroup), name, new Action<string>(_ => { }), limit });
+        };
+        object? Resolve(string path) => cached.Invoke(instance, new object[] { path, lookup,
+            new Func<TContainer, TSoftware?>(container => { reads++; return (ReferenceEquals(container, first) ? firstIsPlc : secondIsPlc) ? plc : null; }) });
+        bool Refused(string path, string message)
+        {
+            try { Resolve(path); return false; }
+            catch (TargetInvocationException ex) { return ex.ToString().Contains(message); }
+        }
+
+        generic["PLC_1"] = second;
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == 1 && ReferenceEquals(cache["PLC_1"], first),
+            "EXE strict PLC cache ignores an unverified generic cache entry and scans once");
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == 1 && reads == 2,
+            "EXE second PLC resolution validates Software without a second tree scan");
+        check(ReferenceEquals(Resolve(" plc_1 "), plc) && scans == 1 && cache.Count == 1,
+            "EXE PLC cache shares the trimmed case-insensitive path");
+        check(ReferenceEquals(generic[" plc_1 "], first),
+            "EXE normalized PLC cache hit publishes the verified CPU for service lookup");
+        check(ReferenceEquals(Resolve(""), plc) && ReferenceEquals(Resolve("  "), plc) && scans == 2 && cache.ContainsKey(""),
+            "EXE empty sole-PLC resolution is cached under the empty key");
+
+        portal.Method("InvalidateHmiSoftwareCache", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(instance, null);
+        check(cache.Count == 0 && generic.Count == 0, "EXE HMI invalidation clears both software caches");
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == 3, "EXE PLC resolution rescans after HMI invalidation");
+        var project = portal.Field("_softwareCacheProject");
+        project.SetValue(instance, Uninitialized(project.FieldType.Assembly.GetType("Siemens.Engineering.Project", true)!));
+        portal.Method("GetSoftwareContainer", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(instance, new object[] { "PLC_1" });
+        check(cache.Count == 0 && generic.Count == 0 && project.GetValue(instance) == null,
+            "EXE project change to no project clears both software caches");
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == 4, "EXE PLC resolution rescans after project cache invalidation");
+
+        firstIsPlc = false;
+        cpu.Container = second;
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == 5 && ReferenceEquals(cache["PLC_1"], second),
+            "EXE cached container that is no longer PLC forces strict lookup and replacement");
+        int before = scans;
+        check(Resolve("WrongPLC") == null && Resolve("WrongPLC") == null && scans == before + 2 && !cache.ContainsKey("WrongPLC"),
+            "EXE missing PLC resolutions are never cached");
+        cache.Clear();
+        secondIsPlc = false;
+        before = scans;
+        check(Resolve("PLC_1") == null && Resolve("PLC_1") == null && scans == before + 2 && cache.Count == 0,
+            "EXE a lookup result without PLC Software is never cached");
+        secondIsPlc = true;
+        roots.Add(new Node { Alias = "CPU_2", SoftwareName = "PLC_1", Container = first });
+        before = scans;
+        check(Refused("PLC_1", "Ambiguous PLC software name") && Refused("PLC_1", "Ambiguous PLC software name")
+            && scans == before + 2 && cache.Count == 0, "EXE ambiguous PLC resolutions are never cached");
+        roots.RemoveAt(1);
+        limit = 1;
+        before = scans;
+        check(Refused("PLC_1", "uniqueness was not established") && Refused("PLC_1", "uniqueness was not established")
+            && scans == before + 2 && cache.Count == 0, "EXE incomplete PLC scans are never cached");
+        limit = 100;
+        check(ReferenceEquals(Resolve("PLC_1"), plc) && scans == before + 3 && cache.Count == 1,
+            "EXE successful PLC lookup after failed scans can populate the cache");
     }
 }

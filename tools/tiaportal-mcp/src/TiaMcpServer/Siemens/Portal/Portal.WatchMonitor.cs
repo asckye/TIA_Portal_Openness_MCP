@@ -32,7 +32,7 @@ namespace TiaMcpServer.Siemens
                 return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = "No project open. Attach first.", Data = data };
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null)
-                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found at '{softwarePath}'.", Data = data };
+                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found at '{softwarePath}'." + AvailablePlcPathsSuffix(), Data = data };
 
             var group = ResolvePlcWatchAndForceTableGroup(plc);
             if (group == null)

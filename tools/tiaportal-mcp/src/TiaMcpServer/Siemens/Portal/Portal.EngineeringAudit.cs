@@ -47,7 +47,7 @@ namespace TiaMcpServer.Siemens
         }
         private List<(string Path, bool? Consistent)> ReadPlcConsistency(string softwarePath)
         {
-            var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "PLC not found: " + softwarePath);
+            var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "PLC not found: " + softwarePath + AvailablePlcPathsSuffix());
             return InvocationJournal.Native("PLC.consistency.rootAndUnits", () => {
                 var rows = new List<(string Path, bool? Consistent)>();
                 foreach (var scope in PlcScopes(plc))
@@ -64,7 +64,7 @@ namespace TiaMcpServer.Siemens
         private IEngineeringServiceProvider ExactCrossReferenceTarget(string softwarePath, string objectPath, string kind, string unitName, string unitKind)
         {
             ValidateUnitKind(unitKind);
-            var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "PLC not found: " + softwarePath);
+            var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "PLC not found: " + softwarePath + AvailablePlcPathsSuffix());
             var unit = OptionalUnit(plc, unitName, unitKind);
             if (kind.Equals("Block", StringComparison.OrdinalIgnoreCase)) return (PlcBlock)ExactObjectUnder(BlockRootOf(plc, unit), objectPath, "Blocks", "block");
             if (kind.Equals("Type", StringComparison.OrdinalIgnoreCase)) return (PlcType)ExactObjectUnder(TypeRootOf(plc, unit), objectPath, "Types", "type");

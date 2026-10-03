@@ -32,7 +32,7 @@ namespace TiaMcpServer.Siemens
                 if (item.Key.StartsWith("Safety", StringComparison.Ordinal) && level > 1) throw new ArgumentException("Safety areas can only be excluded (0) or read-only (1).");
             }
             if (IsProjectNull()) throw new InvalidOperationException("No project is bound.");
-            var plc = GetPlcSoftware(softwarePath) ?? throw new ArgumentException("PLC not found: " + softwarePath);
+            var plc = GetPlcSoftware(softwarePath) ?? throw new ArgumentException("PLC not found: " + softwarePath + AvailablePlcPathsSuffix());
             if (plc.GetService<OpcUaProvider>() == null) throw new NotSupportedException("PLC does not expose OpcUaProvider.");
             var unit = string.IsNullOrEmpty(unitName) ? null : plc.GetService<PlcUnitProvider>()?.UnitGroup.Units.Find(unitName);
             if (!string.IsNullOrEmpty(unitName) && unit == null) throw new ArgumentException("Software unit not found: " + unitName);

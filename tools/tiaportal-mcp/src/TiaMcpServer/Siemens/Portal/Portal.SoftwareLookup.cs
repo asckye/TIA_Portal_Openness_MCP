@@ -10,16 +10,24 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         private SoftwareContainer? ResolveBareSoftwareContainer(string name)
+            => ResolveSoftwareLookup(name, false);
+
+        private SoftwareContainer? ResolveSoftwareLookup(string name, bool plcOnly)
         {
             if (_project == null) return null;
             try
             {
-                var direct = SoftwareContainerLookup.FindUnique(
-                    _project.Devices.Cast<object>().Concat(_project.DeviceGroups.Cast<object>()),
-                    SoftwareLookupChildren,
-                    node => node is Device d ? d.Name : node is DeviceItem item ? item.Name : null,
-                    node => node is DeviceItem item ? item.GetService<SoftwareContainer>() : null,
-                    sc => sc.Software?.Name, name);
+                var roots = _project.Devices.Cast<object>().Concat(_project.DeviceGroups.Cast<object>());
+                string? Alias(object node) => node is Device d ? d.Name : node is DeviceItem item ? item.Name
+                    : plcOnly && node is DeviceUserGroup group ? SoftwareLookupGroupName(group) : null;
+                SoftwareContainer? Container(object node) => node is DeviceItem item ? item.GetService<SoftwareContainer>() : null;
+                string? Name(SoftwareContainer sc) => sc.Software?.Name;
+                var direct = plcOnly
+                    ? SoftwareContainerLookup.FindPlc(roots, SoftwareLookupChildren, Alias,
+                        node => { var sc = Container(node); return SoftwareLookupValue(sc) is PlcSoftware ? sc : null; },
+                        Name, node => node is DeviceUserGroup, name, paths => _plcLookupPathsSuffix = paths)
+                    : SoftwareContainerLookup.FindUnique(roots, SoftwareLookupChildren, Alias, Container, Name, name);
+                if (plcOnly) return direct;
                 if (direct != null) return direct;
                 // The same typed hardware traversal used by GetAllPlcSoftware, but retain
                 // containers, reject duplicates, and never swallow an incomplete scan.
@@ -55,7 +63,7 @@ namespace TiaMcpServer.Siemens
                         "Exact software enumeration limit reached; no target selected.");
                     var item = pending.Pop();
                     var sc = item.GetService<SoftwareContainer>();
-                    if (sc?.Software != null) yield return sc;
+                    if (SoftwareLookupValue(sc) != null) yield return sc!;
                     foreach (var child in item.DeviceItems) pending.Push(child);
                 }
             }
@@ -75,6 +83,9 @@ namespace TiaMcpServer.Siemens
                 foreach (var child in group.Groups) groups.Push(child);
             }
         }
+
+        private static Software? SoftwareLookupValue(SoftwareContainer? container)
+            => container?.Software;
 
         private static IEnumerable<object> SoftwareLookupChildren(object node)
         {

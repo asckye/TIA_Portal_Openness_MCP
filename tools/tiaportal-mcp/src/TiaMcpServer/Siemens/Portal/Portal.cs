@@ -88,6 +88,7 @@ namespace TiaMcpServer.Siemens
         // open project; ReferenceEquals(_project) auto-invalidates on any project open/close/create/attach
         // without a COM call. Device adds only introduce new paths (cache misses); there is no delete-device tool.
         private readonly Dictionary<string, SoftwareContainer> _softwareContainerCache = new Dictionary<string, SoftwareContainer>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, SoftwareContainer> _plcResolutionCache = new Dictionary<string, SoftwareContainer>(StringComparer.OrdinalIgnoreCase);
         private ProjectBase? _softwareCacheProject;
         private readonly ILogger<Portal>? _logger;
         public string? LastConnectError { get; private set; }
@@ -290,7 +291,7 @@ namespace TiaMcpServer.Siemens
                 _session = null;
                 _expectedProjectName = null;
                 _boundProcessId = null;
-                _softwareContainerCache.Clear(); _softwareCacheProject = null;
+                _softwareContainerCache.Clear(); _plcResolutionCache.Clear(); _softwareCacheProject = null;
                 InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
                 // TiaPortal.Dispose detaches an attached client; never call
                 // TiaPortalProcess.Dispose, which terminates the actual TIA process.

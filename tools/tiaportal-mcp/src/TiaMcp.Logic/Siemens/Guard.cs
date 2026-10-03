@@ -48,11 +48,10 @@ namespace TiaMcpServer.Siemens
         }
 
         /// <summary>
-        /// Tolerant resolution of a (possibly sloppy) softwarePath <paramref name="token"/> against the
-        /// available PLC software names. Returns the single resolved name, or null when there is no
-        /// match or the match is ambiguous. Pure/deterministic (no Openness) — unit-testable offline.
-        /// Order: case-insensitive exact (after trim) → a single-PLC project accepts any token →
-        /// unique case-insensitive substring (either direction, e.g. "plc" → "PLC_1").
+        /// Resolves a PLC software name by a unique case-insensitive exact match after trim.
+        /// An empty token selects the sole available PLC. Non-empty tokens never select a
+        /// different name or a substring. Structural aliases are resolved by the session.
+        /// Returns null for missing or ambiguous names. Pure/deterministic (no Openness).
         /// </summary>
         public static string? MatchPlcName(IReadOnlyList<string>? available, string? token)
         {
@@ -63,17 +62,8 @@ namespace TiaMcpServer.Siemens
             var exact = available.Where(n => string.Equals(n?.Trim(), t, StringComparison.OrdinalIgnoreCase)).ToList();
             if (exact.Count == 1) return exact[0];
 
-            // 2) a single-PLC project resolves any token to its sole PLC
-            if (exact.Count == 0 && available.Count == 1) return available[0];
-
-            // 3) unique case-insensitive substring match in either direction
-            if (exact.Count == 0 && t.Length > 0)
-            {
-                var sub = available.Where(n => !string.IsNullOrEmpty(n) && (
-                    n!.IndexOf(t, StringComparison.OrdinalIgnoreCase) >= 0 ||
-                    t.IndexOf(n!, StringComparison.OrdinalIgnoreCase) >= 0)).ToList();
-                if (sub.Count == 1) return sub[0];
-            }
+            // An omitted name retains the single-PLC shorthand.
+            if (t.Length == 0 && available.Count == 1) return available[0];
             return null;
         }
     }

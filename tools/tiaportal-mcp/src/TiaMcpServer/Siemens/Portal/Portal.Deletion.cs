@@ -187,7 +187,7 @@ namespace TiaMcpServer.Siemens
                     "DeletePlcTagTable: no project is open. Connect / AttachToOpenProject first.");
             }
 
-            var plc = GetPlcSoftware(softwarePath);
+            var plc = ResolvePlc(softwarePath, dryRun ? PlcAccess.Read : PlcAccess.Write);
             if (plc == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
@@ -291,7 +291,7 @@ namespace TiaMcpServer.Siemens
             }
 
             // Delete() 之后原来的代理对象已死，读回必须从 PlcSoftware 重新取一遍句柄。
-            var plc2 = GetPlcSoftware(softwarePath);
+            var plc2 = ResolvePlc(softwarePath, dryRun ? PlcAccess.Read : PlcAccess.Write);
             var group2 = plc2 == null ? null : ResolvePlcTagTableGroup(plc2);
             bool absent = group2 == null || FindTagTableWithPath(group2, string.Empty, resolvedPath,
                 new HashSet<object>(ReferenceEqualityComparer.Instance), out _) == null;

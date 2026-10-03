@@ -62,7 +62,7 @@ namespace TiaMcpServer.Siemens
 
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null)
-                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found: '{softwarePath}'.", Data = data };
+                return new ModelContextProtocol.ResponseJsonReport { Ok = false, Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix(), Data = data };
 
             try
             {
@@ -133,8 +133,8 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage SetOpcUaInterfaceEnabled(string softwarePath, string interfaceName, bool enabled, string interfaceType = "ServerInterface")
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -171,7 +171,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -208,8 +208,8 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ImportOpcUaInterface(string softwarePath, string importPath, string interfaceType = "ServerInterface")
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {

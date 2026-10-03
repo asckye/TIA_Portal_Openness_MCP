@@ -100,7 +100,7 @@ namespace TiaMcpServer.Siemens
                     + "Call Connect + OpenProject (or AttachToOpenProject) first.");
             }
 
-            var plcSoftware = GetPlcSoftware(softwarePath);
+            var plcSoftware = ResolvePlc(softwarePath, PlcAccess.Write);
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,
@@ -227,7 +227,7 @@ namespace TiaMcpServer.Siemens
                     + "Call Connect + OpenProject (or AttachToOpenProject) first.");
             }
 
-            var plcSoftware = GetPlcSoftware(softwarePath);
+            var plcSoftware = ResolvePlc(softwarePath, PlcAccess.Write);
             if (plcSoftware == null)
             {
                 throw new PortalException(PortalErrorCode.NotFound,

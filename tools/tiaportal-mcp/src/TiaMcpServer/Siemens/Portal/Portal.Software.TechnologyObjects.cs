@@ -52,8 +52,8 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
 
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'");
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) throw new PortalException(PortalErrorCode.NotFound, $"PlcSoftware not found at '{softwarePath}'" + AvailablePlcPathsSuffix());
 
             try
             {
@@ -226,7 +226,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -267,7 +267,7 @@ namespace TiaMcpServer.Siemens
             var plc = GetPlcSoftware(softwarePath);
             if (plc == null)
             {
-                failed.Add(new ImportFailure { Path = softwarePath, Error = "PLC software not found." });
+                failed.Add(new ImportFailure { Path = softwarePath, Error = "PLC software not found." + AvailablePlcPathsSuffix() });
                 return new ResponseImportBatch { Imported = exported, Failed = failed };
             }
 

@@ -9,6 +9,8 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
+    internal enum PlcAccess { Read, Write }
+
     internal interface IEngineeringSession
     {
         TiaPortal? CurrentPortal { get; }
@@ -21,6 +23,7 @@ namespace TiaMcpServer.Siemens
         void VerifyBinding(string operation);
         SoftwareContainer? GetSoftwareContainer(string softwarePath);
         PlcSoftware? GetPlcSoftware(string softwarePath);
+        PlcSoftware? ResolvePlc(string softwarePath, PlcAccess access);
         T? ResolvePlcService<T>(string softwarePath, PlcSoftware plcSoftware) where T : class, IEngineeringService;
         DeviceItem? GetDeviceItemByPath(string deviceItemPath);
         PlcSoftware ExactPlcForEngineering(string softwarePath, bool writing);

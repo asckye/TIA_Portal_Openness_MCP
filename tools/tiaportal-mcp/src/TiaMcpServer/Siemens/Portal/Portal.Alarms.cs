@@ -55,7 +55,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -90,8 +90,8 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ImportAlarmClasses(string softwarePath, string importPath)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
 
             try
             {
@@ -126,7 +126,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
@@ -151,8 +151,8 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ImportAlarmTextLists(string softwarePath, string importPath)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
-            var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            var plc = ResolvePlc(softwarePath, PlcAccess.Write);
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextListProvider>();
@@ -180,7 +180,7 @@ namespace TiaMcpServer.Siemens
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
             var plc = GetPlcSoftware(softwarePath);
-            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." };
+            if (plc == null) return new ResponseMessage { Message = $"PLC software not found: '{softwarePath}'." + AvailablePlcPathsSuffix() };
             try
             {
                 var provider = plc.GetService<PlcAlarmTextProvider>();
