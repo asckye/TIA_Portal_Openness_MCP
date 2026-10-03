@@ -1,0 +1,1828 @@
+{
+  "profile": "plc-foundation",
+  "release": "14sp1",
+  "tools": [
+    {
+      "descriptionSha256": "7491289e45678c6ba798ef3595e6319e8b8da0d3b2e86becdc7b5728a36c0433",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedProjectFile": {
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "projectName": {
+            "description": "Exact foundation argument: projectName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "projectName",
+          "expectedProjectFile"
+        ],
+        "type": "object"
+      },
+      "name": "AttachToOpenProject"
+    },
+    {
+      "descriptionSha256": "736655df5bed996b22ccc1ad3587369361ce8e25a0c3aa55c3749f4a4b55aeee",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "Bootstrap"
+    },
+    {
+      "descriptionSha256": "e6174adfa186a5e585d2a10625e48a5f3f95b5b021da4d19490d90ef54714591",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "flgNetJson": {
+            "description": "Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md.",
+            "maxLength": 262144,
+            "type": "string"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "flgNetJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildFlgNetCallXml"
+    },
+    {
+      "descriptionSha256": "f17dd99d824948b6c7daca3401229d27edc9012a7fff9ea9020981f117f05ab7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "globalDbJson": {
+            "description": "JSON {dbName,dbNumber:positive integer,staticMembers:[{name,datatype,externalWritable?:boolean,commentZhCn?:string,startValue?:string}]}; flat members, 1..1000 rows, strings <=4096. Aliases documented in legacy-offline-composition-candidate.md.",
+            "maxLength": 262144,
+            "type": "string"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit candidate output release; independent of host selection. GlobalDB supports 14sp1, 15.1 and 16-21; StructuredText remains V21 only. No XML conversion.",
+            "enum": [
+              "14sp1",
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "globalDbJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcGlobalDbXml"
+    },
+    {
+      "descriptionSha256": "857f4c1db663fefcff0f2a3a2b18e0c1b0c3d8b36e08ba008057848c02582354",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "expectedOrigin": {
+            "description": "Required caller attestation of snapshot ownership and immutability during the read; not authentication or proof of export provenance.",
+            "enum": [
+              "caller-owned-immutable-export-snapshot"
+            ],
+            "type": "string"
+          },
+          "files": {
+            "description": "Exact slash-separated relative XML file paths. No traversal, globbing, case aliases or recursive discovery. <=1 MiB/file, <=8 MiB total.",
+            "items": {
+              "maxLength": 512,
+              "type": "string"
+            },
+            "maxItems": 32,
+            "minItems": 1,
+            "type": "array"
+          },
+          "inputRoot": {
+            "description": "Existing absolute caller-owned immutable snapshot directory; no root directory or symlink/reparse-point ancestry.",
+            "maxLength": 4096,
+            "type": "string"
+          }
+        },
+        "required": [
+          "inputRoot",
+          "files",
+          "expectedOrigin"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcSymbolManifestFromXmlPath"
+    },
+    {
+      "descriptionSha256": "80220d809e709e05a9a1ed69b3f383b690000fd4937e08aa15e3f5fb438ff503",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "outputReleaseKey": {
+            "description": "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          },
+          "tagTableJson": {
+            "maxLength": 262144,
+            "type": "string"
+          }
+        },
+        "required": [
+          "tagTableJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcTagTableXml"
+    },
+    {
+      "descriptionSha256": "5e559ec02397c1ef93f9c22415a5962f51e8eb524d3e8604b6f7c544673e02b1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "outputReleaseKey": {
+            "description": "Required exact candidate output format, never inferred from the host release. Runtime XSD and native import validation are separate.",
+            "enum": [
+              "14sp1",
+              "15.1",
+              "16",
+              "17",
+              "18",
+              "19",
+              "20",
+              "21"
+            ],
+            "type": "string"
+          },
+          "udtJson": {
+            "maxLength": 262144,
+            "type": "string"
+          }
+        },
+        "required": [
+          "udtJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildPlcUdtXml"
+    },
+    {
+      "descriptionSha256": "70ffcb0376c584a63de9a3d2747e0f2d4528aa580232e27c8162169ceef9045f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "innerOnly": {
+            "default": false,
+            "description": "Return inner XML in StructuredText/v4 namespace context instead of the enclosing StructuredText element.",
+            "type": "boolean"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit candidate output release; independent of host selection. GlobalDB supports 14sp1, 15.1 and 16-21; StructuredText remains V21 only. No XML conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          },
+          "structuredTextJson": {
+            "description": "JSON {firstUid?:1..1000000000,operations:[{op,...}]}; if/elsif/else/endif, assignment (target and exactly one source or value), token, blank, newline, global/local/symbol/literal, line items. 1..1000 rows; strings <=4096; no unknown, duplicate or conflicting fields. Candidate generation, not SCL validation.",
+            "maxLength": 262144,
+            "type": "string"
+          }
+        },
+        "required": [
+          "structuredTextJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "BuildStructuredTextXml"
+    },
+    {
+      "descriptionSha256": "b724eaa0fbe4c20f7f103cf537b7904ec67c66c99eb381a9f42f43ee7ee184f9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "CloseProject"
+    },
+    {
+      "descriptionSha256": "18ff1d62ccadb8716bd27b429dbcf86d574730fa2582d496adef385f36b70bcb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "Exact foundation argument: password",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompileAndDiagnosePlc"
+    },
+    {
+      "descriptionSha256": "e09e9ccd4f6a8a1d12f5fbdb1fb859953d4d58c14113771d2ef5394aabdcc97b",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "password": {
+            "default": "",
+            "description": "Exact foundation argument: password",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "CompileSoftware"
+    },
+    {
+      "descriptionSha256": "87957e76f3d42313ce4e2cae8f097aa9280545dfca3fe27e84696362075a0ba8",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fbBlockJson": {
+            "description": "JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md.",
+            "maxLength": 262144,
+            "type": "string"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "fbBlockJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "ComposePlcFbBlockXml"
+    },
+    {
+      "descriptionSha256": "3710c146ea78ee71e8a89f4fe4ee5fc93d1bcc33eab5e9e9582c68552e857aab",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "fcBlockJson": {
+            "description": "JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md.",
+            "maxLength": 262144,
+            "type": "string"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "fcBlockJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "ComposePlcFcBlockXml"
+    },
+    {
+      "descriptionSha256": "c331b02fd26e1c69989ba15261ac1470f6c29292970e720e91b46c9aacdb647f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "ladFcBlockJson": {
+            "description": "Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md.",
+            "maxLength": 262144,
+            "type": "string"
+          },
+          "outputReleaseKey": {
+            "description": "Exact explicit V21 candidate output; independent of host selection. No conversion.",
+            "enum": [
+              "21"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "ladFcBlockJson",
+          "outputReleaseKey"
+        ],
+        "type": "object"
+      },
+      "name": "ComposePlcLadFcBlockXml"
+    },
+    {
+      "descriptionSha256": "ccaec22f19d053bff60b48daae204338aad3ba6eaa89a64cd41bb896119c2933",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "processId": {
+            "description": "Exact foundation argument: processId",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "processId"
+        ],
+        "type": "object"
+      },
+      "name": "Connect"
+    },
+    {
+      "descriptionSha256": "9536483db4f0b7d22cdb39268195881a85538e3741c2e646a0af2bdd8ccd11ff",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "description": "Exact foundation argument: address",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dataType": {
+            "description": "Exact foundation argument: dataType",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table",
+          "name",
+          "dataType",
+          "address"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcTag"
+    },
+    {
+      "descriptionSha256": "f5e618d9bfcceb52c2bd12bbf10442a27e12d4245cc3fb2a72cef8fed0764fcc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "group": {
+            "description": "Exact foundation argument: group",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "group",
+          "name"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcTagTable"
+    },
+    {
+      "descriptionSha256": "025f7817d7e0a05fbbdfd35b04d167a525f5f994d5a7b0a9813ab373118f9cba",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dataType": {
+            "description": "Exact foundation argument: dataType",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "name": {
+            "description": "Exact foundation argument: name",
+            "type": "string"
+          },
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          },
+          "value": {
+            "description": "Exact foundation argument: value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table",
+          "name",
+          "dataType",
+          "value"
+        ],
+        "type": "object"
+      },
+      "name": "CreatePlcUserConstant"
+    },
+    {
+      "descriptionSha256": "88d47abee0d880e365c1bb803b0a6af6d65245895d4046390bf6127ebf918c20",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "directoryPath": {
+            "description": "Exact foundation argument: directoryPath",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "projectName": {
+            "description": "Exact foundation argument: projectName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "directoryPath",
+          "projectName"
+        ],
+        "type": "object"
+      },
+      "name": "CreateProject"
+    },
+    {
+      "descriptionSha256": "3cfb95eecc7c14765ddeba5f75fad55193b051c9e9f238745fa5dd48e0856ed5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "externalSourceName": {
+            "description": "Exact foundation argument: externalSourceName",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "externalSourceName"
+        ],
+        "type": "object"
+      },
+      "name": "DeletePlcExternalSource"
+    },
+    {
+      "descriptionSha256": "2c7467f177d95f557fa5c867fa443bb120c3f16f32a544429a4c5ba8052358f9",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "processId": {
+            "description": "Exact foundation argument: processId",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "processId"
+        ],
+        "type": "object"
+      },
+      "name": "DiagnosePortalConnectReadiness"
+    },
+    {
+      "descriptionSha256": "f2b0e2de75871d25898aefecbeab7f40c5db1a927c9c963e83c97b1a2e9cbaed",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "Disconnect"
+    },
+    {
+      "descriptionSha256": "657e0e46f43e2c84f71cb9eb715a9ae5c4bdc7caaf92ed38edf37d5bc1c086e4",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact foundation argument: blockPath",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "Exact foundation argument: preservePath",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportBlock"
+    },
+    {
+      "descriptionSha256": "3a732f8a9518c278476e2affcbc54f8b99dc4ed37e19ca3f0d94f114eda57e1c",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedInventoryHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedInventoryHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": false,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportBlocks"
+    },
+    {
+      "descriptionSha256": "350eb68cd818f45eeb9ae8d3435050e1335460b21c690344c3f9b08f8a218f10",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "tagTableName": {
+            "description": "Exact foundation argument: tagTableName",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "tagTableName",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportPlcTagTable"
+    },
+    {
+      "descriptionSha256": "bd135cec4f8c835f85afab1762041b4fce9ceaa014fa9f000fb21f178f942c37",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "preservePath": {
+            "default": false,
+            "description": "Exact foundation argument: preservePath",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "Exact foundation argument: typePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "exportPath",
+          "typePath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportType"
+    },
+    {
+      "descriptionSha256": "1b90e6682c158bf7beee9abb03948229e68b4adb20f661df28712b7014d4f73f",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedInventoryHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedInventoryHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "exportPath": {
+            "description": "Exact foundation argument: exportPath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "recursive": {
+            "default": false,
+            "description": "Exact foundation argument: recursive",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "exportPath"
+        ],
+        "type": "object"
+      },
+      "name": "ExportTypes"
+    },
+    {
+      "descriptionSha256": "be2a8b5d711f6f72fc80b3de8457c0b6c82f571861ece97778d7000ba077a3a7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "externalSourceName": {
+            "description": "Exact foundation argument: externalSourceName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "externalSourceName"
+        ],
+        "type": "object"
+      },
+      "name": "GenerateBlocksFromExternalSource"
+    },
+    {
+      "descriptionSha256": "7cbc7ff21cf48ffc9d68940559fd0f86915897169b603d98dba6353ddece3f8e",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockPath": {
+            "description": "Exact foundation argument: blockPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "blockPath"
+        ],
+        "type": "object"
+      },
+      "name": "GetBlockInfo"
+    },
+    {
+      "descriptionSha256": "6552aa1f83a3e4dd527b7d869ffdc2a60d29052bb4d45c8d247babe473e804ac",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetBlocks"
+    },
+    {
+      "descriptionSha256": "25e5148521b0297692d52d7ddfa36400674f46e2c20dbc4bffd45d36a01676eb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetBlocksWithHierarchy"
+    },
+    {
+      "descriptionSha256": "8e95369ad1ec9dea80c010acae08a301a72bc69b24031dc00865edc0cf1bf736",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcExternalSources"
+    },
+    {
+      "descriptionSha256": "3d70adf8ff1fd36ff2ab7bc2eac224bec0abbcc8d70cd2436a92ef6727815bd5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetPlcTagTables"
+    },
+    {
+      "descriptionSha256": "40ab7bfbc5ceb9c1bf27aea92da33c7a4d1155ee15fd2e9801fa5ef0d59b1017",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetProject"
+    },
+    {
+      "descriptionSha256": "6e4b534f32b9b5b52de8c7f86b44a46b366492bdc5a3b636b335551d7b53e89d",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetProjectTree"
+    },
+    {
+      "descriptionSha256": "b2d5a5cde0725e96402ea994beca5a4f84eb84dad1adaf94e86d9fef903d09c7",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetSoftwareInfo"
+    },
+    {
+      "descriptionSha256": "ebfad42460ca2221ec2cac8df41ddc61fadcc5bf5d2bc11dc6388b8186f6abdc",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetSoftwareTree"
+    },
+    {
+      "descriptionSha256": "c3319f894e081b74967d3f0937800ba05f0f40acec1232995b28f9488a58165a",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "GetState"
+    },
+    {
+      "descriptionSha256": "9b02e2613aeab16f75180559927234b27efaafb17c59bc1ad48f0d0e87e1b0af",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetTechnologyObjects"
+    },
+    {
+      "descriptionSha256": "a2476ec8bff2bef1e69d466153a51094b1f7bac9389adfa9348ac32e970f4743",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "documentId": {
+            "default": "",
+            "description": "Exact reference ID from a tool's officialReference.documents or search.",
+            "type": "string"
+          },
+          "exampleId": {
+            "default": "",
+            "description": "Exact example ID; reads complete files or steps with release requirements.",
+            "type": "string"
+          },
+          "language": {
+            "default": "",
+            "description": "Programming language/format from the library, e.g. scl or udt.",
+            "type": "string"
+          },
+          "limit": {
+            "default": 80,
+            "maximum": 200,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "operation": {
+            "default": "",
+            "description": "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead.",
+            "type": "string"
+          },
+          "query": {
+            "default": "",
+            "description": "Words to search in official source text.",
+            "type": "string"
+          },
+          "toolName": {
+            "default": "",
+            "description": "Exact available tool name. Do not combine with query or documentId.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "name": "GetToolUsage"
+    },
+    {
+      "descriptionSha256": "0c7f7048afb3ead509d096be8820ed15b4badf77e6ae2e01c912646b9960d450",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "typePath": {
+            "description": "Exact foundation argument: typePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "typePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetTypeInfo"
+    },
+    {
+      "descriptionSha256": "3388b8f68292f658ebd681547498cf66113fccc13a020ac88ee42114e41af820",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath"
+        ],
+        "type": "object"
+      },
+      "name": "GetTypes"
+    },
+    {
+      "descriptionSha256": "f9472bcd79b8f2d4249531da61396f19888e136ea2055720e8ca64a9e4e44a95",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportBlock"
+    },
+    {
+      "descriptionSha256": "dd310cc6073106ed0cd348f79b91bf21b6e22af5f40b0350f433e4515b1e7bfd",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dir": {
+            "description": "Exact foundation argument: dir",
+            "type": "string"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importOrder": {
+            "default": [],
+            "description": "Exact foundation argument: importOrder",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "dir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportBlocksFromDirectory"
+    },
+    {
+      "descriptionSha256": "ed29819f19a42801b0e1c2b6fc2a0674af2f23f5392e89b4e28b836de7adb627",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "filePath": {
+            "description": "Exact foundation argument: filePath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "filePath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcExternalSource"
+    },
+    {
+      "descriptionSha256": "c7b3e8ab118f79e55dce74f34ada6260ea8951fb1349500ef12b3d6a39854fee",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "blockGroupPath": {
+            "default": "",
+            "description": "Exact foundation argument: blockGroupPath",
+            "type": "string"
+          },
+          "compileAfter": {
+            "default": false,
+            "description": "Exact foundation argument: compileAfter",
+            "type": "boolean"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "importOrder": {
+            "default": [],
+            "description": "Exact foundation argument: importOrder",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "maxItems": {
+            "default": 128,
+            "description": "Exact foundation argument: maxItems",
+            "type": "integer"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "regexName": {
+            "default": "",
+            "description": "Exact foundation argument: regexName",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          },
+          "sourceDir": {
+            "description": "Exact foundation argument: sourceDir",
+            "type": "string"
+          },
+          "stopOnImportFailure": {
+            "default": true,
+            "description": "Exact foundation argument: stopOnImportFailure",
+            "type": "boolean"
+          },
+          "tagFolderPath": {
+            "default": "",
+            "description": "Exact foundation argument: tagFolderPath",
+            "type": "string"
+          },
+          "technologyFolderPath": {
+            "default": "",
+            "description": "Exact foundation argument: technologyFolderPath",
+            "type": "string"
+          },
+          "typeGroupPath": {
+            "default": "",
+            "description": "Exact foundation argument: typeGroupPath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "sourceDir"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcProgramFromDirectory"
+    },
+    {
+      "descriptionSha256": "e98651aa1ac43ec81701235499f9923e2abc18b45dfa6d6175933f05376e42fb",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "folderPath": {
+            "description": "Exact foundation argument: folderPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "folderPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportPlcTagTable"
+    },
+    {
+      "descriptionSha256": "781f0a18b685ca8ab61667685c1b006628af8415ba1829bfa4ebf318bb398b28",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "importPath": {
+            "description": "Exact foundation argument: importPath",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Exact foundation argument: overwrite",
+            "type": "boolean"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "importPath"
+        ],
+        "type": "object"
+      },
+      "name": "ImportType"
+    },
+    {
+      "descriptionSha256": "47769bc3c32246fc16b13a30ff1619066087490100ccbdbc2ce3d19baca30d16",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "type": "object"
+      },
+      "name": "ListPortalProcessProjects"
+    },
+    {
+      "descriptionSha256": "9d1d408de37d13ac164d26a6aa1d0ad714178bfbc9b37aecc598ed07e4937d77",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "path": {
+            "description": "Exact foundation argument: path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "name": "OpenProject"
+    },
+    {
+      "descriptionSha256": "060c88e573fbca6602cd9784c510ef30b06ff0bbfd346a80f05acb744c1e6828",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "artifactsJson": {
+            "maxLength": 1048576,
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifactsJson"
+        ],
+        "type": "object"
+      },
+      "name": "PlanArtifactImportOrder"
+    },
+    {
+      "descriptionSha256": "8e47d9e96766fccd6033c4ee68d91100c241c512ca112eb443c16a4d23ba4ff1",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "allowedFilePath": {
+            "description": "Exact foundation argument: allowedFilePath",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedPlanHash": {
+            "default": "",
+            "description": "Exact foundation argument: expectedPlanHash",
+            "type": "string"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          },
+          "filePath": {
+            "description": "Exact foundation argument: filePath",
+            "type": "string"
+          },
+          "groupPath": {
+            "description": "Exact foundation argument: groupPath",
+            "type": "string"
+          },
+          "softwarePath": {
+            "description": "Exact foundation argument: softwarePath",
+            "type": "string"
+          }
+        },
+        "required": [
+          "softwarePath",
+          "groupPath",
+          "filePath",
+          "allowedFilePath"
+        ],
+        "type": "object"
+      },
+      "name": "PlanPlcExternalSourceImport"
+    },
+    {
+      "descriptionSha256": "848dfd9fd9f1d5baf84a6b373b47c49d731cf7e8988ddf3bff69fbc264754a97",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ReadPlcSystemConstants"
+    },
+    {
+      "descriptionSha256": "c692eefd7da86c59dbf019e7bc059f624d65c3006236af043aa9365377d37eb5",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ReadPlcTags"
+    },
+    {
+      "descriptionSha256": "d2762af4b0342a52642b51a2ee3e319b6d1d3ecf801e75cf5b1277af61834415",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "plc": {
+            "description": "Exact foundation argument: plc",
+            "type": "string"
+          },
+          "table": {
+            "description": "Exact foundation argument: table",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plc",
+          "table"
+        ],
+        "type": "object"
+      },
+      "name": "ReadPlcUserConstants"
+    },
+    {
+      "descriptionSha256": "dc91ad963ddee68aebe5c3ab2eead9d51d308f78bec5ff0a925679b677df7acf",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "connectIfNeeded": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "includeProjectTree": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          },
+          "inspectPortalProcesses": {
+            "default": false,
+            "description": "Only false is supported. Native checks/attach are unavailable in this passive host contract.",
+            "enum": [
+              false
+            ],
+            "type": "boolean"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "RunCapabilitySelfTest"
+    },
+    {
+      "descriptionSha256": "33b029b8ac08bdcef4b6cf04972db05cda7ba3559d4c74d41812cd4626f02362",
+      "inputSchema": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm": {
+            "default": false,
+            "description": "Exact foundation argument: confirm",
+            "type": "boolean"
+          },
+          "dryRun": {
+            "default": true,
+            "description": "Exact foundation argument: dryRun",
+            "type": "boolean"
+          },
+          "expectedProjectFile": {
+            "default": "",
+            "description": "Exact foundation argument: expectedProjectFile",
+            "type": "string"
+          }
+        },
+        "required": [],
+        "type": "object"
+      },
+      "name": "SaveProject"
+    }
+  ]
+}
