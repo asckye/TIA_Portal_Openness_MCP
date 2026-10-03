@@ -27,6 +27,7 @@ public class SourceConsistencyTests(WpfContext wpf)
     // LocalizedText.Key("X"), LocalizedText.Working("X")
     private static readonly Regex[] CodeKeys =
     [
+        new(@"TrExtension\.CreateBinding\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"Loc\.Current\[""([A-Za-z][\w.]*)""\]", RegexOptions.Compiled),
         new(@"Loc\.Current\.T\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"SetStatus\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
@@ -109,7 +110,9 @@ public class SourceConsistencyTests(WpfContext wpf)
         {
             var missing = new SortedSet<string>(StringComparer.Ordinal);
 
-            using var configuration = new ConfigurationView(new Window(), AppContext.BaseDirectory, false);
+            var window = new MainWindow();
+            window.ShowConfiguration(false);
+            var configuration = window.Configuration!;
             foreach (var file in SourceScan.Markup)
             {
                 foreach (Match match in ResourceKey.Matches(file.Text))
@@ -154,6 +157,9 @@ public class SourceConsistencyTests(WpfContext wpf)
 
         // Built by LocalizedText.Working rather than named at any call site.
         used.Add("Status.Working");
+
+        // Former preference selector labels remain available to settings consumers.
+        used.UnionWith(new[] { "Theme.Auto", "Theme.Light", "Theme.Dark" });
 
         // P5-02 preserves the complete legacy dictionary, including former window chrome keys.
         used.UnionWith(new[] { "Config.Light", "Config.Dark", "Config.Auto", "Config.Minimize", "Config.Maximize", "Config.Close" });

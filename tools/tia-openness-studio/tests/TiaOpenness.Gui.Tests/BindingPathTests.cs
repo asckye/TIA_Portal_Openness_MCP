@@ -24,7 +24,7 @@ namespace TiaOpenness.Gui.Tests;
 [Collection(WpfCollection.Name)]
 public sealed class BindingPathTests(WpfContext wpf, ITestOutputHelper output)
 {
-    private sealed class BindingTrace : IDisposable
+    internal sealed class BindingTrace : IDisposable
     {
         private readonly TraceSource _source = PresentationTraceSources.DataBindingSource;
         private readonly SourceLevels _previous;

@@ -3,6 +3,16 @@
     <shell:WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="12" UseAeroCaptionButtons="False"/>
   </shell:WindowChrome.WindowChrome>
 
+  <Window.InputBindings>
+    <KeyBinding Key="S" Modifiers="Control" Command="{Binding Engineering.Save}"/>
+    <KeyBinding Key="D1" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Engineering}"/>
+    <KeyBinding Key="D2" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Configuration}"/>
+  </Window.InputBindings>
+  <Window.CommandBindings>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnEngineering"/>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnConfiguration"/>
+  </Window.CommandBindings>
+
   <Grid x:Name="Root" Background="{DynamicResource Ui.WindowBackground}" ClipToBounds="True" TextElement.FontFamily="{DynamicResource Ui.Font}" TextElement.FontSize="12" TextElement.Foreground="{DynamicResource Ui.Label}">
     <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-400,-360,0" IsHitTestVisible="False"/>
     <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="-380,0,0,-380" IsHitTestVisible="False"/>
@@ -12,21 +22,63 @@
         <RowDefinition Height="*"/>
       </Grid.RowDefinitions>
       <Grid Margin="18,0,8,0">
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
           <Border Width="16" Height="16" CornerRadius="5" Background="{DynamicResource Ui.Accent}" VerticalAlignment="Center"/>
           <TextBlock Text="{l:Tr App.Title}" FontWeight="SemiBold" VerticalAlignment="Center" Margin="10,0,0,0"/>
+          <Menu x:Name="MenuBar" Style="{StaticResource Glass.MenuBar}" Margin="18,0,0,0" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+            <MenuItem x:Name="ProjectMenu" Header="{l:Tr Menu.Project}">
+              <MenuItem Header="{l:Tr Menu.Open}" Click="OnProjectOptions"/>
+              <MenuItem x:Name="SaveMenu" IsEnabled="{Binding IsEnabled,ElementName=SaveButton}" Header="{l:Tr Menu.Save}" Command="{Binding Engineering.Save}" InputGestureText="Ctrl+S"/>
+              <MenuItem Header="{l:Tr Menu.Compile}" IsEnabled="{Binding IsEnabled,ElementName=CompileButton}" Command="{Binding Engineering.Compile}"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem Header="{l:Tr Menu.Transfer}" Click="OnExportOptions"/>
+              <MenuItem Header="{l:Tr Menu.Inspect}" Click="OnInspectOptions"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem Header="{l:Tr Menu.Exit}" Click="OnClose"/>
+            </MenuItem>
+            <MenuItem x:Name="ViewMenu" Header="{l:Tr Menu.View}">
+              <MenuItem x:Name="EngineeringMenu" Header="{l:Tr Menu.Engineering}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsChecked,ElementName=EngineeringTab,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Engineering}" InputGestureText="Ctrl+1"/>
+              <MenuItem x:Name="ConfigurationMenu" Header="{l:Tr Menu.Configuration}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsChecked,ElementName=ConfigurationTab,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Configuration}" InputGestureText="Ctrl+2"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem x:Name="BlocksMenu" Header="{l:Tr Menu.Blocks}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsBlocksTab}" Click="OnEngineeringView"/>
+              <MenuItem x:Name="VciMenu" Header="{l:Tr Menu.Vci}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsVcTab}" Click="OnEngineeringView"/>
+              <MenuItem x:Name="LogMenu" Header="{l:Tr Menu.Log}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsLogTab}" Click="OnEngineeringView"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem Header="{l:Tr Menu.Language}" ToolTip="{l:Tr Lang.Switch}">
+                <MenuItem x:Name="EnglishMenu" Header="{l:Tr Menu.English}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}" Click="OnRadioMenuClick"/>
+                <MenuItem x:Name="ChineseMenu" Header="{l:Tr Menu.Chinese}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsChinese,Source={x:Static l:Loc.Current}}" Click="OnRadioMenuClick"/>
+              </MenuItem>
+              <MenuItem Header="{l:Tr Menu.Theme}" ToolTip="{l:Tr Theme.Switch}">
+                <MenuItem x:Name="AutoThemeMenu" Header="{l:Tr Menu.Auto}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsAuto,Source={x:Static themes:ThemeManager.Current}}" Click="OnRadioMenuClick"/>
+                <MenuItem x:Name="LightThemeMenu" Header="{l:Tr Menu.Light}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsLight,Source={x:Static themes:ThemeManager.Current}}" Click="OnRadioMenuClick"/>
+                <MenuItem x:Name="DarkThemeMenu" Header="{l:Tr Menu.Dark}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}" Click="OnRadioMenuClick"/>
+              </MenuItem>
+            </MenuItem>
+            <MenuItem x:Name="ToolsMenu" Header="{l:Tr Menu.Tools}">
+              <MenuItem Header="{l:Tr Menu.Software}" Click="OnSoftware"/>
+              <MenuItem Header="{l:Tr Menu.Git}" Click="OnGit"/>
+              <MenuItem Header="{l:Tr Menu.Workspace}" Click="OnWorkspaceOptions"/>
+            </MenuItem>
+            <MenuItem x:Name="HelpMenu" Header="{l:Tr Menu.Help}" SubmenuOpened="OnHelpOpened">
+              <MenuItem x:Name="UpdateMenu" Header="{l:Tr Config.Update}">
+                <MenuItem x:Name="UpdateInstalledItem" Header="{l:Tr Config.UnknownEngine}" IsEnabled="False"/>
+                <MenuItem x:Name="UpdateStateItem" Header="{l:Tr Config.NotChecked}" IsEnabled="False"/>
+                <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+                <MenuItem x:Name="CheckUpdate" Header="{l:Tr Config.CheckUpdate}"/>
+                <MenuItem x:Name="RunUpdate" Header="{l:Tr Config.RunUpdate}" IsEnabled="False"/>
+                <MenuItem x:Name="OpenReleases" Header="{l:Tr Config.Releases}"/>
+              </MenuItem>
+              <MenuItem x:Name="ShowClientHelp" Header="{l:Tr Config.ClientHelp}"/>
+              <MenuItem x:Name="OpenProjectPage" Header="{l:Tr Config.ProjectPage}"/>
+              <MenuItem x:Name="AboutItem" Header="{l:Tr Config.About}"/>
+            </MenuItem>
+          </Menu>
         </StackPanel>
         <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
           <RadioButton x:Name="EngineeringTab" Content="{l:Tr Desktop.Engineering}" GroupName="DesktopPage" IsChecked="True" Style="{StaticResource Desktop.Tab}" Click="OnEngineering" Margin="0,0,6,0"/>
           <RadioButton x:Name="ConfigurationTab" Content="{l:Tr Desktop.Configuration}" GroupName="DesktopPage" Style="{StaticResource Desktop.Tab}" Click="OnConfiguration" Margin="0,0,8,0"/>
           <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
                           SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
-          <ComboBox Width="80" Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static l:Loc.Current}, Path=Language, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Lang.Switch}">
-            <ComboBoxItem Content="English"/><ComboBoxItem Content="中文"/>
-          </ComboBox>
-          <ComboBox Width="72" Style="{StaticResource Glass.Preference}" SelectedIndex="{Binding Source={x:Static themes:ThemeManager.Current}, Path=Theme, Converter={StaticResource Glass.EnumIndex}}" ToolTip="{l:Tr Theme.Switch}">
-            <ComboBoxItem Content="{l:Tr Theme.Auto}"/><ComboBoxItem Content="{l:Tr Theme.Light}"/><ComboBoxItem Content="{l:Tr Theme.Dark}"/>
-          </ComboBox>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMinimize"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMaximize"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnClose"/>
@@ -43,7 +95,7 @@
         </Grid.ColumnDefinitions>
         <Grid>
           <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-          <Border Style="{StaticResource Glass.Card}" Padding="10,18" Background="{DynamicResource Ui.SidebarBackground}">
+          <Border x:Name="SidebarCard" Style="{StaticResource Glass.Card}" Padding="10,18" Background="{DynamicResource Ui.SidebarBackground}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -72,7 +124,7 @@
                 <Button Content="{l:Tr Glass.Software}" Style="{StaticResource Glass.NavAction}" Click="OnSoftware"/>
                 <RadioButton Content="{l:Tr Tree.ProgramBlocks}" ToolTip="{l:Tr Tab.Blocks}" GroupName="View" IsChecked="{Binding IsBlocksTab}" Style="{StaticResource Glass.Nav}"/>
                 <Button Content="{l:Tr Glass.Transfer}" Style="{StaticResource Glass.NavAction}" Click="OnExportOptions"/>
-                <Button Content="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}" Style="{StaticResource Glass.NavAction}"/>
+                <Button x:Name="CompileButton" Content="{l:Tr Toolbar.Compile}" Command="{Binding Engineering.Compile}" Style="{StaticResource Glass.NavAction}"/>
                 <Button Content="{l:Tr Toolbar.Inspect}" Click="OnInspectOptions" Style="{StaticResource Glass.NavAction}"/>
                 <Border Height="1" Background="{DynamicResource Ui.Separator}" Margin="12,10,12,12"/>
                 <RadioButton Content="{l:Tr Glass.Vci}" ToolTip="{l:Tr Tab.VersionControl}" GroupName="View" IsChecked="{Binding IsVcTab}" Style="{StaticResource Glass.Nav}"/>
@@ -91,7 +143,7 @@
           </Grid.RowDefinitions>
           <Grid>
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}">
+            <Border x:Name="ProjectCard" Style="{StaticResource Glass.Card}">
               <Grid>
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="*"/>
@@ -114,14 +166,14 @@
                       </DataTemplate>
                     </ComboBox.ItemTemplate>
                   </ComboBox>
-                  <Button Content="{l:Tr Toolbar.Save}" ToolTip="{l:Tr Toolbar.Save.Tip}" Command="{Binding Engineering.Save}" Style="{StaticResource Glass.Primary}"/>
+                  <Button x:Name="SaveButton" Content="{l:Tr Toolbar.Save}" ToolTip="{l:Tr Toolbar.Save.Tip}" Command="{Binding Engineering.Save}" Style="{StaticResource Glass.Primary}"/>
                 </StackPanel>
               </Grid>
             </Border>
           </Grid>
           <Grid Grid.Row="2">
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}" Padding="22,18">
+            <Border x:Name="BlocksCard" Style="{StaticResource Glass.Card}" Padding="22,18">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="34"/>
@@ -257,7 +309,7 @@
           </Grid.RowDefinitions>
           <Grid>
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}">
+            <Border x:Name="CompileCard" Style="{StaticResource Glass.Card}">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="24"/>
@@ -293,7 +345,7 @@
           </Grid>
           <Grid Grid.Row="2">
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}">
+            <Border x:Name="InspectionCard" Style="{StaticResource Glass.Card}">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="28"/>
@@ -322,18 +374,18 @@
           </Grid>
           <Grid Grid.Row="4">
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}" BorderThickness="0">
+            <Border x:Name="BlocksLogCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}" BorderThickness="0">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="28"/>
                   <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="{l:Tr Log.Title}" Foreground="#E6EBEF" FontWeight="Bold"/>
+                <TextBlock Text="{l:Tr Log.Title}" Foreground="{DynamicResource Ui.Label}" FontWeight="Bold"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                   <Button Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Glass.Quiet}" Margin="0,0,10,0"/>
                   <Button Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Glass.Quiet}"/>
                 </StackPanel>
-                <glass:GlassLogView Grid.Row="1" LogText="{Binding Activity.Log}" Foreground="#B5C0CA"/>
+                <glass:GlassLogView Grid.Row="1" LogText="{Binding Activity.Log}" Foreground="{DynamicResource Ui.LogText}"/>
               </Grid>
             </Border>
           </Grid>
@@ -348,7 +400,7 @@
           </Grid.RowDefinitions>
           <Grid>
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}">
+            <Border x:Name="WorkspaceCard" Style="{StaticResource Glass.Card}">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="56"/>
@@ -385,7 +437,7 @@
             </Grid.ColumnDefinitions>
             <Grid>
               <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-              <Border Style="{StaticResource Glass.Card}" Padding="20,14">
+              <Border x:Name="VciStatusCard" Style="{StaticResource Glass.Card}" Padding="20,14">
                 <Grid>
                   <Grid.RowDefinitions>
                     <RowDefinition Height="28"/>
@@ -412,7 +464,7 @@
             </Grid>
             <Grid Grid.Column="2">
               <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-              <Border Style="{StaticResource Glass.Card}" Padding="20,14">
+              <Border x:Name="SyncCard" Style="{StaticResource Glass.Card}" Padding="20,14">
                 <Grid>
                   <Grid.RowDefinitions>
                     <RowDefinition Height="30"/>
@@ -446,7 +498,7 @@
           </Grid>
           <Grid Grid.Row="4">
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border Style="{StaticResource Glass.Card}" Padding="22,12">
+            <Border x:Name="MappedObjectsCard" Style="{StaticResource Glass.Card}" Padding="22,12">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="42"/>
@@ -528,7 +580,7 @@
         </Grid>
         <Grid Grid.Column="4" Visibility="{Binding IsVcTab, Converter={StaticResource BoolToVisibility}}">
           <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-          <Border Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.GitBackground}" TextElement.Foreground="#E6EBEF">
+          <Border x:Name="DiffCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.GitBackground}" TextElement.Foreground="{DynamicResource Ui.Label}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
@@ -537,19 +589,19 @@
                 <RowDefinition Height="Auto"/>
               </Grid.RowDefinitions>
               <TextBlock Text="{l:Tr Glass.LocalDiff}" Style="{StaticResource Glass.Heading}"/>
-              <Border Style="{StaticResource Glass.Chip}" Background="#268A98A6" HorizontalAlignment="Right">
-                <TextBlock Text="{l:Tr Glass.WorkingTree}" Foreground="#B5C0CA"/>
+              <Border Style="{StaticResource Glass.Chip}" Background="{DynamicResource Ui.ChipBackground}" HorizontalAlignment="Right">
+                <TextBlock Text="{l:Tr Glass.WorkingTree}" Foreground="{DynamicResource Ui.LogText}"/>
               </Border>
               <DockPanel Grid.Row="1">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                   <TextBlock Text="{Binding ElementName=Root,Path=Tag.DiffAdded}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10.5" Foreground="{DynamicResource Ui.Green}" Margin="8,0,6,0" VerticalAlignment="Center"/>
                   <TextBlock Text="{Binding ElementName=Root,Path=Tag.DiffRemoved}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10.5" Foreground="{DynamicResource Ui.Red}" VerticalAlignment="Center"/>
                 </StackPanel>
-                <TextBlock Text="{Binding VersionControl.VcDiffCaption}" Style="{StaticResource Glass.Mono}" Foreground="#8A98A6" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding VersionControl.VcDiffCaption}" Style="{StaticResource Glass.Mono}" Foreground="{DynamicResource Ui.SecondaryLabel}" FontWeight="SemiBold"/>
               </DockPanel>
-              <Border Grid.Row="2" Background="#59000000" CornerRadius="10" Padding="14,12" Margin="0,4,0,14">
+              <Border Grid.Row="2" Background="{DynamicResource Ui.InsetBackground}" CornerRadius="10" Padding="14,12" Margin="0,4,0,14">
                 <Grid>
-                  <TextBlock Text="{l:Tr Vc.Diff.Empty}" Style="{StaticResource Glass.Muted}" Foreground="#8A98A6" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource NotBoolToVisibility}}"/>
+                  <TextBlock Text="{l:Tr Vc.Diff.Empty}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" VerticalAlignment="Top" Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource NotBoolToVisibility}}"/>
                   <ListBox ItemsSource="{Binding VersionControl.VcDiffLines}" Style="{StaticResource Glass.List}" ScrollViewer.HorizontalScrollBarVisibility="Auto" Visibility="{Binding VersionControl.HasVcDiff, Converter={StaticResource BoolToVisibility}}">
                     <ListBox.ItemContainerStyle>
                       <Style TargetType="ListBoxItem">
@@ -568,7 +620,7 @@
                         <TextBlock Text="{Binding Text}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10.5" LineHeight="17">
                           <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                              <Setter Property="Foreground" Value="#8A98A6"/>
+                              <Setter Property="Foreground" Value="{DynamicResource Ui.SecondaryLabel}"/>
                               <Style.Triggers>
                                 <DataTrigger Binding="{Binding Kind}" Value="Added">
                                   <Setter Property="Foreground" Value="{DynamicResource Ui.Green}"/>
@@ -589,35 +641,35 @@
                 <ItemsControl ItemsSource="{Binding ElementName=Root,Path=Tag.OtherMappedFiles}" Margin="0,0,0,8">
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <Button Content="{Binding FilePath}" Tag="{Binding}" Click="OnMappedFile" ToolTip="{l:Tr Glass.InspectFile}" Style="{StaticResource Glass.Quiet}" Foreground="#8A98A6" HorizontalContentAlignment="Left" Height="22"/>
+                      <Button Content="{Binding FilePath}" Tag="{Binding}" Click="OnMappedFile" ToolTip="{l:Tr Glass.InspectFile}" Style="{StaticResource Glass.Quiet}" Foreground="{DynamicResource Ui.SecondaryLabel}" HorizontalContentAlignment="Left" Height="22"/>
                     </DataTemplate>
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <TextBlock Text="{l:Tr Glass.DiffScope}" Style="{StaticResource Glass.Muted}" Foreground="#8A98A6" TextWrapping="Wrap" FontSize="10.5"/>
+                <TextBlock Text="{l:Tr Glass.DiffScope}" Style="{StaticResource Glass.Muted}" Foreground="{DynamicResource Ui.SecondaryLabel}" TextWrapping="Wrap" FontSize="10.5"/>
               </StackPanel>
             </Grid>
           </Border>
         </Grid>
         <Grid Grid.Column="2" Grid.ColumnSpan="3" Visibility="{Binding IsLogTab, Converter={StaticResource BoolToVisibility}}">
           <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-          <Border Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}">
+          <Border x:Name="LogCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="28"/>
                 <RowDefinition Height="*"/>
               </Grid.RowDefinitions>
-              <TextBlock Text="{l:Tr Log.Title}" Foreground="#E6EBEF" FontWeight="Bold"/>
+              <TextBlock Text="{l:Tr Log.Title}" Foreground="{DynamicResource Ui.Label}" FontWeight="Bold"/>
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="{l:Tr Log.Copy}" Click="OnCopyLog" Style="{StaticResource Glass.Quiet}" Margin="0,0,10,0"/>
                 <Button Content="{l:Tr Log.Clear}" Click="OnClearLog" Style="{StaticResource Glass.Quiet}"/>
               </StackPanel>
-              <glass:GlassLogView Grid.Row="1" LogText="{Binding Activity.Log}" Foreground="#B5C0CA"/>
+              <glass:GlassLogView Grid.Row="1" LogText="{Binding Activity.Log}" Foreground="{DynamicResource Ui.LogText}"/>
             </Grid>
           </Border>
         </Grid>
       </Grid>
     </Grid>
-    <Grid Width="560" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+    <Grid x:Name="OptionsOverlay" Width="560" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
       <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
       <Border x:Name="OptionsPanel" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.WindowBackground}" Padding="24">
         <Grid>

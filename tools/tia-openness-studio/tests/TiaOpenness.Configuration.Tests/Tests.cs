@@ -260,13 +260,10 @@ namespace TiaMcpConfigurator
                 app.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 ThemeManager.Current.Theme = AppTheme.Light;
                 Loc.Current.Language = AppLanguage.English;
-                using (var form = new ConfigurationView(new System.Windows.Window {
-                    Width = 1200, Height = 780, MinWidth = 1200, MinHeight = 780,
-                    WindowStyle = System.Windows.WindowStyle.None, ResizeMode = System.Windows.ResizeMode.NoResize
-                }, AppDomain.CurrentDomain.BaseDirectory, false))
+                var window = new MainWindow(new TiaOpenness.Gui.ViewModels.MainViewModel(), false);
+                window.ShowConfiguration(false, AppDomain.CurrentDomain.BaseDirectory);
+                using (var form = window.Configuration)
                 {
-                    var window = form.Window;
-                    window.Content = form;
                     var versions = (System.Windows.Controls.ComboBox)form.FindName("Version");
                     Assert(versions.Items.Cast<TiaVersionDescriptor>().Select(x => x.Key).SequenceEqual(TiaVersionCatalog.Runnable.Select(x => x.Key))
                         && versions.Items.Cast<TiaVersionDescriptor>().All(x => x.IsRunnable), "version picker is populated only from runnable catalog descriptors");
@@ -282,10 +279,10 @@ namespace TiaMcpConfigurator
                         "selecting the V21 catalog key restores the active engine version");
                     // 2.8.0: the update lives in the menu bar (maintainer: "做成到菜单栏里"); nothing on the page, and the run item
                     // stays disabled until a check found a newer release.
-                    var menuBar = (System.Windows.Controls.Menu)form.FindName("MenuBar");
-                    var runUpdate = (System.Windows.Controls.MenuItem)form.FindName("RunUpdate");
-                    var installedItem = (System.Windows.Controls.MenuItem)form.FindName("UpdateInstalledItem");
-                    Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)form.FindName("CheckUpdate")).Header.ToString().StartsWith("_Check for Updates"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
+                    var menuBar = (System.Windows.Controls.Menu)window.FindName("MenuBar");
+                    var runUpdate = (System.Windows.Controls.MenuItem)window.FindName("RunUpdate");
+                    var installedItem = (System.Windows.Controls.MenuItem)window.FindName("UpdateInstalledItem");
+                    Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)window.FindName("CheckUpdate")).Header.ToString().StartsWith("_Check for Updates"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
                     Assert(installedItem.Header.ToString().StartsWith("Engine "), "English update menu names the installed engine version from the delivery manifest");
                     void AssertMenuLabels(bool chinese)
                     {
@@ -299,11 +296,16 @@ namespace TiaMcpConfigurator
                             ("OpenProjectPage", "Open _Project Page", "打开项目主页(_P)"),
                             ("AboutItem", "_About", "关于(_A)")
                         };
+                        Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Content.ToString() == Loc.Current["Config.SaveBoth"],
+                            (chinese ? "Chinese" : "English") + " save both label");
                         foreach (var (name, en, zh) in labels)
-                            Assert(((System.Windows.Controls.MenuItem)form.FindName(name)).Header.ToString() == (chinese ? zh : en),
+                            Assert(((System.Windows.Controls.MenuItem)window.FindName(name)).Header.ToString() == (chinese ? zh : en),
                                 (chinese ? "Chinese" : "English") + " menu label: " + name);
                     }
                     AssertMenuLabels(false);
+                    Assert(form.FindName("MenuBar") == null, "configuration has no second menu");
+                    Assert(((System.Windows.Controls.Button)form.FindName("SaveBoth")).Visibility == System.Windows.Visibility.Visible,
+                        "save both is a visible page action");
                     Loc.Current.Language = AppLanguage.Chinese;
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(installedItem.Header.ToString().StartsWith("引擎 ") || installedItem.Header.ToString().StartsWith("引擎版本未知"), "update menu names the installed engine version from manifest\\delivery.json");
@@ -311,7 +313,7 @@ namespace TiaMcpConfigurator
                     Loc.Current.Language = AppLanguage.English;
                     window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     AssertMenuLabels(false);
-                    Assert(form.FindName("ShowClientHelp") != null && form.FindName("OpenProjectPage") != null && form.FindName("AboutItem") != null && form.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
+                    Assert(window.FindName("ShowClientHelp") != null && window.FindName("OpenProjectPage") != null && window.FindName("AboutItem") != null && window.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
                     var generate = (System.Windows.Controls.Button)form.FindName("GenerateKey");
                     generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
                     var password = (System.Windows.Controls.PasswordBox)form.FindName("Key");
@@ -428,6 +430,7 @@ namespace TiaMcpConfigurator
                     window.Close();
                 }
                 Assert(File.Exists(Path.Combine(output, "remote.png")) && File.Exists(Path.Combine(output, "local.png")), "both modes render");
+                if (passed < 182) throw new Exception("Expected at least 182 configuration checks.");
                 Console.WriteLine("Passed: " + passed); return 0;
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); return 1; }

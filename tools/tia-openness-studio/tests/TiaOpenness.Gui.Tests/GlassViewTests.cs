@@ -54,7 +54,7 @@ public class GlassViewTests(WpfContext wpf)
         });
     }
 
-    internal void RenderEngineeringFixture(AppTheme theme, bool vci, AppLanguage language)
+    internal void RenderEngineeringFixture(AppTheme theme, bool vci, AppLanguage language, bool log = false)
     {
         wpf.RunWithLanguage(language, () =>
         {
@@ -104,6 +104,7 @@ public class GlassViewTests(WpfContext wpf)
                     { Text = line, Kind = line.StartsWith('+') ? DiffLineKind.Added : line.StartsWith('-') ? DiffLineKind.Removed : DiffLineKind.Context });
                     Set(model.Activity, "Log", "09:54:00  Mapped 128, already 0, unsupported 6, failed 0.\n09:54:01  Dry run: 4 would sync ProjectToWorkspace, 124 already equal. Clear Dry run to apply.\n");
                 }
+                if (log) model.IsLogTab = true;
                 var root = (FrameworkElement)window.Content;
                 window.Content = null;
                 var host = new Border { Child = root, DataContext = model, Width = 1200, Height = 780 };
@@ -113,13 +114,15 @@ public class GlassViewTests(WpfContext wpf)
                 host.UpdateLayout();
                 Assert.Equal(theme, ThemeManager.Current.Theme);
                 if (vci) Assert.True(((Border)window.FindName("SyncThumb")).ActualWidth > 80);
+                string[] cards = log ? new[] { "LogCard" } : vci ? new[] { "WorkspaceCard", "VciStatusCard", "SyncCard", "MappedObjectsCard", "DiffCard" } : new[] { "ProjectCard", "BlocksCard", "CompileCard", "InspectionCard", "BlocksLogCard" };
+                DesktopCapture.AssertCards(host, theme, cards.Select(name => (Border)window.FindName(name)).ToArray());
                 var bitmap = new RenderTargetBitmap(1200,780,96,96,PixelFormats.Pbgra32);bitmap.Render(host);
                 string? output = Environment.GetEnvironmentVariable("TIA_GLASS_SCREENSHOTS");
                 if (!string.IsNullOrEmpty(output))
                 {
                     Directory.CreateDirectory(output);
                     var encoder = new PngBitmapEncoder();encoder.Frames.Add(BitmapFrame.Create(bitmap));
-                    using var file = File.Create(Path.Combine(output, "studio-" + (vci ? "vci" : "blocks") + (language == AppLanguage.Chinese ? "-zh-" : "-") + theme.ToString().ToLowerInvariant() + ".png"));encoder.Save(file);
+                    using var file = File.Create(Path.Combine(output, "studio-" + (log ? "log" : vci ? "vci" : "blocks") + (language == AppLanguage.Chinese ? "-zh-" : "-") + theme.ToString().ToLowerInvariant() + ".png"));encoder.Save(file);
                 }
                 Assert.Equal(1200, bitmap.PixelWidth);
                 Assert.Equal(780, bitmap.PixelHeight);

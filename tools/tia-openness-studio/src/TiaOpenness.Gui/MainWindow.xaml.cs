@@ -7,12 +7,14 @@ namespace TiaOpenness.Gui;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _model;
+    private readonly bool _loadExistingConfiguration;
 
     public MainWindow() : this(new MainViewModel()) { }
 
-    internal MainWindow(MainViewModel model)
+    internal MainWindow(MainViewModel model, bool loadExistingConfiguration = true)
     {
         _model = model;
+        _loadExistingConfiguration = loadExistingConfiguration;
         _model.SelectedReleaseKey = InitialReleaseKey(System.Environment.GetCommandLineArgs());
         InitializeComponent();
         DataContext = _model;
@@ -52,15 +54,25 @@ public partial class MainWindow : Window
         foreach (var item in new[] { ProjectOptions, ExportOptions, InspectOptions, WorkspaceOptions })
             item.Visibility = item == panel ? Visibility.Visible : Visibility.Collapsed;
         OptionsTitle.SetBinding(TextBlock.TextProperty, Localization.TrExtension.CreateBinding(title));
-        OptionsPanel.Visibility = Visibility.Visible;
+        OptionsOverlay.Visibility = Visibility.Visible;
     }
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowOptions(ProjectOptions, "Project.Label");
     private void OnExportOptions(object sender, RoutedEventArgs e) => ShowOptions(ExportOptions, "Glass.Transfer");
     private void OnInspectOptions(object sender, RoutedEventArgs e) => ShowOptions(InspectOptions, "Toolbar.Inspect");
     private void OnWorkspaceOptions(object sender, RoutedEventArgs e) => ShowOptions(WorkspaceOptions, "Glass.NewWorkspace");
-    private void OnCloseOptions(object sender, RoutedEventArgs e) => OptionsPanel.Visibility = Visibility.Collapsed;
-    private void OnSoftware(object sender, RoutedEventArgs e) { _model.IsBlocksTab = true; SoftwarePicker.IsDropDownOpen = true; }
-    private void OnGit(object sender, RoutedEventArgs e) => _model.IsVcTab = true;
+    private void OnCloseOptions(object sender, RoutedEventArgs e) => OptionsOverlay.Visibility = Visibility.Collapsed;
+    private void OnSoftware(object sender, RoutedEventArgs e) { ShowEngineering(); _model.IsBlocksTab = true; SoftwarePicker.IsDropDownOpen = true; }
+    private void OnGit(object sender, RoutedEventArgs e) { ShowEngineering(); _model.IsVcTab = true; }
+    private void OnRadioMenuClick(object sender, RoutedEventArgs e)
+    {
+        // MenuItem toggles before Click; a radio choice must remain selected on a second click.
+        ((MenuItem)sender).SetCurrentValue(MenuItem.IsCheckedProperty, true);
+    }
+    private void OnEngineeringView(object sender, RoutedEventArgs e)
+    {
+        OnRadioMenuClick(sender, e);
+        ShowEngineering();
+    }
     private void OnMappedFile(object sender, RoutedEventArgs e) => _model.VersionControl.SelectedVcItem = (TiaOpenness.Contracts.Models.MappedObjectInfo)((Button)sender).Tag;
     private void OnMappedFilter(object sender, RoutedEventArgs e)
     {

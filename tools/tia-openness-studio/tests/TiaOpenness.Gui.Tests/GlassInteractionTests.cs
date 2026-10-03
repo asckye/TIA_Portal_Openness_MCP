@@ -60,7 +60,7 @@ public class GlassInteractionTests(WpfContext wpf)
         });
     }
     [Fact]
-    public void Language_and_theme_pickers_change_the_live_window_without_replacing_the_model()
+    public void Language_and_theme_menu_items_change_the_live_window_without_replacing_the_model()
     {
         wpf.RunWithLanguage(AppLanguage.English, () =>
         {
@@ -72,12 +72,9 @@ public class GlassInteractionTests(WpfContext wpf)
                 var content=(FrameworkElement)window.Content;window.Content=null;
                 var host=new Border {Child=content,DataContext=model};
                 host.Measure(new Size(1200,780));host.Arrange(new Rect(0,0,1200,780));host.UpdateLayout();
-                var pickers=Find<ComboBox>(host).ToArray();
-                var language=pickers.Single(c=>Equals(c.ToolTip,Loc.Current["Lang.Switch"]));
-                var theme=pickers.Single(c=>Equals(c.ToolTip,Loc.Current["Theme.Switch"]));
-                language.SelectedIndex=1;
+                UnifiedDesktopTests.ClickMenu((MenuItem)window.FindName("ChineseMenu"));
                 Assert.True(Loc.Current.IsChinese);
-                theme.SelectedIndex=2;
+                UnifiedDesktopTests.ClickMenu((MenuItem)window.FindName("DarkThemeMenu"));
                 Assert.Equal(AppTheme.Dark,ThemeManager.Current.Theme);
                 Assert.Same(model,window.DataContext);
             }

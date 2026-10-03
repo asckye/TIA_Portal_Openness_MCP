@@ -79,6 +79,10 @@
         </StackPanel>
       </DataTemplate>
       <Style TargetType="PasswordBox">
+        <Setter Property="SelectionBrush" Value="{DynamicResource Ui.SelectionFill}"/>
+        <Setter Property="SelectionTextBrush" Value="{DynamicResource Ui.SelectionText}"/>
+        <Setter Property="SelectionOpacity" Value="1"/>
+        <Setter Property="CaretBrush" Value="{DynamicResource Ui.Label}"/>
         <Setter Property="Height" Value="38"/>
         <Setter Property="Padding" Value="12,8"/>
         <Setter Property="Foreground" Value="{DynamicResource Ui.Label}"/>
@@ -99,36 +103,7 @@
     <Ellipse Fill="{DynamicResource Glass.GlowOne}" Width="1200" Height="800" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-420,-322,0,0" IsHitTestVisible="False"/>
     <Ellipse Fill="{DynamicResource Glass.GlowTwo}" Width="1000" Height="760" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-380,-302" IsHitTestVisible="False"/>
     <Grid>
-      <Grid.RowDefinitions>
-        <RowDefinition Height="40"/>
-        <RowDefinition Height="*"/>
-      </Grid.RowDefinitions>
-      <Grid Margin="18,0,8,0">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-          <Menu x:Name="MenuBar" Background="Transparent" Foreground="{DynamicResource Ui.SecondaryLabel}" FontSize="11" VerticalAlignment="Center">
-            <MenuItem Header="•••" Padding="10,4">
-              <MenuItem x:Name="UpdateMenu" Header="{l:Tr Config.Update}">
-                <MenuItem x:Name="UpdateInstalledItem" Header="{l:Tr Config.UnknownEngine}" IsEnabled="False"/>
-                <MenuItem x:Name="UpdateStateItem" Header="{l:Tr Config.NotChecked}" IsEnabled="False"/>
-                <Separator/>
-                <MenuItem x:Name="CheckUpdate" Header="{l:Tr Config.CheckUpdate}"/>
-                <MenuItem x:Name="RunUpdate" Header="{l:Tr Config.RunUpdate}" IsEnabled="False"/>
-                <MenuItem x:Name="OpenReleases" Header="{l:Tr Config.Releases}"/>
-              </MenuItem>
-              <MenuItem x:Name="ShowClientHelp" Header="{l:Tr Config.ClientHelp}"/>
-              <MenuItem x:Name="OpenProjectPage" Header="{l:Tr Config.ProjectPage}"/>
-              <MenuItem x:Name="AboutItem" Header="{l:Tr Config.About}"/>
-              <Separator/>
-              <MenuItem StaysOpenOnClick="True">
-                <MenuItem.Header>
-                  <Button x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}"/>
-                </MenuItem.Header>
-              </MenuItem>
-            </MenuItem>
-          </Menu>
-        </StackPanel>
-      </Grid>
-      <ScrollViewer x:Name="ContentScroll" Grid.Row="1" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Padding="24,12,24,24">
+      <ScrollViewer x:Name="ContentScroll" VerticalScrollBarVisibility="Disabled" HorizontalScrollBarVisibility="Disabled" Padding="24,12,24,24">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
@@ -232,7 +207,7 @@
               </Grid.ColumnDefinitions>
               <Grid>
                 <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-                <Border Style="{StaticResource Glass.Card}" Padding="20,18">
+                <Border x:Name="InstallationCard" Style="{StaticResource Glass.Card}" Padding="20,18">
                   <Grid>
                     <Grid.RowDefinitions>
                       <RowDefinition Height="26"/>
@@ -345,7 +320,7 @@
                     <TextBlock Text="{l:Tr Config.AiClients}" FontWeight="Bold"/>
                     <TextBlock x:Name="ClientSelection" Style="{StaticResource Glass.Muted}" FontSize="12" Cursor="Hand"/>
                   </StackPanel>
-                  <TextBlock Text="{l:Tr Config.ClientNote}" Style="{StaticResource Glass.Muted}" HorizontalAlignment="Right"/>
+                  <Button x:Name="SaveBoth" Content="{l:Tr Config.SaveBoth}" Height="28" HorizontalAlignment="Right"/>
                   <ListBox x:Name="ClientChoices" Grid.Row="1" Style="{StaticResource Glass.List}" ItemContainerStyle="{StaticResource ClientChoice}" ItemTemplate="{StaticResource ClientTile}" SelectionMode="Multiple" MaxHeight="250" VerticalAlignment="Top" Margin="-2,0,-8,8">
                     <ListBox.ItemsPanel>
                       <ItemsPanelTemplate>
@@ -374,7 +349,7 @@
                       </Grid>
                     </Border>
                     <Button x:Name="TestClient" Grid.Column="1" Content="{l:Tr Config.Test}" Style="{StaticResource Glass.Outline}" Width="140" Height="38" Margin="0,0,10,0"/>
-                    <Button x:Name="SaveClient" Grid.Column="2" Content="{l:Tr Config.Write}" Width="152" FontSize="13" Height="38" Background="{DynamicResource Ui.StrongFill}" Foreground="{DynamicResource Ui.StrongText}"/>
+                    <Button x:Name="SaveClient" Grid.Column="2" Content="{l:Tr Config.Write}" ToolTip="{l:Tr Config.ClientNote}" Width="152" FontSize="13" Height="38" Background="{DynamicResource Ui.StrongFill}" Foreground="{DynamicResource Ui.StrongText}"/>
                   </Grid>
                   <TextBlock x:Name="ClientInstructions" Visibility="Collapsed"/>
                 </Grid>
@@ -387,7 +362,7 @@
               <RowDefinition Height="14"/>
               <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Border Background="{DynamicResource Ui.SummaryBackground}" CornerRadius="16" Padding="22" TextElement.Foreground="{DynamicResource Ui.SummaryText}">
+            <Border x:Name="SummaryCard" Background="{DynamicResource Ui.SummaryBackground}" CornerRadius="16" Padding="22" TextElement.Foreground="{DynamicResource Ui.SummaryText}">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="30"/>
@@ -398,7 +373,7 @@
                   <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="{l:Tr Config.Summary}" FontWeight="Bold" FontSize="13"/>
-                <Border Background="#268A98A6" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="9,4">
+                <Border Background="{DynamicResource Ui.ChipBackground}" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="9,4">
                   <TextBlock x:Name="LinkState" Text="{l:Tr Config.Idle}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
                 </Border>
                 <TextBlock x:Name="LinkLeftLabel" Grid.Row="1" Text="{l:Tr Config.Clients}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
@@ -409,14 +384,14 @@
                 <TextBlock x:Name="LinkEndpoint" Grid.Row="3" HorizontalAlignment="Right" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11"/>
                 <TextBlock Grid.Row="4" Text="{l:Tr Config.Transport}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
                 <TextBlock x:Name="Transport" Grid.Row="4" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <Border Grid.Row="5" Background="#263DBBDC" BorderBrush="#553DBBDC" BorderThickness="1" CornerRadius="10" Padding="13,9" Margin="0,10,0,0">
+                <Border Grid.Row="5" Background="{DynamicResource Ui.AccentSoft}" BorderBrush="{DynamicResource Ui.AccentSoftBorder}" BorderThickness="1" CornerRadius="10" Padding="13,9" Margin="0,10,0,0">
                   <TextBlock x:Name="LastTest" Text="{l:Tr Config.InitialTest}" FontSize="11" TextWrapping="Wrap" LineHeight="17"/>
                 </Border>
               </Grid>
             </Border>
             <Grid Grid.Row="2">
               <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-              <Border Style="{StaticResource Glass.Card}" Padding="22,18">
+              <Border x:Name="ConfigurationLogCard" Style="{StaticResource Glass.Card}" Padding="22,18">
                 <Grid>
                   <Grid.RowDefinitions>
                     <RowDefinition Height="28"/>

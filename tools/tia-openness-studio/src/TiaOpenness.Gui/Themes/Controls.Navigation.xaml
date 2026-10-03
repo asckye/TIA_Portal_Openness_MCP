@@ -114,9 +114,7 @@
           <Border Background="{DynamicResource Ui.CardBackground}"
                   BorderBrush="{DynamicResource Ui.Separator}"
                   BorderThickness="1" CornerRadius="8" Padding="10,7">
-            <Border.Effect>
-              <DropShadowEffect BlurRadius="16" ShadowDepth="3" Opacity="0.16" Direction="270" />
-            </Border.Effect>
+            <Border.Effect><DynamicResource ResourceKey="Glass.PopupShadow"/></Border.Effect>
             <ContentPresenter />
           </Border>
         </ControlTemplate>

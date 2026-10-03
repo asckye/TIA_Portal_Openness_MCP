@@ -53,9 +53,15 @@ are removed. Doctor remains available without loading a native TIA session.
 ## Glass Layers interface
 
 The native WPF view uses the [Glass styles](src/TiaOpenness.Gui/Themes/Glass.xaml) and bundled [OFL fonts](src/TiaOpenness.Gui/Fonts). The minimum
-window size is 1200 x 780; the center column expands with the window. The title bar selects
-English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
-project session, selection and commands.
+window size is 1200 x 780; the center column expands with the window. One title-bar menu
+provides Project, View, Tools and Help. View selects English or Chinese and Light, Dark or Auto. Language and theme changes keep the same ViewModel,
+project session, selection and commands. Ctrl+S saves the project; Ctrl+1 and Ctrl+2 switch
+between Engineering and Configuration. The release picker and page tabs remain in the title bar.
+Help exposes updates, client instructions and About from either page. Save both configurations
+is a visible button in the AI clients card header on the configuration page.
+
+Cards, logs, local diffs, summaries, menus and application message dialogs follow the selected
+palette. System file/folder pickers keep the Windows shell appearance.
 
 Project opens the existing connection/project options; Export / Import opens format and output
 options; Inspect opens the existing inspection rules. Program blocks retain filtering, selection,

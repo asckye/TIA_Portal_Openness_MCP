@@ -5,7 +5,7 @@ namespace TiaOpenness.Gui.Services;
 public sealed class WpfDialogService : IDialogService
 {
     public DialogResult ShowMessage(string text, string caption, DialogButtons buttons, DialogIcon icon)
-        => MessageBox.Show(text, caption,
+        => TiaOpenness.Gui.Controls.GlassMessageBox.Show(text, caption,
             buttons == DialogButtons.OKCancel ? MessageBoxButton.OKCancel : MessageBoxButton.YesNoCancel,
             icon == DialogIcon.Warning ? MessageBoxImage.Warning : MessageBoxImage.Question) switch
         {

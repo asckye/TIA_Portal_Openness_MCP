@@ -42,7 +42,7 @@ namespace TiaMcpConfigurator
         private string lastTestResult;
         private bool lastTestFailed;
         private bool busy, closing;
-        private T Find<T>(string name) where T : FrameworkElement { return (T)FindName(name); }
+        private T Find<T>(string name) where T : FrameworkElement { return (T)(FindName(name) ?? Window.FindName(name)); }
         private string Text(string name) { return Find<TextBox>(name).Text.Trim(); }
         private string SelectedVersion
         {
@@ -74,7 +74,7 @@ namespace TiaMcpConfigurator
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
             Append(Loc.Current.T("Config.ClientDetection", String.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
             choices.SelectionChanged += delegate { UpdateInstructions(); };
-            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
+            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
             Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
             Find<TextBox>("KeyVisible").TextChanged += delegate { UpdateKeyPlaceholder(); };
             Find<CheckBox>("ShowKey").Click += delegate {
@@ -104,9 +104,9 @@ namespace TiaMcpConfigurator
             MenuClick("CheckUpdate", async delegate { await OnCheckUpdate(true); });
             MenuClick("RunUpdate", OnRunUpdate);
             MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
-            MenuClick("ShowClientHelp", delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
+            MenuClick("ShowClientHelp", delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
             MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
-            MenuClick("AboutItem", delegate { MessageBox.Show(Window, Loc.Current.T("Config.AboutDetails", Assembly.GetExecutingAssembly().GetName().Version, UpdateCheck.Installed(root) ?? Loc.Current["Config.UnknownInstalledEngine"], root), Loc.Current["Config.AboutCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
+            MenuClick("AboutItem", delegate { TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current.T("Config.AboutDetails", Assembly.GetExecutingAssembly().GetName().Version, UpdateCheck.Installed(root) ?? Loc.Current["Config.UnknownInstalledEngine"], root), Loc.Current["Config.AboutCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
             ShowInstalledVersion();
             Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); };
             if (loadExisting)
@@ -234,7 +234,7 @@ namespace TiaMcpConfigurator
                 if (response != null) response.Close();
             }
             string secret = Secret(); if (!String.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]");
-            SetStatus("Config.NeedsAttention"); Append(message); MessageBox.Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetStatus("Config.NeedsAttention"); Append(message); TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
@@ -296,7 +296,7 @@ namespace TiaMcpConfigurator
                 .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)) }).ToList();
             string message = Loc.Current["Config.WriteClientsPrompt"] + String.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
             message += Loc.Current["Config.WriteClientsContinue"];
-            if (MessageBox.Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {
@@ -365,7 +365,7 @@ namespace TiaMcpConfigurator
             string updater = UpdateCheck.UpdaterPath(root);
             if (!File.Exists(updater)) throw new InvalidOperationException(Loc.Current.T("Config.UpdaterMissing", updater));
             string target = latest != null && latest.UpdateAvailable ? latest.Latest : Loc.Current["Config.LatestVersion"];
-            if (MessageBox.Show(Window, Loc.Current.T("Config.RunUpdatePrompt", root, target), Loc.Current["Config.RunUpdateCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current.T("Config.RunUpdatePrompt", root, target), Loc.Current["Config.RunUpdateCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
             Process.Start(UpdateCheck.Launch(root, Process.GetCurrentProcess().Id));
             Append(Loc.Current["Config.UpdaterStarted"]);
             Window.Close();
@@ -390,7 +390,7 @@ namespace TiaMcpConfigurator
             try
             {
                 string ip = Text("ServerAddress"); int port = Int32.Parse(Text("ServerPort")); ConfigCore.Prefix(ip, port);
-                if (MessageBox.Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+                if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
                 var args = new[] { "--network", ip, port.ToString(), WindowsIdentity.GetCurrent().User.Value };
                 var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName, String.Join(" ", args.Select(ConfigCore.Quote))) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden };
                 SetBusy(true); SetStatus("Config.ConfiguringNetwork");
@@ -431,7 +431,7 @@ namespace TiaMcpConfigurator
         private void OnStopServer()
         {
             if (server == null || server.HasExited) return;
-            if (MessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
+            if (TiaOpenness.Gui.Controls.GlassMessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
             server.Kill(); server.WaitForExit();
         }
         private void OnClosing(object sender, CancelEventArgs e)

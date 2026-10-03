@@ -32,9 +32,20 @@ public partial class MainWindow
 
     internal void ShowConfiguration(bool loadExisting = true, string? bundleRoot = null)
     {
+        EnsureConfiguration(loadExisting, bundleRoot);
+        OptionsOverlay.Visibility = Visibility.Collapsed;
+        EngineeringWorkspace.Visibility = Visibility.Collapsed;
+        ConfigurationHost.Visibility = Visibility.Visible;
+        EngineeringTab.IsChecked = false;
+        ConfigurationTab.IsChecked = true;
+        ConfigurationMenu.GetBindingExpression(System.Windows.Controls.MenuItem.IsCheckedProperty)?.UpdateTarget();
+    }
+
+    internal void EnsureConfiguration(bool loadExisting = true, string? bundleRoot = null)
+    {
         if (Configuration == null)
         {
-            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting);
+            var page = new ConfigurationView(this, bundleRoot ?? FindBundleRoot(AppContext.BaseDirectory), loadExisting && _loadExistingConfiguration);
             Configuration = page;
             page.SelectedReleaseKey = _model.SelectedReleaseKey;
             page.SetReleaseEnabled(_model.CanSelectRelease);
@@ -43,10 +54,6 @@ public partial class MainWindow
             ConfigurationHost.Content = page;
             _model.PropertyChanged += OnDesktopModelChanged;
         }
-        EngineeringWorkspace.Visibility = Visibility.Collapsed;
-        ConfigurationHost.Visibility = Visibility.Visible;
-        EngineeringTab.IsChecked = false;
-        ConfigurationTab.IsChecked = true;
     }
 
     internal void ShowEngineering()
@@ -55,6 +62,7 @@ public partial class MainWindow
         EngineeringWorkspace.Visibility = Visibility.Visible;
         EngineeringTab.IsChecked = true;
         ConfigurationTab.IsChecked = false;
+        EngineeringMenu.GetBindingExpression(System.Windows.Controls.MenuItem.IsCheckedProperty)?.UpdateTarget();
     }
 
     private void OnConfiguration(object sender, RoutedEventArgs e)
@@ -63,10 +71,19 @@ public partial class MainWindow
         catch (Exception ex)
         {
             ShowEngineering();
-            MessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
     private void OnEngineering(object sender, RoutedEventArgs e) => ShowEngineering();
+    private void OnHelpOpened(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource != HelpMenu) return;
+        try { EnsureConfiguration(); }
+        catch (Exception ex)
+        {
+            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
     private void OnServiceStateChanged(object? sender, EventArgs e) => _model.ServiceOwnsRelease = Configuration?.LocksRelease == true;
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
     {

@@ -13,7 +13,7 @@ using Xunit;
 namespace TiaOpenness.Gui.Tests;
 
 [Collection(WpfCollection.Name)]
-public sealed class UnifiedDesktopTests(WpfContext wpf)
+public sealed partial class UnifiedDesktopTests(WpfContext wpf)
 {
     [Theory]
     [InlineData(AppLanguage.Chinese, AppTheme.Light, false)]
@@ -32,6 +32,14 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
     [InlineData(AppLanguage.Chinese, AppTheme.Dark)]
     [InlineData(AppLanguage.English, AppTheme.Light)]
     [InlineData(AppLanguage.English, AppTheme.Dark)]
+    public void Engineering_renders_log(AppLanguage language, AppTheme theme)
+        => new GlassViewTests(wpf).RenderEngineeringFixture(theme, false, language, true);
+
+    [Theory]
+    [InlineData(AppLanguage.Chinese, AppTheme.Light)]
+    [InlineData(AppLanguage.Chinese, AppTheme.Dark)]
+    [InlineData(AppLanguage.English, AppTheme.Light)]
+    [InlineData(AppLanguage.English, AppTheme.Dark)]
     public void Configuration_is_an_embedded_page_and_survives_navigation(AppLanguage language, AppTheme theme)
     {
         wpf.RunWithLanguage(language, () =>
@@ -42,6 +50,7 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
             var content = (FrameworkElement)window.Content;
             window.Content = null;
             var host = new Border { Child = content, DataContext = window.DataContext };
+            NameScope.SetNameScope(host, NameScope.GetNameScope(window));
             try
             {
                 var count = Application.Current.Windows.Count;
@@ -226,8 +235,8 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]), ((TextBlock)page.FindName("LastTest")).Text);
                 Assert.Equal("● " + Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
                 Assert.Equal(Loc.Current.T("Config.UpdateAvailable", "9.0", Loc.Current.T("Config.UpdateSize", "15.4 MB")),
-                    ((MenuItem)page.FindName("UpdateStateItem")).Header);
-                var installed = (MenuItem)page.FindName("UpdateInstalledItem");
+                    ((MenuItem)window.FindName("UpdateStateItem")).Header);
+                var installed = (MenuItem)window.FindName("UpdateInstalledItem");
                 string root = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
                 string? version = UpdateCheck.Installed(root);
                 Assert.Equal(version == null ? Loc.Current["Config.EngineOutsideBundle"] :
