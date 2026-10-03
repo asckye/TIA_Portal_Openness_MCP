@@ -55,26 +55,7 @@ namespace TiaMcpServer
         }
 
         private static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
-        {
-            var sections = parent?["sections"] as JsonObject;
-            var section = sections?[key] as JsonObject;
-            if (section == null) return;
-
-            md.AppendLine();
-            md.AppendLine("### " + title);
-            md.AppendLine("- Exists: " + section["exists"]);
-            md.AppendLine("- File count: " + section["fileCount"]);
-            md.AppendLine("- Total bytes: " + section["totalBytes"]);
-            if (section["samples"] is JsonArray samples && samples.Count > 0)
-            {
-                md.AppendLine("- Largest samples:");
-                foreach (var item in samples.Take(5))
-                {
-                    var obj = item as JsonObject;
-                    md.AppendLine("  - " + obj?["relativePath"] + " (" + obj?["bytes"] + " bytes)");
-                }
-            }
-        }
+            => GlobalLibraryPackageAnalyzer.AppendSectionSummary(md, parent, key, title);
 
         private static void SyncMotorMinimalArtifacts(string projectName, string projectDirectory, string importDir)
         {

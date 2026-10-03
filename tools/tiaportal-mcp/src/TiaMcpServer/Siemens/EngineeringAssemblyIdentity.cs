@@ -7,12 +7,7 @@ namespace TiaMcpServer.Siemens
 {
     internal static class EngineeringAssemblyIdentity
     {
-        internal static int? PathVersion(string? path)
-        {
-            if (string.IsNullOrWhiteSpace(path)) return null;
-            var match = Regex.Match(path!, @"[Vv](\d{2})(?!\d)", RegexOptions.RightToLeft);
-            return match.Success && int.TryParse(match.Groups[1].Value, out int version) ? version : (int?)null;
-        }
+        internal static int? PathVersion(string? path) => TiaOpenness.Shared.OpennessEnvironment.PathVersion(path);
 
         internal static void RequireMatch(AssemblyName requested, AssemblyName actual, string path)
         {

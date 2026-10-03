@@ -82,7 +82,7 @@ namespace TiaOpenness.Core.Environment
             RegistryKey root;
             try
             {
-                root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view).OpenSubKey(OpennessKey);
+                root = TiaOpenness.Shared.OpennessEnvironment.OpenLocalMachineKey(view, OpennessKey);
             }
             catch (Exception)
             {

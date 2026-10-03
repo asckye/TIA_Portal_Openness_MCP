@@ -50,4 +50,5 @@
     <Error Condition="'$(TiaReleaseKey)' == '21' and ('%(SelectedStep7Identity.Version)' != '21.0.0.0' or '%(SelectedStep7Identity.PublicKeyToken)' != '29bfe5fdf4ba5d3b')" Text="V21 Step7 identity mismatch." />
     <Message Importance="high" Text="PLC foundation $(TiaReleaseKey), $(TargetFramework), @(SelectedCoreIdentity), source $(SiemensEngineeringDirectory); native acceptance NOT performed" />
   </Target>
+  <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
 </Project>

@@ -354,7 +354,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return list;
         }
 
-        private static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
+        internal static void AppendSectionSummary(StringBuilder md, JsonObject? parent, string key, string title)
         {
             var sections = parent?["sections"] as JsonObject;
             var section = sections?[key] as JsonObject;

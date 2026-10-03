@@ -75,7 +75,7 @@ public sealed class IntegrationTests : IDisposable
         await client.ConnectAsync();
         await client.OpenProjectAsync(Path.Combine(root, "Line.ap21"));
         Assert.True(await client.VcSupportedAsync());
-        var folder = Path.Combine(root, "git");
+        var folder = Path.Combine(root, "git 轴 工作区");
         Directory.CreateDirectory(folder);
         var workspace = await client.VcCreateWorkspaceAsync("LineGit", folder);
         Assert.Equal(folder, workspace.RootPath);
@@ -95,6 +95,12 @@ public sealed class IntegrationTests : IDisposable
         var diff = await client.VcDiffAsync("LineGit");
         Assert.False(diff.Available);
         Assert.Contains("Git repository", diff.Detail);
+        var initialized = await TiaOpenness.Shared.LocalProcess.Run("git", new[] { "init", "--quiet" }, folder, null, 30);
+        Assert.True(initialized.Success, initialized.Stderr);
+        var actualDiff = await client.VcDiffAsync("LineGit");
+        Assert.True(actualDiff.Available, actualDiff.Detail);
+        Assert.Contains(actualDiff.Lines, l => l.Kind == DiffLineKind.Added);
+
     }
 
     [Theory]

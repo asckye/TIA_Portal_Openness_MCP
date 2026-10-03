@@ -1,5 +1,7 @@
 # Native Studio and duplicate-code review — 2026-10-02
 
+Follow-up implementation and updated dispositions: [project deduplication review](project-dedup-20261002.md).
+
 The maintainer explicitly selected a Studio implementation that does not use MCP and calls
 Openness directly. The review started at `9a45819800b30f70c40ad0e839f247f311a745af`.
 

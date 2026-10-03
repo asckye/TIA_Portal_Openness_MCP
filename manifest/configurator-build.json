@@ -1,15 +1,15 @@
 {
-    "generatedAt":  "2026-10-03T04:33:21.0252324+00:00",
+    "generatedAt":  "2026-10-03T05:17:45.0193325+00:00",
     "testsPassed":  144,
     "realTiaAcceptance":  "NOT PERFORMED; isolated client configuration and WPF tests only",
     "executable":  {
                        "path":  "TiaMcpConfigurator.exe",
-                       "sha256":  "b8129f80f0075332713672743ba320926e0b4eae17b41cf9f8880107b9f9bcf9"
+                       "sha256":  "c68eb307478c45b008651f6e1ce07dc2db85b2395c4a1a42f5fb4e816dc0b3da"
                    },
     "sourceFiles":  [
                         {
                             "path":  "scripts/build/Build-Configurator.ps1",
-                            "sha256":  "e4a6c12ebf7421fb20d2ff2b0300305f327aceb6fa03ca3429336845fc2075f5"
+                            "sha256":  "29acc29e6e79fe41adf5d77f4e9f497dcfdf446492533c97211dffc6b9722124"
                         },
                         {
                             "path":  "tools/mcp-configurator/ClientProfiles.cs",
@@ -17,7 +17,7 @@
                         },
                         {
                             "path":  "tools/mcp-configurator/ConfigCore.cs",
-                            "sha256":  "66fb53c8d03f4bf1ced392de17d8808bbd34924668dc96f1decaf341789d0428"
+                            "sha256":  "2de5d26c8ccffd839d251523bd2e79585fc6fc64c87dadbe86397c6dd0cc5d39"
                         },
                         {
                             "path":  "tools/mcp-configurator/Configurator.cs",
@@ -50,6 +50,14 @@
                         {
                             "path":  "tools/mcp-configurator/UpdateCheck.cs",
                             "sha256":  "b6ed2304bc57bb85563eef14620c26d7fad1cd1746c9dadb20a59a19c23667dc"
+                        },
+                        {
+                            "path":  "tools/openness-shared/OpennessEnvironment.cs",
+                            "sha256":  "9bf93521204faec2d385e3a10a8f56f469f31a0d92dbe00493e759a2f2a4c03a"
+                        },
+                        {
+                            "path":  "tools/openness-shared/ProcessArguments.cs",
+                            "sha256":  "23e95bc2b97f65f0092d88a7c41108971062ce358a671c7b7c5204211f392f22"
                         },
                         {
                             "path":  "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs",

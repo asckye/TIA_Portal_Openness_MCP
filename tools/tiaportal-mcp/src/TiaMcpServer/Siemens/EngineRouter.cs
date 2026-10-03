@@ -116,21 +116,7 @@ namespace TiaMcpServer.Siemens
                     sb.Append(a);
                     continue;
                 }
-                sb.Append('"');
-                int backslashes = 0;
-                foreach (char c in a)
-                {
-                    if (c == '\\') { backslashes++; continue; }
-                    if (c == '"')
-                    {
-                        sb.Append('\\', backslashes * 2 + 1).Append('"');
-                        backslashes = 0;
-                        continue;
-                    }
-                    sb.Append('\\', backslashes).Append(c);
-                    backslashes = 0;
-                }
-                sb.Append('\\', backslashes * 2).Append('"');
+                sb.Append(TiaOpenness.Shared.ProcessArguments.Quote(a));
             }
             return sb.ToString();
         }

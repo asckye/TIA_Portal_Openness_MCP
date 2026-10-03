@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
@@ -50,67 +48,15 @@ namespace TiaMcpServer.ModelContextProtocol
             return result;
         }
 
-        // Windows CommandLineToArgvW escaping. No cmd.exe/PowerShell or argument-string concatenation from callers.
-        public static string QuoteArgument(string value)
-        {
-            if (value == null || value.IndexOf('\0') >= 0) throw new ArgumentException("Invalid process argument.");
-            var result = new StringBuilder("\""); int slashes = 0;
-            foreach (char c in value)
-            {
-                if (c == '\\') { slashes++; continue; }
-                if (c == '"') result.Append('\\', slashes * 2 + 1).Append(c);
-                else result.Append('\\', slashes).Append(c);
-                slashes = 0;
-            }
-            return result.Append('\\', slashes * 2).Append('"').ToString();
-        }
+        public static string QuoteArgument(string value) => TiaOpenness.Shared.ProcessArguments.Quote(value);
 
         public static async Task<JsonObject> Run(string executable, IEnumerable<string> arguments, string directory, string? input, int timeoutSeconds)
         {
-            if (!Path.IsPathRooted(directory) || !Directory.Exists(directory)) throw new ArgumentException("workingDirectory must be an existing absolute directory.");
-            if (timeoutSeconds < 1 || timeoutSeconds > 300) throw new ArgumentException("timeoutSeconds must be 1..300.");
-            var start = new ProcessStartInfo(executable, string.Join(" ", arguments.Select(QuoteArgument)))
-            {
-                WorkingDirectory = directory, UseShellExecute = false, CreateNoWindow = true,
-                RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
-                StandardOutputEncoding = Encoding.UTF8, StandardErrorEncoding = Encoding.UTF8
-            };
-            start.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
-            start.EnvironmentVariables["PYTHONUTF8"] = "1";
-            var stdout = new StringBuilder(); var stderr = new StringBuilder();
-            const int maxChars = 1024 * 1024;
-            using (var process = new Process { StartInfo = start })
-            {
-                if (!process.Start()) throw new InvalidOperationException("Process did not start.");
-                var stdoutTask = Drain(process.StandardOutput, stdout, maxChars);
-                var stderrTask = Drain(process.StandardError, stderr, maxChars);
-                if (input != null) await process.StandardInput.WriteAsync(input).ConfigureAwait(false);
-                process.StandardInput.Close();
-                bool finished = await Task.Run(() => process.WaitForExit(timeoutSeconds * 1000)).ConfigureAwait(false);
-                if (!finished)
-                {
-                    // Kill the timed-out command and its children, including pytest/web child processes.
-                    using (var killer = Process.Start(new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "taskkill.exe"), "/PID " + process.Id + " /T /F") { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true }))
-                        if (killer != null) await Task.Run(() => killer.WaitForExit(5000)).ConfigureAwait(false);
-                    if (!process.HasExited) process.Kill();
-                }
-                process.WaitForExit();
-                bool[] truncated = await Task.WhenAll(stdoutTask, stderrTask).ConfigureAwait(false);
-                return new JsonObject { ["success"] = finished && process.ExitCode == 0, ["exitCode"] = process.ExitCode, ["timedOut"] = !finished,
-                    ["stdout"] = stdout.ToString(), ["stderr"] = stderr.ToString(), ["outputTruncated"] = truncated.Any(t => t), ["dataComplete"] = finished && !truncated.Any(t => t),
-                    ["effectsMayHaveOccurred"] = true };
-            }
-        }
-        private static async Task<bool> Drain(StreamReader reader, StringBuilder result, int limit)
-        {
-            var buffer = new char[8192]; int read; bool truncated = false;
-            while ((read = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false)) > 0)
-            {
-                int take = Math.Min(read, limit - result.Length);
-                if (take < read) truncated = true;
-                result.Append(buffer, 0, take);
-            }
-            return truncated;
+            var result = await TiaOpenness.Shared.LocalProcess.Run(executable, arguments, directory, input, timeoutSeconds,
+                environment: new Dictionary<string, string> { ["PYTHONIOENCODING"] = "utf-8", ["PYTHONUTF8"] = "1" }).ConfigureAwait(false);
+            return new JsonObject { ["success"] = result.Success, ["exitCode"] = result.ExitCode, ["timedOut"] = result.TimedOut,
+                ["stdout"] = result.Stdout, ["stderr"] = result.Stderr, ["outputTruncated"] = result.OutputTruncated,
+                ["dataComplete"] = result.DataComplete, ["effectsMayHaveOccurred"] = true };
         }
     }
 }

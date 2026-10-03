@@ -119,14 +119,7 @@ namespace TiaMcpServer.Runtime
 
         private static Check DotNetFramework48()
         {
-            int release = 0;
-            try
-            {
-                using var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                    .OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
-                release = (int)(key?.GetValue("Release") ?? 0);
-            }
-            catch { }
+            var release = TiaOpenness.Shared.OpennessEnvironment.DotNetFrameworkRelease();
 
             // 528040 = .NET Framework 4.8 RTM; anything at or above it satisfies net48.
             bool ok = release >= 528040;

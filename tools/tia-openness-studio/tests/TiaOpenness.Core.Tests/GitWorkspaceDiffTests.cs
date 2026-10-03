@@ -60,6 +60,17 @@ public sealed class GitWorkspaceDiffTests
         Assert.Contains(diff.Lines, l => l.Text == "+staged source body");
     }
 
+    [Fact]
+    public void Relative_workspace_path_still_reads_the_real_repository()
+    {
+        var root = CreateRepository();
+        File.WriteAllText(Path.Combine(root, "Relative.scl"), "relative workspace source\n");
+        var relative = Path.GetRelativePath(System.Environment.CurrentDirectory, root);
+        var diff = GitWorkspaceDiff.Read("test", relative, null);
+        Assert.True(diff.Available, diff.Detail);
+        Assert.Contains(diff.Lines, line => line.Text == "+relative workspace source");
+    }
+
     private static string CreateRepository()
     {
         var root = Path.Combine(Path.GetTempPath(), "studio-git-test-" + Guid.NewGuid().ToString("N"));

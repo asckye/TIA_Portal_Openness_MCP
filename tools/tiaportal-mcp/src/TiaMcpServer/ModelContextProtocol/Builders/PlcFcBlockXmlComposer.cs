@@ -16,7 +16,6 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class PlcFcBlockXmlComposer
     {
-        private static readonly XNamespace InterfaceNs = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
         private static readonly XNamespace StructuredTextNs = "http://www.siemens.com/automation/Openness/SW/NetworkSource/StructuredText/v4";
 
         public static XDocument Compose(
@@ -65,32 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 compileUnit,
                 PlcBlockXmlHelpers.BuildMultilingualText("8", "9", "Title", blockTitleZhCn));
 
-            return new XDocument(
-                new XDeclaration("1.0", "utf-8", null),
-                new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
-                    new XElement("DocumentInfo",
-                        new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
-                        new XElement("ExportSetting", "None"),
-                        new XElement("InstalledProducts")),
-                    new XElement("SW.Blocks.FC",
-                        new XAttribute("ID", "0"),
-                        new XElement("AttributeList",
-                            new XElement("Interface",
-                                new XElement(InterfaceNs + "Sections",
-                                    BuildSection("Input", inputs),
-                                    BuildSection("Output", outputs),
-                                    BuildSection("InOut", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Temp", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Return", new[] { new PlcBlockMemberDefinition("Ret_Val", "Void") }))),
-                            new XElement("MemoryLayout", "Optimized"),
-                            new XElement("Name", blockName),
-                            new XElement("Namespace"),
-                            new XElement("Number", blockNumber),
-                            new XElement("ProgrammingLanguage", "SCL"),
-                            new XElement("SetENOAutomatically", "false")),
-                        blockObjList)));
+            return PlcBlockXmlHelpers.BuildFcDocument(blockName, blockNumber, inputs, outputs, "SCL", blockObjList);
         }
 
         public static string ComposeXml(
@@ -228,21 +202,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        private static XElement BuildSection(string name, IReadOnlyCollection<PlcBlockMemberDefinition> members)
-        {
-            if (members.Count == 0)
-                return new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            var section = new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            foreach (var m in members)
-            {
-                var memEl = new XElement(InterfaceNs + "Member",
-                    new XAttribute("Name", m.Name),
-                    new XAttribute("Datatype", m.Datatype));
-                PlcBlockXmlHelpers.AppendMemberCommentIfAny(memEl, m.CommentZhCn);
-                section.Add(memEl);
-            }
-            return section;
-        }
+
 
         private static bool CompareSemantics(JsonObject golden, JsonObject generated)
         {
@@ -353,6 +313,55 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     internal static class PlcBlockXmlHelpers
     {
+        internal static XElement BuildSection(string name, IReadOnlyCollection<PlcBlockMemberDefinition> members)
+        {
+            if (members.Count == 0)
+                return new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
+            var section = new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
+            foreach (var m in members)
+            {
+                var memEl = new XElement(InterfaceNs + "Member",
+                    new XAttribute("Name", m.Name),
+                    new XAttribute("Datatype", m.Datatype));
+                PlcBlockXmlHelpers.AppendMemberCommentIfAny(memEl, m.CommentZhCn);
+                section.Add(memEl);
+            }
+            return section;
+        }
+
+        internal static XDocument BuildFcDocument(string blockName, int blockNumber,
+            IReadOnlyCollection<PlcBlockMemberDefinition> inputs, IReadOnlyCollection<PlcBlockMemberDefinition> outputs,
+            string language, XElement blockObjList)
+        {
+            return new XDocument(
+                new XDeclaration("1.0", "utf-8", null),
+                new XElement("Document",
+                    new XElement("Engineering", new XAttribute("version", "V21")),
+                    new XElement("DocumentInfo",
+                        new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
+                        new XElement("ExportSetting", "None"),
+                        new XElement("InstalledProducts")),
+                    new XElement("SW.Blocks.FC",
+                        new XAttribute("ID", "0"),
+                        new XElement("AttributeList",
+                            new XElement("Interface",
+                                new XElement(InterfaceNs + "Sections",
+                                    BuildSection("Input", inputs),
+                                    BuildSection("Output", outputs),
+                                    BuildSection("InOut", Array.Empty<PlcBlockMemberDefinition>()),
+                                    BuildSection("Temp", Array.Empty<PlcBlockMemberDefinition>()),
+                                    BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()),
+                                    BuildSection("Return", new[] { new PlcBlockMemberDefinition("Ret_Val", "Void") }))),
+                            new XElement("MemoryLayout", "Optimized"),
+                            new XElement("Name", blockName),
+                            new XElement("Namespace"),
+                            new XElement("Number", blockNumber),
+                            new XElement("ProgrammingLanguage", language),
+                            new XElement("SetENOAutomatically", "false")),
+                        blockObjList)));
+        }
+
+
         public static readonly System.Xml.Linq.XNamespace InterfaceNs =
             "http://www.siemens.com/automation/Openness/SW/Interface/v5";
 

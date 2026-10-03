@@ -13,7 +13,6 @@ namespace TiaMcpServer.ModelContextProtocol
     /// </summary>
     public static class PlcLadFcBlockXmlComposer
     {
-        private static readonly XNamespace InterfaceNs = "http://www.siemens.com/automation/Openness/SW/Interface/v5";
 
         /// <summary>每个网络的描述：FlgNet 元素 + 可选中文标题/注释。</summary>
         public sealed class LadNetwork
@@ -83,32 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             blockObjList.Add(PlcBlockXmlHelpers.BuildMultilingualText(NextId(), NextId(), "Title", blockTitleZhCn));
 
-            return new XDocument(
-                new XDeclaration("1.0", "utf-8", null),
-                new XElement("Document",
-                    new XElement("Engineering", new XAttribute("version", "V21")),
-                    new XElement("DocumentInfo",
-                        new XElement("Created", "2000-01-01T00:00:00.0000000Z"),
-                        new XElement("ExportSetting", "None"),
-                        new XElement("InstalledProducts")),
-                    new XElement("SW.Blocks.FC",
-                        new XAttribute("ID", "0"),
-                        new XElement("AttributeList",
-                            new XElement("Interface",
-                                new XElement(InterfaceNs + "Sections",
-                                    BuildSection("Input", inputs),
-                                    BuildSection("Output", outputs),
-                                    BuildSection("InOut", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Temp", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()),
-                                    BuildSection("Return", new[] { new PlcBlockMemberDefinition("Ret_Val", "Void") }))),
-                            new XElement("MemoryLayout", "Optimized"),
-                            new XElement("Name", blockName),
-                            new XElement("Namespace"),
-                            new XElement("Number", blockNumber),
-                            new XElement("ProgrammingLanguage", "LAD"),
-                            new XElement("SetENOAutomatically", "false")),
-                        blockObjList)));
+            return PlcBlockXmlHelpers.BuildFcDocument(blockName, blockNumber, inputs, outputs, "LAD", blockObjList);
         }
 
         public static string ComposeXml(
@@ -125,21 +99,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return writer.ToString();
         }
 
-        private static XElement BuildSection(string name, IReadOnlyCollection<PlcBlockMemberDefinition> members)
-        {
-            if (members.Count == 0)
-                return new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            var section = new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            foreach (var m in members)
-            {
-                var memEl = new XElement(InterfaceNs + "Member",
-                    new XAttribute("Name", m.Name),
-                    new XAttribute("Datatype", m.Datatype));
-                PlcBlockXmlHelpers.AppendMemberCommentIfAny(memEl, m.CommentZhCn);
-                section.Add(memEl);
-            }
-            return section;
-        }
+
 
         private sealed class Utf8StringWriter : StringWriter
         {

@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-<PropertyGroup><TargetFrameworks>net461;net8.0</TargetFrameworks><LangVersion>latest</LangVersion><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile><AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages></PropertyGroup>
+<PropertyGroup><DefineConstants>$(DefineConstants);TIA_JSON_LEGACY</DefineConstants><TargetFrameworks>net461;net8.0</TargetFrameworks><LangVersion>latest</LangVersion><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><IsPackable>false</IsPackable><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile><AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages></PropertyGroup>
 <ItemGroup><ProjectReference Include="../TiaMcp.WorkerProtocol/TiaMcp.WorkerProtocol.csproj"/><PackageReference Include="Newtonsoft.Json" Version="13.0.4"/></ItemGroup>
 <ItemGroup Condition="'$(TargetFramework)' == 'net461'"><PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(UseReferenceAssemblyPackage)' == 'true'"/></ItemGroup>
+  <ItemGroup><Compile Include="../TiaMcp.WorkerProtocol.JsonShared/JsonSession.cs" Link="Shared/JsonSession.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../TiaMcp.WorkerProtocol.JsonShared/StrictCodec.cs" Link="Shared/StrictCodec.cs" /></ItemGroup>
 </Project>

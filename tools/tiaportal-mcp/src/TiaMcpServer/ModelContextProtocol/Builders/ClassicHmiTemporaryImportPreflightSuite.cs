@@ -170,32 +170,7 @@ namespace TiaMcpServer.ModelContextProtocol
             };
         }
 
-        private static string BuildClassicHmiPackageJson()
-        {
-            return @"{
-  ""Name"": ""Classic_Motor_TemporaryImportPreflight"",
-  ""TagTable"": {
-    ""Name"": ""Motor_HMI_Tags"",
-    ""Tags"": [
-      {""Name"":""Motor_Start"",""DataType"":""Bool"",""Length"":""1"",""Connection"":""HMI_Connection_1"",""PlcTag"":""DB1_MotorData.Motor.Start""},
-      {""Name"":""Motor_Run"",""DataType"":""Bool"",""Length"":""1"",""Connection"":""HMI_Connection_1"",""PlcTag"":""DB1_MotorData.Motor.Run""},
-      {""Name"":""Speed_Set"",""DataType"":""Int"",""Length"":""2"",""Connection"":""HMI_Connection_1"",""PlcTag"":""DB1_MotorData.SpeedSet""}
-    ]
-  },
-  ""ScreenDesign"": {
-    ""Screen"": {""Name"":""Motor_Main"",""Width"":640,""Height"":480},
-    ""Items"": [
-      {""Type"":""Text"",""Name"":""Title"",""Left"":20,""Top"":20,""Width"":260,""Height"":36,""Text"":{""zh-CN"":""电机控制""}},
-      {""Type"":""Button"",""Name"":""Btn_Start"",""Left"":20,""Top"":82,""Width"":130,""Height"":46,""Text"":{""zh-CN"":""启动""},""Actions"":[
-        {""Event"":""Press"",""ActionKind"":""SetBit"",""TargetTag"":""Motor_Start""},
-        {""Event"":""Release"",""ActionKind"":""ResetBit"",""TargetTag"":""Motor_Start""}
-      ]},
-      {""Type"":""Lamp"",""Name"":""Lamp_Run"",""Left"":180,""Top"":86,""Width"":42,""Height"":42,""Tag"":""Motor_Run""},
-      {""Type"":""IOField"",""Name"":""IO_Speed"",""Left"":20,""Top"":154,""Width"":140,""Height"":38,""ProcessValueTag"":""Speed_Set""}
-    ]
-  }
-}";
-        }
+        private static string BuildClassicHmiPackageJson() => ClassicHmiValidationFixture.BuildClassicHmiPackageJson("Classic_Motor_TemporaryImportPreflight");
 
         private static string BuildPlcTagTableXml()
         {

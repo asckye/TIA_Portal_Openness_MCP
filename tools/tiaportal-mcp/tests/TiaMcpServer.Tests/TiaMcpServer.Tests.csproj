@@ -170,4 +170,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Builders/ClassicHmiValidationFixture.cs" Link="Shared/ClassicHmiValidationFixture.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
+  <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs" Link="Shared/McpServer.ScaffoldOperations.cs" /></ItemGroup>
 </Project>

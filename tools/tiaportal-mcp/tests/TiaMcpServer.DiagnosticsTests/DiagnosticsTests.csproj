@@ -16,4 +16,5 @@
   <Target Name="InstrumentFixture" AfterTargets="CoreCompile">
     <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="dotnet &quot;../../../native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll&quot; weave &quot;@(IntermediateAssembly)&quot;" />
   </Target>
+  <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
 </Project>

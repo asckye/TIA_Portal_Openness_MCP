@@ -1,8 +1,22 @@
+#if TIA_JSON_LEGACY
+using Payload = TiaMcp.WorkerProtocol.JsonLegacy.JsonPayload;
+using FrameBuffer = byte[];
+using ValueKind = TiaMcp.WorkerProtocol.JsonLegacy.PayloadKind;
+using Newtonsoft.Json;
+#else
+using Payload = System.Text.Json.JsonElement;
+using FrameBuffer = System.ReadOnlyMemory<byte>;
+using ValueKind = System.Text.Json.JsonValueKind;
 using System.Text.Json;
+#endif
 using System.Text;
 using TiaMcp.WorkerProtocol;
 
+#if TIA_JSON_LEGACY
+namespace TiaMcp.WorkerProtocol.JsonLegacy;
+#else
 namespace TiaMcp.WorkerProtocol.JsonV2;
+#endif
 
 // This is a new, unwired protocol. It is NOT a replacement decoder for MCP or v1.
 public sealed record WireId
@@ -19,8 +33,8 @@ public sealed record WireId
 }
 public abstract record V2Frame;
 public sealed record HelloFrame(EngineIdentity Engine, BindingSnapshot Binding) : V2Frame;
-public sealed record RequestFrame(WireId Id, RequestIdentity Identity, JsonElement Arguments) : V2Frame;
-public sealed record ReplyFrame(WireId Id, ReplyIdentity Identity, JsonElement Result) : V2Frame;
+public sealed record RequestFrame(WireId Id, RequestIdentity Identity, Payload Arguments) : V2Frame;
+public sealed record ReplyFrame(WireId Id, ReplyIdentity Identity, Payload Result) : V2Frame;
 public sealed record ProgressFrame(WireId Id, RequestIdentity Identity, long Sequence, int Percent) : V2Frame;
 
 public static class StrictCodec
@@ -29,17 +43,21 @@ public static class StrictCodec
     public const int MaxFrameBytes = 1024 * 1024;
     static readonly UTF8Encoding Utf8 = new(false, true);
     internal static void Require(bool condition, string code) { if (!condition) throw new IdentityViolation(code); }
-    public static V2Frame Decode(ReadOnlyMemory<byte> bytes)
+    public static V2Frame Decode(FrameBuffer bytes)
     {
         Require(bytes.Length is > 0 and <= MaxFrameBytes, "FrameSizeInvalid");
         try
         {
             _ = Utf8.GetCharCount(bytes.ToArray());
+#if TIA_JSON_LEGACY
+            var root = JsonPayload.Parse(Utf8.GetString(bytes));
+#else
             using var doc = JsonDocument.Parse(bytes, new JsonDocumentOptions { MaxDepth = 32, AllowTrailingCommas = false, CommentHandling = JsonCommentHandling.Disallow });
             var root = doc.RootElement;
+#endif
             Unique(root);
-            Require(root.ValueKind == JsonValueKind.Object, "ObjectRequired");
-            Require(root.TryGetProperty("version", out var version) && version.ValueKind == JsonValueKind.Number && version.TryGetInt32(out var v) && v == 2, "ProtocolVersionMismatch");
+            Require(root.ValueKind == ValueKind.Object, "ObjectRequired");
+            Require(root.TryGetProperty("version", out var version) && version.ValueKind == ValueKind.Number && version.TryGetInt32(out var v) && v == 2, "ProtocolVersionMismatch");
             var type = String(root, "type");
             switch (type)
             {
@@ -48,7 +66,7 @@ public static class StrictCodec
                     return new HelloFrame(Engine(root.GetProperty("engine")), Binding(root.GetProperty("binding")));
                 case "request":
                     Fields(root, "version", "type", "id", "identity", "arguments");
-                    var args = root.GetProperty("arguments"); Require(args.ValueKind == JsonValueKind.Object, "ArgumentsObjectRequired");
+                    var args = root.GetProperty("arguments"); Require(args.ValueKind == ValueKind.Object, "ArgumentsObjectRequired");
                     return new RequestFrame(Id(root.GetProperty("id")), Request(root.GetProperty("identity")), args.Clone());
                 case "reply":
                     Fields(root, "version", "type", "id", "identity", "observedAfter", "outcome", "result");
@@ -79,51 +97,55 @@ public static class StrictCodec
             ProgressFrame p => new { version = 2, type = "progress", id = p.Id.Value, identity = RequestObject(p.Identity), sequence = p.Sequence, percent = p.Percent },
             _ => throw new IdentityViolation("FrameTypeInvalid")
         };
+#if TIA_JSON_LEGACY
+        byte[] bytes = Utf8.GetBytes(JsonPayload.Parse(NewtonsoftBridge.Serialize(body)).ToJson());
+#else
         byte[] bytes = JsonSerializer.SerializeToUtf8Bytes(body);
+#endif
         _ = Decode(bytes); // Apply exactly the same structural/size checks on outgoing frames.
         return bytes;
     }
     static object EngineObject(EngineIdentity e) => new { protocol = 2, releaseKey = e.ReleaseKey, workerSha256 = e.WorkerSha256, engineSha256 = e.EngineSha256, sessionId = e.SessionId };
     static object BindingObject(BindingSnapshot b) => new { epoch = b.Epoch, state = b.IsBound ? "bound" : "unbound", project = b.Project is { } p ? new { projectSha256 = p.ProjectSha256, tiaProcessId = p.TiaProcessId, tiaProcessStartUtcTicks = p.TiaProcessStartUtcTicks } : null };
     static object RequestObject(RequestIdentity r) => new { requestId = r.RequestId, correlationId = r.CorrelationId, engine = EngineObject(r.Engine), operation = r.Operation, before = BindingObject(r.Before), expectedAfter = BindingObject(r.ExpectedAfter) };
-    static EngineIdentity Engine(JsonElement e)
+    static EngineIdentity Engine(Payload e)
     {
         Fields(e, "protocol", "releaseKey", "workerSha256", "engineSha256", "sessionId");
         long protocol = Integer(e, "protocol"); Require(protocol == 2, "ProtocolVersionMismatch");
         return new EngineIdentity(2, String(e, "releaseKey"), String(e, "workerSha256"), String(e, "engineSha256"), String(e, "sessionId"));
     }
-    static BindingSnapshot Binding(JsonElement b)
+    static BindingSnapshot Binding(Payload b)
     {
         Fields(b, "epoch", "state", "project");
         long epoch = Integer(b, "epoch"); string state = String(b, "state"); var p = b.GetProperty("project");
-        if (state == "unbound") { Require(p.ValueKind == JsonValueKind.Null, "UnboundProjectForbidden"); return BindingSnapshot.Unbound(epoch); }
+        if (state == "unbound") { Require(p.ValueKind == ValueKind.Null, "UnboundProjectForbidden"); return BindingSnapshot.Unbound(epoch); }
         Require(state == "bound", "BindingStateRequired");
         Fields(p, "projectSha256", "tiaProcessId", "tiaProcessStartUtcTicks");
         long pid = Integer(p, "tiaProcessId"); Require(pid is > 0 and <= int.MaxValue, "TiaProcessIdentityRequired");
         return BindingSnapshot.Bound(epoch, new ProjectIdentity(String(p, "projectSha256"), (int)pid, Integer(p, "tiaProcessStartUtcTicks")));
     }
-    static RequestIdentity Request(JsonElement r)
+    static RequestIdentity Request(Payload r)
     {
         Fields(r, "requestId", "correlationId", "engine", "operation", "before", "expectedAfter");
         return new RequestIdentity(Integer(r, "requestId"), String(r, "correlationId"), Engine(r.GetProperty("engine")), String(r, "operation"), Binding(r.GetProperty("before")), Binding(r.GetProperty("expectedAfter")));
     }
-    static WireId Id(JsonElement e) => e.ValueKind switch { JsonValueKind.Number when e.TryGetInt64(out long n) => new WireId(n), JsonValueKind.String => new WireId(e.GetString()!), _ => throw new IdentityViolation("OuterIdRequired") };
-    static string String(JsonElement e, string key) { Require(e.TryGetProperty(key, out var v), "MissingField"); Require(v.ValueKind == JsonValueKind.String, "FieldTypeInvalid"); return v.GetString()!; }
-    static long Integer(JsonElement e, string key) { Require(e.TryGetProperty(key, out var v), "MissingField"); Require(v.ValueKind == JsonValueKind.Number && v.TryGetInt64(out _), "IntegerRequired"); return v.GetInt64(); }
-    static void Fields(JsonElement e, params string[] allowed)
+    static WireId Id(Payload e) => e.ValueKind switch { ValueKind.Number when e.TryGetInt64(out long n) => new WireId(n), ValueKind.String => new WireId(e.GetString()!), _ => throw new IdentityViolation("OuterIdRequired") };
+    static string String(Payload e, string key) { Require(e.TryGetProperty(key, out var v), "MissingField"); Require(v.ValueKind == ValueKind.String, "FieldTypeInvalid"); return v.GetString()!; }
+    static long Integer(Payload e, string key) { Require(e.TryGetProperty(key, out var v), "MissingField"); Require(v.ValueKind == ValueKind.Number && v.TryGetInt64(out _), "IntegerRequired"); return v.GetInt64(); }
+    static void Fields(Payload e, params string[] allowed)
     {
-        Require(e.ValueKind == JsonValueKind.Object, "ObjectRequired");
+        Require(e.ValueKind == ValueKind.Object, "ObjectRequired");
         foreach (var p in e.EnumerateObject()) Require(allowed.Contains(p.Name, StringComparer.Ordinal), "UnknownField");
         foreach (string field in allowed) Require(e.TryGetProperty(field, out _), "MissingField");
     }
-    static void Unique(JsonElement e)
+    static void Unique(Payload e)
     {
-        if (e.ValueKind == JsonValueKind.Object)
+        if (e.ValueKind == ValueKind.Object)
         {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var p in e.EnumerateObject()) { Require(seen.Add(p.Name), "DuplicateOrAmbiguousField"); Unique(p.Value); }
         }
-        else if (e.ValueKind == JsonValueKind.Array) foreach (var item in e.EnumerateArray()) Unique(item);
-        else if (e.ValueKind == JsonValueKind.String) _ = e.GetString(); // Force deferred escaped-surrogate validation, including opaque payloads.
+        else if (e.ValueKind == ValueKind.Array) foreach (var item in e.EnumerateArray()) Unique(item);
+        else if (e.ValueKind == ValueKind.String) _ = e.GetString(); // Force deferred escaped-surrogate validation, including opaque payloads.
     }
 }

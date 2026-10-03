@@ -104,6 +104,7 @@ namespace TiaOpenness.Client
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
+                StandardInputEncoding = new UTF8Encoding(false),
                 StandardOutputEncoding = new UTF8Encoding(false),
                 StandardErrorEncoding = new UTF8Encoding(false),
                 WorkingDirectory = Path.GetDirectoryName(exe),

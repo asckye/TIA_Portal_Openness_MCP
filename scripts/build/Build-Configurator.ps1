@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 param([switch]$Test)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -6,6 +6,10 @@ $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 $sources = @('Configurator.cs', 'ConfigCore.cs', 'ClientProfiles.cs', 'UpdateCheck.cs') | ForEach-Object { Join-Path $root "tools\mcp-configurator\$_" }
 $versionCatalog = Join-Path $root 'tools\tiaportal-mcp\src\TiaMcpServer\Siemens\TiaVersionCatalog.cs'
 $sources += $versionCatalog
+$processArguments = Join-Path $root "tools/openness-shared/ProcessArguments.cs"
+$sources += $processArguments
+$opennessEnvironment = Join-Path $root "tools/openness-shared/OpennessEnvironment.cs"
+$sources += $opennessEnvironment
 $sources += Join-Path $root "tools/ui-glass/GlassLogView.cs"
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
@@ -38,7 +42,7 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Configurator tests failed.' }
     $match = [regex]::Match(($results -join "`n"), '(?m)^Passed: (\d+)\s*$')
     if (!$match.Success) { throw 'Missing configurator test result.' }
-    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item $versionCatalog) + @(Get-ChildItem $glass -Recurse -File)
+    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $glass -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()

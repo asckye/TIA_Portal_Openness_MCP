@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using TiaOpenness.Contracts.Models;
+using TiaOpenness.Shared;
 
 namespace TiaOpenness.Core.Inspection
 {
@@ -22,9 +22,6 @@ namespace TiaOpenness.Core.Inspection
     /// </summary>
     public static class GitWorkspaceDiff
     {
-        /// <summary>Long enough for a large block, short enough that a hung git does not hang the bridge.</summary>
-        private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
-
         /// <param name="root">The workspace folder — normally a Git working tree.</param>
         /// <param name="file">One file to diff, or null for every change in the workspace.</param>
         public static WorkspaceDiff Read(string workspaceName, string root, string file)
@@ -38,7 +35,7 @@ namespace TiaOpenness.Core.Inspection
             }
 
             string version;
-            if (!TryRun(root, "--version", out version))
+            if (!TryRun(root, new[] { "--version" }, out version))
             {
                 diff.Detail = "Git is not installed, or not on PATH. The version control tab can still " +
                               "map and push; reviewing a change needs Git.";
@@ -46,7 +43,7 @@ namespace TiaOpenness.Core.Inspection
             }
 
             string inside;
-            if (!TryRun(root, "rev-parse --is-inside-work-tree", out inside)
+            if (!TryRun(root, new[] { "rev-parse", "--is-inside-work-tree" }, out inside)
                 || inside.Trim() != "true")
             {
                 diff.Detail = "This workspace folder is not a Git repository. Run 'git init' in " +
@@ -57,7 +54,7 @@ namespace TiaOpenness.Core.Inspection
             diff.Available = true;
 
             string names;
-            if (TryRun(root, "status --porcelain", out names))
+            if (TryRun(root, new[] { "-c", "core.quotepath=false", "status", "--porcelain" }, out names))
             {
                 diff.ChangedFiles = names
                     .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
@@ -72,27 +69,25 @@ namespace TiaOpenness.Core.Inspection
             // push after mapping actually is.
             var pathspec = PathSpec(root, file);
 
-            var arguments = new StringBuilder("diff --no-color");
-            if (pathspec != null) arguments.Append(" -- \"").Append(pathspec).Append('"');
-
+            var arguments = new List<string> { "diff", "--no-color" };
+            if (pathspec != null) arguments.AddRange(new[] { "--", pathspec });
             string output;
-            if (!TryRun(root, arguments.ToString(), out output))
+            if (!TryRun(root, arguments, out output))
             {
-                diff.Detail = "git " + arguments + " failed.";
+                diff.Detail = "git diff failed.";
                 return diff;
             }
 
-            var stagedArguments = new StringBuilder("diff --no-color --cached");
-            if (pathspec != null) stagedArguments.Append(" -- \"").Append(pathspec).Append('"');
+            var stagedArguments = new List<string> { "diff", "--no-color", "--cached" };
+            if (pathspec != null) stagedArguments.AddRange(new[] { "--", pathspec });
             string staged;
-            if (!TryRun(root, stagedArguments.ToString(), out staged))
+            if (!TryRun(root, stagedArguments, out staged))
             {
-                diff.Detail = "git " + stagedArguments + " failed.";
+                diff.Detail = "git diff --cached failed.";
                 return diff;
             }
             output = staged + output + UntrackedDiff(root, pathspec);
-
-            diff.Detail = "Staged, working-tree and untracked changes: git " + stagedArguments + "; git " + arguments;
+            diff.Detail = "Staged, working-tree and untracked changes: git diff --cached; git diff";
             diff.Lines = Parse(output);
             return diff;
         }
@@ -129,13 +124,13 @@ namespace TiaOpenness.Core.Inspection
         {
             // Let Git expand the VCI pathspec, then compare actual filenames. --no-index does
             // not expand a wildcard, and a new workspace may contain several untracked files.
-            var arguments = "ls-files --others --exclude-standard -z";
-            if (pathspec != null) arguments += " -- \"" + pathspec + "\"";
+            var arguments = new List<string> { "ls-files", "--others", "--exclude-standard", "-z" };
+            if (pathspec != null) arguments.AddRange(new[] { "--", pathspec });
             if (!TryRun(root, arguments, out var files)) return string.Empty;
             var nul = System.Environment.OSVersion.Platform == PlatformID.Win32NT ? "NUL" : "/dev/null";
             var result = new StringBuilder();
             foreach (var file in files.Split(new[] { '\0' }, StringSplitOptions.RemoveEmptyEntries))
-                if (TryRun(root, "diff --no-color --no-index -- " + nul + " \"" + file + "\"", out var output))
+                if (TryRun(root, new[] { "diff", "--no-color", "--no-index", "--", nul, file }, out var output, allowDifferenceExit: true))
                     result.Append(output);
             return result.ToString();
         }
@@ -174,45 +169,18 @@ namespace TiaOpenness.Core.Inspection
             return DiffLineKind.Context;
         }
 
-        private static bool TryRun(string workingDirectory, string arguments, out string output)
+        private static bool TryRun(string workingDirectory, IEnumerable<string> arguments, out string output, bool allowDifferenceExit = false)
         {
             output = string.Empty;
             try
             {
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = "git",
-                    Arguments = arguments,
-                    WorkingDirectory = workingDirectory,
-                    UseShellExecute = false,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    StandardOutputEncoding = new UTF8Encoding(false),
-                };
-
-                using (var process = Process.Start(startInfo))
-                {
-                    var text = process.StandardOutput.ReadToEndAsync();
-                    var errors = process.StandardError.ReadToEndAsync();
-
-                    if (!process.WaitForExit((int)Timeout.TotalMilliseconds))
-                    {
-                        try { process.Kill(); } catch (Exception) { }
-                        return false;
-                    }
-
-                    System.Threading.Tasks.Task.WaitAll(text, errors);
-                    output = text.Result;
-
-                    // `git diff` exits 1 when it found differences, which is not a failure.
-                    return process.ExitCode == 0 || process.ExitCode == 1;
-                }
+                var result = LocalProcess.Run("git", arguments, Path.GetFullPath(workingDirectory), null, 30,
+                    maxOutputCharacters: int.MaxValue).GetAwaiter().GetResult();
+                output = result.Stdout;
+                // Only diff --no-index uses exit 1 as the normal "different" result.
+                return result.DataComplete && (result.ExitCode == 0 || allowDifferenceExit && result.ExitCode == 1);
             }
-            catch (Exception)
-            {
-                return false;
-            }
+            catch (Exception) { return false; }
         }
     }
 }

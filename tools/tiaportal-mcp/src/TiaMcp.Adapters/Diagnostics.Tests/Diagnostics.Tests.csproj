@@ -11,4 +11,5 @@
     <Compile Include="../Diagnostics/NativeCallDiagnostics.cs" Link="NativeCallDiagnostics.cs" />
     <Compile Include="$(AdapterSourceRoot)/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs" Link="PortalFailureClassifier.cs" />
   </ItemGroup>
+  <ItemGroup><Compile Include="../../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
 </Project>

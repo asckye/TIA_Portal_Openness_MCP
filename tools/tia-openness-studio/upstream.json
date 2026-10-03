@@ -21,7 +21,7 @@
     {
       "path": "src/TiaOpenness.Client/BridgeClient.cs",
       "upstreamSha256": "a3be4f2282ae6d660a05ec205c151c70396568a2bf52a57a3504c211a2669727",
-      "integratedSha256": "e7c85704a9c37365c927da9f486997b57dd99ebfd7062301c5f76901ec205fd2"
+      "integratedSha256": "ae9efd1c6405c832a8f3c3b9fe9262fb363720a08a2750095ac4931653079c03"
     },
     {
       "path": "src/TiaOpenness.Client/TiaClient.cs",
@@ -86,17 +86,17 @@
     {
       "path": "src/TiaOpenness.Core/Environment/OpennessDoctor.cs",
       "upstreamSha256": "74c875709e8eff5abf5804c4f8551848c40cd6d98e3576d2883d2aacb32de620",
-      "integratedSha256": "1457b2a95e329524b7eca807bd96fc3247495cf74dfa2ad09a73b16a1312737e"
+      "integratedSha256": "df2d87ef32af7325f99b4a39f5a54fecd71a20117815fa11642aa48b39f007b2"
     },
     {
       "path": "src/TiaOpenness.Core/Environment/OpennessLocator.cs",
       "upstreamSha256": "3a95f850122409ae89bc8b44e306fa53d4da20eb18c37940fca43ed551909287",
-      "integratedSha256": "f38e6a4013d90b496f3622b97125494ea391212675c8356ec223e0fb913e406a"
+      "integratedSha256": "b7568dde8bf076bf6175b2afca25a6d24522c3eb9f8785b1ca3f8b136e448e95"
     },
     {
       "path": "src/TiaOpenness.Core/Inspection/GitWorkspaceDiff.cs",
       "upstreamSha256": "1a4298e8b52b19db0d3b051acf6b9ffc81941908f8a09dae3b7579b421a38306",
-      "integratedSha256": "6763b3298bebc095db6f37ec9d5064bc044b13401b834762b1c6fb2e2caf0c37"
+      "integratedSha256": "6777133f83e3d0f34bbff097112f0219e106a2a0658dbfc96637c24572b19fce"
     },
     {
       "path": "src/TiaOpenness.Core/Inspection/InspectionEngine.cs",
@@ -128,7 +128,7 @@
     {
       "path": "src/TiaOpenness.Core/TiaOpenness.Core.csproj",
       "upstreamSha256": "0fdec0bae04e1091658243f45a5b3bd3ae50942ba8083c6b1f14a15a69217505",
-      "integratedSha256": "51b2dcfc2c7459b236b28a68c01a835aeee9323cc390e93a445c1285f8970ef6"
+      "integratedSha256": "74b38b45f6bae9e871761d1f7a1c5c946c4d3f747d3148729c60172064ac162c"
     },
     {
       "path": "src/TiaOpenness.Gui/App.xaml",

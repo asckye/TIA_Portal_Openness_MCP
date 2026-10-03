@@ -59,19 +59,7 @@ namespace TiaOpenness.Core.Environment
 
         private static DoctorCheck CheckDotNetFramework()
         {
-            var release = 0;
-            try
-            {
-                using (var key = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64)
-                           .OpenSubKey(@"SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full"))
-                {
-                    if (key != null) release = (int)(key.GetValue("Release") ?? 0);
-                }
-            }
-            catch (Exception)
-            {
-                release = 0;
-            }
+            var release = TiaOpenness.Shared.OpennessEnvironment.DotNetFrameworkRelease();
 
             // 528040 is .NET Framework 4.8; 533320 is 4.8.1.
             var ok = release >= 528040;

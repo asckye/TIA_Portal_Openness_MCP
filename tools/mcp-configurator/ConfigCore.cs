@@ -59,16 +59,7 @@ namespace TiaMcpConfigurator
         // Windows CommandLineToArgvW/CRT quoting, including embedded quotes and trailing backslashes.
         public static string Quote(string arg)
         {
-            var result = new StringBuilder("\"");
-            int slashes = 0;
-            foreach (char c in arg)
-            {
-                if (c == '\\') { slashes++; continue; }
-                if (c == '"') result.Append('\\', slashes * 2 + 1).Append(c);
-                else result.Append('\\', slashes).Append(c);
-                slashes = 0;
-            }
-            return result.Append('\\', slashes * 2).Append('"').ToString();
+            return TiaOpenness.Shared.ProcessArguments.Quote(arg);
         }
 
         public static string Engine(string root, int version)
@@ -99,13 +90,9 @@ namespace TiaMcpConfigurator
                 return new KeyValuePair<string, string>(env, "TiaPortalLocation 环境变量");
             try
             {
-                using (var hklm = Microsoft.Win32.RegistryKey.OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine, Microsoft.Win32.RegistryView.Registry64))
-                using (var key = hklm.OpenSubKey(@"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP" + version + @"\TIA_Opns"))
-                {
-                    string regPath = key == null ? null : key.GetValue("Path") as string;
-                    if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, version))
-                        return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
-                }
+                string regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(Microsoft.Win32.RegistryView.Registry64, version, "TIA_Opns");
+                if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, version))
+                    return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
             }
             catch (Exception) { }
             foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
@@ -119,9 +106,7 @@ namespace TiaMcpConfigurator
 
         private static bool PathMatchesVersion(string path, int version)
         {
-            var m = System.Text.RegularExpressions.Regex.Match(path, @"[Vv](\d{2})", System.Text.RegularExpressions.RegexOptions.RightToLeft);
-            int pv;
-            return !m.Success || (int.TryParse(m.Groups[1].Value, out pv) && pv == version);
+            return TiaOpenness.Shared.OpennessEnvironment.PathMatchesVersion(path, version);
         }
 
         private static bool HasOpenness(string path, int version)

@@ -29,7 +29,6 @@ namespace TiaMcpServer.ModelContextProtocol
             bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch { return def; } }
             JsonArray Arr(string key) => root[key] as JsonArray ?? new JsonArray();
             string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch { return def; } }
-            uint IU(JsonNode? n, string key) { try { return (uint)(n?[key]?.GetValue<int>() ?? 0); } catch { return 0; } }
 
             var projectPath = S("projectPath");
             if (string.IsNullOrWhiteSpace(projectPath))
@@ -92,26 +91,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex) { Step("openProject", "failed", ex.Message); resp.Ok = false; throw new McpException($"PatchProject aborted at openProject: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError); }
 
             // ---- PLC elements (per-item collect; re-import = upsert) ----
-            void BuildList(string key, string kind)
-            {
-                foreach (var item in Arr(key))
-                {
-                    try { PlcBuildAndImport(plcName, kind, item!.ToJsonString(), "", "", "", false, false); Step(kind, "ok"); }
-                    catch (Exception ex) { Step(kind, "failed", ex.Message); resp.Ok = false; }
-                }
-            }
-            BuildList("udt", "udt");
-            BuildList("globalDb", "globaldb");
-            BuildList("tagTable", "tagtable");
-
-            foreach (var item in Arr("sclSourceFiles"))
-            {
-                string p; try { p = item?.GetValue<string>() ?? ""; } catch { p = ""; }
-                if (string.IsNullOrWhiteSpace(p)) continue;
-                var srcName = Path.GetFileName(p);
-                try { ImportPlcExternalSource(plcName, "", p); GenerateBlocksFromExternalSource(plcName, srcName); Step("scl", "ok", srcName); }
-                catch (Exception ex) { Step("scl", "failed", $"{srcName}: {ex.Message}"); resp.Ok = false; }
-            }
+            ApplyScaffoldPlcElements(root, plcName, resp);
 
             foreach (var item in Arr("ladDocs"))
             {
@@ -123,18 +103,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
 
             // ---- compile ----
-            if (B("compile", true))
-            {
-                try
-                {
-                    var c = CompileAndDiagnosePlc(plcName);
-                    resp.CompileState = c.State; resp.CompileErrorCount = c.ErrorCount; resp.CompileWarningCount = c.WarningCount;
-                    bool clean = (c.ErrorCount ?? 0) == 0;
-                    Step("compile", clean ? "ok" : "failed", $"state={c.State} errors={c.ErrorCount} warnings={c.WarningCount}");
-                    if (!clean) resp.Ok = false;
-                }
-                catch (Exception ex) { Step("compile", "failed", ex.Message); resp.Ok = false; }
-            }
+            if (B("compile", true)) CompileScaffoldPlc(plcName, resp);
 
             // ---- HMI connection / screens / tags (Ensure* are idempotent upserts) ----
             var hmiName = S("hmiName");
@@ -142,51 +111,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var connectionName = S("connectionName", "HMI_Connection_1");
                 var hmiSoftwarePathSpec = S("hmiSoftwarePath");
-                string hmiPath = "";
-                var candidates = new List<string> { hmiSoftwarePathSpec, "HMI_RT_1", hmiName + ".HMI_RT_1", hmiName + "_RT_1", hmiName };
-                foreach (var c in candidates)
-                {
-                    if (string.IsNullOrWhiteSpace(c)) continue;
-                    try { GetHmiProgramInfo(c); hmiPath = c; break; } catch { }
-                }
-
-                if (string.IsNullOrWhiteSpace(hmiPath))
-                {
-                    Step("hmiResolve", "failed", $"could not resolve HMI software path (tried: {string.Join(", ", candidates.Where(x => !string.IsNullOrWhiteSpace(x)))})");
-                    resp.Ok = false;
-                }
-                else
-                {
-                    Step("hmiResolve", "ok", hmiPath);
-                    try { EnsureUnifiedHmiConnection(hmiPath, connectionName, plcName); Step("hmiConnection", "ok"); }
-                    catch (Exception ex) { Step("hmiConnection", "failed", ex.Message); resp.Ok = false; }
-
-                    foreach (var item in Arr("hmiScreens"))
-                    {
-                        var screenName = IS(item, "screenName");
-                        if (string.IsNullOrWhiteSpace(screenName)) continue;
-                        try
-                        {
-                            EnsureUnifiedHmiScreen(hmiPath, screenName, IU(item, "width"), IU(item, "height"));
-                            var design = item?["designJson"];
-                            if (design != null) ApplyUnifiedHmiScreenDesignJson(hmiPath, screenName, design.ToJsonString(), true);
-                            Step("hmiScreen", "ok", screenName);
-                        }
-                        catch (Exception ex) { Step("hmiScreen", "failed", $"{screenName}: {ex.Message}"); resp.Ok = false; }
-                    }
-
-                    foreach (var item in Arr("hmiTags"))
-                    {
-                        var tagName = IS(item, "tagName");
-                        if (string.IsNullOrWhiteSpace(tagName)) continue;
-                        var tagTable = IS(item, "tagTableName", "Default tag table");
-                        var dt = IS(item, "hmiDataType", "Bool");
-                        var plcTag = IS(item, "plcTag");
-                        var address = IS(item, "address");
-                        try { EnsureUnifiedHmiTag(hmiPath, tagTable, tagName, dt, plcName, plcTag, connectionName, address, true); Step("hmiTag", "ok", tagName); }
-                        catch (Exception ex) { Step("hmiTag", "failed", $"{tagName}: {ex.Message}"); resp.Ok = false; }
-                    }
-                }
+                ApplyScaffoldHmi(root, plcName, hmiName, hmiSoftwarePathSpec, connectionName, resp);
             }
 
             // ---- save ----

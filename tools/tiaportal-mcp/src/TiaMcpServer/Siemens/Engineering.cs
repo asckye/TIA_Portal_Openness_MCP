@@ -191,11 +191,9 @@ namespace TiaMcpServer.Siemens
             {
               try
               {
-                using var regBaseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, view);
                 foreach (var section in new[] { "TIA_Opns", "Global" })
                 {
-                    using var tiaOpnsKey = regBaseKey.OpenSubKey($@"SOFTWARE\Siemens\Automation\_InstalledSW\TIAP{TiaMajorVersion}\{section}");
-                    var regPath = tiaOpnsKey?.GetValue("Path")?.ToString();
+                    var regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(view, TiaMajorVersion, section);
                     if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath)) return regPath;
                 }
               }

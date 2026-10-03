@@ -64,12 +64,12 @@ namespace TiaMcpServer.ModelContextProtocol
                         new XElement("AttributeList",
                             new XElement("Interface",
                                 new XElement(InterfaceNs + "Sections",
-                                    BuildSection("Input", inputs),
-                                    BuildSection("Output", outputs),
-                                    BuildSection("InOut", inouts),
-                                    BuildSection("Static", statics),
-                                    BuildSection("Temp", temps),
-                                    BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()))),
+                                    PlcBlockXmlHelpers.BuildSection("Input", inputs),
+                                    PlcBlockXmlHelpers.BuildSection("Output", outputs),
+                                    PlcBlockXmlHelpers.BuildSection("InOut", inouts),
+                                    PlcBlockXmlHelpers.BuildSection("Static", statics),
+                                    PlcBlockXmlHelpers.BuildSection("Temp", temps),
+                                    PlcBlockXmlHelpers.BuildSection("Constant", Array.Empty<PlcBlockMemberDefinition>()))),
                             new XElement("MemoryLayout", "Optimized"),
                             new XElement("Name", blockName),
                             new XElement("Namespace"),
@@ -119,21 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return writer.ToString();
         }
 
-        private static XElement BuildSection(string name, IReadOnlyCollection<PlcBlockMemberDefinition> members)
-        {
-            if (members.Count == 0)
-                return new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            var section = new XElement(InterfaceNs + "Section", new XAttribute("Name", name));
-            foreach (var m in members)
-            {
-                var memEl = new XElement(InterfaceNs + "Member",
-                    new XAttribute("Name", m.Name),
-                    new XAttribute("Datatype", m.Datatype));
-                PlcBlockXmlHelpers.AppendMemberCommentIfAny(memEl, m.CommentZhCn);
-                section.Add(memEl);
-            }
-            return section;
-        }
+
 
         private static void ValidateMembers(IReadOnlyCollection<PlcBlockMemberDefinition> members)
         {

@@ -43,14 +43,7 @@ namespace TiaMcpServer.Isolation
 
         internal static string Quote(string value)
         {
-            // Windows CommandLineToArgvW escaping, including backslashes before quotes and at the end.
-            var text = new System.Text.StringBuilder("\""); int slashes = 0;
-            foreach (char c in value)
-            {
-                if (c == '\\') { slashes++; continue; }
-                text.Append('\\', c == '"' ? slashes * 2 + 1 : slashes); text.Append(c); slashes = 0;
-            }
-            return text.Append('\\', slashes * 2).Append('"').ToString();
+            return TiaOpenness.Shared.ProcessArguments.Quote(value);
         }
 
         private static ProcessStartInfo StartInfo(string exe, CliOptions options)
