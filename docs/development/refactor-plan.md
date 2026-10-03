@@ -103,7 +103,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P3-03 | 步骤 3：HttpTests `EngineSurface` 查找辅助（按工具名跨全部 `[McpServerToolType]` 类型、按成员名跨 `Portal` 与服务查找），只改测试；engineering-api 各新增 22 项自检 | done |
 | P3-04 | 步骤 4：内核接口 `IEngineeringSession`；四个精确解析器收入内核；`AdoptProject`/`ReleaseProject` 统一会话字段写入；纯静态辅助外移到 `EngineeringSessionHelpers` | done |
 | P3-05 | 步骤 5：试点领域（生态、Git、模板、质量审计、导入顺序、指南、工具用法、离线套件，约 30 个工具）迁入实例工具类；先补吞异常原因、再纯迁移，CLI 保留静态转发；30 个工具迁入 9 个实例类，契约与原始响应 0 差异，`Test-PilotTools.py` 覆盖完整/精简与隔离路径 | done |
-| P3-06 | 步骤 6：第一个 Portal 领域 CFC 迁为服务类 + 工具类，作为后续领域的样板；逐方法比对西门子调用序列 | doing |
+| P3-06 | 步骤 6：第一个 Portal 领域 CFC 迁为服务类 + 工具类，作为后续领域的样板；逐方法比对西门子调用序列（6 个方法 V20/V21 一致），`Siemens/Services/CfcService` + `CfcTools`，样板写入引擎拆分设计 | done |
 | P3-07… | 按设计文档的迁移顺序继续；每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | todo |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明；P3-G9 已合并：内核 `ResolvePlc(path, Read|Write)`、结构别名、已验证结果缓存，CHANGELOG 与[真机验收清单](../reference/real-machine-ledger.md)已登记，真机验收前不发布 | done |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
