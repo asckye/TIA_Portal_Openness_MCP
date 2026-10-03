@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
+LOGIC = ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Logic'
 
 
 def read(path):
@@ -54,7 +55,7 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertIn('Recovery export retained', source)
 
     def test_precise_keys_and_existing_engines(self):
-        source = read(SERVER / 'Siemens/TiaVersionCatalog.cs')
+        source = read(LOGIC / 'Siemens/TiaVersionCatalog.cs')
         keys = re.findall(r'(?:Foundation|new TiaVersionDescriptor)\("([0-9.a-z]+)",', source)
         self.assertEqual(keys, ['14sp1', '15.1', '16', '17', '18', '19', '20', '21'])
         runnable = re.findall(r'new TiaVersionDescriptor\("([^"]+)", "[^"]+", \d+, true,', source)
@@ -101,11 +102,14 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertIn('TiaOpenness.Configuration.Tests.csproj', build)
         self.assertIn('@(Get-Item $versionCatalog)', build)
         package = read(ROOT / 'scripts/build/Package-Release.py')
-        self.assertIn('Siemens/TiaVersionCatalog.cs', package)
+        self.assertIn('TiaMcp.Logic/Siemens/TiaVersionCatalog.cs', package)
         project = ET.parse(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj')
         linked = [e.get('Include', '').replace('\\', '/') for e in project.iter('Compile')]
+        references = [e.get('Include', '').replace('\\', '/') for e in project.iter('ProjectReference')]
+        self.assertTrue(any(p.endswith('/TiaMcp.Logic/TiaMcp.Logic.csproj') for p in references))
         for suffix in ['Siemens/TiaVersionCatalog.cs', 'Siemens/Capability.cs', 'CliOptions.cs']:
-            self.assertTrue(any(p.endswith(suffix) for p in linked), suffix)
+            self.assertFalse(any(p.endswith(suffix) for p in linked), suffix)
+            self.assertTrue((LOGIC / suffix).is_file(), suffix)
         self.assertIn('TiaVersionCatalogTests.Run(Check)', read(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs'))
 
 

@@ -128,7 +128,7 @@ internal static partial class Program
     {
         int before = Passed;
         await Test("production worker start preserves relative path context and omits HTTP credentials", () => {
-            var optionsType = Server.GetType("TiaMcpServer.CliOptions", true)!;
+            var optionsType = FindServerType(Server, "TiaMcpServer.CliOptions");
             var options = Activator.CreateInstance(optionsType)!;
             optionsType.GetProperty("TiaPortalLocation")!.SetValue(options, @"relative API\V21\");
             optionsType.GetProperty("HttpApiKey")!.SetValue(options, "private-host-key-marker");

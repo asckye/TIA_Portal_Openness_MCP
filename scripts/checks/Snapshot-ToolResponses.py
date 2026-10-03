@@ -538,7 +538,11 @@ def response_length(call):
 def compare(args):
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
-    for release in sorted(baseline.keys() | current.keys()):
+    releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
+    missing = releases - (baseline.keys() | current.keys())
+    if missing:
+        raise ValueError('Selected releases have no snapshots: ' + ', '.join(sorted(missing)))
+    for release in sorted(releases):
         old, new = baseline.get(release, {}), current.get(release, {})
         a = {identity(call): call for call in old.get('calls', [])}
         b = {identity(call): call for call in new.get('calls', [])}
@@ -591,6 +595,8 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
+    compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
+                                help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)
     args = parser.parse_args()
     try:

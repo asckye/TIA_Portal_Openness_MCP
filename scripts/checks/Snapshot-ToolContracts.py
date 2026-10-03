@@ -173,7 +173,11 @@ def load_snapshots(directory):
 def compare(args):
     baseline, current = load_snapshots(args.baseline), load_snapshots(args.current)
     total = Counter()
-    for release in sorted(baseline.keys() | current.keys()):
+    releases = set(args.releases) if args.releases else baseline.keys() | current.keys()
+    missing = releases - (baseline.keys() | current.keys())
+    if missing:
+        raise ValueError('Selected releases have no snapshots: ' + ', '.join(sorted(missing)))
+    for release in sorted(releases):
         changes = []
         if release not in current or release not in baseline:
             changes.append(('breaking' if release not in current else 'compatible', 'release removed' if release not in current else 'release added'))
@@ -222,6 +226,8 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', type=Path, required=True)
     compare_parser.add_argument('--current', type=Path, required=True)
+    compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
+                                help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)
     args = parser.parse_args()
     try:

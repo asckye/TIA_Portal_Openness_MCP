@@ -53,7 +53,6 @@
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcBlockXmlPolicy.cs" Link="PlcBlockXmlPolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcExchangePolicy.cs" Link="PlcExchangePolicy.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
-    <Compile Include="../../src/TiaMcpServer/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17MutationEnvelope.cs" Link="V17MutationEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.LegacyHost/V17CompileEnvelope.cs" Link="V17CompileEnvelope.cs" />
     <Compile Include="../../src/TiaMcpServer.PlcFoundation/PlcCompilePolicy.cs" Link="PlcCompilePolicy.cs" />

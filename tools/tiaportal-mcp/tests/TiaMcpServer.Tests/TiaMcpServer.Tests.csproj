@@ -19,16 +19,11 @@
     <Compile Include="..\..\src\TiaMcpServer.PlcFoundation\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Capability.cs" Link="Capability.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\CliOptions.cs" Link="CliOptions.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\Builders\PlcVerifiedImport.cs" Link="PlcVerifiedImport.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\HmiTagDeletion.cs" Link="HmiTagDeletion.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\TimedAttachment.cs" Link="TimedAttachment.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\Engineering.cs" Link="Engineering.cs" />
-    <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ProjectOwnership.cs" Link="ProjectOwnership.cs" />
     <Compile Include="..\..\src\TiaMcpServer\ModelContextProtocol\TransactionExecution.cs" Link="TransactionExecution.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\Hmi\UnifiedEventOperations.cs" Link="UnifiedEventOperations.cs" />
@@ -86,7 +81,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" />
   </ItemGroup>
-  <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs" Link="Shared/McpServer.ScaffoldOperations.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup>

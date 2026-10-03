@@ -9,6 +9,7 @@
     <PackageReference Include="Esprima" Version="3.0.5" />
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <ProjectReference Include="../../../third-party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
+    <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" />
     <Compile Include="../../../openness-shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" />
     <Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" />
     <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />

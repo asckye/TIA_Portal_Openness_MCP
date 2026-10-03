@@ -73,7 +73,7 @@ internal static partial class Program
             string? previous = Environment.GetEnvironmentVariable("TIA_MCP_HTTP_API_KEY");
             try {
                 Environment.SetEnvironmentVariable("TIA_MCP_HTTP_API_KEY", "environment-test-key");
-                var cli = Server.GetType("TiaMcpServer.CliOptions", true)!;
+                var cli = FindServerType(Server, "TiaMcpServer.CliOptions");
                 var parse = cli.GetMethod("ParseArgs", All)!;
                 var property = cli.GetProperty("HttpApiKey")!;
                 var env = parse.Invoke(null, new object[] { new string[0] });
@@ -226,7 +226,7 @@ internal static partial class Program
         string prefix="http://localhost:"+port+"/";
         var httpType=Server.GetType("TiaMcpServer.HttpMcpServer",true)!;
         httpType.GetField("ResponseTimeout",All)!.SetValue(null,TimeSpan.FromMilliseconds(180));
-        var cliType=Server.GetType("TiaMcpServer.CliOptions",true)!; var options=Activator.CreateInstance(cliType,true)!;
+        var cliType=FindServerType(Server, "TiaMcpServer.CliOptions"); var options=Activator.CreateInstance(cliType,true)!;
         cliType.GetProperty("HttpPrefix")!.SetValue(options,prefix); cliType.GetProperty("HttpApiKey")!.SetValue(options,"local-test-secret");
         var streamType=Server.GetType("TiaMcpServer.McpBlockingStream",true)!;
         var requests=(Stream)Activator.CreateInstance(streamType,true)!; var responses=(Stream)Activator.CreateInstance(streamType,true)!;
@@ -436,13 +436,13 @@ internal static partial class Program
                 };
                 Console.InputEncoding=new UTF8Encoding(false);
                 Console.OutputEncoding=new UTF8Encoding(false);
-                var cli=Server.GetType("TiaMcpServer.CliOptions",true)!;
+                var cli=FindServerType(Server, "TiaMcpServer.CliOptions");
                 var options=cli.GetMethod("ParseArgs",All)!.Invoke(null,new object[]{args.Skip(3).ToArray()});
                 // Match the production bootstrap's version selection without its
                 // machine/group setup or Openness.Initialize side effects.
                 var requestedMajor = cli.GetProperty("TiaMajorVersion")!.GetValue(options);
                 if (requestedMajor == null) throw new ArgumentException("protocol-host requires --tia-major-version");
-                Server.GetType("TiaMcpServer.Siemens.Engineering",true)!.GetProperty("TiaMajorVersion")!.SetValue(null, requestedMajor);
+                FindServerType(Server, "TiaMcpServer.Siemens.Engineering").GetProperty("TiaMajorVersion")!.SetValue(null, requestedMajor);
                 Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("SetProfileOverride",All)!.Invoke(null,new[]{cli.GetProperty("Profile")!.GetValue(options)});
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;

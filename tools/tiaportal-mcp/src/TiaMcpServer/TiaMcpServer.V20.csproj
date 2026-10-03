@@ -44,7 +44,6 @@
     <EmbeddedResource Include="..\..\..\third-party\SiemensOpcUaModelled\Phases\Phase1\InterfaceTemplate.xml" LogicalName="TiaMcp.OpcUa.InterfaceTemplate.xml" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
-  <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />

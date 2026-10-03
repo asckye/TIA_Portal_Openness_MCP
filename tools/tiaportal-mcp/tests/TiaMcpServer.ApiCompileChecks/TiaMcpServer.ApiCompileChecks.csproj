@@ -21,8 +21,8 @@
   <ItemGroup>
     <Compile Include="ApiCompileChecks.cs" />
     <Compile Include="../../src/TiaMcpServer/Siemens/OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
-    <Compile Include="../../src/TiaMcpServer/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
-    <Compile Include="../../src/TiaMcpServer/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
+    <Compile Include="../../src/TiaMcp.Logic/Siemens/EngineeringAssemblyIdentity.cs" Link="EngineeringAssemblyIdentity.cs" />
+    <Compile Include="../../src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Siemens.Engineering.Step7" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />

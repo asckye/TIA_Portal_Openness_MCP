@@ -28,8 +28,8 @@
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcOfflinePolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcReadContracts.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcReadPathPolicy.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/TiaVersionCatalog.cs" />
-    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/EngineeringAssemblyIdentity.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Logic/Siemens/EngineeringAssemblyIdentity.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer/Siemens/OpennessReleaseContract.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcpServer.PlcFoundation/PlcSupplementaryReadPolicy.cs" />

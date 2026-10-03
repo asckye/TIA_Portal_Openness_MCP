@@ -168,7 +168,7 @@ def main():
         'scripts/build/Build-Configurator.ps1', 'Version.props',
         'tools/mcp-configurator/Launcher.cs',
         studio + 'Directory.Build.props', studio + 'tests/Directory.Build.props',
-        'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/TiaVersionCatalog.cs',
+        'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs',
         'tools/openness-shared/OpennessEnvironment.cs',
         'tools/openness-shared/ProcessArguments.cs',
         'tools/openness-shared/LocalProcess.cs',
