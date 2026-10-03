@@ -9,7 +9,6 @@
     <DebugSymbols Condition="'$(Configuration)'=='Release'">false</DebugSymbols>
     <AssemblyName>TiaMcpServer</AssemblyName>
     <BaseOutputPath>.\bin-v20</BaseOutputPath>
-    <BaseIntermediateOutputPath>.\obj-v20\</BaseIntermediateOutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
     <DefineConstants>$(DefineConstants);TIA_V20</DefineConstants>

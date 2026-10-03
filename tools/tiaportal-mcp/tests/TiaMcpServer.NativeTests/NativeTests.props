@@ -1,4 +1,6 @@
 <Project>
+  <PropertyGroup><TiaPublicApiReleaseKey>$(TiaMajor)</TiaPublicApiReleaseKey></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net48</TargetFramework>

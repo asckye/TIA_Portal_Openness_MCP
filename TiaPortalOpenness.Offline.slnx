@@ -1,0 +1,69 @@
+<Solution>
+  <!-- PlcWorker is built per TiaReleaseKey by Build-PlcAdapterWorkers.ps1; it has no default release. -->
+  <!-- Windows/.NET 10 SDK required for Studio. No Siemens assemblies required.
+       dotnet test runs only Studio Core/Gui xunit tests; console suites require dotnet run. -->
+  <Folder Name="/Engine/">
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj" />
+  </Folder>
+  <Folder Name="/Studio/">
+    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" />
+    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Client/TiaOpenness.Client.csproj" />
+    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj" />
+    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Core/TiaOpenness.Core.csproj" />
+    <Project Path="tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Engine/">
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticMembershipTests/TiaMcpServer.DiagnosticMembershipTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/DiagnosticsTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.DiagnosticsTests/FakeApi/FakeApi.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ExternalSourceDeleteTests/TiaMcpServer.ExternalSourceDeleteTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ExternalSourcePlanTests/TiaMcpServer.ExternalSourcePlanTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.ImportSelectionTests/TiaMcpServer.ImportSelectionTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/Fixture/Fixture.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/OptionalDependency/OptionalDependency.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.PromptRegistrationTests/TiaMcpServer.PromptRegistrationTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.SoftwareReadTests/TiaMcpServer.SoftwareReadTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/PlcAdapters/">
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.Adapters/Diagnostics.Tests/Diagnostics.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/BindingSnapshot.Tests/BindingSnapshot.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/Studio/">
+    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj" />
+    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" />
+    <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tests/WorkerProtocol/">
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.EndpointFixture/TiaMcp.EndpointFixture.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.TransportFixture/TiaMcp.TransportFixture.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.Endpoint.Tests/TiaMcp.WorkerProtocol.Endpoint.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.HostPreview.Tests/TiaMcp.WorkerProtocol.HostPreview.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.HostTransport.Tests/TiaMcp.WorkerProtocol.HostTransport.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonV2.Tests/TiaMcp.WorkerProtocol.JsonV2.Tests.csproj" />
+    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.Tests/TiaMcp.WorkerProtocol.Tests.csproj" />
+  </Folder>
+  <Folder Name="/Tools/">
+    <Project Path="tools/native-call-weaver/NativeCallWeaver.csproj" />
+    <Project Path="tools/third-party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
+  </Folder>
+  <Folder Name="/WorkerProtocol/">
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.AsyncPreview/TiaMcp.WorkerProtocol.AsyncPreview.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.Endpoint/TiaMcp.WorkerProtocol.Endpoint.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.HostPreview/TiaMcp.WorkerProtocol.HostPreview.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.HostTransport/TiaMcp.WorkerProtocol.HostTransport.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonLegacy/TiaMcp.WorkerProtocol.JsonLegacy.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonV2/TiaMcp.WorkerProtocol.JsonV2.csproj" />
+    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol/TiaMcp.WorkerProtocol.csproj" />
+  </Folder>
+</Solution>

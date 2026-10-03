@@ -4,6 +4,9 @@
 
 | 路径 | 用途 |
 |---|---|
+| `TiaPortalOpenness.slnx` | 69 个开发工程，按 Engine、PlcAdapters、WorkerProtocol、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
+| `TiaPortalOpenness.Offline.slnx` | 48 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
+| `tools/openness-shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由发布脚本收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
 | `tools/tiaportal-mcp/src/TiaMcp.Logic` | net48/net8.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
@@ -26,7 +29,9 @@
 | `.claude-plugin`、`hooks` | 插件定义和 Claude Code 钩子 |
 
 运行二进制不进入 Git；使用[发布流程](release-workflow.md)生成完整交付包。
-Siemens PublicAPI 是本机构建输入，通过参数指定目录，不随仓库或公开交付包分发。
+Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八版 `TIA_V*_PublicAPI`，也可通过
+`TiaPublicApiRoot` 指定这些文件夹的父目录；单工程显式 `SiemensEngineeringDirectory` 优先。
+具体命令见[验证分层](validation.md)。SDK 不随仓库或公开交付包分发。
 `bin-build`、本机输出、用户工程、客户端配置及设计交接素材不属于版本化源码。
 
 ## 文档入口

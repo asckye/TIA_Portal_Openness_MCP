@@ -1,0 +1,17 @@
+<Project>
+  <!-- Imported only by projects that require an exact Siemens PublicAPI release. -->
+  <PropertyGroup>
+    <TiaPublicApiRoot Condition="'$(TiaPublicApiRoot)' == ''">$(MSBuildThisFileDirectory)../../</TiaPublicApiRoot>
+    <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '14sp1'">TIA_V14SP1_PublicAPI/V14 SP1</_TiaPublicApiRelativePath>
+    <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '15.1'">TIA_V15.1_PublicAPI/V15.1</_TiaPublicApiRelativePath>
+    <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '16' or '$(TiaPublicApiReleaseKey)' == '17' or '$(TiaPublicApiReleaseKey)' == '18' or '$(TiaPublicApiReleaseKey)' == '19' or '$(TiaPublicApiReleaseKey)' == '20'">TIA_V$(TiaPublicApiReleaseKey)_PublicAPI/V$(TiaPublicApiReleaseKey)</_TiaPublicApiRelativePath>
+    <_TiaPublicApiRelativePath Condition="'$(TiaPublicApiReleaseKey)' == '21'">TIA_V21_PublicAPI/V21/net48</_TiaPublicApiRelativePath>
+    <TiaConventionalPublicApiDirectory Condition="'$(_TiaPublicApiRelativePath)' != ''">$([System.IO.Path]::GetFullPath('$(TiaPublicApiRoot)/$(_TiaPublicApiRelativePath)'))</TiaConventionalPublicApiDirectory>
+    <SiemensEngineeringDirectory Condition="'$(SiemensEngineeringDirectory)' == '' and Exists('$(TiaConventionalPublicApiDirectory)')">$(TiaConventionalPublicApiDirectory)</SiemensEngineeringDirectory>
+    <_TiaPublicApiCoreAssembly Condition="'$(TiaPublicApiReleaseKey)' != '21'">Siemens.Engineering.dll</_TiaPublicApiCoreAssembly>
+    <_TiaPublicApiCoreAssembly Condition="'$(TiaPublicApiReleaseKey)' == '21'">Siemens.Engineering.Base.dll</_TiaPublicApiCoreAssembly>
+  </PropertyGroup>
+  <Target Name="RequireTiaPublicApiDirectory" BeforeTargets="PrepareForBuild;ResolveReferences;ValidateAdapterInputs">
+    <Error Condition="!Exists('$(SiemensEngineeringDirectory)/$(_TiaPublicApiCoreAssembly)')" Text="PublicAPI $(TiaPublicApiReleaseKey) requires $(_TiaPublicApiCoreAssembly). Set -p:SiemensEngineeringDirectory=&lt;absolute matching SDK directory&gt; or provide '$(TiaConventionalPublicApiDirectory)' (root: TiaPublicApiRoot). Selected directory: '$(SiemensEngineeringDirectory)'." />
+  </Target>
+</Project>

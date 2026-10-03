@@ -3,6 +3,7 @@
     <TargetFrameworks>net461;net8.0</TargetFrameworks>
     <LangVersion>latest</LangVersion><Nullable>enable</Nullable>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <IsPackable>false</IsPackable>
   </PropertyGroup>

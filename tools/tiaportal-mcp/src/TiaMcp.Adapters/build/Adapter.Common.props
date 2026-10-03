@@ -1,4 +1,14 @@
 <Project>
+  <PropertyGroup><TiaPublicApiReleaseKey>$(AdapterReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../../../openness-shared/TiaPublicApi.props" />
+  <!-- Release.props declares the module identities before the SDK directory is defaulted.
+       Rebase those items while preserving their exact identity metadata. -->
+  <ItemGroup>
+    <_TiaAdapterApi Include="@(AdapterApi)" />
+    <AdapterApi Remove="@(AdapterApi)" />
+    <AdapterApi Include="@(_TiaAdapterApi->'$(SiemensEngineeringDirectory)/%(Filename)%(Extension)')" />
+    <_TiaAdapterApi Remove="@(_TiaAdapterApi)" />
+  </ItemGroup>
   <PropertyGroup>
     <DefineConstants Condition="'$(AdapterReleaseKey)' != '14sp1'">$(DefineConstants);PLC_SOURCE_RESULTS</DefineConstants>
     <DefineConstants Condition="'$(AdapterReleaseKey)' == '19' or '$(AdapterReleaseKey)' == '20' or '$(AdapterReleaseKey)' == '21'">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
@@ -20,6 +30,7 @@
     <Nullable>enable</Nullable>
     <DefineConstants>$(DefineConstants);$(AdapterFeatureConstants)</DefineConstants>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <NuGetAudit>false</NuGetAudit>
     <NativeCallWeaverPath Condition="'$(NativeCallWeaverPath)' == ''">$(MSBuildThisFileDirectory)../../../../native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll</NativeCallWeaverPath>

@@ -11,6 +11,7 @@
     <SelectedAdapterDirectory Condition="'$(TiaReleaseKey)' == '16' or '$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">V$(TiaReleaseKey)</SelectedAdapterDirectory>
     <SelectedAdapterProject Condition="'$(SelectedAdapterDirectory)' != ''">../TiaMcp.Adapters/$(SelectedAdapterDirectory)/Adapter.$(TiaReleaseKey).csproj</SelectedAdapterProject>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <WorkerSourceRoot Condition="'$(WorkerSourceRoot)' == ''">$(MSBuildProjectDirectory)</WorkerSourceRoot>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj/**;bin/**</DefaultItemExcludes>

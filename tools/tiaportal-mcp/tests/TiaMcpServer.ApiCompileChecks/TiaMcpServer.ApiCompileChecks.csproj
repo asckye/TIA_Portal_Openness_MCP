@@ -1,6 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!-- Compile-only library: no executable, no TIA initialization, no native tests. -->
   <PropertyGroup>
+    <!-- A standalone/solution compile checks the current engine release; scripts select all eight. -->
+    <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">21</TiaReleaseKey>
+    <TiaPublicApiReleaseKey>$(TiaReleaseKey)</TiaPublicApiReleaseKey>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
+  <PropertyGroup>
     <TargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</TargetFramework>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net48</TargetFramework>
     <OutputType>Library</OutputType>
@@ -8,6 +14,7 @@
     <LangVersion>latest</LangVersion>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
+    <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
     <CoreApiName Condition="'$(TiaReleaseKey)' != '21'">Siemens.Engineering</CoreApiName>
     <CoreApiName Condition="'$(TiaReleaseKey)' == '21'">Siemens.Engineering.Base</CoreApiName>
     <ExpectedApiVersion>$(TiaReleaseKey).0.0.0</ExpectedApiVersion>

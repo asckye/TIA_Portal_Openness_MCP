@@ -1,4 +1,6 @@
 <Project>
+  <PropertyGroup><TiaPublicApiReleaseKey>$(StudioReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
     <AssemblyName>TiaOpenness.Openness</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
