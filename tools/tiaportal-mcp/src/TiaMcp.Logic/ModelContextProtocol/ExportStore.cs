@@ -8,15 +8,13 @@ namespace TiaMcpServer.ModelContextProtocol
     // ───────────────────────────────────────────────────────────────────────────
     //  大响应寄存 —— 判定与切片逻辑，零依赖，可单测。接线层在 McpServer.Exports.cs。
     //
-    //  在此之前引擎对超大响应什么都没有：宿主按上限一刀截断，截断即丢，模型拿不到
-    //  剩下的部分，只能换个更窄的参数重跑一遍整个工具调用 —— 一次 GetBlocks 或
-    //  ExportBlocksAsDocuments 的重跑要几十秒，而且它凭什么知道该窄多少。真机实测过
-    //  一台天车 PLC 的 GetBlocks：payload 在 2 万字符处没了，后面的内容**没有任何
-    //  办法**拿到。
+    // 超阈值的响应必须保留完整内容，避免调用方为了拿到余下内容重跑整个工具。
+    // 真机观察：一台天车 PLC 的 GetBlocks 响应在 2 万字符处被截断，后续内容无法读取；
+    // GetBlocks 或 ExportBlocksAsDocuments 的重跑可能耗时几十秒。
     //
-    //  这里把「截断」换成「寄存 + 分页」：超阈值的响应整份存进这个库，返回头部
-    //  切片加一个 exportId，模型用 GetExport(exportId, offset) 往后翻，或者
-    //  SaveExport 一次落盘。上下文占用被阈值钉死，内容一点不丢。
+    // 超阈值的响应整份寄存，返回头部切片和 exportId；调用方用
+    // GetExport(exportId, offset) 翻页，或用 SaveExport 一次落盘。
+    // 上下文占用受阈值约束，完整内容保留在寄存区。
     //
     //  为什么只存在内存里、不落盘：引擎是随会话起停的进程，句柄的寿命本来就不该
     //  超过会话。落盘要管清理、管并发、管跨会话的陈旧句柄，都是这条需求没有的。
@@ -154,8 +152,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 //   evicted 寄存区满被挤掉（内容没过期，但没了）→ 重跑原工具
                 //   expired 超过 TTL                            → 重跑原工具
                 //   unknown 本引擎没发过这个 id                  → 是你把 id 记错了
-                // 早先只有后两种，被淘汰的一律落进 unknown，等于告诉模型「你记错了」，
-                // 于是它去 ListExports 找一个注定不在那儿的东西，白烧两三个来回。
+                // 被淘汰的句柄必须报 evicted，让调用方重跑原工具；不能报 unknown，
+                // 否则调用方会去 ListExports 查找已被移除的内容。
                 string err = _tombstones.Contains(id ?? "") ? "evicted"
                            : LooksLikeIssuedId(id, now) ? "expired" : "unknown";
                 return new ExportSlice

@@ -6,11 +6,11 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.58: verified multi-step sequences. Trial-and-error on the real machine mostly came from the ORDER of calls
-    // (protection before hardware compile before download, PLC side before HMI side, dryRun before the real run), not
-    // from single calls. Historical sequences were run on the maintainer's VM; newer reference-only recipes state their native acceptance status (docs/reference/real-machine-ledger.md and
-    // the campaign plans); values are the placeholders of the curated examples. Validated at build time like the
-    // examples (each step names a real tool and fits its signature). Zero dependencies; linked into the offline suite.
+    // Multi-step sequences. Real-machine trials exposed call-order dependencies: protection before hardware compile
+    // before download, PLC side before HMI side, and dryRun before execution. Historical native runs and the acceptance
+    // status of reference-only recipes are recorded in docs/reference/real-machine-ledger.md and the campaign plans.
+    // Values are curated-example placeholders. Build-time validation checks that each step names a real tool and fits
+    // its signature. Zero dependencies; linked into the offline suite.
     public static class ToolRecipes
     {
         public sealed class Step

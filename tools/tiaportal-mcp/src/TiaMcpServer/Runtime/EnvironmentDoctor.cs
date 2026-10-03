@@ -11,15 +11,11 @@ namespace TiaMcpServer.Runtime
     /// <summary>
     /// The environment checks behind both `tia doctor` (CLI) and the Doctor MCP tool.
     ///
-    /// It lives in one place because the two used to be written separately and had drifted: each
-    /// only asked the registry whether TIA existed, checked the Openness group, and stopped. The
-    /// three failures that actually strand a first-time user on a fresh machine were checked by
-    /// neither:
-    ///   * Openness was never installed, so Siemens.Engineering cannot be resolved (the registry
-    ///     still says TIA is there, so both doctors reported OK and the engine died on first call);
-    ///   * the delivery was unzipped straight from a download, so Windows marked every DLL with a
-    ///     zone identifier and .NET refuses to load them;
-    ///   * .NET Framework 4.8 is missing, which is prerequisite #1 in the README.
+    /// Both entry points must check the same prerequisites, including failures that a TIA registry entry
+    /// and Openness group membership alone cannot detect:
+    ///   * missing Openness assemblies, which prevent Siemens.Engineering resolution;
+    ///   * Zone.Identifier streams on downloaded DLLs, which prevent .NET from loading them;
+    ///   * missing .NET Framework 4.8.
     ///
     /// Each check carries both languages: the CLI is invoked from Chinese .bat files by Chinese
     /// engineers, while the MCP tool's output is consumed by a model alongside English tool text.

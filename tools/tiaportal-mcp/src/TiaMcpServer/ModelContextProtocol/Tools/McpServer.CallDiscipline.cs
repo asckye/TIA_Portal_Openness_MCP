@@ -11,7 +11,7 @@ using ModelContextProtocol.Server;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.58: calling discipline for every tool, done by the engine rather than left to the model.
+    // Calling discipline for every tool, done by the engine rather than left to the model.
     //
     //   1. SchemaHintedTool - the documented alternatives, defaults and example values of a parameter go into the
     //      tool's inputSchema (enum / default / examples). A client that validates against the schema stops an invalid

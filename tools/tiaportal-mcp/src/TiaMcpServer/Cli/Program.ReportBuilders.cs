@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    // Partial: report/analysis builders. Extracted from Program.cs (god-file split); behavior unchanged.
     public partial class Program
     {
         private static void TryWriteText(string path, string content)

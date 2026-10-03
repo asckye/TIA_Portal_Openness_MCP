@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): pure logic (no Siemens dependency) for the Teamcenter Gateway option package
+    // Pure logic (no Siemens dependency) for the Teamcenter Gateway option package
     // (Siemens.Engineering.TeamcenterGateway, identical on V20 / V21): connection (user / SSO), dataset locks, search and download,
     // and the workflow provider that saves the open project / global library to Teamcenter (as is, to an item, as new item / revision,
     // with or without proxy objects) plus its custom attributes.

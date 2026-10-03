@@ -49,10 +49,10 @@ namespace TiaMcpServer.Runtime
     {
         private static readonly object Gate = new object();
         private static PlcSimApi? _api;
-        // 2.7.41: one IInstance interface per instance name, kept open across tool calls. 2.7.38-2.7.40 created and disposed an
-        // interface per call and rebuilt the tag list every time; on the maintainer's machine the engine died after 15-30 consecutive
-        // reads / writes (exit 0xE0434352 from the PLCSIM Advanced API's own thread). Interfaces are re-created only when the cached one
-        // no longer answers, and every API call is serialized on Gate (the API is not documented as thread-safe).
+        // Keep one IInstance interface per instance name across tool calls and recreate it only when it stops answering.
+        // Real-machine observation: creating/disposing an interface and rebuilding its tag list on every call caused
+        // the engine to exit after 15-30 consecutive reads/writes (0xE0434352 from the PLCSIM Advanced API's own thread).
+        // Serialize every API call on Gate because the API is not documented as thread-safe.
         private sealed class CachedInterface { public object Instance = null!; public bool TagListLoaded; public DateTime Opened; public int Uses; }
         private static readonly Dictionary<string, CachedInterface> Interfaces = new Dictionary<string, CachedInterface>(StringComparer.OrdinalIgnoreCase);
         public static object Acquire(PlcSimApi api, string name)
@@ -184,7 +184,7 @@ namespace TiaMcpServer.Runtime
             return o;
         }
 
-        // 2.7.51: SimulationRuntimeManager.NetworkMode (ENetworkMode) is the global interface choice of PLCSIM Advanced 6+; null when the
+        // SimulationRuntimeManager.NetworkMode (ENetworkMode) is the global interface choice of PLCSIM Advanced 6+; null when the
         // installed API predates it. The setter is refused by the API while an instance is running (InstanceAlreadyRunning).
         public static string? NetworkMode(PlcSimApi api)
         {
@@ -291,10 +291,11 @@ namespace TiaMcpServer.Runtime
             Invoke(plain, instance);
         }
 
-        // 2.7.48: ECommunicationInterface (None / Softbus / TCPIP). TCPIP makes the instance reachable through the "Siemens PLCSIM
+        // ECommunicationInterface (None / Softbus / TCPIP). TCPIP makes the instance reachable through the "Siemens PLCSIM
         // Virtual Ethernet Adapter" PG/PC interface at its IP suite (API default 192.168.0.1/24 on X1), which is what a TIA download
         // needs; must be set before PowerOn.
-        // 2.7.51 (real machine, PLCSIM Advanced 8.0): the per-instance property is read-only on the class AND on IInstance, and no
+        // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md): the
+        // per-instance property is read-only on the class AND on IInstance, and no
         // Set...() method exists (members seen: CommunicationInterface {get} only); the manual says "To set the network mode, refer to
         // the NetworkMode section" - the choice is the global SimulationRuntimeManager.NetworkMode. So: instance setter when the API
         // still has one (PLCSIM Advanced <= 5), otherwise the manager network mode (mapped by PlcSimAdvancedLogic.NetworkModeFor).
@@ -320,7 +321,7 @@ namespace TiaMcpServer.Runtime
             return Convert.ToString(GetMember(instance.GetType(), instance, "CommunicationInterface")) ?? "";
         }
 
-        // Returns the EOperatingMode name actually applied (2.7.54: the first candidate the installed API defines).
+        // Returns the EOperatingMode name actually applied: the first candidate the installed API defines.
         public static string SetOperatingMode(PlcSimApi api, object instance, string mode)
         {
             var enumType = api.Assembly.GetType("Siemens.Simatic.Simulation.Runtime.EOperatingMode", false) ?? throw NotSupported("EOperatingMode");
@@ -332,10 +333,11 @@ namespace TiaMcpServer.Runtime
             return Convert.ToString(GetMember(instance.GetType(), instance, "OperatingMode")) ?? name;
         }
 
-        // 2.7.50 (real machine, PLCSIM Advanced 8.0): neither the instance class nor any interface it implements carries a writable
-        // CommunicationInterface / OperatingMode property. Try the property, then Set<Name>(value) / set_<Name>(value) on the class and
-        // its interfaces; when nothing fits, the refusal lists every member whose name contains <Name>. (2.7.51: for CommunicationInterface
-        // the answer turned out to be the manager-level NetworkMode, see SetCommunicationInterface; OperatingMode still goes through here.)
+        // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md): neither
+        // the instance class nor its interfaces carries a writable CommunicationInterface / OperatingMode property.
+        // Try the property, then Set<Name>(value) / set_<Name>(value) on the class and its interfaces; when nothing fits,
+        // list every member containing <Name> in the refusal. CommunicationInterface uses the manager-level NetworkMode
+        // (see SetCommunicationInterface); OperatingMode still goes through this method.
         private static void SetThroughPropertyOrMethod(object instance, string name, object value, Type valueType)
         {
             var prop = WritableProperty(instance, name);
@@ -371,10 +373,11 @@ namespace TiaMcpServer.Runtime
             return seen.Count == 0 ? "none" : string.Join("; ", seen.Distinct().Take(40));
         }
 
-        // 2.7.49 (real machine): the runtime's instance class exposes CommunicationInterface / OperatingMode as read-only public
-        // properties and implements the IInstance setters explicitly, so PropertyInfo.SetValue on the concrete type threw
-        // "Property set method not found" (localized) - register with communicationInterface failed AFTER RegisterInstance had
-        // already created the instance. Look for a setter on the concrete type first, then on every interface the instance implements.
+        // Real-machine observation, 2026-09-21 (docs/reference/real-machine-ledger.md): the runtime class exposed
+        // CommunicationInterface / OperatingMode as read-only public properties and implemented IInstance setters explicitly.
+        // PropertyInfo.SetValue on the concrete type threw "Property set method not found" (localized), so registration
+        // with communicationInterface failed after RegisterInstance had created the instance.
+        // Look for a setter on the concrete type first, then on every interface the instance implements.
         private static PropertyInfo? WritableProperty(object instance, string name)
         {
             var direct = instance.GetType().GetProperty(name, Any);
@@ -393,10 +396,11 @@ namespace TiaMcpServer.Runtime
             Invoke(m, instance);
         }
 
-        // 2.7.55 (real machine + manual "SingleStep operating modes"): RunToNextSyncPoint() only cancels the freeze state and returns; the
-        // instance then runs until the next synchronization point and reports OperatingState Freeze again. Five back-to-back calls advanced
-        // ONE cycle (303 -> 304) because the later calls hit an instance that was still running. Each stepped cycle therefore waits for
-        // Freeze before the trigger and again after it; the wait times are returned so a scenario can show them.
+        // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md), and the
+        // "SingleStep operating modes" manual: RunToNextSyncPoint() cancels Freeze and returns; the instance runs until
+        // the next synchronization point and reports Freeze again. Five back-to-back calls advanced only one cycle
+        // (303 -> 304) because later calls hit a running instance. Wait for Freeze before and after each stepped cycle;
+        // return the wait times so a scenario can show them.
         public static (int steps, long waitedMs, string finalState, string? failure) StepCycles(object instance, int count, int waitMs, int pollMs)
         {
             var watch = System.Diagnostics.Stopwatch.StartNew();

@@ -70,7 +70,7 @@ namespace TiaMcpServer.Cli
             var plc = Opt(args, "--plc") ?? "PLC_1";
             var c = McpServer.CompileAndDiagnosePlc(plc);
             // 三态：ErrorCount==null 表示编译结果没读回来，不是零错误。
-            // 原来的 ?? 0 会让"读不回来"退 0，脚本和 CI 会当成编译干净，这里必须退 1。
+            // 编译结果不可读时必须退 1，避免脚本和 CI 将未知结果当成零错误。
             bool? clean = c.ErrorCount == null ? (bool?)null : c.ErrorCount.Value == 0;
             var errorsText = c.ErrorCount?.ToString() ?? "(unreadable)";
             var warningsText = c.WarningCount?.ToString() ?? "(unreadable)";
@@ -180,9 +180,8 @@ namespace TiaMcpServer.Cli
             int ver = TiaMcpServer.Siemens.Engineering.TiaMajorVersion;
             TiaMcp.Versioning.TiaVersionCatalog.RequireMatchingEngine(ver, Siemens.EngineRouter.CompiledTiaMajorVersion);
             string exe = McpConfigInstaller.ExeForVersion(ver);
-            // The engine itself now defaults to the ~48-tool lite roster, so a plain config is
-            // already the right one and pins no profile. --full is the opt-out; --lite is still
-            // accepted and still yields lite, since lite is the default.
+            // The engine defaults to lite, so a plain config need not pin a profile.
+            // --full selects the complete roster; --lite explicitly selects the default.
             bool full = Flag(args, "--full");
 
             if (Flag(args, "--print"))

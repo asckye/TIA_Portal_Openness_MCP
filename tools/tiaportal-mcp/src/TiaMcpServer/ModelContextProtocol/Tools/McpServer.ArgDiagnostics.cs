@@ -102,7 +102,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
             }
 
-            // 参数没问题 → 原样转交；2.7.58 起失败的结果带上自动预检（McpServer.CallDiscipline.cs），成功的一字不改。
+            // 参数没问题 → 原样转交；失败的结果带上自动预检（McpServer.CallDiscipline.cs），成功的一字不改。
             var result = await _inner.InvokeAsync(request, cancellationToken).ConfigureAwait(false);
             return McpServer.AttachPreflightOnFailure(tool?.Name ?? "", request.Params?.Arguments, result);
         }

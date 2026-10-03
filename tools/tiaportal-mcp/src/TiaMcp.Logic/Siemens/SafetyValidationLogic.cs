@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): pure logic (no Siemens dependency) for the Safety Validation Assistant option package
+    // Pure logic (no Siemens dependency) for the Safety Validation Assistant option package
     // (V21 Siemens.Engineering.SafetyValidation.dll; absent on V20): activation tests and their user groups, safety functions
     // (test cases) with conditions and trace configuration, validity checks, reports and XML exchange.
     internal static class SafetyValidationLogic
@@ -140,10 +140,10 @@ namespace TiaMcpServer.Siemens
             return r;
         }
         // Which of the three inputs a signal usage owns (official examples: OperatingMode -> ExecutedInput, InputCondition -> InitialInput +
-        // ExecutedInput, Response -> Response). 2.7.42 real project: TIA refuses NotRelevant on an owned input ("'NotRelevant' is not
-        // supported when the signal usage is 'InputCondition'") - and the refusal came after Comment / SignalName had already been written,
-        // leaving the condition half updated; the following condition-level CheckValidity took TIA Portal V21 down. So the request is
-        // validated here before anything is written.
+        // ExecutedInput, Response -> Response). Real-project observation, TIA V21: an owned input refused NotRelevant
+        // ("'NotRelevant' is not supported when the signal usage is 'InputCondition'") after Comment / SignalName had already
+        // been written. The condition was partially updated, and the following condition-level CheckValidity terminated TIA.
+        // Validate the request before any write. Native validation evidence: docs/reference/real-machine-ledger.md.
         internal static string[] OwnedInputs(string signalUsage) => signalUsage switch { "OperatingMode" => new[] { "executedInput" }, "InputCondition" => new[] { "initialInput", "executedInput" }, "Response" => new[] { "response" }, _ => Array.Empty<string>() };
         internal static void ValidateConditionValues(string signalUsage, JsonObject properties)
         {

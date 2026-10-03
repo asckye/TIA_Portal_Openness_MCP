@@ -63,7 +63,8 @@ namespace TiaMcpServer.Runtime
             return hit;
         }
 
-        // 2.7.51 (real machine, PLCSIM Advanced 8.0 + manual "Interfaces for IInstances" / "IBaseRuntimeManager"): IInstance.CommunicationInterface
+        // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md):
+        // the "Interfaces for IInstances" / "IBaseRuntimeManager" manuals confirm that IInstance.CommunicationInterface
         // is read-only ("To set the network mode, refer to the NetworkMode section"); the choice is the global SimulationRuntimeManager.NetworkMode
         // (ENetworkMode TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus, changeable only while no instance runs). A requested
         // communicationInterface maps onto that mode: Softbus -> Softbus, TCPIP keeps the current TCPIP variant or falls back to
@@ -84,11 +85,12 @@ namespace TiaMcpServer.Runtime
             throw new ArgumentException("communicationInterface '" + communicationInterface + "' cannot be mapped to a network mode; valid: TCPIP, " + string.Join(", ", NetworkModes) + ".");
         }
 
-        // 2.7.54 (real machine, PLCSIM Advanced 8.0 + manual "EOperatingMode"): the single-step mode is no longer one value - the API has
-        // SingleStep_C / _CT / _P / _CP / _CPT / _Bus (and TimespanSynchronized_*); Enum.Parse("SingleStep") threw.
-        // 2.7.55 (real machine + manual "SingleStep operating modes"): SingleStep_C freezes at the cycle control point only - one sync point
-        // per program cycle, so "cycles: N" is exactly N cycles; SingleStep_CP adds a second sync point before the process image is read
-        // (two per cycle). "singleStep" therefore prefers SingleStep_C; older APIs keep the plain name.
+        // Real-machine observation, PLCSIM Advanced 8.0, 2026-09-21 (docs/reference/real-machine-ledger.md):
+        // the API defines SingleStep_C / _CT / _P / _CP / _CPT / _Bus (and TimespanSynchronized_*);
+        // Enum.Parse("SingleStep") threw. The "EOperatingMode" manual lists these modes.
+        // The "SingleStep operating modes" manual and the same native trial show that SingleStep_C freezes only at the
+        // cycle control point, so "cycles: N" is exactly N cycles; SingleStep_CP adds a second sync point before the
+        // process image is read (two per cycle). "singleStep" prefers SingleStep_C; older APIs keep the plain name.
         public static string[] OperatingModeCandidates(string? mode)
         {
             var m = (mode ?? "").Trim();

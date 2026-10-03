@@ -14,18 +14,16 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         // Explicit allowlist (tool Name, not method name). Kept explicit on purpose:
         // membership must not silently change when a [Lx] description prefix is edited.
-        // = all [L0]/[L1] tools + the golden-path tools ServerInstructions/GetAuthoringGuide
-        // tell the model to call (previously [L2] and thus missing from lite — a weak
-        // model in lite was instructed to call ImportFromDocuments and couldn't see it).
+        // Include all [L0]/[L1] tools and the golden-path tools named by ServerInstructions/GetAuthoringGuide,
+        // so every profile exposes the tools its instructions ask the model to call.
         private static readonly HashSet<string> LiteToolNames = new HashSet<string>(StringComparer.Ordinal)
         {
-            // L0 — the bridge to everything not listed here. Without these, lite is a
-            // dead end: the model cannot even discover that the other ~300 tools exist.
+            // L0 — discovery and invocation for every tool outside the advertised lite roster.
             "FindTools", "CallTool", "ListToolCategories",
-            // 2.7.57: the preflight belongs next to the bridge - the point is to check a call before it is
-            // made, in every profile; the update check is what a maintainer asks first when something is off.
+            // Preflight belongs next to the bridge so callers can check a call before making it in every profile.
+            // Update checking is available alongside the other diagnostics.
             "PreflightToolCall", "CheckForUpdate",
-            // 2.7.58: the verified sequences belong next to the guide.
+            // The verified sequences belong next to the guide.
             "GetRecipe", "GetToolUsage",
             // L0 — orientation / diagnostics
             "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
@@ -52,7 +50,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // L1 — hardware
             "AddDeviceWithFallback", "SearchHardwareCatalog", "ConnectDeviceNodesToProfinetSubnet",
             // Golden-path tools referenced by ServerInstructions / GetAuthoringGuide
-            // (previously [L2]; without them the lite roster contradicts the instructions)
+            // (required in lite so the roster agrees with those instructions)
             "ImportFromDocuments", "GenerateBlocksFromExternalSource",
             // Batch SD import/export are the "PREFERRED on V21+" batch path in the same
             // instructions; tag tables and cross-references are what a model needs to read a
@@ -83,9 +81,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         /// <summary>
-        /// 全量工具表。存在的理由是**能拿到列表才能包装它** —— 注册时原来走
-        /// `WithToolsFromAssembly()`，那条路直接把工具塞进容器，中间没有一个可以插手的地方，
-        /// 于是参数诊断、大响应分页这类「每个工具都该有」的能力根本接不上去。
+        /// 全量工具表。注册前先取得列表，才能统一包装每个工具，接入参数诊断和大响应分页。
         /// </summary>
         public static IList<McpServerTool> GetAllTools()
         {
@@ -98,8 +94,8 @@ namespace TiaMcpServer.ModelContextProtocol
             return tools;
         }
 
-        // 2.7.57: the protocol description carries the worked example from ToolExamples (one table, validated at build
-        // time), so the model sees a correct call next to every listed tool without editing 80 attribute strings.
+        // The protocol description carries the worked example from ToolExamples (one table, validated at build
+        // time), so the model sees a correct call next to every listed tool without duplicating examples in attributes.
         private static McpServerTool CreateTool(string name, MethodInfo method)
         {
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
@@ -108,18 +104,13 @@ namespace TiaMcpServer.ModelContextProtocol
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? ToolCatalog.CreateTool(method)
                 : ToolCatalog.CreateTool(method, new McpServerToolCreateOptions { Name = name, Description = decorated });
-            // 2.7.58: enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
+            // Enum / default / examples hints in the input schema (McpServer.CallDiscipline.cs).
             return WithSchemaHints(tool, name, method);
         }
 
         // ---- Profile resolution -----------------------------------------------------------------
-        // LITE IS THE DEFAULT. Measured on the V21 engine: the full roster is ~200 tools /
-        // ~160 KB of JSON schema (~40k tokens) that every host re-sends to the model on EVERY
-        // turn, before any work happens. Lite is ~48 tools / ~35 KB (~8k tokens).
-        // It is also a hard compatibility wall, not just a cost: VS Code / Copilot refuse to
-        // run agent mode above 128 tools and Windsurf is capped at 100, so the full roster
-        // simply does not load there. Nothing is lost by defaulting to lite — FindTools /
-        // CallTool (McpServer.ToolBridge.cs) reach every one of the other tools on demand.
+        // Lite is the default to limit schema size per turn and stay within host tool-count limits.
+        // FindTools / CallTool (McpServer.ToolBridge.cs) reach every other tool on demand.
         // Precedence: --profile flag > TIA_MCP_PROFILE env > lite.
         private static string? _profileOverride;
 

@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: types. Extracted from McpServer.cs (god-file split); behavior unchanged.
     public static partial class McpServer
     {
         #region types
@@ -76,8 +75,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var list = Portal.GetTypes(softwarePath, regexName);
 
                 // null = 根本没查成（没连接/没打开项目）；空列表 = 这个 PLC 里确实没有。
-                // 以前 Portal 层无项目时返回空列表，两件事被同一个值表示，于是下面那句
-                // `if (list != null)` 恒为真、`else throw` 永不执行，离线调用得到「成功，0 个」。
+                // 无连接或无项目必须走失败分支，不能返回空列表让离线调用被报告为「成功，0 个」。
                 if (list == null)
                 {
                     throw new McpException(

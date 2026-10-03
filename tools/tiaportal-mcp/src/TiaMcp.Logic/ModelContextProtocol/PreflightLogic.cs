@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.57: the pure part of PreflightToolCall. Given a tool's parameter specs (name, kind, required, default,
+    // The pure part of PreflightToolCall. Given a tool's parameter specs (name, kind, required, default,
     // description) and the arguments an AI caller intends to send, it says what CallTool / the SDK binder would
     // object to - before anything reaches TIA. Zero dependencies so the offline suite can feed it real inputs.
     public static class PreflightLogic

@@ -23,7 +23,7 @@ namespace TiaMcpServer.Tests
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
         };
-        // McpServer.ToolBridge.cs:841 and McpServer.CallDiscipline.cs:27.
+        // McpServer.ToolBridge.cs:834 and McpServer.CallDiscipline.cs:27.
         private static readonly JsonSerializerOptions Bridge = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
@@ -367,7 +367,7 @@ namespace TiaMcpServer.Tests
             }
         }
 
-        // Test-only shapes copied from Responses.cs:305-318, 665-668. Production
+        // Test-only shapes copied from Responses.cs:302-315, 662-665. Production
         // POCOs stay untouched; the E1 bytes above validate inheritance/property order.
         private class GoldenJsonReport : ResponseMessage
         {

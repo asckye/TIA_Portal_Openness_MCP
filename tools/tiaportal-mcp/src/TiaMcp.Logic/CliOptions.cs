@@ -5,7 +5,7 @@ namespace TiaMcpServer
         public int? TiaMajorVersion { get; set; }
         public string? TiaPortalLocation { get; set; } // explicit install root, e.g. D:\app\TIA20\Portal V20
         public int? Logging { get; set; } // 1=stderr, 2=Debug, 3=EventLog
-        // Tool roster size: "lite" (default, ~48 tools) or "full" (everything).
+        // Tool roster: "lite" (default) or "full" (everything).
         // null = not given on the command line; TIA_MCP_PROFILE then decides.
         public string? Profile { get; set; }
         public string? Transport { get; set; } // "stdio" (default) or "http"

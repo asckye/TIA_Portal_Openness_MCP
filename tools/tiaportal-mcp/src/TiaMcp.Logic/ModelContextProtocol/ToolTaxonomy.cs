@@ -82,7 +82,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static Category? FindCategory(string? key)
             => string.IsNullOrWhiteSpace(key) ? null : Categories.FirstOrDefault(c => string.Equals(c.Key, key!.Trim(), StringComparison.OrdinalIgnoreCase));
 
-        /// <summary>规范操作类型。描述里第三个方括号使用这些值；其它历史写法已统一映射。</summary>
+        /// <summary>规范操作类型。描述里第三个方括号使用这些值；其它写法映射到这些规范值。</summary>
         public static readonly IReadOnlyDictionary<string, string> OperationMeaning = new Dictionary<string, string>
         {
             ["SESSION"] = "会话与发现：连接/断开/状态/引导/工具查找，不改工程",

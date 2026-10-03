@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 5 (2.7.37): pure logic (no Siemens dependency) for the classic WinCC folder hierarchy - screen / pop-up / template /
+    // Pure logic (no Siemens dependency) for the classic WinCC folder hierarchy - screen / pop-up / template /
     // tag / VB-script folders, pop-up / template / slide-in / overview / global-element screen objects and multilingual graphics.
     internal static class ClassicHmiFoldersLogic
     {

@@ -10,7 +10,7 @@ namespace TiaMcpServer.Siemens
     // Pure validation/parsing for the PlcBlockServices family; no Siemens.Engineering dependency so it is testable offline.
     internal static class PlcBlockServicesLogic
     {
-        // 2.7.49: which PlcWatchTableEntry / PlcForceTableEntry attribute a caller's "address" belongs to. Absolute addresses
+        // Which PlcWatchTableEntry / PlcForceTableEntry attribute a caller's "address" belongs to. Absolute addresses
         // (%M0.0, %DB1.DBX0.0, M0.0, DB1.DBW0, I0.0, Q0.0, IW64, PIW256) go to Address; a quoted or plain symbol is a tag Name.
         internal static string WatchEntryAddressAttribute(string address)
         {

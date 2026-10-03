@@ -6,11 +6,12 @@ using System.Xml.Linq;
 
 namespace TiaMcpServer.Siemens
 {
-    // 2.7.50 (real machine + PublicAPI): a watch table entry with a tag cannot be created through the typed API -
+    // Real-machine observation and PublicAPI: a watch table entry with a tag cannot be created through the typed API -
     // PlcWatchTable.Entries is a PlcTableCommentEntryComposition whose Create() yields a comment row that refuses
     // Address / Name / ModifyValue ("'Address' is not supported by type PlcTableCommentEntry"). The official way to add
     // or change a tag row is the SimaticML round trip: export the table, edit the XML, import it with ImportOptions.Override.
     // This class holds the pure XML part so the offline suite can cover it; the Openness calls stay in Portal.Software.cs.
+    // Native table exchange evidence: docs/reference/real-machine-ledger.md.
     internal static class WatchTableEntryXml
     {
         internal const string TableElement = "SW.WatchAndForceTables.PlcWatchTable";
@@ -92,9 +93,10 @@ namespace TiaMcpServer.Siemens
             return action;
         }
 
-        // 2.7.51 (real machine): TIA V21 refuses an imported row that carries ModifyIntention ("'set_ModifyIntention' is not
-        // supported by type PlcWatchTableEntry ... The property 'ModifyIntention' is read-only"; the row's ModifyValue makes TIA derive
-        // the intention itself). An export may carry it, so it is dropped from every row before the import, not only from the edited one.
+        // Real-machine observation, TIA V21, 2026-09-21 (docs/reference/real-machine-ledger.md):
+        // an imported row carrying ModifyIntention is refused ("'set_ModifyIntention' is not
+        // supported by type PlcWatchTableEntry ... The property 'ModifyIntention' is read-only").
+        // An export may carry it, so drop it from every row before import, not only from the edited one.
         internal static readonly string[] ReadOnlyEntryAttributes = { "ModifyIntention" };
 
         internal static int StripReadOnlyAttributes(XDocument doc)

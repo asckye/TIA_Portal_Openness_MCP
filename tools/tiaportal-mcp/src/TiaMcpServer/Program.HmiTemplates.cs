@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    // Partial: hmi template validation. Extracted from Program.cs (god-file split); behavior unchanged.
     public partial class Program
     {
         private static string MakeSafeReportFileName(string name)

@@ -6,12 +6,11 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.57: one worked call per frequently used tool. The maintainer's complaint was that an AI caller, once a
-    // call is refused, tries variants against TIA instead of re-planning; a concrete example next to the signature
-    // removes most of the guessing. The table is the single source: it is appended to the protocol description of
-    // every listed tool (McpServer.Profile.cs), printed by FindTools / PreflightToolCall / CallTool refusals, and
-    // validated against the real signatures by the tools-list build gate (Generate-ToolsListFromAssembly.ps1 calls
-    // ValidateAgainst) so an example can never drift away from its tool. Zero dependencies: linked into the offline suite.
+    // One worked call per frequently used tool, placed next to its signature so callers can correct a refused call
+    // without guessing parameters against TIA. The table is appended to protocol descriptions (McpServer.Profile.cs)
+    // and used by FindTools / PreflightToolCall / CallTool refusals. The tools-list build gate checks every example
+    // against the real signatures (Generate-ToolsListFromAssembly.ps1 calls ValidateAgainst) to prevent drift.
+    // Zero dependencies: linked into the offline suite.
     public static class ToolExamples
     {
         public sealed class Example
@@ -52,7 +51,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => Find(tool) ?? Derive(tool, specs);
 
         /// <summary>
-        /// 2.7.58: a placeholder example for the tools without a curated one - the required parameters with values taken
+        /// A placeholder example for the tools without a curated one - the required parameters with values taken
         /// from the description ("e.g. 'PLC_1'"), the documented alternatives (first one) or the parameter's name.
         /// Never wrong on the shape (keys come from the signature), possibly wrong on the value - the note says so.
         /// </summary>
@@ -70,8 +69,8 @@ namespace TiaMcpServer.ModelContextProtocol
         private static readonly System.Text.RegularExpressions.Regex ForExample = new System.Text.RegularExpressions.Regex(@"\be\.g\.\s*['""]?(?<v>[^'"",;)\s][^'"",;)]*)['""]?", System.Text.RegularExpressions.RegexOptions.Compiled);
 
         // Host paths (files / folders on the TIA machine) versus object paths inside the project ('Folder/Name'): the
-        // name decides, the description's "e.g." is used only when it is a plain value (2.7.59 real machine: the vocabulary's
-        // e.g. ["PLC_1"] produced the fragment "[" as a placeholder).
+        // name decides, and the description's "e.g." is used only for plain values. Real-machine observation:
+        // the vocabulary example ["PLC_1"] produced the fragment "[" as a placeholder.
         private static readonly string[] HostPathNames = { "filePath", "importPath", "exportPath", "outputPath", "archivePath", "csvPath", "xmlPath", "logFilePath", "leftFilePath", "rightFilePath", "directoryPath", "referenceAmlPath", "targetForSoftware", "zipPath", "path" };
         private static readonly System.Text.RegularExpressions.Regex ArrayJsonName = new System.Text.RegularExpressions.Regex("(Path|Paths|Names|Ids|Items|Entries|List|Steps|Rows|Tags|Blocks|Pages|Cultures|Numbers|Markers|Extensions|Charts|Fields)Json$", System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 

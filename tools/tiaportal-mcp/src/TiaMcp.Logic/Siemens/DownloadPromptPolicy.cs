@@ -9,7 +9,7 @@ namespace TiaMcpServer.Siemens
     /// 下载/上载提示的应答策略。Openness 在下载过程中会通过 DownloadConfigurationDelegate 逐个交出
     /// 提示对象（Siemens.Engineering.Download.Configurations.*，V21 共 43 种具体类型），每个提示按基类分三种形态：
     /// 选择型（CurrentSelection 枚举）、复选型（Checked）和密码型（SetPassword）。没有被应答的提示由 TIA 自行决定，
-    /// 有的会让整次下载中止（StopModules 曾经如此）。本类只做纯决策，不接触任何 Siemens 对象，便于离线测试；
+    /// 已观察到未应答的 StopModules 提示导致整次下载中止。本类只做纯决策，不接触任何 Siemens 对象，便于离线测试；
     /// 反射读取提示形态并真正赋值的代码在 Portal.Download.cs。
     /// 决策顺序：调用方 promptAnswersJson 的显式指定 > 已知提示的内置默认 > 未应答（记录类型名与提示文本，绝不记录密码）。
     /// </summary>

@@ -5,14 +5,15 @@ using System.Linq;
 namespace TiaMcpServer.Siemens
 {
     /// <summary>
-    /// 2.9.1: decides whether a CrossReferenceService query may run at all. Pure logic, no Openness types.
+    /// Decides whether a CrossReferenceService query may run at all. Pure logic, no Openness types.
     ///
-    /// Real project, 2026-09-21 (maintainer's timeline): five blocks re-imported with Override (an FC stopped calling an
+    /// Real project, TIA V21, 2026-09-21: five blocks re-imported with Override (an FC stopped calling an
     /// instance DB whose structure changed completely), no compile in between, then DeletePlcBlock's dry run asked the
     /// CrossReferenceService for the old IDB's references - it answered "26 references" (the stale index) and TIA Portal
     /// V21 was gone before the next call. A second TIA exit on 2026-09-20 also followed a run of Openness writes.
     /// Uncompiled changes are a suspected trigger, not a complete explanation of every crash. Native PLC queries
     /// are disabled by default. Explicitly enabling them still requires every block's consistency to be readable/true.
+    /// Native exit evidence: docs/reference/real-machine-ledger.md.
     /// </summary>
     public static class CrossReferenceGuardLogic
     {

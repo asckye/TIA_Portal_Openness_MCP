@@ -27,9 +27,8 @@ namespace TiaMcpServer.ModelContextProtocol
     //  StructuredContent 必须一起换掉。只换文本块的话，带结构化输出的宿主拿到的
     //  仍是整份原文，上下文一点没省 —— 而你看着响应里的 truncated=true 会以为省了。
     //
-    //  ⚠ 与闭源线的差异：本线的 ResponseMessage 只有 Message + Meta，没有三态
-    //  ResponseOutcome 契约，也没有审计包装层。所以这里的失败一律按本线既有写法
-    //  抛 McpException（见 McpServer.Blocks.cs），成功才正常返回 ResponseMessage。
+    // ResponseMessage 使用 Message + Meta。导出工具失败时抛 McpException
+    // （见 McpServer.Blocks.cs），成功才正常返回 ResponseMessage。
     // ───────────────────────────────────────────────────────────────────────────
     public static partial class McpServer
     {

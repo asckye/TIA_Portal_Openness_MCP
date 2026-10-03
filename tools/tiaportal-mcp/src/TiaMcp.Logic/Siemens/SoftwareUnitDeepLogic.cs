@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 4 sub-batch 1 (2.7.34): pure logic (no Siemens dependency) for software units (standard and safety), named
+    // Pure logic (no Siemens dependency) for software units (standard and safety), named
     // value type / UDT documents, software checksums, object fingerprints, block write protection, project compilation
     // settings and channel-linked tags.
     internal static class SoftwareUnitDeepLogic

@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.57: the pure part of CheckForUpdate - version parsing / comparison and the GitHub "latest release" JSON.
+    // The pure part of CheckForUpdate - version parsing / comparison and the GitHub "latest release" JSON.
     // The engine only REPORTS; replacing the files is scripts/operations/Update-Engine.ps1, which refuses while any
-    // TiaMcpServer.exe runs (the maintainer chose "stop, then update" over a self-replacing hot update).
+    // TiaMcpServer.exe runs: all engines must stop before their files are replaced.
     public static class UpdateLogic
     {
         public const string DefaultRepository = "asckye/TIA_Portal_Openness_MCP";
@@ -40,7 +40,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static readonly Regex VersionPattern = new Regex(@"^v?(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?$", RegexOptions.Compiled);
 
-        /// <summary>"v2.7.57", "2.7.57" or "2.7.57.0" -> [2,7,57]; null otherwise.</summary>
+        /// <summary>Parses major.minor.patch with an optional v prefix and fourth component; null otherwise.</summary>
         public static int[]? ParseVersion(string? text)
         {
             if (string.IsNullOrWhiteSpace(text)) return null;
@@ -96,7 +96,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static string LatestPageUrl(string repository) => "https://github.com/" + repository.Trim() + "/releases/latest";
         public static string ExpandedAssetsUrl(string repository, string tag) => "https://github.com/" + repository.Trim() + "/releases/expanded_assets/" + tag;
 
-        /// <summary>The tag a /releases/latest redirect landed on ("https://github.com/o/r/releases/tag/v2.7.57" -> "v2.7.57"), or null.</summary>
+        /// <summary>The tag a /releases/latest redirect landed on (the segment after /releases/tag/), or null.</summary>
         public static string? TagFromReleaseUrl(string? finalUrl)
         {
             if (string.IsNullOrEmpty(finalUrl)) return null;
@@ -130,7 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string Text(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String ? (v.GetString() ?? "") : "";
         private static bool Flag(JsonElement e, string name) => e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.True;
 
-        /// <summary>The steps a maintainer follows; the engine never replaces its own files.</summary>
+        /// <summary>The manual update steps; the engine never replaces its own files.</summary>
         public static IReadOnlyList<string> HowToUpdate(string? updaterPath, bool updaterPresent)
         {
             var updater = updaterPresent && updaterPath != null ? updaterPath : UpdaterRelativePath;

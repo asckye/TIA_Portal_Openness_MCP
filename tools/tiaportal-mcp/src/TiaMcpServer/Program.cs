@@ -66,7 +66,7 @@ namespace TiaMcpServer
                 // Force stdin/stdout to UTF-8 (no BOM). Without this, on zh-CN Windows the
                 // default Console encoding is GBK (CP936), which mangles Chinese project
                 // names, comments, HMI labels, and any non-ASCII characters in JSON-RPC.
-                // P2-06: child stdin now selects its own UTF-8 encoding and no longer depends on this setup.
+                // Child stdin selects its own UTF-8 encoding independently of this console setup.
                 try
                 {
                     var utf8NoBom = new UTF8Encoding(false);
@@ -79,9 +79,9 @@ namespace TiaMcpServer
                 }
 
                 AppDomain.CurrentDomain.AssemblyResolve += ResolveFromBaseDir;
-                // 2.7.41: with legacyUnhandledExceptionPolicy (App.config) a background-thread exception no longer kills the server;
-                // record it without calling ToString()/Message on the exception object itself first - the Openness exceptions that
-                // surface after TIA Portal has died fail inside ToString() ("Exception.ToString() failed" was all the crash left).
+                // With legacyUnhandledExceptionPolicy (App.config), background-thread exceptions must be recorded here.
+                // Do not first call ToString()/Message on the exception: after a TIA Portal exit, Openness exceptions have
+                // been observed to fail inside ToString(), leaving only "Exception.ToString() failed" in the crash report.
                 AppDomain.CurrentDomain.UnhandledException += (_, e) => LogDiag("UNHANDLED (" + (e.IsTerminating ? "terminating" : "non-terminating, process kept alive") + "): " + DescribeSafely(e.ExceptionObject));
                 System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (_, e) => { LogDiag("UNOBSERVED TASK: " + DescribeSafely(e.Exception)); e.SetObserved(); };
 
@@ -670,10 +670,8 @@ namespace TiaMcpServer
                         .WithStdioServerTransport();
                     // TIA_MCP_PROFILE=lite → only [L0]/[L1] essentials (weak models / capped hosts).
                     //
-                    // 两个分支都走 WrapTools：参数诊断和大响应分页是**每个工具都该有**的能力，
-                    // 而原来的 `WithToolsFromAssembly()` 直接把工具塞进容器，中间没有插手的余地 ——
-                    // 于是 full profile 下少传一个必填参数只会得到「An error occurred invoking 'X'.」，
-                    // 大响应被截断后也拿不回后半段。改成先取列表再包装。
+                    // 两个分支都必须先取得工具列表再走 WrapTools，保证每个工具都有参数诊断和大响应分页。
+                    // 诊断必须在 SDK 参数绑定前执行；超阈值的响应必须能通过寄存句柄读取剩余内容。
                     mcp.WithTools(ModelContextProtocol.McpServer.WrapTools(
                         ModelContextProtocol.McpServer.IsLiteProfile()
                             ? ModelContextProtocol.McpServer.GetLiteTools()
@@ -825,10 +823,6 @@ namespace TiaMcpServer
             }
         }
 
-        // methods for 'cli probe/test commands' — moved to Program.CliProbes.cs
-        // methods for 'report/analysis builders' — moved to Program.ReportBuilders.cs
-        // methods for 'hmi template validation' — moved to Program.HmiTemplates.cs
-        // methods for 'plc/hmi sync + xml writers' — moved to Program.PlcHmiSyncXml.cs
         private static Assembly? ResolveFromBaseDir(object? sender, ResolveEventArgs args)
         {
             try

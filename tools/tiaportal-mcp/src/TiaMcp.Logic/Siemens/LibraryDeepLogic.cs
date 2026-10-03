@@ -151,7 +151,7 @@ namespace TiaMcpServer.Siemens
             if (maxItems < 1 || maxItems > 5000) throw new ArgumentException("maxItems must be 1..5000.");
         }
 
-        // 2.7.31 real project: ProjectLibrary has no Name in the PublicAPI (only MasterCopyFolder / Parent / TypeFolder), so the
+        // Real-project observation: ProjectLibrary has no Name in the PublicAPI (only MasterCopyFolder / Parent / TypeFolder), so the
         // label is synthesized; SystemGlobalLibrary.TypeFolder is null (system libraries carry master copies only) and TIA answers
         // UpdateCheck on such a library with a NonRecoverableException; Close / Save / SaveAs / Archive / CleanUpLibrary exist on
         // UserGlobalLibrary only, so a system library opened through Open(GlobalLibraryInfo) cannot be closed through the API.

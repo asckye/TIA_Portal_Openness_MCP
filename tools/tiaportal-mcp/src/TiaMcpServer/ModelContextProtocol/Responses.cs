@@ -42,7 +42,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseBlockInfo : ResponseAttributes
     {
-        //public string? Path { get; set; }
         public string? TypeName { get; set; }
         public string? Name { get; set; }
         public string? Namespace { get; set; }
@@ -61,7 +60,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseTypeInfo : ResponseAttributes
     {
-        //public string? Path { get; set; }
         public string? Name { get; set; }
         public string? TypeName { get; set; }
         public string? Namespace { get; set; }
@@ -73,7 +71,6 @@ namespace TiaMcpServer.ModelContextProtocol
 
     public class ResponseProjectInfo : ResponseAttributes
     {
-        //public string? Path { get; set; }
         public string? Name { get; set; }
     }
 
@@ -645,7 +642,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public string? OfSystemLibElement { get; set; }   // e.g. "TO_PositioningAxis"
         public string? OfSystemLibVersion { get; set; }   // e.g. "V8.0"
         public string? TypeHint { get; set; }              // fallback when OfSystemLibElement is absent
-        public string? Folder { get; set; }                // "" = root TechnologicalObjectGroup, otherwise user folder path (2.7.49)
+        public string? Folder { get; set; }                // "" = root TechnologicalObjectGroup, otherwise user folder path
     }
 
     public class ResponseTechnologyObjectList : ResponseMessage

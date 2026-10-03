@@ -197,7 +197,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return this;
         }
 
-        // 新增：ELSIF — 多段优先级常用
+        // ELSIF — 多段优先级常用
         public StructuredTextXmlBuilder ElsIfHeader(string conditionVariable, int indent = 0)
         {
             if (indent > 0) Blank(indent);

@@ -11,8 +11,7 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         /// <summary>
         /// 真实的执行 JSON 构建检查：读模板条目数 → 用本仓的执行 JSON 构建器生成 → 比对 items 数是否一致。
-        /// 之所以要有这个默认实现，是因为过去调用方不传委托时会退化成「前面没报错就算验过」，
-        /// 而那个判据里已经含着 errors.Count == 0，永远不可能新增错误 —— 等于没检查却报 pass。
+        /// 调用方未提供委托时也必须实际构建并核对条目数，不能仅凭已有 errors.Count == 0 判定通过。
         /// </summary>
         public static bool ExecutionJsonBuilds(string templateFile)
         {

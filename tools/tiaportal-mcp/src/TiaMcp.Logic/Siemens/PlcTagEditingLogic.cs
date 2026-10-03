@@ -5,10 +5,11 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // 2.7.46: pure logic for ManagePlcTagDefinition. PlcTag.Comment / PlcUserConstant.Comment are MultilingualText (official:
-    // "The multilingual comment of the PlcTag"), not scalars - the real project refused every comment write with
-    // "Complex/reference property requires a dedicated adapter: Siemens.Engineering.MultilingualText". The comment is therefore
-    // split off propertiesJson here and written per culture through MultilingualText.Items by the engine.
+    // Pure logic for ManagePlcTagDefinition. PlcTag.Comment / PlcUserConstant.Comment are MultilingualText (official:
+    // "The multilingual comment of the PlcTag"), not scalars. A real project refused scalar comment writes with
+    // "Complex/reference property requires a dedicated adapter: Siemens.Engineering.MultilingualText".
+    // Split the comment off propertiesJson and write it per culture through MultilingualText.Items in the engine.
+    // Native write/readback evidence: docs/reference/real-machine-ledger.md.
     internal static class PlcTagEditingLogic
     {
         internal static readonly string[] Actions = { "read", "create", "update", "delete" };

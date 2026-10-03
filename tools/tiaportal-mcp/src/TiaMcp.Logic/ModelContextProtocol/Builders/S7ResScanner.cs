@@ -14,11 +14,9 @@ namespace TiaMcpServer.ModelContextProtocol
     ///         zh-CN: 起升
     ///         en-US: Hoist
     ///
-    /// The previous implementation fed it to <c>XDocument.Load</c> and looked for
-    /// SimaticML &lt;Comment&gt;/&lt;MultiLanguageText&gt; elements, so it threw
-    /// <c>XmlException</c> on every real file and the "missing en-US" pre-check
-    /// never once produced a warning. This replacement is a dependency-free
-    /// line scanner over the YAML shape actually emitted by ExportAsDocuments.
+    /// Scan the YAML shape emitted by ExportAsDocuments without an XML parser or external dependencies.
+    /// Real-file observation: parsing this data as SimaticML with <c>XDocument.Load</c> throws
+    /// <c>XmlException</c>, preventing the "missing en-US" check from reporting missing translations.
     /// </summary>
     internal static class S7ResScanner
     {

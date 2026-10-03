@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.58: the machine-readable part of a parameter description goes into the tool's JSON schema, for every tool.
+    // The machine-readable part of a parameter description goes into the tool's JSON schema, for every tool.
     // A client that validates against the schema (Claude Code does) then rejects an invalid enum value before the
     // call leaves the model, and the model reads exact alternatives / defaults / example values instead of prose.
     // Zero dependencies; linked into the offline suite.

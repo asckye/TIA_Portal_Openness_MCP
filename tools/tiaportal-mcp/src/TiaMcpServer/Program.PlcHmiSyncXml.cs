@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    // Partial: plc/hmi sync + xml writers. Extracted from Program.cs (god-file split); behavior unchanged.
     public partial class Program
     {
         private static void RunValidatePlcHmiSyncMinimal(CliOptions options)
@@ -375,7 +374,7 @@ namespace TiaMcpServer
             };
             var importedBlockNames = import.ImportedBlocks ?? Array.Empty<string>();
             var exportedFileNames = exportedFiles.Select(Path.GetFileNameWithoutExtension).Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
-            // 三态：ErrorCount==null 表示编译结果没读回来，原来的 ?? 0 会让 passed 直接为 true。
+            // 三态：ErrorCount==null 表示编译结果没读回来，不能按零错误判定 passed。
             bool? compileClean = compile.ErrorCount == null ? (bool?)null : compile.ErrorCount.Value == 0;
             var otherChecksPassed = importedBlockNames.Any(n => string.Equals(n, "FB1_LAD_Motor", StringComparison.OrdinalIgnoreCase))
                 && importedBlockNames.Any(n => string.Equals(n, "FB2_SCL_Count", StringComparison.OrdinalIgnoreCase))
@@ -387,7 +386,7 @@ namespace TiaMcpServer
             WriteChineseCommentsReport(reportPath, jsonReportPath, projectName, projectDirectory, importDir, exportDir, passed, import, compile, checks, exportedFiles);
             if (!passed)
             {
-                // 只有"其余检查都过、单单编译结果读不回来"才换文案；任何真失败仍走原文案。
+                // 只有其余检查都通过时才单独报告编译结果不可读；实际检查失败优先报告。
                 throw new InvalidOperationException(otherChecksPassed && compileClean == null
                     ? "PLC Chinese comments validation NOT verified: compile result unreadable (ErrorCount unavailable). Report: " + reportPath
                     : "PLC Chinese comments validation failed. Report: " + reportPath);

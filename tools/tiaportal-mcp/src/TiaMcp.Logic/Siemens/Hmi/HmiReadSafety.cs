@@ -22,7 +22,7 @@ namespace TiaMcpServer.Siemens
         }
 
         // True when the only connection-shaped failure in the chain is an Openness "disposed object" error, which TIA also
-        // raises for a proxy it released after Create/Delete (2.7.30 real project: MrpDomain) while the session is fine.
+        // raises for a proxy it released after Create/Delete (real-project observation: MrpDomain) while the session is fine.
         internal static bool DisposedObjectOnly(Exception error)
         {
             bool disposed = false;

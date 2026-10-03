@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): pure logic (no Siemens dependency) for the CFC option package (Siemens.Engineering.CFC, identical on
+    // Pure logic (no Siemens dependency) for the CFC option package (Siemens.Engineering.CFC, identical on
     // V20 / V21): ChartProvider XML (ZIP) exchange, chart passwords and the ChartProviderS7 instruction data export.
     internal static class CfcLogic
     {
@@ -19,11 +19,12 @@ namespace TiaMcpServer.Siemens
 
         internal static readonly string[] ExchangeActions = { "export", "selectiveExport", "import", "exportInstructionData" };
 
-        // ---- exchange file inventory (2.7.43 preflight) ------------------------------------------------------------------------------
-        // The exchange file is a ZIP holding Data.xml (S7TIA exchange model). 2.7.43 real project (PLC without charts): the export is
-        // Document > DocumentInfo / FunctionChartsFolder(Name="Charts") > ObjectList / UsedAlarmClasses - the folder itself carries a Name, so
-        // chart names are taken from elements whose name contains "Chart" but is neither a folder / list container nor a plural (2.7.44);
-        // the distinct element names and ZIP entries are reported so an unexpected schema stays visible.
+        // ---- exchange file inventory ------------------------------------------------------------------------------
+        // Real-project observation (PLC without charts): the ZIP holds Data.xml with the S7TIA exchange model
+        // Document > DocumentInfo / FunctionChartsFolder(Name="Charts") > ObjectList / UsedAlarmClasses.
+        // The folder itself carries a Name, so chart names must come from elements containing "Chart" in their name
+        // that are neither folder/list containers nor plurals. Report distinct element names and ZIP entries so an
+        // unexpected schema stays visible. Native exchange evidence: docs/reference/real-machine-ledger.md.
         internal static bool IsChartElement(string localName)
             => localName.IndexOf("Chart", StringComparison.OrdinalIgnoreCase) >= 0 && localName.IndexOf("Folder", StringComparison.OrdinalIgnoreCase) < 0
                && localName.IndexOf("List", StringComparison.OrdinalIgnoreCase) < 0 && !localName.EndsWith("s", StringComparison.OrdinalIgnoreCase);

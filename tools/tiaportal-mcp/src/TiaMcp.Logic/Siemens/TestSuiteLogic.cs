@@ -5,7 +5,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): pure logic (no Siemens dependency) for the TIA Portal Test Suite option package
+    // Pure logic (no Siemens dependency) for the TIA Portal Test Suite option package
     // (Siemens.Engineering.TestSuite, identical on V20 / V21): style guide rule sets, application test cases and test sets,
     // system test cases; scope, execution, file exchange and library master copies.
     internal static class TestSuiteLogic

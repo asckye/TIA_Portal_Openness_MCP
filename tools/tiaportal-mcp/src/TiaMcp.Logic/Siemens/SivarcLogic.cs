@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-① (2.7.38): pure logic (no Siemens dependency) for the SiVArc option package - rule families (screen / tag /
+    // Pure logic (no Siemens dependency) for the SiVArc option package - rule families (screen / tag /
     // advanced tag / alarm / copy / text list), rule folders / tables / groups / rules, block tag / text definitions and tag member
     // settings, the expression resolver, screen layout data and the definitions upgrader.
     internal static class SivarcLogic

@@ -4,11 +4,12 @@ using System.Linq;
 
 namespace TiaMcpServer.Siemens
 {
-    // 2.7.56 (real machine, 2026-09-21): with the maintainer's project and 项目1 open in two TIA processes, ConnectPortal attached to
-    // neither within its 2 x 30 s budget and then STARTED A THIRD, EMPTY TIA INSTANCE (the MCP client had long timed out; the engine sat
-    // bound to a portal without a project until AttachToOpenProject re-bound it). Rules now: when TIA processes exist the engine attaches
-    // or refuses - it never starts an instance unless the caller says allowStart; a wanted project name picks the process that holds it;
-    // the per-process attach wait stays inside the client's 60 s. Pure selection / wording here, the Openness calls stay in Portal.cs.
+    // Real-machine observation, TIA V21, 2026-09-21 (docs/reference/real-machine-ledger.md): with two projects
+    // including 项目1 open in separate TIA processes, ConnectPortal attached to neither within its 2 x 30 s budget,
+    // then started a third, empty instance after the MCP client timed out. AttachToOpenProject restored the binding.
+    // When TIA processes exist, attach or refuse; start an instance only with allowStart. A requested project name
+    // must select its owning process, and each attach wait must fit within the client's 60 s budget.
+    // Pure selection / wording here; the Openness calls stay in Portal.cs.
     internal static class ConnectLogic
     {
         internal const int AttachTimeoutMsPerProcess = 20000;

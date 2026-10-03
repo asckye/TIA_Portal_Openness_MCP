@@ -3,10 +3,11 @@ using System.Linq;
 
 namespace TiaMcpServer.Siemens
 {
-    // 2.7.53 (real machine, 项目1 / PLCSIM Advanced): the first hardware download to the F-CPU 1515F-2 PN V2.9 was refused by TIA V21's
-    // hardware compile - "the password for full access must be set" (access level NoAccess without password), "Password for confidential
-    // PLC configuration data is not configured" and "The PLC communication certificate cannot be configured without the password" - and
-    // no tool could change either setting. Official pages: "Access level setting" (PlcAccessLevelProvider: PlcProtectionAccessLevel
+    // Real-machine observation, TIA V21, 2026-09-21, 项目1 / PLCSIM Advanced (docs/reference/real-machine-ledger.md):
+    // the first hardware download to the F-CPU 1515F-2 PN V2.9 failed hardware compilation with "the password for full access must be set"
+    // (access level NoAccess without password), "Password for confidential PLC configuration data is not configured" and
+    // "The PLC communication certificate cannot be configured without the password". Configure both protection settings before compiling.
+    // Official pages: "Access level setting" (PlcAccessLevelProvider: PlcProtectionAccessLevel
     // attribute, SetPassword(level, SecureString) / ResetPassword(level)) and "Managing PLC Master Secret in PLCs"
     // (PlcMasterSecretConfigurator: Protect / Unprotect / ChangePassword / ProtectAllPlcConfiguration[WithPassword] /
     // UnprotectAllPlcConfiguration / Reset, MasterSecretConfiguration state). Pure gating here; the Openness calls are in Portal.PlcProtection.cs.

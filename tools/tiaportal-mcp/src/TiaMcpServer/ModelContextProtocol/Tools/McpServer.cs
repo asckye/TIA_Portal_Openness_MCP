@@ -499,7 +499,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var toolNameList = toolNames.OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
                 // Read-only getters (Get*) may legitimately reference force tables (e.g. GetPlcForceTables
                 // lists names). The safety red line is that no force-EXECUTION/WRITE tool is exposed.
-                // 2.7.46: ManageWatchForceTableWebAccess (2.7.33) only edits the offline web-server access rules of watch / force
+                // ManageWatchForceTableWebAccess only edits the offline web-server access rules of watch / force
                 // tables (WatchAndForceTableAccessManager); it neither forces nor writes a value, so the name heuristic must not flag it.
                 var offlineConfigurationTools = new[] { "ManageWatchForceTableWebAccess" };
                 var forbiddenToolNames = toolNameList
@@ -974,16 +974,5 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
-        // #region project/session — moved to McpServer.ProjectSession.cs
-
-        // #region devices — moved to McpServer.Devices.cs
-
-        // #region plc software — moved to McpServer.PlcSoftware.cs
-
-        // #region blocks — moved to McpServer.Blocks.cs
-
-        // #region types — moved to McpServer.Types.cs
-
-        // #region documents — moved to McpServer.Documents.cs
     }
 }

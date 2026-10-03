@@ -3,9 +3,8 @@ using System.Collections.Generic;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.58: descriptions for the parameters that recur across the roster. 1488 of 2204 parameters carried no
-    // [Description] (213 tools) - most of them the same forty names: softwarePath, devicePathJson, dryRun, offset,
-    // limit, confirmDelete ... A parameter without a description is invisible to the schema hints, the preflight and
+    // Descriptions for recurring parameters such as softwarePath, devicePathJson, dryRun, offset,
+    // limit and confirmDelete. A parameter without a description is invisible to the schema hints, the preflight and
     // the derived examples, and the model has to guess its meaning. This vocabulary fills the gap generically; a
     // hand-written [Description] on the parameter always wins (SpecsOf uses the vocabulary only when none exists),
     // and the build statistics still count the source-level gap so it keeps shrinking. Zero dependencies.

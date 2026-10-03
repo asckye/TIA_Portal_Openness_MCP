@@ -19,7 +19,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer
 {
-    // Partial: cli probe/test commands. Extracted from Program.cs (god-file split); behavior unchanged.
     public partial class Program
     {
         // ErrorCount/WarningCount 是 int?，null 专门表示「编译结果没读回来」，不是 0。
@@ -1446,7 +1445,7 @@ namespace TiaMcpServer
             foreach (var w in compile.Warnings ?? Array.Empty<string>()) LogDiag("PLC syntax validation warning: " + w);
 
             // 三态：true=确实零错误，false=确实有错误，null=编译结果没读回来。
-            // null 不能当成通过（原来的 ?? 0 就是这么放行的），但要和"真有错误"分开报，先判真失败保证原文案不变。
+            // null 不能当成通过；先报告实际检查失败，其余检查通过时再单独报告编译结果不可读。
             bool? syntaxClean = compile.ErrorCount == null ? (bool?)null : compile.ErrorCount.Value == 0;
             if (syntaxClean == false || (import.Failed?.Any() ?? false))
             {

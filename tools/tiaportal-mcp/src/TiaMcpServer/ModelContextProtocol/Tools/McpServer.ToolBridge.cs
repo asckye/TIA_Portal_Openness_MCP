@@ -14,15 +14,9 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     // The escape hatch that lets the lite roster be the default without losing anything.
     //
-    // Shipping all 212 tools costs ~40k tokens of JSON schema in every single turn and
-    // exceeds what Copilot (128) and Windsurf (100) will even load. Shipping only the ~48
-    // lite tools fixes that but used to be a dead end: a model in lite could not reach
-    // ExportPlcWatchTable at all, and had no way to find out it existed.
-    //
-    // FindTools + CallTool close that gap: two tools (~700 tokens) buy on-demand access to
-    // the entire roster. The model searches when it needs something the roster lacks, reads
-    // just that one signature, and calls it. This is the progressive-disclosure / tool-search
-    // pattern that Anthropic, VS Code and the agent gateways all converged on during 2025-26.
+    // The lite roster limits per-turn schema size and stays within host tool-count limits.
+    // FindTools + CallTool provide on-demand access to the entire roster: search when a tool is needed,
+    // read its signature, then invoke it. Tools outside the advertised list remain discoverable and callable.
     public static partial class McpServer
     {
         private static ToolCatalog? _bridgeCatalog;
@@ -232,7 +226,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     lines.Add(RenderSignature(h.Value, m)
                               + (listed ? "  [already listed - call it directly]" : "  [call via CallTool]"));
                     lines.Add("    " + ToolDescription(m));
-                    // 2.7.57: a worked call next to the signature is what stops the guess-and-retry loop.
+                    // A worked call next to the signature is what stops the guess-and-retry loop.
                     lines.Add("    " + ToolExamples.Render(ToolExamples.FindOrDerive(h.Value, SpecsOf(m))));
                 }
 
@@ -260,9 +254,8 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("name: exact tool name from FindTools, e.g. 'ExportPlcWatchTable'.")] string name,
             [Description("argumentsJson: the tool's arguments as a JSON object - either the object itself ({\"softwarePath\":\"PLC_1\"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings.")] JsonElement? argumentsJson = null)
         {
-            // 2.7.47: AI callers routinely send the arguments as an object instead of a string (a binding error before this
-            // overload existed) - both forms are accepted. Nullable on purpose: the tool factory cannot serialize default(JsonElement)
-            // as a parameter default (the stdio host died in AIFunctionFactory.Build during the 2.7.47 build).
+            // Accept arguments as either an object or a string. Keep JsonElement nullable because the tool factory
+            // cannot serialize default(JsonElement) as a parameter default; AIFunctionFactory.Build fails during host startup.
             var element = argumentsJson ?? default;
             string text = argumentsJson == null || element.ValueKind == JsonValueKind.Undefined || element.ValueKind == JsonValueKind.Null ? ""
                 : element.ValueKind == JsonValueKind.String ? (element.GetString() ?? "") : element.GetRawText();
@@ -355,10 +348,11 @@ namespace TiaMcpServer.ModelContextProtocol
                 for (int i = 0; i < ps.Length; i++)
                 {
                     var p = ps[i];
-                    // 2.7.46: infrastructure parameters of the async export tools (IMcpServer, RequestContext<...>) are not tool
+                    // Infrastructure parameters of the async export tools (IMcpServer, RequestContext<...>) are not tool
                     // arguments; the bridge has no request context of its own, so they are passed as null and the tools only send
                     // progress notifications when a progress token exists (real project: ExportBlocks / ExportTypes were uncallable
                     // through CallTool - "missing required argument(s): server, context").
+                    // Native export/readback evidence: docs/reference/real-machine-ledger.md.
                     if (IsInfrastructureParameter(p.ParameterType)) { call[i] = null; continue; }
                     // Match case-insensitively: models routinely send PascalCase for a camelCase param.
                     JsonNode? value = null;
@@ -375,17 +369,17 @@ namespace TiaMcpServer.ModelContextProtocol
                         call[i] = p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null;
                         continue;
                     }
-                    // 2.7.46: an empty string for a parameter whose documented default is a non-empty keyword (unitKind="all",
+                    // An empty string for a parameter whose documented default is a non-empty keyword (unitKind="all",
                     // kind="all", action="read") means "the default" - callers routinely pass "" for "not specified".
                     if (p.ParameterType == typeof(string) && p.HasDefaultValue && p.DefaultValue is string defaultText && defaultText.Length > 0
                         && value is JsonValue emptyCandidate && emptyCandidate.TryGetValue<string>(out var candidateText) && candidateText.Length == 0)
                     { call[i] = defaultText; continue; }
-                    // 2.7.46: an array parameter (InvokeObject / InvokeService args: JsonElement[]) given as a JSON-encoded string.
+                    // An array parameter (InvokeObject / InvokeService args: JsonElement[]) given as a JSON-encoded string.
                     if (p.ParameterType.IsArray && value is JsonValue encodedArray && encodedArray.TryGetValue<string>(out var encodedText) && encodedText.TrimStart().StartsWith("["))
                     {
                         try { value = JsonNode.Parse(encodedText); } catch (JsonException) /* swallow(parse-fallback): an invalid encoded array stays unchanged for normal argument validation */ { }
                     }
-                    // 2.7.47: lenient coercion - the recurring "format errors" of AI callers. A *Json / string parameter given as the
+                    // Lenient coercion - the recurring "format errors" of AI callers. A *Json / string parameter given as the
                     // object or array itself becomes its JSON text; numbers and booleans given as strings (or 0/1) are parsed; a
                     // string parameter given as a number / boolean takes its text.
                     var coerced = CoerceArgument(value!, p.ParameterType);
@@ -417,7 +411,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 object? result = InvokeToolMethod(method!, call);
-                // 2.7.47: a refusal such as "action must be one of: read/create/delete (case-sensitive)" whose given value matches one of
+                // A refusal such as "action must be one of: read/create/delete (case-sensitive)" whose given value matches one of
                 // the alternatives except for casing is retried once with the canonical spelling; the normalization is reported.
                 var refusal = (result as ResponseMessage)?.Message;
                 if (refusal != null && TryCanonicalizeEnumArgument(refusal, ps, call, out var canonicalName, out var canonicalValue))
@@ -450,11 +444,10 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        // 2.7.57 --------------------------------------------------------------------------------------------------
-        // PreflightToolCall: the same name resolution and parameter matching as CallTool, but nothing is invoked.
-        // The maintainer's request: when a call is wrong, the AI should be told what is wrong and re-plan from that,
-        // instead of trying variants against TIA. The report is built by PreflightLogic (pure, offline-tested); only
-        // the session state comes from the engine, through a partial method the offline suite does not implement.
+        // PreflightToolCall uses the same name resolution and parameter matching as CallTool without invoking anything.
+        // The report identifies invalid arguments so callers can correct their plan before sending it to TIA.
+        // PreflightLogic builds the report (pure, offline-tested); only session state comes from the engine,
+        // through a partial method the offline suite does not implement.
 
         [McpServerTool(Name = "PreflightToolCall"), Description(
             "[L0][Meta][SESSION] Check a planned tool call WITHOUT executing it. Resolves the tool name (suggests the right one on a typo), " +
@@ -627,7 +620,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (p.HasDefaultValue)
                     def = p.DefaultValue == null ? "null" : p.DefaultValue is bool b ? (b ? "true" : "false") : p.DefaultValue is string s ? "\"" + s + "\"" : Convert.ToString(p.DefaultValue, System.Globalization.CultureInfo.InvariantCulture);
                 var d = p.GetCustomAttribute<DescriptionAttribute>();
-                // 2.7.58: a parameter without its own [Description] gets the roster-wide vocabulary text (flagged Synthesized).
+                // A parameter without its own [Description] gets the roster-wide vocabulary text (flagged Synthesized).
                 string? text = d?.Description;
                 bool synthesized = false;
                 if (string.IsNullOrEmpty(text)) { text = ParameterVocabulary.Describe(p.Name!); synthesized = text != null; }
@@ -636,7 +629,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return specs;
         }
 
-        // 2.7.58: the compact preflight the engine attaches to EVERY failed call (McpServer.ArgDiagnostics.cs), so the
+        // The compact preflight the engine attaches to EVERY failed call (McpServer.ArgDiagnostics.cs), so the
         // caller gets the corrected plan in the same response instead of guessing a second time. Only what is wrong,
         // the example and one next step - a failure is where guidance pays, but it must stay small.
         internal static JsonObject PreflightSummary(string tool, JsonObject args)

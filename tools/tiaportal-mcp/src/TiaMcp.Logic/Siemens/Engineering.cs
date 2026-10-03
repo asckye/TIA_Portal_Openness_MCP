@@ -175,10 +175,9 @@ namespace TiaMcpServer.Siemens
                 return TiaPortalLocationOverride;
             }
 
-            // 2. env var (Cursor MCP env or user env) — but it is version-agnostic and on
-            //    multi-version machines it typically points at ONE install (e.g. V21), which
-            //    used to hijack V20 assembly resolution ("Could not find DLL ... for version 20").
-            //    Only trust it when its path names the version we need (or names no version).
+            // 2. env var (Cursor MCP env or user env) is version-agnostic and may point at another install.
+            //    Only trust it when its path names the required version (or names no version), so a V21 path
+            //    cannot hijack V20 assembly resolution ("Could not find DLL ... for version 20").
             var env = Environment.GetEnvironmentVariable("TiaPortalLocation");
             bool envUsable = !string.IsNullOrWhiteSpace(env) && Directory.Exists(env);
             if (envUsable && PathMatchesVersion(env!, TiaMajorVersion))

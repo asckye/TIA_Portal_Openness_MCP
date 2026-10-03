@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 4 sub-batch 2 (2.7.35): pure logic (no Siemens dependency) for external sources (files, master copies, user
+    // Pure logic (no Siemens dependency) for external sources (files, master copies, user
     // groups, block generation), system block / type groups, tag table constants, alarm text list XLSX exchange, watch /
     // force table entries and ProDiag CSV export.
     internal static class Step7LeftoversLogic

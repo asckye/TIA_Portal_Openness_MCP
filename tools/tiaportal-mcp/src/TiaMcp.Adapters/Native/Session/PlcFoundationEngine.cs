@@ -22,9 +22,9 @@ using EngineeringProject = Siemens.Engineering.Project;
 namespace TiaMcp.PlcFoundation
 {
     /// <summary>
-    /// Shared typed PLC subset extracted from the V17 phase-one operation boundaries.
-    /// Compile-validated only; not connected to the production MCP catalog.
-    /// A future host must supply exact assembly resolution and serialize calls on one STA.
+    /// Shared typed PLC operations for the selected release.
+    /// Native acceptance is tracked in docs/reference/real-machine-ledger.md.
+    /// The host must supply exact assembly resolution and serialize calls on one STA.
     /// </summary>
     public sealed partial class PlcFoundationEngine : IDisposable
     {

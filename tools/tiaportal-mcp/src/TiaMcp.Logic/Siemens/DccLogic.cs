@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-② (2.7.39): pure logic (no Siemens dependency) for the SINAMICS DCC option package - drive control charts and
+    // Pure logic (no Siemens dependency) for the SINAMICS DCC option package - drive control charts and
     // subcharts, DCB libraries and block types, DCC blocks, pins, published parameters, connections, chart interfaces and partitions.
     internal static class DccLogic
     {
