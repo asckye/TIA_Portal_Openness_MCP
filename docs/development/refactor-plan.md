@@ -100,7 +100,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P3-01 | 设计：见[完整引擎拆分设计](engine-decomposition.md)（12 个领域、内核接口、`ToolCatalog`/依赖注入、17 步迁移顺序与验收） | done |
 | P3-02 | 步骤 2：`ToolCatalog`（工具按名称排序）、`EngineServices`、`EngineRegistration`，ToolBridge 夹具改为测试用工具类型；不迁移工具 | done |
-| P3-03… | 按设计文档的迁移顺序继续；每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | todo |
+| P3-03 | 步骤 3：HttpTests `EngineSurface` 查找辅助（按工具名跨全部 `[McpServerToolType]` 类型、按成员名跨 `Portal` 与服务查找），只改测试 | doing |
+| P3-04… | 按设计文档的迁移顺序继续；每步兼容快照 0 差异（含描述）、返回快照 0 差异，织入覆盖的西门子成员集合不变 | todo |
 | P3-xx | 会话层去掉静态服务定位器；G9 修复：非空 PLC 名称在读写中都只接受精确或别名匹配，否则返回 NotFound 与可用路径；空名称仍选唯一 PLC（维护者 2026-10-03 决定），在引擎拆分步骤 4 之后实施，需发布说明 | todo |
 | P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
 | P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构 | todo |
@@ -109,7 +110,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D1–D7 待维护者决定 | done |
+| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D4（worker 改 net48）、D7（删除 WorkerProtocol，先移植规则）已决定，其余随对应步骤决定 | done |
+| P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变 | doing |
 | P4-02 | Foundation worker 迁移到共享适配器 | todo |
 | P4-03 | Studio 桥接进程迁移到共享适配器 | todo |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
