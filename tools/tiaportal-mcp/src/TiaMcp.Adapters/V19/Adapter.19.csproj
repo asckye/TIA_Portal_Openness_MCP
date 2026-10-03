@@ -1,4 +1,4 @@
-<Project TreatAsLocalProperty="AdapterReleaseKey;AdapterExpectedFramework;AdapterFeatureConstants">
+<Project TreatAsLocalProperty="AdapterReleaseKey;AdapterExpectedFramework">
   <!-- Typed PLC subset referenced by one exact standalone preview worker; no production full-engine replacement. -->
   <Import Project="Release.props" />
   <Import Project="../build/Adapter.Common.props" />

@@ -2,13 +2,15 @@
   <PropertyGroup><TiaPublicApiReleaseKey>$(StudioReleaseKey)</TiaPublicApiReleaseKey></PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
   <PropertyGroup>
+    <TiaReleaseKey>$(StudioReleaseKey)</TiaReleaseKey>
+    <TiaFeatureProfile>Studio</TiaFeatureProfile>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaFeatures.props" />
+  <PropertyGroup>
     <TargetFramework>net48</TargetFramework><PlatformTarget>x64</PlatformTarget>
     <AssemblyName>TiaOpenness.Openness</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <StudioApiAssembly Condition="'$(StudioReleaseKey)' != '21'">Siemens.Engineering.dll</StudioApiAssembly>
     <StudioApiAssembly Condition="'$(StudioReleaseKey)' == '21'">Siemens.Engineering.Base.dll</StudioApiAssembly>
-    <DefineConstants Condition="'$(StudioReleaseKey)' != '14sp1' and '$(StudioReleaseKey)' != '15.1'">$(DefineConstants);STUDIO_VCI</DefineConstants>
-    <DefineConstants Condition="'$(StudioReleaseKey)' == '20' or '$(StudioReleaseKey)' == '21'">$(DefineConstants);STUDIO_VCI_MODERN</DefineConstants>
-    <DefineConstants Condition="'$(StudioReleaseKey)' == '16' or '$(StudioReleaseKey)' == '17'">$(DefineConstants);STUDIO_VCI_INITIAL</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../TiaOpenness.Core/TiaOpenness.Core.csproj" />

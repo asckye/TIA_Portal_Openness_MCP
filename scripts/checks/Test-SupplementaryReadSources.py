@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Source-wiring regression only; no native SDK or execution claim."""
 from pathlib import Path
+import importlib.util
 import re
 import xml.etree.ElementTree as ET
 root=Path(__file__).resolve().parents[2]
@@ -15,9 +16,12 @@ code='\n'.join(f.read_text() for f in files)
 ops=set(re.findall(r'"([A-Za-z]+)"',(src/'TiaMcpServer.PlcWorker/WorkerOperations.cs').read_text()))
 methods=set(re.findall(r'public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(',code))
 assert ops<=methods, f'Worker operations absent from adapter sources: {sorted(ops-methods)}'
+spec=importlib.util.spec_from_file_location('tia_features',root/'scripts/checks/Check-TiaFeatures.py')
+features=importlib.util.module_from_spec(spec)
+spec.loader.exec_module(features)
 for release in ['V14Sp1','V15_1','V16','V17','V18','V19','V20','V21']:
- p=ET.parse(src/f'TiaMcp.Adapters/{release}/Release.props').getroot()
- constants=p.find('.//AdapterFeatureConstants').text or ''
+ project=next((src/f'TiaMcp.Adapters/{release}').glob('*.csproj'))
+ constants=features.evaluate(root,project.relative_to(root).as_posix(),{},'dotnet')['DefineConstants'].split(';')
  assert ('PLC_WATCH_READ' in constants)==(release!='V14Sp1'),release
  assert ('PLC_TECH_GROUP_READ' in constants)==(release in ['V19','V20','V21']),release
 native=(src/'TiaMcpServer.PlcFoundation/PlcSupplementaryRead.cs').read_text()

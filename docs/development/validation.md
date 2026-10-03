@@ -57,6 +57,7 @@ V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器
 ```powershell
 python scripts/checks/Check-Repository.py
 python scripts/checks/Check-DeadToolReferences.py
+python scripts/checks/Check-TiaFeatures.py
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
 python scripts/checks/Test-DotnetSuites.py --self-test
 python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy

@@ -31,6 +31,8 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
+      - name: Release feature defines match the reviewed table
+        run: python scripts/checks/Check-TiaFeatures.py
       - name: Build launcher and test .NET 10 configuration page
         shell: powershell
         run: ./scripts/build/Build-Configurator.ps1 -Test

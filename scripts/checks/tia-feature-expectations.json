@@ -1,0 +1,459 @@
+[
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V14Sp1/StudioOpenness.V14Sp1.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V15_1/StudioOpenness.V15_1.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V16/StudioOpenness.V16.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "STUDIO_VCI_INITIAL",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V17/StudioOpenness.V17.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "STUDIO_VCI_INITIAL",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V18/StudioOpenness.V18.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V19/StudioOpenness.V19.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V20/StudioOpenness.V20.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "STUDIO_VCI_MODERN",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tia-openness-studio/src/TiaOpenness.Openness/V21/StudioOpenness.V21.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "STUDIO_VCI",
+      "STUDIO_VCI_MODERN",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V14Sp1/Adapter.14sp1.csproj",
+    "properties": {},
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V15_1/Adapter.15.1.csproj",
+    "properties": {},
+    "targetFramework": "net461",
+    "defineConstants": [
+      "PLC_RH",
+      "PLC_SOURCE_RESULTS",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V16/Adapter.16.csproj",
+    "properties": {},
+    "targetFramework": "net461",
+    "defineConstants": [
+      "PLC_RH",
+      "PLC_SOURCE_RESULTS",
+      "PLC_SPECIAL_EXPORT",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V17/Adapter.17.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_RH",
+      "PLC_SAFETY",
+      "PLC_SOURCE_RESULTS",
+      "PLC_SPECIAL_EXPORT",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V18/Adapter.18.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_RH",
+      "PLC_SAFETY",
+      "PLC_SOURCE_RESULTS",
+      "PLC_SPECIAL_EXPORT",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V19/Adapter.19.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_HARDWARE_CATALOG",
+      "PLC_RH",
+      "PLC_SAFETY",
+      "PLC_SOURCE_RESULTS",
+      "PLC_SPECIAL_EXPORT",
+      "PLC_TECH_GROUP_READ",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V20/Adapter.20.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_DOCUMENT_EXPORT",
+      "PLC_HARDWARE_CATALOG",
+      "PLC_RH",
+      "PLC_SAFETY",
+      "PLC_SOURCE_RESULTS",
+      "PLC_SPECIAL_EXPORT",
+      "PLC_TECH_GROUP_READ",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V21/Adapter.21.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "PLC_DOCUMENT_EXPORT",
+      "PLC_HARDWARE_CATALOG",
+      "PLC_RH",
+      "PLC_SAFETY",
+      "PLC_SOURCE_RESULTS",
+      "PLC_TECH_GROUP_READ",
+      "PLC_WATCH_EXPORT",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "14sp1"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "15.1"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "16"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "17"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "18"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "19"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "20"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/TiaMcpServer.PlcWorker.csproj",
+    "properties": {
+      "TiaReleaseKey": "21"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TIA_V20",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "14sp1"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "15.1"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "16"
+    },
+    "targetFramework": "net461",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "17"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "18"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "19"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "20"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.ApiCompileChecks/TiaMcpServer.ApiCompileChecks.csproj",
+    "properties": {
+      "TiaReleaseKey": "21"
+    },
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj",
+    "properties": {},
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "PLC_HARDWARE_CATALOG",
+      "RELEASE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj",
+    "properties": {},
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "PLC_HARDWARE_CATALOG",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V20/NativeTests.V20.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TIA_V20",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V21/NativeTests.V21.csproj",
+    "properties": {},
+    "targetFramework": "net48",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj",
+    "properties": {},
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "PLC_WATCH_EXPORT",
+      "PLC_WATCH_READ",
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
+    "properties": {},
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "RELEASE",
+      "TRACE"
+    ]
+  },
+  {
+    "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
+    "properties": {
+      "DefineConstants": "TIA_V20"
+    },
+    "targetFramework": "net8.0",
+    "defineConstants": [
+      "TIA_V20"
+    ]
+  }
+]

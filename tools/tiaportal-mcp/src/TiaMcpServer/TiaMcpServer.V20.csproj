@@ -11,7 +11,6 @@
     <BaseOutputPath>.\bin-v20</BaseOutputPath>
     <PlatformTarget>x64</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
-    <DefineConstants>$(DefineConstants);TIA_V20</DefineConstants>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;obj-v20\**;bin\**;bin-v20\**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
