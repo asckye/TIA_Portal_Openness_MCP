@@ -7,8 +7,7 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        // 2.7.39: ManageStartdriveParameter moved to Portal.Startdrive.cs (typed DriveObjectContainer / DriveParameter); the DCC tools to Portal.Dcc.cs.
-        // 2.7.38: the anchor is the typed Sivarc project service (Portal.Sivarc.cs); the generic path-based readers below stay for arbitrary sub-paths.
+        // The typed Sivarc project service anchors the generic readers for arbitrary sub-paths.
         private object ExactSiVArcRoot(string category) => Family(category).Anchor(RequireSivarc());
         public ResponseMessage ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
             =>RunHmiStepTool("ReadSiVArcRules",meta=>{
@@ -41,9 +40,9 @@ namespace TiaMcpServer.Siemens
                 if(action=="create")target=EngineeringGroupOperations.Call(collection,"Create",new[]{typeof(string)},name);
                 if(action=="delete") {
                     EngineeringGroupOperations.Call(target!,"Delete",Type.EmptyTypes);
-                    // 2.7.38 real project: the composition proxy used for Find/Delete is stale afterwards - enumerating it throws
-                    // EngineeringObjectDisposedException although the rule / group is gone (same as the 2.7.30 hardware
-                    // compositions). Re-resolve the collection from the typed anchor before verifying.
+                    // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md): the composition proxy used for Find/Delete
+                    // is stale afterwards; enumerating it throws EngineeringObjectDisposedException although the rule / group
+                    // is gone. Re-resolve the collection from the typed anchor before verifying.
                     var fresh=EngineeringObjectAddress.Resolve(ExactSiVArcRoot(category),collectionPathJson);
                     if(EngineeringGroupOperations.Find(fresh,name)!=null)throw new InvalidOperationException("Rule remains after deletion.");meta["verifiedAbsent"]=true;meta["verifiedOnFreshNavigation"]=true;
                 }else {EngineeringScalarProperties.Apply(target!,prepared,meta);meta["after"]=EngineeringObjectAddress.Read(target!);}

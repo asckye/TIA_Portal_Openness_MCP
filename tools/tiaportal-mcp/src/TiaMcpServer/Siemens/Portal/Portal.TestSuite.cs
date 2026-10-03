@@ -20,8 +20,8 @@ using SysLoadOptions = Siemens.Engineering.TestSuite.SystemTest.TCLoadOptions;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-③ (2.7.42): typed TIA Portal Test Suite option package (Siemens.Engineering.TestSuite, identical on V20 / V21;
-    // replaces the reflective 2.7.x adapter). Official entry: Project.GetService<TestSuiteService>() -> StyleGuideGroup.RuleSets,
+    // Typed TIA Portal Test Suite option package (Siemens.Engineering.TestSuite, identical on V20 / V21).
+    // Official entry: Project.GetService<TestSuiteService>() -> StyleGuideGroup.RuleSets,
     // ApplicationTestGroup.TestCases / ApplicationTestSets, SystemTestGroup.SystemTestCases; the executors are services of the three
     // system groups (RuleSetExecutor / TestCaseExecutor / SystemTestCaseExecutor) and answer TestResults with recursive messages.
     public partial class Portal
@@ -189,7 +189,8 @@ namespace TiaMcpServer.Siemens
                 var targets = r.Names.Select(n => ExactTestSuiteItem(collection, n, Logic.CategoryLabel(category))).ToArray();
                 meta["before"] = new JsonArray(targets.Select(t => (JsonNode)TestSuiteRow(t)).ToArray());
                 if (runAll) Safe(meta, "expectedCount", () => EngineeringGroupOperations.Items(collection).Count()); else meta["expectedCount"] = targets.Length;
-                // 2.7.42 real project (empty groups): TestCaseExecutor.Run(ApplicationTestSystemGroup) threw a native NullReferenceException inside TIA and
+                // TIA V21, 2026-09-20 (docs/reference/real-machine-ledger.md): on empty groups,
+                // TestCaseExecutor.Run(ApplicationTestSystemGroup) threw a native NullReferenceException inside TIA and
                 // SystemTestCaseExecutor.Run(SystemTestSystemGroup) answered "No test case(s) in the selected project" - only the style-guide executor
                 // returns a Success result for an empty group. Nothing to run means nothing is asked of TIA.
                 if (runAll && meta["expectedCount"] is JsonValue count && count.TryGetValue<int>(out var total) && total == 0)

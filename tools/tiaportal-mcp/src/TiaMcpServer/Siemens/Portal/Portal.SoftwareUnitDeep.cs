@@ -20,7 +20,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 4 sub-batch 1 (2.7.34): Step7 software units and the small PlcSoftware service providers. Official pages:
+    // Step7 software units and the small PlcSoftware service providers. Official pages:
     // "Accessing software unit" / "Working with software unit" / "Accessing software unit underlying objects" / "Updating
     // software unit properties" / "Accessing namespaces for software units" / "Units as mastercopies", "Accessing the
     // SafetyUnit" / "Creating/deleting SafetyUnit relations", "Accessing name value type document", "Exporting UDT as
@@ -44,7 +44,8 @@ namespace TiaMcpServer.Siemens
             PlcUnitComposition units = group.Units;
             return units.Find(name) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact software unit not found: " + name + " (available: " + string.Join(", ", EngineeringGroupOperations.Items(units).Cast<PlcUnit>().Select(u => u.Name)) + ").");
         }
-        // 2.7.34 real project: after PlcUnitRelationComposition.Create the same composition proxy answers Find(relatedObject) with null,
+        // TIA V21, 2026-09-19 (docs/reference/real-machine-ledger.md): after PlcUnitRelationComposition.Create
+        // the same composition proxy answers Find(relatedObject) with null,
         // and after PlcUnitRelation.Delete it throws EngineeringObjectDisposedException - readback must re-navigate from the unit group.
         private static bool RelationExists(PlcUnitSystemGroup group, string unitKind, string unitName, string relatedUnit)
         {
@@ -112,7 +113,7 @@ namespace TiaMcpServer.Siemens
                 return "Software units read; no modification.";
             });
 
-        // ---- ManagePlcSoftwareUnit (extends the 2.7.x tool: safety units, master copies, per-culture comments) ---------------------
+        // ---- ManagePlcSoftwareUnit (safety units, master copies, per-culture comments) --------------------------------------------
         public ResponseMessage ManagePlcSoftwareUnit(string softwarePath, string action, string name = "", string relatedUnit = "",
             string relationType = "", string propertiesJson = "{}", bool dryRun = true, string unitKind = "unit", string commentsJson = "{}",
             string libraryName = "", string masterCopyPath = "", string copyMode = "")

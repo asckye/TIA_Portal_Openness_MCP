@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-③ (2.7.42): typed TIA Portal Test Suite option package (Project.GetService<TestSuiteService>; identical on V20 / V21).
+    // Typed TIA Portal Test Suite option package (Project.GetService<TestSuiteService>; identical on V20 / V21).
     // category styleGuide (rule sets) / application (test cases, kind testSet = ApplicationTestSet) / system (system test cases).
     public static partial class McpServer
     {
