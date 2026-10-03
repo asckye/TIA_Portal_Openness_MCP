@@ -1,6 +1,6 @@
 # 重构计划
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md)
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md)
 
 本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
 worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
@@ -79,8 +79,8 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
-| P1-05 | 测试迁移到 xunit；去掉测试中的 `partial class` 注入和伪造 Siemens 命名空间；HttpTests 字符串反射改为编译期引用 | todo |
-| P1-06 | 合并两个相似的 TransportFixture；把 `src` 下的测试工程移到 `tests` | todo |
+| P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | doing |
+| P1-06 | `src/TiaMcp.Adapters/Diagnostics.Tests` 移到 `tests`；两个 TransportFixture 协议不同，不合并、不改名，文档说明区别 | todo |
 
 ### 阶段 2：公共层（兼容）
 
