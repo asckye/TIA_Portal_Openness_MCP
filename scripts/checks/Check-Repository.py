@@ -57,6 +57,10 @@ def check(root, no_binaries=False):
     required(package['cli']['exe'], 'CLI')
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj', 'adapter contracts')
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json', 'adapter contracts lock')
+    for name in ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs'):
+        required('tools/tiaportal-mcp/src/TiaMcp.Runtime/' + name, 'runtime channel source')
+    for major in (20, 21):
+        required(f'runtime/v{major}/TiaMcp.Runtime.dll', 'runtime channel assembly')
     required('tools/openness-shared/BundleLayout.cs', 'bundle layout')
     required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
     required('tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')

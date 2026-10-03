@@ -16,7 +16,8 @@ namespace TiaMcpServer.ModelContextProtocol
     // write inputs, step cycles, assert outputs". Lifecycle changes, writes and scenarios are real
     // operations on the simulation: they default to preview and need an explicit confirm flag.
     // Nothing here saves, compiles or downloads a TIA project, and no physical PLC is involved.
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class PlcSimAdvancedTools
     {
         private static JsonObject PlcSimSafety(bool changesInstance, bool writesValues) => new JsonObject
         {
@@ -28,7 +29,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static ResponseJsonReport RunPlcSimTool(string tool, bool? dryRun, Func<JsonObject, JsonObject, string> body)
         {
-            var meta = RuntimeMeta(false, dryRun);
+            var meta = RuntimeChannelTools.RuntimeMeta(false, dryRun);
             meta["tool"] = tool;
             var data = new JsonObject();
             var sw = Stopwatch.StartNew();
@@ -54,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ReadPlcSimAdvancedInstances"), Description("[L2][Simulation][ONLINE] List the S7-PLCSIM Advanced instances registered on this machine through the official PLCSIM Advanced .NET API (Siemens.Simatic.Simulation.Runtime, located at run time: apiPath > env PLCSIMADV_API_PATH > newest folder under %ProgramFiles(x86)%\\Common Files\\Siemens\\PLCSIMADV\\API). Returns API path/version, the global network mode (SimulationRuntimeManager.NetworkMode on PLCSIM Advanced 6+: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus) and per instance name, id and — when includeState=true — operating state (Off/Stop/Run/...), CPU type, communication interface and storage path. Read-only: registers nothing, changes no state. Fails with status ApiNotFound when PLCSIM Advanced is not installed; the API DLL is never shipped with this server.")]
-        public static ResponseJsonReport ReadPlcSimAdvancedInstances(
+        public ResponseJsonReport ReadPlcSimAdvancedInstances(
             [Description("includeState: true (default) opens an interface to each instance to read its operating state; false lists names/ids only.")] bool includeState = true,
             [Description("apiPath: optional absolute path of Siemens.Simatic.Simulation.Runtime.Api.x64.dll or its folder; empty = auto-detect.")] string apiPath = "",
             [Description("memberFilter: optional substring; when given (with includeState) every instance row also lists the API members of the instance object and its interfaces whose name contains it (e.g. 'CommunicationInterface'), and managerMembers lists the matching static members of SimulationRuntimeManager - a diagnostic for API differences between PLCSIM Advanced versions.")] string memberFilter = "")
@@ -86,7 +87,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ManagePlcSimAdvancedInstance"), Description("[L2][Simulation][ONLINE-WRITE] Lifecycle of ONE S7-PLCSIM Advanced instance: action register (create/registers a new instance; optional cpuType e.g. CPU1500_Unspecified, CPU1516, CPU1518F), powerOn, run, stop, powerOff, memoryReset or unregister. communicationInterface=TCPIP on register / powerOn puts the instance on the 'Siemens PLCSIM Virtual Ethernet Adapter' (API default IP 192.168.0.1), so a TIA project whose PLC has that IP can DownloadToPlc / GoOnline to it through that PG/PC interface - the safe target for the whole online family; Softbus selects the local PLCSIM access instead. On PLCSIM Advanced 6+ the per-instance property is read-only and the choice is the global SimulationRuntimeManager.NetworkMode (also accepted literally: TCPIPMultipleAdapter / TCPIPSingleAdapter / Softbus), which the API refuses while any instance is running - data.communicationInterfaceRoute shows the route and the mode before / after. Default dryRun=true only reports the current state and the planned action; the action runs only with dryRun=false AND confirmInstanceChange=true. powerOn boots the virtual CPU from its storage path (put the memory-card image there via DownloadPlcToFolder or download from TIA to the running instance); memoryReset wipes the loaded program. Returns state before/after. No physical PLC and no TIA project is touched.")]
-        public static ResponseJsonReport ManagePlcSimAdvancedInstance(
+        public ResponseJsonReport ManagePlcSimAdvancedInstance(
             [Description("instanceName: PLCSIM Advanced instance name, e.g. 'PLC_1'.")] string instanceName,
             [Description("action: register | powerOn | run | stop | powerOff | memoryReset | unregister.")] string action,
             [Description("cpuType: only for register; ECPUType name such as CPU1500_Unspecified, CPU1511, CPU1516, CPU1518F; empty = API default.")] string cpuType = "",
@@ -159,7 +160,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "ReadPlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE] Read from ONE S7-PLCSIM Advanced instance: with namesJson (JSON array or comma list of PLCSIM tag names, e.g. [\"\\\"Start\\\"\", \"\\\"DB_Motor\\\".Speed\", \"%I0.0\" is NOT supported — use symbolic names as PLCSIM lists them]) the current value and primitive type of each tag; without namesJson the tag list of the instance (UpdateTagList + TagInfos) filtered by areaFilter (Input/Output/Marker/DataBlock/... or empty) and nameContains, paginated with offset/limit (max 500). Read-only; requires the instance to be powered on with a loaded program. Per-tag errors are reported in items[].error.")]
-        public static ResponseJsonReport ReadPlcSimAdvancedTags(
+        public ResponseJsonReport ReadPlcSimAdvancedTags(
             [Description("instanceName: registered PLCSIM Advanced instance.")] string instanceName,
             [Description("namesJson: tag names to read (JSON array or comma-separated). Empty = list tags instead.")] string namesJson = "",
             [Description("areaFilter: for listing; EArea name such as Input, Output, Marker, DataBlock; empty = all.")] string areaFilter = "",
@@ -215,7 +216,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "WritePlcSimAdvancedTags"), Description("[L2][Simulation][ONLINE-WRITE] Write values into ONE S7-PLCSIM Advanced instance (inputs, markers, DB elements) by symbolic name: valuesJson is {\"\\\"Start\\\"\":true,\"\\\"DB_Motor\\\".Speed\":50} or [{name,value}]. Each tag is read first to learn its primitive type; values are converted (Bool/Int8..Int64/UInt8..UInt64/Float/Double/Char/WChar; 16#hex accepted; structs must be written per element). Default dryRun=true reports current values and the conversion plan; writing needs dryRun=false AND confirmWrite=true. Per-tag errors in items[].error; readBack shows the value after the write. Virtual CPU only, no physical PLC, no TIA project.")]
-        public static ResponseJsonReport WritePlcSimAdvancedTags(
+        public ResponseJsonReport WritePlcSimAdvancedTags(
             [Description("instanceName: registered, powered-on PLCSIM Advanced instance.")] string instanceName,
             [Description("valuesJson: JSON object tag name -> value, or array of {name, value}. Max 500.")] string valuesJson,
             [Description("confirmWrite: must be true together with dryRun=false to write.")] bool confirmWrite = false,
@@ -270,7 +271,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "RunPlcSimAdvancedTestScenario"), Description("[L2][Simulation][EXECUTE] Run a closed-loop test scenario against ONE S7-PLCSIM Advanced instance (the PLCSIM.UnitTest idea without a separate runner): scenarioJson = {\"instance\":\"PLC_1\",\"mode\":\"singleStep\"|\"default\",\"stopOnFailure\":true,\"steps\":[{\"write\":{\"\\\"Start\\\"\":true}},{\"cycles\":5},{\"waitMs\":200},{\"assert\":{\"\\\"Running\\\"\":true},\"tolerance\":0.001,\"note\":\"motor starts\"},{\"run\":true},{\"stop\":true},{\"powerOn\":true}]}. mode singleStep sets the instance to SingleStep and advances exactly N cycles per {cycles} step via RunToNextSyncPoint (deterministic); mode default keeps free running and {cycles} becomes a wait of N*10 ms. Default dryRun=true validates and returns the plan; execution needs dryRun=false AND confirmRun=true. Result: per-step outcome, failed assertions with expected/actual, passed/failed counts; the instance is left in the operating mode it had before. Virtual CPU only — no physical PLC and no TIA project is touched.")]
-        public static ResponseJsonReport RunPlcSimAdvancedTestScenario(
+        public ResponseJsonReport RunPlcSimAdvancedTestScenario(
             [Description("scenarioJson: scenario object (see description). Max 500 steps.")] string scenarioJson,
             [Description("confirmRun: must be true together with dryRun=false to execute the steps.")] bool confirmRun = false,
             [Description("dryRun: true (default) validates and plans only; false executes.")] bool dryRun = true,

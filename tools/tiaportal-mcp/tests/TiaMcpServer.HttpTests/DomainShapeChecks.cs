@@ -14,6 +14,40 @@ internal static class DomainShapeChecks
         var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
         var session = provider.GetService(contract);
         check(session != null && ReferenceEquals(session, provider.GetService(portal)), "Optional domains share the Portal singleton");
+        foreach (var domain in new[] { (Name: "Runtime", Count: 7), (Name: "RuntimeChannel", Count: 8), (Name: "PlcSimAdvanced", Count: 5) })
+        {
+            var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
+            check(tools.IsSealed && !typeof(IDisposable).IsAssignableFrom(tools), domain.Name + " tools are sealed and non-disposable");
+            var target = provider.GetService(tools);
+            check(target != null && ReferenceEquals(target, provider.GetService(tools)), domain.Name + " tools are singletons");
+            var methods = tools.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
+            check(methods.Length == domain.Count, domain.Name + " runtime tool count");
+            foreach (var method in methods)
+            {
+                check(!method.IsStatic && surface.Tool(method.Name) == method && ReferenceEquals(surface.Target(method), target),
+                    domain.Name + " instance ownership: " + method.Name);
+                check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(method.Name, all) == null,
+                    method.Name + " has no CLI caller or static forwarder");
+            }
+            if (domain.Name == "Runtime")
+                check(ReferenceEquals(tools.GetField("_session", all)!.GetValue(target), session), "Runtime project reads share the engineering session");
+            else
+                check(tools.GetConstructors().All(constructor => constructor.GetParameters().Length == 0), domain.Name + " needs no engineering session");
+        }
+        foreach (var name in new[] { "GetPutGetAccess", "TraceTagCause", "TraceTagCauseLive" })
+            check(contract.GetMethod(name) != null && surface.Method(name, all).DeclaringType == portal,
+                name + " keeps its project implementation behind IEngineeringSession");
+        var runtime = Assembly.LoadFrom(System.IO.Path.Combine(System.IO.Path.GetDirectoryName(server.Location)!, "TiaMcp.Runtime.dll"));
+        foreach (var name in new[] { "S7LiveReader", "OpcUaLiveReader", "S7WebApiChannel", "UnifiedOpenPipeChannel" })
+            check(server.GetType("TiaMcpServer.Runtime." + name) == null && runtime.GetType("TiaMcpServer.Runtime." + name) != null,
+                name + " belongs to the protocol assembly with its namespace preserved");
+        foreach (var name in new[] { "PlcSimAdvancedChannel", "EnvironmentDoctor" })
+            check(server.GetType("TiaMcpServer.Runtime." + name) != null && runtime.GetType("TiaMcpServer.Runtime." + name) == null,
+                name + " stays in the engine");
+        check(!runtime.GetReferencedAssemblies().Any(reference => reference.Name!.StartsWith("Siemens.Engineering", StringComparison.Ordinal)
+            || reference.Name.StartsWith("Siemens.Simatic.Simulation", StringComparison.Ordinal) || reference.Name == "TiaMcpServer"),
+            "Runtime assembly has no engineering dependency");
+        check(!runtime.GetTypes().Any(type => type.FullName!.Contains("NativeCall")), "Runtime assembly is not woven");
         var domains = new[] {
             (Name: "TestSuite", Count: 4), (Name: "V20Options", Count: 5),
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),

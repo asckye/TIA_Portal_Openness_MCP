@@ -788,6 +788,64 @@ HARDWARE_TERMINALS = {
     'GetDeviceItemIoAddresses': '的地址：要么没有连接项目',
     'SetDeviceItemIoAddress': '的地址：要么没有连接项目',
 }
+# No runtime endpoint is opened: empty inputs are refused before channel calls.
+# The CPU probe/state and PLCSIM entry points have no deterministic offline body
+# refusal (PLCSIM probes the installed API and records elapsed time), so use the
+# existing duplicate-argument gate before invocation, including through CallTool.
+CASES['Runtime'] = [
+    ('ProbeS7CpuIdentity', 'duplicate-argument', {'ip': '', 'IP': ''}),
+    ('ReadPlcLiveValuesS7', 'empty-addresses', {'ip': '', 'itemsJson': '[]'}),
+    ('SamplePlcLiveValuesS7', 'empty-addresses', {'ip': '', 'itemsJson': '[]'}),
+    ('TraceTagCause', 'duplicate-argument', {'softwarePath': '', 'SOFTWAREPATH': '', 'tag': ''}),
+    ('TraceTagCauseLive', 'empty-ip', {'softwarePath': '', 'tag': '', 'ip': ''}),
+    ('ReadPlcLiveValuesOpcUa', 'empty-nodes', {'endpointUrl': '', 'nodeIdsJson': '[]'}),
+    ('GetPlcRunStateS7', 'duplicate-argument', {'ip': '', 'IP': ''}),
+]
+CASES['RuntimeChannel'] = [
+    ('ReadPlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'varsJson': '[]'}),
+    ('WritePlcWebVars', 'empty-host', {'host': '', 'username': '', 'password': '', 'writesJson': '{}'}),
+    ('ReadPlcWebDiagnostics', 'empty-host', {'host': '', 'username': '', 'password': ''}),
+    ('SetPlcWebOperatingMode', 'empty-host', {'host': '', 'username': '', 'password': '', 'mode': 'RUN'}),
+    ('ReadUnifiedRuntimeTags', 'empty-tags', {'tagsJson': '[]'}),
+    ('WriteUnifiedRuntimeTags', 'empty-writes', {'writesJson': '{}'}),
+    ('ReadUnifiedRuntimeAlarms', 'invalid-language', {'languageId': 0}),
+    ('UnifiedOpenPipeRequest', 'invalid-request', {'requestJson': '{}'}),
+]
+CASES['PlcSimAdvanced'] = [
+    (name, 'duplicate-argument', {'apiPath': '', 'APIPATH': ''}) for name in (
+        'ReadPlcSimAdvancedInstances', 'ManagePlcSimAdvancedInstance',
+        'ReadPlcSimAdvancedTags', 'WritePlcSimAdvancedTags', 'RunPlcSimAdvancedTestScenario')
+]
+
+
+def runtime_reply(reply, profile, name, case):
+    resources.require('result' in reply, f'{name}: missing runtime refusal: {reply}')
+    result = reply['result']
+    raw = result['content'][0]['text']
+    if case == 'duplicate-argument':
+        resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
+        return raw
+    resources.require(not result.get('isError'), f'{name}: changed refusal family: {raw}')
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is True,
+                          f'{name}: runtime refusal did not return through the bridge: {raw}')
+        raw = bridge['message']
+    value = json.loads(raw)
+    resources.require(value.get('ok', value.get('Ok')) is False,
+                      f'{name}: offline input unexpectedly accepted: {raw}')
+    markers = {
+        'empty-addresses': 'No addresses supplied', 'empty-nodes': 'No node IDs supplied',
+        'empty-ip': 'ip is required', 'empty-host': 'host', 'empty-tags': 'tagsJson',
+        'empty-writes': 'writesJson', 'invalid-language': 'languageId', 'invalid-request': 'Message',
+    }
+    message = value.get('message', value.get('Message', ''))
+    resources.require(markers[case] in message, f'{name}: wrong offline refusal: {raw}')
+    return raw
+
+
+
+
 
 
 HARDWARE_THROWS = {
@@ -1086,6 +1144,11 @@ def capture(args, exe, harness, profile, isolated):
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
                 reply = rpc('tools/call', params=params)
+                if domain in ('Runtime', 'RuntimeChannel', 'PlcSimAdvanced'):
+                    raw = runtime_reply(reply, profile, name, case)
+                    reached_child |= case != 'duplicate-argument'
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
                 if domain in ('HmiExchange', 'HmiDescribe', 'HmiTagDeletion'):
                     raw = hmi_reply(reply, profile, name)
                     reached_child = True

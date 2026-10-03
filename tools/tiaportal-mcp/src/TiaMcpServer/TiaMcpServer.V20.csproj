@@ -18,9 +18,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0-preview.4.25258.110" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <PackageReference Include="YamlDotNet" Version="13.7.1" />
-    <PackageReference Include="Sharp7" Version="1.1.84" />
-    <PackageReference Include="Workstation.UaClient" Version="3.2.3" />
-    <PackageReference Include="Siemens.Simatic.S7.Webserver.API" Version="3.3.76" />
     <PackageReference Include="Siemens.Collaboration.Net.OperatingSystem.Windows" Version="3.0.1725521661" />
     <PackageReference Include="Siemens.Collaboration.Net.TiaPortal.Openness.Resolver" Version="1.1.1725480302" />
     <PackageReference Include="Siemens.Collaboration.Net.TiaPortal.Packages.Openness" Version="20.0.1744190253" />
@@ -45,6 +42,7 @@
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" /></ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../TiaMcp.Runtime/TiaMcp.Runtime.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <ProjectReference Include="../TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
 </Project>

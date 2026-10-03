@@ -75,7 +75,7 @@ namespace TiaMcpServer.Tests
                 ["timestamp"] = ResponseClock.Now,
                 ["success"] = true,
             }, ResponseMeta.Basic(true), check);
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.RuntimeChannels.cs:31.
+            // TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs:31.
             bool ok = false;
             Compare("Basic/RuntimeMeta", new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = ok }, ResponseMeta.Basic(ok), check);
             // TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs: DescribeBlockLogic.
@@ -144,7 +144,7 @@ namespace TiaMcpServer.Tests
                 }, deletion, check);
                 check(ReferenceEquals(nextActions, deletion["nextActions"]), "deletion keeps nextActions ownership " + ok);
 
-                // McpServer.RuntimeChannels.cs: RuntimeMeta appends only supplied nullable flags.
+                // RuntimeChannelTools.cs: RuntimeMeta appends only supplied nullable flags.
                 foreach (bool? flag in new bool?[] { null, false, true })
                 {
                     var old = new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = ok };

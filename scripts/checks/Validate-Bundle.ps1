@@ -111,6 +111,16 @@ foreach ($guiFile in @(
     else { Fail "Missing GUI entry: $guiFile" }
 }
 
+foreach ($name in @('TiaMcp.Runtime.csproj','S7LiveReader.cs','OpcUaLiveReader.cs','S7WebApiChannel.cs','UnifiedOpenPipeChannel.cs')) {
+    $path = 'tools/tiaportal-mcp/src/TiaMcp.Runtime/' + $name
+    if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing runtime channel source: $path" }
+}
+if (!$NoBinaries) {
+    foreach ($major in @(20,21)) {
+        if (!(Test-Path -LiteralPath (Join-Path $root "runtime/v$major/TiaMcp.Runtime.dll"))) { Fail "Missing runtime channel assembly: V$major" }
+    }
+}
+
 foreach ($name in @('ChannelMessage.cs','LineFraming.cs','ChannelCodec.cs','ChannelClient.cs','ChannelServer.cs','TiaMcp.WorkerChannel.csproj','packages.lock.json')) {
     $path = 'tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + $name
     if (!(Test-Path -LiteralPath (Join-Path $root $path))) { Fail "Missing worker channel source: $path" }

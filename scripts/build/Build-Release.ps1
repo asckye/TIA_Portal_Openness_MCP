@@ -141,6 +141,7 @@ foreach($major in @(20,21)) {
     $runtime=Join-Path $repo "runtime/v$major"
     New-Item -ItemType Directory -Force -Path $runtime | Out-Null
     $payload=@(Get-ChildItem -LiteralPath $built -File | Where-Object {$_.Extension -in '.exe','.dll','.config' -and $_.Name -notlike 'Siemens.Engineering*'})
+    if ('TiaMcp.Runtime.dll' -notin $payload.Name) { throw "V$major runtime channel assembly missing from build output" }
     # Fail on obsolete dependencies so an old DLL is never silently republished.
     foreach($file in Get-ChildItem -LiteralPath $runtime -File | Where-Object {$_.Extension -in '.exe','.dll','.config'}){if($file.Name -notin $payload.Name){throw "Review obsolete runtime file: $($file.FullName)"}}
     $payload | Copy-Item -Destination $runtime -Force

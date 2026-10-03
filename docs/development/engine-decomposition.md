@@ -651,3 +651,45 @@ P3-14b 将 51 个工具迁入 `UnifiedHmi`（22）、`UnifiedObjectServices`（1
 `UnifiedHmiDomainShapeChecks` 验证完整工具归属、单例、共享会话、调用关系和这些转发；已有 HTTP 断言保留。
 `Test-DomainTools.py` 覆盖全部 51 个工具的 full/lite、直接/隔离调用，只屏蔽明确的时间戳及 D1 堆栈帧。
 原生调用顺序、参数与线程归属保持不变；上述离线证明不替代真机验收。
+### 运行时通道与实例工具（P3-16a）
+
+20 个工具分别迁入 [RuntimeTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs)（7）、
+[RuntimeChannelTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs)（8）和
+[PlcSimAdvancedTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs)（5）。
+工具仍在引擎内，按约定注册为非 IDisposable 单例，方法签名、描述、响应及拒绝顺序保持原样。
+这 20 个工具没有 CLI 静态调用点，因此没有保留 McpServer 转发。
+
+只有 RuntimeTools 注入 IEngineeringSession：ReadPlcLiveValuesS7 的可选 PUT/GET 预检继续调用
+GetPutGetAccess；TraceTagCause、TraceTagCauseLive 继续调用内核的同名方法。接口新增这三个原实现的显式转发；
+工程读取、块导出、S7 读取的顺序、参数和线程归属不变。其他两个工具类没有会话依赖。
+RuntimeMeta 由 RuntimeChannelTools 保留为内部静态辅助，供 PLCSIM 执行器复用。
+
+[TiaMcp.Runtime](../../tools/tiaportal-mcp/src/TiaMcp.Runtime/TiaMcp.Runtime.csproj) 为不织入的 net48 协议程序集，
+保持 TiaMcpServer.Runtime 命名空间，引用原版本 Sharp7、Workstation.UaClient、官方 HTTP Web API 客户端及 Logic。
+官方 Siemens.Simatic.S7.Webserver.API 是协议客户端；此程序集不引用 Siemens.Engineering、PLCSIM 或引擎。
+独立还原时显式保持引擎已有的 DependencyInjection 版本，不引入新的依赖版本。
+
+迁移前 V20/V21 的 NativeCallWeaver verify 清单在这六个文件上相同：
+
+| 文件 | 原织入类别与数量 | 归属与理由 |
+|---|---|---|
+| S7LiveReader.cs | interface 10、object-dispatch 1 | 迁入 Runtime；只处理 Sharp7 和协议数据 |
+| OpcUaLiveReader.cs | enumeration-input 4、interface 1、object-dispatch 2 | 迁入 Runtime；只处理 OPC UA 客户端和节点值 |
+| S7WebApiChannel.cs | enumeration-input 3、interface 6、object-dispatch 4 | 迁入 Runtime；只处理 HTTP 客户端与 JSON 数据 |
+| UnifiedOpenPipeChannel.cs | interface 2 | 迁入 Runtime；只处理本地命名管道与 JSON |
+| PlcSimAdvancedChannel.cs | enumeration-input 29、object-dispatch 17、reflection 9、interface 15 | 保留引擎；反射、Activator 和接口调度可到达 Siemens PLCSIM Runtime |
+| EnvironmentDoctor.cs | enumeration-input 6、interface 4 | 保留引擎；依赖 Engineering 探测、EngineRouter，执行程序集位置也决定其检查目录 |
+
+引擎移除的 33 个点正好属于四个迁出的文件，严格 Siemens 直接成员多重集合不变。
+新的外部程序集边界产生 5 个 enumeration-input 点：RuntimeTools 的 ReadItems、SampleItems、ReadNodes，
+以及 Portal.CausalTrace 和 Portal.PlcWatchTables 中原有的两处 ReadItems。未禁用这些边界，也未改变调用参数。
+PLCSIM 与 doctor 的全部 80 个原有点保留。逐站点清单与前后比较保存于任务的本地构建证据目录。
+
+V20/V21 项目引用 Runtime；LegacyHost 不链接这些通道，无需新增引用。
+Build-Release 复制整个协议依赖闭包并检查 Runtime DLL；Build-MultiVersion 同时检查既有完整引擎输出。
+构建脚本现有的目录枚举自动把新源码及 DLL 纳入生成的 sourceFiles/runtimeFiles 清单，发布哈希仍只由脚本生成。
+Package-Release、Validate-Bundle、Check-Repository 的必需文件清单同步要求四个通道源码、项目及两版 DLL。
+
+Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite 与普通/隔离路径。
+空地址、空节点、空 host、空变量及无效请求在打开通道前拒绝；CPU 探测/状态、离线追踪和 PLCSIM 使用既有重复参数准入拒绝，
+避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。HttpTests 另外核对实例单例、会话依赖与程序集归属。

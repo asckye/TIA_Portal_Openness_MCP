@@ -230,5 +230,7 @@ namespace TiaMcpServer.Siemens
         JsonObject GetPutGetAccess(string devicePath);
         (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device);
         bool AttrValueIsEnabled(object? value);
+        ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope);
+        ResponseJsonReport TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains);
     }
 }

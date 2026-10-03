@@ -15,7 +15,8 @@ namespace TiaMcpServer.ModelContextProtocol
     // Reads are for monitoring. Writes and CPU mode changes are real operations on a
     // running system: they default to preview and additionally need an explicit confirm
     // flag. Nothing here saves, compiles or downloads a TIA project.
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class RuntimeChannelTools
     {
         private static ResponseJsonReport RuntimeRefusal(string message, JsonObject? data = null)
             => new ResponseJsonReport
@@ -26,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Meta = ResponseMeta.Basic(false)
             };
 
-        private static JsonObject RuntimeMeta(bool ok, bool? dryRun = null, bool? mayHaveChanged = null, bool? passwordProvided = null)
+        internal static JsonObject RuntimeMeta(bool ok, bool? dryRun = null, bool? mayHaveChanged = null, bool? passwordProvided = null)
         {
             var m = ResponseMeta.Basic(ok);
             if (dryRun != null) m["dryRun"] = dryRun;
@@ -47,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // ------------------------------------------------------------------ S7 Web API
 
         [McpServerTool(Name = "ReadPlcWebVars"), Description("[L2][Online-Monitoring][ONLINE] Read live values of PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (HTTPS JSON-RPC on the CPU; S7-1500 FW>=2.9, S7-1200 G2, ET 200SP CPU, Software Controller, PLCSIM Advanced). Independent of TIA Openness and of PUT/GET; optimized DBs are fine. Names use the Web API form, e.g. \"\\\"DB_Motor\\\".\\\"Speed\\\"\" or \"\\\"Tag_1\\\"\" (quotes may be omitted for plain names; array elements as \"\\\"DB\\\".\\\"Arr\\\"[3]\"). Read-only: never writes, forces or changes CPU mode. Preconditions: web server enabled on the CPU, the user has 'read variables' permission (the default Anonymous user usually has none). The CPU certificate is validated unless ignoreCertificateErrors=true. The password is passed straight to the API and never stored or logged. Each name is read individually; per-name errors are reported in items[].error. Session is cached per host+user and reused.")]
-        public static ResponseJsonReport ReadPlcWebVars(
+        public ResponseJsonReport ReadPlcWebVars(
             [Description("host: CPU web server address, IP or DNS name with optional :port, e.g. '192.168.0.1'. No scheme (always https).")] string host,
             [Description("username: web server user configured in TIA (Protection & Security > User management), e.g. 'Anonymous' or 'monitor'.")] string username,
             [Description("password: that user's password (empty for Anonymous). Passed to Api.Login only.")] string password,
@@ -100,7 +101,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "WritePlcWebVars"), Description("[L2][Online-Monitoring][ONLINE-WRITE] Write values to PLC variables by SYMBOLIC name through the SIMATIC S7 Web server API (PlcProgram.Write). This changes values in a RUNNING CPU. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values only, no write is sent. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. Every variable is read before the write, written one by one, then read back and compared (items[].verified); a readback mismatch (e.g. the program overwrites the variable cyclically) is reported as an error, never as success. Values must be JSON bool/number/string scalars; structs/arrays are refused. The user needs 'write variables' permission. No force, no CPU mode change, no TIA project change.")]
-        public static ResponseJsonReport WritePlcWebVars(
+        public ResponseJsonReport WritePlcWebVars(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user with write permission.")] string username,
             [Description("password: that user's password. Passed to Api.Login only.")] string password,
@@ -177,7 +178,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ReadPlcWebDiagnostics"), Description("[L2][Online-Monitoring][ONLINE] Read CPU diagnostics through the SIMATIC S7 Web server API: operating mode (RUN/STOP/STARTUP/HOLD/...), mode selector position, Api.Ping, API version, CPU type/order number, CPU system time, cycle-time and load figures, work/retentive memory usage. Read-only: never writes, forces or changes mode. Plc.ReadOperatingMode must succeed; the other calls are best-effort and calls this CPU firmware or user does not support are listed in data.unavailable instead of being faked. Works with PLCSIM Advanced. Certificate validated unless ignoreCertificateErrors=true; password never stored.")]
-        public static ResponseJsonReport ReadPlcWebDiagnostics(
+        public ResponseJsonReport ReadPlcWebDiagnostics(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user (needs 'read diagnostics' for most values).")] string username,
             [Description("password: that user's password. Passed to Api.Login only.")] string password,
@@ -231,7 +232,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SetPlcWebOperatingMode"), Description("[L2][Online-Monitoring][ONLINE-WRITE] DANGEROUS: request a CPU operating mode change (RUN or STOP) through the SIMATIC S7 Web server API (Plc.RequestChangeOperatingMode). STOP halts the user program and all outputs go to their configured safe state; RUN starts the program. Defaults to PREVIEW (dryRun=true): reads and reports the current mode only. A real change needs dryRun=false AND confirmModeChange=true; anything else is refused. After the request the mode is polled (up to ~10 s) and the readback is reported; an unconfirmed change is an error, not success. If the CPU is already in the requested mode nothing is sent. The user needs 'change operating mode' permission and the hardware mode selector must allow it. Never writes variables, never touches the TIA project.")]
-        public static ResponseJsonReport SetPlcWebOperatingMode(
+        public ResponseJsonReport SetPlcWebOperatingMode(
             [Description("host: CPU web server address, e.g. '192.168.0.1' (optional :port, no scheme).")] string host,
             [Description("username: web server user with 'change operating mode' permission.")] string username,
             [Description("password: that user's password. Passed to Api.Login only.")] string password,
@@ -331,7 +332,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ReadUnifiedRuntimeTags"), Description("[L2][Online-Monitoring][ONLINE] Read current values of WinCC Unified RUNTIME tags (HMI tags incl. their PLC-connected values) through the official WinCC Unified Open Pipe (local named pipe \\\\.\\pipe\\HmiRuntime of the running Runtime; no ODK license, no TIA Openness). Sends one ReadTag request and returns value, quality, quality code and time stamp per tag; per-tag errors (e.g. 'Tag does not exist') are in items[].error. Tag names are the runtime names, e.g. 'Tag_1' or 'HMI_RT_1::Tag_1'. Read-only, opens no subscription. Requires: this MCP server runs ON the Runtime PC and its user is in the 'SIMATIC HMI' group.")]
-        public static ResponseJsonReport ReadUnifiedRuntimeTags(
+        public ResponseJsonReport ReadUnifiedRuntimeTags(
             [Description("tagsJson: JSON array of runtime tag names, e.g. [\"Tag_1\",\"Motor.Speed\"], or a comma-separated list. Max 500.")] string tagsJson,
             [Description("pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime (bare 'HmiRuntime' also accepted). Remote machines are refused.")] string pipeName = RuntimeChannelsLogic.DefaultOpenPipeName,
             [Description("timeoutMs: connect + response timeout in ms (500..120000).")] int timeoutMs = 5000)
@@ -375,7 +376,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "WriteUnifiedRuntimeTags"), Description("[L2][Online-Monitoring][ONLINE-WRITE] Write values to WinCC Unified RUNTIME tags through WinCC Unified Open Pipe (WriteTag on \\\\.\\pipe\\HmiRuntime). PLC-connected HMI tags forward the value to the PLC, so this changes a running system. Defaults to PREVIEW (dryRun=true): validates the writes and reads the CURRENT values (ReadTag) only. A real write needs dryRun=false AND confirmWrite=true; anything else is refused. After WriteTag the tags are read back and compared (items[].verified); a mismatch or a per-tag WriteTag error is reported as failure. Values: JSON bool/number/string scalars (the Runtime converts to the tag's data type). Local only; user must be in the 'SIMATIC HMI' group. No TIA project change.")]
-        public static ResponseJsonReport WriteUnifiedRuntimeTags(
+        public ResponseJsonReport WriteUnifiedRuntimeTags(
             [Description("writesJson: JSON array of {\"name\":\"Tag_1\",\"value\":50} objects, or a JSON object {\"Tag_1\":50,\"Flag\":true}. Max 500.")] string writesJson,
             [Description("pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.")] string pipeName = RuntimeChannelsLogic.DefaultOpenPipeName,
             [Description("timeoutMs: connect + response timeout in ms (500..120000).")] int timeoutMs = 5000,
@@ -501,7 +502,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ReadUnifiedRuntimeAlarms"), Description("[L2][Online-Monitoring][ONLINE] Read the currently ACTIVE alarms of WinCC Unified Runtime through WinCC Unified Open Pipe (ReadAlarm on \\\\.\\pipe\\HmiRuntime). Returns the alarm objects as the Runtime reports them (Name, State, StateText, EventText, RaiseTime, Priority, AlarmClassName, Tag, Value, ...). Optional filter uses the Runtime alarm filter syntax (e.g. \"AlarmClassName != 'Warning'\"); empty systemNames means all systems. Read-only, no acknowledgement, no subscription. Local only; user must be in the 'SIMATIC HMI' group.")]
-        public static ResponseJsonReport ReadUnifiedRuntimeAlarms(
+        public ResponseJsonReport ReadUnifiedRuntimeAlarms(
             [Description("systemNamesJson: JSON array of runtime system names, e.g. [\"HMI_RT_1\"]; empty array or empty string = all systems.")] string systemNamesJson = "[]",
             [Description("filter: optional alarm filter expression (Runtime syntax), e.g. \"Priority >= 10\". Empty = no filter.")] string filter = "",
             [Description("languageId: Windows LCID for alarm texts, e.g. 1033 (en-US), 1031 (de-DE), 2052 (zh-CN).")] int languageId = 1033,
@@ -562,7 +563,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "UnifiedOpenPipeRequest"), Description("[L2][Online-Monitoring][ONLINE-WRITE] Send ONE raw WinCC Unified Open Pipe expert-syntax request (JSON object with 'Message', optional 'Params', optional 'ClientCookie') to the local Runtime and return the matching response line, e.g. BrowseTags, BrowseConfiguredAlarms, BrowseAlarmClasses, ReadConfig, ReadTag, ReadAlarm, WriteTag, WriteConfig. Defaults to PREVIEW (dryRun=true): validates the JSON and shows the exact line that would be sent, nothing is sent. Read-only messages (Read*/Browse*) are sent with dryRun=false; any other message (WriteTag, WriteConfig, ...) additionally requires confirmWrite=true. Subscribe*/Unsubscribe* are refused (streaming). No readback verification is performed here; prefer ReadUnifiedRuntimeTags/WriteUnifiedRuntimeTags for tags. Local only.")]
-        public static ResponseJsonReport UnifiedOpenPipeRequest(
+        public ResponseJsonReport UnifiedOpenPipeRequest(
             [Description("requestJson: single-line JSON object, e.g. {\"Message\":\"BrowseTags\",\"Params\":{\"Filter\":\"*Motor*\",\"PageSize\":50}}. A ClientCookie is generated when missing.")] string requestJson,
             [Description("pipeName: named pipe of the Runtime; default \\\\.\\pipe\\HmiRuntime.")] string pipeName = RuntimeChannelsLogic.DefaultOpenPipeName,
             [Description("timeoutMs: connect + response timeout in ms (500..120000).")] int timeoutMs = 5000,

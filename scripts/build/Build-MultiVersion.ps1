@@ -18,6 +18,11 @@ if(!$SkipFullEngines) {
     & (Join-Path $PSScriptRoot 'Build-Release.ps1') -V20ReferenceRoot (Join-Path $api 'TIA_V20_PublicAPI/V20') -V21ReferenceRoot (Join-Path $api 'TIA_V21_PublicAPI/V21/net48') -Dotnet $Dotnet -Python $Python -NuGetConfig $NuGetConfig
     if($LASTEXITCODE){throw 'Full-engine build failed'}
 }
+foreach ($major in @(20,21)) {
+    if (!(Test-Path -LiteralPath (Join-Path $repo "runtime/v$major/TiaMcp.Runtime.dll"))) {
+        throw "V$major runtime channel assembly missing; rebuild the full engines"
+    }
+}
 $weaver=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
 & $Dotnet build $weaver -c Release -v:q *> (Join-Path $logs 'weaver.log')
 if($LASTEXITCODE){throw 'Native weaver build failed'}

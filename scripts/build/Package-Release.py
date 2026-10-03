@@ -181,7 +181,7 @@ def main():
             data = data.decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
-    required = ('docs/README.md',
+    required = ['docs/README.md',
                 'tools/openness-shared/BundleLayout.cs',
                 'scripts/checks/Check-BundleLayout.py',
                 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
@@ -214,7 +214,10 @@ def main():
                 'tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs',
                 'scripts/operations/预热.bat', 'scripts/operations/生成工程.bat', 'README.md', 'README.zh-CN.md', 'LICENSE', 'NOTICE.md',
                 'docs/guides/hmi/read-only-migration.md', 'docs/development/release-workflow.md',
-                'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json')
+                'tools/tiaportal-mcp/skill/SKILL.md', 'templates/project-blueprints/full_plc_hmi_project.json']
+    required += ['tools/tiaportal-mcp/src/TiaMcp.Runtime/' + name for name in
+                 ('TiaMcp.Runtime.csproj', 'S7LiveReader.cs', 'OpcUaLiveReader.cs', 'S7WebApiChannel.cs', 'UnifiedOpenPipeChannel.cs')]
+    required += [f'runtime/v{major}/TiaMcp.Runtime.dll' for major in (20, 21)]
     required += ['tools/tiaportal-mcp/src/TiaMcp.WorkerChannel/' + name for name in ('ChannelMessage.cs', 'LineFraming.cs', 'ChannelCodec.cs', 'ChannelClient.cs', 'ChannelServer.cs', 'TiaMcp.WorkerChannel.csproj', 'packages.lock.json')]
     required += ['tools/tia-openness-studio/src/TiaOpenness.Core/Rpc/BridgeChannel.cs', 'runtime/studio/TiaMcp.WorkerChannel.dll']
     required += ['runtime/studio/bridge/' + name for name in ('TiaMcp.WorkerChannel.dll', 'System.Text.Json.dll', 'System.Text.Encodings.Web.dll', 'System.IO.Pipelines.dll', 'Microsoft.Bcl.AsyncInterfaces.dll', 'System.Buffers.dll', 'System.Memory.dll', 'System.Numerics.Vectors.dll', 'System.Runtime.CompilerServices.Unsafe.dll', 'System.Threading.Tasks.Extensions.dll')]

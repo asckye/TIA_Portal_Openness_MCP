@@ -245,5 +245,9 @@ namespace TiaMcpServer.Siemens
         JsonObject IEngineeringSession.GetPutGetAccess(string devicePath) => GetPutGetAccess(devicePath);
         (DeviceItem? item, string? attrName) IEngineeringSession.FindPutGetAttribute(Device device) => FindPutGetAttribute(device);
         bool IEngineeringSession.AttrValueIsEnabled(object? value) => AttrValueIsEnabled(value);
+        ResponseJsonReport IEngineeringSession.TraceTagCause(string softwarePath, string tag, string blockScope)
+            => TraceTagCause(softwarePath, tag, blockScope);
+        ResponseJsonReport IEngineeringSession.TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains)
+            => TraceTagCauseLive(softwarePath, tag, ip, rack, slot, blockScope, expectModuleContains);
     }
 }
