@@ -7,6 +7,8 @@
   <ItemGroup>
     <Compile Remove="FakeApi/**/*.cs" />
     <ProjectReference Include="FakeApi/FakeApi.csproj" />
+    <!-- Build order only: the fixture is woven with the Release weaver below in every configuration. -->
+    <ProjectReference Include="../../../native-call-weaver/NativeCallWeaver.csproj" ReferenceOutputAssembly="false" Private="false" SkipGetTargetFrameworkProperties="true" SetConfiguration="Configuration=Release" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;TargetFramework;RuntimeIdentifier" />
     <CustomAdditionalCompileInputs Include="../../../native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll" />
     <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/InvocationJournal.cs" Link="InvocationJournal.cs" />
