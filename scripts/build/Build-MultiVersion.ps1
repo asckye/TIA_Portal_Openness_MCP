@@ -41,7 +41,7 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     $workerBuild=Join-Path $repo "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/bin/$key/Release/$framework"
     Get-ChildItem -LiteralPath $workerBuild -File | Where-Object {$_.Extension -in '.exe','.dll','.config'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $worker -Force}
     if(@(Get-ChildItem -LiteralPath $worker -Filter 'TiaMcp.Adapter.*.dll').Count -ne 1){throw "Exactly one matching adapter is required: $key"}
-    & (Join-Path $runtime 'TiaMcpServer.exe') --catalog > (Join-Path $logs "tools-$key.json")
+    & (Join-Path $runtime 'TiaMcpServer.exe') --catalog | Out-File -LiteralPath (Join-Path $logs "tools-$key.json") -Encoding utf8
     if($LASTEXITCODE){throw "Catalog failed: $key"}
     $catalog=Get-Content -LiteralPath (Join-Path $logs "tools-$key.json") -Raw | ConvertFrom-Json
     $records+=@{releaseKey=$key;profile='plc-foundation';toolCount=$catalog.tools.Count;nativeAcceptance='NOT RUN'}
