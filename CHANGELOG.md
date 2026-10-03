@@ -4,8 +4,7 @@
 
 ## [Unreleased]
 
-- Non-empty PLC names now resolve only by exact or structural alias match; they no longer fall back to the only PLC or to substring matches. An empty name still selects the only PLC. Wrong names fail with the available PLC paths. Real-TIA acceptance is pending.
-
+- PLC 名称解析改为严格匹配（行为变化）：非空的 `softwarePath` 只接受精确名称（忽略大小写和首尾空白）或结构别名（CPU、所属站点/设备、分组路径），读取和写入相同；不再把错误名称回退到工程中唯一的 PLC，也不再按子串猜测。空名称仍选择唯一的 PLC。名称错误时返回“未找到”并列出可用 PLC 路径，同名歧义时列出全部候选。已验证的解析结果会缓存，切换工程后重新解析。真机验收尚未进行。
 - 将 MCP 配置器与 Openness Studio 合并为一个 WPF/.NET 10 工作台；工程操作与 MCP/客户端配置在同一主窗口内切换，保留各页面状态。
 - 统一版本选择、语言和主题；根目录 `TiaMcpConfigurator.exe` 保留文件名并启动统一桌面。主界面需要 .NET 10 Desktop Runtime，不能只复制入口 EXE。
 - 配置模块在 .NET 10 下保持原有客户端配置合并、备份及密钥保护行为，补充嵌入页面和跨运行时回归。原生 Openness 桥接及各版本引擎保留后台隔离。
