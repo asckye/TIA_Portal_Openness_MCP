@@ -1250,7 +1250,7 @@ namespace TiaMcpServer.Siemens
                 }
                 catch (EngineeringNotSupportedException)
                 {
-                    usedDocs = false; // mixed-language / STL -> fall back to XML
+ /* swallow(native-fallback): Unsupported document export falls back to SimaticML before deleting the source block. */                    usedDocs = false; // mixed-language / STL -> fall back to XML
                 }
 
                 if (usedDocs)
@@ -1292,7 +1292,7 @@ namespace TiaMcpServer.Siemens
                 // A failed import may have already deleted the source. Never erase
                 // its only recovery export during exception cleanup.
                 if (moveVerified)
-                    try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { /* best-effort cleanup */ }
+                    try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch {  /* swallow(cleanup): Cleanup after verified relocation must not replace the successful move result. *//* best-effort cleanup */ }
             }
 
             return $"Moved '{blockName}' to '{targetGroupPath}' via {method}";

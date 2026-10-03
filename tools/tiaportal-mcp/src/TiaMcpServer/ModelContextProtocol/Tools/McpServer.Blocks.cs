@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: blocks. Extracted from McpServer.cs (god-file split); behavior unchanged.
     public static partial class McpServer
     {
         #region blocks
@@ -79,8 +78,6 @@ namespace TiaMcpServer.ModelContextProtocol
                 var list = Portal.GetBlocks(softwarePath, regexName);
 
                 // null = 根本没查成（没连接/没打开项目）；空列表 = 这个 PLC 里确实没有。
-                // 以前 Portal 层无项目时返回空列表，两件事被同一个值表示，于是下面那句
-                // `if (list != null)` 恒为真、`else throw` 永不执行，离线调用得到「成功，0 个」。
                 if (list == null)
                 {
                     throw new McpException(
@@ -280,7 +277,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch
             {
-                return string.Empty; // best effort only
+ /* swallow(probe-optional): Path suggestions are optional and must not replace the original lookup error. */                return string.Empty; // best effort only
             }
         }
 
@@ -323,7 +320,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch
             {
-                return string.Empty;
+ /* swallow(probe-optional): Group suggestions are optional and must not replace the original import error. */                return string.Empty;
             }
         }
         [McpServerTool(Name = "ImportBlock"), Description("[L1][PLC-Software] Import a single SimaticML XML block file into PLC software. Requires: Connect + OpenProject. importPath must be an absolute path to a .xml file. After import it reads back to confirm the block is present (Meta.verified); call CompileAndDiagnosePlc for full consistency. Pick the right tool: SCL/.s7dcl text → ImportFromDocuments; multiple XML files → ImportBlocksFromDirectory; a full exported program (UDTs+tags+blocks) → ImportPlcProgramFromDirectory; JSON-built blocks → PlcBuildAndImport.")]
@@ -337,9 +334,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Portal.ImportBlock(softwarePath, groupPath, importPath);
 
                 // 读回校验的判据是 **XML 里声明的块名 + 块号**，不是 XML 文件名。
-                // 原来按文件名找：把 OB100 的 XML 存成 OB100.xml 导进去，块在 TIA 里
-                // 实际叫 Startup，于是一次成功的导入被报成「NOT found after import」——
-                // 调用方照着这个结论去重导、去排查一个根本不存在的问题。
+                // 例如 OB100.xml 可以声明名为 Startup 的块，不能按文件名推断导入结果。
                 var outcome = VerifyImportedBlock(softwarePath, importPath);
 
                 if (outcome.State == PlcBlockVerificationState.Mismatch)
@@ -572,10 +567,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 var compileWatch = System.Diagnostics.Stopwatch.StartNew();
                 var result = Portal.CompileSoftware(softwarePath, password);
 
-                // 收集不再吞：CollectCompilerMessages 内部逐条兜异常，把能拿到的都拿回来，
-                // 拿不到的记进 CollectFailures。以前这里是 try{...}catch{} —— 一抛就
-                // 「errorCount=5, errors: []」，模型看得到数字却拿不到任何一条，
-                // 还分不清是收集炸了还是本来就没明细。那正好把这个工具的立意废掉。
+                // CollectCompilerMessages 逐条收集诊断，拿不到的记进 CollectFailures，
+                // 让调用方区分没有明细与诊断收集不完整。
                 var compileMs = compileWatch.ElapsedMilliseconds;
                 var collected = CollectCompilerMessages(result.Messages);
                 var summary = collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount);
@@ -628,7 +621,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var suggestions = new List<string>();
             try
             {
-                // ImportBlock 现以 PortalException 报失败；成功即已导入
+                // ImportBlock 以 PortalException 报失败；成功即已导入
                 Portal.ImportBlock(softwarePath, groupPath, importPath);
 
                 ResponseCompileDiagnose? compile = null;
@@ -735,7 +728,7 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch
             {
-                subKind = "";
+ /* swallow(parse-fallback): Unreadable XML remains unknown so the batch import reports or skips it using its existing classification policy. */                subKind = "";
             }
 
             return "unknown";
@@ -940,7 +933,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     catch
                     {
-                        // Ignore notification errors during error handling
+ /* swallow(logging-failure): A failed progress notification must not replace the batch export failure. */                        // Ignore notification errors during error handling
                     }
                 }
                 

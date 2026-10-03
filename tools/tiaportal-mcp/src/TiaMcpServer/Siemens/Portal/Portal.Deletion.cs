@@ -91,7 +91,7 @@ namespace TiaMcpServer.Siemens
             }
             catch
             {
-                // 某些块类型不给 Number/AutoNumber。读不到就不警告，但绝不因此让删除失败。
+ /* swallow(probe-optional): 部分块类型不提供 Number/AutoNumber；缺少编号警告不阻止原有删除流程。 */                // 某些块类型不给 Number/AutoNumber。读不到就不警告，但绝不因此让删除失败。
             }
 
             var result = new JsonObject
@@ -113,8 +113,8 @@ namespace TiaMcpServer.Siemens
                 + "调用方会变成悬空引用 —— 删后必须 CompileSoftware 才看得出影响面。"
             };
 
-            // 交叉引用：2.9.0 起只在 crossReferences=true 时查 —— 维护者 2026-09-21 真机：DeletePlcBlock 干跑里的
-            // CrossReferenceService.GetCrossReferences 让 TIA Portal V21 整个退出（handoff §4 退出点 ⑧）。默认不查，
+            // TIA Portal V21，2026-09-21（docs/reference/real-machine-ledger.md）：DeletePlcBlock 干跑里的
+            // CrossReferenceService.GetCrossReferences 让 TIA Portal 整个退出。默认不查，
             // 并明说「没查」，不是「没人用」。
             string? crossRefReason = null;
             bool crossRefQueried = false;
@@ -252,7 +252,7 @@ namespace TiaMcpServer.Siemens
                 ["verifiedAbsent"] = false
             };
 
-            // 交叉引用：2.9.0 起只在 crossReferences=true 时查（同 DeletePlcBlock，真机上该查询让 TIA 退出过）。
+            // 交叉引用仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = crossReferences ? CrossReferenceRefusal(softwarePath) : "not queried (crossReferences=false)";
             bool crossRefQueried = false;
             var refs = crossReferences && crossRefReason == null ? TryGetTagTableCrossReferences(table, resolvedPath, out crossRefReason, out crossRefQueried) : null;
@@ -354,7 +354,7 @@ namespace TiaMcpServer.Siemens
                 + "必须重新编译整个 PLC 才能看出影响面。"
             };
 
-            // 2.9.0 起只在 crossReferences=true 时查（同 DeletePlcBlock，真机上该查询让 TIA 退出过）。
+            // 仅在 crossReferences=true 时查，保留上方 TIA V21 真机退出证据对应的显式启用约束。
             string? crossRefReason = null;
             bool crossRefQueried = false;
             var refs = crossReferences ? GetCrossReferences(softwarePath, typePath, "Type", "AllObjects", out crossRefReason, out crossRefQueried) : null;

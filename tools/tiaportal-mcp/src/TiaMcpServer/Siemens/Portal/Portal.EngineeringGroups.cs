@@ -29,7 +29,7 @@ namespace TiaMcpServer.Siemens
                 if (action != "deleteEmpty" || dryRun) { try { meta["group"] = UserGroupRow(EngineeringGroupOperations.Group(EngineeringGroupOperations.Get(plc, shape.Item1), action == "rename" && !dryRun ? string.Join("/", EngineeringGroupOperations.Parts(groupPath).Take(EngineeringGroupOperations.Parts(groupPath).Length - 1).Append(newName)) : groupPath)); } catch (Exception ex) { meta["groupError"] = ex.GetBaseException().Message; } }
                 return dryRun ? "Group operation preview; nothing changed." : "Group operation completed. Project not saved.";
             });
-        // 2.7.35: typed user-group row for every STEP 7 user group class (Name is writable, Delete exists on each).
+        // Typed user-group row for every STEP 7 user group class (Name is writable, Delete exists on each).
         private static JsonObject UserGroupRow(object group) => group switch
         {
             global::Siemens.Engineering.SW.Blocks.PlcBlockUserGroup b => new JsonObject { ["name"] = b.Name, ["groupClass"] = b.GetType().Name, ["blocks"] = b.Blocks.Count, ["groups"] = b.Groups.Count },

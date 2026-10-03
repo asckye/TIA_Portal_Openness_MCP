@@ -245,7 +245,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             if (block is OB ob)
             {
-                try { snapshot.SecondaryType = ob.SecondaryType; } catch { /* 代理失效时宁可标 unavailable，也不谎报不相等 */ }
+                try { snapshot.SecondaryType = ob.SecondaryType; } catch {  /* swallow(probe-optional): 代理失效时将 SecondaryType 标为 unavailable，不能谎报不相等。 *//* 代理失效时宁可标 unavailable，也不谎报不相等 */ }
             }
 
             snapshot.PriorityNumber = TryReadPriority(block);
@@ -269,13 +269,13 @@ namespace TiaMcpServer.ModelContextProtocol
             }
             catch
             {
-                return null;
+ /* swallow(probe-optional): Unreadable optional OB priority remains unavailable for verification. */                return null;
             }
         }
 
         private static int? SafeNumber(PlcBlock block)
         {
-            try { return block.Number; } catch { return null; }
+            try { return block.Number; } catch {  /* swallow(probe-optional): Unreadable block number remains unavailable rather than reporting a mismatch. */return null; }
         }
 
         private static int? ParseIntOrNull(string? value)

@@ -36,7 +36,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: blocks/types. Extracted from Portal.cs (god-file split); behavior unchanged.
     public partial class Portal
     {
         #region blocks/types
@@ -71,7 +70,7 @@ namespace TiaMcpServer.Siemens
             }
             catch (Exception)
             {
-                // Invalid regex, return null
+ /* swallow(parse-fallback): Invalid regular expressions retain the existing not-found result. */                // Invalid regex, return null
                 return null;
             }
 
@@ -264,7 +263,7 @@ namespace TiaMcpServer.Siemens
             return list;
         }
 
-        // 2.7.46: the file actually written by the last ExportBlock / ExportType (exportPath is a directory unless it ends in .xml).
+        // The file actually written by the last ExportBlock / ExportType (exportPath is a directory unless it ends in .xml).
         public string? LastExportedFile { get; private set; }
 
         private static string ResolveExportFile(string exportPath, string name, string groupPath, bool preservePath)
@@ -402,7 +401,7 @@ namespace TiaMcpServer.Siemens
             }
             catch
             {
-                return path; // best effort; on any failure import the original file
+ /* swallow(parse-fallback): If XML preparation fails, preserve the original path so native import reports the input error. */                return path; // best effort; on any failure import the original file
             }
         }
 
@@ -704,7 +703,6 @@ namespace TiaMcpServer.Siemens
             if (failures.Count > 0)
             {
                 _logger?.LogWarning($"ExportBlocks completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
-                // Optionally: _logger?.LogDebug("All failures: {Failures}", string.Join("; ", failures));
             }
             else
             {

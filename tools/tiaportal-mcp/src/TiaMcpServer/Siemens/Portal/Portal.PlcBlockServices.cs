@@ -135,7 +135,7 @@ namespace TiaMcpServer.Siemens
                             foreach (var address in EnumerateReflectedProperty(target, "Addresses"))
                                 if (address is ConfigurationAddress native)
                                     candidates.Add(new PlcBlockServicesLogic.RouteCandidate { ModeName = ReadReflectedString(mode, "Name"), PcInterfaceName = ReadReflectedString(pcInterface, "Name"), TargetName = ReadReflectedString(target, "Name"), Address = native.Address ?? "", NativeAddress = native });
-                        // 2.7.49: the CPU's configured IP is listed under the PC interface's subnets / gateways (the target interface stays empty until the adapter sees the CPU)
+                        // The CPU's configured IP is listed under the PC interface's subnets / gateways (the target interface stays empty until the adapter sees the CPU)
                         foreach (var subnet in EnumerateReflectedProperty(pcInterface, "Subnets"))
                         {
                             foreach (var address in EnumerateReflectedProperty(subnet, "Addresses"))
@@ -156,7 +156,7 @@ namespace TiaMcpServer.Siemens
                 OnlineConfigurationDelegate handler = cfg =>
                 {
                     if (secure != null && cfg is OnlinePasswordConfiguration pwd) pwd.SetPassword(secure);
-                    else if (cfg is TlsVerificationConfiguration tls)   // 2.7.52: FW >= 2.9 CPUs ask for certificate trust before any online read
+                    else if (cfg is TlsVerificationConfiguration tls)   // FW >= 2.9 CPUs ask for certificate trust before any online read
                     {
                         var before = tls.CurrentSelection.ToString();
                         if (BaseLeftoversLogic.TlsSelectionToApply(true, before) != null) tls.CurrentSelection = TlsVerificationConfigurationSelection.Trusted;
