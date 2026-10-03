@@ -1,0 +1,2 @@
+# These files are exact UTF-8 serializer output, including LF and no BOM.
+*.txt -text

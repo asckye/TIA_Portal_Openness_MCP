@@ -39,11 +39,21 @@ dispatch coverage; its rejection marker is asserted on the original response
 before hashing. Existing small full-profile behavior responses remain readable.
 Only full-content entries can report an inner differing path; digest entries
 report the changed digest path and byte-size delta. No hash field is masked.
+
+Format 3 additionally hashes every original MCP text block's UTF-8 bytes BEFORE
+decode_reply or canonicalization. The transport JSON string has already been
+read by the RPC client; its inner text is not decoded/re-serialized for this hash.
+RAW_MASK_RULES is the complete reviewed allowlist, including reasons. A lexical
+JSON walk locates literal paths; regex substitutes only the timestamp's contents,
+preserving quotes, whitespace, key order, escapes and all surrounding text. No
+elapsed-time, PID, GUID or temp-path mask is needed by the current capture set.
+Unknown paths/encodings remain visible and must fail the consecutive-capture gate.
 """
 import argparse
 from collections import Counter
 from contextlib import contextmanager
 import importlib.util
+import io
 import hashlib
 import json
 from pathlib import Path
@@ -54,6 +64,8 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import unittest
+from contextlib import redirect_stdout
 
 from tool_usage_checks import check_usage, unwrap_usage
 
@@ -179,6 +191,98 @@ def identity(call):
     return call['profile'], call['tool'], canonical(call['arguments'])
 
 
+RAW_MASK_RULES = [
+    {'tool': '*', 'path': ['meta', 'timestamp'],
+     'reason': 'Response envelope wall clock (DateTime.Now).'},
+    *[{'tool': tool, 'path': ['data', 'timestamp'],
+       'reason': 'Classic HMI builder DateTime.Now.ToString("O").'}
+      for tool in ('BuildClassicHmiScreenXml', 'BuildClassicHmiTagTableXml',
+                   'BuildClassicHmiMinimalPackage')],
+    *[{'tool': 'BuildClassicHmiMinimalPackage', 'path': ['data', part, 'timestamp'],
+       'reason': 'Embedded Classic HMI builder DateTime.Now.ToString("O").'}
+      for part in ('screen', 'tagTable')],
+]
+RAW_TOKEN = re.compile(r'"(?:[^"\\\x00-\x1f]|\\(?:["\\/bfnrt]|u[0-9a-fA-F]{4}))*"'
+                       r'|[{}\[\]:,]|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|true|false|null')
+RAW_TIMESTAMP = re.compile(r'(?<=")\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)(?=")')
+
+
+def mask_raw_text(text, tool):
+    # No JSON decoding: keep source spans and literal property tokens. Escaped
+    # property names deliberately do not match the reviewed literal paths.
+    paths = {tuple('"' + key + '"' for key in rule['path']) for rule in RAW_MASK_RULES
+             if rule['tool'] in ('*', tool)}
+    tokens = list(RAW_TOKEN.finditer(text))
+    end = 0
+    for token in tokens:
+        if re.search(r'[^ \t\r\n]', text[end:token.start()]):
+            return text
+        end = token.end()
+    if re.search(r'[^ \t\r\n]', text[end:]) or not tokens:
+        return text
+    replacements = []
+    index = 0
+
+    def take(expected=None):
+        nonlocal index
+        if index == len(tokens):
+            raise ValueError('Incomplete JSON')
+        token = tokens[index]
+        if expected is not None and token.group() != expected:
+            raise ValueError('Unexpected JSON token')
+        index += 1
+        return token
+
+    def value(path):
+        token = take()
+        raw = token.group()
+        if raw == '{':
+            if index < len(tokens) and tokens[index].group() != '}':
+                while True:
+                    key = take().group()
+                    if not key.startswith('"'):
+                        raise ValueError('Expected property')
+                    take(':')
+                    value(path + (key,))
+                    if index == len(tokens) or tokens[index].group() != ',':
+                        break
+                    take(',')
+            take('}')
+        elif raw == '[':
+            item = 0
+            if index < len(tokens) and tokens[index].group() != ']':
+                while True:
+                    value(path + (item,))
+                    item += 1
+                    if index == len(tokens) or tokens[index].group() != ',':
+                        break
+                    take(',')
+            take(']')
+        elif raw in ('}', ']', ':', ','):
+            raise ValueError('Expected value')
+        elif path in paths and raw.startswith('"'):
+            masked, count = RAW_TIMESTAMP.subn('<string:timestamp>', raw)
+            if count:
+                replacements.append((token.start(), token.end(), masked))
+
+    try:
+        value(())
+        if index != len(tokens):
+            return text
+    except (ValueError, RecursionError):
+        return text
+    for start, end, masked in reversed(replacements):
+        text = text[:start] + masked + text[end:]
+    return text
+
+
+def raw_text_blocks(reply, tool):
+    return [{'contentIndex': index,
+             'sha256': hashlib.sha256(mask_raw_text(block['text'], tool).encode('utf-8')).hexdigest()}
+            for index, block in enumerate(reply.get('result', {}).get('content', []))
+            if block.get('type') == 'text']
+
+
 def normalize(call):
     result = json.loads(canonical(call))
     paths = [('meta', 'timestamp')]
@@ -293,8 +397,11 @@ def recorder(rpc, entries, profile):
     def call(name, arguments):
         key = profile, name, canonical(arguments)
         if key not in entries:
-            response = decode_reply(rpc('tools/call', params={'name': name, 'arguments': arguments}))
-            entries[key] = {'profile': profile, 'tool': name, 'arguments': arguments, 'response': response}
+            reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
+            raw_blocks = raw_text_blocks(reply, name)
+            response = decode_reply(reply)
+            entries[key] = {'profile': profile, 'tool': name, 'arguments': arguments,
+                            'response': response, 'rawTextBlocks': raw_blocks}
         return entries[key]['response']
     return call
 
@@ -381,7 +488,8 @@ def capture_release(args, release, exe, public_api):
                 if key in entry['arguments'] and entry['tool'] != 'GetToolUsage'})
             for name in sorted(registered):
                 rejection(call(name, REJECT_ARGUMENTS), DUPLICATE_MARKER)
-            snapshot = {'formatVersion': 2, 'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
+            snapshot = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
+                'release': release, 'profiles': ['full', 'lite'], 'transport': 'stdio',
                 'maxResponseChars': 2000000,
                 'coverage': {'registeredTools': len(tools), 'calledTools': sorted(registered),
                     'behaviorCallTools': behavior_calls, 'directRejectedTools': sorted(registered),
@@ -447,7 +555,8 @@ def capture_foundation(args, release, exe):
                                   name + ': passive contract changed')
             names = sorted(t['name'] for t in tools)
             resources.require('CallTool' not in names, 'Foundation added a bridge; review its rejection path first')
-            return {'formatVersion': 2, 'release': release, 'profiles': ['plc-foundation'], 'transport': 'stdio',
+            return {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES,
+                'release': release, 'profiles': ['plc-foundation'], 'transport': 'stdio',
                 'coverage': {'registeredTools': len(tools), 'calledTools': sorted(set(rejected) | set(passive)),
                     'directRejectedTools': rejected, 'directSkipped': skipped, 'passiveTools': passive,
                     'passiveSkipped': {'GetState': 'Requires worker ReadState; no worker is started by this capture.'},
@@ -525,6 +634,19 @@ def load_snapshots(directory):
             raise ValueError('Invalid/empty response snapshot: ' + str(path))
         if len({identity(call) for call in calls}) != len(calls):
             raise ValueError('Duplicate call identity: ' + str(path))
+        if snapshot.get('formatVersion') not in (2, 3):
+            raise ValueError('Unsupported response snapshot format: ' + str(path))
+        if snapshot['formatVersion'] == 3:
+            for call in calls:
+                blocks = call.get('rawTextBlocks')
+                if not isinstance(blocks, list) or any(
+                        set(block) != {'contentIndex', 'sha256'}
+                        or type(block['contentIndex']) is not int or block['contentIndex'] < 0
+                        or not re.fullmatch('[0-9a-f]{64}', block['sha256']) for block in blocks):
+                    raise ValueError('Invalid/missing raw text hashes: ' + str(path))
+                indices = [block['contentIndex'] for block in blocks]
+                if indices != sorted(set(indices)):
+                    raise ValueError('Duplicate/unordered raw text blocks: ' + str(path))
         snapshots[release] = snapshot
     if not snapshots:
         raise ValueError('No response snapshots in ' + str(directory))
@@ -554,7 +676,8 @@ def compare(args):
             elif key not in a:
                 changes.append(('added', label))
             else:
-                difference = first_difference(a[key], b[key])
+                difference = first_difference({k: v for k, v in a[key].items() if k != 'rawTextBlocks'},
+                                              {k: v for k, v in b[key].items() if k != 'rawTextBlocks'})
                 if difference:
                     before, after = response_length(a[key]), response_length(b[key])
                     if ('responseDigest' in a[key] and 'responseDigest' in b[key]
@@ -562,22 +685,153 @@ def compare(args):
                         difference = '$/responseDigest/sha256'
                     changes.append(('changed', label + ' ' + difference
                                     + f'; response bytes {before} -> {after} (delta {after - before:+d})'))
-        metadata = first_difference({k: v for k, v in old.items() if k != 'calls'},
-                                    {k: v for k, v in new.items() if k != 'calls'})
+                if not args.normalized_only:
+                    raw_difference = first_difference(a[key].get('rawTextBlocks'), b[key].get('rawTextBlocks'),
+                                                      '$/rawTextBlocks')
+                    if raw_difference:
+                        changes.append(('rawChanged', label + ' ' + raw_difference
+                                        + '; raw text SHA-256 differs (or evidence missing)'))
+        ignored = {'calls'} | ({'formatVersion', 'rawMaskRules'} if args.normalized_only else set())
+        metadata = first_difference({k: v for k, v in old.items() if k not in ignored},
+                                    {k: v for k, v in new.items() if k not in ignored})
         counts = Counter(kind for kind, _ in changes)
         counts['metadata'] = int(metadata is not None)
         total.update(counts)
-        print(f'V{release}: changed={counts["changed"]} added={counts["added"]} removed={counts["removed"]} metadata={counts["metadata"]}')
+        print(f'V{release}: changed={counts["changed"]} added={counts["added"]} removed={counts["removed"]} metadata={counts["metadata"]} rawChanged={counts["rawChanged"]}')
         for kind, detail in changes:
             print(f'  {kind}: {detail}')
         if metadata:
             print('  metadata: ' + metadata)
-    print(f'TOTAL: changed={total["changed"]} added={total["added"]} removed={total["removed"]} metadata={total["metadata"]}')
+    print(f'TOTAL: changed={total["changed"]} added={total["added"]} removed={total["removed"]} metadata={total["metadata"]} rawChanged={total["rawChanged"]}')
+    if args.normalized_only:
+        print('Normalized comparison only; raw-byte evidence and format metadata were NOT compared.')
     # Additions also fail: migration acceptance requires exactly zero differences.
     return int(any(total.values()))
 
 
+class RawResponseTests(unittest.TestCase):
+    def reply(self, text):
+        return {'id': 1, 'jsonrpc': '2.0', 'result': {'content': [{'type': 'text', 'text': text}]}}
+
+    def call(self, text, tool='GetState', profile='full'):
+        entries = {}
+        recorder(lambda *a, **kw: self.reply(text), entries, profile)(tool, {})
+        return compact(next(iter(entries.values())))
+
+    def test_order_escaping_and_numbers(self):
+        for left, right in [(' {"a":1,"b":2}', ' {"b":2,"a":1}'),
+                            ('{"text":"中文"}', r'{"text":"\u4e2d\u6587"}'),
+                            ('{"n":1.0}', '{"n":1.00}'),
+                            ('{"n":1e2}', '{"n":100.0}'),
+                            ('{"a":1}', '{ "a" : 1 }')]:
+            with self.subTest(left=left):
+                a, b = self.call(left), self.call(right)
+                self.assertEqual(a['response'], b['response'])
+                self.assertNotEqual(a['rawTextBlocks'], b['rawTextBlocks'])
+
+    def test_every_reviewed_path(self):
+        for rule in RAW_MASK_RULES:
+            with self.subTest(rule=rule):
+                value = '"2026-10-03T11:12:13.1234567-07:00"'
+                for key in reversed(rule['path']):
+                    value = '{ "' + key + '" : ' + value + ' }'
+                tool = rule['tool'] if rule['tool'] != '*' else 'GetState'
+                self.assertEqual(mask_raw_text(value, tool),
+                                 value.replace('2026-10-03T11:12:13.1234567-07:00', '<string:timestamp>'))
+                other = value.replace('2026-10-03T11:12:13.1234567-07:00', '2027-01-02T00:00:00Z')
+                self.assertEqual(self.call(value, tool), self.call(other, tool))
+
+    def test_no_unreviewed_masks(self):
+        stamp = '2026-10-03T11:12:13Z'
+        samples = [
+            '{"data":{"timestamp":"' + stamp + '"}}',
+            '{"meta":{"nested":{"timestamp":"' + stamp + '"}}}',
+            '[{"meta":{"timestamp":"' + stamp + '"}}]',
+            r'{"meta":{"time\u0073tamp":"' + stamp + '"}}',
+            '{"Meta":{"timestamp":"' + stamp + '"}}',
+            '{"meta":{"timestamp":"not-a-date","elapsedMs":123,"pid":456,"temp":"C:/tmp"}}',
+            '{"meta":{"timestamp":"2026-10-03T11:12:13"}}',
+            '{"meta":{"timestamp":123,"operationId":"123e4567-e89b-12d3-a456-426614174000"}}',
+            r'{"meta":{"timestamp":"2026-10-03T11:12:13\u005a"}}',
+            '{"message":"' + stamp + '"}',
+        ]
+        for value in samples:
+            with self.subTest(value=value):
+                self.assertEqual(mask_raw_text(value, 'GetState'), value)
+        # Builder masks cannot reach tool usage examples or source XML strings.
+        self.assertEqual(mask_raw_text(samples[0], 'GetToolUsage'), samples[0])
+
+    def test_surrounding_bytes(self):
+        value = r'{ "meta" : {"timestamp" : "2026-10-03T11:12:13Z", "n":1.00}, "text":"中文\n\"\\", "array":[{},[null,2]] }'
+        masked = mask_raw_text(value, 'GetState')
+        self.assertEqual(masked, value.replace('2026-10-03T11:12:13Z', '<string:timestamp>'))
+        self.assertEqual(self.call(value)['rawTextBlocks'][0]['sha256'],
+                         hashlib.sha256(masked.encode('utf-8')).hexdigest())
+
+    def test_plain_text_and_invalid_json(self):
+        for text in ('argument refused 中文', '', '{"meta":{"timestamp":"2026-10-03T11:12:13Z"}',
+                     '{\u00a0"meta":{"timestamp":"2026-10-03T11:12:13Z"}}',
+                     '{"meta":{"timestamp":"2026-10-03T11:12:13Z"}} extra'):
+            with self.subTest(text=text):
+                self.assertEqual(mask_raw_text(text, 'GetState'), text)
+                self.assertEqual(self.call(text)['rawTextBlocks'][0]['sha256'],
+                                 hashlib.sha256(text.encode('utf-8')).hexdigest())
+
+    def test_multiple_blocks_and_protocol_error(self):
+        reply = self.reply('first')
+        reply['result']['content'] += [{'type': 'image', 'data': 'AA=='}, {'type': 'text', 'text': 'second'}]
+        hashes = raw_text_blocks(reply, 'GetState')
+        self.assertEqual([b['contentIndex'] for b in hashes], [0, 2])
+        self.assertEqual(hashes[1]['sha256'], hashlib.sha256(b'second').hexdigest())
+        self.assertEqual(raw_text_blocks({'error': {'message': 'refused'}}, 'GetState'), [])
+
+    def test_digest_keeps_raw_hashes(self):
+        a = self.call('{"b":2,"a":1}', 'GetToolUsage')
+        b = self.call('{"a":1,"b":2}', 'GetToolUsage')
+        self.assertEqual(a['responseDigest'], b['responseDigest'])
+        self.assertNotEqual(a['rawTextBlocks'], b['rawTextBlocks'])
+
+    def test_compare_and_format_migration(self):
+        with scratch_directory(Path(tempfile.gettempdir())) as scratch:
+            old, new = Path(scratch) / 'old', Path(scratch) / 'new'
+            old.mkdir(); new.mkdir()
+            a = {'formatVersion': 3, 'rawMaskRules': RAW_MASK_RULES, 'release': '20',
+                 'calls': [self.call('{"a":1,"b":2}')]}
+            b = dict(a, calls=[self.call('{"b":2,"a":1}')])
+            def write(directory, value):
+                (directory / '20.json').write_text(snapshot_text(value), encoding='utf-8')
+            write(old, a); write(new, b)
+            args = argparse.Namespace(baseline=old, current=new, releases=None, normalized_only=False)
+            with redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(compare(args), 1)
+            self.assertIn('rawChanged=1', output.getvalue())
+            self.assertIn('full GetState({}) $/rawTextBlocks/0/sha256', output.getvalue())
+            write(new, a)
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(compare(args), 0)
+            a['formatVersion'] = 2
+            a.pop('rawMaskRules'); a['calls'][0].pop('rawTextBlocks')
+            write(old, a)
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(compare(args), 1)
+                args.normalized_only = True
+                self.assertEqual(compare(args), 0)
+            b['calls'][0].pop('rawTextBlocks')
+            write(new, b)
+            with self.assertRaisesRegex(ValueError, 'raw text hashes'):
+                load_snapshots(new)
+
+
+def self_test():
+    result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(RawResponseTests))
+    print(f'SELF-TEST: passed={result.testsRun - len(result.failures) - len(result.errors)} '
+          f'failed={len(result.failures) + len(result.errors)}')
+    return int(not result.wasSuccessful())
+
+
 def main():
+    if sys.argv[1:] == ['--self-test']:
+        return self_test()
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     capture_parser = commands.add_parser('capture')
@@ -595,6 +849,8 @@ def main():
     compare_parser = commands.add_parser('compare')
     compare_parser.add_argument('--baseline', required=True, type=Path)
     compare_parser.add_argument('--current', required=True, type=Path)
+    compare_parser.add_argument('--normalized-only', action='store_true',
+                                help='Migration check against format 2 only; does not prove raw-byte compatibility')
     compare_parser.add_argument('--releases', nargs='+', choices=RELEASES,
                                 help='Compare only these releases (default: compare all releases strictly)')
     compare_parser.set_defaults(run=compare)

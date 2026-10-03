@@ -335,6 +335,18 @@ internal static partial class Program
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length >= 3 && (args[1] == "response-golden-only" || args[1] == "response-golden-record")) {
+                string api=Path.GetFullPath(args[2]);
+                AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
+                    string dependency=Path.Combine(api,new AssemblyName(e.Name).Name+".dll");
+                    return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
+                };
+                string golden = args.Length > 3 ? Path.GetFullPath(args[3]) : Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Golden");
+                ResponseGoldenTests.Run(Server, golden, args[1] == "response-golden-record",
+                    (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); });
+                Console.WriteLine("COMPLETE: " + Passed + " response golden checks passed");
+                return 0;
+            }
             if(args.Length > 1 && args[1] == "child-stdin-only") { await ChildStdinTests(); return 0; }
             if (args.Length > 1 && args[1] == "example-library-only") {
                 var catalog = FindServerType(Server, "TiaOpenness.Shared.ToolUsageCatalog");

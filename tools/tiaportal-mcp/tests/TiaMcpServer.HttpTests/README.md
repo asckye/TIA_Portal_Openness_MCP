@@ -45,3 +45,58 @@ of `UpdateUnifiedGlobalScript` with preview defaults. The V21 build additionally
 checks the real Siemens DLL's native Import/Export signatures. The V20 build's
 bridge checks do not establish native Unified script support. No native import
 or live TIA connection is performed by this harness.
+
+`response-golden-only <PublicAPI-directory> [golden-directory]` is the P2-01a
+E1/E3 byte-level baseline. It loads the woven V20/V21 EXE, reflects `BridgeJson`
+and `DisciplineJson`, and uses the loaded SDK's `McpJsonUtilities.DefaultOptions`
+(the default for `McpServerToolCreateOptions.SerializerOptions`). The fourth path
+calls plain `ToJsonString()` on nodes, wrapping scalar/POCO samples in `JsonValue`.
+No options objects are copied or re-created. `ResponseXmlBuild` is instantiated
+from the engine, with null/populated properties, Chinese and escaping-sensitive
+text, typed Local/UTC dates, double/long/int values and nested arrays.
+
+The E3 cases invoke the real private `RunHmiStepTool`, `RunOfflineAnalysisTool`,
+`RunPlcSimTool`, `BatchResult`, `BuildOfflineXmlBuilderReport` and
+`ToolBridgeStatus.Create`. Full results are serialized both with SDK defaults
+(direct) and `BridgeJson` (the inner bridge payload). Portal is uninitialized,
+as in the existing shape checks; its native handles remain null. HMI actions
+cover success, operation false, ArgumentException, PortalException,
+TargetInvocationException, missing project and the `_hmiReadFault` block. The
+last two assert the action was never entered. PLCSIM uses synthetic bodies for
+each refusal status and calls the empty-instance guard before API loading;
+no simulator is loaded. Batch and offline analysis also record the same action
+matrix, including their different handling of `operationSuccess=false`.
+
+E3's closed mask list is `Meta.timestamp` and `Meta.lastFailure.timestamp`
+(wall clocks, replaced as **DateTime with the original Kind**),
+`Meta.elapsedMs`/`Meta.lastFailure.elapsedMs` (Int64 stopwatch values), and
+`Meta.operationId`/`Meta.lastFailure.operationId` (GUID strings). Only the
+first line of `Meta.error`/`Meta.lastFailure.error` is compared, per D1. The
+blocked HMI fixture supplies the retained fault timestamp/GUID. Arbitrary data,
+messages and other paths remain unchanged. Mask checks include Local/UTC/
+Unspecified kinds and data fields that must not be masked.
+
+For portable Local DateTime golden bytes, the test temporarily sets only its
+own net48 `TimeZoneInfo` cache to a fixed +08:00 zone and uses invariant culture;
+both are restored in `finally`. Windows settings and engine serializer options
+are untouched. `Golden/response-bytes-v20.txt` and `response-bytes-v21.txt` store
+one case ID, TAB and **exact output text** per LF-terminated line, UTF-8 without
+BOM. They are generated from this task's unchanged engine base, never manually
+edited; `.gitattributes` prevents checkout newline conversion. Tests compare
+every case and the complete file byte-for-byte, including BOM/newlines.
+
+Baseline recording is explicit, separate from verification:
+
+```powershell
+& $tests $engine 'response-golden-record' $publicApi 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/Golden'
+& $tests $engine 'response-golden-only' $publicApi 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/Golden'
+```
+
+Run verification twice for each release. Recording writes new data and must not
+be used to accept a changed response during P2-01d. Command logs, engine/base
+hashes and mode counts are kept in `bin-build/refactor/evidence/P3-02` locally.
+The historical `baseline` mode is a negative control for the old HTTP race and
+deliberately fails with “Baseline unexpectedly passed” on a fixed engine.
+`protocol-host`, `isolated-worker-host`, `worker-fixture`, `lease-holder` and
+`stdin-hex-fixture` are child-process fixtures used by the corresponding tests,
+not standalone finite test suites.

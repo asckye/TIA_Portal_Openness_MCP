@@ -9,7 +9,10 @@
     <RootNamespace>HttpTests</RootNamespace>
   </PropertyGroup>
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
-  <!-- Only SDK attributes are compiled in; engine and runtime dependencies resolve beside the loaded EXE. -->
+  <!-- Compile-only SDK/JSON types; runtime dependencies resolve beside the loaded EXE.
+       Keep transitive build targets so net48 uses its inbox System.ValueTuple. -->
   <ItemGroup><PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" IncludeAssets="compile" /></ItemGroup>
+  <ItemGroup><PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" IncludeAssets="compile;buildTransitive" /></ItemGroup>
+  <ItemGroup><None Update="Golden/*.txt" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcpServer.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
 </Project>
