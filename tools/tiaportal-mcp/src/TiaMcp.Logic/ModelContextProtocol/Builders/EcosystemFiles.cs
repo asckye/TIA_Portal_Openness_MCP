@@ -11,14 +11,21 @@ namespace TiaMcpServer.ModelContextProtocol
     {
         public static string RepositoryRoot()
         {
-            var configured = Environment.GetEnvironmentVariable("TIA_MCP_REPOSITORY_ROOT");
+            return RepositoryRoot(AppDomain.CurrentDomain.BaseDirectory, Environment.GetEnvironmentVariable("TIA_MCP_REPOSITORY_ROOT"));
+        }
+
+        internal static string RepositoryRoot(string baseDirectory, string? configured)
+        {
             if (!string.IsNullOrWhiteSpace(configured))
             {
                 if (!Path.IsPathRooted(configured) || !File.Exists(Path.Combine(configured, "scripts", "ecosystem", "plc_tools_bridge.py")))
                     throw new DirectoryNotFoundException("TIA_MCP_REPOSITORY_ROOT must point to this source/distribution root.");
                 return Path.GetFullPath(configured);
             }
-            for (var dir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory); dir != null; dir = dir.Parent)
+            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+            if (root != null && File.Exists(Path.Combine(root, "scripts", "ecosystem", "plc_tools_bridge.py"))) return root;
+            // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
+            for (var dir = new DirectoryInfo(baseDirectory); dir != null; dir = dir.Parent)
                 if (File.Exists(Path.Combine(dir.FullName, "scripts", "ecosystem", "plc_tools_bridge.py"))) return dir.FullName;
             throw new DirectoryNotFoundException("Companion files missing. Set TIA_MCP_REPOSITORY_ROOT to the source/distribution root.");
         }
