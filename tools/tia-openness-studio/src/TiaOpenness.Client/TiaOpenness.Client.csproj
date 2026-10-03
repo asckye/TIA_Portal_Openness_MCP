@@ -1,4 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework></PropertyGroup>
   <ItemGroup><ProjectReference Include="../TiaOpenness.Core/TiaOpenness.Core.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../openness-shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+  </ItemGroup>
 </Project>

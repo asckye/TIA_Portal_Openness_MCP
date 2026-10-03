@@ -30,7 +30,8 @@
 | R7 | `EngineRouter.FindSiblingExe`（两套硬编码布局） | 引擎改道、doctor、CLI 配置写入 |
 | R10 | LegacyHost：exe 旁 `release-key.txt` 与 `worker/`，已按安装布局定位 | Foundation 宿主 |
 | R11 | Studio `FindBundleRoot`、`ConfigCore.Engine`（路径写入客户端配置）、`UpdateCheck` | 桌面端 |
-| R12–R14 | Launcher、`BridgeClient.LocateBridge`、`SessionFactoryLoader` | 桌面端 |
+| R12 | Launcher 保留 C# 5 查找实现，`Check-BundleLayout.py` 校验全部相对探测路径与解析器安装锚点及 GUI 输出文件名一致 | 桌面端 |
+| R13–R14 | `BridgeClient.LocateBridge`、`SessionFactoryLoader` | 桌面端 |
 
 ### 目标设计
 

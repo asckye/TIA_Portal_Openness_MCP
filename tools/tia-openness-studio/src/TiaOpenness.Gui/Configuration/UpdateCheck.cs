@@ -42,7 +42,9 @@ namespace TiaMcpConfigurator
         {
             try
             {
-                string path = Path.Combine(root, "manifest", "delivery.json");
+                string path = TiaOpenness.Shared.BundleLayout.FindResource(
+                    TiaOpenness.Shared.BundleResource.DeliveryManifest, null, root)
+                    ?? Path.Combine(root, "manifest", "delivery.json");
                 if (!File.Exists(path)) return null;
                 var json = ConfigCore.Json().Deserialize<Dictionary<string, object>>(File.ReadAllText(path));
                 object value;
@@ -50,10 +52,18 @@ namespace TiaMcpConfigurator
             }
             catch /* swallow(parse-fallback): an unreadable or malformed delivery manifest leaves the installed release or package unknown */ { return null; }
         }
-        public static string UpdaterPath(string root) { return Path.Combine(root, UpdaterRelativePath); }
+        public static string UpdaterPath(string root)
+        {
+            root = TiaOpenness.Shared.BundleLayout.FindRoot(null, root) ?? root;
+            return Path.Combine(root, UpdaterRelativePath);
+        }
         // The source repository also carries manifest\delivery.json and the updater; updating there would overwrite
-        // tracked files, so the button is disabled when a .git folder sits at the root.
-        public static bool IsSourceRepository(string root) { return Directory.Exists(Path.Combine(root, ".git")); }
+        // tracked files, so the button is disabled for both a checkout and a worktree.
+        public static bool IsSourceRepository(string root)
+        {
+            string git = Path.Combine(root, ".git");
+            return Directory.Exists(git) || File.Exists(git);
+        }
 
         // Numeric MAJOR.MINOR.PATCH comparison; a leading "v" is ignored; unparsable or empty sorts lowest.
         public static int Compare(string a, string b)

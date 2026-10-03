@@ -11,6 +11,8 @@ import uuid
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'tools/openness-shared/BundleLayout.cs'
 VALIDATOR = 'scripts/checks/Validate-Bundle.ps1'
+LAUNCHER = 'tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs'
+GUI_PROJECT = 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'
 
 
 def resource_paths(source):
@@ -47,8 +49,30 @@ def validated_paths(source):
     return set(rows)
 
 
+def launcher_paths(layout, launcher, gui_project):
+    # The C# 5 bootstrapper cannot link the resolver. Its sole installed probe
+    # must match the resolver's Studio anchor and the GUI's executable name.
+    anchor = re.search(r'var studioRoot = FromAnchor\(directory, "([^"]+)"\);', layout)
+    assembly = re.search(r'<AssemblyName>([^<]+)</AssemblyName>', gui_project)
+    probes = re.findall(r'Path\.Combine\(root, ((?:"[^"\\]+"\s*,?\s*)+)\)', launcher)
+    if (not anchor or not assembly or len(probes) != 1
+            or len(re.findall(r'Path\.Combine\s*\(', launcher)) != len(probes)
+            or not re.search(r'string root = AppDomain\.CurrentDomain\.BaseDirectory;', launcher)
+            or not re.search(r'string desktop = Path\.Combine\(root,', launcher)
+            or re.findall(r'File\.Exists\(([^)]+)\)', launcher) != ['desktop']):
+        raise ValueError('Unrecognized Launcher lookup; review every relative probe against BundleLayout')
+    actual = '/'.join(re.findall(r'"([^"]+)"', probes[0]))
+    expected = anchor[1] + '/' + assembly[1] + '.exe'
+    if actual != expected:
+        raise ValueError(f'Launcher path differs from BundleLayout/GUI output: {actual} != {expected}')
+    return [actual]
+
+
 def check(root, tracked):
-    paths = resource_paths((root / SOURCE).read_text(encoding='utf-8-sig'))
+    layout = (root / SOURCE).read_text(encoding='utf-8-sig')
+    paths = resource_paths(layout)
+    launcher_paths(layout, (root / LAUNCHER).read_text(encoding='utf-8-sig'),
+                   (root / GUI_PROJECT).read_text(encoding='utf-8-sig'))
     validated = validated_paths((root / VALIDATOR).read_text(encoding='utf-8-sig'))
     errors = []
     for path in paths:
@@ -64,6 +88,21 @@ def check(root, tracked):
 
 
 class LayoutChecks(unittest.TestCase):
+    def test_launcher_matches_installed_anchor_and_gui_filename(self):
+        layout, launcher, project = [(ROOT / path).read_text(encoding='utf-8-sig')
+                                     for path in (SOURCE, LAUNCHER, GUI_PROJECT)]
+        self.assertEqual(launcher_paths(layout, launcher, project), ['runtime/studio/TiaOpenness.exe'])
+        for changed in (launcher.replace('"studio"', '"other"'),
+                        launcher.replace('"TiaOpenness.exe"', '"Other.exe"'),
+                        launcher + '\nPath.Combine(root, "other", "TiaOpenness.exe");',
+                        launcher.replace('File.Exists(desktop)', 'File.Exists("other.exe")')):
+            with self.subTest(source=changed), self.assertRaises(ValueError):
+                launcher_paths(layout, changed, project)
+        with self.assertRaises(ValueError):
+            launcher_paths(layout.replace('"runtime/studio"', '"runtime/desktop"'), launcher, project)
+        with self.assertRaises(ValueError):
+            launcher_paths(layout, launcher, project.replace('<AssemblyName>TiaOpenness', '<AssemblyName>Other'))
+
     def test_real_table_and_validator(self):
         paths = resource_paths((ROOT / SOURCE).read_text(encoding='utf-8-sig'))
         self.assertTrue(set(paths) <= validated_paths((ROOT / VALIDATOR).read_text(encoding='utf-8-sig')))
@@ -91,7 +130,7 @@ class LayoutChecks(unittest.TestCase):
         root = parent / ('bundle-check-' + uuid.uuid4().hex)
         root.mkdir()
         try:
-            for relative in (SOURCE, VALIDATOR):
+            for relative in (SOURCE, VALIDATOR, LAUNCHER, GUI_PROJECT):
                 target = root / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text((ROOT / relative).read_text(encoding='utf-8-sig'), encoding='utf-8')

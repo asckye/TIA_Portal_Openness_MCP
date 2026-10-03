@@ -17,7 +17,7 @@ namespace TiaOpenness.Core.Abstractions
             if (install == null) return Unavailable("No supported V14 SP1, V15.1 or V16-V21 Openness installation was found. Run Doctor.");
             var release = TiaMcp.Versioning.TiaVersionCatalog.FromApiVersion(install.Version);
             string key = release.Key;
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
+            string path = AdapterPath(AppDomain.CurrentDomain.BaseDirectory, key);
             if (!File.Exists(path)) return Unavailable("Build the " + release.DisplayName + " native adapter with scripts/build/Build-Studio.ps1 and deploy it under bridge/adapters/v" + key + ".");
             OpennessAssemblyResolver.Install(install.Version);
             var type = Assembly.LoadFrom(path).GetType("TiaOpenness.Openness.OpennessSessionFactory", true);
@@ -25,6 +25,19 @@ namespace TiaOpenness.Core.Abstractions
             factory.Configure(install.Version);
             LastDecision = "direct Openness V" + key;
             return factory;
+        }
+        internal static string AdapterPath(string baseDirectory, string key)
+        {
+            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+            if (root != null)
+            {
+                string installed = Path.Combine(root, "runtime", "studio", "bridge");
+                if (string.Equals(new DirectoryInfo(baseDirectory).FullName.TrimEnd(Path.DirectorySeparatorChar),
+                    installed, StringComparison.OrdinalIgnoreCase))
+                    return Path.Combine(baseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
+            }
+            // Development bridges and unrecognized layouts keep their adjacent adapters (D-G7-3).
+            return Path.Combine(baseDirectory, "adapters", "v" + key, "TiaOpenness.Openness.dll");
         }
         private static ITiaSessionFactory Unavailable(string reason)
         { LastDecision = reason; return new UnavailableSessionFactory(reason); }

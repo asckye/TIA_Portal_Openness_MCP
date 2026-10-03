@@ -72,6 +72,9 @@ namespace TiaMcpConfigurator
         public static string Engine(string root, string versionKey)
         {
             var version = TiaVersionCatalog.RequireRunnable(versionKey);
+            // The configuration page supplies an explicit root; keep its spelling and
+            // retain the original candidates when an incomplete bundle has no marker.
+            root = TiaOpenness.Shared.BundleLayout.FindRoot(null, root) ?? root;
             var candidates = version.IsFullEngine ? new[] {
                 Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe"),
                 Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") } : new[] {

@@ -150,7 +150,21 @@ namespace TiaOpenness.Client
         /// <summary>Looks for the bridge next to the caller, then in the usual build output folders.</summary>
         public static string LocateBridge()
         {
-            var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+            return LocateBridge(AppDomain.CurrentDomain.BaseDirectory);
+        }
+
+        internal static string LocateBridge(string baseDir)
+        {
+            if (TiaOpenness.Shared.BundleLayout.FindRoot(baseDir) != null)
+            {
+                // Known installed and development outputs carry the bridge locally.
+                // Use the caller's spelling, including any trailing separator.
+                string adjacent = Path.Combine(baseDir, "TiaOpenness.Bridge.exe");
+                if (File.Exists(adjacent)) return adjacent;
+                string copied = Path.Combine(baseDir, "bridge", "TiaOpenness.Bridge.exe");
+                if (File.Exists(copied)) return copied;
+            }
+            // Keep all original candidates for incomplete bundles and other callers (D-G7-3).
             var candidates = new[]
             {
                 Path.Combine(baseDir, "TiaOpenness.Bridge.exe"),
