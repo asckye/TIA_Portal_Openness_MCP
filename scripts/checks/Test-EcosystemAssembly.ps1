@@ -15,6 +15,10 @@ $resolve=[ResolveEventHandler]{param($sender,$eventArgs)
 }
 [AppDomain]::CurrentDomain.add_AssemblyResolve($resolve)
 $passed=0
+# Mirror the engine's startup (Program.cs): .NET Framework writes child stdin with Console.InputEncoding,
+# which adds a UTF-8 BOM under console code page 65001 and breaks the companion JSON bridges.
+$previousInputEncoding=[Console]::InputEncoding
+try { [Console]::InputEncoding=[Text.UTF8Encoding]::new($false) } catch {}
 try {
     $assembly=[Reflection.Assembly]::LoadFrom($exePath)
     if(![IDisposable].IsAssignableFrom($assembly.GetType('TiaMcpServer.Siemens.Portal',$true))){throw 'Portal cleanup is not registered with IDisposable'}
@@ -99,4 +103,7 @@ try {
     Check (@($entries|Where-Object {$_.phase -eq 'BEFORE'}).Count -gt 0 -and @($entries|Where-Object {$_.phase -eq 'RETURNED'}).Count -gt 0) 'Invocation breadcrumbs missing'
     Check (!(Get-Content -LiteralPath $journal[0].FullName -Raw).Contains('offline-test@example.invalid')) 'Journal unexpectedly contains argument data'
     Write-Output "COMPLETE: $passed ecosystem assembly checks passed. Artifacts: $scratch"
-} finally { [AppDomain]::CurrentDomain.remove_AssemblyResolve($resolve) }
+} finally {
+    [AppDomain]::CurrentDomain.remove_AssemblyResolve($resolve)
+    try { [Console]::InputEncoding=$previousInputEncoding } catch {}
+}

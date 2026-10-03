@@ -68,7 +68,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | done |
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（维护者决定暂不进行真机实测） | deferred |
 | P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | todo |
-| P0-06 | 离线返回结构快照：不连接 TIA 即可调用的工具（FindTools、ListToolCategories、PreflightToolCall、断开时的 GetState、离线构造器等）的返回结构基线与对比 | doing |
+| P0-06 | 离线返回结构快照：离线可执行工具的规范化返回，加上全部工具在直接调用与 CallTool 桥接两条路径上的调用前拒绝（`manifest/contracts/responses`） | done |
 | P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
 
 ### 阶段 1：构建与验证
@@ -91,7 +91,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛 | todo |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界 | todo |
 | P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略 | todo |
-| P2-06 | 隔离 worker 的 stdin 编码不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM），宿主测试框架已同步引擎启动设置 | todo |
+| P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`openness-shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与 `Test-EcosystemAssembly.ps1` 已同步引擎启动设置 | todo |
 
 ### 阶段 3：拆分完整引擎（兼容）
 
@@ -118,7 +118,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P5-01 | 配置器改为编译型 UserControl，去掉运行时 XAML 改写；去掉仅供测试的 .NET Framework 配置器构建（启动器仍由 csc 编译，`configurator-build.json` 格式不变） | done |
 | P5-02 | 单一主题引擎与单一本地化方案 | done |
-| P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | doing |
+| P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | done |
 
 ### 阶段 6：破坏性变更（4.0）
 
