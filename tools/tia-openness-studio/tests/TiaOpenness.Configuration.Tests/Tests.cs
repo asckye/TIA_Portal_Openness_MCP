@@ -109,6 +109,8 @@ namespace TiaMcpConfigurator
         public static int Main(string[] args)
         {
             Console.OutputEncoding = new UTF8Encoding(false);
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo("en-US");
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("en-US");
             if (args.Length > 0 && args[0] == "--echo")
             {
                 Console.WriteLine(ConfigCore.Json().Serialize(args.Skip(1).ToArray())); return 0;
@@ -251,6 +253,9 @@ namespace TiaMcpConfigurator
                 Assert(UpdateCheck.RunningEngines().All(x => x.StartsWith("TiaMcpServer.exe PID ")), "update: running engines are listed by pid (the updater refuses while any runs)");
                 var app = new App { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
                 app.InitializeComponent();
+                // App's constructor queues OnStartup, which restores the saved language and theme; run it before the
+                // values below are pinned, otherwise the first dispatcher pump replaces them (CI starts in English).
+                app.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
                 ThemeManager.Current.Theme = AppTheme.Light;
                 Loc.Current.Language = AppLanguage.English;
                 using (var form = new ConfigurationView(new System.Windows.Window {
