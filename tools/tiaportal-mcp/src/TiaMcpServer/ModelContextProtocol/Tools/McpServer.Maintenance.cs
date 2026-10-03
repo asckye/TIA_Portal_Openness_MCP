@@ -13,8 +13,7 @@ using System.Threading.Tasks;
 namespace TiaMcpServer.ModelContextProtocol
 {
     // 2.7.57: engine maintenance - the session state PreflightToolCall reads, and CheckForUpdate.
-    // This file is NOT linked into the offline suite (it needs the portal and the network); the logic it
-    // relies on (UpdateLogic, PreflightLogic) is.
+    // The offline suite links this file only to exercise root lookup; session and HTTP operations are not invoked.
     public static partial class McpServer
     {
         static partial void ReadSessionState(ref bool? connected, ref string? project)
@@ -45,14 +44,23 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>The delivery root (the folder holding manifest/delivery.json), walking up from the engine's directory; null when not found.</summary>
         internal static string? FindInstallRoot()
+            => FindInstallRoot(AppContext.BaseDirectory);
+
+        // The repository override is intentionally ignored, as in the original lookup.
+        internal static string? FindInstallRoot(string baseDirectory, string? repositoryRoot = null)
         {
             try
             {
-                var dir = new DirectoryInfo(AppContext.BaseDirectory);
+                var dir = new DirectoryInfo(baseDirectory);
+                var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+                // Only installed anchors qualify here; the development root is beyond the original four-level probe.
+                if (root != null && string.Equals(dir.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
+                    && File.Exists(Path.Combine(root, "manifest", "delivery.json"))) return root;
+                // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
                 for (int i = 0; i < 4 && dir != null; i++, dir = dir.Parent)
                     if (File.Exists(Path.Combine(dir.FullName, "manifest", "delivery.json"))) return dir.FullName;
             }
-            catch { }
+            catch /* swallow(env-probe): an unavailable installation path retains the original null result */ { }
             return null;
         }
 

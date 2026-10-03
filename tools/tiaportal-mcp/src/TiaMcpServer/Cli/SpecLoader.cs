@@ -38,7 +38,7 @@ namespace TiaMcpServer.Cli
 
         // The shipped spec templates reference bundled .scl/.s7dcl files via a "__BUNDLE__" token
         // so they work without the user hand-editing absolute paths. Resolve it to the package
-        // root (found by walking up from the exe to a dir that has both templates/ and tools/).
+        // root (a known bundle anchor, with the original upward probe as a compatibility fallback).
         // Forward slashes are used so the result stays valid inside JSON string values (no \-escaping
         // needed) and Windows file APIs accept them. If the root can't be found, the token is left
         // as-is and the user must substitute it manually.
@@ -53,8 +53,16 @@ namespace TiaMcpServer.Cli
         }
 
         private static string? FindBundleRoot()
+            => FindBundleRoot(AppContext.BaseDirectory);
+
+        // The repository override is intentionally ignored, as in the original lookup.
+        internal static string? FindBundleRoot(string baseDirectory, string? repositoryRoot = null)
         {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
+            var root = TiaOpenness.Shared.BundleLayout.FindRoot(baseDirectory);
+            if (root != null && Directory.Exists(Path.Combine(root, "templates")) &&
+                Directory.Exists(Path.Combine(root, "tools"))) return root.Replace('\\', '/');
+            // Keep the original probe for incomplete bundles and unrecognized layouts (D-G7-3).
+            var dir = new DirectoryInfo(baseDirectory);
             for (int i = 0; i < 12 && dir != null; i++, dir = dir.Parent)
                 if (Directory.Exists(Path.Combine(dir.FullName, "templates")) &&
                     Directory.Exists(Path.Combine(dir.FullName, "tools")))

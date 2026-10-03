@@ -33,15 +33,38 @@ namespace TiaMcpServer.Siemens
         /// plugin runtime (runtime\v20\ / runtime\v21\). Returns null when not found.
         /// </summary>
         public static string? FindSiblingExe(int version)
+            => FindSiblingExe(version, () => Process.GetCurrentProcess().MainModule.FileName);
+
+        // The repository override is intentionally ignored, as in the original lookup.
+        internal static string? FindSiblingExe(int version, Func<string> ownExePath, string? repositoryRoot = null)
         {
             var target = TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(version);
             try
             {
-                string own = Process.GetCurrentProcess().MainModule.FileName;
+                string own = ownExePath();
                 string exeName = Path.GetFileName(own);
                 string dir = Path.GetDirectoryName(own) ?? "";
                 var candidates = new List<string>();
 
+                var root = TiaOpenness.Shared.BundleLayout.FindRoot(dir);
+                if (root != null)
+                {
+                    var output = new DirectoryInfo(dir);
+                    if (string.Equals(output.Parent?.FullName, Path.Combine(root, "runtime"), StringComparison.OrdinalIgnoreCase)
+                        && (string.Equals(output.Name, "v20", StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(output.Name, "v21", StringComparison.OrdinalIgnoreCase)))
+                        candidates.Add(Path.Combine(output.Parent!.FullName, target.RuntimeDirectory, exeName));
+                    else if (target.IsFullEngine && string.Equals(output.Parent?.Name, "Release", StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(output.Parent?.Parent?.Parent?.FullName,
+                            Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer"), StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Preserve the original prefix spelling, separators and literal Release/net48 suffix.
+                        string source = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(dir)))!;
+                        candidates.Add(Path.Combine(source, target.EngineOutputDirectory, "Release", "net48", exeName));
+                    }
+                }
+
+                // Keep the original layout probes for incomplete bundles and unrecognized outputs (D-G7-3).
                 var m = Regex.Match(dir, @"^(.*)[\\/]bin(-v20)?[\\/]Release[\\/]net48$", RegexOptions.IgnoreCase);
                 if (m.Success && target.IsFullEngine)
                 {
@@ -64,7 +87,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(env-probe): lookup failure retains the original null result so callers fail closed */
             {
                 // Lookup failure is returned to the caller, which must fail closed.
             }

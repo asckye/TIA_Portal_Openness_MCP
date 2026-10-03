@@ -23,6 +23,8 @@
     <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/ToolCatalog.cs" Link="ToolCatalog.cs" />
     <Compile Include="..\..\src\TiaMcp.Adapters\Native\Plc\PlcFoundationPolicy.cs" Link="PlcFoundationPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\EngineRouter.cs" Link="EngineRouter.cs" />
+    <Compile Include="../../src/TiaMcpServer/Cli/SpecLoader.cs" Link="SpecLoader.cs" />
+    <Compile Include="../../src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs" Link="McpServer.Maintenance.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Runtime\EnvironmentDoctor.cs" Link="EnvironmentDoctor.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\ToolVersionPolicy.cs" Link="ToolVersionPolicy.cs" />
     <Compile Include="..\..\src\TiaMcpServer\Siemens\OpennessReleaseContract.cs" Link="OpennessReleaseContract.cs" />
