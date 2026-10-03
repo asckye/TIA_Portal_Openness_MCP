@@ -154,6 +154,22 @@ PURE_EXAMPLES = (
     'ComposePlcAliasAlarmLad', 'LintPlcSclSource',
 )
 
+# Reviewed passive resource calls. These literal inputs never start a worker,
+# execute guide content, or contact a network service. Keep the bin layout for
+# CheckForUpdate: its four-parent delivery probe must return null (asserted below).
+PASSIVE_RESOURCE_CALLS = (
+    ('ReadOpennessGuidance', {},
+     'Lists bundled document IDs and line counts; no absolute paths in output.'),
+    ('ReadOpennessGuidance', {'query': 'hardware'},
+     'Searches bundled Markdown as data; returns only IDs and line counts.'),
+    ('ReadOpennessGuidance', {'document': 'blocks/SKILL.md', 'limit': 20},
+     'Reads a fixed page of a bundled document; never executes its instructions.'),
+    ('ReadV21EcosystemCatalog', {},
+     'Reads the dated local JSON survey; no network lookup or native calls.'),
+    ('CheckForUpdate', {'repository': 'x'},
+     'Invalid owner/name returns before HTTP; bin layout has no installRoot.'),
+)
+
 # Every current [L1][Domain] group from ToolTaxonomy's description prefixes.
 # All native-facing representatives stop at a null project before SDK access.
 # Portal/Exports have no connection prerequisite: disconnected Disconnect and
@@ -446,6 +462,18 @@ def capture_release(args, release, exe, public_api):
             decoded('FindTools', {'query': 'no-such-snapshot-tool', 'limit': 3})
             decoded('PreflightToolCall', {'name': 'GetDevices', 'argumentsJson': '{}'})
             decoded('PreflightToolCall', {'name': 'GetBlocks', 'argumentsJson': '{}'})
+
+            for name, arguments, reason in PASSIVE_RESOURCE_CALLS:
+                result = decoded(name, arguments)
+                meta = result['meta']
+                if name == 'CheckForUpdate':
+                    resources.require(meta['installRoot'] is None and meta['updaterScript'] is None
+                                      and meta['success'] is False and 'releaseApiUrl' not in meta
+                                      and result['message'].startswith("repository must be 'owner/name'"),
+                                      'Expected bin-layout update refusal before HTTP: ' + reason)
+                else:
+                    resources.require(meta['success'] is True and meta['total'] > 0,
+                                      'Expected successful offline resource read: ' + reason)
 
             # The existing audit performs schema/operation checks and executes its
             # literal in-memory allowlist, using the same public examples as users.
