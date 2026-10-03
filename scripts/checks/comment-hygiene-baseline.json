@@ -328,12 +328,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "bc833ff28a933f43357869f0a3e6c482e28b93f83eb1c4830b89bba4deb7c261",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.HmiOperation.cs",
-      "line": 12
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "c81c2b251824e5567aa17ee65dc1c6a9c86b9cb05aea07ccdabef859266b5558",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.HmiExchange.cs",
       "line": 62

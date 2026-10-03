@@ -9,7 +9,7 @@ namespace TiaMcpServer.Siemens
     public partial class Portal
     {
         private JsonObject? _hmiReadFault;
-        // 2.7.40: OS process behind the bound TiaPortal (set by RememberBoundProcess in Portal.cs); pure .NET so the offline suite compiles it.
+        // OS process behind the bound TiaPortal, set by RememberBoundProcess in Portal.cs.
         private int? _boundProcessId;
         private long _processStartTicks;
         public JsonObject GetPortalProcessHealth()
