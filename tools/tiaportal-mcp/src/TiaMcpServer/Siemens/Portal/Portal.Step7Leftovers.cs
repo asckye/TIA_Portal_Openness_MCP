@@ -167,26 +167,6 @@ namespace TiaMcpServer.Siemens
                 return "System block / type groups read; no modification.";
             });
 
-        // ---- tag table constants ----------------------------------------------------------------------------------------------------------
-        private static JsonObject ConstantRow(PlcConstant constant, string kind) => new JsonObject { ["name"] = constant.Name, ["dataTypeName"] = constant.DataTypeName, ["value"] = constant.Value, ["kind"] = kind, ["constantClass"] = constant.GetType().Name };
-        public ResponseMessage ReadPlcTagTableConstants(string softwarePath, string tablePath, string kind = "all", string unitName = "", string unitKind = "unit", int offset = 0, int limit = 200)
-            => RunHmiStepTool("ReadPlcTagTableConstants", meta => {
-                Step7LeftoversLogic.ValidateConstantRequest(tablePath, kind, unitName, unitKind, offset, limit);
-                var plc = ExactPlcForEngineering(softwarePath, false);
-                var unit = OptionalUnit(plc, unitName, unitKind);
-                PlcTagTableSystemGroup root = unit == null ? plc.TagTableGroup : unit.TagTableGroup;
-                var table = (PlcTagTable)ExactObjectUnder(root, tablePath, "TagTables", "PLC tag table");
-                PlcUserConstantComposition userConstants = table.UserConstants; PlcSystemConstantComposition systemConstants = table.SystemConstants;
-                var rows = new List<JsonNode>();
-                if (kind != "system") rows.AddRange(EngineeringGroupOperations.Items(userConstants).Cast<PlcUserConstant>().Select(c => (JsonNode)ConstantRow(c, "user")));
-                if (kind != "user") rows.AddRange(EngineeringGroupOperations.Items(systemConstants).Cast<PlcSystemConstant>().Select(c => (JsonNode)ConstantRow(c, "system")));
-                meta["table"] = new JsonObject { ["name"] = table.Name, ["unit"] = unit?.Name, ["isDefault"] = table.IsDefault, ["userConstantCount"] = userConstants.Count, ["systemConstantCount"] = systemConstants.Count };
-                Page(rows.ToArray(), offset, limit, meta);
-                meta["apiCallSuccess"] = true;
-                meta["scope"] = "PlcConstant Name / DataTypeName / Value of the table's UserConstants and SystemConstants; user constants are edited with ManagePlcTag kind=constant. No modification.";
-                return "Tag table constants read; no modification.";
-            });
-
         // ---- alarm text lists XLSX ----------------------------------------------------------------------------------------------------------
         public ResponseMessage ExchangePlcAlarmTextListsXlsx(string softwarePath, string action, string filePath, string unitName = "", string unitKind = "unit",
             string textListNamesJson = "[]", string culturesJson = "[]", string importOption = "None", bool confirmImport = false, bool dryRun = true)
@@ -226,76 +206,6 @@ namespace TiaMcpServer.Siemens
                 meta["apiCallSuccess"] = true; meta["nativeState"] = imported?.State.ToString(); meta["logFile"] = imported?.LogFilePath?.FullName;
                 if (imported?.State == TextListXlsxResultState.Error) throw new PortalException(PortalErrorCode.ImportFailed, "ImportFromXlsx reported Error (see logFile " + imported.LogFilePath?.FullName + ").");
                 return "Alarm text lists imported from XLSX (native state attached); project not saved / compiled.";
-            });
-
-        // ---- watch / force table entries ------------------------------------------------------------------------------------------------------
-        private static JsonObject TableEntryRow(PlcTableCommentEntry entry, int index)
-        {
-            var row = new JsonObject { ["index"] = index, ["entryClass"] = entry.GetType().Name };
-            switch (entry)
-            {
-                case PlcWatchTableEntry w:
-                    row["kind"] = "watch"; row["name"] = w.Name; row["address"] = w.Address; row["displayFormat"] = w.DisplayFormat.ToString(); row["monitorTrigger"] = w.MonitorTrigger.ToString();
-                    row["modifyTrigger"] = w.ModifyTrigger.ToString(); row["modifyValue"] = w.ModifyValue; row["modifyIntention"] = w.ModifyIntention; break;
-                case PlcForceTableEntry f:
-                    row["kind"] = "force"; row["name"] = f.Name; row["address"] = f.Address; row["displayFormat"] = f.DisplayFormat.ToString(); row["monitorTrigger"] = f.MonitorTrigger.ToString();
-                    row["forceValue"] = f.ForceValue; row["forceIntention"] = f.ForceIntention; break;
-                default: row["kind"] = "comment"; break;
-            }
-            return row;
-        }
-        public ResponseMessage ManagePlcTableEntries(string softwarePath, string tableKind, string tablePath, string action = "read", int entryIndex = -1, bool confirmDelete = false, bool dryRun = true, int offset = 0, int limit = 200)
-            => RunHmiStepTool("ManagePlcTableEntries", meta => {
-                bool writing = Step7LeftoversLogic.ValidateTableEntryRequest(tableKind, tablePath, action, entryIndex, confirmDelete, dryRun, offset, limit);
-                using var access = writing ? AcquireHmiEditAccess() : null;
-                var plc = ExactPlcForEngineering(softwarePath, writing);
-                PlcWatchAndForceTableGroup root = plc.WatchAndForceTableGroup;
-                PlcTableCommentEntryComposition entries; string tableName; bool consistent; PlcWatchTable? watchTable = null;
-                if (tableKind == "watch") { var table = (PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table"); watchTable = table; entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
-                else { var table = (PlcForceTable)ExactObjectUnder(root, tablePath, "ForceTables", "force table"); entries = table.Entries; tableName = table.Name; consistent = table.IsConsistent; }
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["table"] = new JsonObject { ["name"] = tableName, ["kind"] = tableKind, ["isConsistent"] = consistent, ["entryCount"] = entries.Count };
-                var all = EngineeringGroupOperations.Items(entries).Cast<PlcTableCommentEntry>().ToArray();
-                if (action == "deleteTable")
-                {
-                    // Capture all rows before deleting the watch table and verify it is absent afterwards.
-                    meta["before"] = new JsonArray(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray());
-                    if (!writing) return "Watch table deletion preview (" + all.Length + " rows would go with it); no changes.";
-                    meta["mayHaveChanged"] = true;
-                    watchTable!.Delete(); meta["apiCallSuccess"] = true;
-                    bool absent;
-                    try { ExactObjectUnder(plc.WatchAndForceTableGroup, tablePath, "WatchTables", "watch table"); absent = false; }
-                    catch (PortalException) /* swallow(native-fallback): Failed exact lookup is the existing post-delete absence check. */ { absent = true; }
-                    meta["verifiedAbsent"] = absent;
-                    if (!absent) throw new InvalidOperationException("Watch table still resolvable after Delete().");
-                    return "Watch table '" + tableName + "' deleted and verified absent; project not saved.";
-                }
-                if (action == "read")
-                {
-                    Page(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray(), offset, limit, meta);
-                    meta["apiCallSuccess"] = true;
-                    meta["scope"] = "PlcWatchTableEntry / PlcForceTableEntry scalars and comment rows (PlcTableCommentEntry) in native order; values are configuration, not online data (ReadPlcWatchTableCurrentValuesReadOnly).";
-                    return "Table entries read; no modification.";
-                }
-                if (action == "createComment")
-                {
-                    if (!writing) return "Comment entry creation preview; no changes.";
-                    meta["mayHaveChanged"] = true;
-                    PlcTableCommentEntry created = entries.Create(); meta["apiCallSuccess"] = true;
-                    // TIA V21 native evidence (2026-09-19): the Create proxy can retain the old Count; count on a fresh navigation.
-                    // See docs/reference/real-machine-ledger.md for the native evidence.
-                    int after = EngineeringGroupOperations.Items(((PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = after;
-                    if (after != all.Length + 1) throw new InvalidOperationException("Entry count did not increase by one after Create (fresh readback).");
-                    meta["after"] = TableEntryRow(created, after - 1);
-                    return "Comment entry appended to the watch table and counted back; project not saved.";
-                }
-                if (entryIndex >= all.Length) throw new PortalException(PortalErrorCode.NotFound, "entryIndex " + entryIndex + " is outside 0.." + (all.Length - 1) + ".");
-                meta["before"] = TableEntryRow(all[entryIndex], entryIndex);
-                if (!writing) return "Entry deletion preview; no changes.";
-                meta["mayHaveChanged"] = true;
-                all[entryIndex].Delete(); meta["apiCallSuccess"] = true;
-                int remaining = EngineeringGroupOperations.Items(((PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = remaining;
-                if (remaining != all.Length - 1) throw new InvalidOperationException("Entry count did not decrease by one after Delete.");
-                return "Watch table entry deleted and counted back; project not saved.";
             });
 
         // ---- ProDiag CSV export -------------------------------------------------------------------------------------------------------------------

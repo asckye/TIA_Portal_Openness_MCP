@@ -80,6 +80,24 @@ namespace TiaMcpServer.Siemens
         JsonObject UmacRow(object item);
         JsonObject LibraryRef(object library);
         IEnumerable<Device> EnumerateGroupDevices(DeviceUserGroupComposition? groups);
+        Microsoft.Extensions.Logging.ILogger? Logger { get; }
+        int PortalMajorVersion { get; }
+        string AvailablePlcPathsSuffix();
+        System.Collections.Generic.List<string>? GetPlcTagTables(string softwarePath, out Portal.TagTableWalkDiagnostics diagnostics);
+        bool ExportPlcTagTable(string softwarePath, string tagTableName, string exportPath, out string? error);
+        void ImportPlcTagTable(string softwarePath, string folderPath, string importPath);
+        object? TryInvokeMethodByName(object target, string methodName, params object?[] args);
+        bool TryExportEngineeringObject(object engineeringObject, string exportPath, out string? error);
+        System.Collections.Generic.List<string>? TryListNamesFromCollection(object root, string[] propHints, string kind);
+        object? TryFindByNameInCollection(object root, string[] propHints, string name);
+        string MakeSafeFileName(string name);
+        string? TryGetName(object? value);
+        System.Collections.Generic.IEnumerable<ObjectMember> DescribeMembers(object value, int maxMembers);
+        Type? FindTypeBySuffix(string typeSuffix);
+        object? TryGetService(object target, Type serviceType);
+
+        System.Collections.Generic.IEqualityComparer<object> ReferenceEqualityComparer { get; }
+        string FormatExceptionDetail(Exception exception);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

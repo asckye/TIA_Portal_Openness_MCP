@@ -81,6 +81,24 @@ namespace TiaMcpServer.Siemens
         JsonObject IEngineeringSession.UmacRow(object item) => UmacRow(item);
         JsonObject IEngineeringSession.LibraryRef(object library) => LibraryRef(library);
         IEnumerable<Device> IEngineeringSession.EnumerateGroupDevices(DeviceUserGroupComposition? groups) => EnumerateGroupDevices(groups);
+        Microsoft.Extensions.Logging.ILogger? IEngineeringSession.Logger => _logger;
+        int IEngineeringSession.PortalMajorVersion => PortalMajorVersion;
+        string IEngineeringSession.AvailablePlcPathsSuffix() => AvailablePlcPathsSuffix();
+        System.Collections.Generic.List<string>? IEngineeringSession.GetPlcTagTables(string softwarePath, out TagTableWalkDiagnostics diagnostics) => GetPlcTagTables(softwarePath, out diagnostics);
+        bool IEngineeringSession.ExportPlcTagTable(string softwarePath, string tagTableName, string exportPath, out string? error) => ExportPlcTagTable(softwarePath, tagTableName, exportPath, out error);
+        void IEngineeringSession.ImportPlcTagTable(string softwarePath, string folderPath, string importPath) => ImportPlcTagTable(softwarePath, folderPath, importPath);
+        object? IEngineeringSession.TryInvokeMethodByName(object target, string methodName, params object?[] args) => TryInvokeMethodByName(target, methodName, args);
+        bool IEngineeringSession.TryExportEngineeringObject(object engineeringObject, string exportPath, out string? error) => TryExportEngineeringObject(engineeringObject, exportPath, out error);
+        System.Collections.Generic.List<string>? IEngineeringSession.TryListNamesFromCollection(object root, string[] propHints, string kind) => TryListNamesFromCollection(root, propHints, kind);
+        object? IEngineeringSession.TryFindByNameInCollection(object root, string[] propHints, string name) => TryFindByNameInCollection(root, propHints, name);
+        string IEngineeringSession.MakeSafeFileName(string name) => MakeSafeFileName(name);
+        string? IEngineeringSession.TryGetName(object? value) => TryGetName(value);
+        System.Collections.Generic.IEnumerable<ObjectMember> IEngineeringSession.DescribeMembers(object value, int maxMembers) => DescribeMembers(value, maxMembers);
+        Type? IEngineeringSession.FindTypeBySuffix(string typeSuffix) => FindTypeBySuffix(typeSuffix);
+        object? IEngineeringSession.TryGetService(object target, Type serviceType) => TryGetService(target, serviceType);
+
+        System.Collections.Generic.IEqualityComparer<object> IEngineeringSession.ReferenceEqualityComparer => ReferenceEqualityComparer.Instance;
+        string IEngineeringSession.FormatExceptionDetail(Exception exception) => FormatExceptionDetail(exception);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

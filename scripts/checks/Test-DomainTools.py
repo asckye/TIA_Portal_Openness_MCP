@@ -1,7 +1,7 @@
 """Compare disconnected domain responses over full/lite, direct/isolated STDIO.
 
 Use pre-move/current HttpTests and EXEs. Compare UTF-8 response text, masking the
-envelope timestamp and D1 exception stack frames. Version-hidden tools must remain hidden; their direct
+declared envelope/watch-probe timestamps and D1 exception stack frames. Version-hidden tools must remain hidden; their direct
 registration refusal and lite bridge refusal are compared as well. Never connects
 to TIA. Extend CASES when migrating another domain; source coverage is mandatory.
 """
@@ -24,7 +24,10 @@ def load(name, filename):
 resources = load('resources', 'Test-ResourceDiscovery.py')
 snapshots = load('snapshots', 'Snapshot-ToolResponses.py')
 snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
-    {'tool': '*', 'path': ['Meta', 'timestamp'], 'reason': 'CallTool POCO envelope wall clock'}]
+    {'tool': '*', 'path': ['Meta', 'timestamp'], 'reason': 'CallTool POCO envelope wall clock'},
+    *({'tool': name, 'path': [key, 'timestamp'], 'reason': 'Watch-table read/probe DateTime.Now.ToString("O")'}
+      for name in ('ReadPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
+      for key in ('data', 'Data'))]
 
 
 ERROR_PATHS = {('"meta"', '"error"'), ('"Meta"', '"error"')}
@@ -208,8 +211,55 @@ CASES = {
         + [('CompareLibraries', 'read', {'leftLibraryName': 'Library1', 'rightLibraryName': 'Library2'}),
            ('ReadProjectSettings', 'read', {})]
         + [('CompareProjects', kind, {'kind': kind, 'softwarePath': PLC})
-           for kind in ('software', 'softwareToLibrary', 'hardware')]
+           for kind in ('software', 'softwareToLibrary', 'hardware')],
+    'PlcTables': [(name, 'disconnected', {'softwarePath': PLC}) for name in (
+            'GetPlcTagTables', 'GetPlcWatchTables', 'GetPlcForceTables', 'ProbePlcMonitorOnlineCapabilities')]
+        + [('ExportPlcTagTable', 'disconnected', dict(softwarePath=PLC, tagTableName='Tags', exportPath='C:/domain-tags.xml')),
+           ('ImportPlcTagTable', 'disconnected', dict(softwarePath=PLC, folderPath='', importPath='C:/domain-tags.xml')),
+           ('ImportPlcTagTablesFromDirectory', 'disconnected', dict(softwarePath=PLC, folderPath='', dir='C:/domain-tables')),
+           ('SetWatchTableModifyValue', 'disconnected', dict(softwarePath=PLC, tableName='Watch', address='%M0.0', modifyValue='TRUE')),
+           ('ExportPlcWatchTable', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch', exportPath='C:/domain-watch.xml')),
+           ('ExportPlcWatchTablesToDirectory', 'disconnected', dict(softwarePath=PLC, dir='C:/domain-tables')),
+           ('ReadPlcWatchTableCurrentValuesReadOnly', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch')),
+           ('MonitorWatchTableLiveS7', 'disconnected', dict(softwarePath=PLC, watchTableName='Watch', ip='192.0.2.1')),
+           ('ImportPlcWatchTableOffline', 'disconnected', dict(softwarePath=PLC, filePath='C:/domain-watch.xml'))]
+        + [('ReadPlcTagTableConstants', kind, dict(softwarePath=PLC, tablePath='Tags', kind=kind))
+           for kind in ('all', 'user', 'system')]
+        + actions('ManagePlcTableEntries', 'read createComment deleteEntry deleteTable',
+                  softwarePath=PLC, tableKind='watch', tablePath='Watch', entryIndex=0, confirmDelete=True)
+        + [('ManagePlcTableEntries', 'force-read', dict(softwarePath=PLC, tableKind='force', tablePath='Force'))]
+        + [('PlanOnlineReadOnlyMonitoring', mode, dict(softwarePath=PLC, tagPathsJson='["DB_HMI.MotorRun"]', mode=mode))
+           for mode in ('current-values', 'watch-table-export-plan')]
+        + [('PlanOnlineReadOnlyDataProvider', provider, dict(provider=provider, endpoint='opc.tcp://192.0.2.1:4840',
+                                                          tagPathsJson='["DB_HMI.MotorRun"]'))
+           for provider in ('opcua', 's7-readonly')]
 }
+
+
+def table_reply(reply, profile, name):
+    """Preserve each table tool's existing throw/POCO/plan family, without connecting."""
+    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
+    result = reply['result']
+    raw = result['content'][0]['text']
+    throwing = name in {'GetPlcTagTables', 'GetPlcWatchTables', 'GetPlcForceTables',
+                        'ExportPlcTagTable', 'ImportPlcTagTable', 'ExportPlcWatchTable'}
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
+                          f'{name}: unexpected bridge status: {raw}')
+        raw = bridge['message']
+    else:
+        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
+    if name.startswith('PlanOnlineReadOnly'):
+        value = json.loads(raw)
+        resources.require(value.get('ok', value.get('Ok')) is True and
+                          value.get('data', value.get('Data', {})).get('readOnly') is True,
+                          f'{name}: offline plan failed: {raw}')
+    else:
+        resources.require(any(marker in raw for marker in ('Project is null', 'No project open',
+            'No project is open', 'PLC software not found', 'Failed exporting PLC', 'PlcSoftware not found')),
+            f'{name}: did not reach the disconnected guard: {raw}')
+    return raw
 
 
 def check_coverage(domains):
@@ -244,6 +294,11 @@ def capture(args, exe, harness, profile, isolated):
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
                 reply = rpc('tools/call', params=params)
+                if domain == 'PlcTables':
+                    raw = table_reply(reply, profile, name)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
                 if (hidden or version_action) and profile == 'full':
                     resources.require('error' in reply or reply.get('result', {}).get('isError'),
                                       f'Unavailable tool/action unexpectedly ran: {reply}')
@@ -344,6 +399,24 @@ class SelfTests(unittest.TestCase):
     def test_all_declared_tools_covered(self):
         check_coverage(CASES)
 
+    def test_table_reply_preserves_disconnected_error_family(self):
+        reply = {'result': {'isError': True, 'content': [{'text': 'PLC software not found'}]}}
+        self.assertEqual(table_reply(reply, 'full', 'GetPlcWatchTables'), 'PLC software not found')
+        with self.assertRaises(AssertionError):
+            table_reply(reply, 'full', 'MonitorWatchTableLiveS7')
+
+    def test_table_reply_rejects_unrelated_failure(self):
+        reply = {'result': {'content': [{'text': '{"message":"Unexpected constructor failure"}'}]}}
+        with self.assertRaises(AssertionError):
+            table_reply(reply, 'full', 'MonitorWatchTableLiveS7')
+
+    def test_watch_timestamp_mask_is_narrow(self):
+        raw = '{"data":{"timestamp":"2026-10-03T12:34:56.123+08:00","other":"2026-10-03T12:34:56.123+08:00"}}'
+        masked = snapshots.mask_raw_text(raw, 'ProbePlcMonitorOnlineCapabilities')
+        self.assertIn('"timestamp":"<string:timestamp>"', masked)
+        self.assertIn('"other":"2026-10-03T12:34:56.123+08:00"', masked)
+        self.assertEqual(snapshots.mask_raw_text(raw, 'GetPlcWatchTables'), raw)
+
     def test_unique_cases(self):
         for domain, cases in CASES.items():
             self.assertTrue(cases, domain)
@@ -395,7 +468,7 @@ def main():
                             print(f'D1 V{args.major} {profile} isolated={isolated} {name}: {path} '
                                   f'firstLineEqual=true firstLine={json.dumps(first_line, ensure_ascii=False)}', flush=True)
     print(f'COMPLETE: {passed} domain dispatch/byte checks passed; {failed} failed; '
-          'only meta/Meta.timestamp and D1 meta/Meta.error stack frames masked; first lines/non-frame bytes preserved; no TIA connection')
+          'only declared timestamps and D1 meta/Meta.error stack frames masked; first lines/non-frame bytes preserved; no TIA connection')
     return int(bool(failed))
 
 

@@ -28,7 +28,8 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.SafetyValidationService",
         "TiaMcpServer.Siemens.Services.SecurityDeepService",
         "TiaMcpServer.Siemens.Services.CertificateManagementService",
-        "TiaMcpServer.Siemens.Services.ProjectSecurityService"
+        "TiaMcpServer.Siemens.Services.ProjectSecurityService",
+        "TiaMcpServer.Siemens.Services.PlcTablesService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

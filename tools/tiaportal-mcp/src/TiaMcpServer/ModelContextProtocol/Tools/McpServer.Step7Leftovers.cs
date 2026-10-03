@@ -32,16 +32,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
             int maxDepth=4)
             => Portal.ReadPlcSystemGroups(softwarePath,unitName,unitKind,includeBlocks,maxDepth);
-        [McpServerTool(Name="ReadPlcTagTableConstants"), Description("[L2][PLC-Software][READ] Constants of one exact PLC tag table (tablePath under TagTableGroup, or a unit's TagTableGroup via unitName + unitKind): PlcTagTable.UserConstants and SystemConstants as typed PlcConstant rows (Name, DataTypeName, Value, kind user/system); kind filters. Paginated. User constants are edited with ManagePlcTag kind=constant. No modification.")]
-        public static ResponseMessage ReadPlcTagTableConstants(
-            string softwarePath,
-            string tablePath,
-            [Description("kind: all | user | system.")] string kind="all",
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            int offset=0,
-            int limit=200)
-            => Portal.ReadPlcTagTableConstants(softwarePath,tablePath,kind,unitName,unitKind,offset,limit);
+
         [McpServerTool(Name="ExchangePlcAlarmTextListsXlsx"), Description("[L2][PLC-Alarms][WRITE] Native XLSX exchange of PLC alarm text lists through PlcAlarmTextListProvider of the exact PLC or of a unit (unitName + unitKind): export writes a NEW absolute .xlsx (every user text list in every project language, or the filtered overload with textListNamesJson + culturesJson, both required together; TIA refuses system text lists and inactive languages natively) and returns the TextListXlsxResult state, log file and file hash; import (importOption None refuses existing lists, Override replaces their entries) needs confirmImport=true besides dryRun=false and an Offline PLC. No save/compile/download.")]
         public static ResponseMessage ExchangePlcAlarmTextListsXlsx(
             string softwarePath,
@@ -55,18 +46,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
             bool dryRun=true)
             => Portal.ExchangePlcAlarmTextListsXlsx(softwarePath,action,filePath,unitName,unitKind,textListNamesJson,culturesJson,importOption,confirmImport,dryRun);
-        [McpServerTool(Name="ManagePlcTableEntries"), Description("[L2][PLC-Software][WRITE] Entries of one exact watch or force table (tableKind + tablePath under WatchAndForceTableGroup) as typed rows in native order: PlcWatchTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ModifyTrigger, ModifyValue, ModifyIntention), PlcForceTableEntry (Name, Address, DisplayFormat, MonitorTrigger, ForceValue, ForceIntention) and comment rows (PlcTableCommentEntry). Watch tables also accept createComment (PlcTableCommentEntryComposition.Create), deleteEntry (0-based entryIndex from a read, confirmDelete=true) and deleteTable (PlcWatchTable.Delete, confirmDelete=true, verified absent), each counted back; tag rows are added with SetWatchTableModifyValue (SimaticML round trip - the typed API only creates comment rows); force tables are read-only here on purpose. Configuration values only, never online data. Default dryRun=true; no save/compile/download.")]
-        public static ResponseMessage ManagePlcTableEntries(
-            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
-            [Description("tableKind: watch | force.")] string tableKind,
-            [Description("tablePath: 'Group/Table' path under the watch-and-force-table group, e.g. 'MCP_W/MCP_WT' (bare name for a root table).")] string tablePath,
-            [Description("action: read | createComment | deleteEntry | deleteTable (force tables: read only).")] string action="read",
-            [Description("entryIndex: 0-based row index from a read, for deleteEntry.")] int entryIndex=-1,
-            [Description("confirmDelete: must be true together with dryRun=false for deleteEntry / deleteTable.")] bool confirmDelete=false,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true,
-            [Description("offset: first row to return (paging).")] int offset=0,
-            [Description("limit: maximum rows to return.")] int limit=200)
-            => Portal.ManagePlcTableEntries(softwarePath,tableKind,tablePath,action,entryIndex,confirmDelete,dryRun,offset,limit);
+
         [McpServerTool(Name="ExportPlcProDiagInfo"), Description("[L2][PLC-Software][READ] Native CodeBlock.ExportProDIAGInfo: writes the alarm messages of one exact ProDiag FB (blockPath under BlockGroup or a unit's BlockGroup) as CSV files into an existing directoryPath on the TIA Portal machine and hashes the new files. Refused before the call unless the block is a ProDiag FB and consistent (compile first). Default dryRun=true; no project change.")]
         public static ResponseMessage ExportPlcProDiagInfo(
             string softwarePath,

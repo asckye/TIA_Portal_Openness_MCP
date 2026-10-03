@@ -392,25 +392,6 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "MonitorWatchTableLiveS7"), Description("[L2][Online-Monitoring] Read-only: live-monitor an existing TIA watch table. Reads the table's entry addresses (Openness, read-only) and live-reads them over the S7 protocol (port 102). Returns name/address/value rows. Never edits the watch table, writes, or forces. Absolute-address entries (e.g. %DB1.DBW0, %MW4) are read; symbolic/optimized entries are listed as unresolved (use OPC UA for those). Identity guard via expectModuleContains. Use GetPlcWatchTables to list table names.")]
-        public static ResponseJsonReport MonitorWatchTableLiveS7(
-            [Description("softwarePath: PLC software path, e.g. '安全PLC'.")] string softwarePath,
-            [Description("watchTableName: existing watch table name from GetPlcWatchTables.")] string watchTableName,
-            [Description("ip: CPU IP address, e.g. '192.168.0.32'.")] string ip,
-            [Description("rack: hardware rack. S7-1200/1500 = 0.")] int rack = 0,
-            [Description("slot: hardware slot. S7-1200/1500 = 1.")] int slot = 1,
-            [Description("expectModuleContains: optional identity guard (e.g. '1211C'); aborts on a positive module-type mismatch.")] string expectModuleContains = "")
-        {
-            try
-            {
-                var result = Portal.MonitorWatchTableLiveS7(softwarePath, watchTableName, ip, rack, slot, expectModuleContains);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
-                return result;
-            }
-            catch (Exception ex) when (ex is not McpException)
-            {
-                throw new McpException($"MonitorWatchTableLiveS7 failed: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
-            }
-        }
+
     }
 }
