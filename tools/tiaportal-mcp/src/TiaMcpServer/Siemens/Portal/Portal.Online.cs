@@ -11,15 +11,13 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: online operations (GoOnline / GoOffline / GetOnlineState / Compare).
-    // Extracted from Portal.cs to keep that monolith from growing further.
+    // Historical native observations below lack a recorded PLCSIM version/date;
+    // see docs/reference/real-machine-ledger.md for the native acceptance boundary.
     public partial class Portal
     {
         public ResponseOnlineState GetOnlineState(string softwarePath)
         {
-            // 这两条原来都返回 State="Offline"。那是**给一个没测过的问题一个确定的答案**：
-            // 调用方读 isOnline=false 会当成「已确认这台 PLC 不在线」，而真相是
-            // 「没连项目」或「路径写错，压根没这台 PLC」。比不回答更糟。
+            // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
@@ -40,8 +38,7 @@ namespace TiaMcpServer.Siemens
                 var provider = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
                 if (provider == null)
                 {
-                    // 服务拿不到 = 测不了，不是"离线"。用 Unknown 如实表达（本文件下方
-                    // 的异常分支早就是这么写的，这里跟它对齐）。
+                    // 缺少在线服务时状态未知，不能报告为已确认离线。
                     return new ResponseOnlineState
                     {
                         State = "Unknown",
@@ -78,21 +75,19 @@ namespace TiaMcpServer.Siemens
 
         public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface) => GoOnline(softwarePath, ipAddress, password, userName, userType, rhTarget, pgPcInterface, true);
 
-        // 2.7.33: userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
+        // userName/userType answer OnlineAuthenticationConfiguration (UMAC-protected PLCs); rhTarget primary|backup
         // goes online through RHOnlineProvider.GoOnlineToPrimary/Backup on R/H systems.
-        // 2.7.49 (real machine, PLCSIM Advanced): OnlineProvider.GoOnline() uses whatever route TIA last applied - on a fresh
+        // Historical native observation: OnlineProvider.GoOnline() uses whatever route TIA last applied - on a fresh
         // project nothing is applied and TIA answers "The connection cannot be established". The route is now selected like a
         // download (pgPcInterface + ipAddress -> ConnectionConfiguration.ApplyConfiguration) and an explicit address goes through
         // the official GoOnline(ConfigurationAddress) overload (V21; V20 applies the address and calls GoOnline()).
-        // 2.7.52: trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision).
+        // trustDeviceCertificate answers the TLS prompt of FW >= 2.9 CPUs (meta.tlsVerification records the decision).
         public ResponseOnlineState GoOnline(string softwarePath, string? ipAddress, string? password, string? userName, string? userType, string rhTarget, string? pgPcInterface, bool trustDeviceCertificate)
         {
             BaseLeftoversLogic.ValidateOnlineCredentials(userName ?? "", password ?? "", userType ?? "");
             rhTarget = BaseLeftoversLogic.ValidateRhTarget(rhTarget);
             var meta = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };
-            // 这两条原来都返回 State="Offline"。那是**给一个没测过的问题一个确定的答案**：
-            // 调用方读 isOnline=false 会当成「已确认这台 PLC 不在线」，而真相是
-            // 「没连项目」或「路径写错，压根没这台 PLC」。比不回答更糟。
+            // 未连接工程或路径无效时，在线状态未经测量，不能报告为 Offline。
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
@@ -134,8 +129,7 @@ namespace TiaMcpServer.Siemens
                 var provider = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware);
                 if (provider == null)
                 {
-                    // 服务拿不到 = 测不了，不是"离线"。用 Unknown 如实表达（本文件下方
-                    // 的异常分支早就是这么写的，这里跟它对齐）。
+                    // 缺少在线服务时状态未知，不能报告为已确认离线。
                     return new ResponseOnlineState
                     {
                         State = "Unknown",
@@ -186,12 +180,12 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "GoOnline failed for {SoftwarePath}", softwarePath);
-                // 2.7.54 (real machine): EngineeringTargetInvocationException carries only "Error when calling method 'GoOnline'" - the
+                // Historical native observation: EngineeringTargetInvocationException carries only "Error when calling method 'GoOnline'" - the
                 // reason ("Incompatible" against a never-downloaded PLCSIM instance) sits in the inner chain; surface it and the state TIA holds.
                 var chain = new List<string>();
                 for (var e = ex; e != null && chain.Count < 6; e = e.InnerException) if (!string.IsNullOrWhiteSpace(e.Message) && !chain.Contains(e.Message)) chain.Add(e.Message);
                 string stateNow = "";
-                try { stateNow = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* diagnostics only */ }
+                try { stateNow = ResolvePlcService<OnlineProvider>(softwarePath, plcSoftware)?.State.ToString() ?? ""; } catch (Exception) { /* swallow(probe-optional): a failed state probe must preserve the original GoOnline failure */ }
                 meta["success"] = false; meta["error"] = string.Join(" <- ", chain);
                 if (stateNow.Length > 0) meta["onlineStateAfter"] = stateNow;
                 var hint = stateNow == "Incompatible" ? " TIA reports the connection as Incompatible (device / firmware / program mismatch): download first (DownloadToPlc), then go online." : "";
@@ -199,7 +193,7 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (2.7.33; R/H online targets).
+        // Typed walk of Modes -> PcInterfaces -> TargetInterfaces -> Addresses for an exact IP (R/H online targets).
         private static ConfigurationAddress? FindConfigurationAddress(ConnectionConfiguration configuration, string ipAddress)
         {
             foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
@@ -208,7 +202,7 @@ namespace TiaMcpServer.Siemens
                     foreach (ConfigurationTargetInterface target in EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>())
                         foreach (ConfigurationAddress address in EngineeringGroupOperations.Items(target.Addresses).Cast<ConfigurationAddress>())
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) return address;
-                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);   // 2.7.49
+                    var viaSubnet = FindSubnetOrGatewayAddress(pcInterface, ipAddress, out _);
                     if (viaSubnet != null) return viaSubnet;
                 }
             return null;
@@ -216,10 +210,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage GoOffline(string softwarePath)
         {
-            // 下线失败必须看得见。原来这三条都返回一条 isError=false 的普通消息，
-            // 其中 provider 为 null 那条更是**什么都没做**却回一句「is now offline」——
-            // 调用方据此认为在线会话已经断开，实际它还挂着：后续 CompileSoftware / Export*
-            // 会被「not permitted in online mode」挡住，现场 CPU 的编程连接也一直被占。
+            // 未找到工程、PLC 或在线服务时，不能报告下线成功。
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
@@ -300,9 +291,7 @@ namespace TiaMcpServer.Siemens
 
         public ResponseCompare CompareSoftwareToOnline(string softwarePath, int maxDepth = 4, int maxEntries = 200)
         {
-            // 这两条原来返回 Entries=null / Summary=null 的普通响应，调用方读到的是
-            // 「0 处差异」→ 得出「在线离线一致，不用下载」。本工具的全部价值就是回答
-            // 「要不要下载」，把「没比成」说成「一致」是这里能犯的最贵的错。
+            // 缺少工程或 PLC 时没有比对结果，不能解释为在线离线一致。
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
@@ -352,11 +341,7 @@ namespace TiaMcpServer.Siemens
                     Truncated = truncated
                 };
             }
-            // 比对**失败**时原来返回一条 isError=false 的普通 ResponseCompare：
-            // Entries=null、Summary=null，调用方读到的又是「0 处差异」→「一致，不用下载」。
-            // 而 TargetInvocationException 那一路还硬写 IsOnline=true —— 实测拿到的正是
-            // 「The operation is not permitted in offline mode」，即根本没在线，
-            // 消息和字段自相矛盾。比不出来就是比不出来，必须抛。
+            // 比对失败必须抛出原生错误，不能返回空差异或声称在线。
             catch (TargetInvocationException tie) when (tie.InnerException != null)
             {
                 _logger?.LogError(tie.InnerException, "CompareSoftwareToOnline failed for {SoftwarePath}", softwarePath);

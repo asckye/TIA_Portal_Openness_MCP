@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - Online
@@ -303,7 +302,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try { return op(); }
             catch (Exception ex) when (IsOnlineModeError(ex))
             {
-                try { Portal.GoOfflineAll(); } catch { }
+                try { Portal.GoOfflineAll(); } catch { /* swallow(native-fallback): preserve the one retry so the original operation reports its own failure */ }
                 return op(); // retry once, now fully offline
             }
         }

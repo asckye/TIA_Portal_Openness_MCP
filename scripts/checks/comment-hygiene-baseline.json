@@ -28,21 +28,9 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "1f5c83a8b38e2cf8184a573cd926006b228f91ee94c810f96ef7da32ea190404",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 63
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "2361fd152c56e3245d61777e5709e1ff1b195d5c701d263e3cbc01068df82bc4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
       "line": 38
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "273a09d7bdcf3bedf7b40a48a43230c1770e183288f033eecc43ff02baa0c770",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 92
     },
     {
       "kind": "old-phase",
@@ -78,7 +66,7 @@
       "kind": "commented-code",
       "fingerprint": "368aa0f95f5e9e23e8a2285243bce5a085ce05241bab0221f9325875b472e8b5",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 1431
+      "line": 1429
     },
     {
       "kind": "product-version",
@@ -100,45 +88,15 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "40f3416c0d11f8e51e92cb3b4ff2baac972804c0af32a08bfeb577b41ae0c6e2",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 141
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "434fab7bcdadbb2db2695eb4210424b93752e0817e5cf1908871596a80a81ae8",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
       "line": 305
     },
     {
       "kind": "product-version",
-      "fingerprint": "44370aad433123c89cb5de15662a908c7d58ee4b9d180e1f6744d276aa24bd03",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 184
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "44370aad433123c89cb5de15662a908c7d58ee4b9d180e1f6744d276aa24bd03",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 234
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "45127d295caf7a1d30835407cb281bbf113e7d3ba21aa95b14020c245ea8002a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 332
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "4626a4e6d745dfd99cb8b2317987b5a418573874f031b935ec7d0f78f5910e40",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs",
       "line": 46
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "474332f2ffe9ecd8a1c15721c32860cd51c7325704bd86e9e48548f6b6dabc1b",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 255
     },
     {
       "kind": "tombstone",
@@ -160,27 +118,9 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "57bc25bc5bb193a8f5546a510f23dddebe22cd40e239492090dda79673842b47",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 83
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "586337fdca9df19cf72431cec06dfbb3662a8a7e39394194b70325c646e57a7e",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 761
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "5cc6a2937feb367e70a154e245b1401fde0faea8965725e54232c08e1e880155",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.PlcProtection.cs",
       "line": 164
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "6168ab8e502e0debb819170e6f1eb035625685d688bb93250eb8d81a402432bd",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 86
     },
     {
       "kind": "old-phase",
@@ -258,19 +198,13 @@
       "kind": "product-version",
       "fingerprint": "7dfa82cc94511706e24dabdfd1aa038c82f5d5544894c0aae818de1527b877b4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 2093
+      "line": 2091
     },
     {
       "kind": "old-phase",
       "fingerprint": "7e5282ca3d94abc225045bdb99620bc62ba5fb321f9cdc5f5be6bbbf1906d575",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs",
       "line": 9
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "8061003c5fb0dec447ff4880a8d3e82f7f273ca983e91f9ff35c0e9e57c8bc00",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 515
     },
     {
       "kind": "product-version",
@@ -292,21 +226,9 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "8ae38f0bb6504e33343f6304fa08c893080c5fa2e5c0a45567f34b79a273962d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 235
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "91590cf087ed5c69da4307c9364af09fa863f42c7e6e9409bf0a0a62129a44b7",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Deletion.cs",
       "line": 357
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "9926a959d802ff2a3165a9b79e26304de8cf5123f12d115d7e3717a3d7a61442",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 569
     },
     {
       "kind": "tombstone",
@@ -325,12 +247,6 @@
       "fingerprint": "9b9bd4900e10b9474daf801769a7ca7e8907fa632e496e0554870fa33d3754d4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
       "line": 231
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "9c1749befc02664e8b6e64e8f11d96fef2c145f15dc2c47b2aed0d808aab62d5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 81
     },
     {
       "kind": "product-version",
@@ -377,12 +293,6 @@
     {
       "kind": "product-version",
       "fingerprint": "a59705cb867981051d8387634ebf4288fc838faea4d969e363d342fa06040dcc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.Online.cs",
-      "line": 23
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "a59705cb867981051d8387634ebf4288fc838faea4d969e363d342fa06040dcc",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.UnifiedHmi.cs",
       "line": 23
     },
@@ -397,18 +307,6 @@
       "fingerprint": "a5c229c085a0a592aa3379ec9393ac2232927ee46648edcf289f2f85793c50fe",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs",
       "line": 105
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "a7e8fe6e89cc2fb89396dce00d9cbbda7dde5ea971e5dac7611574aa74a9f0a3",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 222
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "a8907b9ac4c1b2638fea5bb0ec75d6c58f6edfcadee4f2941e695a68c3882a06",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 117
     },
     {
       "kind": "product-version",
@@ -546,7 +444,7 @@
       "kind": "commented-code",
       "fingerprint": "ca1374865512885ddeaff07a71408efbd9178ed3b5cb23606af31d3b50cf845e",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 1469
+      "line": 1467
     },
     {
       "kind": "product-version",
@@ -574,12 +472,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "d1d419e2cfa6579eeb8c4524763c4e9b37bfebd60d02757daf3d9cfbf617d691",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 170
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "d26a4c616b85a979a75bb1d83ce9a8d8ae7a02998b247c155cdb930345e31437",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/BaseLeftoversLogic.cs",
       "line": 127
@@ -589,12 +481,6 @@
       "fingerprint": "d33c3eb216c04e317ec3b338f418527f93d7cc3136e6bd3c7a68adabc6293279",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.EngineeringGroups.cs",
       "line": 32
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "d534537b1c3171a3d3de874049a439631f21f36c8b5b7c840bdd48e2bc943256",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 202
     },
     {
       "kind": "leftovers-file",
@@ -652,45 +538,9 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "e00306530ed017ee02fe5e2fd8b3680944d9d52418d43eefdc1de123b363ed7d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 211
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "e1150e27e3cfee7ab7db7e689d097ce9f0d98dfe057bd5acfdd2e839dd08fd9d",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 189
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "e156b7638b594c1167415aed918ed0c30b3e0f409d70ffcbe2d48cdc0033baaf",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 133
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "e2aab7d84d727f3630f2e2968afa2a1161254cc30d8be588af8ece7e41f800b7",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs",
       "line": 13
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "e31f96167f2aedcdc388eb49d5bbd7bb0c4ffa54f7b39ea504f1e527b2bbf79c",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 691
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "e4c72c3fa4769d620f59bd928f241d4ecc18f084671ecccf876654f8eebea631",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
-      "line": 66
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "e55359b6e175b78f4a1a3667b47b3d0d2b895fd8307130f5fce66a4c625dd111",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
-      "line": 341
     },
     {
       "kind": "product-version",
@@ -723,12 +573,6 @@
       "line": 767
     },
     {
-      "kind": "product-version",
-      "fingerprint": "ebaf36bff517a84654e71f00e653ad413b9837926c877de64072f93b707d3762",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
-      "line": 87
-    },
-    {
       "kind": "tombstone",
       "fingerprint": "f667eccedf482309cd6f01f0507f2a6938f2bfb0accd406bd35ee876c385e2ec",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
@@ -757,12 +601,6 @@
       "fingerprint": "f9827599e6c3260ea4d51cfa582981e9ef1dc360c500a9e2401619d6f536039a",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs",
       "line": 6
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "fa4782558e85dd6269fa22f3b9327fece7e23297af2f19b00ae6989e9ed8b673",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 571
     },
     {
       "kind": "product-version",

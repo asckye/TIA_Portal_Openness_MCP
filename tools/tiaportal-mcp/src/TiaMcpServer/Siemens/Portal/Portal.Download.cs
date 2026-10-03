@@ -38,7 +38,8 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: download. Extracted from Portal.cs (god-file split); behavior unchanged.
+    // Historical native observations below lack a recorded PLCSIM version/date;
+    // see docs/reference/real-machine-ledger.md for the native acceptance boundary.
     public partial class Portal
     {
         #region download
@@ -60,7 +61,7 @@ namespace TiaMcpServer.Siemens
             string rhTarget = "",
             bool trustDeviceCertificate = true)
         {
-            var legitimation = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // 2.7.52: TLS prompt record
+            var legitimation = new JsonObject { ["trustDeviceCertificate"] = trustDeviceCertificate };   // TLS prompt record
             _logger?.LogInformation(
                 "DownloadToPlc: softwarePath={SoftwarePath} consistentOnly={C} keepDB={K} start={S} stop={T} hasPassword={P} pgPc={I} targetIp={A} userMgmt={U}",
                 softwarePath, consistentBlocksOnly, keepActualValues, startAfterDownload, stopBeforeDownload, !string.IsNullOrEmpty(password), pgPcInterface, targetIpAddress, userManagementMode);
@@ -130,7 +131,7 @@ namespace TiaMcpServer.Siemens
                 if (routeDiagnostics.Address != null && routeDiagnostics.AddressSource == "created" && rhTarget.Length == 0
                     && routeDiagnostics.Target is IConfiguration targetConfiguration)
                 {
-                    // 2.7.49: "Download Hardware and Software to a target with specific IP-Address" - the official overload for an
+                    // "Download Hardware and Software to a target with specific IP-Address" - the official overload for an
                     // address TIA has not seen on the target yet (PLCSIM Advanced instance before its first download, new CPU).
                     DownloadResult createdResult = downloadProvider.Download(targetConfiguration, routeDiagnostics.Address, preDelegate, postDelegate, DownloadOptions.Software);
                     return BuildDownloadResponse(createdResult, softwarePath, routeDiagnostics, promptPolicy, legitimation);
@@ -138,7 +139,7 @@ namespace TiaMcpServer.Siemens
 
                 if (rhTarget.Length > 0)
                 {
-                    // 2.7.33: R/H systems download to one CPU at a time through RHDownloadProvider (typed overloads; no reflection).
+                    // R/H systems download to one CPU at a time through RHDownloadProvider (typed overloads; no reflection).
                     RHDownloadProvider rh = ResolvePlcService<RHDownloadProvider>(softwarePath, plcSoftware)
                         ?? throw new PortalException(PortalErrorCode.NotFound, "RHDownloadProvider service not available on this PLC (rhTarget applies to R/H systems only).");
                     var rhConfiguration = downloadConfig as IConfiguration ?? throw new PortalException(PortalErrorCode.InvalidState, "No applicable route (IConfiguration) for the R/H download; give pgPcInterface/targetIpAddress.");
@@ -232,8 +233,8 @@ namespace TiaMcpServer.Siemens
             var type = config.GetType();
             var typeName = type.Name;
             string? message = null;
-            // 2.7.33: the official base classes carry the prompt text; the 43 concrete V21 prompt classes derive from them.
-            try { message = config switch { DownloadConfiguration download => download.Message, UploadConfiguration upload => upload.Message, _ => type.GetProperty("Message")?.GetValue(config) as string }; } catch { }
+            // the official base classes carry the prompt text; the 43 concrete V21 prompt classes derive from them.
+            try { message = config switch { DownloadConfiguration download => download.Message, UploadConfiguration upload => upload.Message, _ => type.GetProperty("Message")?.GetValue(config) as string }; } catch /* swallow(probe-optional): prompt text is diagnostic; a missing message must not prevent answering the prompt */ { }
             _logger?.LogDebug("ApplyDownloadPrompt: {TypeName}", typeName);
             try
             {
@@ -252,7 +253,7 @@ namespace TiaMcpServer.Siemens
                         else selection!.SetValue(config, Enum.Parse(selection.PropertyType, answer.Value!, ignoreCase: true));
                         break;
                     case DownloadPromptPolicy.AnswerKind.Checked:
-                        // 2.7.39: the Startdrive prompts are typed (V21 Siemens.Engineering.Startdrive.dll): the two upload checks derive from
+                        // the Startdrive prompts are typed (V21 Siemens.Engineering.Startdrive.dll): the two upload checks derive from
                         // UploadConfiguration (not UploadCheckConfiguration; V21 only), the three download checks from DownloadCheckConfiguration.
 #if !TIA_V20
                         if (config is OverrideTelegramMismatch telegramMismatch) telegramMismatch.Checked = answer.Value == "true";
@@ -329,7 +330,7 @@ namespace TiaMcpServer.Siemens
             public string Description = "(no route selected — raw connection configuration)";
             public string? Error;           // set when an explicit pgPcInterface/targetIpAddress filter matched nothing
             public List<DownloadRoute> Candidates = new List<DownloadRoute>();
-            // 2.7.49: the exact ConfigurationAddress when the caller named a target IP. It comes from the target interface,
+            // the exact ConfigurationAddress when the caller named a target IP. It comes from the target interface,
             // from the PC interface's subnet / gateway (where TIA lists the CPU's configured IP - the target interface itself
             // stays empty until the PG adapter can see the CPU), or it is created on the target interface (official
             // ConfigurationAddressComposition.Create; first download to a PLCSIM Advanced instance / a factory-new CPU).
@@ -338,7 +339,7 @@ namespace TiaMcpServer.Siemens
             public object? Target;              // the ConfigurationTargetInterface the address belongs to (for the 5-arg Download overload)
         }
 
-        // Typed walk of one PC interface's subnets and gateways for an exact address (2.7.49, real machine: the route tree of a
+        // Typed walk of one PC interface's subnets and gateways for an exact address (historical native observation: the route tree of a
         // PLCSIM Advanced target listed 192.168.0.1 only under PcInterface.Subnets["MCP_PN"].Addresses, never under 1 X1).
         private static ConfigurationAddress? FindSubnetOrGatewayAddress(object? pcInterface, string ipAddress, out string source)
         {
@@ -355,7 +356,7 @@ namespace TiaMcpServer.Siemens
                             if (string.Equals(address.Address, ipAddress, StringComparison.OrdinalIgnoreCase)) { source = "gateway " + gateway.Name + " of subnet " + subnet.Name; return address; }
                 }
             }
-            catch { }
+            catch /* swallow(native-fallback): an unavailable subnet or gateway address leaves target-interface address creation available */ { }
             return null;
         }
 
@@ -400,19 +401,19 @@ namespace TiaMcpServer.Siemens
         private static object? ReadReflectedParent(object? owner)
         {
             try { return owner?.GetType().GetProperty("Parent")?.GetValue(owner); }
-            catch { return null; }
+            catch /* swallow(probe-optional): an unavailable parent leaves route selection on the target interface */ { return null; }
         }
 
         private static string ReadReflectedString(object? owner, string propertyName)
         {
             try { return owner?.GetType().GetProperty(propertyName)?.GetValue(owner)?.ToString() ?? string.Empty; }
-            catch { return string.Empty; }
+            catch /* swallow(probe-optional): an unavailable route label is represented by an empty string */ { return string.Empty; }
         }
 
         private static int ReadReflectedInt(object? owner, string propertyName)
         {
             try { return owner?.GetType().GetProperty(propertyName)?.GetValue(owner) is int number ? number : 0; }
-            catch { return 0; }
+            catch /* swallow(probe-optional): an unavailable interface number retains the default route diagnostic */ { return 0; }
         }
 
         // ConfigurationPcInterface.Addresses = the PG/PC adapter's own IPs.
@@ -512,7 +513,7 @@ namespace TiaMcpServer.Siemens
                     }
                     else
                     {
-                        // 2.7.49: the CPU's configured IP is usually listed under the PC interface's subnet (or a gateway) while the
+                        // the CPU's configured IP is usually listed under the PC interface's subnet (or a gateway) while the
                         // target interface carries no address at all; a subnet / gateway ConfigurationAddress is an IConfiguration.
                         var byPcInterface = pool.GroupBy(r => r.PcInterfaceName + "#" + r.PcInterfaceNumber).ToList();
                         foreach (var group in byPcInterface)
@@ -559,7 +560,7 @@ namespace TiaMcpServer.Siemens
                 if (selection.Address != null && selection.AddressSource != "targetInterface" && connectionConfiguration is ConnectionConfiguration typedConfiguration)
                 {
                     bool applied = false;
-                    try { applied = typedConfiguration.ApplyConfiguration(selection.Address); } catch { }
+                    try { applied = typedConfiguration.ApplyConfiguration(selection.Address); } catch /* swallow(native-fallback): the selected address is still passed to the native operation when applying it is not confirmed */ { }
                     selection.Configuration = selection.Address;
                     var route = pool.OrderByDescending(r => r.Score).First();
                     selection.Description = route.Describe() + " -> address " + selection.Address.Address + " (" + selection.AddressSource + (applied ? "" : "; not confirmed by ApplyConfiguration") + ")";
@@ -587,7 +588,7 @@ namespace TiaMcpServer.Siemens
                             return selection;
                         }
                     }
-                    catch { }
+                    catch /* swallow(native-fallback): try the next ranked route when this target cannot be applied */ { }
                 }
 
                 // Nothing applied cleanly — hand back the best-ranked target anyway (it IS an
@@ -596,7 +597,7 @@ namespace TiaMcpServer.Siemens
                 selection.Description = ranked[0].Describe() + " (not confirmed by ApplyConfiguration)";
                 return selection;
             }
-            catch { }
+            catch /* swallow(native-fallback): return the accumulated selection so the caller preserves its raw-configuration fallback */ { }
             return selection;
         }
 
@@ -611,7 +612,7 @@ namespace TiaMcpServer.Siemens
                 if (value is System.Collections.IEnumerable en)
                     foreach (var item in en) items.Add(item);
             }
-            catch { }
+            catch /* swallow(enumerate-optional): return route items collected before an optional composition becomes unavailable */ { }
             return items;
         }
 
@@ -688,7 +689,7 @@ namespace TiaMcpServer.Siemens
                 Issues = issues.Count > 0 ? issues.ToArray() : null,
                 Meta = new JsonObject
                 {
-                    ["success"] = true,   // 2.7.52: the check itself ran; Ready carries the verdict
+                    ["success"] = true,   // the check itself ran; Ready carries the verdict
                     ["configurationReady"] = hasProvider && hasConfig,
                     ["consistencyScope"] = "root, software units and safety units: blocks and types",
                     ["unchecked"] = new JsonArray("deviceReachability", "accessAuthorization", "hardwareConsistency", "downloadPrompts"),
@@ -758,7 +759,7 @@ namespace TiaMcpServer.Siemens
                 if (obj == null) continue;
                 try
                 {
-                    // 2.7.33: typed result messages (DownloadResultMessage / UploadResultMessage carry State, Message, counts, nested Messages).
+                    // typed result messages (DownloadResultMessage / UploadResultMessage carry State, Message, counts, nested Messages).
                     if (obj is DownloadResultMessage downloadMessage)
                     {
                         var text = downloadMessage.Message ?? string.Empty; var state = downloadMessage.State;
@@ -789,7 +790,7 @@ namespace TiaMcpServer.Siemens
                     if (nested != null)
                         CollectDownloadMessages(nested, errors, warnings);
                 }
-                catch { }
+                catch /* swallow(enumerate-optional): one unreadable result message must not discard the other download or upload diagnostics */ { }
             }
         }
 

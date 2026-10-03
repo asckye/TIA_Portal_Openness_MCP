@@ -566,13 +566,11 @@ namespace TiaMcpServer.Siemens
         private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, JsonObject? meta, bool trustDeviceCertificate)
             => AttachOnlineLegitimationHandler(configuration, password, null, null, meta, trustDeviceCertificate);
 
-        // 2.7.33: besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
+        // besides the legacy password prompt, UMAC-protected PLCs raise OnlineAuthenticationConfiguration (user name +
         // password + UserType, IsSecureCommunication, GetSupportedAuthenticationTypes); the answered prompts are reported to meta.
-        // 2.7.52 (real machine, PLCSIM Advanced MCP_SIM over Softbus): the handler was only subscribed when a password was given, so
-        // the TLS prompt of a FW 2.9 CPU (TlsVerificationConfiguration, official page "Supporting secure S7 communication TLS") was
-        // never answered and every first GoOnline / Download failed with "The device is not trusted. Please check the certificate."
-        // / "连接到模块 ... 失败". The handler is now always subscribed; the trust decision is the caller's (trustDeviceCertificate) and
-        // meta.tlsVerification records PlcName / VerificationInfo / the selection before and after.
+        // Subscribe even without a password so the TLS trust decision is answered and recorded.
+        // Historical PLCSIM Advanced Softbus observation (version/date not recorded): an unanswered TLS prompt
+        // refuses the first connection; see docs/reference/real-machine-ledger.md.
         private static IDisposable? AttachOnlineLegitimationHandler(object? configuration, string? password, string? userName, string? userType, JsonObject? meta, bool trustDeviceCertificate)
         {
             if (configuration is not ConnectionConfiguration conn)
@@ -609,7 +607,7 @@ namespace TiaMcpServer.Siemens
                 {
                     OnlineCredentials credentials = auth.OnlineCredentials;
                     var supported = new JsonArray();
-                    try { foreach (AuthenticationType type in auth.GetSupportedAuthenticationTypes()) supported.Add(type.CurrentUserType.ToString()); } catch { }
+                    try { foreach (AuthenticationType type in auth.GetSupportedAuthenticationTypes()) supported.Add(type.CurrentUserType.ToString()); } catch { /* swallow(enumerate-optional): supported authentication types are diagnostic; credentials still answer the prompt */ }
                     if (!string.IsNullOrEmpty(userName)) credentials.Name = userName;
                     if (!string.IsNullOrEmpty(userType)) credentials.Type = (UserType)Enum.Parse(typeof(UserType), userType);
                     else if (!string.IsNullOrEmpty(userName)) credentials.Type = UserType.ProjectUser;

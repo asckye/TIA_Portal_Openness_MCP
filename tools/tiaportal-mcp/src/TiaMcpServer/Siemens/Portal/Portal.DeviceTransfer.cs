@@ -14,6 +14,8 @@ namespace TiaMcpServer.Siemens
 {
     // 设备传输：在线可达设备扫描、站上载、参数上载、下载到 Windows 文件夹（存储卡镜像 / PLCSIM Advanced）。
     // 与 DownloadToPlc 共用 PG/PC 路由遍历和 DownloadPromptPolicy 提示应答；上载提示对象形态相同，可直接复用。
+    // Historical native observations below lack a recorded PLCSIM version/date;
+    // see docs/reference/real-machine-ledger.md for the native acceptance boundary.
     public partial class Portal
     {
         private sealed class PcInterfacePick
@@ -63,7 +65,7 @@ namespace TiaMcpServer.Siemens
             throw new ArgumentException("pgPcInterface is ambiguous; use the interface number: " + string.Join("; ", matches.Select(p => $"{p.Name} (#{p.Number}, {p.ModeName})")));
         }
 
-        // 2.7.54 (real machine, Softbus): the project-level StationUploadProvider configuration lists the same adapter once per
+        // Historical native observation: the project-level StationUploadProvider configuration lists the same adapter once per
         // connection mode ("PLCSIM (#1)" under PN/IE, PROFIBUS and MPI), so an exact name matched three picks and was refused as
         // ambiguous. Picks that share name and number are one adapter; the PN/IE mode wins, otherwise the first.
         private static PcInterfacePick? SameAdapter(List<PcInterfacePick> picks)
@@ -83,13 +85,13 @@ namespace TiaMcpServer.Siemens
                     if (!string.IsNullOrWhiteSpace(value)) seen.Add(value);
                     if (string.Equals(value, targetIpAddress, StringComparison.OrdinalIgnoreCase) && address is ConfigurationAddress typed) return typed;
                 }
-            // 2.7.49: subnet / gateway addresses of the PC interface (where TIA lists configured CPU addresses)
+            // subnet / gateway addresses of the PC interface (where TIA lists configured CPU addresses)
             var viaSubnet = FindSubnetOrGatewayAddress(pick.Interface, targetIpAddress, out _);
             if (viaSubnet != null) return viaSubnet;
             return null;
         }
 
-        // 2.7.49: an address that ScanAccessibleDevices reported on the same PG/PC interface (IP or MAC of a station TIA has not
+        // an address that ScanAccessibleDevices reported on the same PG/PC interface (IP or MAC of a station TIA has not
         // seen in the route tree) is created on the first target interface - or, without target interfaces (project-level
         // StationUploadProvider), on the first subnet - through the official ConfigurationAddressComposition.Create.
         private static ConfigurationAddress? CreateScannedAddress(PcInterfacePick pick, string targetAddress, out string note)
@@ -114,7 +116,7 @@ namespace TiaMcpServer.Siemens
                 try { var created = subnet.Addresses.Find(targetAddress) ?? subnet.Addresses.Create(targetAddress); note = "created on subnet " + subnet.Name; return created; }
                 catch (Exception ex) { errors.Add("subnet " + subnet.Name + ": " + ex.Message); }
             }
-            // 2.7.50 (real machine): the project-level StationUploadProvider lists the PC interface with neither target interfaces nor
+            // Historical native observation: the project-level StationUploadProvider lists the PC interface with neither target interfaces nor
             // subnets, so the last composition left is the PC interface's own ConfigurationPcInterface.Addresses.
             try { var created = typed.Addresses.Find(targetAddress) ?? typed.Addresses.Create(targetAddress); note = "created on PC interface " + typed.Name; return created; }
             catch (Exception ex) { errors.Add("PC interface " + typed.Name + ": " + ex.Message); }
@@ -167,7 +169,7 @@ namespace TiaMcpServer.Siemens
                 meta["knownTargetAddresses"] = string.Join(", ", seen.Distinct());
                 string addressSource = "route tree";
                 if (address == null) { address = CreateScannedAddress(pick, targetIpAddress, out addressSource); meta["addressCreation"] = addressSource; }
-                // 2.7.51 (real machine, PLCSIM Advanced MCP_SIM seen only by MAC): ConfigurationAddressComposition.Create takes IP addresses
+                // Historical native observation: ConfigurationAddressComposition.Create takes IP addresses
                 // only ("'02-C0-A8-00-C8-00' does not specify a valid address"); the official page creates "192.68.0.1". A MAC from the scan is
                 // therefore never a valid target, and a virtual PLC that has not been downloaded to (IP 0.0.0.0) cannot be uploaded from.
                 if (address == null)
@@ -181,7 +183,7 @@ namespace TiaMcpServer.Siemens
                 if (dryRun) return "Station upload preview: provider, PG/PC interface and target address resolved (" + addressSource + "); " + (addressSource == "route tree" ? "no PLC contact" : "only a DCP network scan was sent") + ", no project change.";
                 if (!confirmUpload) throw new InvalidOperationException("Station upload adds a new device to the project from the live PLC; set confirmUpload=true to execute.");
                 using var access = AcquireHmiEditAccess();
-                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, meta, true);   // 2.7.52: TLS trust prompt of FW >= 2.9 CPUs
+                using var legitimationScope = AttachOnlineLegitimationHandler(provider.Configuration, password, meta, true);   // TLS trust prompt of FW >= 2.9 CPUs
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 var result = provider.StationUpload(address, handler);
@@ -219,7 +221,7 @@ namespace TiaMcpServer.Siemens
                 var route = SelectDownloadRoute(providerConfiguration, string.IsNullOrWhiteSpace(pgPcInterface) ? null : pgPcInterface, targetIpAddress);
                 if (route.Error != null) throw new PortalException(PortalErrorCode.NotFound, route.Error);
                 if (route.Configuration == null) throw new PortalException(PortalErrorCode.NotFound, "No PG/PC route to the target address; run ScanAccessibleDevices first.");
-                ConfigurationAddress? address = route.Address;   // 2.7.49: target interface, subnet / gateway or created address
+                ConfigurationAddress? address = route.Address;   // target interface, subnet / gateway or created address
                 foreach (var candidate in EnumerateReflectedProperty(route.Target ?? route.Configuration, "Addresses"))
                     if (address == null && string.Equals(ReadReflectedString(candidate, "Address"), targetIpAddress, StringComparison.OrdinalIgnoreCase) && candidate is ConfigurationAddress typed) address = typed;
                 if (address == null) throw new PortalException(PortalErrorCode.NotFound, "Exact target address not found on the selected route: " + route.Description);
@@ -231,7 +233,7 @@ namespace TiaMcpServer.Siemens
                 meta["mayHaveChanged"] = true;
                 UploadConfigurationDelegate handler = config => ApplyDownloadPrompt(config, policy);
                 if ((route.Target ?? route.Configuration) is not IConfiguration configuration) throw new NotSupportedException("Selected route is not an IConfiguration.");
-                using var legitimationScope = AttachOnlineLegitimationHandler(providerConfiguration, password, meta, true);   // 2.7.52: TLS trust prompt of FW >= 2.9 CPUs
+                using var legitimationScope = AttachOnlineLegitimationHandler(providerConfiguration, password, meta, true);   // TLS trust prompt of FW >= 2.9 CPUs
                 try { uploadMethod.Invoke(provider, new object[] { configuration, address, handler }); }
                 catch (System.Reflection.TargetInvocationException tie) when (tie.InnerException != null) { throw tie.InnerException; }
                 meta["apiCallSuccess"] = true;
