@@ -232,7 +232,40 @@ CASES = {
            for mode in ('current-values', 'watch-table-export-plan')]
         + [('PlanOnlineReadOnlyDataProvider', provider, dict(provider=provider, endpoint='opc.tcp://192.0.2.1:4840',
                                                           tagPathsJson='["DB_HMI.MotorRun"]'))
-           for provider in ('opcua', 's7-readonly')]
+           for provider in ('opcua', 's7-readonly')],
+    'Library': [('ReadLibraryOverview', 'read', {}), ('ReadLibraryType', 'read', {'typePath': 'Type1'})]
+        + actions('ManageLibraryType', 'update delete updateLibrary updateProject', typePath='Type1')
+        + [('CheckLibraryUpdates', 'read', {})]
+        + actions('SynchronizeLibrary', 'updateLibrary updateProject harmonizeProject cleanUp', selectionJson='[]')
+        + [('CompareLibraryObjects', kind, {'kind': kind, 'leftPath': 'Left', 'rightPath': 'Right',
+                                          'leftVersion': '1.0.0' if kind == 'version' else '',
+                                          'rightVersion': '1.0.0' if kind == 'version' else ''})
+           for kind in ('type', 'version', 'masterCopy')]
+        + actions('ManageLibraryTypeVersion', 'read edit release setDefault deleteVersion updateInstances discard findInstances',
+                  typePath='Type1', version='1.0.0')
+        + [('CreateLibraryMasterCopy', kind, {'sourceKind': kind, 'sourcePath': 'Source', 'softwarePath': PLC})
+           for kind in ('block', 'type', 'device', 'screen')]
+        + actions('ManageLibraryMasterCopy', 'read copy compare delete', sourcePath='Copy1')
+        + [('ImportLibraryTypeDocuments', 'import', {'filePath': 'C:/domain-offline.xml'})]
+        + actions('ManageGlobalLibrary', 'list infos create open openInfo retrieve save saveAs close archive')
+        + actions('ManageLibraryFolder', 'read create rename delete', folderKind='types', folderPath='Folder1'),
+    'VersionControl': [('GetVersionControlWorkspaces', 'read', {}),
+        ('CreateVersionControlWorkspace', 'create', {'workspaceName': 'Offline', 'folderPath': str(Path(__file__).resolve().parents[2])}),
+        ('GetVersionControlStatus', 'read', {}),
+        ('SyncVersionControlWorkspace', 'export', {'direction': 'ProjectToWorkspace'}),
+        ('SyncVersionControlWorkspace', 'import-refusal', {'direction': 'WorkspaceToProject'}),
+        ('ConnectProjectToWorkspace', 'map', {})],
+    'Sivarc': [('ReadSivarcRuleTree', category, {'category': category})
+               for category in ('screens', 'tags', 'advancedTags', 'alarms', 'copies', 'textLists')]
+        + actions('ManageSivarcRuleContainer', 'read create createFromType delete', category='screens', kind='table', path='Table1')
+        + actions('ManageSivarcTableRule', 'read create createFromMasterCopy update delete', category='screens', tablePath='Table1')
+        + [('ReadSivarcBlockDefinitions', 'read', {'softwarePath': PLC, 'blockPath': 'Block1'})]
+        + actions('ManageSivarcBlockDefinition', 'read create update delete', softwarePath=PLC, blockPath='Block1', kind='tagDefinition')
+        + [('ResolveSivarcExpression', 'resolve', {'softwarePath': PLC, 'blockPath': 'Block1', 'devicePathJson': '[]',
+            'itemPathJson': '[]', 'libraryItemKind': 'masterCopy', 'libraryItemPath': 'Copy1', 'expression': 'Block.Name'})]
+        + actions('ManageSivarcScreenLayout', 'export import', softwarePath=PLC, screenName='Screen1', filePath='C:/domain-offline.xml')
+        + [('UpgradeSivarcDefinitions', 'upgrade', {'softwarePath': PLC}),
+           ('GenerateSiVArc', 'generate', {'hmiDeviceName': 'HMI1', 'plcSoftwarePathsJson': '["PLC1"]', 'generationOptions': 'None'})]
 }
 
 
@@ -282,7 +315,8 @@ def capture(args, exe, harness, profile, isolated):
         reached_child = False
         for domain in args.domain:
             for name, case, arguments in CASES[domain]:
-                hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest')
+                hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
+                                                        'ManageSivarcScreenLayout')
                                                or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (
                     (name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType'))
@@ -329,6 +363,19 @@ def capture(args, exe, harness, profile, isolated):
                             and re.split(r'\r\n|\r|\n', meta.get('error', ''), maxsplit=1)[0]
                                 == 'TiaMcpServer.Siemens.PortalException: Connect to TIA first.',
                             f'{name}/{case} did not reach the disconnected portal guard: {raw}')
+                    elif domain == 'VersionControl':
+                        message = value.get('message', value.get('Message', ''))
+                        expected = ('commercial-tier operation' if case == 'import-refusal' else 'No project is open.')
+                        resources.require(meta.get('success') is False and expected in message,
+                                          f'{name}/{case}: missing disconnected/refused VCI response: {raw}')
+                        reached_child = True
+                    elif name in ('ReadLibraryOverview', 'ReadLibraryType', 'CompareLibraryObjects', 'ManageGlobalLibrary'):
+                        error_type = ('System.InvalidOperationException' if name == 'ManageGlobalLibrary'
+                                      else 'TiaMcpServer.Siemens.PortalException')
+                        resources.require(value.get('message', value.get('Message')) == name + ' failed'
+                                          and meta.get('error', '').splitlines()[0] == error_type + ': Connect to TIA first.'
+                                          and meta.get('tool') == name and meta.get('operationSuccess') is False,
+                                          f'{name}: missing disconnected portal response: {raw}')
                         reached_child = True
                     else:
                         resources.require(value.get('message', value.get('Message')) == 'Project is null'

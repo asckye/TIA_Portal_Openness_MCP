@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.38 phase 6 ⑥-① SiVArc option-package tools (Portal.Sivarc.cs), verified member by member against
+// Native members used by the 2.7.38 phase 6 ⑥-① SiVArc option-package tools (SivarcService.cs), verified member by member against
 // the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Sivarc) PublicAPI. The VM has no SiVArc licence, so this
 // file is the only verification the family gets; every tool answers NotSupported when the services are absent at run time.
 internal static class SivarcShapeChecks

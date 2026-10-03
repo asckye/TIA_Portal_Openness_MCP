@@ -99,6 +99,16 @@ namespace TiaMcpServer.Siemens
 
         System.Collections.Generic.IEqualityComparer<object> IEngineeringSession.ReferenceEqualityComparer => ReferenceEqualityComparer.Instance;
         string IEngineeringSession.FormatExceptionDetail(Exception exception) => FormatExceptionDetail(exception);
+        DeviceItem IEngineeringSession.ExactDeviceItem(string[] devicePath, string[] itemPath) => ExactDeviceItem(devicePath, itemPath);
+        object IEngineeringSession.EngineeringLibraryFolder(object library, string folderPath, string rootProperty) => EngineeringLibraryFolder(library, folderPath, rootProperty);
+        string IEngineeringSession.LibraryPathOf(object node, string rootTypeName) => LibraryPathOf(node, rootTypeName);
+        string IEngineeringSession.OptionPackageLibraryTypeKind(LibraryType type) => OptionPackageLibraryTypeKind(type);
+        Device IEngineeringSession.ExactEngineeringDevice(string pathJson) => ExactEngineeringDevice(pathJson);
+        object IEngineeringSession.ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName) => ResolveHmiScreenOrThrow(hmiSoftwarePath, screenName);
+        string[] IEngineeringSession.ExactNameList(string json) => ExactNameList(json);
+        Portal.SivarcFamily IEngineeringSession.GetSivarcFamily(string category) => Family(category);
+        global::Siemens.Engineering.SiVArc.Sivarc IEngineeringSession.RequireSivarc() => RequireSivarc();
+        Exception IEngineeringSession.SivarcShape(object node) => SivarcShape(node);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

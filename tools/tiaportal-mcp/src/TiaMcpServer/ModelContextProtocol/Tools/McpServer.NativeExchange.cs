@@ -56,27 +56,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("updateSourceLanguage: true also writes the source-language texts.")] bool updateSourceLanguage,
             bool dryRun=true)
             => Portal.ImportProjectTexts(filePath,updateSourceLanguage,dryRun);
-        [McpServerTool(Name="ManageGlobalLibrary"), Description("[L2][Library][WRITE] Global library lifecycle: list (open libraries), infos (GlobalLibraryComposition.GetGlobalLibraryInfos: every library this Portal knows with path, type and IsOpen), create/open/openInfo (Open(GlobalLibraryInfo) by exact name)/retrieve/save/saveAs/close, and archive (UserGlobalLibrary.Archive(destinationDirectory, archiveName, archiveMode None/Compressed/DiscardRestorableData/DiscardRestorableDataAndCompressed); the library must be saved first). Exact expected name, new destination; preview by default. Close is explicit, never auto-save. Upgrade opening requires explicit ReadWrite.")]
-        public static ResponseMessage ManageGlobalLibrary(
-            [Description("action: the operation to perform - list | infos | create | open | openInfo | retrieve | save | saveAs | close | archive.")] string action,
-            string libraryName="",
-            string filePath="",
-            string destinationDirectory="",
-            [Description("openMode: how to open the library - ReadOnly or ReadWrite.")] string openMode="ReadOnly",
-            [Description("upgrade: true opens with an upgrade to the current TIA version when the file is older.")] bool upgrade=false,
-            [Description("archiveName: file name of the library archive to write.")] string archiveName="",
-            [Description("archiveMode: None | Compressed | DiscardRestorableData | DiscardRestorableDataAndCompressed.")] string archiveMode="Compressed",
-            bool dryRun=true)
-            => Portal.ManageGlobalLibrary(action,libraryName,filePath,destinationDirectory,openMode,upgrade,archiveName,archiveMode,dryRun);
-        [McpServerTool(Name="ManageLibraryFolder"), Description("[L2][Library][WRITE] Read/create/rename/delete exact types or masterCopies folder. Empty-folder deletion only, no recursive deletion or save. Default preview.")]
-        public static ResponseMessage ManageLibraryFolder(
-            [Description("folderKind: types | masterCopies.")] string folderKind,
-            string folderPath,
-            [Description("action: the operation to perform - read | create | rename | delete.")] string action,
-            string libraryName="",
-            string newName="",
-            bool dryRun=true)
-            => Portal.ManageLibraryFolder(folderKind,folderPath,action,libraryName,newName,dryRun);
         [McpServerTool(Name="ManagePlcTagDefinition"), Description("[L2][PLC-Software][WRITE] Native tag/constant read/create/update/delete in exact table path. Creation requires dataType and logical address or constant value. Public scalar edits (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; constants: Value); Comment is a MultilingualText and is written per culture - propertiesJson {\"Comment\":\"text\"} goes to the project editing language, {\"Comment\":{\"zh-CN\":\"文本\",\"en-US\":\"text\"}} per active culture (inactive culture = NotFound, activate with ManageProjectLanguage); commentBefore / commentAfter report every culture. Default preview, execution requires Offline. No runtime value write, save/compile/download.")]
         public static ResponseMessage ManagePlcTagDefinition(
             [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,

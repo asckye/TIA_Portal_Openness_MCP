@@ -98,6 +98,16 @@ namespace TiaMcpServer.Siemens
 
         System.Collections.Generic.IEqualityComparer<object> ReferenceEqualityComparer { get; }
         string FormatExceptionDetail(Exception exception);
+        DeviceItem ExactDeviceItem(string[] devicePath, string[] itemPath);
+        object EngineeringLibraryFolder(object library, string folderPath, string rootProperty);
+        string LibraryPathOf(object node, string rootTypeName);
+        string OptionPackageLibraryTypeKind(LibraryType type);
+        Device ExactEngineeringDevice(string pathJson);
+        object ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName);
+        string[] ExactNameList(string json);
+        Portal.SivarcFamily GetSivarcFamily(string category);
+        global::Siemens.Engineering.SiVArc.Sivarc RequireSivarc();
+        Exception SivarcShape(object node);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

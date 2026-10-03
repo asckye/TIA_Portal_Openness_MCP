@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the deep library family (Portal.LibraryDeep.cs, the 2.7.31 extensions of ManageGlobalLibrary and
+// Native members used by the deep library family (LibraryService.cs, the 2.7.31 extensions of ManageGlobalLibrary and
 // ImportLibraryTypeDocuments), verified against the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base) PublicAPI.
 internal static class LibraryDeepShapeChecks
 {

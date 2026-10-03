@@ -13,28 +13,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Published | Unpublished. Native software-unit object publication state.")] string access,
             bool dryRun=true)
             => Portal.SetPlcUnitObjectAccess(softwarePath,unitName,objectKind,objectPath,access,dryRun);
-        [McpServerTool(Name="ManageLibraryTypeVersion"), Description("[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA.")]
-        public static ResponseMessage ManageLibraryTypeVersion(
-            string typePath,
-            string version,
-            [Description("action: the operation to perform - read | edit | release | setDefault | deleteVersion | updateInstances | discard | findInstances.")] string action,
-            string libraryName="",
-            [Description("newVersion: version string of the new type version, e.g. 'V1.0.1'.")] string newVersion="",
-            [Description("dependenciesMode: how dependent types are handled by the action ('' = default).")] string dependenciesMode="",
-            [Description("author: author text of the version.")] string author="",
-            [Description("comment: comment text.")] string comment="",
-            string targetSoftwarePath="",
-            bool dryRun=true)
-            => Portal.ManageLibraryTypeVersion(typePath,version,action,libraryName,newVersion,dependenciesMode,author,comment,targetSoftwarePath,dryRun);
-        [McpServerTool(Name="CreateLibraryMasterCopy"), Description("[L2][Library][WRITE] Create a native master copy from an exact block/type/device/screen in an existing library folder. sourcePath is relative object path; for device use JSON array of exact group/station names. Empty libraryName=project library; otherwise already-open global library. dryRun=true default. Native IMasterCopySource required; no automatic save or close.")]
-        public static ResponseMessage CreateLibraryMasterCopy(
-            [Description("sourceKind: block | type | device | screen.")] string sourceKind,
-            [Description("sourcePath: 'Group/Name' of the source object.")] string sourcePath,
-            string softwarePath="",
-            string folderPath="",
-            string libraryName="",
-            bool dryRun=true)
-            => Portal.CreateLibraryMasterCopy(sourceKind,sourcePath,softwarePath,folderPath,libraryName,dryRun);
         [McpServerTool(Name="ManageHardwareObject"), Description("[L2][Hardware][WRITE] Native deleteDevice/deleteItem/moveItem/copyItem. devicePathJson=[group,...,station] or [unique exact station name]; itemPathJson lists exact child names, preserving slashes in names. Move/copy require destinationDevicePathJson,destinationItemPathJson,position and pass native CanPlug check. dryRun=true default. Deletes may remove contained software. No save/download/online control.")]
         public static ResponseMessage ManageHardwareObject(
             [Description("devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name, e.g. [\"PLC_2\"].")] string devicePathJson,

@@ -164,6 +164,30 @@ full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，�
 [Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 和
 [Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 保留为兼容入口。
 
+### 库、VCI 与 SiVArc
+
+| 领域 | 服务 / 工具类 | 工具数 |
+|---|---|---|
+| 库 | [LibraryService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/LibraryService.cs) / [LibraryTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) | 12 |
+| VCI | [VersionControlService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/VersionControlService.cs) / [VersionControlTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) | 5 |
+| SiVArc | [SivarcService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SivarcService.cs) / [SivarcTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) | 9 |
+
+库生命周期、类型和主副本工具从混合工具文件一并迁入；SiVArc 包含混合文件中的 `GenerateSiVArc`。
+VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例字段，保留原有获取、保活和失效清理顺序。
+三个领域按既有约定注册为非 `IDisposable` 单例，没有需要保留的 CLI 静态入口。
+
+跨领域辅助仍留在内核：`LibraryLabel` / `LibraryRef`、`EngineeringLibraryFolder`、`ExactMasterCopyPlcSource`、
+`MultilingualJson`、`LibraryPathOf`、`ExactLibraryType` / `ExactTypeVersion` / `ExactMasterCopy`，以及 SiVArc 的
+`SivarcFamily` / `SivarcFamilies` / `Family` / `RequireSivarc` / `SivarcShape` 和 `OptionPackageLibraryTypeKind`。
+其中 SiVArc 家族表仍供 `ExactSiVArcRoot` 使用；嵌套类型 `SivarcFamily` 改为 internal，以便接口返回原对象。
+
+本步新增的会话接口成员为 `LibraryRef`、`EngineeringLibraryFolder`、`ExactMasterCopyPlcSource`、`LibraryPathOf`、
+`OptionPackageLibraryTypeKind`、`ExactEngineeringDevice`、`ExactDeviceItem`、`ResolveHmiScreenOrThrow`、`ExactNameList`、
+`GetSivarcFamily`（转发 `Family`）、`RequireSivarc`、`SivarcShape`；均显式转发现有实现。
+`DomainShapeChecks` 验证工具归属、共享会话、单例与调用关系，并验证 VCI 保活列表不跨实例共享、断开时清理旧引用。
+`Test-DomainTools.py` 的 `Library`、`VersionControl`、`Sivarc` 用例覆盖全部工具，比较 full/lite 与直接/隔离调用的响应字节，
+只屏蔽原有时间戳和 D1 允许变化的堆栈帧。原生调用的顺序、参数和线程归属不变，真机验收仍未执行。
+
 ### 首批可选包领域
 
 | 领域 | 服务 / 工具类 | 工具数 |

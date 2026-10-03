@@ -25,7 +25,7 @@
 | 文档 | E `Blocks.cs` | `PlcDocument*`，V20/V21，仅 GlobalDB | — | 准入规则不同 |
 | 外部源 | 名称宽松匹配（去扩展名）；删除幂等 | 全部 8 版；V14 SP1 生成返回 void | 用 `GenerateSource` 导出；导入时建临时源、生成、删除 | 幂等删除与核实删除 |
 | 编译 | Safety 登录不登出；Unified HMI 向上查找 | 离线检查；Safety 登录并登出 | 软件或其所在设备；无 Safety 处理 | 登出与离线前提不同 |
-| VCI | `McpServer.VersionControl.cs` 直接调用新版 API | — | `OpennessVersionControl.cs`：16/17 初版、18/19 旧版、20/21 新版 | V20/V21 新版 API 有两份实现 |
+| VCI | `VersionControlService.cs` 直接调用新版 API | — | `OpennessVersionControl.cs`：16/17 初版、18/19 旧版、20/21 新版 | V20/V21 新版 API 有两份实现 |
 | 硬件目录/添加设备 | `Portal.Devices.cs`：反射加评分；`AddDeviceWithFallback` 遍历 MLFB×版本列表，多次原生创建 | 仅 19–21：类型化 `Find`，恰好一次 `CreateWithItem`，计划哈希 | — | 同名工具，回退语义相反 |
 | 监控表、工艺对象 | 导出、目录导出、按 `Override` 导入更新；监视与映射 | 名称 15.1–21，导出 16–21；读取 8 版（V18 及以前只有根组） | — | |
 

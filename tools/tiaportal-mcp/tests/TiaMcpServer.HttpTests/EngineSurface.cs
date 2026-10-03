@@ -29,7 +29,10 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.SecurityDeepService",
         "TiaMcpServer.Siemens.Services.CertificateManagementService",
         "TiaMcpServer.Siemens.Services.ProjectSecurityService",
-        "TiaMcpServer.Siemens.Services.PlcTablesService"
+        "TiaMcpServer.Siemens.Services.PlcTablesService",
+        "TiaMcpServer.Siemens.Services.LibraryService",
+        "TiaMcpServer.Siemens.Services.VersionControlService",
+        "TiaMcpServer.Siemens.Services.SivarcService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

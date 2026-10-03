@@ -18,7 +18,8 @@ internal static class DomainShapeChecks
             (Name: "TestSuite", Count: 4), (Name: "V20Options", Count: 5),
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
             (Name: "SoftwareUnitDeep", Count: 7),
-            (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11)
+            (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
+            (Name: "Library", Count: 12), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9)
         };
         foreach (var domain in domains)
         {
@@ -65,5 +66,39 @@ internal static class DomainShapeChecks
         foreach (var name in new[] { "_teamcenterConnection", "_teamcenterConnectionLabel" })
             check(surface.Field(name, all).DeclaringType == teamcenter && portal.GetField(name, all) == null,
                 name + " is private Teamcenter service state");
+        foreach (var name in new[] { "LibraryRef", "EngineeringLibraryFolder", "ExactMasterCopyPlcSource", "LibraryPathOf",
+            "OptionPackageLibraryTypeKind", "ExactEngineeringDevice", "ExactDeviceItem", "ResolveHmiScreenOrThrow",
+            "ExactNameList", "RequireSivarc", "SivarcShape" })
+            check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
+                name + " remains shared on the kernel through IEngineeringSession");
+        check(surface.Method("Family", all).DeclaringType == portal && contract.GetMethod("GetSivarcFamily") != null,
+            "SiVArc families remain shared with the optional-engineering reader");
+
+        var vci = server.GetType("TiaMcpServer.Siemens.Services.VersionControlService", true)!;
+        var first = provider.GetService(vci)!;
+        var second = Activator.CreateInstance(vci, new[] { session })!;
+        foreach (var name in new[] { "_vciOwnerProject", "_vciCached", "_vciKeepAlive" })
+            check(vci.GetField(name, all) is FieldInfo field && !field.IsStatic,
+                "VCI state belongs to the service instance: " + name);
+        var rootsField = vci.GetField("_vciKeepAlive", all)!;
+        var roots = (System.Collections.IList)rootsField.GetValue(first)!;
+        var otherRoots = (System.Collections.IList)rootsField.GetValue(second)!;
+        var owner = vci.GetField("_vciOwnerProject", all)!;
+        var sentinel = new object();
+        roots.Add(sentinel); owner.SetValue(first, sentinel);
+        check(!ReferenceEquals(roots, otherRoots) && otherRoots.Count == 0, "VCI services do not share retained proxies");
+        try
+        {
+            vci.GetMethod("RequireVci", all)!.Invoke(first, null);
+            check(false, "Disconnected VCI service refuses acquisition");
+        }
+        catch (TargetInvocationException ex)
+        {
+            check(ex.InnerException is InvalidOperationException && ex.InnerException.Message ==
+                "No project is open. Call Connect, then AttachToOpenProject / OpenProject first.",
+                "Disconnected VCI acquisition retains its original error");
+        }
+        check(roots.Count == 0 && owner.GetValue(first) == null && vci.GetField("_vciCached", all)!.GetValue(first) == null,
+            "Disconnected VCI acquisition clears the cached owner and retained proxies");
     }
 }

@@ -1,4 +1,3 @@
-using ModelContextProtocol.Server;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
@@ -9,12 +8,12 @@ using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.VersionControl;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
+using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.ModelContextProtocol
+namespace TiaMcpServer.Siemens.Services
 {
     // TIA Portal V21's Version Control Interface (VCI), reached from Openness rather than the UI.
     //
@@ -33,18 +32,22 @@ namespace TiaMcpServer.ModelContextProtocol
     // The generic reflection tools cannot reach any of this: they navigate properties from an
     // object, and VersionControlInterface is a *service*, so the traversal dead-ends immediately.
     // Hence a purpose-built toolset.
-    public static partial class McpServer
+    internal sealed class VersionControlService
     {
+        private readonly IEngineeringSession _session;
+
+        public VersionControlService(IEngineeringSession session) => _session = session;
+
         // The VCI service must be kept alive for the whole session. Openness disposes the objects
         // reached through a service once that service instance is collected, so re-acquiring it on
         // every call makes workspaces obtained in an earlier call throw
         // "Access to a disposed object of type Workspace" — observed, not theoretical.
-        private static object? _vciOwnerProject;
-        private static VersionControlInterface? _vciCached;
+        private object? _vciOwnerProject;
+        private VersionControlInterface? _vciCached;
 
-        private static VersionControlInterface RequireVci()
+        private VersionControlInterface RequireVci()
         {
-            var project = Portal.CurrentProject;
+            var project = _session.CurrentProject;
             if (project == null)
             {
                 _vciOwnerProject = null;
@@ -71,9 +74,9 @@ namespace TiaMcpServer.ModelContextProtocol
         // Let an intermediate (WorkspaceGroup, or the service itself) get collected and every object
         // reached through it dies with it — "Access to a disposed object of type Workspace". So every
         // intermediate stays rooted here for as long as the project is open. Observed, not theoretical.
-        private static readonly List<object> _vciKeepAlive = new List<object>();
+        private readonly List<object> _vciKeepAlive = new List<object>();
 
-        private static T Keep<T>(T o) where T : class
+        private T Keep<T>(T o) where T : class
         {
             if (o != null) _vciKeepAlive.Add(o);
             return o!;
@@ -81,7 +84,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         /// <summary>All workspaces, walking the system group and any nested user groups. Nothing here is lazy:
         /// a yield-return iterator would let the groups be collected between MoveNext calls.</summary>
-        private static List<Workspace> AllWorkspaces(VersionControlInterface vci)
+        private List<Workspace> AllWorkspaces(VersionControlInterface vci)
         {
             var found = new List<Workspace>();
             var pending = new Stack<WorkspaceGroup>();
@@ -97,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return found;
         }
 
-        private static Workspace FindWorkspace(VersionControlInterface vci, string name)
+        private Workspace FindWorkspace(VersionControlInterface vci, string name)
         {
             var all = AllWorkspaces(vci).ToList();
             if (all.Count == 0)
@@ -114,11 +117,7 @@ namespace TiaMcpServer.ModelContextProtocol
             return hit;
         }
 
-        [McpServerTool(Name = "GetVersionControlWorkspaces"), Description(
-            "[L1][VersionControl] List this project's version control (VCI) workspaces: name, folder on disk, " +
-            "language, and how many objects are mapped. A workspace is the plain-text mirror of the project " +
-            "that Git can actually diff and commit. Read-only. Requires TIA V21+ and an open project.")]
-        public static ResponseStringList GetVersionControlWorkspaces()
+        public ResponseStringList GetVersionControlWorkspaces()
         {
             try
             {
@@ -164,15 +163,9 @@ namespace TiaMcpServer.ModelContextProtocol
             catch { /* swallow(probe-optional): An unavailable workspace language is represented by the existing dash placeholder. */ return "-"; }
         }
 
-        [McpServerTool(Name = "CreateVersionControlWorkspace"), Description(
-            "[L2][VersionControl] Create a VCI workspace pointing at a folder on disk — normally the working " +
-            "tree of a Git repository, so every synchronized export lands where Git can commit it. " +
-            "Creating the workspace does NOT map any objects into it — call ConnectProjectToWorkspace " +
-            "afterwards to map the whole project (or one device) automatically. " +
-            "Requires TIA V21+ and an open project.")]
-        public static ResponseMessage CreateVersionControlWorkspace(
-            [Description("workspaceName: name shown in the TIA project tree, e.g. 'git'.")] string workspaceName,
-            [Description("folderPath: existing folder the text files are written to, e.g. 'D:\\\\repos\\\\crane-plc'. Use your Git working tree.")] string folderPath)
+        public ResponseMessage CreateVersionControlWorkspace(
+            string workspaceName,
+            string folderPath)
         {
             try
             {
@@ -216,14 +209,9 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        [McpServerTool(Name = "GetVersionControlStatus"), Description(
-            "[L1][VersionControl] Per-object status of a VCI workspace: which mapped objects differ between the " +
-            "TIA project and the text files on disk. This is the input for a change log — it names exactly what " +
-            "changed before you commit. Read-only, changes nothing. " +
-            "Status values: Equal (in sync), Unequal (project and file differ), WorkspaceFileMissing (never exported), Unknown.")]
-        public static ResponseStringList GetVersionControlStatus(
-            [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
-            [Description("changedOnly: default true — list only objects that are NOT in sync. false lists every mapped object.")] bool changedOnly = true)
+        public ResponseStringList GetVersionControlStatus(
+            string workspaceName = "",
+            bool changedOnly = true)
         {
             try
             {
@@ -294,18 +282,11 @@ namespace TiaMcpServer.ModelContextProtocol
             try { return " | format=" + mo.FileFormat; } catch { /* swallow(probe-optional): An unavailable mapped-object format omits the optional format suffix. */ return ""; }
         }
 
-        [McpServerTool(Name = "SyncVersionControlWorkspace"), Description(
-            "[L1][VersionControl] Synchronize a VCI workspace. direction='ProjectToWorkspace' writes the TIA " +
-            "project's objects out as text files (do this before `git commit`); 'WorkspaceToProject' reads the " +
-            "text files back INTO the project (do this after `git pull` / to restore a reviewed version). " +
-            "DEFAULTS TO dryRun=true: the default call only reports what WOULD be synchronized. " +
-            "WorkspaceToProject OVERWRITES blocks in the open project — compile and save afterwards, " +
-            "and it requires a Pro license (exporting is free).")]
-        public static ResponseStringList SyncVersionControlWorkspace(
-            [Description("direction: 'ProjectToWorkspace' (export, for committing) or 'WorkspaceToProject' (import, for restoring).")] string direction = "ProjectToWorkspace",
-            [Description("workspaceName: which workspace. Empty = the first one in the project.")] string workspaceName = "",
-            [Description("dryRun: DEFAULT true — only reports what would change. Pass false to actually synchronize.")] bool dryRun = true,
-            [Description("changedOnly: default true — synchronize only objects whose status is not Equal. false forces every mapped object.")] bool changedOnly = true)
+        public ResponseStringList SyncVersionControlWorkspace(
+            string direction = "ProjectToWorkspace",
+            string workspaceName = "",
+            bool dryRun = true,
+            bool changedOnly = true)
         {
             try
             {
@@ -525,25 +506,16 @@ namespace TiaMcpServer.ModelContextProtocol
             return kids;
         }
 
-        [McpServerTool(Name = "ConnectProjectToWorkspace"), Description(
-            "[L2][VersionControl] Put a WHOLE project under version control automatically - no TIA UI clicks. " +
-            "Walks the project tree, asks every object whether VCI can map it (Workspace.GetSupportedFileFormats) " +
-            "and maps each supported object with Workspace.ConnectObject. COARSE-FIRST: when a device or PLC " +
-            "software object is mappable as one unit it is mapped whole and its children are not visited, so you " +
-            "get the fewest mappings that still cover everything. Objects VCI does not support (typically hardware " +
-            "configuration) are reported, never silently dropped. " +
-            "DEFAULTS TO dryRun=true: the default call only reports what it WOULD map. " +
-            "After a real run call SyncVersionControlWorkspace(ProjectToWorkspace, dryRun=false), then git commit.")]
-        public static ResponseStringList ConnectProjectToWorkspace(
-            [Description("workspaceName: which workspace to map into. Empty = the first one in the project.")] string workspaceName = "",
-            [Description("dryRun: DEFAULT true - reports what would be mapped and changes nothing. Pass false to actually map.")] bool dryRun = true,
-            [Description("deviceFilter: map only this device (exact name, e.g. 'PLC_1'). Empty = the whole project.")] string deviceFilter = "",
-            [Description("maxObjects: safety cap on how many tree nodes are visited. Default 3000.")] int maxObjects = 3000,
-            [Description("walkTrace: write one stderr line per visited node. Diagnostic only.")] bool walkTrace = false)
+        public ResponseStringList ConnectProjectToWorkspace(
+            string workspaceName = "",
+            bool dryRun = true,
+            string deviceFilter = "",
+            int maxObjects = 3000,
+            bool walkTrace = false)
         {
             try
             {
-                var project = Portal.CurrentProject;
+                var project = _session.CurrentProject;
                 if (project == null) throw new InvalidOperationException("No project is open.");
 
                 var ws = FindWorkspace(RequireVci(), workspaceName);
