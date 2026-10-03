@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - PlcTables
@@ -126,7 +125,7 @@ namespace TiaMcpServer.Siemens
         ///
         /// 为什么要有它：空清单有三种完全不同的成因 —— 这个 PLC 确实没有表、
         /// TagTables 属性在这个版本上叫别的名字、读属性时抛了异常被吞掉。
-        /// 三者返回的东西一模一样，调用方（和维护者）无从分辨，
+        /// 诊断区分这三种情况，帮助调用方判断空清单的原因。
         /// 用户报「V20 上枚举返回空但删除工具能找到同一张表」时，我们手上没有任何证据。
         /// 有了这几行，空清单至少能自证是哪一种。
         /// </summary>
@@ -440,10 +439,10 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // 2.7.50 (real machine, 项目1): PlcWatchTable.Entries.Create() only yields a comment row and the typed entry properties are
+        // TIA V21 native evidence (2026-09-21): PlcWatchTable.Entries.Create() only yields a comment row and the typed entry properties are
         // read-only, so no Openness call adds a tag row. The official route is the SimaticML round trip: export the table, add or
         // update the row in the XML, import it back with ImportOptions.Override into the table's own group, then read the row back.
-        // The old code also looked for the table at the root only and created a fresh one on every call (MCP_WT_1 … MCP_WT_5).
+        // Keep group-qualified lookup and readback; see docs/reference/real-machine-ledger.md for the native evidence.
         public ResponseMessage EnsureWatchTableEntry(
             string softwarePath,
             string tableName,
@@ -458,7 +457,7 @@ namespace TiaMcpServer.Siemens
             var triggerType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
             object triggerValue;
             try { triggerValue = Enum.Parse(triggerType, (trigger ?? "").Trim(), true); }
-            catch (ArgumentException) { return new ResponseMessage { Message = "trigger must be one of: " + string.Join("/", Enum.GetNames(triggerType)) + " (case-sensitive)." }; }
+            catch (ArgumentException) /* swallow(parse-fallback): Invalid trigger names return the existing list of allowed values. */ { return new ResponseMessage { Message = "trigger must be one of: " + string.Join("/", Enum.GetNames(triggerType)) + " (case-sensitive)." }; }
             var triggerName = triggerValue.ToString();
 
             var meta = new JsonObject
@@ -519,7 +518,7 @@ namespace TiaMcpServer.Siemens
                 bool triggerOk = string.Equals(hit.ModifyTrigger.ToString(), triggerName, StringComparison.OrdinalIgnoreCase);
                 meta["readbackVerified"] = valueOk && triggerOk;
                 meta["note"] = "Value will be applied to the PLC when TIA Portal is online and the trigger fires. Project not saved.";
-                meta["success"] = valueOk && triggerOk;   // 2.7.52: the bridge reads Meta.success (was missing -> operationStatus unknown)
+                meta["success"] = valueOk && triggerOk;   // The bridge reads Meta.success to determine operationStatus.
                 if (!valueOk || !triggerOk)
                     return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action}, but the readback shows ModifyValue='{hit.ModifyValue}' Trigger={hit.ModifyTrigger} (requested '{modifyValue}' / {triggerName}).", Meta = meta };
                 return new ResponseMessage { Message = $"Watch table '{resolvedPath}': row for '{address}' {action} with ModifyValue='{modifyValue}' Trigger={triggerName} (readback verified; {rows.Length} rows).", Meta = meta };
@@ -533,7 +532,7 @@ namespace TiaMcpServer.Siemens
             }
             finally
             {
-                try { if (tempFile != null && File.Exists(tempFile)) File.Delete(tempFile); } catch { }
+                try { if (tempFile != null && File.Exists(tempFile)) File.Delete(tempFile); } catch { /* swallow(cleanup): Temporary watch-table XML cleanup must not replace the edit result. */ }
             }
         }
 
@@ -688,7 +687,7 @@ namespace TiaMcpServer.Siemens
                 }
             }
 
-            // Official factory: PlcTableCommentEntryComposition.Create() - no arguments (2.7.49)
+            // Official factory: PlcTableCommentEntryComposition.Create() - no arguments.
             var entry = TryInvokeMethodByName(entries, "Create") ?? TryInvokeMethodByName(entries, "Create", address);
             created = entry != null;
             return entry;
@@ -706,7 +705,7 @@ namespace TiaMcpServer.Siemens
                 {
                     var enumType = typeof(global::Siemens.Engineering.SW.WatchAndForceTables.PlcWatchAndForceTablePreDefinedTrigger);
                     try { typedValue = Enum.Parse(enumType, triggerName, true); }
-                    catch (ArgumentException) { refused[name] = "unknown trigger '" + triggerName + "'; valid: " + string.Join("/", Enum.GetNames(enumType)); return; }
+                    catch (ArgumentException) /* swallow(parse-fallback): Invalid trigger names are reported in refused attributes without attempting a write. */ { refused[name] = "unknown trigger '" + triggerName + "'; valid: " + string.Join("/", Enum.GetNames(enumType)); return; }
                 }
                 engineeringObject.SetAttribute(name, typedValue);
             }
@@ -720,7 +719,7 @@ namespace TiaMcpServer.Siemens
             foreach (var name in names)
             {
                 try { var v = engineeringObject.GetAttribute(name); o[name] = v == null ? null : JsonValue.Create(Convert.ToString(v)); }
-                catch { /* attribute not on this entry kind */ }
+                catch { /* swallow(probe-optional): Attributes absent from this entry kind are omitted from the readback. */ }
             }
             return o;
         }
@@ -734,7 +733,7 @@ namespace TiaMcpServer.Siemens
                     .FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == args.Length);
                 return method?.Invoke(target, args);
             }
-            catch { return null; }
+            catch { /* swallow(probe-optional): Missing or unsupported reflective methods return null to the existing caller fallback. */ return null; }
         }
 
         private static void SetEnumPropertyByName(object target, string propertyName, string valueName)
@@ -746,7 +745,7 @@ namespace TiaMcpServer.Siemens
                 var enumValue = Enum.Parse(prop.PropertyType, valueName, ignoreCase: true);
                 prop.SetValue(target, enumValue);
             }
-            catch { }
+            catch { /* swallow(probe-optional): Unsupported optional enum properties leave the object unchanged. */ }
         }
 
         // ── Watch Table Current Values (read-only) ────────────────────────────
@@ -1005,7 +1004,7 @@ namespace TiaMcpServer.Siemens
                         var value = getAttr.Invoke(entry, new object[] { name });
                         attributes[name] = value?.ToString() ?? "";
                     }
-                    catch { }
+                    catch { /* swallow(probe-optional): Unreadable optional watch attributes are omitted while other attributes remain available. */ }
                 }
             }
 

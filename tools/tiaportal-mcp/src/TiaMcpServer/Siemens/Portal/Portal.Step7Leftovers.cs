@@ -257,14 +257,14 @@ namespace TiaMcpServer.Siemens
                 var all = EngineeringGroupOperations.Items(entries).Cast<PlcTableCommentEntry>().ToArray();
                 if (action == "deleteTable")
                 {
-                    // 2.7.50: no tool could delete a watch table (the old SetWatchTableModifyValue left MCP_WT_1 … MCP_WT_5 behind on the real machine).
+                    // Capture all rows before deleting the watch table and verify it is absent afterwards.
                     meta["before"] = new JsonArray(all.Select((e, i) => (JsonNode)TableEntryRow(e, i)).ToArray());
                     if (!writing) return "Watch table deletion preview (" + all.Length + " rows would go with it); no changes.";
                     meta["mayHaveChanged"] = true;
                     watchTable!.Delete(); meta["apiCallSuccess"] = true;
                     bool absent;
                     try { ExactObjectUnder(plc.WatchAndForceTableGroup, tablePath, "WatchTables", "watch table"); absent = false; }
-                    catch (PortalException) { absent = true; }
+                    catch (PortalException) /* swallow(native-fallback): Failed exact lookup is the existing post-delete absence check. */ { absent = true; }
                     meta["verifiedAbsent"] = absent;
                     if (!absent) throw new InvalidOperationException("Watch table still resolvable after Delete().");
                     return "Watch table '" + tableName + "' deleted and verified absent; project not saved.";
@@ -281,7 +281,8 @@ namespace TiaMcpServer.Siemens
                     if (!writing) return "Comment entry creation preview; no changes.";
                     meta["mayHaveChanged"] = true;
                     PlcTableCommentEntry created = entries.Create(); meta["apiCallSuccess"] = true;
-                    // 2.7.35 real project: the composition proxy used for Create still answers the old Count; count on a fresh navigation.
+                    // TIA V21 native evidence (2026-09-19): the Create proxy can retain the old Count; count on a fresh navigation.
+                    // See docs/reference/real-machine-ledger.md for the native evidence.
                     int after = EngineeringGroupOperations.Items(((PlcWatchTable)ExactObjectUnder(root, tablePath, "WatchTables", "watch table")).Entries).Count(); meta["entryCountAfter"] = after;
                     if (after != all.Length + 1) throw new InvalidOperationException("Entry count did not increase by one after Create (fresh readback).");
                     meta["after"] = TableEntryRow(created, after - 1);

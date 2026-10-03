@@ -136,7 +136,7 @@ namespace TiaMcpServer.Siemens
                 foreach (var n in names)
                 {
                     try { var v = getAttr.Invoke(entry, new object[] { n }); if (v != null) return v.ToString() ?? ""; }
-                    catch { }
+                    catch { /* swallow(probe-optional): An unavailable entry attribute falls through to the remaining candidate names. */ }
                 }
             }
             return "";

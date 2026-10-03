@@ -9,12 +9,6 @@
       "line": 99
     },
     {
-      "kind": "maintainer",
-      "fingerprint": "06493c33a0a188cacf20f4a90aa7c463299e11a1b3cdfe98249a98015402b161",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "line": 129
-    },
-    {
       "kind": "product-version",
       "fingerprint": "0740a5e2887121ff1332069bdf32501694c8cf0301dfd3df5e188619e2d7903d",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
@@ -61,12 +55,6 @@
       "fingerprint": "1536442cc874bc75dc1321c863ef11766fdbb94d132c62ed5a2ba3d0848864df",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Modules.cs",
       "line": 425
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "17569eb599b6e2f5a7eb764ce5d0c2925e6d23404d4979e15eae4a1d55c0febc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "line": 691
     },
     {
       "kind": "tombstone",
@@ -292,12 +280,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "5eebbf83c9713b8b7487f08d3d6ad56e60f77fae95f06360bf15ecfac2235322",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Step7Leftovers.cs",
-      "line": 284
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "6168ab8e502e0debb819170e6f1eb035625685d688bb93250eb8d81a402432bd",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
       "line": 86
@@ -496,12 +478,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "97b88edbeccb4bed66af933258a0f6270cfdaaa1bc53723ed43ae4f3ef89912b",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "line": 522
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "9926a959d802ff2a3165a9b79e26304de8cf5123f12d115d7e3717a3d7a61442",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
       "line": 569
@@ -600,12 +576,6 @@
       "kind": "product-version",
       "fingerprint": "a59705cb867981051d8387634ebf4288fc838faea4d969e363d342fa06040dcc",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.OpcUaAlarms.cs",
-      "line": 23
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "a59705cb867981051d8387634ebf4288fc838faea4d969e363d342fa06040dcc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.PlcTables.cs",
       "line": 23
     },
     {
@@ -744,12 +714,6 @@
       "kind": "product-version",
       "fingerprint": "b14c3ed31040c68a22e5a13ddc4e46ddc224f27c85a700a37fbaafbb726641d4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
-      "line": 40
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "b14c3ed31040c68a22e5a13ddc4e46ddc224f27c85a700a37fbaafbb726641d4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
       "line": 40
     },
     {
@@ -919,12 +883,6 @@
       "fingerprint": "d1d419e2cfa6579eeb8c4524763c4e9b37bfebd60d02757daf3d9cfbf617d691",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.DeviceTransfer.cs",
       "line": 170
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "d235c7cc1b1ef658414d83512079987e635d3a2d5c68c2d7f2a9faf25e6a6a4a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Step7Leftovers.cs",
-      "line": 260
     },
     {
       "kind": "product-version",
@@ -1165,12 +1123,6 @@
       "fingerprint": "fb0c73da19d4cc2ac4ad66e76742469dee2679c37da7d172f0db73f703041589",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.PlcTagEditing.cs",
       "line": 27
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "fb457501b1989ecc8289ccefc97d6ff91dd9d306c96fb34fa583a1e94c8f5fb8",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",
-      "line": 443
     },
     {
       "kind": "product-version",

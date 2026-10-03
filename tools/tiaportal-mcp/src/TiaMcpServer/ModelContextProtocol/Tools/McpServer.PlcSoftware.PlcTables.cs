@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - PlcTables
@@ -250,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
         // Force-write capability retained in the Portal layer but intentionally NOT exposed as an MCP tool:
         // forcing overrides live PLC logic and must not be AI-invocable. Online monitoring stays read-only
         // (see RunOnlineMonitoringSafetySelfTest / Test_OnlineMonitoringNoUnsafeToolNames). Use TIA Portal
-        // directly for commissioning forces. Removed from the tool surface in 0.0.38.
+        // directly for commissioning forces.
         public static ResponseMessage SetForceTableEntry(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("tableName: name of the force table to configure (created if not existing)")] string tableName,
