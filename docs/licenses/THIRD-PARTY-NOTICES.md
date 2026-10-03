@@ -81,3 +81,15 @@ Manrope (Google Fonts, Copyright 2018 The Manrope Project Authors) and JetBrains
 MIT, copyright (c) 2026 EIDO AUTOMATION, S.L.U. The adapted implementation and retained license are described in [the provenance record](../../tools/third-party/eido-import-planner/README.md). Both MCP profiles share this implementation.
 
 The foundation HTTP transport uses ModelContextProtocol.AspNetCore 0.3.0-preview.4 (MIT), matching the existing MCP SDK, and the Microsoft.AspNetCore.App shared framework. No independent HTTP MCP protocol implementation is copied from another repository.
+
+## Embedded official example reference
+
+The complete C# source corpus of [Siemens TIA Portal Openness Code Snippets](https://github.com/siemens/tia-portal-openness-code-snippets)
+is retained as reference text at commit `4a8cc79d0666633e524e52f3335d99ff993f8830`,
+copyright Siemens 2025-2026. Section 2 of the [original license](../../reference/siemens-code-snippets/LICENSE.md)
+grants MIT terms for source code. All original notices remain. The complete license,
+source/dependency files and [provenance](../../reference/siemens-code-snippets/UPSTREAM.json)
+are bundled; no upstream executable, SDK or sample engineering archive is included.
+The generated MCP catalog also embeds the previously vendored MIT Siemens AI extension
+guides. It does not compile or execute these references. Project summaries and MCP
+argument templates are identified separately from official source text.

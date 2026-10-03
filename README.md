@@ -40,7 +40,10 @@ The last command validates the specification offline. Remove `--dry-run` when re
 
 ## Capabilities and limits
 
-The V21 full-engine static inventory contains **487 tools** (V20 exposes 476) in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **62**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+The V21 full-engine static inventory contains **488 tools** (V20 exposes 477) in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **63**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
+
+Before an unfamiliar call, use `GetToolUsage(toolName)` for the selected version's MCP example/template, exact parameters, workflow and official source references.
+All eight profiles include this offline reference tool; [coverage and provenance](docs/development/official-tool-usage.md) distinguish official patterns from project templates and native acceptance.
 
 Version 3.1.0 offers opt-in [Openness worker isolation](docs/guides/openness-worker-isolation.md) with `--isolate-openness`. It keeps host diagnostics available after worker failure; real TIA acceptance and coordination between separate MCP services remain pending.
 

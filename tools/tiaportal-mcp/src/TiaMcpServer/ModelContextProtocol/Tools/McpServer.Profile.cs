@@ -27,7 +27,7 @@ namespace TiaMcpServer.ModelContextProtocol
             // made, in every profile; the update check is what a maintainer asks first when something is off.
             "PreflightToolCall", "CheckForUpdate",
             // 2.7.58: the verified sequences belong next to the guide.
-            "GetRecipe",
+            "GetRecipe", "GetToolUsage",
             // L0 — orientation / diagnostics
             "Bootstrap", "Doctor", "GetState", "GetAuthoringGuide",
             "GenerateAcceptanceReport", "GenerateErrorReport",
@@ -108,7 +108,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var attribute = method.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>();
             var description = attribute?.Description ?? "";
-            var decorated = ToolExamples.Decorate(name, description);
+            var decorated = ToolExamples.Decorate(name, description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(name);
             var tool = ReferenceEquals(decorated, description) || decorated == description
                 ? McpServerTool.Create(method)
                 : McpServerTool.Create(method, options: new McpServerToolCreateOptions { Name = name, Description = decorated });

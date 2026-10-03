@@ -12,6 +12,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from tool_usage_checks import check_usage
 
 
 def require(condition, message):
@@ -136,8 +137,10 @@ def main():
     parser.add_argument('--major', required=True, type=int, choices=(20, 21))
     parser.add_argument('--host-harness', type=Path, help='Load the EXE host methods without changing local Openness group membership')
     parser.add_argument('--public-api', type=Path)
+    parser.add_argument('--usage-output', type=Path)
     args = parser.parse_args()
     passed = 0
+    usage_records = []
     for transport in ('stdio', 'http'):
         for profile in ('full', 'lite'):
             label = f'V{args.major} {transport} {profile}'
@@ -163,6 +166,65 @@ def main():
                         passed += 1
                 tools = rpc('tools/list')['result']['tools']
                 require(any(tool['name'] == 'GetState' for tool in tools), 'Tools disappeared')
+                # The caller must receive native-use guidance over the real protocol,
+                # including lite clients that discover the parameter tool through FindTools.
+                require('startdrive-bico' in initialized['result'].get('instructions', ''),
+                        'BICO guidance missing from MCP initialize instructions')
+                passed += 1
+
+                def call_guide_tool(name, arguments):
+                    reply = rpc('tools/call', params={'name': name, 'arguments': arguments})
+                    require('result' in reply and not reply['result'].get('isError'), str(reply))
+                    decoded = json.loads(reply['result']['content'][0]['text'])
+                    if decoded.get('meta', {}).get('truncated'):
+                        pieces = [decoded['message']]
+                        page_meta = decoded['meta']
+                        while not page_meta['eof']:
+                            page = call_guide_tool('GetExport', {'exportId': page_meta['exportId'], 'offset': page_meta['nextOffset']})
+                            pieces.append(page['message'])
+                            page_meta = page['meta']
+                        decoded = json.loads(''.join(pieces))
+                    return decoded
+
+                require('GetToolUsage' in initialized['result'].get('instructions', ''), 'Usage instructions missing')
+                usage_report = check_usage(call_guide_tool, tools, args.major,
+                    exhaustive=transport == 'stdio' and profile == 'full',
+                    verify_documents=transport == 'stdio' and profile == 'full')
+                usage_records.append(dict(usage_report, transport=transport, profile=profile))
+                passed += 1
+                guide = call_guide_tool('GetAuthoringGuide', {'topic': 'startdrive-bico'})
+                guide_text = guide['message']
+                require(guide['meta']['success'] and
+                        f'/v{args.major}/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters' in guide_text and
+                        'p2051[0]' in guide_text and 'dryRun' in guide_text,
+                        'Official-version BICO guide or crash/read semantics missing')
+                passed += 1
+                found = call_guide_tool('FindTools', {'query': 'ManageStartdriveParameter', 'limit': 1})
+                found_text = json.dumps(found)
+                require('ManageStartdriveParameter' in found_text and 'startdrive-bico' in found_text and
+                        'p1070[0]' in found_text, 'FindTools omitted the guide or curated call example')
+                passed += 1
+                planned_args = {'devicePathJson': '["fixture-drive"]', 'itemPathJson': '["fixture-cu"]',
+                                'driveObjectNumber': 0, 'driveObjectIndex': 0,
+                                'parameter': 'p2051[0]', 'action': 'read', 'dryRun': True}
+                preflight = call_guide_tool('PreflightToolCall', {'name': 'ManageStartdriveParameter',
+                                                               'argumentsJson': planned_args})
+                detail = preflight['meta']
+                require(detail['ok'] and detail['nativeReadsPossible'] and
+                        detail['authoringGuideTopic'] == 'startdrive-bico' and
+                        any('p2051[0]' in note and 'dryRun=true' in note for note in detail['precautions']),
+                        'Preflight hides native reads or the known crash report')
+                passed += 1
+                recipe = call_guide_tool('GetRecipe', {'topic': 'startdrive-bico-read'})
+                require(recipe['meta']['success'] and 'PreflightToolCall' in json.dumps(recipe) and
+                        'NOT RUN' in json.dumps(recipe), 'BICO recipe omitted preflight or native acceptance limits')
+                passed += 1
+                bridged = call_guide_tool('CallTool', {'name': 'GetAuthoringGuide',
+                                                     'argumentsJson': {'topic': 'startdrive-bico'}})
+                # CallTool preserves the legacy nested ResponseMessage envelope.
+                require(json.loads(bridged['message'])['Message'] == guide_text,
+                        'CallTool did not deliver the same embedded BICO guide')
+                passed += 1
                 state = rpc('tools/call', params={'name': 'GetState', 'arguments': {}})
                 require('result' in state and not state['result'].get('isError') and
                         state['result'].get('content'), 'GetState failed after resource discovery')
@@ -190,6 +252,8 @@ def main():
                     'Resource discovery still produced unavailable-handler warnings')
             passed += 1
             print('PASS ' + label + ': resources, templates, capabilities, repeated IDs, tools and logs')
+    if args.usage_output:
+        args.usage_output.write_text(json.dumps(usage_records, indent=2) + '\n', encoding='utf-8')
     print(f'COMPLETE: {passed} resource discovery checks passed; no TIA connection attempted')
 
 

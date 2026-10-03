@@ -63,6 +63,22 @@ namespace TiaMcpServer.Siemens
         }
 
         // ---- parameters ----------------------------------------------------------------------------------------------------------
+        // Read one exact value, not a recursively expanded parameter description. The primary
+        // Parameters view is the documented BICO path; only an absent entry uses ReadParameters.
+        internal static JsonObject? ReadExactParameter<TParameter, TReadParameter>(string name,
+            Func<string, TParameter?> findParameter, Func<string, TReadParameter?> findReadParameter,
+            Func<TParameter, JsonObject> readParameter, Func<TReadParameter, JsonObject> readReadParameter)
+            where TParameter : class where TReadParameter : class
+        {
+            var parameter = findParameter(name);
+            if (parameter != null)
+                return new JsonObject { ["name"] = name, ["parameterClass"] = "DriveParameter", ["value"] = readParameter(parameter) };
+            var readOnly = findReadParameter(name);
+            return readOnly == null ? null : new JsonObject {
+                ["name"] = name, ["parameterClass"] = "ReadDriveParameter", ["value"] = readReadParameter(readOnly)
+            };
+        }
+
         internal static readonly string[] ParameterSources = { "read", "write" };                                 // ReadParameters (offline / online read view) or Parameters (writable view)
         internal sealed class ParameterSelector
         {

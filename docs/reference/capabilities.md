@@ -7,7 +7,7 @@
 
 3.1.0 已加入本轮 10 个专用工具及 B1–B6 修正；[操作流程和边界](v20-v21-audit-tools.md)。交叉引用默认仍禁用，新增原生工程/选件操作尚未做真机验收。
 
-本文说明 3.1.0 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。V21 静态清单 487 项（V20 可用 476 项）（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 62 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
+本文说明 3.1.0 引擎的能力与缺口：最新的工具族在前，按版本倒序追加，2.7.14–2.7.15 的基础表格保留在后。V21 静态清单 488 项（V20 可用 477 项）（7 个大类，见 `ListToolCategories` 与 [工具矩阵](tool-matrix.md)），默认 lite 暴露 63 项。工具数量不表示覆盖全部 API——对照官方 V21 PublicAPI 的逐类型记分板在[官方 API 覆盖清单](openness-coverage.md)（2.7.42：核心程序集 Base / Step7 / 经典 WinCC / WinCC Unified / Safety 与全部选件包 SiVArc / Startdrive / DCC / SafetyValidation / Test Suite / Teamcenter / CFC 的功能类型缺口均为 0）。原生方法按本机官方 V20/V21 PublicAPI 对照实现，每个调用的成员在构建时做程序集形状检查；**真机验收状态按版本分段记录**——每段末尾的"真机"句说明哪些在 V21 参考工程 `AutomaticDipCoatingMachine` 上跑过、哪些只有形状检查（选件包无许可、经典 HMI 无工程），不能混同。
 
 ## 3.1.0 诊断、PLC 编辑与 V21 生态扩展
 
@@ -147,6 +147,8 @@
 | TIA 进程存活 | `GetState.hmiReadHealth.portalProcess`、连接失败保护记录的 `portalProcess` / `recovery`、`GetState` 失败文案 | 引擎记住绑定的 TIA 进程 id；`processAlive=false` 表示 TIA Portal 已退出（G120C 上的三处 Startdrive 调用会这样），要重启 TIA、重开工程再 `AttachToOpenProject`；未保存工程里的临时对象随进程消失 |
 | Startdrive 守卫 | `ManageDriveTelegrams`（已有主报文时不调 `CanInsertMainTelegram` / `InsertMainTelegram`）、`ReadDriveParameters` / `ReadOnlineDriveParameters` 的 `includeValue`（`Value` 最后读、可关闭）、位参数名经 `Bits` 解析 | 真机：读 `r2139` 与新建驱动上未接线 `p840[0]` 的值、已有主报文时 `CanInsertMainTelegram` 都让 TIA V21 退出——先 `includeValue=false`，再逐个读值 |
 | SiVArc | `GenerateSiVArc` 软件名 → 设备名两次尝试（`meta.attempts`）；`ManageSivarcTableRule` `ProgramBlock` 不能赋 null | SiVArc 只认 HMI 已连接的 PLC；参考工程 HMI 无连接，两次都 "PLC device not found" |
+
+**新增回归报告（2026-10-02）**：维护者报告 `ManageStartdriveParameter` 读取 `p2051[0]` 时 TIA 崩溃。此前“BICO 写入通过”不覆盖这次读取；具体 TIA/Startdrive 版本、驱动型号和最后一次原生调用仍待补充。单参数 `read` 现改用官方 `Parameters.Find(name).Value` 路径，仅在参数不存在时查 `ReadParameters`；返回 `name`、`parameterClass`、`value`，不再展开 `Bits`、上下限或枚举表。`meta.before.value.bicoSource` 保留；标量和 null 保留原值结构。详细属性仍由 `ReadDriveParameters` 按显式选项读取。此改动已缩小调用范围，不能在真实工程复测前宣称崩溃已解决。
 
 **真机（2026-09-20，2.7.39 引擎，临时设备 `MCP_TMP_G120C`）**：见 [v2.7.39 验证](../releases/v2.7.39.md#验证)。
 

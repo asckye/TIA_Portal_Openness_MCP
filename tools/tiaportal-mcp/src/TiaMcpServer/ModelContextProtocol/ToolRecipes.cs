@@ -8,7 +8,7 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     // 2.7.58: verified multi-step sequences. Trial-and-error on the real machine mostly came from the ORDER of calls
     // (protection before hardware compile before download, PLC side before HMI side, dryRun before the real run), not
-    // from single calls. Every sequence here was run on the maintainer's VM (docs/reference/real-machine-ledger.md and
+    // from single calls. Historical sequences were run on the maintainer's VM; newer reference-only recipes state their native acceptance status (docs/reference/real-machine-ledger.md and
     // the campaign plans); values are the placeholders of the curated examples. Validated at build time like the
     // examples (each step names a real tool and fits its signature). Zero dependencies; linked into the offline suite.
     public static class ToolRecipes
@@ -36,6 +36,15 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static readonly Recipe[] Rows =
         {
+            new Recipe("startdrive-bico-read", "Read one intended offline BICO connection using the official V20/V21 parameter path.",
+                "Intended project and exact drive/control-unit paths are known; substitute placeholders and parameter. Do not automatically execute a known failing target such as p2051[0].",
+                "Official-reference workflow; native p2051[0] crash regression acceptance is NOT RUN. dryRun=true still reads Value. On loss collect GetState and ReadNativeInvocationLog; no automatic replay or write.",
+                new Step("GetAuthoringGuide", @"{""topic"": ""startdrive-bico""}", @"Official V20/V21 sources, response interpretation and known failures; stop automated replay of reported crash targets."),
+                new Step("GetState", @"{}", @"The operator-intended project is already bound; no automatic reconnect."),
+                new Step("FindTools", @"{""query"": ""ManageStartdriveParameter"", ""limit"": 1}", @"Tool is available on this selected full engine; inspect its schema and example."),
+                new Step("PreflightToolCall", @"{""name"": ""ManageStartdriveParameter"", ""argumentsJson"": {""devicePathJson"": ""[\""<exact drive device>\""]"", ""itemPathJson"": ""[\""<exact drive/control unit item>\""]"", ""driveObjectNumber"": 0, ""driveObjectIndex"": 0, ""parameter"": ""p1070[0]"", ""action"": ""read"", ""dryRun"": true}}", @"Arguments and session checked without native calls. A passing preflight is not crash acceptance."),
+                new Step("ManageStartdriveParameter", @"{""devicePathJson"": ""[\""<exact drive device>\""]"", ""itemPathJson"": ""[\""<exact drive/control unit item>\""]"", ""driveObjectNumber"": 0, ""driveObjectIndex"": 0, ""parameter"": ""p1070[0]"", ""action"": ""read"", ""dryRun"": true}", @"For the requested target only, meta.before.value has a BICO source or scalar/null; stop on failure.")),
+
             new Recipe("connect-project", "Attach to the TIA process holding the project and read the real names before any other call.",
                 "TIA Portal is open with the project (the engine never starts an instance while one runs).",
                 "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else.",

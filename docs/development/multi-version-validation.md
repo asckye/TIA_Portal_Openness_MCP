@@ -7,17 +7,18 @@ project, device, VM or PLC was operated in this change.
 
 | Validation | Result |
 |---|---|
-| Offline core suite, V21 and V20 symbols | 3,055 passed each |
+| Offline core suite, V21 and V20 symbols | 3,071 passed each |
 | MCP SDK version policy | 10 passed |
-| Foundation contracts and fake native callbacks | 4,103 passed; one explicit native/read-lock scope skip |
+| Foundation contracts and fake native callbacks | 5,564 passed; one explicit native/read-lock scope skip |
 | Configurator | 157 passed |
 | Studio client / mock bridge | 45 passed |
 | Studio WPF, including exact release selection and Chinese switch | 608 passed |
 | Exact SDK input checks | 20 passed |
 | Worker adapter selection and instrumentation | 34 passed, including eight corruption-test invocations |
 | Foundation actual transport | Six STDIO releases; two independent HTTP sessions; Chinese roundtrip and dependency-order execution |
-| Full-engine actual transport | 28 HTTP, 18 HMI and 44 resource checks per release; dependency planner invoked over STDIO/HTTP |
+| Full-engine actual transport | 28 HTTP, 18 HMI and 72 resource checks per release; dependency planner invoked over STDIO/HTTP |
 | Full-engine stability | 17,936 tool calls across ordinary/isolated processes, both transports and both profiles |
+| AI-facing tool usage | All 496 unique names across eight actual MCP catalogs; parameter keys/types/enums and preview flags checked; 89 complete official reference documents retrieved and hash-checked |
 | Existing ecosystem functionality | 31 checks per release; companion Python and PDF report exercised |
 
 The isolated working copy initially lacked the companion Python environment; using the
@@ -27,6 +28,9 @@ and the full workflow then passed without reducing checks or substituting hash r
 Build records: [full engines](../../manifest/release-build.json),
 [configurator](../../manifest/configurator-build.json),
 [multi-version runtimes and source inputs](../../manifest/multi-version-build.json).
+The [all-tool usage coverage record](../../manifest/tool-usage-coverage.json) separates
+curated MCP examples, schema templates and related official references. Example
+engineering operations were not executed.
 New transport coverage is also wired into GitHub Actions without requiring Siemens SDKs.
 
 The current handoff replaces stale branch/VM/route assertions. README EN/ZH, Studio,

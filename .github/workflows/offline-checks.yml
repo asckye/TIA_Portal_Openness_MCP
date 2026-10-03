@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      - name: Official example catalog must match pinned sources
+        run: python3 scripts/generate/Generate-ToolUsage.py --check
       - name: Descriptions must not name unregistered tools
         run: python3 scripts/checks/Check-DeadToolReferences.py
 

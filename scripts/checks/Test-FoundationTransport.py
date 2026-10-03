@@ -1,5 +1,6 @@
 """Exercise real MCP STDIO/HTTP hosts against a separate synthetic worker. No TIA calls."""
 import argparse
+from tool_usage_checks import check_usage
 import json
 import os
 from pathlib import Path
@@ -14,6 +15,7 @@ import urllib.request
 
 ROOT = Path(__file__).resolve().parents[2]
 KEYS = ['14sp1', '15.1', '16', '17', '18', '19']
+USAGE_REPORTS = []
 INIT = {'protocolVersion': '2025-03-26', 'capabilities': {}, 'clientInfo': {'name': 'foundation-transport-test', 'version': '1'}}
 
 
@@ -88,8 +90,11 @@ def tool(client, name, args=None):
 
 
 def exercise(client, key, logfile, expected_before):
-    client.call('initialize', INIT)
-    names = {t['name'] for t in client.call('tools/list', {})['tools']}
+    initialized = client.call('initialize', INIT)
+    assert 'GetToolUsage' in initialized.get('instructions', '')
+    tools = client.call('tools/list', {})['tools']
+    names = {t['name'] for t in tools}
+    USAGE_REPORTS.append(check_usage(lambda name, args: tool(client, name, args), tools, key))
     assert {'Connect', 'Disconnect', 'GetProjectTree', 'PlanArtifactImportOrder'} <= names
     assert ('GetPlcWatchTables' in names) == (key != '14sp1')
     assert ('SearchHardwareCatalog' in names) == (key == '19')
@@ -173,6 +178,7 @@ def main():
                 assert len(starts) == 2 and starts[0]['pid'] != starts[1]['pid']
             finally:
                 p.terminate(); p.wait(10)
+    (args.output / 'tool-usage.json').write_text(json.dumps(USAGE_REPORTS, indent=2) + '\n', encoding='utf-8')
     (args.output / 'result.json').write_text(json.dumps({'stdioToolCounts': counts, 'httpSessions': 2, 'unicodeRoundTrip': True, 'workerArguments': 'exact release keys', 'nativeTiaExecuted': False}, indent=2), 'utf-8')
     print('PASS: six STDIO releases, two isolated HTTP sessions, dependency planning and Chinese worker roundtrip; native TIA NOT RUN')
 

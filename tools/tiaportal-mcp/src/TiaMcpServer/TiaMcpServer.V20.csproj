@@ -51,4 +51,8 @@
   <ItemGroup><Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="Shared/ToolUsageCatalog.cs" />
+    <EmbeddedResource Include="../../../openness-shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
+  </ItemGroup>
 </Project>

@@ -15,6 +15,13 @@ for the new routes is NOT RUN. Compile/transport/mock results do not establish i
 
 ## 2. Shared code and GitHub reuse
 
+All registered tools expose [AI-readable usage and official examples](official-tool-usage.md)
+through `GetToolUsage`, including foundation and full/lite profiles. Its embedded
+corpus is generated from pinned Siemens references. Regenerate with
+`scripts/generate/Generate-ToolUsage.py`; CI rejects stale content, and the
+multi-version build checks actual per-tool retrieval in `manifest/tool-usage-coverage.json`.
+Templates and topic references are not native acceptance or official MCP wrappers.
+
 Shared release identities, environment facts and dependency planning live under
 `tools/openness-shared` and the linked version catalog. Native API-bound assemblies
 are compiled separately. Preserve the foundation worker contracts and full-engine
@@ -26,6 +33,10 @@ PLC Tools and other integrations remain in place. Check source availability, lic
 actual integration points and the version-specific API before adding upstream code.
 
 ## 3. Remaining work
+
+A [p2051[0] BICO read crash](startdrive-bico-read-regression.md) was reported. The exact
+read path now avoids detailed property/bit traversal; native acceptance and the actual
+crash cause remain unconfirmed. This report supersedes any blanket BICO-read claim.
 
 The seven pending names in the historical 62-tool migration ledger remain pending;
 that ledger is not the full official API gap count. The version matrix distinguishes

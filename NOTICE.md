@@ -22,3 +22,11 @@
 2026-10-03: TIA Openness Studio desktop, mock and inspection sources are integrated under `tools/tia-openness-studio`, from asckye/tia-openness-studio commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT, copyright 2026 asckye. The upstream license, file hashes, full source snapshot and Git history are retained there. The integrated desktop uses its own direct Openness bridge; the MCP dependency has been removed.
 
 The shared import dependency planner incorporates MIT-licensed code from EidoAut/EidoTiaWorkbench, copyright (c) 2026 EIDO AUTOMATION, S.L.U.; see [license and pinned provenance](tools/third-party/eido-import-planner/README.md).
+
+The AI-facing usage catalog embeds reference text from Siemens AI extensions and
+all C# example sources from Siemens TIA Portal Openness Code Snippets, copyright
+Siemens 2025-2026, pinned at `4a8cc79d0666633e524e52f3335d99ff993f8830`.
+Source code is MIT under section 2 of the complete retained
+[Siemens license](reference/siemens-code-snippets/LICENSE.md).
+The files are reference data, not compiled dependencies; Siemens SDK binaries and
+sample engineering archives are excluded. See [scope and provenance](docs/development/official-tool-usage.md).

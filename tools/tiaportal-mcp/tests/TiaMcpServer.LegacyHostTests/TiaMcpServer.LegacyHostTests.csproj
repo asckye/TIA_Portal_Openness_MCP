@@ -77,4 +77,9 @@
   </ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../src/TiaMcpServer.LegacyHost/ImportOrderTool.cs" Link="ImportOrderTool.cs" /><Compile Include="../../src/TiaMcpServer.LegacyHost/HostOptions.cs" Link="HostOptions.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../src/TiaMcpServer.LegacyHost/ToolUsageTool.cs" Link="ToolUsageTool.cs" />
+    <Compile Include="../../../openness-shared/ToolUsageCatalog.cs" Link="ToolUsageCatalog.cs" />
+    <EmbeddedResource Include="../../../openness-shared/ToolUsageData.json" LogicalName="TiaMcp.ToolUsage.json" />
+  </ItemGroup>
 </Project>

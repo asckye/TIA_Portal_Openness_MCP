@@ -22,7 +22,7 @@ if (options.CatalogOnly)
     return 0;
 }
 
-const string instructions = "Version-specific PLC foundation engine. Only listed tools are implemented. Native acceptance is not complete. Mutations default to dryRun=true. Start with Bootstrap and ListPortalProcessProjects, explicitly Connect by processId, then select an exact project. HMI and online/download operations are not in this catalog.";
+const string instructions = TiaOpenness.Shared.ToolUsageCatalog.Instructions + " Version-specific PLC foundation engine. Only listed tools are implemented. Native acceptance is not complete. Mutations default to dryRun=true. Start with Bootstrap and ListPortalProcessProjects, explicitly Connect by processId, then select an exact project. HMI and online/download operations are not in this catalog.";
 if (options.Transport == "http")
 {
     var builder = WebApplication.CreateBuilder(new WebApplicationOptions { Args = Array.Empty<string>() });

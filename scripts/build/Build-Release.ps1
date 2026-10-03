@@ -80,6 +80,7 @@ Run $Python @((Join-Path $repo 'scripts/checks/Test-NativeMcpSession.py'),'--sel
 if ((Get-Content (Join-Path $out 'native-mcp-safety.log') -Raw) -notmatch 'COMPLETE: 8 native MCP safety checks passed') { throw 'Native MCP safety checks incomplete' }
 Run 'powershell.exe' @('-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $repo 'scripts/checks/Test-CrashEvidence.ps1')) 'crash-evidence-tests.log'
 if ((Get-Content (Join-Path $out 'crash-evidence-tests.log') -Raw) -notmatch 'COMPLETE: 6 crash evidence checks passed') { throw 'Crash evidence collector checks incomplete' }
+Run $Python @((Join-Path $repo 'scripts/generate/Generate-ToolUsage.py'),'--check') 'tool-usage-catalog.log'
 $checks=[ordered]@{}
 foreach($major in @(20,21)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
@@ -137,7 +138,7 @@ foreach($major in @(20,21)) {
     if(!$http.Success -or !$hmi.Success){throw 'Runtime regression did not report complete success'}
     # Exercise the actual host methods with SDK dispatch and transports, without
     # changing this machine's Openness group or connecting to a TIA process.
-    Run $Python @((Join-Path $repo 'scripts/checks/Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api) "resources-v$major.log"
+    Run $Python @((Join-Path $repo 'scripts/checks/Test-ResourceDiscovery.py'),'--exe',$exe,'--portal-root',$api,'--major',"$major",'--host-harness',$harness,'--public-api',$api,'--usage-output',(Join-Path $out "tool-usage-v$major.json")) "resources-v$major.log"
     $resources=[regex]::Match((Get-Content (Join-Path $out "resources-v$major.log") -Raw),'COMPLETE: (\d+) resource discovery checks passed')
     if(!$resources.Success){throw 'Resource discovery validation did not report complete success'}
     # V21 document adapters are offline on both runtimes; use the supplied V21 schemas.
@@ -237,7 +238,7 @@ $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo '
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.
-$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/openness-shared'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
+$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/openness-shared'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
     $text=[IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n")
     $sha=[Security.Cryptography.SHA256]::Create()
     try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}

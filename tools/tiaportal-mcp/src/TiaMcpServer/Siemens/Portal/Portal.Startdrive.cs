@@ -235,9 +235,13 @@ namespace TiaMcpServer.Siemens
                 meta["driveObject"] = Logic.ParseDriveSelector(driveObjectNumber, driveObjectIndex).Label; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["online"] = false;
                 if (action == "read")
                 {
-                    ReadDriveParameter target = FindParameter(drive.ReadParameters, parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact drive parameter not found: " + parameter);
-                    meta["before"] = DriveParameterRow(target, true, true);
-                    return "Offline drive parameter read (ReadParameters view with bits, enum values and BICO source). No OnlineDriveObject or live device access used.";
+                    // Official BICO example: Parameters.Find(name).Value. Do not expand Bits,
+                    // limits or enum tables when asked for one value (p2051[0] crash report).
+                    meta["before"] = Logic.ReadExactParameter<DriveParameter, ReadDriveParameter>(parameter,
+                        name => FindParameter(drive.Parameters, name), name => FindParameter(drive.ReadParameters, name),
+                        target => BicoOrScalar(target.Value), target => BicoOrScalar(target.Value))
+                        ?? throw new PortalException(PortalErrorCode.NotFound, "Exact drive parameter not found: " + parameter);
+                    return "Exact offline parameter value read, including BICO source when available; no bit expansion, limits or enum table reads. No OnlineDriveObject or live device access used.";
                 }
                 DriveParameter writable = FindParameter(drive.Parameters, parameter) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact writable drive parameter not found: " + parameter + " (read-only parameters live in ReadParameters).");
                 meta["before"] = DriveParameterRow(writable, false, true);

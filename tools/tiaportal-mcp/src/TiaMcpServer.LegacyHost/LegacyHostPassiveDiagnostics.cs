@@ -57,6 +57,8 @@ internal static class LegacyHostToolRegistry
         var tools = FoundationTools.Create(worker, releaseKey).Concat(OfflineXmlTools.Create()).Concat(OfflineCompositionTools.Create()).Concat(OfflineBlockCompositionTools.Create()).Concat(OfflineSymbolManifestTools.Create()).Concat(OfflineLadderTools.Create()).ToList();
         tools.Add(new ImportOrderTool());
         tools.AddRange(LegacyHostPassiveDiagnosticTools.Create(releaseKey, nativeSessionConfigured, () => tools));
+        tools.Add(new ToolUsageTool(releaseKey, () => tools));
+        for (int i = 0; i < tools.Count; i++) tools[i] = new UsageHintTool(tools[i]);
         return tools.AsReadOnly();
     }
 }

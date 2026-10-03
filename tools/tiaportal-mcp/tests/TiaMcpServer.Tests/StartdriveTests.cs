@@ -12,8 +12,51 @@ namespace TiaMcpServer.Tests
     {
         private static bool Fails<T>(Action a) where T : Exception { try { a(); return false; } catch (T) { return true; } }
 
+        private static void ExactParameterReads(Action<bool, string> check)
+        {
+            var handle = new object();
+            int primaryFinds = 0, secondaryFinds = 0, valueReads = 0;
+            var bico = StartdriveLogic.ReadExactParameter<object, object>("p2051[0]",
+                name => { primaryFinds++; return name == "p2051[0]" ? handle : null; },
+                _ => { secondaryFinds++; throw new InvalidOperationException("ReadParameters must not be opened for this BICO sink"); },
+                p => { if (!ReferenceEquals(p, handle)) throw new Exception("Wrong parameter"); valueReads++; return new JsonObject { ["bicoSource"] = "r80", ["parameterText"] = "Actual torque" }; },
+                _ => throw new InvalidOperationException("Wrong value getter"));
+            check(bico!["name"]!.GetValue<string>() == "p2051[0]" && bico["value"]!["bicoSource"]!.GetValue<string>() == "r80",
+                "startdrive exact read: p2051[0] returns its declared BICO source");
+            check(primaryFinds == 1 && secondaryFinds == 0 && valueReads == 1 && bico.Count == 3,
+                "startdrive exact read: one primary value read, no read-only lookup or expanded description");
+
+            var readOnly = StartdriveLogic.ReadExactParameter<object, object>("r47",
+                _ => null, name => { secondaryFinds++; return name == "r47" ? handle : null; },
+                _ => throw new InvalidOperationException("Wrong value getter"),
+                _ => { valueReads++; return new JsonObject { ["value"] = 60 }; });
+            check(readOnly!["parameterClass"]!.GetValue<string>() == "ReadDriveParameter" && readOnly["value"]!["value"]!.GetValue<int>() == 60 && secondaryFinds == 1 && valueReads == 2,
+                "startdrive exact read: absent primary entry uses read-only view once");
+
+            var absent = StartdriveLogic.ReadExactParameter<object, object>("p99999", _ => null, _ => null,
+                _ => throw new Exception("Missing entry has no value"), _ => throw new Exception("Missing entry has no value"));
+            check(absent == null, "startdrive exact read: absent in both views remains not found");
+            var nullValue = StartdriveLogic.ReadExactParameter<object, object>("p2051[0]", _ => handle,
+                _ => throw new Exception("No fallback for null values"), _ => new JsonObject { ["value"] = null },
+                _ => throw new Exception("Wrong value getter"));
+            check(nullValue!["value"] is JsonObject value && value.ContainsKey("value") && value["value"] == null && !value.ContainsKey("bicoSource"),
+                "startdrive exact read: inaccessible/null source remains null, not a fabricated connection");
+
+            int retries = 0;
+            check(Fails<IOException>(() => StartdriveLogic.ReadExactParameter<object, object>("p2051[0]", _ => handle,
+                _ => { retries++; return handle; }, _ => throw new IOException("Native read interrupted"),
+                _ => { retries++; return new JsonObject(); })) && retries == 0,
+                "startdrive exact read: failing primary getter propagates without another native read");
+            var bit = StartdriveLogic.ReadExactParameter<object, object>("p2080[0].6", name => name == "p2080[0].6" ? handle : null,
+                _ => throw new Exception("No unrelated lookup"), _ => new JsonObject { ["value"] = 1 },
+                _ => throw new Exception("Wrong value getter"));
+            check(bit!["name"]!.GetValue<string>() == "p2080[0].6" && bit["value"]!["value"]!.GetValue<int>() == 1,
+                "startdrive exact read: explicit bit selection retains its exact name and scalar value");
+        }
+
         internal static void Run(Action<bool, string> check)
         {
+            ExactParameterReads(check);
             var temp = Path.GetTempPath();                       // rooted on every OS (offline-checks runs on ubuntu)
             string tec = Path.Combine(temp, "TRCDATA_V1_1_0_1.tec");
 

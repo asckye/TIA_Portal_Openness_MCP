@@ -8,19 +8,23 @@ PublicAPI identity; selecting another version does not translate or upgrade a pr
 
 | Version | Advertised full catalog | Implementation |
 |---|---:|---|
-| V14 SP1 | 54 | PLC foundation host + V14 SP1 worker |
-| V15.1 | 55 | PLC foundation host + V15.1 worker |
-| V16 | 57 | PLC foundation host + V16 worker |
-| V17 | 57 | PLC foundation host + V17 worker |
-| V18 | 57 | PLC foundation host + V18 worker |
-| V19 | 59 | PLC foundation host + V19 worker |
-| V20 | 476 | Existing full engine |
-| V21 | 487 | Existing full engine |
+| V14 SP1 | 55 | PLC foundation host + V14 SP1 worker |
+| V15.1 | 56 | PLC foundation host + V15.1 worker |
+| V16 | 58 | PLC foundation host + V16 worker |
+| V17 | 58 | PLC foundation host + V17 worker |
+| V18 | 58 | PLC foundation host + V18 worker |
+| V19 | 60 | PLC foundation host + V19 worker |
+| V20 | 477 | Existing full engine |
+| V21 | 488 | Existing full engine |
 
-V20/V21 retain the 62-tool lite profile and FindTools/CallTool discovery. Foundation
+V20/V21 retain the 63-tool lite profile and FindTools/CallTool discovery. Foundation
 hosts advertise their entire implemented subset and do not offer the full engine's
 CLI or dispatch bridge. Equal tool names across profiles can have different arguments,
 write-confirmation requirements and response envelopes. Read the selected host schema.
+
+Every tool has `GetToolUsage(toolName)` with the selected engine's exact schema,
+MCP example/template and related official sources. [Coverage and limits](../development/official-tool-usage.md)
+distinguish source patterns, custom wrappers and native acceptance.
 
 Shared algorithms belong in API-independent code. Version-specific native operations
 remain in the typed release adapters; feature filtering occurs before tools/list.
@@ -29,7 +33,7 @@ It returns a plan directly on foundation hosts and under `meta.plan` on full eng
 
 ## Complete grouping
 
-The union contains 495 names: **46 across all eight releases**, **438 shared by a subset**,
+The union contains 496 names: **47 across all eight releases**, **438 shared by a subset**,
 and **11 exclusive to V21**. The foundation profile has eight names absent from the full
 profile; several correspond to full-engine features with different naming/contracts.
 These counts describe advertised names, not the number of independent implementations.

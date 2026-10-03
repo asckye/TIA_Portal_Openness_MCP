@@ -63,7 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
         private static string ToolDescription(MethodInfo m)
         {
             var d = m.GetCustomAttribute<DescriptionAttribute>();
-            return d == null ? "" : d.Description;
+            return (d == null ? "" : d.Description) + TiaOpenness.Shared.ToolUsageCatalog.Hint(m.GetCustomAttribute<McpServerToolAttribute>()?.Name ?? m.Name);
         }
 
         /// <summary>Renders one tool's signature the way the model needs to call it through CallTool.</summary>
@@ -557,6 +557,13 @@ namespace TiaMcpServer.ModelContextProtocol
             var tag = ToolTaxonomy.Parse(description);
             var op = ToolTaxonomy.OperationOf(canonical, description);
             var precautions = PreflightLogic.Precautions(op.Operation, report.DryRunSupported).ToList();
+            bool nativeParameterRead = StartdriveGuidance.AppliesTo(canonical);
+            if (nativeParameterRead)
+            {
+                precautions.Add(StartdriveGuidance.Precaution);
+                meta["authoringGuideTopic"] = StartdriveGuidance.Topic;
+                meta["nativeReadsPossible"] = true;
+            }
 
             bool? connected = null; string? project = null;
             ReadSessionState(ref connected, ref project);
@@ -605,7 +612,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string verdict = !report.Ok
                 ? "NOT READY: fix " + (report.Missing.Count + report.Unknown.Count + report.TypeProblems.Count) + " problem(s) listed in Items, then preflight again."
                 : prerequisitesOk == false ? "Arguments fit; the session prerequisite is not met (see Items)."
-                : "READY: " + canonical + " would bind" + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count) + " automatic correction(s) (CallTool only)" : "") + (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : "") + ".";
+                : "READY: " + canonical + " would bind" + (report.CaseFixes.Count + report.Coercions.Count > 0 ? " after " + (report.CaseFixes.Count + report.Coercions.Count) + " automatic correction(s) (CallTool only)" : "") + (nativeParameterRead ? "; native parameter reads may execute even with dryRun=true" : (report.DryRunSupported ? (report.Effective ? "; it EXECUTES (dryRun=false)" : "; it is a preview (dryRun)") : "")) + ".";
             return new ResponseStringList { Message = verdict, Items = lines, Meta = meta };
         }
 
@@ -668,11 +675,15 @@ namespace TiaMcpServer.ModelContextProtocol
             if (prerequisite != null) summary["prerequisite"] = prerequisite;
             var example = ToolExamples.FindOrDerive(canonical, specs);
             summary["example"] = JsonNode.Parse(example.ArgumentsJson);
+            summary["exampleNote"] = example.Note;
+            summary["usageTool"] = new JsonObject { ["name"] = "GetToolUsage", ["arguments"] = new JsonObject { ["toolName"] = canonical } };
             if (example.Note == ToolExamples.DerivedNote) summary["exampleDerived"] = true;
             summary["next"] = !report.Ok
                 ? "Correct the argument problems listed here and call once more; PreflightToolCall(name, argumentsJson) checks a corrected call without executing."
                 : prerequisite != null ? prerequisite
                 : "The message names the cause; fix that one thing (real names from GetProjectTree / GetSoftwareTree, documented values, preconditions) and call once more - do not try variants.";
+            if (StartdriveGuidance.AppliesTo(canonical))
+                summary["next"] = StartdriveGuidance.Precaution;
             return summary;
         }
 
@@ -689,9 +700,9 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetRecipe"), Description(
-            "[L0][Guide][SESSION] Verified multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, " +
+            "[L0][Guide][SESSION] Documented multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, " +
             "watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, " +
-            "paging large responses. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; the sequences were run on the real machine. " +
+            "paging large responses and exact Startdrive BICO reads. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; native acceptance and known limitations are stated in each recipe; examples alone do not establish it. " +
             "Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed.")]
         public static ResponseStringList GetRecipe(
             [Description("topic: recipe key from the list, e.g. 'download-plcsim'; empty lists all recipes with their one-line purpose.")] string topic = "")

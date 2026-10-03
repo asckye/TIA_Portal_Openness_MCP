@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/siemens/tia-portal-openness-code-snippets",
+  "commit": "4a8cc79d0666633e524e52f3335d99ff993f8830",
+  "license": "Source code: MIT under LICENSE.md section 2; preserve the complete upstream license",
+  "scope": "Every C# source file, project dependency file and root build settings; reference text only, never compiled/executed. Sample engineering archives/resources and binaries are not redistributed.",
+  "versionEvidence": "Pinned source fixtures use .zap21; upstream README still says V20. Neither proves V14 SP1-V20 compatibility.",
+  "localModifications": "README relative links relocated to pinned upstream URLs; C# sources, project files, build settings and license unchanged."
+}

@@ -38,7 +38,9 @@
 
 ## 能力与验证范围
 
-V21 完整引擎静态清单共 **487 个工具**（V20 可用 476 个），分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **62 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+V21 完整引擎静态清单共 **488 个工具**（V20 可用 477 个），分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **63 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
+
+调用不熟悉的工具前，先用 `GetToolUsage(toolName)` 读取当前版本的 MCP 示例/模板、准确参数、调用步骤和官方来源。八个版本均提供此离线参考工具；[覆盖范围与来源](docs/development/official-tool-usage.md) 明确区分官方 API 示例、项目模板和真机验收。
 
 3.1.0 提供可选[工作进程隔离](docs/guides/openness-worker-isolation.md)：`--isolate-openness` 默认关闭，工作进程故障后仍可查询宿主诊断。真实 TIA 验收、精确工程身份绑定及不同 MCP 服务间的协调仍未完成。
 

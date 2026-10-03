@@ -1,5 +1,7 @@
 # 给 AI 编码助手
 
+- 新增或修改原生工具时，把匹配版本的官方示例转成调用 AI 可读取的指引：`GetToolUsage` 覆盖所有版本实际注册的工具，工具描述与 `ToolExamples` 给准确参数，`GetAuthoringGuide` / `GetRecipe` 给调用顺序、官方来源和真实验收范围；不要只写在项目文档里。对已报告的崩溃，预检说明原生读取与 `dryRun` 的实际语义，断连后先保留诊断，不自动重放。通过真实 MCP STDIO/HTTP 检查这些信息在 full/lite 下可见；指引不能冒充原生验收通过。官方示例目录变更后运行 `scripts/generate/Generate-ToolUsage.py`；新工具必须通过 `Audit-ToolUsage.py` 的八版本实际调用覆盖检查。
+
 - 继续"官方 Openness API 全量对齐"计划前先读 `docs/development/handoff.md`（现状、下一步、每阶段固定动作、发布闸门、真机验证约定、只在真机上学到的 API 事实）；逐版本历史在 `docs/development/handoff-history.md`——新发布后 handoff §1 只改现状表，条目加到 history 顶部。
 - 换了机器接手：先读 `docs/development/handoff-checklist.md`（新机器准备、虚拟机现状、部署后按序要做的事、真机批跑工具 `scripts/diagnostics/campaign/`）。
 - 提交信息、PR、Release 正文不加任何 AI 署名行（`Co-Authored-By`、"Generated with …"）。

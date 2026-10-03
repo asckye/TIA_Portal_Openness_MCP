@@ -1,0 +1,113 @@
+{
+  "note": "Project-maintained references checked on 2026-10-03. No inferred counterpart URLs for other releases. These are additional related API examples, not official implementations of MCP tools.",
+  "references": [
+    {
+      "id": "hmi-unified-20",
+      "topic": "hmi-unified",
+      "releaseKey": "20",
+      "title": "Description HMISoftware (RT Unified)",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-accessing-the-data-of-an-hmi-unified-device-rt-unified/hmisoftware-rt-unified/description-hmisoftware-rt-unified",
+      "projectSummary": "Resolve HmiSoftware through the device software container; engineering objects differ from runtime API objects.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "hmi-unified-21",
+      "topic": "hmi-unified",
+      "releaseKey": "21",
+      "title": "HMISoftware example index",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/description-hmisoftware",
+      "projectSummary": "Use the matching engineering collection/service; follow the linked object-specific examples.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "hmi-screen-21",
+      "topic": "hmi-screen",
+      "releaseKey": "21",
+      "title": "Screens.Create",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screens.create",
+      "projectSummary": "Requires an accessible HmiSoftware object and a valid screen name.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "hmi-dynamization-21",
+      "topic": "hmi-dynamization",
+      "releaseKey": "21",
+      "title": "Screen dynamization examples",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/dynamization/description-dynamization",
+      "projectSummary": "Dynamization subtypes differ; resolve the exact property and subtype before editing.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "hmi-events-21",
+      "topic": "hmi-events",
+      "releaseKey": "21",
+      "title": "Property event handlers",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/propertyeventhandlers/description-propertyeventhandlers",
+      "projectSummary": "Use the correct screen/item owner and property event type.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "hmi-classic-21",
+      "topic": "hmi-classic",
+      "releaseKey": "21",
+      "title": "Using the code examples: HmiTarget and screens",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/general-functions/use-of-the-code-examples",
+      "projectSummary": "The example assumes an existing HMI and user folder. Resolve actual names and use absolute host file paths.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "sivarc-21",
+      "topic": "sivarc",
+      "releaseKey": "21",
+      "title": "SiVArc generation",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/sivarc-generation",
+      "projectSummary": "Requires a SiVArc license and supported HMI/PLC devices in the open project. Resolve actual device names.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "sivarc-rules-21",
+      "topic": "sivarc-rules",
+      "releaseKey": "21",
+      "title": "Rule objects and groups",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/sivarc-openness/creating-rule-object-and-rule-group",
+      "projectSummary": "Resolve the rule composition and group for the selected rule kind.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "opcua-21",
+      "topic": "opcua",
+      "releaseKey": "21",
+      "title": "OPC UA SIMATIC interface",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-on-opc/accessing-opc-ua-server-simatic-interface",
+      "projectSummary": "Resolve the PLC and supported SIMATIC interface service before creating/exporting/deleting interfaces.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "vci-20",
+      "topic": "vci",
+      "releaseKey": "20",
+      "title": "Creating VCI workspace",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v20/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
+      "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup; foundation legacy VCI uses a different contract.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "vci-21",
+      "topic": "vci",
+      "releaseKey": "21",
+      "title": "Creating VCI workspace",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/creating-vci-workspace-in-vci-group",
+      "projectSummary": "Resolve VersionControlInterface and its WorkspaceGroup.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    },
+    {
+      "id": "vci-formats-21",
+      "topic": "vci-formats",
+      "releaseKey": "21",
+      "title": "Supported workspace formats",
+      "url": "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-version-control-interface/getting-supported-file-formats",
+      "projectSummary": "Query formats for the engineering object before mapping/exporting; do not pass its composition or association.",
+      "delivery": "link to official manual example; not a vendored code sample"
+    }
+  ]
+}

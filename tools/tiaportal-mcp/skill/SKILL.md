@@ -7,7 +7,7 @@ description: Drive Siemens TIA Portal end-to-end through the TiaMcpServer MCP pl
 
 This is the operating skill for TIA Portal MCP automation. The
 companion plugin lives at `tools/tiaportal-mcp/`. The static roster contains
-**487** MCP tools (default lite profile: 62; exact runtime set: call `tools/list` on the running server) covering
+**488** MCP tools (default lite profile: 63; exact runtime set: call `tools/list` on the running server) covering
 project, hardware, PLC, HMI, and online operations.
 
 ## 0. Always start here
@@ -28,7 +28,9 @@ it; otherwise inspect with `DescribeObject`/`DescribeService` first, then call
 
 ## 0.1 Small models / newcomers: these 15 tools are all you ever need (ignore the rest at first)
 
-This server contains 487 tools, with 62 exposed by default (the lite profile). **You do NOT need most of them.** A small or
+Before an unfamiliar tool call, use `GetToolUsage(toolName)` to read the current release's schema, MCP example/template and official examples. Use `documentId` to retrieve full source with setup/caveats; do not execute source references automatically. The tool is available in all eight profiles.
+
+This server contains 488 tools, with 63 exposed by default (the lite profile). **You do NOT need most of them.** A small or
 non-expert model should pick **only** from this whitelist and ignore everything
 else unless one of these tools' output explicitly tells you to call another:
 

@@ -5,7 +5,7 @@
       "path": "scripts/build/Build-Configurator.ps1"
     },
     {
-      "sha256": "7969e1283d0b17abc9d160d56686f21a91938a716d883cc1ddeb03773ace7ad8",
+      "sha256": "dad5ca2512265725d612c56fdb7af9d3ae8b1c96af41a42ba4413cd0284ed311",
       "path": "scripts/build/Build-MultiVersion.ps1"
     },
     {
@@ -17,7 +17,7 @@
       "path": "scripts/build/Build-PlcFoundation.ps1"
     },
     {
-      "sha256": "291b81d6820fdf7c4b87ed3d1d4fb2bb1b2f6b1e370396a68e587b03ba1ce476",
+      "sha256": "12e15c86ea6bf44d1cb0156b9536b83774d482ab09ca6c263134252ccd1c0851",
       "path": "scripts/build/Build-Release.ps1"
     },
     {
@@ -85,7 +85,7 @@
       "path": "scripts/checks/Test-ExternalSourceDispatch.py"
     },
     {
-      "sha256": "e18716d3ff81672c1d7243ccd07065c7b4970124c29fb701656981cf1260d4e4",
+      "sha256": "c9473a7245d48a48ddb7b679aa261a6e9ce0cc2251b1d44550ffaf19aa366997",
       "path": "scripts/checks/Test-FoundationTransport.py"
     },
     {
@@ -117,7 +117,7 @@
       "path": "scripts/checks/Test-LegacyPassiveDiagnostics.py"
     },
     {
-      "sha256": "925d2358d12e582e242fbfa61dc3cae55595aa8532f6e45d2f7e99854f94900e",
+      "sha256": "45c90c4d91113668b8c65a5f7da118edfcc83cf955bf2160810cc9bac529ed0c",
       "path": "scripts/checks/Test-LocalStability.py"
     },
     {
@@ -149,7 +149,7 @@
       "path": "scripts/checks/Test-PromptRegistrationSources.py"
     },
     {
-      "sha256": "359f4f6c730932d262e0b75693c871a8a4cb77cc9d1a7443d5619997b1fbc034",
+      "sha256": "77e7fd12fa61b001faba49281cdb92c5785fdd71c48d8a48edfa611fe16ac654",
       "path": "scripts/checks/Test-ResourceDiscovery.py"
     },
     {
@@ -165,16 +165,20 @@
       "path": "scripts/checks/Test-V21Ecosystem.py"
     },
     {
-      "sha256": "0ad622a8beada8054009fbd4a3699234f4f8430e10bf84fd785447a909e9ef7c",
+      "sha256": "fdd943b9e218da224f9c61095d7618ead492a5f150d9a8f4f7fae679314b0e28",
       "path": "scripts/checks/Test-VersionCatalogWiring.py"
     },
     {
-      "sha256": "b8de592cabfd34eda23333462ad3fc3dce172aac81b94a9ddc5e5f3c0237fd8c",
+      "sha256": "17988713dc6391560cd83d42bc8d40e3504f71ec04613bb259bac23ee6e5728b",
       "path": "scripts/checks/Test-WorkerIsolation.py"
     },
     {
       "sha256": "12ec6a3aee91f779dc5a73a67ceeeb1686cbf03be3e9d71e9c85c02280e6e92e",
       "path": "scripts/checks/Test-WriteGuard.ps1"
+    },
+    {
+      "sha256": "cf65321949f992c05861b0c4ad1450257a8abdf7b640fbffdd573d7a011f2c0e",
+      "path": "scripts/checks/tool_usage_checks.py"
     },
     {
       "sha256": "3a77984a592d18fa4969a3719495ec87939237791f7c854ed04c808fbf3f7cdf",
@@ -187,6 +191,10 @@
     {
       "sha256": "aa0cdc3032ba74c677b4646dc255115625e8d5a5e7e3898fc81f824c150feec4",
       "path": "scripts/diagnostics/Audit-OpennessCoverage.ps1"
+    },
+    {
+      "sha256": "13a943d6c52ad842de11003f46798c70e98903cac04889859a3b4e9609623c7e",
+      "path": "scripts/diagnostics/Audit-ToolUsage.py"
     },
     {
       "sha256": "00d7aaee8e469f6c19f3ae2c19689ebaa9e2ebaaf386ff748af8cbec102067a6",
@@ -293,6 +301,10 @@
       "path": "scripts/diagnostics/campaign/rawmsg.py"
     },
     {
+      "sha256": "140fe615fa6571599fc3c5eed1a8a8140d7650bb4e182fee6018f1ec9b0d5b29",
+      "path": "scripts/diagnostics/campaign/vm_ledger.json"
+    },
+    {
       "sha256": "3f6a34d53375fa05594bea01c42fb5af397fd77f4a47b25d801a0e8a35fb86b6",
       "path": "scripts/diagnostics/campaign/vm_ledger.py"
     },
@@ -325,12 +337,28 @@
       "path": "scripts/diagnostics/LibraryRenameProbe/Test-Supervisor.ps1"
     },
     {
+      "sha256": "950bee216e119a8fb62cea7a146de156a36e434b3f368acce2e2a3077abf3e07",
+      "path": "scripts/diagnostics/openness-dynamic-coverage.json"
+    },
+    {
       "sha256": "b9655c8efe160ddad9c79ce962f07d391403dc51786489899b964d1fccad2832",
       "path": "scripts/diagnostics/Probe-McpServer.py"
     },
     {
       "sha256": "53e9ce82d9fe94ac0da93c445a5c71923ef9c349ffee4e67dccebc1427a2888d",
       "path": "scripts/diagnostics/Sweep-WrongPathHonesty.py"
+    },
+    {
+      "sha256": "e60a1b47b1a5eb78b5f5e14e5b367cb4efe96da8881a888fd31c15cd58f9cdc0",
+      "path": "scripts/generate/Generate-ToolCapabilityMatrix.ps1"
+    },
+    {
+      "sha256": "f502ac9f8f8a8ca1bcc4544c3d3d36cdea0b9ac740ce35a840ba719f2eccb315",
+      "path": "scripts/generate/Generate-ToolsListFromAssembly.ps1"
+    },
+    {
+      "sha256": "416be02d83240621a5f79ec16426c9cfd2a909ad958cae09ea375901ae140e86",
+      "path": "scripts/generate/Generate-ToolUsage.py"
     },
     {
       "sha256": "85b29b67d9e3503a594902982140cf224b6d7c9b2b3527b4622449defd1ac8fc",
@@ -363,6 +391,14 @@
     {
       "sha256": "23e95bc2b97f65f0092d88a7c41108971062ce358a671c7b7c5204211f392f22",
       "path": "tools/openness-shared/ProcessArguments.cs"
+    },
+    {
+      "sha256": "936c47b25a0859717abd54a544ffbb0a53bab64099462134dcf08874cc4fdfaf",
+      "path": "tools/openness-shared/ToolUsageCatalog.cs"
+    },
+    {
+      "sha256": "325bb5a4b4327aeb51fa95699a7c35178b389b96afd8f3f8361566686efc3ee4",
+      "path": "tools/openness-shared/ToolUsageData.json"
     },
     {
       "sha256": "3edc1b9e80d5889f71892ee205a8a7db64ec1ae66120f5e1091a0ea03b572872",
@@ -873,6 +909,10 @@
       "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.AsyncPreview/TiaMcp.WorkerProtocol.AsyncPreview.csproj"
     },
     {
+      "sha256": "d54072dc7c21230295af9483bf6207526fa84696180e477fd3f8b49f6e315f5a",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.Endpoint/packages.lock.json"
+    },
+    {
       "sha256": "62ce619c6ede2e83ba7f2f0b3658e28a21160c1ef22930ebf99bbbe7ec8db3ab",
       "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.Endpoint/TiaMcp.WorkerProtocol.Endpoint.csproj"
     },
@@ -909,6 +949,10 @@
       "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonLegacy/JsonPayload.cs"
     },
     {
+      "sha256": "4c7ff8cead7d89dc48066a73deacc44abb4cc17610e6e2d64c74a1e8e07a5179",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonLegacy/packages.lock.json"
+    },
+    {
       "sha256": "34dd471489313fd76a482f020231c1f750f32af345c5068120eed40a25869c09",
       "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonLegacy/TiaMcp.WorkerProtocol.JsonLegacy.csproj"
     },
@@ -923,6 +967,10 @@
     {
       "sha256": "4ae38b975102655dafbfc4c7760a4d5ead7ec05c2ced9b91a1f7a721585fd5dd",
       "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonV2/FrameworkCompatibility.cs"
+    },
+    {
+      "sha256": "6c233a2ed5446ea85aa349315d3a88fcfef1af2b88eb93c1f843da81d93a4d60",
+      "path": "tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonV2/packages.lock.json"
     },
     {
       "sha256": "b4ad3892555735e47c2b3e85d6d8e0b2fe209d6a97a34aa33d10c1e8981f2e63",
@@ -1005,7 +1053,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/ImportOrderTool.cs"
     },
     {
-      "sha256": "efe0455a433c2b731f41aaf32f07b051b6c1b950fe5dec5acc1fe4303ec6603e",
+      "sha256": "cdd9ba72911c3df01188af5a286c9d41271ad0a080bdb73d9fb07faf87777ada",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/LegacyHostPassiveDiagnostics.cs"
     },
     {
@@ -1053,7 +1101,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlTools.cs"
     },
     {
-      "sha256": "2e010fe60f5990959debfd353fa88b6502481956716b30dbb7fd26321a377ac7",
+      "sha256": "441f1bb3eab91678cc75248df35c52b1b52a891bb159bdfe8af3392b6c940729",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/Program.cs"
     },
     {
@@ -1073,8 +1121,12 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/SupplementaryReadContract.cs"
     },
     {
-      "sha256": "1a97347fd08025ea568f9e34453ea54613d07d1db7907ae3ec8d7d6085b122c8",
+      "sha256": "11491caacd75c4d82bab44a09f5b9066bb34e1fadb5c67c26731d0c9115203ba",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj"
+    },
+    {
+      "sha256": "9d54b51dee1081d207db4b8bd811fc99b455a9de28957029cbc1e0e881b9a678",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/ToolUsageTool.cs"
     },
     {
       "sha256": "e30d3b13da18fff68b392acb3b8e228481d8865e23084139a2f72f1ed1effa1c",
@@ -1577,7 +1629,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/InvocationJournal.cs"
     },
     {
-      "sha256": "5477e638b6f0641818e577b2aff7435b43dbbfc31c464e91a8a27513e352a7ff",
+      "sha256": "a327b04230b9da21321d7ec0fac5dc5dad537a977feca21a47d07772e00c33cc",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/McpGuides.cs"
     },
     {
@@ -1605,7 +1657,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PortalFailureClassifier.cs"
     },
     {
-      "sha256": "031c422009d2aa8dcae62dd85e1d698389cde1323e8a0e10e14db529a0b9deb3",
+      "sha256": "b320e5fd6963681f216fc98347b3123443e1a2c4726ebf0b01357e45ec567ff3",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/PreflightLogic.cs"
     },
     {
@@ -1617,15 +1669,19 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/SchemaHintsLogic.cs"
     },
     {
+      "sha256": "52ef28db4412feb7c9e1ede1e5b0cd150a16fab5f1300158b737bf2de205b117",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/StartdriveGuidance.cs"
+    },
+    {
       "sha256": "1e34d3a1dda568af169ec6d5d608bda63a80c7ad4a7c9c1387b76fb731bc8525",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/ToolBridgeStatus.cs"
     },
     {
-      "sha256": "6a2e231b1151c44e22d162d9cc7419b0276a66341b270c094ba0004cb94bca6c",
+      "sha256": "2622088291ea203d56a7d1bde16005d32a51533fb654f010753f849a3ffdf10d",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/ToolExamples.cs"
     },
     {
-      "sha256": "e8bcb1313ececa3490eb2120fb8a31bc6b69d9fe40114e3cedfcc8ccb1745ca0",
+      "sha256": "0785a25d2c860f4927c2544d7ffc9e4770a2cf380df80eb3038f908a1a6742ab",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/ToolRecipes.cs"
     },
     {
@@ -1677,7 +1733,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ClassicHmiFolders.cs"
     },
     {
-      "sha256": "66b8335acc3b582cafb2f2557798a7d2d648c04285c8237297457974a9b77c6e",
+      "sha256": "87a6bea5999fc01baafe357afdbde0d1bd2ea3a1564b6f48767d02636cac6346",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs"
     },
     {
@@ -1745,7 +1801,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Groups.cs"
     },
     {
-      "sha256": "78b87fa3a3fac08494d414d419079b4981aa59d7e598f882e78fae0014e5a474",
+      "sha256": "ced5a2c2c9a2fc86bb9e64a537db738edd775c09f9d25af14b6350f197545236",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Guides.cs"
     },
     {
@@ -1873,7 +1929,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcTemplates.cs"
     },
     {
-      "sha256": "8a641e2d50e0b11f6f840c13d8d19abc3bf1a4be7b03e7e2678862fefbbe01e6",
+      "sha256": "8ad53585399f47834aeeb5a0d4f493b4d11e6e594d094997826e8666ce9e25e2",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Profile.cs"
     },
     {
@@ -1929,7 +1985,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.SpecializedEngineering.cs"
     },
     {
-      "sha256": "3ee09abeba6e80ea471f0d211175288919bd02840a132c9ca7abe36960060aa8",
+      "sha256": "7e9337d5e3a880bf4c2c962d37b8888bf9203bc19c80e764f12f595dcbfc3abc",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Startdrive.cs"
     },
     {
@@ -1949,8 +2005,12 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.TestSuite.cs"
     },
     {
-      "sha256": "99b3ea61187e16f294604f1ac8f621b05f5344759f80b2156090a2e400857d3d",
+      "sha256": "a7630ef56a2bf2088c176f599011d5bc486d334ff479a3c5faf532c212c1ddc3",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs"
+    },
+    {
+      "sha256": "52a6ac0c8b2c7f3fb5b825ae558fadfe205d9768e4062d0656af7b1a3e0eb844",
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolUsage.cs"
     },
     {
       "sha256": "55d1bd79ecc32f5c3d018fd9158d978896903ca7cb47b88405fee12a14b21c5b",
@@ -2573,7 +2633,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.SpecializedExchange.cs"
     },
     {
-      "sha256": "494b55313a51d528d308f68d81b8e12a5a245765bd2226dc27df033d68322d09",
+      "sha256": "a5d0bddbf97002935b592949d7193ee55c3efd9056f917b9c0789a7eeb1d4056",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Startdrive.cs"
     },
     {
@@ -2697,7 +2757,7 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SoftwareUnitDeepLogic.cs"
     },
     {
-      "sha256": "23d07049411824e44320801d7c73b69eb32f0521dcc546fc9c3f62513dc04bd5",
+      "sha256": "67986eced031a04b4397d84164556d8c67f36516176e6256c4fe5467fa255ddf",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs"
     },
     {
@@ -2737,11 +2797,11 @@
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/WatchTableImportValidation.cs"
     },
     {
-      "sha256": "c1e6a07ad1692655a1fdfb28b6d438bebe7ef7f50729c97a962e0b3163799a12",
+      "sha256": "e2e014fd62295145a27e66eccfe75930c40ddf29a1af9362164ff68d04545a17",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj"
     },
     {
-      "sha256": "6ceef323c4e4254d6c1dcb412da5526a3be029562b1bd6d56ac25fdfe0a6c98c",
+      "sha256": "e8bc1144a451b1acf6f41efca79458262edc93f0d2b1ac26f4b0150a27c6de60",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj"
     },
     {
@@ -3197,7 +3257,7 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/PathAndIdentityTests.cs"
     },
     {
-      "sha256": "c51d558d9d3f722a7c72477a6102fe758475cdb01a74bc546d8b200f24aa70f2",
+      "sha256": "cd8326add9ace7f060694ae091c806a792d02b2559b3204c7aff73f30477348a",
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/Program.cs"
     },
     {
@@ -3221,8 +3281,12 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/SupplementaryReadTests.cs"
     },
     {
-      "sha256": "76a5cc879c9b6ae9d39445ebb7dced28a8692ba7c66a5d94f9ca77bd46562702",
+      "sha256": "d5be58d85826c53d1e56341128e6781d9bc5b61ffaefcbb8d13733efb015d165",
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj"
+    },
+    {
+      "sha256": "7dd012440ce288dc2877ef584b830c99ca7dfee29562057acaebdb9c3faf0cdc",
+      "path": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/ToolUsageTests.cs"
     },
     {
       "sha256": "a957b99bb71e4f40cf3691a6bf8ca73594475412e837854f1ca1c029c5f46675",
@@ -3517,7 +3581,7 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/SoftwareUnitDeepTests.cs"
     },
     {
-      "sha256": "6239102e74480ac09255ff2d40acd12156f4f1122b1f2860bae7e3cdb91ac626",
+      "sha256": "9bbf478de219bd22823b420c64136ca0aac463758ef31ae78838ea00ecd13bae",
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/StartdriveTests.cs"
     },
     {
@@ -3541,7 +3605,7 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TestSuiteTests.cs"
     },
     {
-      "sha256": "b4aada408e92f2c79cddc63d334318afb6a41ed4bdceeca1ffa2070723a512cc",
+      "sha256": "9a8b4a0ddde61172d130de3f7abfa5738976715e7f89519820781b50773414fa",
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj"
     },
     {
@@ -3597,38 +3661,43 @@
       "path": "tools/tiaportal-mcp/tests/TiaMcpServer.VersionPolicyTests/TiaMcpServer.VersionPolicyTests.csproj"
     }
   ],
-  "nativeAcceptance": "NOT RUN",
+  "validation": {
+    "toolUsageCoverageExecuted": true,
+    "nativeTiaExecuted": false,
+    "foundationTransportExecuted": true,
+    "studioFunctionalTestsExecuted": true
+  },
   "files": [
     {
-      "sha256": "6e2072edef3fb779256eed07c1e88eb4a7adb7bf2f7ca99028a7c4f39f45d25b",
+      "sha256": "95d5e963f0d0be467116b35f337839f9fa3ee02d3dfe2e25b938f883eda93534",
       "path": "runtime/studio/bridge/adapters/v14sp1/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "b750397fea22f5024567b1650a16010f137fd02d774040ee5ccc16a676153eb9",
+      "sha256": "f5836998bd9f94d5dc9e3dd4f7e63819f6fc2cfb20e21b78f89003d7db1f9b80",
       "path": "runtime/studio/bridge/adapters/v15.1/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "40c3f793c39650678dd0952acd1f9959fabeda350f55825393d43f3f55a218c7",
+      "sha256": "27ad3657bca708c1d34766c7f2932b52096082a94fea4fdfec2d3dd2d5c3c108",
       "path": "runtime/studio/bridge/adapters/v16/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "fdfd0d1e38be051eb13b6e4b7a8eaf122b28ad35d2920a98846f924079a76b7a",
+      "sha256": "7f76e94eed76ffe59a94b09f09a08816e9594762d5c5db973eef22504c711aa6",
       "path": "runtime/studio/bridge/adapters/v17/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "5cd0e971243f3d86d114a2e7ab21a562376da5be854879e17743ad3121a3cac5",
+      "sha256": "9106f28ef730504464d4aa8d2c945ecabef45ad69914aab243f926b3f32cbb48",
       "path": "runtime/studio/bridge/adapters/v18/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "88e9a59277d78f3273251385793be1717f37cbc3cb3816f11bb324e0d72a9d61",
+      "sha256": "046075d35ca9b6fb1e680cbbbf795d9f0789d6771b3990b5d345abe102e260b9",
       "path": "runtime/studio/bridge/adapters/v19/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "3337e387d0b93b9efeb372c09c2aa0e6e9a8031799663682584afe2d0aad1a6b",
+      "sha256": "2b42e5c022eb93fc6ea183727eea488ededbc25254e6f8488e97366a0a6d2554",
       "path": "runtime/studio/bridge/adapters/v20/TiaOpenness.Openness.dll"
     },
     {
-      "sha256": "933d8629af221e878d8e22e257eb0c6ce5785aa2ca3adadc734fbd04aa58d99a",
+      "sha256": "f9895dca2004ecb125ffb49b0093d16f0fb7c3e45f1568a5a15ef7ad626ba808",
       "path": "runtime/studio/bridge/adapters/v21/TiaOpenness.Openness.dll"
     },
     {
@@ -3636,7 +3705,7 @@
       "path": "runtime/studio/bridge/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "de7f16da88fd0cad6212e66110c6d7928edbf3e11e6abf004f3d7dacac736200",
+      "sha256": "166fd0443dad13e56ca9d83d8478debf1d2ce5cea99397505b0486e036b21cf9",
       "path": "runtime/studio/bridge/TiaOpenness.Bridge.exe"
     },
     {
@@ -3644,11 +3713,11 @@
       "path": "runtime/studio/bridge/TiaOpenness.Bridge.exe.config"
     },
     {
-      "sha256": "adbe98deb2d3dd9c29fc9548c3c697b7ad9e95e1c8e632b930db0d7731190427",
+      "sha256": "95d69111281cfaacfaf9d24cb43746cbe7618f083b78f3b9869f2366c6ce1fce",
       "path": "runtime/studio/bridge/TiaOpenness.Contracts.dll"
     },
     {
-      "sha256": "dbd19a75f028f2a93a86afcc15a997fddcdd6836b4917168d1f3e27d71746f04",
+      "sha256": "847ce19cb0c8b1f51cfdb9cec67ef162a2f825fba1fdf8ad74305abf4b5c1536",
       "path": "runtime/studio/bridge/TiaOpenness.Core.dll"
     },
     {
@@ -3664,15 +3733,15 @@
       "path": "runtime/studio/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "334769b63b9210619a950c7ee0f79a5c6d7b572166d5b76f0d9e793f0974f542",
+      "sha256": "6932685c39cf297907591425a43a81fbc0915fd34ed0c0b4f9f9a65a8ad620ec",
       "path": "runtime/studio/TiaOpenness.Client.dll"
     },
     {
-      "sha256": "adbe98deb2d3dd9c29fc9548c3c697b7ad9e95e1c8e632b930db0d7731190427",
+      "sha256": "95d69111281cfaacfaf9d24cb43746cbe7618f083b78f3b9869f2366c6ce1fce",
       "path": "runtime/studio/TiaOpenness.Contracts.dll"
     },
     {
-      "sha256": "43d88cb5c71a466e6ef36c1925231488ebda389be6ea7c6c952010060e763925",
+      "sha256": "ffb7d2b607cc134726cbb6c89e52dd8289996bb928e4b09325ad9d3be1277382",
       "path": "runtime/studio/TiaOpenness.Core.dll"
     },
     {
@@ -3680,11 +3749,11 @@
       "path": "runtime/studio/TiaOpenness.deps.json"
     },
     {
-      "sha256": "2b67dd98343c17de4812a019eea188b6abba21abb0d475001bf47921d06cae32",
+      "sha256": "a718b09e1dea87ae5c91057a8bd635ac115b950111f277948f5485a361ca22ee",
       "path": "runtime/studio/TiaOpenness.dll"
     },
     {
-      "sha256": "0d076165e7c9cd9ddc3e2ab36cce9c1f5afa34fa8e2bd74cb5c736b001594156",
+      "sha256": "6091f82f12cf9b94ad089736fdd0b724202b0c9b29b92386572b17be92e2787d",
       "path": "runtime/studio/TiaOpenness.exe"
     },
     {
@@ -3848,11 +3917,11 @@
       "path": "runtime/v14sp1/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v14sp1/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v14sp1/TiaMcpServer.exe"
     },
     {
@@ -3864,11 +3933,11 @@
       "path": "runtime/v14sp1/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "f07717ba03ff100863dff625809361b1946e37f9104b56f9bb07a337f101bd66",
+      "sha256": "e5276aa990b195a01966d62a08d3fd4d16f68f0768124b2a6167bcb7a7ce297a",
       "path": "runtime/v14sp1/worker/TiaMcp.Adapter.14sp1.dll"
     },
     {
-      "sha256": "b5d8d788618b6adf7a1634ba80df0a7523afe88c6a0ff4b28062c227affd9875",
+      "sha256": "7a757957e8e80a6a07390d25c847a8de8cc2c30c4302e8fa283210f61797d433",
       "path": "runtime/v14sp1/worker/TiaMcp.PlcWorker.14sp1.exe"
     },
     {
@@ -4032,11 +4101,11 @@
       "path": "runtime/v15.1/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v15.1/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v15.1/TiaMcpServer.exe"
     },
     {
@@ -4048,11 +4117,11 @@
       "path": "runtime/v15.1/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "45620c10d4c721636aa3ec7322588bff12a73a29ae615f69b983a75293b4c638",
+      "sha256": "1e2629b9d9f38b49d24f3c9c86a7d3766d5ef31cd580739fd8c52372e5c33f11",
       "path": "runtime/v15.1/worker/TiaMcp.Adapter.15.1.dll"
     },
     {
-      "sha256": "c4b14fef31d6853c91401518a54a41300905a1c7cf807093872c4f631a60d919",
+      "sha256": "633c43938122207c02f229a3a15318cbaed4d8b3418d4cacc37bf8a9cff19133",
       "path": "runtime/v15.1/worker/TiaMcp.PlcWorker.15.1.exe"
     },
     {
@@ -4216,11 +4285,11 @@
       "path": "runtime/v16/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v16/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v16/TiaMcpServer.exe"
     },
     {
@@ -4232,11 +4301,11 @@
       "path": "runtime/v16/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "c2c592664a269cc706733985e52e4a4e8a719478be10152279cd1d203c92ecd6",
+      "sha256": "6f1751b84743ec376916f05e35ad40754de58ba3153a3720c7485d6d1d5b1d48",
       "path": "runtime/v16/worker/TiaMcp.Adapter.16.dll"
     },
     {
-      "sha256": "828aaa1af2b1d4e234824ff4b350d40f003356eff3c49064421477d0b2e4de12",
+      "sha256": "2092fbcb8323aa98ede3c9d5e1654fcbf465fbe6af922213469468fab7d272ba",
       "path": "runtime/v16/worker/TiaMcp.PlcWorker.16.exe"
     },
     {
@@ -4400,11 +4469,11 @@
       "path": "runtime/v17/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v17/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v17/TiaMcpServer.exe"
     },
     {
@@ -4416,11 +4485,11 @@
       "path": "runtime/v17/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "bc2cf5bc8b16fce9c722ae054fac90b2c55d604618738f4b0e23d93c2e33f6b4",
+      "sha256": "ec56b008bdf87ef101a1e6a49f4c0d53dcb3dd7fb1508fadb69086368cecfe12",
       "path": "runtime/v17/worker/TiaMcp.Adapter.17.dll"
     },
     {
-      "sha256": "01933a48e02d9860217576d9a892a1f6d9cf0d55b453ab219b30994f0a4f02b3",
+      "sha256": "780d654f733fa4eafb479706a275c99b851eb38b9139fb5ad4f2c6739e1d90f3",
       "path": "runtime/v17/worker/TiaMcp.PlcWorker.17.exe"
     },
     {
@@ -4584,11 +4653,11 @@
       "path": "runtime/v18/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v18/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v18/TiaMcpServer.exe"
     },
     {
@@ -4600,11 +4669,11 @@
       "path": "runtime/v18/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "83b74cd05147983e0195dc92ffcdbddfb7acbb08bf4afb00bcdf16e9b34c5401",
+      "sha256": "e19572af8d3a6594da2a78f5ce5155bd4811f752665e3b145063c047e55c0d2c",
       "path": "runtime/v18/worker/TiaMcp.Adapter.18.dll"
     },
     {
-      "sha256": "8dc5a431a0fd4927299002ec9d55633a443f0059c24ab106adb9430c28df0695",
+      "sha256": "0ce0c6c3649936070f6e156311c5a25238486e3be59ed0dea2b640c7685dba1b",
       "path": "runtime/v18/worker/TiaMcp.PlcWorker.18.exe"
     },
     {
@@ -4768,11 +4837,11 @@
       "path": "runtime/v19/TiaMcpServer.deps.json"
     },
     {
-      "sha256": "fb8f83bc83c5b959e6291538b95a0a05f677fd6bc340f456b9fa32cefac9da04",
+      "sha256": "703cccde88c04da58d945baab8cb457a3fc403cd0e520fe293ee25f03d01aa96",
       "path": "runtime/v19/TiaMcpServer.dll"
     },
     {
-      "sha256": "c795f4b4259ebe0ce5374a3b278fb71f969abe0b45c90cbd52ed7469132f6a9a",
+      "sha256": "e59aa18ea32615ed6890b79cbc13dfb81fd1ac895d9b6142f8e96da3479cc7ca",
       "path": "runtime/v19/TiaMcpServer.exe"
     },
     {
@@ -4784,11 +4853,11 @@
       "path": "runtime/v19/worker/Newtonsoft.Json.dll"
     },
     {
-      "sha256": "807e68c71de93c2321f67c5bc2d45a50bffaa9befa4cf0d5b83180ccad27e481",
+      "sha256": "f0612ff6da20ae3c94880e54078965d40f70bf03f41d1f0b8cb801479bc5ac99",
       "path": "runtime/v19/worker/TiaMcp.Adapter.19.dll"
     },
     {
-      "sha256": "ccbdc4219ecb121636f365dbba90998ae3ec2882ec3c15c61bf54f2bdce873e0",
+      "sha256": "c9e276d4c180923b6fe04d8bd6313c1f48d1086cd35ebb4266b015ec31502e17",
       "path": "runtime/v19/worker/TiaMcp.PlcWorker.19.exe"
     },
     {
@@ -5044,11 +5113,11 @@
       "path": "runtime/v20/System.Threading.Tasks.Extensions.dll"
     },
     {
-      "sha256": "38471c0b571c0f3d7ef1e08c9042601b0f7966584c3a90991c912a7634f83401",
+      "sha256": "39544d7c1c435714460ac5286f34f7d920dc396e523215fdc0a4a984068114fd",
       "path": "runtime/v20/TiaGitAddIn.Core.dll"
     },
     {
-      "sha256": "ad941aabadcd17a793c5c0e3e813a8757a45fbca62e4a78b95316540d06e675e",
+      "sha256": "a7ce29c347ec7a93ceee3a07729b2cb7c58ff21738d5139f5f68a0f35c7adeaf",
       "path": "runtime/v20/TiaMcpServer.exe"
     },
     {
@@ -5312,11 +5381,11 @@
       "path": "runtime/v21/System.Threading.Tasks.Extensions.dll"
     },
     {
-      "sha256": "38471c0b571c0f3d7ef1e08c9042601b0f7966584c3a90991c912a7634f83401",
+      "sha256": "39544d7c1c435714460ac5286f34f7d920dc396e523215fdc0a4a984068114fd",
       "path": "runtime/v21/TiaGitAddIn.Core.dll"
     },
     {
-      "sha256": "f39f1ba2d30c131b0d02e63d3e16a3f3f69510c3ba7bf645e17bf0eeab65601d",
+      "sha256": "076bef67472991399bcf24323142e47f0cd86a6bcb68274fe0ad65e899bb74e9",
       "path": "runtime/v21/TiaMcpServer.exe"
     },
     {
@@ -5332,31 +5401,6 @@
       "path": "runtime/v21/YamlDotNet.dll"
     }
   ],
-  "validation": {
-    "foundationTransportExecuted": true,
-    "studioFunctionalTestsExecuted": true,
-    "nativeTiaExecuted": false,
-    "foundationTransportRecheck": {
-      "at": "2026-10-03T06:50:08.449313+00:00",
-      "reason": "Compare Windows PublicAPI path directory identity after host canonicalization; exact release and argument count retained.",
-      "result": {
-        "stdioToolCounts": {
-          "14sp1": 54,
-          "15.1": 55,
-          "16": 57,
-          "17": 57,
-          "18": 57,
-          "19": 59
-        },
-        "httpSessions": 2,
-        "unicodeRoundTrip": true,
-        "workerArguments": "exact release keys",
-        "nativeTiaExecuted": false
-      },
-      "runtimeRebuilt": false
-    }
-  },
-  "createdAt": "2026-10-03T06:41:33.9182968+00:00",
   "studioReleaseKeys": [
     "14sp1",
     "15.1",
@@ -5367,42 +5411,44 @@
     "20",
     "21"
   ],
+  "createdAt": "2026-10-03T07:47:05.6806852+00:00",
+  "nativeAcceptance": "NOT RUN",
   "releases": [
     {
+      "toolCount": 55,
+      "nativeAcceptance": "NOT RUN",
       "releaseKey": "14sp1",
-      "profile": "plc-foundation",
-      "nativeAcceptance": "NOT RUN",
-      "toolCount": 54
+      "profile": "plc-foundation"
     },
     {
+      "toolCount": 56,
+      "nativeAcceptance": "NOT RUN",
       "releaseKey": "15.1",
-      "profile": "plc-foundation",
-      "nativeAcceptance": "NOT RUN",
-      "toolCount": 55
+      "profile": "plc-foundation"
     },
     {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
       "releaseKey": "16",
-      "profile": "plc-foundation",
-      "nativeAcceptance": "NOT RUN",
-      "toolCount": 57
+      "profile": "plc-foundation"
     },
     {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
       "releaseKey": "17",
-      "profile": "plc-foundation",
-      "nativeAcceptance": "NOT RUN",
-      "toolCount": 57
+      "profile": "plc-foundation"
     },
     {
+      "toolCount": 58,
+      "nativeAcceptance": "NOT RUN",
       "releaseKey": "18",
-      "profile": "plc-foundation",
-      "nativeAcceptance": "NOT RUN",
-      "toolCount": 57
+      "profile": "plc-foundation"
     },
     {
-      "releaseKey": "19",
-      "profile": "plc-foundation",
+      "toolCount": 60,
       "nativeAcceptance": "NOT RUN",
-      "toolCount": 59
+      "releaseKey": "19",
+      "profile": "plc-foundation"
     }
   ]
 }

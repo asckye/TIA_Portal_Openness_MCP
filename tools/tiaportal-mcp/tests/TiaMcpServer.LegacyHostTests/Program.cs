@@ -59,6 +59,7 @@ internal static class Program
         var server=DispatchProxy.Create<IMcpServer,ServerProxy>();
         await DisconnectTests.Run(server,Check);
         await PassiveHostDiagnosticsTests.Run(server,Check);
+        await ToolUsageTests.Run(server,Check);
         DocumentImportTests.Run(Check);
         BatchDocumentImportTests.Run(Check);
         WorkerSessionOutcomeTests.Run(Check);
