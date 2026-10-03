@@ -91,7 +91,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛 | todo |
 | P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界 | todo |
 | P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略 | todo |
-| P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`openness-shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与 `Test-EcosystemAssembly.ps1` 已同步引擎启动设置 | doing |
+| P2-06 | 写子进程 stdin 时显式使用无 BOM UTF-8，不再依赖进程级 `Console.InputEncoding`（.NET Framework 在 65001 代码页下会写 BOM）：隔离 worker（`WorkerConnection`）、`openness-shared/LocalProcess.Run`（Python 伴随桥接）等；HttpTests 与 `Test-EcosystemAssembly.ps1` 已同步引擎启动设置 | done |
 
 ### 阶段 3：拆分完整引擎（兼容）
 
