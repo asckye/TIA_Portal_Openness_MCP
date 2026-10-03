@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
@@ -12,22 +11,13 @@ namespace TiaMcpServer.Siemens
     // settings and channel-linked tags.
     internal static class SoftwareUnitDeepLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         internal static JsonObject ParseObject(string json, string parameter)
-        {
-            JsonNode? node;
-            try { node = JsonNode.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json); }
-            catch (Exception ex) { throw new ArgumentException(parameter + " must be a JSON object: " + ex.Message); }
-            return node as JsonObject ?? throw new ArgumentException(parameter + " must be a JSON object.");
-        }
+            => ArgumentRules.ParseObject(json, parameter, ArgumentRules.ObjectRule.SoftwareUnit);
 
         // ---- software units (PlcUnitProvider.UnitGroup: Units / SafetyUnits) --------------------------------------------------
         internal static readonly string[] UnitKinds = { "unit", "safety" };
@@ -141,7 +131,7 @@ namespace TiaMcpServer.Siemens
         {
             file.Refresh();
             var row = new JsonObject { ["path"] = file.FullName, ["exists"] = file.Exists, ["bytes"] = file.Exists ? file.Length : 0 };
-            if (file.Exists && file.Length > 0) { using var stream = file.OpenRead(); using var sha = SHA256.Create(); row["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant(); }
+            if (file.Exists && file.Length > 0) { using var stream = file.OpenRead(); row["sha256"] = ArgumentRules.Hash(stream); }
             return row;
         }
 

@@ -12,16 +12,11 @@ namespace TiaMcpServer.Siemens
     // SubjectAlternativeName). Everything here is parameter gating and catalogs; the Portal partial does the native calls.
     internal static class SecurityDeepLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void RequireKeys(JsonObject properties, string[] allowed, string parameter)
-        {
-            var unknown = properties.Select(p => p.Key).Where(k => !allowed.Contains(k, StringComparer.Ordinal)).ToArray();
-            if (unknown.Length > 0) throw new ArgumentException(parameter + " accepts only " + string.Join(" / ", allowed) + "; unknown: " + string.Join(", ", unknown));
-        }
+            => ArgumentRules.RequireKeys(properties, allowed, parameter);
 
         // ---- syslog -------------------------------------------------------------------------------------------------------
         internal static readonly string[] SyslogScopes = { "project", "plc" };

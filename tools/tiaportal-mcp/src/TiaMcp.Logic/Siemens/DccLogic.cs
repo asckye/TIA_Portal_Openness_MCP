@@ -10,17 +10,13 @@ namespace TiaMcpServer.Siemens
     // subcharts, DCB libraries and block types, DCC blocks, pins, published parameters, connections, chart interfaces and partitions.
     internal static class DccLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireText(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         internal static JsonObject ParseObject(string json, string parameter)
-            => (string.IsNullOrWhiteSpace(json) ? new JsonObject() : JsonNode.Parse(json) as JsonObject) ?? throw new ArgumentException(parameter + " must be a JSON object.");
+            => ArgumentRules.ParseObject(json, parameter);
         // Chart paths are Root/Sub/Sub relative to DriveControlChartContainer.Charts (subcharts through DriveControlChart.Subcharts).
         internal static string[] ChartParts(string chartPath) { RequireText(chartPath, "chartPath", 1024); return EngineeringPath.Parts(chartPath); }
 

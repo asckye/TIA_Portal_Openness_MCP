@@ -43,22 +43,11 @@ namespace TiaMcpServer.Siemens
             "ReadFiles", "ModifyFiles", "ChangeOperatingMode", "FlashLed", "WriteFirmware", "ChangeSystemParameter", "ChangeApplicationParameter", "Backup", "Restore", "FAdmin", "ManageUserDefinedWebPages" };
         internal static readonly string[] SimpleWebserverPermissions = { "None", "ReadOnly", "ReadWrite" };
 
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
-        internal static string RequireExactName(string value, string parameter) => HardwareServicesLogic.RequireExactName(value, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
+        internal static string RequireExactName(string value, string parameter) => ArgumentRules.RequireExactName(value, parameter);
 
         internal static JsonObject ParseObject(string json, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(json)) return new JsonObject();
-            if (json.Length > 32768) throw new ArgumentException(parameter + " exceeds 32 KiB.");
-            var obj = JsonNode.Parse(json) as JsonObject ?? throw new ArgumentException(parameter + " must be a JSON object.");
-            if (obj.Count > 50) throw new ArgumentException(parameter + ": at most 50 entries.");
-            foreach (var pair in obj)
-            {
-                if (string.IsNullOrWhiteSpace(pair.Key) || !pair.Key.All(c => char.IsLetterOrDigit(c) || c == '_')) throw new ArgumentException(parameter + ": invalid key '" + pair.Key + "'.");
-                if (pair.Value is JsonObject || pair.Value is JsonArray) throw new ArgumentException(parameter + ": only scalar values are supported (" + pair.Key + ").");
-            }
-            return obj;
-        }
+            => ArgumentRules.ParseObject(json, parameter, ArgumentRules.ObjectRule.HardwareNetwork);
         internal static string[] ParseNames(string json, string parameter, int max = 64)
         {
             if (string.IsNullOrWhiteSpace(json)) return Array.Empty<string>();

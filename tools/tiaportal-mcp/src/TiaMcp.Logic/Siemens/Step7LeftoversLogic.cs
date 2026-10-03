@@ -11,19 +11,13 @@ namespace TiaMcpServer.Siemens
     // force table entries and ProDiag CSV export.
     internal static class Step7LeftoversLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         private static void RequireAbsoluteDirectory(string path, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(path) || !Path.IsPathRooted(path)) throw new ArgumentException("Absolute existing " + parameter + " required.");
-        }
+            => ArgumentRules.RequireAbsolutePath(path, "Absolute existing " + parameter + " required.");
         internal static string[] ParseNames(string json, string parameter)
         {
             JsonNode? node;

@@ -10,16 +10,12 @@ namespace TiaMcpServer.Siemens
     // (test cases) with conditions and trace configuration, validity checks, reports and XML exchange.
     internal static class SafetyValidationLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireText(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
-        internal static JsonObject ParseObject(string json, string parameter) => SivarcLogic.ParseObject(json, parameter);
+            => ArgumentRules.Refuse(value, parameter, reason);
+        internal static JsonObject ParseObject(string json, string parameter) => ArgumentRules.ParseObject(json, parameter);
         internal static string[] ParseGroupPath(string json)
         {
             var array = (string.IsNullOrWhiteSpace(json) ? new JsonArray() : JsonNode.Parse(json) as JsonArray) ?? throw new ArgumentException("groupPathJson must be a JSON array of activation test group names (outermost first).");

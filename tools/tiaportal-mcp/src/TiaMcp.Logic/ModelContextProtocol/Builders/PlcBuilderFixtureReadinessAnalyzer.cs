@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -235,11 +234,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static string Sha256(string path)
-        {
-            using var sha = SHA256.Create();
-            using var stream = File.OpenRead(path);
-            return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
-        }
+            => Siemens.ArgumentRules.HashFile(path, FileShare.Read);
 
         private sealed class FixtureRule
         {

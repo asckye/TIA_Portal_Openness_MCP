@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
@@ -18,9 +17,9 @@ namespace TiaMcpServer.Siemens
         internal static JsonObject Verify(FileInfo file)
         {
             file.Refresh(); if (!file.Exists || file.Length == 0) throw new IOException("Native output missing or empty: " + file.FullName);
-            using var stream = file.OpenRead(); using var sha = SHA256.Create();
+            using var stream = file.OpenRead();
             return new JsonObject { ["path"] = file.FullName, ["bytes"] = file.Length,
-                ["sha256"] = BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant(), ["contentSemanticsVerified"] = false };
+                ["sha256"] = ArgumentRules.Hash(stream), ["contentSemanticsVerified"] = false };
         }
     }
 }

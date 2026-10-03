@@ -91,4 +91,7 @@
   <ItemGroup>
     <ProjectReference Include="../../src/TiaMcp.Logic/TiaMcp.Logic.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ArgumentRulesCharacterization.json" LogicalName="ArgumentRulesCharacterization.json" />
+  </ItemGroup>
 </Project>

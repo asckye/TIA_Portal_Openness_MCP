@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -167,9 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                using var sha = SHA256.Create();
-                using var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                return (true, BitConverter.ToString(sha.ComputeHash(stream)).Replace("-", "").ToLowerInvariant(), null);
+                return (true, Siemens.ArgumentRules.HashFile(file, FileShare.ReadWrite | FileShare.Delete), null);
             }
             catch (Exception ex)
             {

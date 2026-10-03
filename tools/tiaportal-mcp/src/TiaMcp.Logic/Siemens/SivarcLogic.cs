@@ -11,17 +11,13 @@ namespace TiaMcpServer.Siemens
     // settings, the expression resolver, screen layout data and the definitions upgrader.
     internal static class SivarcLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 128)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         internal static JsonObject ParseObject(string json, string parameter)
-            => (string.IsNullOrWhiteSpace(json) ? new JsonObject() : JsonNode.Parse(json) as JsonObject) ?? throw new ArgumentException(parameter + " must be a JSON object.");
+            => ArgumentRules.ParseObject(json, parameter);
         internal static string[] ParseNames(string json, string parameter)
         {
             var array = (string.IsNullOrWhiteSpace(json) ? new JsonArray() : JsonNode.Parse(json) as JsonArray) ?? throw new ArgumentException(parameter + " must be a JSON array of names.");

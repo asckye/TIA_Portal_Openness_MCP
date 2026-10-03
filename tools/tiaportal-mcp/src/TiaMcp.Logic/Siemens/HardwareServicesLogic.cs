@@ -30,19 +30,12 @@ namespace TiaMcpServer.Siemens
         internal static readonly string[] TableAccessValues = { "None", "Read", "Write" };
 
         internal static string RequireOneOf(string value, string[] allowed, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(value) || !allowed.Contains(value, StringComparer.Ordinal))
-                throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
-            return value;
-        }
+            => ArgumentRules.RequireOneOf(value, allowed, parameter);
         internal static string ConnectionTypeName(string kind) => ConnectionNamespace + "." + RequireOneOf(kind, ConnectionKinds, "connectionType");
         internal static string FeatureTypeName(string feature) => FeatureNamespace + "." + feature;
         internal static bool FeatureValuesAllowed(string feature) => !FeatureValueDenylist.Contains(feature, StringComparer.Ordinal);
         internal static string RequireExactName(string value, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > 256 || value != value.Trim()) throw new ArgumentException(parameter + " must be an exact nonempty name without surrounding whitespace.");
-            return value;
-        }
+            => ArgumentRules.RequireExactName(value, parameter);
         internal static void ValidatePagination(int offset, int limit)
         {
             if (offset < 0 || limit < 1 || limit > 500) throw new ArgumentException("offset>=0, limit 1..500 required.");

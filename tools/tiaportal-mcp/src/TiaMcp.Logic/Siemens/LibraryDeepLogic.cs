@@ -60,7 +60,7 @@ namespace TiaMcpServer.Siemens
             if (isWriteProtected) throw new NotSupportedException("Library type property writes require a non-write-protected global library. No property setter was called.");
         }
 
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
 
         internal static Guid? ParseGuid(string guid, string parameter)
         {

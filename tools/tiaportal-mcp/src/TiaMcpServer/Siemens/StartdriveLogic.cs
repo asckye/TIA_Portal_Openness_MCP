@@ -12,17 +12,13 @@ namespace TiaMcpServer.Siemens
     // extensions, hardware modules, safety acceptance tests and the online drive domain functions.
     internal static class StartdriveLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireText(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         internal static JsonObject ParseObject(string json, string parameter)
-            => (string.IsNullOrWhiteSpace(json) ? new JsonObject() : JsonNode.Parse(json) as JsonObject) ?? throw new ArgumentException(parameter + " must be a JSON object.");
+            => ArgumentRules.ParseObject(json, parameter);
 
         // ---- official enum names (pinned member by member by StartdriveShapeChecks) ---------------------------------------------
         internal static readonly string[] TelegramTypes = { "MainTelegram", "SupplementaryTelegram", "AdditionalTelegram", "SafetyTelegram", "TorqueTelegram", "EdgeTelegram" };

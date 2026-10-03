@@ -11,20 +11,13 @@ namespace TiaMcpServer.Siemens
     // identifiers, show-in-editor, transactions and credential-bearing open / online requests.
     internal static class BaseLeftoversLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void RequireKeys(JsonObject properties, string[] allowed, string parameter)
-        {
-            var unknown = properties.Select(p => p.Key).Where(k => !allowed.Contains(k, StringComparer.Ordinal)).ToArray();
-            if (unknown.Length > 0) throw new ArgumentException(parameter + " accepts only " + string.Join(" / ", allowed) + "; unknown: " + string.Join(", ", unknown));
-        }
+            => ArgumentRules.RequireKeys(properties, allowed, parameter);
         private static void RequireAbsoluteNewFile(string filePath, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(filePath) || !System.IO.Path.IsPathRooted(filePath)) throw new ArgumentException("Absolute " + parameter + " required.");
-        }
+            => ArgumentRules.RequireAbsolutePath(filePath, "Absolute " + parameter + " required.");
 
         // ---- hardware utilities (ProjectBase.HwUtilities) --------------------------------------------------------------------
         internal static readonly string[] HardwareUtilityActions = { "list", "findModuleTypes", "findContainerTypes", "normalizeTypeIdentifier", "exportOpcUa", "exportCardReaderPsc" };

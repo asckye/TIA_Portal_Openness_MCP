@@ -463,13 +463,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         private static JsonObject ParseObject(string json, string path)
-        {
-            if (string.IsNullOrWhiteSpace(json))
-                throw new ArgumentException("Missing required JSON object: " + path);
-
-            var node = JsonNode.Parse(json);
-            return AsObject(node, path);
-        }
+            => Siemens.ArgumentRules.ParseObject(json, path, Siemens.ArgumentRules.ObjectRule.Required);
 
         private static JsonObject AsObject(JsonNode? node, string path)
         {

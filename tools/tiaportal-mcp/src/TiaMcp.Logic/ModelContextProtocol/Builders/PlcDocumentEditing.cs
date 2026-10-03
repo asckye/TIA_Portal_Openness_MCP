@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Xml;
@@ -14,7 +13,7 @@ namespace TiaMcpServer.ModelContextProtocol
     public static class PlcDocumentEditing
     {
         public const int MaxBytes = 16 * 1024 * 1024;
-        public static string Hash(byte[] bytes) { using var h = SHA256.Create(); return BitConverter.ToString(h.ComputeHash(bytes)).Replace("-", "").ToLowerInvariant(); }
+        public static string Hash(byte[] bytes) => Siemens.ArgumentRules.Hash(bytes);
         public static string HashText(string text) => Hash(Encoding.UTF8.GetBytes(text));
         public static string Read(string path)
         {

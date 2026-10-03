@@ -184,11 +184,6 @@ namespace TiaMcpServer.Siemens
         }
 
         private static JsonObject ParseObject(string propertiesJson)
-        {
-            if (string.IsNullOrWhiteSpace(propertiesJson) || propertiesJson.Length > 16384) throw new ArgumentException("propertiesJson must be a JSON object (<= 16 KB).");
-            var node = JsonNode.Parse(propertiesJson) as JsonObject ?? throw new ArgumentException("propertiesJson must be a JSON object.");
-            if (node.Count > 50) throw new ArgumentException("At most 50 properties per request.");
-            return node;
-        }
+            => ArgumentRules.ParseObject(propertiesJson, "propertiesJson", ArgumentRules.ObjectRule.Safety);
     }
 }

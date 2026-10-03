@@ -8,19 +8,13 @@ namespace TiaMcpServer.Siemens
     // tag / VB-script folders, pop-up / template / slide-in / overview / global-element screen objects and multilingual graphics.
     internal static class ClassicHmiFoldersLogic
     {
-        internal static string RequireOneOf(string value, string[] allowed, string parameter) => HardwareServicesLogic.RequireOneOf(value, allowed, parameter);
+        internal static string RequireOneOf(string value, string[] allowed, string parameter) => ArgumentRules.RequireOneOf(value, allowed, parameter);
         private static void RequireName(string value, string parameter, int max = 256)
-        {
-            if (string.IsNullOrWhiteSpace(value) || value.Length > max || value.Trim() != value) throw new ArgumentException("Exact nonempty " + parameter + " required (max " + max + " chars, no surrounding whitespace).");
-        }
+            => ArgumentRules.RequireText(value, parameter, max);
         private static void Refuse(string value, string parameter, string reason)
-        {
-            if (!string.IsNullOrEmpty(value)) throw new ArgumentException(parameter + " " + reason);
-        }
+            => ArgumentRules.Refuse(value, parameter, reason);
         private static void RequireAbsoluteFile(string filePath, string parameter)
-        {
-            if (string.IsNullOrWhiteSpace(filePath) || !Path.IsPathRooted(filePath)) throw new ArgumentException("Absolute " + parameter + " required.");
-        }
+            => ArgumentRules.RequireAbsolutePath(filePath, "Absolute " + parameter + " required.");
 
         // ---- screen tree ----
         internal static readonly string[] ScreenTreeKinds = { "all", "screens", "popups", "templates", "slideins" };
