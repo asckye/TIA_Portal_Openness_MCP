@@ -225,12 +225,6 @@
       "line": 196
     },
     {
-      "fingerprint": "2d564185794bd55ca26a2cbd260e844358b462581dd029fbff74d672be623433",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Cfc.cs",
-      "line": 46
-    },
-    {
       "fingerprint": "2d899f85b7941b0df6ff3efa0ec53215602f42478ac77be7db89c513f441e8b4",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.PlcTables.cs",

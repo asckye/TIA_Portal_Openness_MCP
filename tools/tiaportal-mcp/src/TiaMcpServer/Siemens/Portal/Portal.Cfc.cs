@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens
                 meta["preflight"] = row;
                 return inventory;
             }
-            finally { try { if (temp.Exists) temp.Delete(); } catch { } }
+            finally { try { if (temp.Exists) temp.Delete(); } catch { /* swallow(cleanup): Temporary preflight ZIP deletion must not replace the inventory result or the original export failure. */ } }
         }
         private static void RequireCfcCharts(ChartProviderS7 provider, string[] chartNames, string modelVersion, long filter, JsonObject meta, string purpose)
         {
