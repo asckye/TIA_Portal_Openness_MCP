@@ -557,13 +557,11 @@ namespace TiaMcpServer.ModelContextProtocol
             var tag = ToolTaxonomy.Parse(description);
             var op = ToolTaxonomy.OperationOf(canonical, description);
             var precautions = PreflightLogic.Precautions(op.Operation, report.DryRunSupported).ToList();
-            bool nativeParameterRead = StartdriveGuidance.AppliesTo(canonical);
-            if (nativeParameterRead)
-            {
-                precautions.Add(StartdriveGuidance.Precaution);
-                meta["authoringGuideTopic"] = StartdriveGuidance.Topic;
-                meta["nativeReadsPossible"] = true;
-            }
+            var usageNotes = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical);
+            bool nativeParameterRead = (bool?)usageNotes["nativeReadsPossible"] == true;
+            if (usageNotes["precaution"] is JsonValue note) precautions.Add(note.GetValue<string>());
+            if (usageNotes["nativeReadsPossible"] != null) meta["nativeReadsPossible"] = usageNotes["nativeReadsPossible"]!.DeepClone();
+            meta["usageTool"] = new JsonObject { ["name"] = "GetToolUsage", ["arguments"] = new JsonObject { ["toolName"] = canonical } };
 
             bool? connected = null; string? project = null;
             ReadSessionState(ref connected, ref project);
@@ -677,13 +675,15 @@ namespace TiaMcpServer.ModelContextProtocol
             summary["example"] = JsonNode.Parse(example.ArgumentsJson);
             summary["exampleNote"] = example.Note;
             summary["usageTool"] = new JsonObject { ["name"] = "GetToolUsage", ["arguments"] = new JsonObject { ["toolName"] = canonical } };
+            if (args["action"] is JsonValue action) summary["usageTool"]!["arguments"]!["operation"] = action.DeepClone();
+            else if (args["operation"] is JsonValue operation) summary["usageTool"]!["arguments"]!["operation"] = operation.DeepClone();
             if (example.Note == ToolExamples.DerivedNote) summary["exampleDerived"] = true;
             summary["next"] = !report.Ok
                 ? "Correct the argument problems listed here and call once more; PreflightToolCall(name, argumentsJson) checks a corrected call without executing."
                 : prerequisite != null ? prerequisite
                 : "The message names the cause; fix that one thing (real names from GetProjectTree / GetSoftwareTree, documented values, preconditions) and call once more - do not try variants.";
-            if (StartdriveGuidance.AppliesTo(canonical))
-                summary["next"] = StartdriveGuidance.Precaution;
+            var usageNote = TiaOpenness.Shared.ToolUsageCatalog.Notes(canonical)["precaution"];
+            if (usageNote != null) summary["next"] = usageNote.DeepClone();
             return summary;
         }
 
@@ -699,11 +699,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
         }
 
-        [McpServerTool(Name = "GetRecipe"), Description(
-            "[L0][Guide][SESSION] Documented multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, " +
-            "watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, " +
-            "paging large responses and exact Startdrive BICO reads. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; native acceptance and known limitations are stated in each recipe; examples alone do not establish it. " +
-            "Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed.")]
+        [McpServerTool(Name = "GetRecipe"), Description("[L0][Guide][READ] Compatibility entry for call sequences stored in the unified GetToolUsage example library. Empty topic lists sequences; a topic returns ordered calls and expected results. No calls are executed.")]
         public static ResponseStringList GetRecipe(
             [Description("topic: recipe key from the list, e.g. 'download-plcsim'; empty lists all recipes with their one-line purpose.")] string topic = "")
         {

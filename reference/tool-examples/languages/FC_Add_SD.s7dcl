@@ -1,0 +1,11 @@
+﻿{ S7_EditorMode := "SCL"; S7_Optimized := "TRUE"; S7_Version := "0.1" }
+FUNCTION "FC_Add_SD" : Int
+    VAR_INPUT
+        LeftValue : Int;
+        RightValue : Int;
+    END_VAR
+    { S7_Language := "SCL" }
+    NETWORK
+        #FC_Add_SD := #LeftValue + #RightValue;
+    END_NETWORK
+END_FUNCTION

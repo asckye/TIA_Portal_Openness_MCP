@@ -36,7 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string devicePathJson,
             string itemPathJson,
             [Description("family: webApplications | telecontrolDataPoints | certificateServices.")] string family,
-            string action="read",
+            [Description("read | setDefault | update | delete | export | import | setServiceGroupName | createService | deleteService. ")] string action="read",
             string name="",
             string propertiesJson="{}",
             string filePath="",

@@ -1,0 +1,7 @@
+﻿MultiLingualTexts:
+  - id: MLC_Run
+    zh-CN: 运行条件
+    en-US: Run condition
+  - id: MLC_Pulse
+    zh-CN: 上升沿脉冲
+    en-US: Rising pulse

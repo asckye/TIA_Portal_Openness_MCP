@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageMotionAxis(
             string softwarePath,
             string objectPath,
-            string action,
+            [Description("read | addMasterValue | removeMasterValue | createMapping | updateMapping | deleteMapping | connect | disconnect | connectIdent. ")] string action,
             [Description("aspect: which aspect of the axis to manage (see the tool description).")] string aspect="",
             string name="",
             [Description("targetJson: JSON object naming the target (see the tool description).")] string targetJson="{}",
@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManagePlcSupervision"), Description("[L2][PLC-Software][WRITE] ProDiag native object access on an exact PLC or block: read provider metadata (attributes, advertised compositions), readComposition/createEntry/deleteEntry through the official IEngineeringObject composition API (typeName must be advertised by GetCreationInfos), setAttributes on the provider, exportSettings/importSettings (.dat) via SupervisionSettingsProvider. Openness exposes no typed supervision list; XLSX bulk exchange is ExchangePlcSupervisions. Offline PLC for real writes; deletes need confirmDelete=true. Default preview; no save/compile/download.")]
         public static ResponseMessage ManagePlcSupervision(
             string softwarePath,
-            string action,
+            [Description("read | readComposition | createEntry | deleteEntry | setAttributes | exportSettings | importSettings. ")] string action,
             string blockPath="",
             [Description("providerKind: supervision | settings.")] string providerKind="supervision",
             [Description("compositionName: exact name of the composition (collection) on the object.")] string compositionName="",
@@ -48,7 +48,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageClassicHmiScript(
             string softwarePath,
             [Description("scriptPath: 'Folder/Script' path of the script.")] string scriptPath,
-            string action,
+            [Description("read | export | import | delete | createFolder | deleteFolder | setAttributes. ")] string action,
             string filePath="",
             string importOptions="None",
             string attributesJson="{}",
@@ -58,7 +58,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManageClassicHmiCycle"), Description("[L2][HMI-Classic][WRITE] Classic HMI cycles: read (all or exact cycleName with advertised time/unit attributes), export (new XML file), import (Override needs confirmDelete=true), delete (confirmDelete=true; system cycles refused), setAttributes (readback verified). CycleComposition has no native Create. Default preview; no save/compile/download.")]
         public static ResponseMessage ManageClassicHmiCycle(
             string softwarePath,
-            string action,
+            [Description("read | export | import | delete | setAttributes. ")] string action,
             [Description("cycleName: exact cycle name.")] string cycleName="",
             string filePath="",
             string importOptions="None",
@@ -72,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageClassicHmiTextGraphicList(
             string softwarePath,
             [Description("listKind: text | graphic.")] string listKind,
-            string action,
+            [Description("read | readEntries | createEntry | deleteEntry | export | import | delete | setAttributes. ")] string action,
             [Description("listName: exact list name.")] string listName="",
             [Description("compositionName: exact name of the composition (collection) on the object.")] string compositionName="",
             [Description("entryName: exact name of the entry inside the composition.")] string entryName="",

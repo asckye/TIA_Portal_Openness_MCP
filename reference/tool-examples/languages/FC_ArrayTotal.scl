@@ -1,0 +1,23 @@
+FUNCTION "FC_ArrayTotal" : DInt
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Values : Array[0..3] of Int;
+    Mode : Int;
+END_VAR
+VAR_TEMP
+    Index : Int;
+    Total : DInt;
+END_VAR
+BEGIN
+    #Total := 0;
+    FOR #Index := 0 TO 3 DO
+        #Total := #Total + INT_TO_DINT(#Values[#Index]);
+    END_FOR;
+    CASE #Mode OF
+        0: #FC_ArrayTotal := #Total;
+        1: #FC_ArrayTotal := #Total / 4;
+        ELSE
+            #FC_ArrayTotal := 0;
+    END_CASE;
+END_FUNCTION

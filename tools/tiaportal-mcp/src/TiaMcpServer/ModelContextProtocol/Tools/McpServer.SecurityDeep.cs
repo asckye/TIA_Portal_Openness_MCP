@@ -7,7 +7,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManageSyslogServers"), Description("[L2][Security][WRITE] Syslog configuration. scope=project (Siemens.Engineering.Security.SyslogServerProvider.Servers, project-global servers): read (all or exact name: Name, Address, Port, Tls, Comment, AssignedModules with owner paths), create (PREVIEW ONLY: SyslogServerComposition.Create crashed TIA Portal V21 twice on the reference project, so dryRun=false is refused; create the server in the TIA UI), update (propertiesJson), delete (needs confirmDelete, verified absent), assignModule/unassignModule (DeviceItemAssociation.Add/Remove of the exact devicePathJson/itemPathJson module). scope=plc (HW.Features.SysLogConfigurationManager on the exact CPU item, S7-1500 FW 3.1+): read (EnableSystemLogging, TransportProtocol, SysLogServerConfiguration rows, dynamic SysLogAutoAcceptClient/SysLogClientCertificateId/SysLogTrustedCertificateIds), update (propertiesJson EnableSystemLogging/TransportProtocol None|TLSServerAndClientAuthentication|TLSOnlyServerAuthentication|UDP + attributesJson for the three dynamic attributes), createServer (serverAddress + serverPort via SysLogServerConfigurationComposition.Create), deleteServer (serverAddress, needs confirmDelete). Default dryRun=true; no save/compile/download.")]
         public static ResponseMessage ManageSyslogServers(
             [Description("scope: project | plc.")] string scope="project",
-            string action="read",
+            [Description("read | create | update | delete | assignModule | unassignModule | createServer | deleteServer. ")] string action="read",
             string name="",
             string propertiesJson="{}",
             string attributesJson="{}",

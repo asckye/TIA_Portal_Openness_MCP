@@ -109,6 +109,7 @@ foreach($major in @(20,21)) {
     $payload | Copy-Item -Destination $runtime -Force
     $exe=Join-Path $runtime 'TiaMcpServer.exe'
     if((Get-Item $exe).VersionInfo.FileVersion -ne $version){throw "V$major runtime version mismatch"}
+    Run $harness @($exe,'example-library-only') "example-library-v$major.log"
     $coveragePath=Join-Path $out "native-call-coverage-v$major.json"
     Run $Dotnet @($weaver,'verify',$exe,$coveragePath) "native-coverage-v$major.log"
     $coverage=Get-Content $coveragePath -Raw | ConvertFrom-Json

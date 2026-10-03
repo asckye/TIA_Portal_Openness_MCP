@@ -22,6 +22,14 @@ corpus is generated from pinned Siemens references. Regenerate with
 multi-version build checks actual per-tool retrieval in `manifest/tool-usage-coverage.json`.
 Templates and topic references are not native acceptance or official MCP wrappers.
 
+The library now also resolves `operation`, `language` and `exampleId`. Edit call
+sequences, programming assets, input origins and result interpretation together in
+`reference/tool-examples`; do not create separate issue-specific guide systems.
+The older `GetAuthoringGuide` and `GetRecipe` entries reuse this data. Initialization
+points to examples instead of imposing a repeated guide/preflight workflow. Preserve
+functional tool checks. Coverage distinguishes schema templates, curated calls,
+complete sources, fragments and exported-module edits; native acceptance is separate.
+
 Shared release identities, environment facts and dependency planning live under
 `tools/openness-shared` and the linked version catalog. Native API-bound assemblies
 are compiled separately. Preserve the foundation worker contracts and full-engine
@@ -50,7 +58,7 @@ After engine/test changes, run `scripts/build/Build-Release.ps1` against the aut
 V20/V21 PublicAPI directories. For all targets, use:
 
 ```powershell
-./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+pwsh -NoProfile -File ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
 This runs the full build unless `-SkipFullEngines` is explicitly chosen after a fresh

@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name = "AnalyzePlcReferences"), Description("[L2][Validation][OFFLINE] Query supplied exports without native CrossReferenceService. action summary/callers/callees/callPaths/unreachable/references. Recursively indexes single-block SimaticML XML (max 2000 files / 64 MiB); SCL/S7DCL and invalid files are reported unindexed. target is exact block name or relative file ID; references takes a quoted component path e.g. \"Motor\".\"Run\". Uses explicit CallInfo and global Symbol nodes only. Reports missing/ambiguous callees, cycles, truncation and failures; coverageComplete and safeToDelete are always false. An empty result is not proof of no references. No TIA calls or writes.")]
         public static ResponseMessage AnalyzePlcReferences(
             [Description("Absolute directory of exports from one PLC/scope, scanned recursively.")] string directory,
-            [Description("summary, callers, callees, callPaths, unreachable or references.")] string action = "summary",
+            [Description("summary | callers | callees | callPaths | unreachable | references. summary, callers, callees, callPaths, unreachable or references.")] string action = "summary",
             [Description("Exact block name or relative file ID; references uses quoted symbol components.")] string target = "",
             [Description("Maximum call-path edge depth, 1..50.")] int maxDepth = 10,
             [Description("Zero-based result offset.")] int offset = 0,

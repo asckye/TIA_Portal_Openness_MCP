@@ -1,0 +1,8 @@
+﻿{ S7_Optimized := "TRUE"; S7_Version := "0.1" }
+DATA_BLOCK DB_Example
+    VAR
+        Enabled : Bool := FALSE;
+        Setpoint : Real := 10.0;
+        Samples : Array[0..3] of Int;
+    END_VAR
+END_DATA_BLOCK

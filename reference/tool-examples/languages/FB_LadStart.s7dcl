@@ -1,0 +1,30 @@
+﻿{ S7_Optimized := "TRUE"; S7_PreferredLanguage := "LAD"; S7_Version := "0.1" }
+FUNCTION_BLOCK "FB_LadStart"
+    VAR_INPUT
+        Enable : Bool;
+        Stop : Bool;
+    END_VAR
+    VAR_OUTPUT
+        Run : Bool;
+        Pulse : Bool;
+    END_VAR
+    VAR
+        Previous : Bool;
+    END_VAR
+    { S7_Language := "LAD"; S7_NetworkTitle := "MLC_Run" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #Enable )
+            I_Contact( #Stop )
+            Coil( #Run )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "LAD"; S7_NetworkTitle := "MLC_Pulse" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #Run )
+            P_Trig( #Previous )
+            Coil( #Pulse )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION_BLOCK

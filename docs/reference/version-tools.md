@@ -22,8 +22,9 @@ hosts advertise their entire implemented subset and do not offer the full engine
 CLI or dispatch bridge. Equal tool names across profiles can have different arguments,
 write-confirmation requirements and response envelopes. Read the selected host schema.
 
-Every tool has `GetToolUsage(toolName)` with the selected engine's exact schema,
-MCP example/template and related official sources. [Coverage and limits](../development/official-tool-usage.md)
+Every tool has `GetToolUsage(toolName, operation)` with its actual schema, input
+origins, result interpretation and examples. `language` and `exampleId` retrieve
+programming files and call sequences from the same library. [Coverage and limits](../development/official-tool-usage.md)
 distinguish source patterns, custom wrappers and native acceptance.
 
 Shared algorithms belong in API-independent code. Version-specific native operations

@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ExchangeMotionCamData(
             string softwarePath,
             string objectPath,
-            string action,
+            [Description("export | import. ")] string action,
             string filePath,
             [Description("format: file format name (see the tool description).")] string format="",
             [Description("separator: column separator character for CSV.")] string separator="",
@@ -54,7 +54,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string category,
             [Description("collectionPathJson: JSON array path of the rule collection.")] string collectionPathJson,
             string name,
-            string action,
+            [Description("create | update | delete. ")] string action,
             string propertiesJson="{}",
             bool dryRun=true)
             => Portal.ManageSiVArcRule(category,collectionPathJson,name,action,propertiesJson,dryRun);

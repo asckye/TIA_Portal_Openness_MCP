@@ -315,41 +315,9 @@ namespace TiaMcpServer.ModelContextProtocol
                     L2Count = GetMcpToolNames().Count(),
                 };
 
-                var rules = new[]
-                {
-                    "ORDER: Connect → (OpenProject | AttachToOpenProject | CreateProject) → GetProjectTree → read/write → CompileSoftware → SaveProject. Explicit connection is required. Use ConnectToProject for exact PID/start time/project path binding; GetState does not auto-attach.",
-                    "AFTER A WRITE: read back the intended change, then compile the relevant scope. Compile and SaveProject run outside transactions; save only within the authorized workflow. Changes are NOT saved automatically.",
-                    "NAMES ARE EXACT: plc software path defaults to 'PLC_1', HMI to 'HMI_RT_1'. If a name/path is rejected, call GetProjectTree / GetSoftwareTree to read the real names instead of guessing.",
-                    "ON ERROR: read the error message — it names the recovery tool (e.g. 'call OpenProject/AttachToOpenProject'). Do that instead of retrying the same call or switching tools at random.",
-                    "PLAN, DO NOT PROBE: before an unfamiliar call and after any correction from the user, run PreflightToolCall(name, argumentsJson) — it checks the arguments against the real signature and reports dryRun / confirm flags, precautions and session prerequisites without executing; fix the plan from that report, then call once. Every listed tool routes to GetToolUsage for a curated example or labeled schema template; every FAILED call carries meta.preflight with the corrected plan; GetRecipe(topic) gives the exact call sequence of a multi-step job.",
-                    "STARTDRIVE / BICO: GetAuthoringGuide('startdrive-bico') before parameter reads. dryRun does not suppress Value access; p2051[0] has a crash report awaiting native retest. Do not replay a failing native read.",
-                    "OFFICIAL REFERENCE: First read GetToolUsage(toolName) for any tool: version-specific MCP examples and embedded official source. GetAuthoringGuide('openness-workflow') routes to ReadOpennessGuidance and the matching API manual. Siemens V21 guide examples do not establish V20 support or live acceptance.",
-                    "BIG TASKS: to create or extend a whole project in one shot, prefer ScaffoldProject (one JSON spec) over many small calls; pass dryRun=true first to validate the spec offline.",
-                    "WRITING CODE: call GetAuthoringGuide('scl' or 'lad') BEFORE authoring block code — it returns the verified syntax and encoding rules. NEVER hand-write FlgNet XML for ladder logic; use S7DCL text via ImportFromDocuments/ImportBlocksFromScl.",
-                    "ENCODING: ASCII-only .scl can use UTF-8 without BOM; use a BOM for Chinese .scl; .s7dcl/.s7res and all XML = UTF-8 WITH BOM. Wrong BOM is the #1 cause of mojibake/import failures with Chinese text.",
-                };
-
-                var limits = new[]
-                {
-                    "Openness API CANNOT: read/change CPU RUN-STOP mode (use OPC UA), read fault buffer, ClearForces, selective per-block download.",
-                    "Force/Watch table values become effective only after the project is online and the table trigger fires.",
-                    "Safety F-CPU compile is not exposed in PublicAPI; user must trigger it in TIA UI.",
-                    "HMI full automation (connection + tags + screens) works ONLY for WinCC Unified panels. Classic/Comfort/Basic panels (KTP Basic, TP/KTP Comfort) CANNOT get their PLC-HMI connection, tag binding or screens created via Openness on this build (CommunicationConnections service is not exposed) — pick a WinCC Unified panel (e.g. MTP700 Unified Basic 6AV2 123-3GB32-0AW0) if you need end-to-end HMI automation.",
-                    "HMI screen text labels use itemType 'Text' (HmiText). A Rectangle has NO Text property — writing text onto a Rectangle silently yields a blank label. Use Rectangle only for lamps/indicators/backgrounds.",
-                };
-
-                // The roster is trimmed by default, so say so HERE too. Bootstrap is the one call
-                // every model makes; a model that only reads the tool list would otherwise conclude
-                // the unlisted tools do not exist.
-                {
-                    int total = GetMcpToolNames().Count();
-                    rules = rules.Concat(new[]
-                    {
-                        IsLiteProfile()
-                            ? $"TOOL ROSTER: this session lists ~{LiteToolNames.Count} core tools of {total} total (profile=lite, the default — it keeps the tool list inside what VS Code/Copilot and Windsurf accept and saves ~30k tokens per turn). To use ANY unlisted tool: FindTools('plain words for what you need') → CallTool(name, argumentsJson). Never report a capability as missing without running FindTools first."
-                            : $"TOOL ROSTER: profile=full — all {total} tools are listed. Note that VS Code/Copilot (128) and Windsurf (100) refuse rosters this large; use the default lite profile there.",
-                    }).ToArray();
-                }
+                var rules = new[] { TiaOpenness.Shared.ToolUsageCatalog.Instructions,
+                    IsLiteProfile() ? "FindTools searches all tools in this release; CallTool invokes a discovered tool." : "All tools in this release are listed." };
+                var limits = new[] { "Availability depends on the selected release, target object and installed options; read the selected tool's contract and example evidence." };
 
                 bool ready = env.OpennessGroupOk == true && (env.TiaVersionInUse != null || env.TiaVersionDetected != null);
 

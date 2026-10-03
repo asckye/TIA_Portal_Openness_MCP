@@ -80,7 +80,7 @@ namespace TiaMcpServer.ModelContextProtocol
             string name,
             [Description("nodeId: OPC UA node id.")] string nodeId,
             [Description("connection: exact HMI connection name.")] string connection,
-            string action="create",
+            [Description("create | update. ")] string action="create",
             bool dryRun=true)
             => Portal.ManageUnifiedOpcUaAlarmType(softwarePath,name,nodeId,connection,action,dryRun);
     }

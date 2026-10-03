@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ReadUnifiedEngineeringObjects(string softwarePath,string category,string name="",int offset=0,int limit=100)
             => Portal.ReadUnifiedEngineeringObjects(softwarePath,category,name,offset,limit);
         [McpServerTool(Name="ManageUnifiedEngineeringObject"), Description("[L2][HMI-Unified][WRITE] Native create/update/delete for alarmClasses/discreteAlarms/analogAlarms/alarmLogs/dataLogs/textLists/graphicLists when supported by installed API. Exact name. propertiesJson contains public writable scalar properties only, not references/complex text. Default dryRun=true. Preview validates API shape, not TIA semantics. No save/compile/download. Delete impact on references is not analyzed. Partial writes reported, no rollback.")]
-        public static ResponseMessage ManageUnifiedEngineeringObject(string softwarePath,string category,string name,string action,string propertiesJson="{}",bool dryRun=true)
+        public static ResponseMessage ManageUnifiedEngineeringObject(string softwarePath,string category,string name,[Description("create | update | delete. ")] string action,string propertiesJson="{}",bool dryRun=true)
             => Portal.ManageUnifiedEngineeringObject(softwarePath,category,name,action,propertiesJson,dryRun);
     }
 }

@@ -1,0 +1,6 @@
+﻿TYPE
+    UDT_Status : STRUCT
+        Ready : Bool;
+        Value : Real;
+    END_STRUCT;
+END_TYPE

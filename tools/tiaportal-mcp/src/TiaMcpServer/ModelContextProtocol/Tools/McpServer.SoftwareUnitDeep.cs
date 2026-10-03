@@ -57,7 +57,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit")
             => Portal.ManagePlcBlockWriteProtection(softwarePath,blockPath,action,password,newPassword,confirmProtectionChange,dryRun,unitName,unitKind);
         [McpServerTool(Name="ManageProjectCompilationSettings"), Description("[L2][Project][WRITE] Project simulation / virtual PLC support during block compilation (official 'Updating project properties'): read or update propertiesJson {IsSimulationDuringBlockCompilationEnabled, IsVirtualPlcDuringBlockCompilationEnabled} (booleans). V20 reads / writes the two Project properties; V21 removed them and goes through the project's PlcSimulationSettingsProvider / VirtualPlcSettingsProvider services; every write is read back. Default dryRun=true; no save.")]
-        public static ResponseMessage ManageProjectCompilationSettings(string action="read", string propertiesJson="{}", bool dryRun=true)
+        public static ResponseMessage ManageProjectCompilationSettings([Description("read | update. ")] string action="read", string propertiesJson="{}", bool dryRun=true)
             => Portal.ManageProjectCompilationSettings(action,propertiesJson,dryRun);
     }
 }

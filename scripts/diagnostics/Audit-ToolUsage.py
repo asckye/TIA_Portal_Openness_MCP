@@ -30,10 +30,12 @@ def main():
     assert set(by_release) == set(matrix)
     union = set().union(*(set(r['tools']) for r in matrix.values()))
     assert union == set(catalog['tools']), 'Missing or obsolete usage mapping'
-    result = {'basis': 'Actual MCP tools/list and GetToolUsage responses. Required keys, parameter names/types/enums, preview flags, exact release identity, all pinned source text pagination and SHA-256 checked. Example operations/native APIs NOT executed.',
+    result = {'basis': 'Actual MCP tools/list and GetToolUsage responses for every tool/operation. Schemas, input origins, result contracts, language files, sequence calls and source hashes checked. The two JSON builder examples execute offline on each full engine. Native example operations NOT executed.',
               'catalogSha256': hashlib.sha256(source.read_text('utf-8').replace('\r\n', '\n').encode()).hexdigest(),
               'uniqueTools': len(union), 'documents': len(catalog['documents']),
               'indexedExampleBlocksOrMethods': sum(len(d['examples']) for d in catalog['documents']),
+              'programmingExamples': len(catalog['examples']), 'callSequences': len(catalog['sequences']),
+              'languages': [l['id'] for l in catalog['languages']],
               'relatedOfficialPatternMappings': sum(m['relationship'] == 'related-api-patterns' for m in catalog['tools'].values()),
               'noDirectVendoredExampleMappings': sum(m['relationship'] == 'no-direct-official-example' for m in catalog['tools'].values()),
               'sources': catalog['sources'], 'nativeTiaExecuted': False, 'releases': by_release}

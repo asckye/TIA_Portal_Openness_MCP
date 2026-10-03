@@ -1,0 +1,22 @@
+﻿{ S7_Optimized := "TRUE"; S7_PreferredLanguage := "LAD"; S7_Version := "0.1" }
+FUNCTION "FC_Mixed" : Void
+    VAR_INPUT
+        Enable : Bool;
+        Value : Int;
+    END_VAR
+    VAR_OUTPUT
+        Active : Bool;
+        Doubled : DInt;
+    END_VAR
+    { S7_Language := "LAD" }
+    NETWORK
+        RUNG wire#powerrail
+            Contact( #Enable )
+            Coil( #Active )
+        END_RUNG
+    END_NETWORK
+    { S7_Language := "SCL" }
+    NETWORK
+        #Doubled := INT_TO_DINT(#Value) * 2;
+    END_NETWORK
+END_FUNCTION

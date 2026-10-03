@@ -16,7 +16,7 @@ namespace TiaMcpServer.ModelContextProtocol
         [McpServerTool(Name="ManagePlcSafety"), Description("[L2][Safety][WRITE] Official Siemens.Engineering.Safety administration of one exact F-PLC. read: password/login state, SafetySettings incl. AssignmentOfBlockNumbers (ManagementMode, From/To FB/FC/DB), SafetySystemVersion + applicable versions, EnableConsistentUploadFromFCpu/EnableFCommunicationIdTag attributes, runtime groups incl. FOBNumber/FOBCycleTime/FOBPhaseShift/FOBPriority, collective/software/hardware/communication-address F-signatures (V21), portal GlobalSettings and CPU Failsafe_FCapabilityActivated. Writes: createRuntimeGroup (optional mainSafetyBlockPath FC, or FB + mainSafetyInstanceDbPath), deleteRuntimeGroup, updateRuntimeGroup/updateSettings (propertiesJson: scalar properties, AssignmentOfBlockNumbers.*, SafetySystemVersion exact string, documented attributes), generateGlobalFIOStatusBlock, cleanSystemGeneratedObjects, generateBaseId (V21, F-BaseID CPUs), login/logoff/setPassword/revokePassword (password passed straight to TIA, never stored or logged). dryRun=true default; program edits require Offline and F-login when protected; delete/generate/clean/password actions and SafetyModeCanBeDisabled require confirmSafetyChange=true. No F-compile, save or download; API access is not functional safety acceptance.")]
         public static ResponseMessage ManagePlcSafety(
             string softwarePath,
-            string action="read",
+            [Description("read | createRuntimeGroup | deleteRuntimeGroup | updateRuntimeGroup | updateSettings | generateGlobalFIOStatusBlock | cleanSystemGeneratedObjects | generateBaseId | login | logoff | setPassword | revokePassword. ")] string action="read",
             [Description("runtimeGroup: exact name of the F-runtime group.")] string runtimeGroup="",
             string propertiesJson="{}",
             bool dryRun=true,
@@ -26,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("mainSafetyInstanceDbPath: path of the main safety instance DB.")] string mainSafetyInstanceDbPath="")
             => Portal.ManagePlcSafety(softwarePath,action,runtimeGroup,propertiesJson,dryRun,password,confirmSafetyChange,mainSafetyBlockPath,mainSafetyInstanceDbPath);
         [McpServerTool(Name="ManageSafetyGlobalSettings"), Description("[L2][Safety][WRITE] Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). propertiesJson holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login.")]
-        public static ResponseMessage ManageSafetyGlobalSettings(string action="read",string propertiesJson="{}",bool dryRun=true)
+        public static ResponseMessage ManageSafetyGlobalSettings([Description("read | update. ")] string action="read",string propertiesJson="{}",bool dryRun=true)
             => Portal.ManageSafetyGlobalSettings(action,propertiesJson,dryRun);
         [McpServerTool(Name="ReadSafetyBlockSignatures"), Description("[L2][Safety][READ] Per-block F-signatures via native PlcBlock.GetService<SafetySignatureProvider>() for one exact blockPath or every block of the PLC (recursive), plus the PLC collective/software/hardware/communication-address signatures (V21 ProgramSignatures) when includeProgramSignatures=true. Blocks without the service (non-F blocks, non-F-CPU) are counted, not listed. Value 0 = no valid signature (changed since the last F-compile). Offline project values, never read from the CPU. Paginated offset/limit<=500. No change.")]
         public static ResponseMessage ReadSafetyBlockSignatures(
@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManagePlcCertificate(
             string devicePathJson,
             string itemPathJson,
-            string action,
+            [Description("list | read | template | create | import | export | delete | assign | unassign. ")] string action,
             [Description("certificateId: certificate id from the read action.")] string certificateId="",
             string filePath="",
             [Description("usage: Tls | WebServer | OpcUaServer | OpcUaClient | OpcUaClientServer.")] string usage="",

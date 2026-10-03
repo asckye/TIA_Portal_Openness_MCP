@@ -1,6 +1,6 @@
 {
-  "schemaVersion": 1,
-  "scope": "All Markdown guidance/examples in the pinned Siemens AI extension skills, and all C# source files plus dependency/setup text in the pinned Siemens code-snippet repository. Not all examples ever published in Siemens manuals; gaps are explicit per tool. No Siemens SDKs or engineering archives included.",
+  "schemaVersion": 2,
+  "scope": "Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.",
   "sources": [
     {
       "repository": "https://github.com/siemens/tia-portal-ai-extensions",
@@ -7026,8 +7026,7 @@
       "manualsByRelease": {
         "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
         "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
-      },
-      "specificWorkflow": "GetAuthoringGuide(startdrive-bico), GetRecipe(startdrive-bico-read). p2051[0] reported crash: do not automatically replay; dryRun can read Value. Parameters.Find exact name first; BICO references are not scalar values. Online and offline containers differ."
+      }
     },
     "ManageSyslogServers": {
       "relationship": "related-api-patterns",
@@ -7876,8 +7875,7 @@
       "manualsByRelease": {
         "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
         "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
-      },
-      "specificWorkflow": "GetAuthoringGuide(startdrive-bico), GetRecipe(startdrive-bico-read). p2051[0] reported crash: do not automatically replay; dryRun can read Value. Parameters.Find exact name first; BICO references are not scalar values. Online and offline containers differ."
+      }
     },
     "ReadHardwareFeatures": {
       "relationship": "related-api-patterns",
@@ -8004,8 +8002,7 @@
       "manualsByRelease": {
         "20": "https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters",
         "21": "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
-      },
-      "specificWorkflow": "GetAuthoringGuide(startdrive-bico), GetRecipe(startdrive-bico-read). p2051[0] reported crash: do not automatically replay; dryRun can read Value. Parameters.Find exact name first; BICO references are not scalar values. Online and offline containers differ."
+      }
     },
     "ReadOpcUaAccessControl": {
       "relationship": "no-direct-official-example",
@@ -9751,6 +9748,2404 @@
       "documents": [],
       "sourceReleaseEvidence": "Pinned snippet source fixtures use .zap21; upstream README still says V20. Guides are reference patterns with no per-release acceptance. V14 SP1-V19 require the selected foundation contract; no newer-API compatibility claim.",
       "manualReferences": []
+    }
+  },
+  "languages": [
+    {
+      "id": "scl",
+      "title": "SCL external source (.scl)",
+      "aliases": [
+        "scl-external"
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "scl-sd",
+      "title": "SCL in SIMATIC SD (.s7dcl)",
+      "aliases": [
+        "s7dcl",
+        "scl-s7dcl"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "lad",
+      "title": "LAD / KOP",
+      "aliases": [
+        "ladder",
+        "kop"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "fbd",
+      "title": "FBD / FUP",
+      "aliases": [
+        "fup"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "mixed",
+      "title": "LAD with SCL networks",
+      "aliases": [
+        "lad-scl"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "db",
+      "title": "Global data block",
+      "aliases": [
+        "globaldb"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "BuildPlcGlobalDbXml",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "udt",
+      "title": "PLC data type",
+      "aliases": [
+        "type"
+      ],
+      "tools": [
+        "ManagePlcDocuments",
+        "BuildPlcUdtXml",
+        "ImportType"
+      ]
+    },
+    {
+      "id": "s7res",
+      "title": "Chinese / multilingual resources",
+      "aliases": [
+        "chinese",
+        "resources"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "stl",
+      "title": "STL / AWL",
+      "aliases": [
+        "awl"
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "graph",
+      "title": "GRAPH sequence",
+      "aliases": [
+        "s7-graph"
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "hmi-javascript",
+      "title": "WinCC Unified JavaScript",
+      "aliases": [
+        "javascript",
+        "js",
+        "hmi"
+      ],
+      "tools": [
+        "SetUnifiedHmiButtonEventScriptCode",
+        "ReadUnifiedGlobalScript",
+        "ExchangeUnifiedScriptModules",
+        "UpdateUnifiedGlobalScript"
+      ]
+    },
+    {
+      "id": "hmi-vbscript",
+      "title": "Classic WinCC VBScript",
+      "aliases": [
+        "vbscript",
+        "vbs"
+      ],
+      "tools": [
+        "ExportHmiScreen",
+        "ImportHmiScreen"
+      ]
+    },
+    {
+      "id": "csharp",
+      "title": "Openness C# API examples",
+      "aliases": [
+        "c#",
+        "cs"
+      ],
+      "tools": []
+    }
+  ],
+  "examples": [
+    {
+      "id": "scl-add",
+      "language": "scl",
+      "title": "Complete FC with typed inputs and return value",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Add.scl",
+          "name": "FC_Add.scl",
+          "encoding": "ASCII (UTF-8 without BOM)",
+          "content": "FUNCTION \"FC_Add\" : Int\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    LeftValue : Int;\n    RightValue : Int;\nEND_VAR\nBEGIN\n    #FC_Add := #LeftValue + #RightValue;\nEND_FUNCTION\n",
+          "contentSha256": "e5f55e83bb0c7df9b2abbbc4a8483f672fa4c9991bc676a0778e9faa052f6e03"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500. Save as .scl, then register the external source and generate blocks.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "NETWORK inside a .scl external source",
+          "correct": "BEGIN ... END_FUNCTION",
+          "reason": "NETWORK is used by the separate SIMATIC SD format."
+        }
+      ]
+    },
+    {
+      "id": "scl-state-timer",
+      "language": "scl",
+      "title": "FB with static timer and edge instance",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_DelayPulse.scl",
+          "name": "FB_DelayPulse.scl",
+          "encoding": "ASCII (UTF-8 without BOM)",
+          "content": "FUNCTION_BLOCK \"FB_DelayPulse\"\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    Enable : Bool;\n    Delay : Time := T#500ms;\nEND_VAR\nVAR_OUTPUT\n    Ready : Bool;\n    RisingPulse : Bool;\nEND_VAR\nVAR\n    OnDelay : TON_TIME;\n    Edge : R_TRIG;\nEND_VAR\nBEGIN\n    // Static instances preserve state between scans.\n    #OnDelay(IN := #Enable, PT := #Delay);\n    #Edge(CLK := #OnDelay.Q);\n    #Ready := #OnDelay.Q;\n    #RisingPulse := #Edge.Q;\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "d5ac65293bd47bb63e5de2fe54dab27f06421786668f9e25cd8936bc976b01f8"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500; TON_TIME and R_TRIG instances belong in static VAR.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "Timer or edge memory in VAR_TEMP",
+          "correct": "Declare the instance in VAR of an FB.",
+          "reason": "State must survive between scans."
+        },
+        {
+          "wrong": "#seconds * T#1s",
+          "correct": "DINT_TO_TIME(INT_TO_DINT(#seconds) * 1000)",
+          "reason": "Convert numeric milliseconds to Time explicitly."
+        }
+      ]
+    },
+    {
+      "id": "scl-control-flow",
+      "language": "scl",
+      "title": "FC with CASE, loop and array",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_ArrayTotal.scl",
+          "name": "FC_ArrayTotal.scl",
+          "encoding": "ASCII (UTF-8 without BOM)",
+          "content": "FUNCTION \"FC_ArrayTotal\" : DInt\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\nVAR_INPUT\n    Values : Array[0..3] of Int;\n    Mode : Int;\nEND_VAR\nVAR_TEMP\n    Index : Int;\n    Total : DInt;\nEND_VAR\nBEGIN\n    #Total := 0;\n    FOR #Index := 0 TO 3 DO\n        #Total := #Total + INT_TO_DINT(#Values[#Index]);\n    END_FOR;\n    CASE #Mode OF\n        0: #FC_ArrayTotal := #Total;\n        1: #FC_ArrayTotal := #Total / 4;\n        ELSE\n            #FC_ArrayTotal := 0;\n    END_CASE;\nEND_FUNCTION\n",
+          "contentSha256": "ca10a897857c9d6d5975f16a589440c895f119c24a3a401ac13810b7bff2d1dd"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500; every temporary used here is assigned before it is read.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "IN_RANGE(...) in SCL",
+          "correct": "(#Value >= #Low) AND (#Value <= #High)",
+          "reason": "Use the comparison expression in SCL."
+        },
+        {
+          "wrong": "EXPT(IN1 := #Value, IN2 := 2.0)",
+          "correct": "#Value ** 2.0",
+          "reason": "SCL uses the exponent operator."
+        }
+      ]
+    },
+    {
+      "id": "scl-sd-add",
+      "language": "scl-sd",
+      "title": "The same FC in SIMATIC SD format",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Add_SD.s7dcl",
+          "name": "FC_Add_SD.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_EditorMode := \"SCL\"; S7_Optimized := \"TRUE\"; S7_Version := \"0.1\" }\nFUNCTION \"FC_Add_SD\" : Int\n    VAR_INPUT\n        LeftValue : Int;\n        RightValue : Int;\n    END_VAR\n    { S7_Language := \"SCL\" }\n    NETWORK\n        #FC_Add_SD := #LeftValue + #RightValue;\n    END_NETWORK\nEND_FUNCTION\n",
+          "contentSha256": "42e33124f45e6a3ee806bf335883305ab9fec39b28578981e26b60cc69addfee"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Use the document import route; importPath is a directory, fileNameWithoutExtension is FC_Add_SD."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [
+        {
+          "wrong": "{ S7_Optimized_Access := 'TRUE' } + BEGIN in .s7dcl",
+          "correct": "{ S7_Optimized := \"TRUE\" } + S7_Language + NETWORK",
+          "reason": "External SCL and SIMATIC SD have different envelopes."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "lad-contacts-edge",
+      "language": "lad",
+      "title": "Contacts, coil, persistent edge and Chinese titles",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7dcl",
+          "name": "FB_LadStart.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_Optimized := \"TRUE\"; S7_PreferredLanguage := \"LAD\"; S7_Version := \"0.1\" }\nFUNCTION_BLOCK \"FB_LadStart\"\n    VAR_INPUT\n        Enable : Bool;\n        Stop : Bool;\n    END_VAR\n    VAR_OUTPUT\n        Run : Bool;\n        Pulse : Bool;\n    END_VAR\n    VAR\n        Previous : Bool;\n    END_VAR\n    { S7_Language := \"LAD\"; S7_NetworkTitle := \"MLC_Run\" }\n    NETWORK\n        RUNG wire#powerrail\n            Contact( #Enable )\n            I_Contact( #Stop )\n            Coil( #Run )\n        END_RUNG\n    END_NETWORK\n    { S7_Language := \"LAD\"; S7_NetworkTitle := \"MLC_Pulse\" }\n    NETWORK\n        RUNG wire#powerrail\n            Contact( #Run )\n            P_Trig( #Previous )\n            Coil( #Pulse )\n        END_RUNG\n    END_NETWORK\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "63ae7403c57d18b59668cad64ae3c46921974e8d36f8a037f5cac1a3ba3e73ea"
+        },
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7res",
+          "name": "FB_LadStart.s7res",
+          "encoding": "UTF-8 with BOM",
+          "content": "MultiLingualTexts:\n  - id: MLC_Run\n    zh-CN: 运行条件\n    en-US: Run condition\n  - id: MLC_Pulse\n    zh-CN: 上升沿脉冲\n    en-US: Rising pulse\n",
+          "contentSha256": "4b04baf420709ca75da1aaff7ee9d5023e2ede469b73aac3467d4bc1ad2fb707"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Both files use the same basename and live in the import directory.",
+        "V20 requires a compatible SIMATIC SD installation/update; this sample is scoped to V21."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [
+        {
+          "wrong": "P_Contact(#Previous)",
+          "correct": "P_Trig(#Previous) or P_Contact(#Signal, #Previous)",
+          "reason": "Power-flow edge and signal contact have different operands."
+        },
+        {
+          "wrong": "One S7_Language pragma for multiple networks",
+          "correct": "Place S7_Language before each NETWORK.",
+          "reason": "The language belongs to each network."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "lad-chinese-resources",
+      "language": "s7res",
+      "title": "Paired LAD and Chinese resource files",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7dcl",
+          "name": "FB_LadStart.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_Optimized := \"TRUE\"; S7_PreferredLanguage := \"LAD\"; S7_Version := \"0.1\" }\nFUNCTION_BLOCK \"FB_LadStart\"\n    VAR_INPUT\n        Enable : Bool;\n        Stop : Bool;\n    END_VAR\n    VAR_OUTPUT\n        Run : Bool;\n        Pulse : Bool;\n    END_VAR\n    VAR\n        Previous : Bool;\n    END_VAR\n    { S7_Language := \"LAD\"; S7_NetworkTitle := \"MLC_Run\" }\n    NETWORK\n        RUNG wire#powerrail\n            Contact( #Enable )\n            I_Contact( #Stop )\n            Coil( #Run )\n        END_RUNG\n    END_NETWORK\n    { S7_Language := \"LAD\"; S7_NetworkTitle := \"MLC_Pulse\" }\n    NETWORK\n        RUNG wire#powerrail\n            Contact( #Run )\n            P_Trig( #Previous )\n            Coil( #Pulse )\n        END_RUNG\n    END_NETWORK\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "63ae7403c57d18b59668cad64ae3c46921974e8d36f8a037f5cac1a3ba3e73ea"
+        },
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7res",
+          "name": "FB_LadStart.s7res",
+          "encoding": "UTF-8 with BOM",
+          "content": "MultiLingualTexts:\n  - id: MLC_Run\n    zh-CN: 运行条件\n    en-US: Run condition\n  - id: MLC_Pulse\n    zh-CN: 上升沿脉冲\n    en-US: Rising pulse\n",
+          "contentSha256": "4b04baf420709ca75da1aaff7ee9d5023e2ede469b73aac3467d4bc1ad2fb707"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "MLC_Run and MLC_Pulse are resource IDs, not literal titles. Save both files with UTF-8 BOM."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [],
+      "profile": "full-engine"
+    },
+    {
+      "id": "fbd-and",
+      "language": "fbd",
+      "title": "Complete FBD FC with a boolean AND",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_FbdAnd.s7dcl",
+          "name": "FC_FbdAnd.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_Optimized := \"TRUE\"; S7_PreferredLanguage := \"FBD\"; S7_Version := \"0.1\" }\nFUNCTION \"FC_FbdAnd\" : Void\n    VAR_INPUT\n        Enable : Bool;\n        Permitted : Bool;\n    END_VAR\n    VAR_OUTPUT\n        Run : Bool;\n    END_VAR\n    { S7_Language := \"FBD\" }\n    NETWORK\n        RUNG #Enable\n            A( in2 := #Permitted )\n            Coil( #Run )\n        END_RUNG\n    END_NETWORK\nEND_FUNCTION\n",
+          "contentSha256": "a6b54c00512acac95be05f8609a2a72a81e9c027a58f7b49351d62e7b167a724"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "V20 Update 4 or later, or V21. The running release key alone does not identify the installed update."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/representation-of-fbd-program-code-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2",
+        "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"
+      ],
+      "corrections": [
+        {
+          "wrong": "RUNG wire#powerrail in FBD",
+          "correct": "RUNG #Enable",
+          "reason": "FBD begins with an operand rather than a LAD power rail."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "mixed-lad-scl",
+      "language": "mixed",
+      "title": "LAD condition followed by SCL arithmetic",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Mixed.s7dcl",
+          "name": "FC_Mixed.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_Optimized := \"TRUE\"; S7_PreferredLanguage := \"LAD\"; S7_Version := \"0.1\" }\nFUNCTION \"FC_Mixed\" : Void\n    VAR_INPUT\n        Enable : Bool;\n        Value : Int;\n    END_VAR\n    VAR_OUTPUT\n        Active : Bool;\n        Doubled : DInt;\n    END_VAR\n    { S7_Language := \"LAD\" }\n    NETWORK\n        RUNG wire#powerrail\n            Contact( #Enable )\n            Coil( #Active )\n        END_RUNG\n    END_NETWORK\n    { S7_Language := \"SCL\" }\n    NETWORK\n        #Doubled := INT_TO_DINT(#Value) * 2;\n    END_NETWORK\nEND_FUNCTION\n",
+          "contentSha256": "8ac0ab5f2c0d14bd2cd7390bcd433e02c6e4f07c8dd63e3ce25c24b778532cc5"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "V20 Update 4 or later, or V21. The block keeps LAD as its preferred language; each network declares its own language."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"
+      ],
+      "corrections": [
+        {
+          "wrong": "S7_EditorMode := \"SCL\" for a mixed block",
+          "correct": "S7_PreferredLanguage := \"LAD\"",
+          "reason": "An SCL-only block cannot contain LAD networks."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "db-sd",
+      "language": "db",
+      "title": "Global DB with initial values",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/DB_Example.s7dcl",
+          "name": "DB_Example.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "{ S7_Optimized := \"TRUE\"; S7_Version := \"0.1\" }\nDATA_BLOCK DB_Example\n    VAR\n        Enabled : Bool := FALSE;\n        Setpoint : Real := 10.0;\n        Samples : Array[0..3] of Int;\n    END_VAR\nEND_DATA_BLOCK\n",
+          "contentSha256": "537710e0a14fef59239fd346cc28918aa829b0da644ff31d89272f916aed1cac"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "SIMATIC SD data declaration; no BEGIN section."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "udt-sd",
+      "language": "udt",
+      "title": "PLC data type in SIMATIC SD",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/UDT_Status.s7dcl",
+          "name": "UDT_Status.s7dcl",
+          "encoding": "UTF-8 with BOM",
+          "content": "TYPE\n    UDT_Status : STRUCT\n        Ready : Bool;\n        Value : Real;\n    END_STRUCT;\nEND_TYPE\n",
+          "contentSha256": "6680329983d21ebdf96ca3cd5ff0bdcafdc08a90526b9e16824e25fba9a2327c"
+        }
+      ],
+      "tools": [
+        "ManagePlcDocuments"
+      ],
+      "notes": [
+        "Import into the PLC type group with the type-document tool listed by the engine.",
+        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportFromDocuments targets program blocks."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "stl-boolean",
+      "language": "stl",
+      "title": "STL network body with local operands",
+      "kind": "network-fragment",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/stl-boolean.txt",
+          "name": "stl-boolean.txt",
+          "encoding": "UTF-8",
+          "content": "A #Enable\nA #Permitted\n= #Run\n",
+          "contentSha256": "71377115aed8ad9272de17254834c0058b0110aca125da4c610a197d73b2c163"
+        }
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Network body only; declare Enable/Permitted as Bool inputs and Run as a Bool output in an existing STL block.",
+        "S7-1500 example; S7-1200 has no STL. Preserve the exported SimaticML envelope when importing; this text is not an importable .s7dcl file."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/stl-s7-1500/stl-mnemonic-s7-1500/bit-logic-operations-s7-1500/a-and-logic-operation-s7-1500",
+        "https://docs.tia.siemens.cloud/r/en-us/v21/stl-s7-1500/stl-mnemonic-s7-1500/bit-logic-operations-s7-1500/assignment-s7-1500"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "graph-step-text",
+      "language": "graph",
+      "title": "GRAPH step title fragment",
+      "kind": "xml-fragment",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/graph-step-text.xml",
+          "name": "graph-step-text.xml",
+          "encoding": "UTF-8 with BOM",
+          "content": "<StepName>\n  <MultiLanguageText Lang=\"zh-CN\">等待启动</MultiLanguageText>\n  <MultiLanguageText Lang=\"en-US\">Wait for start</MultiLanguageText>\n</StepName>\n",
+          "contentSha256": "fd2d9588ee6fdce19372c2548d4ab7d6cccfb823139f469544f94c49bd6e00fb"
+        }
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Insert under an existing Step in a native GRAPH XML export. Preserve the Step attributes, transitions, connections and namespace.",
+        "This is a text-edit fragment, not a complete GRAPH block generator. GRAPH remains XML, not .s7dcl."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/exporting-graph-blocks-with-multi-language-text"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "unified-tag-read",
+      "language": "hmi-javascript",
+      "title": "Unified button event body: read a tag and log it",
+      "kind": "event-body",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/unified-tag-read.js",
+          "name": "unified-tag-read.js",
+          "encoding": "UTF-8",
+          "content": "const actual = Tags(\"ActualValue\").Read();\nHMIRuntime.Trace(\"ActualValue=\" + actual);\n",
+          "contentSha256": "a25f686fde0cf656c4c6333859a627d749a37344d1234eec12a7a24bb37a1766"
+        }
+      ],
+      "tools": [
+        "SetUnifiedHmiButtonEventScriptCode"
+      ],
+      "notes": [
+        "Event body, not an exported global module. hmiSoftwarePath, screenName and buttonName select the target; eventType=\"Tapped\"; scriptCode is the file text. The tag ActualValue must exist.",
+        "For a global module, keep the exported function declarations and paired .hmi.yml metadata from ReadUnifiedGlobalScript.",
+        "Use the event body as scriptCode. The named ActualValue tag and target button must exist."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/runtime-scripting-rt-unified/examples-rt-unified/reading-and-writing-tag-values-rt-unified"
+      ],
+      "corrections": [
+        {
+          "wrong": "SmartTags(\"ActualValue\") in Unified JavaScript",
+          "correct": "Tags(\"ActualValue\").Read()",
+          "reason": "SmartTags is the Classic VBScript interface."
+        }
+      ],
+      "profile": "full-engine",
+      "steps": [
+        {
+          "tool": "SetUnifiedHmiButtonEventScriptCode",
+          "arguments": {
+            "hmiSoftwarePath": "<Unified software>",
+            "screenName": "<existing screen>",
+            "buttonName": "<existing button>",
+            "eventType": "Tapped",
+            "scriptCode": "const value = Tags(\"ActualValue\").Read();\nHMIRuntime.Trace(String(value));",
+            "syntaxCheck": false
+          },
+          "expect": "meta.success reports the write. Missing syntaxErrorCount means NOT CHECKED. CompileAndDiagnoseHmi checks the HMI compilation separately."
+        }
+      ]
+    },
+    {
+      "id": "classic-tag-read",
+      "language": "hmi-vbscript",
+      "title": "Classic VBScript event body",
+      "kind": "event-body",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/classic-tag-read.vbs",
+          "name": "classic-tag-read.vbs",
+          "encoding": "UTF-8",
+          "content": "Dim actual\nactual = SmartTags(\"ActualValue\")\n",
+          "contentSha256": "4823cbe41b701b43490e7cd8a9621c48ae8b99475eecc56729f8624a86e57723"
+        }
+      ],
+      "tools": [],
+      "notes": [
+        "Classic WinCC scripting-capable target only; this is an event body, not a Unified script.",
+        "There is no dedicated Classic script-body writer in the current tool roster. This sample is for editing a native exported script/event; it is not an importable standalone module."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/zh-cn/v21/%E7%BC%96%E8%AF%91%E5%92%8C%E5%8A%A0%E8%BD%BD-basic-panels-panels-comfort-panels-rt-advanced-rt-professional/runtime-professional-rt-professional/%E4%BB%BF%E7%9C%9F%E9%A1%B9%E7%9B%AE-rt-professional/%E4%BD%BF%E7%94%A8%E5%8F%98%E9%87%8F%E4%BB%BF%E7%9C%9F%E5%99%A8%E4%BB%BF%E7%9C%9F%E5%8F%98%E9%87%8F-rt-professional/%E9%80%9A%E8%BF%87%E8%84%9A%E6%9C%AC%E4%BB%BF%E7%9C%9F%E5%8F%98%E9%87%8F-rt-professional"
+      ],
+      "corrections": [],
+      "profile": "full-engine"
+    },
+    {
+      "id": "scl-library-fb_basiclatch",
+      "language": "scl",
+      "title": "FB_BasicLatch",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_BasicLatch.scl",
+          "name": "FB_BasicLatch.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FB_BasicLatch —— 启动/停止/故障/复位 保持（自锁）功能块\n//  ---------------------------------------------------------------------------\n//  功能：实现带故障闭锁的标准启停自锁逻辑。故障优先停机并闭锁，复位清除故障，\n//        停止与故障均使输出失活；仅在使能且无故障时输出激活。\n//  适用：S7-1200 / S7-1500（优化访问）。典型电机/泵启停控制骨架。\n//  作者：TIA MCP 示例库     版本：0.2\n// ============================================================================\nFUNCTION_BLOCK \"FB_BasicLatch\"\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.2\n   VAR_INPUT\n      Enable     : Bool;   // 启动请求：为 TRUE 且无故障时使输出激活\n      Disable    : Bool;   // 停止请求：高电平使输出失活\n      FaultInput : Bool;   // 故障输入：为 TRUE 时闭锁故障并立即停机\n      Reset      : Bool;   // 复位：清除已闭锁的故障（高电平有效）\n   END_VAR\n\n   VAR_OUTPUT\n      Active  : Bool;   // 输出激活（运行中）\n      Fault   : Bool;   // 故障闭锁中\n      Healthy : Bool;   // 健康：无故障，可运行\n   END_VAR\n\n   VAR\n      ActiveLatch : Bool;   // 内部运行自锁位\n      FaultLatch  : Bool;   // 内部故障闭锁位\n   END_VAR\n\nBEGIN\n   // --- 故障闭锁与复位（故障优先） ----------------------------------------\n   IF FaultInput THEN\n      FaultLatch  := TRUE;     // 出现故障：闭锁故障\n      ActiveLatch := FALSE;    // 并立即停机\n   ELSIF Reset THEN\n      FaultLatch := FALSE;     // 复位：清除故障闭锁\n   END_IF;\n\n   // --- 启停自锁（停止/故障优先于启动） -----------------------------------\n   IF Disable OR FaultLatch THEN\n      ActiveLatch := FALSE;                    // 停止或故障：失活\n   ELSIF Enable AND NOT FaultLatch THEN\n      ActiveLatch := TRUE;                     // 启动且无故障：激活\n   END_IF;\n\n   // --- 输出映射 ----------------------------------------------------------\n   Active  := ActiveLatch;\n   Fault   := FaultLatch;\n   Healthy := NOT FaultLatch;                  // 无故障即为健康\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "0c362df54d5a7834c7a798d0dcef777a514c64d66d272e327b29e2bee7dd594d"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_selftest_template",
+      "language": "scl",
+      "title": "FB_SelfTest_Template",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_SelfTest_Template.scl",
+          "name": "FB_SelfTest_Template.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FB_SelfTest_Template —— DB 驱动的最小 SCL 自测骨架\n//  ---------------------------------------------------------------------------\n//  功能：把「被测逻辑」放进 RunCase，用一张用例表（预期值/实际值）逐条跑，\n//        统计通过/失败计数，给出 Done/AllPassed。用例表和控制位放在实例 DB\n//        或全局 DB 里，HMI/监控表置 Start 即可触发，不需要在线改程序。\n//  用法：1) 把被测 FC/FB 调用写进 RunCase 区（示例为线性缩放）；\n//        2) 在 Cases[] 里填 Input / Expected；\n//        3) 监控表置 Start := TRUE，读 PassCount / FailCount / FirstFailIndex。\n//  适用：S7-1200 / S7-1500（优化访问）。模式借鉴社区 SCL 单元测试思路，代码全新编写。\n//  注意：这是工程内自检，不是 Siemens 质量判定；上线前仍需 TIA 编译与规范审查。\n//  作者：TIA MCP 示例库     版本：0.1\n// ============================================================================\nFUNCTION_BLOCK \"FB_SelfTest_Template\"\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\n   VAR_INPUT\n      Start   : Bool;   // 上升沿启动一轮测试（自动清零计数）\n      Reset   : Bool;   // 清除结果与计数\n      Tol     : Real := 0.001;   // 实数比较容差\n   END_VAR\n\n   VAR_OUTPUT\n      Busy           : Bool;   // 测试进行中\n      Done           : Bool;   // 本轮测试结束\n      AllPassed      : Bool;   // Done 且 FailCount = 0\n      PassCount      : Int;    // 通过用例数\n      FailCount      : Int;    // 失败用例数\n      FirstFailIndex : Int := -1;   // 第一条失败用例下标，-1 表示无\n   END_VAR\n\n   VAR\n      Cases : Array[0..7] of Struct   // 用例表：在 DB 里直接编辑\n         Enabled  : Bool;   // 是否参与本轮测试\n         Input    : Real;   // 送入被测逻辑的输入\n         Expected : Real;   // 预期输出\n         Actual   : Real;   // 实际输出（由 RunCase 写回）\n         Passed   : Bool;   // 本条结果\n      END_STRUCT;\n      CaseIndex  : Int;    // 当前执行到的用例\n      StartEdge  : Bool;   // Start 上升沿记忆\n      Running    : Bool;   // 内部运行标志\n   END_VAR\n\n   VAR_TEMP\n      tmpDiff : Real;\n   END_VAR\n\nBEGIN\n   // --- 复位 ---------------------------------------------------------------\n   IF #Reset THEN\n      #Running := FALSE;\n      #Busy := FALSE;\n      #Done := FALSE;\n      #AllPassed := FALSE;\n      #PassCount := 0;\n      #FailCount := 0;\n      #FirstFailIndex := -1;\n      #CaseIndex := 0;\n   END_IF;\n\n   // --- Start 上升沿：清零并开始一轮 ------------------------------------------\n   IF #Start AND NOT #StartEdge AND NOT #Running THEN\n      #Running := TRUE;\n      #Busy := TRUE;\n      #Done := FALSE;\n      #AllPassed := FALSE;\n      #PassCount := 0;\n      #FailCount := 0;\n      #FirstFailIndex := -1;\n      #CaseIndex := 0;\n   END_IF;\n   #StartEdge := #Start;\n\n   // --- 每个周期跑一条用例，便于在监控表里逐条观察 ---------------------------\n   IF #Running THEN\n      IF #Cases[#CaseIndex].Enabled THEN\n         // ===== RunCase：把被测逻辑放在这里（示例：0..100 -> 0..1000 线性缩放）=====\n         #Cases[#CaseIndex].Actual := #Cases[#CaseIndex].Input * 10.0;\n         // ==========================================================================\n\n         #tmpDiff := ABS(#Cases[#CaseIndex].Actual - #Cases[#CaseIndex].Expected);\n         #Cases[#CaseIndex].Passed := #tmpDiff <= #Tol;\n         IF #Cases[#CaseIndex].Passed THEN\n            #PassCount := #PassCount + 1;\n         ELSE\n            #FailCount := #FailCount + 1;\n            IF #FirstFailIndex < 0 THEN\n               #FirstFailIndex := #CaseIndex;\n            END_IF;\n         END_IF;\n      END_IF;\n\n      IF #CaseIndex >= 7 THEN\n         #Running := FALSE;\n         #Busy := FALSE;\n         #Done := TRUE;\n         #AllPassed := #FailCount = 0;\n      ELSE\n         #CaseIndex := #CaseIndex + 1;\n      END_IF;\n   END_IF;\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "ec018f92d3daf300f02ac7abb53886f5989989e713b4c18cecc6cd530ff07312"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_stepsequencedemo",
+      "language": "scl",
+      "title": "FB_StepSequenceDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_StepSequenceDemo.scl",
+          "name": "FB_StepSequenceDemo.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FB_StepSequenceDemo —— 步序状态机示例功能块\n//  ---------------------------------------------------------------------------\n//  功能：用 CASE 实现 4 步顺序流程（空闲→步10→步20→步30→回空闲）。\n//        Next 上升沿推进步序，ConditionOk 作为进入/退出条件，并输出进度百分比。\n//  适用：S7-1200 / S7-1500（优化访问）。顺序控制 / 工艺步进骨架。\n//  作者：TIA MCP 示例库     版本：0.2\n// ============================================================================\nFUNCTION_BLOCK \"FB_StepSequenceDemo\"\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.2\n   VAR_INPUT\n      Enable      : Bool;   // 使能：为 FALSE 时强制回到空闲步\n      Next        : Bool;   // 步进请求：上升沿推进到下一步\n      Reset       : Bool;   // 复位：高电平强制回到空闲步\n      ConditionOk : Bool;   // 步序条件：满足时才允许进入/保持流程\n   END_VAR\n\n   VAR_OUTPUT\n      StepNo   : Int;    // 当前步号（0=空闲, 10/20/30=各工作步）\n      Ready    : Bool;   // 就绪：处于空闲步，等待启动\n      Busy     : Bool;   // 运行中：处于中间工作步\n      Done     : Bool;   // 完成：到达最后一步\n      Progress : Real;   // 进度百分比 0/33/66/100，供 HMI 显示\n   END_VAR\n\n   VAR\n      State    : Int;   // 状态机当前状态\n      LastNext : Bool;  // 上一周期 Next 状态，用于上升沿检测\n   END_VAR\n\nBEGIN\n   // --- 状态机主体 --------------------------------------------------------\n   IF Reset OR NOT Enable THEN\n      State := 0;                                  // 复位或未使能：回空闲步\n   ELSE\n      CASE State OF\n         0:                                        // 空闲：条件满足则启动\n            IF ConditionOk THEN State := 10; END_IF;\n         10:                                       // 步10：Next 上升沿进入步20\n            IF Next AND NOT LastNext THEN State := 20; END_IF;\n         20:                                       // 步20：Next 上升沿进入步30\n            IF Next AND NOT LastNext THEN State := 30; END_IF;\n         30:                                       // 步30（完成）：条件消失则回空闲\n            IF NOT ConditionOk THEN State := 0; END_IF;\n      ELSE\n         State := 0;                               // 非法状态保护：回空闲\n      END_CASE;\n   END_IF;\n   LastNext := Next;                               // 记录 Next，供下次沿检测\n\n   // --- 状态输出映射 ------------------------------------------------------\n   StepNo := State;\n   Ready  := (State = 0);\n   Busy   := (State > 0) AND (State < 30);\n   Done   := (State = 30);\n\n   // --- 进度百分比（供 HMI 显示） -----------------------------------------\n   CASE State OF\n      0:   Progress := 0.0;\n      10:  Progress := 33.0;\n      20:  Progress := 66.0;\n      30:  Progress := 100.0;\n   ELSE\n      Progress := 0.0;\n   END_CASE;\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "4ea760583854fb57770d60150cdff82a764c497632b8b620591c45688d92c274"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_timercounterdemo",
+      "language": "scl",
+      "title": "FB_TimerCounterDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_TimerCounterDemo.scl",
+          "name": "FB_TimerCounterDemo.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FB_TimerCounterDemo —— 边沿计数器示例功能块\n//  ---------------------------------------------------------------------------\n//  功能：对计数脉冲 CountPulse 的上升沿进行计数，累计值达到预设值后置位完成标志，\n//        并输出运行标志、剩余计数与完成百分比，方便 HMI 直接显示进度。\n//  适用：S7-1200 / S7-1500（优化访问）。纯布尔/整型/实型逻辑，不依赖定时器。\n//  作者：TIA MCP 示例库     版本：0.3\n// ============================================================================\nFUNCTION_BLOCK \"FB_TimerCounterDemo\"\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.3\n   VAR_INPUT\n      Enable      : Bool;   // 使能：为 TRUE 时才接受计数脉冲\n      CountPulse  : Bool;   // 计数脉冲：每检测到一个上升沿，累计值 +1\n      Reset       : Bool;   // 复位：高电平有效，将累计值清零（优先级最高）\n      PresetCount : DInt;   // 预设计数值：累计值达到该值时置位 CounterDone\n   END_VAR\n\n   VAR_OUTPUT\n      Running        : Bool;   // 运行中：已使能且尚未完成\n      CounterDone    : Bool;   // 计数完成：累计值 >= 预设值\n      CountValue     : DInt;   // 当前累计计数值（每周期输出）\n      RemainingCount : DInt;   // 剩余计数 = 预设值 - 累计值（不小于 0）\n      DonePercent    : Real;   // 完成百分比 0.0~100.0，供 HMI 进度条显示\n   END_VAR\n\n   VAR\n      LastCountPulse : Bool;   // 上一扫描周期的脉冲状态，用于上升沿检测\n      Accum          : DInt;   // 内部累计计数（静态保持，避免输出未初始化告警）\n   END_VAR\n\nBEGIN\n   // --- 计数与复位逻辑 ----------------------------------------------------\n   IF Reset THEN\n      Accum := 0;                                        // 复位优先：清零累计值\n   ELSIF Enable AND CountPulse AND NOT LastCountPulse THEN\n      Accum := Accum + 1;                                // 仅在使能且脉冲上升沿时累加\n   END_IF;\n   LastCountPulse := CountPulse;                         // 记录本周期脉冲，供下次沿检测\n   CountValue     := Accum;                              // 累计值每周期输出，保证已赋值\n\n   // --- 完成与运行状态 ----------------------------------------------------\n   CounterDone := (PresetCount > 0) AND (Accum >= PresetCount);\n   Running     := Enable AND NOT CounterDone;\n\n   // --- 剩余计数与完成百分比（供 HMI 显示） --------------------------------\n   IF PresetCount > 0 THEN\n      IF Accum < PresetCount THEN\n         RemainingCount := PresetCount - Accum;\n      ELSE\n         RemainingCount := 0;                            // 已超过预设值则剩余记 0\n      END_IF;\n      DonePercent := LIMIT(MN := 0.0,\n                           IN := DINT_TO_REAL(Accum) / DINT_TO_REAL(PresetCount) * 100.0,\n                           MX := 100.0);\n   ELSE\n      RemainingCount := 0;                               // 未设定预设值时不计算剩余\n      DonePercent    := 0.0;\n   END_IF;\nEND_FUNCTION_BLOCK\n",
+          "contentSha256": "f9ce88808fe5a03e2a5045b451004a3152b05056d5ee1d786ed54cc316edb48d"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_basicscalelimit",
+      "language": "scl",
+      "title": "FC_BasicScaleLimit",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_BasicScaleLimit.scl",
+          "name": "FC_BasicScaleLimit.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FC_BasicScaleLimit —— 线性缩放与限幅功能（FC）\n//  ---------------------------------------------------------------------------\n//  功能：把原始量程 [RawMin, RawMax] 的输入线性映射到工程量程 [EngMin, EngMax]，\n//        并限幅在工程上下限内；量程非法（RawMax = RawMin）时输出下限并报无效。\n//        额外输出 Clamped 指示结果是否被限幅，便于诊断超量程。\n//  适用：S7-1200 / S7-1500（优化访问）。模拟量工程值换算的标准骨架。\n//  作者：TIA MCP 示例库     版本：0.2\n// ============================================================================\nFUNCTION \"FC_BasicScaleLimit\" : Void\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.2\n   VAR_INPUT\n      RawValue : Real;   // 原始输入值（如 AI 通道标定后的电流/电压值）\n      RawMin   : Real;   // 原始量程下限\n      RawMax   : Real;   // 原始量程上限\n      EngMin   : Real;   // 工程量程下限\n      EngMax   : Real;   // 工程量程上限\n   END_VAR\n\n   VAR_OUTPUT\n      EngValue : Real;   // 换算并限幅后的工程值\n      Valid    : Bool;   // 换算有效（量程合法）\n      Clamped  : Bool;   // 结果被上/下限限幅（输入超量程）\n   END_VAR\n\n   VAR_TEMP\n      Scaled : Real;     // 限幅前的线性换算中间值\n   END_VAR\n\nBEGIN\n   IF RawMax <> RawMin THEN\n      // 线性插值：EngMin + (输入占原始量程比例) * 工程量程跨度\n      Scaled   := EngMin + ((RawValue - RawMin) * (EngMax - EngMin) / (RawMax - RawMin));\n      EngValue := LIMIT(MN := EngMin, IN := Scaled, MX := EngMax);   // 限幅在工程上下限\n      Valid    := TRUE;\n      Clamped  := (Scaled <> EngValue);          // 限幅前后不一致说明发生了限幅\n   ELSE\n      EngValue := EngMin;                         // 量程非法：输出下限并报无效\n      Valid    := FALSE;\n      Clamped  := FALSE;\n   END_IF;\nEND_FUNCTION\n",
+          "contentSha256": "d4e0c3beb59afe3a110a648b50ad9b84b45e2c7fa9a4a59b93604312d53cffa8"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_instructiongallery",
+      "language": "scl",
+      "title": "FC_InstructionGallery",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_InstructionGallery.scl",
+          "name": "FC_InstructionGallery.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "FUNCTION \"FC_InstructionGallery\" : Void\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.1\n   VAR_INPUT\n      Enable : Bool;\n      Mode : Int;\n      InInt : Int;\n      InDInt : DInt;\n      InReal : Real;\n      MinValue : Real;\n      MaxValue : Real;\n   END_VAR\n\n   VAR_OUTPUT\n      OutBool : Bool;\n      OutInt : Int;\n      OutDInt : DInt;\n      OutReal : Real;\n      InRange : Bool;\n   END_VAR\n\n   VAR_TEMP\n      Index : Int;\n      SumValue : DInt;\n      RealFromDInt : Real;\n   END_VAR\n\nBEGIN\n   OutBool := Enable AND (Mode >= 0);\n   OutInt := InInt;\n   OutDInt := InDInt;\n   RealFromDInt := DINT_TO_REAL(InDInt);\n\n   IF NOT Enable THEN\n      OutReal := 0.0;\n   ELSIF Mode = 1 THEN\n      OutReal := LIMIT(MN := MinValue, IN := InReal, MX := MaxValue);\n   ELSIF Mode = 2 THEN\n      OutReal := ABS(InReal);\n   ELSE\n      OutReal := RealFromDInt;\n   END_IF;\n\n   CASE Mode OF\n      0:\n         OutInt := 0;\n      1:\n         OutInt := InInt + 1;\n      2:\n         OutInt := InInt - 1;\n   ELSE\n      OutInt := InInt;\n   END_CASE;\n\n   SumValue := 0;\n   FOR Index := 0 TO 7 DO\n      SumValue := SumValue + INT_TO_DINT(Index);\n   END_FOR;\n\n   OutDInt := SumValue;\n   InRange := (OutReal >= MinValue) AND (OutReal <= MaxValue);\nEND_FUNCTION\n",
+          "contentSha256": "0f30b006df8da94346d9c890853c381c2ab1f59be52c02cef840f7533a47fbce"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_mathcomparedemo",
+      "language": "scl",
+      "title": "FC_MathCompareDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_MathCompareDemo.scl",
+          "name": "FC_MathCompareDemo.scl",
+          "encoding": "UTF-8 with BOM",
+          "content": "// ============================================================================\n//  FC_MathCompareDemo —— 偏差运算 / 比较 / 限幅 / 质量位示例（FC）\n//  ---------------------------------------------------------------------------\n//  功能：计算设定值与实际值的偏差及绝对偏差，按死区判断是否在公差内，\n//        输出限幅后的偏差值，并给出高于/低于设定值及偏差百分比，便于调节与显示。\n//  适用：S7-1200 / S7-1500（优化访问）。闭环调节前处理 / 偏差监视骨架。\n//  作者：TIA MCP 示例库     版本：0.2\n// ============================================================================\nFUNCTION \"FC_MathCompareDemo\" : Void\n{ S7_Optimized_Access := 'TRUE' }\nVERSION : 0.2\n   VAR_INPUT\n      Setpoint : Real;   // 设定值\n      Actual   : Real;   // 实际值\n      Deadband : Real;   // 死区（绝对偏差 <= 死区视为在公差内）\n      OutMin   : Real;   // 偏差输出下限\n      OutMax   : Real;   // 偏差输出上限\n   END_VAR\n\n   VAR_OUTPUT\n      ErrorValue   : Real;   // 偏差 = 设定值 - 实际值\n      AbsError     : Real;   // 绝对偏差\n      OutputValue  : Real;   // 限幅后的偏差值（可作为调节量）\n      InTolerance  : Bool;   // 在公差内（绝对偏差 <= 死区）\n      AboveSetpoint: Bool;   // 实际值高于设定值\n      DeviationPct : Real;   // 相对设定值的偏差百分比（设定值为 0 时记 0）\n   END_VAR\n\nBEGIN\n   // --- 偏差与绝对偏差 ----------------------------------------------------\n   ErrorValue := Setpoint - Actual;\n   AbsError   := ABS(ErrorValue);\n\n   // --- 限幅输出与公差判断 ------------------------------------------------\n   OutputValue := LIMIT(MN := OutMin, IN := ErrorValue, MX := OutMax);\n   InTolerance := AbsError <= Deadband;\n\n   // --- 方向与偏差百分比（供 HMI 显示） -----------------------------------\n   AboveSetpoint := Actual > Setpoint;\n   IF Setpoint <> 0.0 THEN\n      DeviationPct := AbsError / ABS(Setpoint) * 100.0;\n   ELSE\n      DeviationPct := 0.0;                       // 设定值为 0 时不计算百分比\n   END_IF;\nEND_FUNCTION\n",
+          "contentSha256": "d29350752d09380c868143eb3ca80f4ff16fd228df2fbef8cfa001edb2ec2362"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "db-builder-json",
+      "language": "db",
+      "title": "Structured JSON for BuildPlcGlobalDbXml",
+      "kind": "builder-input",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/plcbuild-json/db_basic_status.json",
+          "name": "db_basic_status.json",
+          "encoding": "UTF-8",
+          "content": "{\n  \"kind\": \"globaldb\",\n  \"tool\": \"PlcBuildAndImport\",\n  \"description\": \"通用状态 DB，使用 UDT_BasicStatus。每个成员带中文注释。\",\n  \"json\": {\n    \"dbName\": \"DB_BasicStatus\",\n    \"dbNumber\": 100,\n    \"staticMembers\": [\n      {\n        \"name\": \"Status\",\n        \"datatype\": \"\\\"UDT_BasicStatus\\\"\",\n        \"commentZhCn\": \"设备状态结构（引用 UDT_BasicStatus）\"\n      },\n      {\n        \"name\": \"EnableRequest\",\n        \"datatype\": \"Bool\",\n        \"startValue\": \"false\",\n        \"commentZhCn\": \"使能请求（来自 HMI/上位）\"\n      },\n      {\n        \"name\": \"ResetRequest\",\n        \"datatype\": \"Bool\",\n        \"startValue\": \"false\",\n        \"commentZhCn\": \"复位请求（来自 HMI/上位）\"\n      },\n      {\n        \"name\": \"CycleCounter\",\n        \"datatype\": \"DInt\",\n        \"startValue\": \"0\",\n        \"commentZhCn\": \"循环计数器（每周期 +1，用于心跳/诊断）\"\n      }\n    ]\n  }\n}\n",
+          "contentSha256": "1878791acd347ef8afbceea0af8468ca111f1a193186c337c4ddc0b61ff8ba6e"
+        }
+      ],
+      "tools": [
+        "BuildPlcGlobalDbXml",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "udt-builder-json",
+      "language": "udt",
+      "title": "Structured JSON for BuildPlcUdtXml",
+      "kind": "builder-input",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/plcbuild-json/udt_basic_status.json",
+          "name": "udt_basic_status.json",
+          "encoding": "UTF-8",
+          "content": "{\n  \"kind\": \"udt\",\n  \"tool\": \"PlcBuildAndImport\",\n  \"description\": \"通用状态 UDT，不绑定任何业务对象。每个成员带中文注释。\",\n  \"json\": {\n    \"name\": \"UDT_BasicStatus\",\n    \"members\": [\n      {\n        \"name\": \"Active\",\n        \"datatype\": \"Bool\",\n        \"commentZhCn\": \"运行/激活标志\"\n      },\n      {\n        \"name\": \"Ready\",\n        \"datatype\": \"Bool\",\n        \"commentZhCn\": \"就绪标志（可启动）\"\n      },\n      {\n        \"name\": \"Error\",\n        \"datatype\": \"Bool\",\n        \"commentZhCn\": \"故障标志\"\n      },\n      {\n        \"name\": \"Warning\",\n        \"datatype\": \"Bool\",\n        \"commentZhCn\": \"警告标志\"\n      },\n      {\n        \"name\": \"State\",\n        \"datatype\": \"Int\",\n        \"startValue\": \"0\",\n        \"commentZhCn\": \"状态码（0=空闲，>0=各工作状态）\"\n      },\n      {\n        \"name\": \"ErrorCode\",\n        \"datatype\": \"Int\",\n        \"startValue\": \"0\",\n        \"commentZhCn\": \"故障代码（0=无故障）\"\n      },\n      {\n        \"name\": \"Setpoint\",\n        \"datatype\": \"Real\",\n        \"startValue\": \"0.0\",\n        \"commentZhCn\": \"设定值\"\n      },\n      {\n        \"name\": \"Actual\",\n        \"datatype\": \"Real\",\n        \"startValue\": \"0.0\",\n        \"commentZhCn\": \"实际值\"\n      },\n      {\n        \"name\": \"Output\",\n        \"datatype\": \"Real\",\n        \"startValue\": \"0.0\",\n        \"commentZhCn\": \"输出值\"\n      }\n    ]\n  }\n}\n",
+          "contentSha256": "3f45abbfd6b7fdd377998507e4915f83dce0f08f53e2c2d6f433ba211a288e87"
+        }
+      ],
+      "tools": [
+        "BuildPlcUdtXml",
+        "ImportType"
+      ],
+      "notes": [
+        "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "unified-global-module",
+      "language": "hmi-javascript",
+      "title": "Edit an exported Unified global module",
+      "kind": "module-edit",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "origin": "project example",
+      "validation": "Source reviewed; native import/compilation NOT RUN.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/ReadActualValue.hmi.js",
+          "name": "ReadActualValue.hmi.js",
+          "encoding": "UTF-8",
+          "content": "export function ReadActualValue() {\n    return Tags(\"ActualValue\").Read();\n}\n",
+          "contentSha256": "2e1c73b83e133a5176aee001d652a12a0d951e59c99f49f4ddcc52428f40aa68"
+        }
+      ],
+      "tools": [
+        "ExchangeUnifiedScriptModules",
+        "CompileAndDiagnoseHmi"
+      ],
+      "notes": [
+        "Create/export the named global module in the selected TIA release first. Preserve its generated .hmi.yml and companion files, edit the exported .hmi.js function body and use the same export directory for import. This code file alone is not an import package.",
+        "moduleName selects an export; leave it empty for import. fileName, when used, comes from the actual export."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "corrections": [
+        {
+          "wrong": "SetUnifiedHmiButtonEventScriptCode for a global module",
+          "correct": "ExchangeUnifiedScriptModules for the module package",
+          "reason": "Event handler script and global module are different engineering objects."
+        }
+      ],
+      "steps": [
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<Unified software from GetProjectTree>",
+            "action": "export",
+            "directory": "C:\\Temp\\ModuleExample",
+            "moduleName": "<existing module>",
+            "dryRun": false
+          },
+          "expect": "meta.files and meta.directoryListing identify the generated files; preserve companion metadata."
+        },
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "action": "import",
+            "directory": "C:\\Temp\\ModuleExample",
+            "dryRun": true
+          },
+          "expect": "Preview identifies candidate files."
+        },
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "action": "import",
+            "directory": "C:\\Temp\\ModuleExample",
+            "dryRun": false
+          },
+          "expect": "Inspect meta.nativeSuccess, modulesAfter and operation-specific verification fields."
+        },
+        {
+          "tool": "CompileAndDiagnoseHmi",
+          "arguments": {
+            "softwarePath": "<same software>"
+          },
+          "expect": "Inspect errorCount and diagnostics."
+        }
+      ]
+    },
+    {
+      "id": "unified-update-existing-module",
+      "language": "hmi-javascript",
+      "title": "Update the complete source of an existing global module",
+      "kind": "call-sequence",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "origin": "project example",
+      "validation": "Contract checked; native execution NOT RUN.",
+      "files": [],
+      "tools": [
+        "ListUnifiedGlobalScripts",
+        "ReadUnifiedGlobalScript",
+        "UpdateUnifiedGlobalScript"
+      ],
+      "notes": [
+        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take expectedToken from the preview, then apply the same text."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "corrections": [],
+      "steps": [
+        {
+          "tool": "ListUnifiedGlobalScripts",
+          "arguments": {
+            "softwarePath": "<Unified software>",
+            "expectedProject": "<bound project>"
+          },
+          "expect": "Select the exact existing module name."
+        },
+        {
+          "tool": "ReadUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<existing module>"
+          },
+          "expect": "Retrieve the complete exported source; preserve unchanged functions and definitions."
+        },
+        {
+          "tool": "UpdateUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<same module>",
+            "scriptCode": "<complete modified source>",
+            "dryRun": true
+          },
+          "expect": "Review before/after text and copy the returned token."
+        },
+        {
+          "tool": "UpdateUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<same module>",
+            "scriptCode": "<the same complete modified source>",
+            "dryRun": false,
+            "expectedToken": "<token from previous preview>"
+          },
+          "expect": "Inspect native import and exact text verification; compile separately."
+        }
+      ]
+    }
+  ],
+  "sequences": [
+    {
+      "id": "sequence/startdrive-bico-read",
+      "topic": "startdrive-bico-read",
+      "purpose": "Read one intended offline BICO connection using the official V20/V21 parameter path.",
+      "preconditions": "Intended project and exact drive/control-unit paths are known; substitute placeholders and parameter. Do not automatically execute a known failing target such as p2051[0].",
+      "notes": "Offline values describe engineering configuration. Interpret the returned value shape using GetToolUsage(toolName=\"ManageStartdriveParameter\", operation=\"read\"). Native regression acceptance NOT RUN.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "GetState",
+          "arguments": {},
+          "expect": "The operator-intended project is already bound; no automatic reconnect."
+        },
+        {
+          "tool": "FindTools",
+          "arguments": {
+            "query": "ManageStartdriveParameter",
+            "limit": 1
+          },
+          "expect": "Tool is available on this selected full engine; inspect its schema and example."
+        },
+        {
+          "tool": "ManageStartdriveParameter",
+          "arguments": {
+            "devicePathJson": "[\"<exact drive device>\"]",
+            "itemPathJson": "[\"<exact drive/control unit item>\"]",
+            "driveObjectNumber": 0,
+            "driveObjectIndex": 0,
+            "parameter": "p1070[0]",
+            "action": "read",
+            "dryRun": true
+          },
+          "expect": "For the requested target only, meta.before.value has a BICO source or scalar/null; stop on failure."
+        }
+      ]
+    },
+    {
+      "id": "sequence/connect-project",
+      "topic": "connect-project",
+      "purpose": "Attach to the TIA process holding the project and read the real names before any other call.",
+      "preconditions": "TIA Portal is open with the project (the engine never starts an instance while one runs).",
+      "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "Bootstrap",
+          "arguments": {},
+          "expect": "serverVersion, connected=false, recommendedNextTool Connect"
+        },
+        {
+          "tool": "Connect",
+          "arguments": {
+            "projectName": "<project name as shown in TIA>"
+          },
+          "expect": "Meta.boundProcessId = the process holding the project, startedNew false"
+        },
+        {
+          "tool": "GetState",
+          "arguments": {},
+          "expect": "project = the wanted project"
+        },
+        {
+          "tool": "GetProjectTree",
+          "arguments": {},
+          "expect": "the PLC / HMI software paths used below"
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-scl-block",
+      "topic": "plc-scl-block",
+      "purpose": "Create a block from SCL text: source file -> external source -> generated block -> compile -> save.",
+      "preconditions": "connect-project done; the PLC software path is known.",
+      "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "WritePlcSclSourceFile",
+          "arguments": {
+            "sclContent": "<complete FUNCTION / FUNCTION_BLOCK / DATA_BLOCK text>",
+            "outputPath": "C:\\Temp\\<Block>.scl"
+          },
+          "expect": "Meta reports the file written"
+        },
+        {
+          "tool": "ManagePlcExternalSources",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "action": "createFromFile",
+            "name": "<Block>",
+            "filePath": "C:\\Temp\\<Block>.scl",
+            "dryRun": true
+          },
+          "expect": "preview clean"
+        },
+        {
+          "tool": "ManagePlcExternalSources",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "action": "createFromFile",
+            "name": "<Block>",
+            "filePath": "C:\\Temp\\<Block>.scl",
+            "dryRun": false
+          },
+          "expect": "external source created"
+        },
+        {
+          "tool": "GenerateBlocksFromExternalSource",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "externalSourceName": "<Block>"
+          },
+          "expect": "generated blocks listed"
+        },
+        {
+          "tool": "CompileAndDiagnosePlc",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "ErrorCount 0"
+        },
+        {
+          "tool": "SaveProject",
+          "arguments": {},
+          "expect": "IsModified false"
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-s7dcl-import",
+      "topic": "plc-s7dcl-import",
+      "purpose": "Add LAD / FBD logic from S7DCL text documents (preferred over hand-written FlgNet XML).",
+      "preconditions": "connect-project done; the .s7dcl (+ .s7res) files are on the TIA machine, UTF-8 WITH BOM.",
+      "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "ImportFromDocuments",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "",
+            "importPath": "C:\\Temp\\docs",
+            "fileNameWithoutExtension": "<Block>",
+            "importOption": "Override"
+          },
+          "expect": "block imported"
+        },
+        {
+          "tool": "CompileAndDiagnosePlc",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "ErrorCount 0"
+        },
+        {
+          "tool": "SaveProject",
+          "arguments": {},
+          "expect": "saved"
+        }
+      ]
+    },
+    {
+      "id": "sequence/plc-builder",
+      "topic": "plc-builder",
+      "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
+      "preconditions": "connect-project done.",
+      "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see PlcBuildAndImport's example).",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "PlcBuildAndImport",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "kind": "fc",
+            "json": "<BuildPlc* JSON as a string>",
+            "dryRun": true
+          },
+          "expect": "WrittenFiles / Discovered* clean, Failed empty"
+        },
+        {
+          "tool": "PlcBuildAndImport",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "kind": "fc",
+            "json": "<same JSON>",
+            "dryRun": false,
+            "compileAfter": true
+          },
+          "expect": "Compile.ErrorCount 0"
+        },
+        {
+          "tool": "SaveProject",
+          "arguments": {},
+          "expect": "saved"
+        }
+      ]
+    },
+    {
+      "id": "sequence/watch-table",
+      "topic": "watch-table",
+      "purpose": "Add a row to a watch table and read it back.",
+      "preconditions": "connect-project done.",
+      "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA).",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "GetPlcWatchTables",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "existing tables"
+        },
+        {
+          "tool": "SetWatchTableModifyValue",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tableName": "<Group/Table>",
+            "address": "%M0.0",
+            "modifyValue": "TRUE",
+            "trigger": "OnceOnlyAtStart"
+          },
+          "expect": "meta.readbackVerified true"
+        },
+        {
+          "tool": "ManagePlcTableEntries",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "tableKind": "watch",
+            "tablePath": "<Group/Table>",
+            "action": "read"
+          },
+          "expect": "the new row in native order"
+        }
+      ]
+    },
+    {
+      "id": "sequence/cpu-protection",
+      "topic": "cpu-protection",
+      "purpose": "Make a new CPU downloadable: access level + confidential-configuration password + hardware compile.",
+      "preconditions": "connect-project done; the station name is known (GetDevices).",
+      "notes": "TIA V21 creates CPUs with NoAccess and 'protect confidential data' without a password - the hardware compile refuses a download until both are set. The password is a test value for the scratch project only.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "ManagePlcProtection",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]",
+            "action": "read"
+          },
+          "expect": "accessLevel / masterSecret as configured"
+        },
+        {
+          "tool": "ManagePlcProtection",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]",
+            "action": "setAccessLevel",
+            "accessLevel": "FullAccess",
+            "dryRun": false,
+            "confirmChange": true
+          },
+          "expect": "accessLevel FullAccess (FullAccessIncludingFailsafe on an F-CPU)"
+        },
+        {
+          "tool": "ManagePlcProtection",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]",
+            "action": "protectMasterSecret",
+            "password": "<test password>",
+            "dryRun": false,
+            "confirmChange": true
+          },
+          "expect": "masterSecret WithPassword"
+        },
+        {
+          "tool": "CompileDevice",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]"
+          },
+          "expect": "0 errors (warnings allowed)"
+        }
+      ]
+    },
+    {
+      "id": "sequence/download-plcsim",
+      "topic": "download-plcsim",
+      "purpose": "Download a standard CPU to a PLCSIM Advanced instance and go online (the maintainer's only permitted online target).",
+      "preconditions": "cpu-protection done for that CPU; PLCSIM Advanced 8.0 installed on the TIA machine; the CPU is a standard one (F-CPUs are refused by Openness).",
+      "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. Downloads to FW >= 2.9 CPUs need trustDeviceCertificate (default true).",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "ReadPlcSimAdvancedInstances",
+          "arguments": {
+            "includeState": true
+          },
+          "expect": "instances and api.networkMode"
+        },
+        {
+          "tool": "ManagePlcSimAdvancedInstance",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "action": "register",
+            "cpuType": "CPU1500_Unspecified",
+            "communicationInterface": "Softbus",
+            "dryRun": false,
+            "confirmInstanceChange": true
+          },
+          "expect": "registered (skip when it exists)"
+        },
+        {
+          "tool": "ManagePlcSimAdvancedInstance",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "action": "powerOn",
+            "dryRun": false,
+            "confirmInstanceChange": true
+          },
+          "expect": "stateAfter Run/Stop"
+        },
+        {
+          "tool": "ReadTransferRoutes",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "a 'PLCSIM' PC interface with the CPU's IP"
+        },
+        {
+          "tool": "CompileSoftware",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "0 errors"
+        },
+        {
+          "tool": "CheckDownloadReadiness",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "ready"
+        },
+        {
+          "tool": "DownloadToPlc",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "pgPcInterface": "PLCSIM",
+            "targetIpAddress": "<CPU IP>"
+          },
+          "expect": "State Success / Warning"
+        },
+        {
+          "tool": "GoOnline",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "ipAddress": "<CPU IP>",
+            "pgPcInterface": "PLCSIM"
+          },
+          "expect": "Online"
+        },
+        {
+          "tool": "GetOnlineState",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "Online"
+        },
+        {
+          "tool": "CompareSoftwareToOnline",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "maxDepth": 4
+          },
+          "expect": "0 differences after a download"
+        },
+        {
+          "tool": "GoOffline",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "Offline"
+        }
+      ]
+    },
+    {
+      "id": "sequence/plcsim-test",
+      "topic": "plcsim-test",
+      "purpose": "Read / write PLCSIM Advanced tags and run a closed-loop scenario against the downloaded program.",
+      "preconditions": "download-plcsim done; the instance is in Run.",
+      "notes": "Tags exist only after a download. Steps: write | waitMs | cycles (singleStep mode, one OB1 cycle each) | assert. Execution needs dryRun=false + confirmWrite / confirmRun.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "ReadPlcSimAdvancedTags",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "namesJson": ""
+          },
+          "expect": "tag list"
+        },
+        {
+          "tool": "ReadPlcSimAdvancedTags",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "namesJson": [
+              "<DB>.<Tag>"
+            ]
+          },
+          "expect": "current values"
+        },
+        {
+          "tool": "WritePlcSimAdvancedTags",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "valuesJson": {
+              "<DB>.<Tag>": true
+            },
+            "dryRun": true
+          },
+          "expect": "preview"
+        },
+        {
+          "tool": "WritePlcSimAdvancedTags",
+          "arguments": {
+            "instanceName": "<Instance>",
+            "valuesJson": {
+              "<DB>.<Tag>": true
+            },
+            "dryRun": false,
+            "confirmWrite": true
+          },
+          "expect": "written and read back"
+        },
+        {
+          "tool": "RunPlcSimAdvancedTestScenario",
+          "arguments": {
+            "scenarioJson": {
+              "instance": "<Instance>",
+              "mode": "default",
+              "steps": [
+                {
+                  "write": {
+                    "<DB>.Start": true
+                  }
+                },
+                {
+                  "waitMs": 300
+                },
+                {
+                  "assert": {
+                    "<DB>.Running": true
+                  }
+                }
+              ]
+            },
+            "dryRun": true
+          },
+          "expect": "plan validated"
+        },
+        {
+          "tool": "RunPlcSimAdvancedTestScenario",
+          "arguments": {
+            "scenarioJson": {
+              "instance": "<Instance>",
+              "mode": "default",
+              "steps": [
+                {
+                  "write": {
+                    "<DB>.Start": true
+                  }
+                },
+                {
+                  "waitMs": 300
+                },
+                {
+                  "assert": {
+                    "<DB>.Running": true
+                  }
+                }
+              ]
+            },
+            "dryRun": false,
+            "confirmRun": true
+          },
+          "expect": "PASSED n/n"
+        }
+      ]
+    },
+    {
+      "id": "sequence/hardware-device",
+      "topic": "hardware-device",
+      "purpose": "Add a device from the catalog, plug a module, and remove a temporary device again.",
+      "preconditions": "connect-project done. The maintainer's rule: hardware tests only on temporary devices in the scratch project, never on existing ones.",
+      "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); AddDevice needs the exact catalog version from SearchHardwareCatalog.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "SearchHardwareCatalog",
+          "arguments": {
+            "keyword": "1515-2 PN",
+            "limit": 10
+          },
+          "expect": "order numbers and versions"
+        },
+        {
+          "tool": "AddDevice",
+          "arguments": {
+            "orderNumber": "6ES7 515-2AM02-0AB0",
+            "version": "V2.9",
+            "deviceName": "<Station>"
+          },
+          "expect": "device created"
+        },
+        {
+          "tool": "PlugDeviceItem",
+          "arguments": {
+            "deviceItemPath": "<Station>/导轨_0",
+            "orderNumber": "6ES7 521-1BH00-0AB0",
+            "version": "V2.2",
+            "positionNumber": 2,
+            "dryRun": true
+          },
+          "expect": "CanPlugNew true"
+        },
+        {
+          "tool": "PlugDeviceItem",
+          "arguments": {
+            "deviceItemPath": "<Station>/导轨_0",
+            "orderNumber": "6ES7 521-1BH00-0AB0",
+            "version": "V2.2",
+            "positionNumber": 2,
+            "dryRun": false
+          },
+          "expect": "module plugged"
+        },
+        {
+          "tool": "ManageHardwareObject",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]",
+            "action": "deleteDevice",
+            "dryRun": true
+          },
+          "expect": "preview"
+        },
+        {
+          "tool": "ManageHardwareObject",
+          "arguments": {
+            "devicePathJson": "[\"<Station>\"]",
+            "action": "deleteDevice",
+            "dryRun": false
+          },
+          "expect": "device removed"
+        }
+      ]
+    },
+    {
+      "id": "sequence/hmi-unified-screen",
+      "topic": "hmi-unified-screen",
+      "purpose": "Unified HMI: connection -> tag bound to a PLC tag -> screen -> button -> compile.",
+      "preconditions": "connect-project done; the PLC side (tags / DB) exists; the HMI is WinCC Unified (classic panels cannot get connections via Openness).",
+      "notes": "PLC side first. Text labels use itemType Text; a Rectangle has no Text.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "EnsureUnifiedHmiConnection",
+          "arguments": {
+            "hmiSoftwarePath": "HMI_RT_1",
+            "connectionName": "HMI_Connection_1",
+            "plcName": "PLC_1"
+          },
+          "expect": "connection present"
+        },
+        {
+          "tool": "EnsureUnifiedHmiTag",
+          "arguments": {
+            "hmiSoftwarePath": "HMI_RT_1",
+            "tagTableName": "Default tag table",
+            "tagName": "<Tag>",
+            "hmiDataType": "Bool",
+            "plcName": "PLC_1",
+            "plcTag": "<PLC tag>"
+          },
+          "expect": "AbsoluteVerified true"
+        },
+        {
+          "tool": "EnsureUnifiedHmiScreen",
+          "arguments": {
+            "hmiSoftwarePath": "HMI_RT_1",
+            "screenName": "<Screen>"
+          },
+          "expect": "screen present"
+        },
+        {
+          "tool": "EnsureUnifiedHmiScreenItem",
+          "arguments": {
+            "hmiSoftwarePath": "HMI_RT_1",
+            "screenName": "<Screen>",
+            "itemName": "btnStart",
+            "itemType": "Button",
+            "left": 20,
+            "top": 20,
+            "width": 120,
+            "height": 40,
+            "text": "Start"
+          },
+          "expect": "item present"
+        },
+        {
+          "tool": "EnsureUnifiedHmiButtonAction",
+          "arguments": {
+            "hmiSoftwarePath": "HMI_RT_1",
+            "screenName": "<Screen>",
+            "buttonName": "btnStart",
+            "eventType": "Down",
+            "actionKind": "set-bit",
+            "targetTag": "<Tag>"
+          },
+          "expect": "handler written"
+        },
+        {
+          "tool": "CompileAndDiagnoseHmi",
+          "arguments": {
+            "softwarePath": "HMI_RT_1"
+          },
+          "expect": "ErrorCount 0"
+        }
+      ]
+    },
+    {
+      "id": "sequence/export-import-block",
+      "topic": "export-import-block",
+      "purpose": "Round-trip one block through SimaticML (export, edit outside, import back).",
+      "preconditions": "connect-project done.",
+      "notes": "ExportBlock reports the file written in Meta.exportedFile; ImportBlock normalises the engineering version automatically.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "ExportBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "blockPath": "<Group/Block>",
+            "exportPath": "C:\\Temp"
+          },
+          "expect": "Meta.exportedFile"
+        },
+        {
+          "tool": "ImportBlock",
+          "arguments": {
+            "softwarePath": "PLC_1",
+            "groupPath": "<Group>",
+            "importPath": "C:\\Temp\\<Block>.xml"
+          },
+          "expect": "imported"
+        },
+        {
+          "tool": "CompileAndDiagnosePlc",
+          "arguments": {
+            "softwarePath": "PLC_1"
+          },
+          "expect": "ErrorCount 0"
+        }
+      ]
+    },
+    {
+      "id": "sequence/large-response",
+      "topic": "large-response",
+      "purpose": "Read a response that was stored because it exceeded the size limit.",
+      "preconditions": "A response came back with meta.truncated=true and an exportId.",
+      "notes": "Pages are character slices: concatenate every page before parsing. SaveExport writes the whole payload to a file on the TIA machine.",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "kind": "call-sequence",
+      "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+      "steps": [
+        {
+          "tool": "GetExport",
+          "arguments": {
+            "exportId": "<exportId>",
+            "offset": 0
+          },
+          "expect": "first page + nextOffset"
+        },
+        {
+          "tool": "GetExport",
+          "arguments": {
+            "exportId": "<exportId>",
+            "offset": 20000
+          },
+          "expect": "offset = the previous page's nextOffset; repeat until eof=true"
+        },
+        {
+          "tool": "SaveExport",
+          "arguments": {
+            "exportId": "<exportId>",
+            "outputPath": "C:\\Temp\\<name>.json"
+          },
+          "expect": "path written"
+        }
+      ]
+    }
+  ],
+  "parameterSources": {
+    "softwarePath": {
+      "tools": [
+        "GetProjectTree",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Select the PLC or HMI software path returned by the tree for this target; station names can differ."
+    },
+    "hmiSoftwarePath": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "Select the HMI software path in the current project."
+    },
+    "blockPath": {
+      "tools": [
+        "GetBlocksWithHierarchy",
+        "GetBlocks",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Use the returned block path, including user groups, relative to the program-block root."
+    },
+    "typePath": {
+      "tools": [
+        "GetTypes",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Use the exact PLC data type path returned by the target software."
+    },
+    "processId": {
+      "tools": [
+        "ListPortalProcessProjects",
+        "ReadPortalInfo"
+      ],
+      "meaning": "Choose the process that contains the requested project from current process discovery."
+    },
+    "projectName": {
+      "tools": [
+        "ListPortalProcessProjects",
+        "ReadPortalInfo"
+      ],
+      "meaning": "Existing project: select its reported name. Creating a project: use the requested new name."
+    },
+    "expectedProjectFile": {
+      "tools": [
+        "GetState"
+      ],
+      "meaning": "Use the exact bound project file from the current session."
+    },
+    "expectedProject": {
+      "tools": [
+        "GetProject",
+        "GetState"
+      ],
+      "meaning": "Use the current project identity returned by this engine."
+    },
+    "devicePathJson": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "JSON STRING containing the exact device path name array; preserve each path segment."
+    },
+    "itemPathJson": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "JSON STRING containing the item hierarchy beneath the selected device."
+    },
+    "screenName": {
+      "tools": [
+        "GetHmiScreens",
+        "GetProjectTree"
+      ],
+      "meaning": "Use an existing screen name for edits; the requested new name for creation."
+    },
+    "tagTableName": {
+      "tools": [
+        "GetPlcTagTables",
+        "GetHmiTagTables"
+      ],
+      "meaning": "Use a table name/path in the selected software; names belong to that software."
+    },
+    "pgPcInterface": {
+      "tools": [
+        "ReadTransferRoutes"
+      ],
+      "meaning": "Use an available transfer route interface for the intended target."
+    },
+    "targetIpAddress": {
+      "tools": [
+        "ReadTransferRoutes",
+        "ScanAccessibleDevices"
+      ],
+      "meaning": "Use the intended device address from the selected route/discovery."
+    },
+    "expectedToken": {
+      "tools": [],
+      "meaning": "Copy the token from this same tool's preview with the same target and proposed content."
+    },
+    "expectedPlanHash": {
+      "tools": [],
+      "meaning": "Copy the plan hash from this same operation's preview."
+    },
+    "expectedInventoryHash": {
+      "tools": [],
+      "meaning": "Copy the inventory hash returned by the operation's preview."
+    },
+    "exportId": {
+      "tools": [
+        "ListExports"
+      ],
+      "meaning": "Copy the exportId returned by the original tool; GetExport pages use its nextOffset."
+    }
+  },
+  "resultReading": {
+    "ResponseMessage": [
+      "Read meta.success / meta.operationSuccess when present; message supplies operation detail.",
+      "Tool-specific result keys are documented in the tool description."
+    ],
+    "ResponseStringList": [
+      "items contains the returned rows or strings; meta supplies status and paging when present."
+    ],
+    "ResponseXmlBuild": [
+      "xml contains generated XML. data contains builder details; generating XML does not import it into TIA."
+    ],
+    "default": [
+      "Read the returned data fields and status using the resultContract below."
+    ],
+    "ResponseCompile": [
+      "Check state, errorCount, warningCount and messages. Native compiler diagnostics, including child messages, are flattened by this wrapper.",
+      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+    ],
+    "ResponseCompileDiagnose": [
+      "Check state and errorCount, then errors/warnings/info and rawMessages. These include nested native compiler diagnostics.",
+      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+    ],
+    "ResponsePlcProgramImport": [
+      "Compare importedBlocks/importedTypes/importedTagTables with requested objects, inspect failed entries and compile.errorCount when compile was requested. A dryRun result is a plan."
+    ]
+  },
+  "toolNotes": {
+    "ManageStartdriveParameter": {
+      "input": "devicePathJson and itemPathJson are JSON strings of names from GetProjectTree. Select the intended drive object from ReadDriveObjects. parameter is the exact parameter name, including index.",
+      "resultCases": [
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": {
+                  "bicoSource": "<source parameter name>",
+                  "parameterText": "<source description>"
+                }
+              }
+            }
+          },
+          "meaning": "DriveParameter reference: this is the configured connection source, not its live numeric value."
+        },
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": {
+                  "value": 12.5
+                }
+              }
+            }
+          },
+          "meaning": "Scalar value of the selected offline engineering parameter, not a sampled live process value."
+        },
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": null
+              }
+            }
+          },
+          "meaning": "No accessible value. The API can return null for an invalid connection or inaccessible source; null does not prove the connection is unwired."
+        }
+      ],
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
+      ],
+      "profile": "full-engine",
+      "nativeReadsPossible": true
+    },
+    "ImportFromDocuments": {
+      "input": "For FC_Add_SD.s7dcl (+ FC_Add_SD.s7res), importPath is the containing directory and fileNameWithoutExtension is FC_Add_SD.",
+      "result": "This wrapper checks native State internally. Its public response reports meta.success, existsVerified and verifyDetail; contentVerified=null is not a content match. Native failures include imported-name/message details in the error. ManagePlcBlockDocuments exposes a structured native document result when that is required.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/importing-program-block-from-document"
+      ],
+      "profile": "full-engine"
+    },
+    "ManagePlcBlockDocuments": {
+      "result": "For import, inspect meta.result state, imported object names and native messages. Compare the requested object names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
+      "profile": "full-engine"
+    },
+    "ExchangeUnifiedScriptModules": {
+      "input": "Global module exchange uses a directory package exported by the selected TIA release. Keep the .hmi.js, .hmi.yml and companion files together. moduleName is for export only.",
+      "result": "Import: inspect meta.nativeSuccess and reported post-import module names. A successful native import is not independent content/compilation verification.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "profile": "full-engine"
+    },
+    "SetUnifiedHmiButtonEventScriptCode": {
+      "input": "scriptCode is the handler body of the named button/event; globalDefinitionAreaScriptCode is that handler's global definition area, not a global module package.",
+      "result": "A missing syntaxErrorCount means the optional native syntax check was not run. Inspect the write response and a separate HMI compile result.",
+      "profile": "full-engine"
+    },
+    "CompileAndDiagnosePlc": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "errors": [
+              "<nested error diagnostic>"
+            ],
+            "rawMessages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileSoftware": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "messages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "messages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileDevice": {
+      "resultCases": [
+        {
+          "example": {
+            "meta": {
+              "apiCallSuccess": true,
+              "effectiveState": "Warning",
+              "rootCounts": {
+                "errors": 0,
+                "warnings": 1
+              },
+              "warnings": [
+                "<native warning diagnostic>"
+              ],
+              "incomplete": false
+            }
+          },
+          "meaning": "The hardware compile returned with a warning. Inspect warnings and nodes; no save/download is implied."
+        },
+        {
+          "example": {
+            "meta": {
+              "apiCallSuccess": true,
+              "effectiveState": "Error",
+              "rootCounts": {
+                "errors": 0,
+                "warnings": 0
+              },
+              "errors": [
+                "<nested error diagnostic>"
+              ],
+              "incomplete": false
+            }
+          },
+          "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
+        }
+      ],
+      "result": "This tool returns compilation fields under meta, not top-level state/errorCount. Inspect meta.effectiveState, rootCounts.errors/warnings, errors/warnings and nodes, including nested diagnostics. apiCallSuccess only means the API returned; this wrapper sets success/operationSuccess from the native root state, so those flags alone can miss nested errors. incomplete/truncated/collectFailures explain partial diagnostics; root/subtree counts overlap and must not be added.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileAndDiagnoseHmi": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "errors": [
+              "<nested error diagnostic>"
+            ],
+            "rawMessages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "ReadDriveParameters": {
+      "profile": "full-engine",
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "nativeReadsPossible": true
+    },
+    "ReadOnlineDriveParameters": {
+      "profile": "full-engine",
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "nativeReadsPossible": true
+    },
+    "ManageSinumerikArchive": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ImportSinumerikAlarmTexts": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ManageSinumerikSafetyMode": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "InitializeSimotionScripting": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ExportScadaData": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
     }
   }
 }

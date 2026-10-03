@@ -26,12 +26,15 @@ internal sealed class UsageHintTool : McpServerTool
 
 internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpServerTool>> roster) : McpServerTool
 {
-    private readonly Tool tool = new() { Name = "GetToolUsage", Description = "Read this exact release's tool contracts, MCP argument templates, workflows and official Siemens source examples. toolName selects one registered tool; query searches all embedded reference text; documentId reads complete paginated source including setup. No native/worker/file/network calls. Official source-version limits and example gaps are explicit.",
+    private readonly Tool tool = new() { Name = "GetToolUsage", Description = "Unified tool and programming examples for this release: exact contracts, parameter sources and result interpretation. toolName selects a tool; language lists code examples; exampleId reads full files/steps. query/documentId searches/reads official source. Embedded data only.",
         InputSchema = JsonSerializer.SerializeToElement(new JsonObject { ["type"] = "object", ["additionalProperties"] = false,
             ["properties"] = new JsonObject {
                 ["toolName"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact available tool name. Do not combine with query or documentId." },
                 ["query"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Words to search in official source text." },
                 ["documentId"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact reference ID from a tool's officialReference.documents or search." },
+                ["operation"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Action/operation from the selected tool's operations list; foundation contracts currently have separate tool names instead." },
+                ["language"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Programming language/format from the library, e.g. scl or udt." },
+                ["exampleId"] = new JsonObject { ["type"] = "string", ["default"] = "", ["description"] = "Exact example ID; reads complete files or steps with release requirements." },
                 ["offset"] = new JsonObject { ["type"] = "integer", ["default"] = 0, ["minimum"] = 0 },
                 ["limit"] = new JsonObject { ["type"] = "integer", ["default"] = 80, ["minimum"] = 1, ["maximum"] = 200 }
             } }) };
@@ -42,10 +45,14 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
         try
         {
             var args = request.Params?.Arguments;
-            if (args != null && args.Keys.Except(new[] { "toolName", "query", "documentId", "offset", "limit" }).Any()) throw new ArgumentException("Unknown argument.");
+            if (args != null && args.Keys.Except(new[] { "toolName", "query", "documentId", "offset", "limit", "operation", "language", "exampleId" }).Any()) throw new ArgumentException("Unknown argument.");
             string Text(string key) => args != null && args.TryGetValue(key, out var value) ? value.GetString() ?? "" : "";
             int Number(string key, int fallback) => args != null && args.TryGetValue(key, out var value) ? value.GetInt32() : fallback;
             var name = Text("toolName"); var query = Text("query"); var id = Text("documentId");
+            var operation = Text("operation"); var language = Text("language"); var exampleId = Text("exampleId");
+            if ((name.Length > 0 || operation.Length > 0 || language.Length > 0 || exampleId.Length > 0) && (query.Length > 0 || id.Length > 0))
+                throw new ArgumentException("Select a tool/language/example, or search/read official references.");
+            if (operation.Length > 0 && name.Length == 0) throw new ArgumentException("operation requires toolName.");
             var offset = Number("offset", 0); var limit = Number("limit", 80);
             if (offset < 0 || limit < 1 || limit > 200) throw new ArgumentException("offset >= 0 and limit 1..200 are required.");
             JsonObject usage;
@@ -56,8 +63,12 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                 var target = all.Select(t => t.ProtocolTool).FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))
                     ?? throw new ArgumentException("Tool is not available in this release: " + name);
                 usage = ToolUsageCatalog.Describe(target.Name, releaseKey, "plc-foundation", target.Description ?? "",
-                    (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!);
+                    (JsonObject)JsonNode.Parse(target.InputSchema.GetRawText())!, operation: operation, roster: all.Select(t => t.ProtocolTool.Name));
+                if (language.Length > 0 || exampleId.Length > 0)
+                    usage["examples"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId, target.Name)["examples"]!.DeepClone();
             }
+            else if (language.Length > 0 || exampleId.Length > 0)
+                usage = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", all.Select(t => t.ProtocolTool.Name), language, exampleId);
             else
             {
                 usage = ToolUsageCatalog.ReadReference(query, id, offset, limit);
@@ -67,6 +78,7 @@ internal sealed class ToolUsageTool(string releaseKey, Func<IReadOnlyList<McpSer
                     usage["tools"] = new JsonArray(names.Skip(offset).Take(limit).Select(n => (JsonNode)JsonValue.Create(n)!).ToArray());
                     usage["toolCount"] = names.Length;
                     usage["nextToolOffset"] = offset + limit < names.Length ? JsonValue.Create(offset + limit) : null;
+                    usage["exampleLibrary"] = ToolUsageCatalog.Examples(releaseKey, "plc-foundation", names);
                 }
             }
             return ValueTask.FromResult(new CallToolResult { Content = new List<ContentBlock> { new TextContentBlock { Text = new JsonObject { ["success"] = true, ["usage"] = usage }.ToJsonString() } } });

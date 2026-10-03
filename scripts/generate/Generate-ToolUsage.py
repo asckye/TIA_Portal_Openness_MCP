@@ -137,11 +137,22 @@ def generate():
         mappings[name]['manualReferences'] = [m for m in manuals if m['topic'] in manual_topics]
         if name in ('ManageStartdriveParameter', 'ReadDriveParameters', 'ReadOnlineDriveParameters'):
             mappings[name]['manualsByRelease'] = {key: f'https://docs.tia.siemens.cloud/r/en-us/v{key}/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters' for key in ('20', '21')}
-            mappings[name]['specificWorkflow'] = 'GetAuthoringGuide(startdrive-bico), GetRecipe(startdrive-bico-read). p2051[0] reported crash: do not automatically replay; dryRun can read Value. Parameters.Find exact name first; BICO references are not scalar values. Online and offline containers differ.'
     ids = {d['id'] for d in documents}
     assert all(set(m['documents']) <= ids for m in mappings.values())
-    return {'schemaVersion': 1, 'scope': 'All Markdown guidance/examples in the pinned Siemens AI extension skills, and all C# source files plus dependency/setup text in the pinned Siemens code-snippet repository. Not all examples ever published in Siemens manuals; gaps are explicit per tool. No Siemens SDKs or engineering archives included.',
-            'sources': sources, 'documents': documents, 'tools': mappings}
+    base = ROOT / 'reference/tool-examples'
+    library = read(base / 'languages/catalog.json')
+    assert len({e['id'] for e in library['examples']}) == len(library['examples'])
+    assert all(set(e['tools']) <= names for e in library['examples']), 'Example links to an unknown tool'
+    for example in library['examples']:
+        for asset in example.get('files', []):
+            path = ROOT / asset['path']
+            asset['content'] = path.read_text('utf-8-sig').replace('\r\n', '\n')
+            asset['contentSha256'] = hashlib.sha256(asset['content'].encode()).hexdigest()
+    meta = read(base / 'metadata.json')
+    return {'schemaVersion': 2, 'scope': 'Pinned Siemens source documents and project-authored MCP/programming examples. Per-release contracts are read from the running engine. Templates, complete sources and fragments are distinguished; native acceptance is separate.',
+            'sources': sources, 'documents': documents, 'tools': mappings,
+            'languages': library['languages'], 'examples': library['examples'],
+            'sequences': read(base / 'sequences.json'), **{k: v for k, v in meta.items() if k != 'schemaVersion'}}
 
 
 if __name__ == '__main__':

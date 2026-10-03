@@ -1,0 +1,775 @@
+[
+  {
+    "id": "sequence/startdrive-bico-read",
+    "topic": "startdrive-bico-read",
+    "purpose": "Read one intended offline BICO connection using the official V20/V21 parameter path.",
+    "preconditions": "Intended project and exact drive/control-unit paths are known; substitute placeholders and parameter. Do not automatically execute a known failing target such as p2051[0].",
+    "notes": "Offline values describe engineering configuration. Interpret the returned value shape using GetToolUsage(toolName=\"ManageStartdriveParameter\", operation=\"read\"). Native regression acceptance NOT RUN.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetState",
+        "arguments": {},
+        "expect": "The operator-intended project is already bound; no automatic reconnect."
+      },
+      {
+        "tool": "FindTools",
+        "arguments": {
+          "query": "ManageStartdriveParameter",
+          "limit": 1
+        },
+        "expect": "Tool is available on this selected full engine; inspect its schema and example."
+      },
+      {
+        "tool": "ManageStartdriveParameter",
+        "arguments": {
+          "devicePathJson": "[\"<exact drive device>\"]",
+          "itemPathJson": "[\"<exact drive/control unit item>\"]",
+          "driveObjectNumber": 0,
+          "driveObjectIndex": 0,
+          "parameter": "p1070[0]",
+          "action": "read",
+          "dryRun": true
+        },
+        "expect": "For the requested target only, meta.before.value has a BICO source or scalar/null; stop on failure."
+      }
+    ]
+  },
+  {
+    "id": "sequence/connect-project",
+    "topic": "connect-project",
+    "purpose": "Attach to the TIA process holding the project and read the real names before any other call.",
+    "preconditions": "TIA Portal is open with the project (the engine never starts an instance while one runs).",
+    "notes": "Names are exact: use the PLC / HMI software paths GetProjectTree returns everywhere else.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "Bootstrap",
+        "arguments": {},
+        "expect": "serverVersion, connected=false, recommendedNextTool Connect"
+      },
+      {
+        "tool": "Connect",
+        "arguments": {
+          "projectName": "<project name as shown in TIA>"
+        },
+        "expect": "Meta.boundProcessId = the process holding the project, startedNew false"
+      },
+      {
+        "tool": "GetState",
+        "arguments": {},
+        "expect": "project = the wanted project"
+      },
+      {
+        "tool": "GetProjectTree",
+        "arguments": {},
+        "expect": "the PLC / HMI software paths used below"
+      }
+    ]
+  },
+  {
+    "id": "sequence/plc-scl-block",
+    "topic": "plc-scl-block",
+    "purpose": "Create a block from SCL text: source file -> external source -> generated block -> compile -> save.",
+    "preconditions": "connect-project done; the PLC software path is known.",
+    "notes": "Use the complete SCL files in GetToolUsage(language=\"scl\"). External source and SIMATIC SD envelopes differ. Generation may overwrite an existing block.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "WritePlcSclSourceFile",
+        "arguments": {
+          "sclContent": "<complete FUNCTION / FUNCTION_BLOCK / DATA_BLOCK text>",
+          "outputPath": "C:\\Temp\\<Block>.scl"
+        },
+        "expect": "Meta reports the file written"
+      },
+      {
+        "tool": "ManagePlcExternalSources",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "createFromFile",
+          "name": "<Block>",
+          "filePath": "C:\\Temp\\<Block>.scl",
+          "dryRun": true
+        },
+        "expect": "preview clean"
+      },
+      {
+        "tool": "ManagePlcExternalSources",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "action": "createFromFile",
+          "name": "<Block>",
+          "filePath": "C:\\Temp\\<Block>.scl",
+          "dryRun": false
+        },
+        "expect": "external source created"
+      },
+      {
+        "tool": "GenerateBlocksFromExternalSource",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "externalSourceName": "<Block>"
+        },
+        "expect": "generated blocks listed"
+      },
+      {
+        "tool": "CompileAndDiagnosePlc",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "ErrorCount 0"
+      },
+      {
+        "tool": "SaveProject",
+        "arguments": {},
+        "expect": "IsModified false"
+      }
+    ]
+  },
+  {
+    "id": "sequence/plc-s7dcl-import",
+    "topic": "plc-s7dcl-import",
+    "purpose": "Add LAD / FBD logic from S7DCL text documents (preferred over hand-written FlgNet XML).",
+    "preconditions": "connect-project done; the .s7dcl (+ .s7res) files are on the TIA machine, UTF-8 WITH BOM.",
+    "notes": "Select a language example for the actual release/update. Check imported block names and document messages, then compile the relevant software.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "ImportFromDocuments",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "",
+          "importPath": "C:\\Temp\\docs",
+          "fileNameWithoutExtension": "<Block>",
+          "importOption": "Override"
+        },
+        "expect": "block imported"
+      },
+      {
+        "tool": "CompileAndDiagnosePlc",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "ErrorCount 0"
+      },
+      {
+        "tool": "SaveProject",
+        "arguments": {},
+        "expect": "saved"
+      }
+    ]
+  },
+  {
+    "id": "sequence/plc-builder",
+    "topic": "plc-builder",
+    "purpose": "Build a UDT / tag table / global DB / FC / FB from structured JSON in one call (dry run first).",
+    "preconditions": "connect-project done.",
+    "notes": "kind: udt | tagtable | globaldb | fc | fb; the json shape is the BuildPlc* structure (see PlcBuildAndImport's example).",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "PlcBuildAndImport",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "json": "<BuildPlc* JSON as a string>",
+          "dryRun": true
+        },
+        "expect": "WrittenFiles / Discovered* clean, Failed empty"
+      },
+      {
+        "tool": "PlcBuildAndImport",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "kind": "fc",
+          "json": "<same JSON>",
+          "dryRun": false,
+          "compileAfter": true
+        },
+        "expect": "Compile.ErrorCount 0"
+      },
+      {
+        "tool": "SaveProject",
+        "arguments": {},
+        "expect": "saved"
+      }
+    ]
+  },
+  {
+    "id": "sequence/watch-table",
+    "topic": "watch-table",
+    "purpose": "Add a row to a watch table and read it back.",
+    "preconditions": "connect-project done.",
+    "notes": "tableName may be group-qualified ('MCP_W/MCP_WT'); the row is created through SimaticML, ModifyIntention is read-only (set by TIA).",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetPlcWatchTables",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "existing tables"
+      },
+      {
+        "tool": "SetWatchTableModifyValue",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableName": "<Group/Table>",
+          "address": "%M0.0",
+          "modifyValue": "TRUE",
+          "trigger": "OnceOnlyAtStart"
+        },
+        "expect": "meta.readbackVerified true"
+      },
+      {
+        "tool": "ManagePlcTableEntries",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "tableKind": "watch",
+          "tablePath": "<Group/Table>",
+          "action": "read"
+        },
+        "expect": "the new row in native order"
+      }
+    ]
+  },
+  {
+    "id": "sequence/cpu-protection",
+    "topic": "cpu-protection",
+    "purpose": "Make a new CPU downloadable: access level + confidential-configuration password + hardware compile.",
+    "preconditions": "connect-project done; the station name is known (GetDevices).",
+    "notes": "TIA V21 creates CPUs with NoAccess and 'protect confidential data' without a password - the hardware compile refuses a download until both are set. The password is a test value for the scratch project only.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "ManagePlcProtection",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]",
+          "action": "read"
+        },
+        "expect": "accessLevel / masterSecret as configured"
+      },
+      {
+        "tool": "ManagePlcProtection",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]",
+          "action": "setAccessLevel",
+          "accessLevel": "FullAccess",
+          "dryRun": false,
+          "confirmChange": true
+        },
+        "expect": "accessLevel FullAccess (FullAccessIncludingFailsafe on an F-CPU)"
+      },
+      {
+        "tool": "ManagePlcProtection",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]",
+          "action": "protectMasterSecret",
+          "password": "<test password>",
+          "dryRun": false,
+          "confirmChange": true
+        },
+        "expect": "masterSecret WithPassword"
+      },
+      {
+        "tool": "CompileDevice",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]"
+        },
+        "expect": "0 errors (warnings allowed)"
+      }
+    ]
+  },
+  {
+    "id": "sequence/download-plcsim",
+    "topic": "download-plcsim",
+    "purpose": "Download a standard CPU to a PLCSIM Advanced instance and go online (the maintainer's only permitted online target).",
+    "preconditions": "cpu-protection done for that CPU; PLCSIM Advanced 8.0 installed on the TIA machine; the CPU is a standard one (F-CPUs are refused by Openness).",
+    "notes": "Softbus makes TIA show a single 'PLCSIM' PG/PC interface; register with that when the instance is new. Downloads to FW >= 2.9 CPUs need trustDeviceCertificate (default true).",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "ReadPlcSimAdvancedInstances",
+        "arguments": {
+          "includeState": true
+        },
+        "expect": "instances and api.networkMode"
+      },
+      {
+        "tool": "ManagePlcSimAdvancedInstance",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "action": "register",
+          "cpuType": "CPU1500_Unspecified",
+          "communicationInterface": "Softbus",
+          "dryRun": false,
+          "confirmInstanceChange": true
+        },
+        "expect": "registered (skip when it exists)"
+      },
+      {
+        "tool": "ManagePlcSimAdvancedInstance",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "action": "powerOn",
+          "dryRun": false,
+          "confirmInstanceChange": true
+        },
+        "expect": "stateAfter Run/Stop"
+      },
+      {
+        "tool": "ReadTransferRoutes",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "a 'PLCSIM' PC interface with the CPU's IP"
+      },
+      {
+        "tool": "CompileSoftware",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "0 errors"
+      },
+      {
+        "tool": "CheckDownloadReadiness",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "ready"
+      },
+      {
+        "tool": "DownloadToPlc",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "pgPcInterface": "PLCSIM",
+          "targetIpAddress": "<CPU IP>"
+        },
+        "expect": "State Success / Warning"
+      },
+      {
+        "tool": "GoOnline",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "ipAddress": "<CPU IP>",
+          "pgPcInterface": "PLCSIM"
+        },
+        "expect": "Online"
+      },
+      {
+        "tool": "GetOnlineState",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "Online"
+      },
+      {
+        "tool": "CompareSoftwareToOnline",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "maxDepth": 4
+        },
+        "expect": "0 differences after a download"
+      },
+      {
+        "tool": "GoOffline",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "Offline"
+      }
+    ]
+  },
+  {
+    "id": "sequence/plcsim-test",
+    "topic": "plcsim-test",
+    "purpose": "Read / write PLCSIM Advanced tags and run a closed-loop scenario against the downloaded program.",
+    "preconditions": "download-plcsim done; the instance is in Run.",
+    "notes": "Tags exist only after a download. Steps: write | waitMs | cycles (singleStep mode, one OB1 cycle each) | assert. Execution needs dryRun=false + confirmWrite / confirmRun.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "ReadPlcSimAdvancedTags",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "namesJson": ""
+        },
+        "expect": "tag list"
+      },
+      {
+        "tool": "ReadPlcSimAdvancedTags",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "namesJson": [
+            "<DB>.<Tag>"
+          ]
+        },
+        "expect": "current values"
+      },
+      {
+        "tool": "WritePlcSimAdvancedTags",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "valuesJson": {
+            "<DB>.<Tag>": true
+          },
+          "dryRun": true
+        },
+        "expect": "preview"
+      },
+      {
+        "tool": "WritePlcSimAdvancedTags",
+        "arguments": {
+          "instanceName": "<Instance>",
+          "valuesJson": {
+            "<DB>.<Tag>": true
+          },
+          "dryRun": false,
+          "confirmWrite": true
+        },
+        "expect": "written and read back"
+      },
+      {
+        "tool": "RunPlcSimAdvancedTestScenario",
+        "arguments": {
+          "scenarioJson": {
+            "instance": "<Instance>",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "<DB>.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "<DB>.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": true
+        },
+        "expect": "plan validated"
+      },
+      {
+        "tool": "RunPlcSimAdvancedTestScenario",
+        "arguments": {
+          "scenarioJson": {
+            "instance": "<Instance>",
+            "mode": "default",
+            "steps": [
+              {
+                "write": {
+                  "<DB>.Start": true
+                }
+              },
+              {
+                "waitMs": 300
+              },
+              {
+                "assert": {
+                  "<DB>.Running": true
+                }
+              }
+            ]
+          },
+          "dryRun": false,
+          "confirmRun": true
+        },
+        "expect": "PASSED n/n"
+      }
+    ]
+  },
+  {
+    "id": "sequence/hardware-device",
+    "topic": "hardware-device",
+    "purpose": "Add a device from the catalog, plug a module, and remove a temporary device again.",
+    "preconditions": "connect-project done. The maintainer's rule: hardware tests only on temporary devices in the scratch project, never on existing ones.",
+    "notes": "S7-1500 modules plug into the rail item ('<Station>/导轨_0'); AddDevice needs the exact catalog version from SearchHardwareCatalog.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "SearchHardwareCatalog",
+        "arguments": {
+          "keyword": "1515-2 PN",
+          "limit": 10
+        },
+        "expect": "order numbers and versions"
+      },
+      {
+        "tool": "AddDevice",
+        "arguments": {
+          "orderNumber": "6ES7 515-2AM02-0AB0",
+          "version": "V2.9",
+          "deviceName": "<Station>"
+        },
+        "expect": "device created"
+      },
+      {
+        "tool": "PlugDeviceItem",
+        "arguments": {
+          "deviceItemPath": "<Station>/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": true
+        },
+        "expect": "CanPlugNew true"
+      },
+      {
+        "tool": "PlugDeviceItem",
+        "arguments": {
+          "deviceItemPath": "<Station>/导轨_0",
+          "orderNumber": "6ES7 521-1BH00-0AB0",
+          "version": "V2.2",
+          "positionNumber": 2,
+          "dryRun": false
+        },
+        "expect": "module plugged"
+      },
+      {
+        "tool": "ManageHardwareObject",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]",
+          "action": "deleteDevice",
+          "dryRun": true
+        },
+        "expect": "preview"
+      },
+      {
+        "tool": "ManageHardwareObject",
+        "arguments": {
+          "devicePathJson": "[\"<Station>\"]",
+          "action": "deleteDevice",
+          "dryRun": false
+        },
+        "expect": "device removed"
+      }
+    ]
+  },
+  {
+    "id": "sequence/hmi-unified-screen",
+    "topic": "hmi-unified-screen",
+    "purpose": "Unified HMI: connection -> tag bound to a PLC tag -> screen -> button -> compile.",
+    "preconditions": "connect-project done; the PLC side (tags / DB) exists; the HMI is WinCC Unified (classic panels cannot get connections via Openness).",
+    "notes": "PLC side first. Text labels use itemType Text; a Rectangle has no Text.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "EnsureUnifiedHmiConnection",
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "connectionName": "HMI_Connection_1",
+          "plcName": "PLC_1"
+        },
+        "expect": "connection present"
+      },
+      {
+        "tool": "EnsureUnifiedHmiTag",
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "tagTableName": "Default tag table",
+          "tagName": "<Tag>",
+          "hmiDataType": "Bool",
+          "plcName": "PLC_1",
+          "plcTag": "<PLC tag>"
+        },
+        "expect": "AbsoluteVerified true"
+      },
+      {
+        "tool": "EnsureUnifiedHmiScreen",
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "<Screen>"
+        },
+        "expect": "screen present"
+      },
+      {
+        "tool": "EnsureUnifiedHmiScreenItem",
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "<Screen>",
+          "itemName": "btnStart",
+          "itemType": "Button",
+          "left": 20,
+          "top": 20,
+          "width": 120,
+          "height": 40,
+          "text": "Start"
+        },
+        "expect": "item present"
+      },
+      {
+        "tool": "EnsureUnifiedHmiButtonAction",
+        "arguments": {
+          "hmiSoftwarePath": "HMI_RT_1",
+          "screenName": "<Screen>",
+          "buttonName": "btnStart",
+          "eventType": "Down",
+          "actionKind": "set-bit",
+          "targetTag": "<Tag>"
+        },
+        "expect": "handler written"
+      },
+      {
+        "tool": "CompileAndDiagnoseHmi",
+        "arguments": {
+          "softwarePath": "HMI_RT_1"
+        },
+        "expect": "ErrorCount 0"
+      }
+    ]
+  },
+  {
+    "id": "sequence/export-import-block",
+    "topic": "export-import-block",
+    "purpose": "Round-trip one block through SimaticML (export, edit outside, import back).",
+    "preconditions": "connect-project done.",
+    "notes": "ExportBlock reports the file written in Meta.exportedFile; ImportBlock normalises the engineering version automatically.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "ExportBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "blockPath": "<Group/Block>",
+          "exportPath": "C:\\Temp"
+        },
+        "expect": "Meta.exportedFile"
+      },
+      {
+        "tool": "ImportBlock",
+        "arguments": {
+          "softwarePath": "PLC_1",
+          "groupPath": "<Group>",
+          "importPath": "C:\\Temp\\<Block>.xml"
+        },
+        "expect": "imported"
+      },
+      {
+        "tool": "CompileAndDiagnosePlc",
+        "arguments": {
+          "softwarePath": "PLC_1"
+        },
+        "expect": "ErrorCount 0"
+      }
+    ]
+  },
+  {
+    "id": "sequence/large-response",
+    "topic": "large-response",
+    "purpose": "Read a response that was stored because it exceeded the size limit.",
+    "preconditions": "A response came back with meta.truncated=true and an exportId.",
+    "notes": "Pages are character slices: concatenate every page before parsing. SaveExport writes the whole payload to a file on the TIA machine.",
+    "releaseKeys": [
+      "20",
+      "21"
+    ],
+    "profile": "full-engine",
+    "kind": "call-sequence",
+    "validation": "Contract checked; native acceptance of this revision NOT RUN.",
+    "steps": [
+      {
+        "tool": "GetExport",
+        "arguments": {
+          "exportId": "<exportId>",
+          "offset": 0
+        },
+        "expect": "first page + nextOffset"
+      },
+      {
+        "tool": "GetExport",
+        "arguments": {
+          "exportId": "<exportId>",
+          "offset": 20000
+        },
+        "expect": "offset = the previous page's nextOffset; repeat until eof=true"
+      },
+      {
+        "tool": "SaveExport",
+        "arguments": {
+          "exportId": "<exportId>",
+          "outputPath": "C:\\Temp\\<name>.json"
+        },
+        "expect": "path written"
+      }
+    ]
+  }
+]

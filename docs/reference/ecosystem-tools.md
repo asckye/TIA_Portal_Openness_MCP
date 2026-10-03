@@ -4,7 +4,7 @@
 
 这些功能已纳入 3.1.0 源码和交付包。启动对应版本引擎后通过 `FindTools` / `CallTool` 调用；正在运行的旧 MCP 服务不会自动加载新工具。无需操作 TIA 界面。此轮没有连接 VM、修改工程、保存或下载到 PLC。
 
-官方 `tia-portal-ai-extensions` 为优先参考。先调用 `GetAuthoringGuide(topic="openness-workflow")` 了解开发流程，再用 `ReadOpennessGuidance` 阅读对应主题。指南与具体版本手册冲突时，以手册和 PublicAPI 为准；详细差异、修复与缺口见[官方流程审计](../development/official-openness-audit-20260929.md)。`RunToolsInTransaction` 已收紧为其描述中的 8 个同步编辑工具，编译、保存、在线、文件和嵌套编排不能放进该事务。
+官方 `tia-portal-ai-extensions` 为优先参考。通过 `GetToolUsage(toolName, operation)` 获取统一调用示例和官方出处；语言代码与流程也在同一示例库。指南与具体版本手册冲突时，以手册和 PublicAPI 为准；详细差异、修复与缺口见[官方流程审计](../development/official-openness-audit-20260929.md)。`RunToolsInTransaction` 已收紧为其描述中的 8 个同步编辑工具，编译、保存、在线、文件和嵌套编排不能放进该事务。
 
 | 新工具 | 用途 |
 |---|---|

@@ -86,7 +86,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
             deadline = time.monotonic() + 25
             while True:
                 raw = output.get(timeout=max(0.1, deadline - time.monotonic()))
-                require(raw is not None, 'Host exited before returning a response: ' + ''.join(errors[-8:]))
+                require(raw is not None, 'Host exited before returning a response: ' + ''.join(errors))
                 reply = json.loads(raw)
                 if 'id' in reply:
                     break
@@ -102,7 +102,7 @@ def server(exe, portal_root, major, transport, profile, harness=None, public_api
         if transport == 'http':
             deadline = time.monotonic() + 25
             while True:
-                require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors[-8:]))
+                require(process.poll() is None, 'HTTP server exited at startup: ' + ''.join(errors))
                 try:
                     request = urllib.request.Request(endpoint + '/ready',
                                                      headers={'X-API-Key': key})
@@ -166,10 +166,9 @@ def main():
                         passed += 1
                 tools = rpc('tools/list')['result']['tools']
                 require(any(tool['name'] == 'GetState' for tool in tools), 'Tools disappeared')
-                # The caller must receive native-use guidance over the real protocol,
-                # including lite clients that discover the parameter tool through FindTools.
-                require('startdrive-bico' in initialized['result'].get('instructions', ''),
-                        'BICO guidance missing from MCP initialize instructions')
+                instructions = initialized['result'].get('instructions', '')
+                require('GetToolUsage' in instructions and len(instructions) < 1200,
+                        'Initialization should point to the unified library concisely')
                 passed += 1
 
                 def call_guide_tool(name, arguments):
@@ -192,38 +191,23 @@ def main():
                     verify_documents=transport == 'stdio' and profile == 'full')
                 usage_records.append(dict(usage_report, transport=transport, profile=profile))
                 passed += 1
-                guide = call_guide_tool('GetAuthoringGuide', {'topic': 'startdrive-bico'})
-                guide_text = guide['message']
-                require(guide['meta']['success'] and
-                        f'/v{args.major}/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters' in guide_text and
-                        'p2051[0]' in guide_text and 'dryRun' in guide_text,
-                        'Official-version BICO guide or crash/read semantics missing')
+                guide = call_guide_tool('GetAuthoringGuide', {'topic': 'scl'})
+                direct = call_guide_tool('GetToolUsage', {'language': 'scl'})
+                require(guide['meta']['usage'] == direct['meta']['usage'], 'Legacy guide diverges from unified examples')
                 passed += 1
-                found = call_guide_tool('FindTools', {'query': 'ManageStartdriveParameter', 'limit': 1})
-                found_text = json.dumps(found)
-                require('ManageStartdriveParameter' in found_text and 'startdrive-bico' in found_text and
-                        'p1070[0]' in found_text, 'FindTools omitted the guide or curated call example')
+                found = call_guide_tool('FindTools', {'query': 'ManageMotionAxis', 'limit': 1})
+                require('GetToolUsage' in json.dumps(found), 'Discovery omitted example route')
                 passed += 1
-                planned_args = {'devicePathJson': '["fixture-drive"]', 'itemPathJson': '["fixture-cu"]',
-                                'driveObjectNumber': 0, 'driveObjectIndex': 0,
-                                'parameter': 'p2051[0]', 'action': 'read', 'dryRun': True}
-                preflight = call_guide_tool('PreflightToolCall', {'name': 'ManageStartdriveParameter',
-                                                               'argumentsJson': planned_args})
-                detail = preflight['meta']
-                require(detail['ok'] and detail['nativeReadsPossible'] and
-                        detail['authoringGuideTopic'] == 'startdrive-bico' and
-                        any('p2051[0]' in note and 'dryRun=true' in note for note in detail['precautions']),
-                        'Preflight hides native reads or the known crash report')
+                legacy = call_guide_tool('GetAuthoringGuide', {'topic': 'startdrive-bico'})
+                direct = call_guide_tool('GetToolUsage', {'toolName': 'ManageStartdriveParameter', 'operation': 'read'})
+                require(legacy['meta']['usage'] == direct['meta']['usage'], 'Legacy topic must use the same catalog')
                 passed += 1
-                recipe = call_guide_tool('GetRecipe', {'topic': 'startdrive-bico-read'})
-                require(recipe['meta']['success'] and 'PreflightToolCall' in json.dumps(recipe) and
-                        'NOT RUN' in json.dumps(recipe), 'BICO recipe omitted preflight or native acceptance limits')
+                recipe = call_guide_tool('GetRecipe', {'topic': 'connect-project'})
+                sequence = call_guide_tool('GetToolUsage', {'exampleId': 'sequence/connect-project'})['meta']['usage']['examples'][0]
+                require([s['tool'] for s in recipe['meta']['steps']] == [s['tool'] for s in sequence['steps']], 'Recipe steps differ from the unified catalog')
                 passed += 1
-                bridged = call_guide_tool('CallTool', {'name': 'GetAuthoringGuide',
-                                                     'argumentsJson': {'topic': 'startdrive-bico'}})
-                # CallTool preserves the legacy nested ResponseMessage envelope.
-                require(json.loads(bridged['message'])['Message'] == guide_text,
-                        'CallTool did not deliver the same embedded BICO guide')
+                bridged = call_guide_tool('CallTool', {'name': 'GetToolUsage', 'argumentsJson': {'language': 'scl'}})
+                require(json.loads(bridged['message'])['Meta']['usage'] == guide['meta']['usage'], 'Bridge did not deliver the same examples')
                 passed += 1
                 state = rpc('tools/call', params={'name': 'GetState', 'arguments': {}})
                 require('result' in state and not state['result'].get('isError') and

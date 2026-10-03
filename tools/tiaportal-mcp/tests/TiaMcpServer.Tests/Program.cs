@@ -173,6 +173,7 @@ namespace TiaMcpServer.Tests
 
             Console.WriteLine("== 2.7.58 调用纪律纯逻辑：schema enum / default / examples、按签名派生示例、失败附带的预检摘要、配方表与 GetRecipe ==");
             CallDisciplineTests.Run(Check);
+            ToolExampleLibraryTests.Run(Check);
 
             Console.WriteLine(_fail == 0
                 ? $"{_pass} passed, {_fail} failed, {_skip} skipped."

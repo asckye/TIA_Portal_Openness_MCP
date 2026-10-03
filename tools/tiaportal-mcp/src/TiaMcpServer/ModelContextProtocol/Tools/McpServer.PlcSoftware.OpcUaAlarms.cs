@@ -44,7 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageOpcUaInterface(
             [Description("softwarePath: path to the PLC software, e.g. 'PLC_1'")] string softwarePath,
             [Description("interfaceName: exact name as shown in GetOpcUaConfig")] string interfaceName,
-            [Description("action: read (default) or delete")] string action = "read",
+            [Description("read | delete. action: read (default) or delete")] string action = "read",
             [Description("interfaceType: 'ServerInterface' (default), 'SimaticInterface', or 'ReferenceNamespace'")] string interfaceType = "ServerInterface",
             [Description("dryRun: true (default) previews; false deletes")] bool dryRun = true)
             => Portal.ManageOpcUaInterface(softwarePath, interfaceName, action, interfaceType, dryRun);

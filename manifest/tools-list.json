@@ -1,19 +1,19 @@
 {
-    "package":  "TIA_MCP_Delivery_v3.1.0_20261002",
-    "generatedAt":  "2026-10-03T07:45:53.2291924+00:00",
+    "package":  "TIA_MCP_Delivery_v3.1.0_20261003",
+    "generatedAt":  "2026-10-03T09:14:08.9407774+00:00",
     "source":  "Reflection metadata from the compiled EXE; no live TIA or host tools/list claimed",
     "fileVersion":  "3.1.0.0",
-    "exeSha256":  "076bef67472991399bcf24323142e47f0cd86a6bcb68274fe0ad65e899bb74e9",
+    "exeSha256":  "1f4ad60063e9124955182cd6ad82524b677236bde0ed3b806a04e9d1c14a7dc4",
     "toolCount":  488,
     "note":  "Full attributed tool roster. Default lite profile uses FindTools + CallTool for the remaining tools. Runtime tools/list is authoritative.",
     "callDiscipline":  {
-                           "parameters":  2344,
-                           "parametersUndocumented":  894,
-                           "parametersFromVocabulary":  894,
+                           "parameters":  2347,
+                           "parametersUndocumented":  871,
+                           "parametersFromVocabulary":  871,
                            "toolsWithUndocumentedParameters":  198,
-                           "toolsWithEnumHints":  124,
-                           "enumHints":  192,
-                           "defaultHints":  1414,
+                           "toolsWithEnumHints":  144,
+                           "enumHints":  221,
+                           "defaultHints":  1417,
                            "examplesCurated":  87,
                            "recipes":  13
                        },
@@ -678,14 +678,14 @@
                       "layer":  "L0",
                       "category":  "session",
                       "domain":  "Guide",
-                      "operation":  "SESSION",
-                      "operationInferred":  true,
+                      "operation":  "READ",
+                      "operationInferred":  false,
                       "method":  "GetAuthoringGuide",
                       "returnType":  "ResponseMessage",
                       "parameters":  [
                                          "topic"
                                      ],
-                      "description":  "[L0][Guide] Verified syntax + workflow cheat sheet for authoring TIA content through this server. CALL THIS BEFORE Startdrive/BICO parameter access or writing any SCL/LAD/DB/HMI content — it prevents the common encoding, syntax and tool-routing mistakes. Topics: workflow, openness-workflow, startdrive-bico, scl, lad, db, hmi, errors. Read-only, does not touch TIA Portal.",
+                      "description":  "[L0][Guide][READ] Compatibility entry into the unified GetToolUsage example library. A language topic returns programming examples; workflow returns the connection sequence. No separate rules or native calls.",
                       "example":  "{\"topic\":\"scl\"}"
                   },
                   {
@@ -5994,14 +5994,14 @@
                       "layer":  "L0",
                       "category":  "session",
                       "domain":  "Guide",
-                      "operation":  "SESSION",
+                      "operation":  "READ",
                       "operationInferred":  false,
                       "method":  "GetRecipe",
                       "returnType":  "ResponseStringList",
                       "parameters":  [
                                          "topic"
                                      ],
-                      "description":  "[L0][Guide][SESSION] Documented multi-step call sequences (recipes) for the common jobs - connect and bind a project, build a block from SCL, import S7DCL, watch tables, CPU protection, download to PLCSIM Advanced and go online, PLCSIM tag tests, adding hardware, Unified HMI screens, exporting/importing blocks, paging large responses and exact Startdrive BICO reads. Each step is an exact tool call (name + argumentsJson, placeholders marked) with what to expect; native acceptance and known limitations are stated in each recipe; examples alone do not establish it. Call with no topic to list the recipes; follow a recipe step by step instead of improvising the order. Nothing is executed.",
+                      "description":  "[L0][Guide][READ] Compatibility entry for call sequences stored in the unified GetToolUsage example library. Empty topic lists sequences; a topic returns ordered calls and expected results. No calls are executed.",
                       "example":  null
                   },
                   {
@@ -6230,7 +6230,7 @@
                                          "limit",
                                          "includeValue"
                                      ],
-                      "description":  "[L2][Hardware][READ] Before parameter access read GetAuthoringGuide(topic: startdrive-bico). For one BICO connection prefer ManageStartdriveParameter action=read; a reported p2051[0] crash awaits native retest, so do not automatically replay it. Typed offline drive parameters of one drive object: source read (ReadDriveParameter view) or write (DriveParameter view); namesJson [\"p1000[0]\",\"r47\"] uses Find(name), numbersJson [{number, arrayIndex}] uses Find(number, arrayIndex) (arrayIndex -1 for array-less parameters); without both the composition is enumerated in native order with offset / limit. Rows: name, number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value list and bit parameters (Bits); bit names such as r722.0 resolve through the parent\u0027s Bits. includeValue=false reads the metadata without touching Value - do that first for BICO sinks and status words on a freshly added drive: on a G120C, TIA Portal V21 itself went down while reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline; ReadOnlineDriveParameters reads the connected drive.",
+                      "description":  "[L2][Hardware][READ] For one BICO connection prefer ManageStartdriveParameter action=read; a reported p2051[0] crash awaits native retest, so do not automatically replay it. Typed offline drive parameters of one drive object: source read (ReadDriveParameter view) or write (DriveParameter view); namesJson [\"p1000[0]\",\"r47\"] uses Find(name), numbersJson [{number, arrayIndex}] uses Find(number, arrayIndex) (arrayIndex -1 for array-less parameters); without both the composition is enumerated in native order with offset / limit. Rows: name, number, array index / length, value (BICO sinks report {bicoSource, parameterText}), min / max, unit, parameter text, optional enum value list and bit parameters (Bits); bit names such as r722.0 resolve through the parent\u0027s Bits. includeValue=false reads the metadata without touching Value - do that first for BICO sinks and status words on a freshly added drive: on a G120C, TIA Portal V21 itself went down while reading the Value of r2139 and of the unwired p840[0] (2.7.39 real project). Read-only, offline; ReadOnlineDriveParameters reads the connected drive.",
                       "example":  "{\"devicePathJson\": \"[\\\"\u003cexact drive device\u003e\\\"]\", \"itemPathJson\": \"[\\\"\u003cexact drive/control unit item\u003e\\\"]\", \"driveObjectNumber\": 0, \"driveObjectIndex\": 0, \"source\": \"write\", \"namesJson\": \"[\\\"p1070[0]\\\"]\", \"includeValue\": false, \"includeBits\": false, \"includeEnumValues\": false}"
                   },
                   {
@@ -6252,7 +6252,7 @@
                                          "dryRun",
                                          "driveObjectIndex"
                                      ],
-                      "description":  "[L2][Hardware][WRITE] First read GetAuthoringGuide(topic: startdrive-bico) and GetRecipe(topic: startdrive-bico-read). dryRun=true still performs native reads; never replay a known failing parameter after TIA/channel loss. Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read follows Parameters.Find(name).Value for BICO, using ReadParameters only when absent in Parameters; returns name, parameterClass and value (including BICO source). Reads the selected Value once without expanding bits, limits or enum tables; use ReadDriveParameters for an explicitly requested detailed view. A reported p2051[0] TIA crash remains pending native retest; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {\"bicoSource\":\"r2050[1]\"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent\u0027s Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -\u003e 11 -\u003e 10 and p1070[0] \u003c- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive.",
+                      "description":  "[L2][Hardware][WRITE] dryRun=true still performs native reads; never replay a known failing parameter after TIA/channel loss. Exact offline drive parameter read or write on one drive object (driveObjectNumber or driveObjectIndex): read follows Parameters.Find(name).Value for BICO, using ReadParameters only when absent in Parameters; returns name, parameterClass and value (including BICO source). Reads the selected Value once without expanding bits, limits or enum tables; use ReadDriveParameters for an explicitly requested detailed view. A reported p2051[0] TIA crash remains pending native retest; write sets DriveParameter.Value from a JSON scalar (converted to the current value type) or wires a BICO sink with valueJson {\"bicoSource\":\"r2050[1]\"} (Value = Parameters.Find(source); bit sources such as r722.0 resolve through the parent\u0027s Bits). Exact parameter names such as p1000[0], r47 or p2080[0].6; no fuzzy matching. Real project (G120C, 2.7.39): p1120[0] 10 -\u003e 11 -\u003e 10 and p1070[0] \u003c- r2050[1] verified. Default preview; readback after the write. Never uses OnlineDriveObjectContainer or commands a drive.",
                       "example":  "{\"devicePathJson\": \"[\\\"\u003cexact drive device\u003e\\\"]\", \"itemPathJson\": \"[\\\"\u003cexact drive/control unit item\u003e\\\"]\", \"driveObjectNumber\": 0, \"driveObjectIndex\": 0, \"parameter\": \"p1070[0]\", \"action\": \"read\", \"dryRun\": true}"
                   },
                   {
@@ -6413,7 +6413,7 @@
                                          "limit",
                                          "includeValue"
                                      ],
-                      "description":  "[L2][Hardware][ONLINE] First read GetAuthoringGuide(topic: startdrive-bico); offline reads and online reads are distinct, and native read calls can still fail or terminate TIA. Parameters of the connected drive (OnlineDriveObjectContainer.OnlineDriveObjects[n].ReadParameters): namesJson / numbersJson selectors or paged enumeration, same typed rows as ReadDriveParameters (BICO sources, bits, enum values, includeValue). Requires the drive to be online in TIA Portal; nothing is written.",
+                      "description":  "[L2][Hardware][ONLINE] Offline reads and online reads are distinct, and native read calls can still fail or terminate TIA. Parameters of the connected drive (OnlineDriveObjectContainer.OnlineDriveObjects[n].ReadParameters): namesJson / numbersJson selectors or paged enumeration, same typed rows as ReadDriveParameters (BICO sources, bits, enum values, includeValue). Requires the drive to be online in TIA Portal; nothing is written.",
                       "example":  null
                   },
                   {
@@ -6452,9 +6452,12 @@
                                          "query",
                                          "documentId",
                                          "offset",
-                                         "limit"
+                                         "limit",
+                                         "operation",
+                                         "language",
+                                         "exampleId"
                                      ],
-                      "description":  "[L0][Guide][READ] Get any available tool\u0027s exact version-specific MCP example/template, parameter schema, workflow and related official Siemens source examples. toolName selects a tool; query searches ALL embedded official source text; documentId reads its complete paginated source including setup and caveats. Empty selectors list current tool names and official sources. Reference only: never calls TIA, executes a sample or requires network/repository files. Official coverage gaps and source-version limits are explicit.",
+                      "description":  "[L0][Guide][READ] Unified examples for every tool and operation in this release: exact arguments, parameter sources, result fields, programming files and call sequences. Select toolName + optional operation; language lists programming examples; exampleId returns full files/steps. query/documentId searches/reads embedded official source. Empty selectors list tools, languages and examples. Reads embedded data only.",
                       "example":  null
                   },
                   {

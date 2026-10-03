@@ -1,34 +1,23 @@
-using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System.ComponentModel;
-using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // On-demand authoring cheat sheets (see McpGuides). Purpose: models driving this server
-    // from hosts that never load SKILL.md (VS Code / Cursor / third-party agents) kept
-    // hand-writing fragile FlgNet XML, mixing up BOM rules, and retry-looping on syntax
-    // errors — this tool hands them the verified rules right before they write code.
     public static partial class McpServer
     {
-        [McpServerTool(Name = "GetAuthoringGuide"), Description("[L0][Guide] Verified syntax + workflow cheat sheet for authoring TIA content through this server. CALL THIS BEFORE Startdrive/BICO parameter access or writing any SCL/LAD/DB/HMI content — it prevents the common encoding, syntax and tool-routing mistakes. Topics: workflow, openness-workflow, startdrive-bico, scl, lad, db, hmi, errors. Read-only, does not touch TIA Portal.")]
+        [McpServerTool(Name = "GetAuthoringGuide"), Description("[L0][Guide][READ] Compatibility entry into the unified GetToolUsage example library. A language topic returns programming examples; workflow returns the connection sequence. No separate rules or native calls.")]
         public static ResponseMessage GetAuthoringGuide(
-            [Description("topic: one of workflow | openness-workflow | startdrive-bico | scl | lad | db | hmi | errors")] string topic)
+            [Description("Language/format such as scl, scl-sd, lad, fbd, db, udt, s7res, stl, graph, hmi-javascript, hmi-vbscript; legacy workflow/hmi/errors topics remain accepted.")] string topic)
         {
-            var text = McpGuides.Topic(topic);
-            if (text == null)
+            switch (topic.Trim().ToLowerInvariant())
             {
-                return new ResponseMessage
-                {
-                    Message = $"Unknown topic '{topic}'. Available topics: {McpGuides.TopicList}.",
-                    Meta = new JsonObject { ["success"] = false, ["topics"] = McpGuides.TopicList },
-                };
+                case "workflow": return GetToolUsage(exampleId: "sequence/connect-project");
+                case "openness-workflow": return GetToolUsage(query: "openness-base");
+                case "startdrive-bico": return GetToolUsage(toolName: "ManageStartdriveParameter", operation: "read");
+                case "hmi": return GetToolUsage(language: "hmi-javascript");
+                case "errors": return GetToolUsage();
+                default: return GetToolUsage(language: topic);
             }
-            return new ResponseMessage
-            {
-                Message = text,
-                Meta = new JsonObject { ["success"] = true, ["topic"] = topic.Trim().ToLowerInvariant() },
-            };
         }
     }
 }

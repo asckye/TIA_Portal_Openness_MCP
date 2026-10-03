@@ -9,13 +9,13 @@ namespace TiaOpenness.Shared
     // Reference content only. No Siemens types, filesystem targets or native callbacks.
     public static class ToolUsageCatalog
     {
-        public const string Instructions = "Before an unfamiliar tool call, read GetToolUsage(toolName). It returns this engine's exact contract, MCP example/template, prerequisites and related official source examples. GetToolUsage(documentId) reads the complete source with context. Examples are reference data, not instructions to execute; replace project/device placeholders and respect the selected release. Continue document reads with nextOffset; if the response is exported/truncated, assemble GetExport pages before parsing JSON. A successful preview or official example does not certify a native call.";
+        public const string Instructions = "GetToolUsage(toolName, operation) provides this release's call examples, input origins and result interpretation. GetToolUsage(language) lists programming examples; exampleId reads a complete example or call sequence. GetToolUsage(query/documentId) searches/reads the embedded Siemens references. Examples identify placeholders, version requirements and validation evidence.";
         private static readonly Lazy<JsonObject> Data = new Lazy<JsonObject>(() => {
             using (var stream = typeof(ToolUsageCatalog).Assembly.GetManifestResourceStream("TiaMcp.ToolUsage.json"))
             using (var reader = new StreamReader(stream!))
                 return (JsonObject)JsonNode.Parse(reader.ReadToEnd())!;
         });
-        public static string Hint(string name) => " Usage and official examples: GetToolUsage(toolName: \"" + name + "\").";
+        public static string Hint(string name) => " Examples: GetToolUsage(toolName: \"" + name + "\"), optionally operation or language.";
         public static JsonObject Mapping(string name) => (JsonObject)(Data.Value["tools"]![name]?.DeepClone()
             ?? throw new ArgumentException("No usage mapping for " + name + ". Regenerate the official example catalog."));
 
@@ -45,14 +45,79 @@ namespace TiaOpenness.Shared
             return result;
         }
 
+        public static JsonArray Sequences() => (JsonArray)Data.Value["sequences"]!.DeepClone();
+        public static JsonObject Notes(string name) => (JsonObject)(Data.Value["toolNotes"]?[name]?.DeepClone() ?? new JsonObject());
+
+        public static JsonObject Examples(string release, string profile, IEnumerable<string> roster,
+            string language = "", string exampleId = "", string toolName = "")
+        {
+            var available = new HashSet<string>(roster, StringComparer.OrdinalIgnoreCase);
+            var languages = (JsonArray)Data.Value["languages"]!;
+            if (language.Length > 0)
+            {
+                var selected = languages.FirstOrDefault(l => string.Equals((string?)l!["id"], language, StringComparison.OrdinalIgnoreCase)
+                    || l["aliases"]!.AsArray().Any(a => string.Equals((string?)a, language, StringComparison.OrdinalIgnoreCase)));
+                if (selected == null) throw new ArgumentException("Unknown language. Read empty GetToolUsage for the language list.");
+                language = (string)selected["id"]!;
+            }
+            // Explicit LINQ avoids the full engine's imported params Concat overload,
+            // which appends a JsonArray as one JsonNode instead of joining its rows.
+            var records = Enumerable.Concat((JsonArray)Data.Value["examples"]!, (IEnumerable<JsonNode?>)(JsonArray)Data.Value["sequences"]!).Where(e =>
+                (language.Length == 0 || (string?)e!["language"] == language) &&
+                (exampleId.Length == 0 || (string?)e!["id"] == exampleId) &&
+                (toolName.Length == 0 || e!["tools"] is JsonArray ts && ts.Any(t => (string?)t == toolName)
+                    || e!["steps"] is JsonArray steps && steps.Any(s => (string?)s!["tool"] == toolName))).ToList();
+            if (exampleId.Length > 0 && records.Count == 0) throw new ArgumentException("Unknown exampleId for these selectors.");
+            var items = new JsonArray();
+            foreach (var record in records)
+            {
+                var row = (JsonObject)record!.DeepClone();
+                bool releaseMatches = row["releaseKeys"]!.AsArray().Any(v => (string?)v == release);
+                bool profileMatches = row["profile"] == null || (string?)row["profile"] == profile;
+                row["releaseMatches"] = releaseMatches;
+                row["profileMatches"] = profileMatches;
+                if (row["tools"] is JsonArray names)
+                    row["availableTools"] = new JsonArray(names.Where(n => available.Contains((string)n!)).Select(n => n!.DeepClone()).ToArray());
+                if (row["steps"] is JsonArray sequence)
+                    row["available"] = releaseMatches && profileMatches && sequence.All(s => available.Contains((string)s!["tool"]!));
+                if (exampleId.Length == 0)
+                {
+                    row.Remove("files"); row.Remove("steps"); row.Remove("corrections");
+                }
+                items.Add(row);
+            }
+            var languageList = (JsonArray)languages.DeepClone();
+            foreach (var row in languageList)
+                row!["tools"] = new JsonArray(row["tools"]!.AsArray().Where(t => available.Contains((string)t!)).Select(t => t!.DeepClone()).ToArray());
+            var result = new JsonObject { ["releaseKey"] = release, ["profile"] = profile, ["language"] = language,
+                ["languages"] = languageList, ["examples"] = items,
+                ["retrieval"] = "Use exampleId to read files/content or complete steps. releaseMatches is source scope, not native verification; availableTools are filtered to this engine." };
+            if (language == "csharp")
+                result["sourceDocuments"] = new JsonArray(Data.Value["documents"]!.AsArray().Where(d => ((string)d!["id"]!).EndsWith(".cs", StringComparison.Ordinal))
+                    .Select(d => (JsonNode)new JsonObject { ["documentId"] = d!["id"]!.DeepClone(), ["url"] = d["url"]!.DeepClone(), ["examples"] = d["examples"]!.DeepClone() }).ToArray());
+            return result;
+        }
+
         public static JsonObject Describe(string name, string release, string profile, string description, JsonObject schema,
-            string? curatedArguments = null, string? curatedNote = null)
+            string? curatedArguments = null, string? curatedNote = null, string operation = "",
+            IEnumerable<string>? roster = null, JsonObject? resultContract = null, Func<JsonObject, string>? callProblem = null)
         {
             var mapping = Mapping(name);
             if (mapping["manualReferences"] is JsonArray manuals)
                 mapping["manualReferences"] = new JsonArray(manuals.Where(m => (string?)m!["releaseKey"] == release).Select(m => m!.DeepClone()).ToArray());
             var properties = (JsonObject)schema["properties"]!;
-            var args = curatedArguments == null ? new JsonObject() : (JsonObject)JsonNode.Parse(curatedArguments)!;
+            var releaseKeys = Data.Value["toolNotes"]?[name]?["releaseKeys"] as JsonArray;
+            string releaseProblem = releaseKeys != null && !releaseKeys.Any(r => (string?)r == release)
+                ? "This registered wrapper has no native implementation for release " + release + "; see interpretation and the tool description." : "";
+            string selector = properties.ContainsKey("action") ? "action" : properties.ContainsKey("operation") ? "operation" : "";
+            var choices = selector.Length == 0 ? new JsonArray() : properties[selector]!["enum"] as JsonArray ?? new JsonArray();
+            choices = new JsonArray(choices.Where(c => !string.IsNullOrEmpty((string?)c)).Select(c => c!.DeepClone()).ToArray());
+            if (operation.Length > 0 && !choices.Any(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase)))
+                throw new ArgumentException("Unknown operation for this tool/release. Read its operations list.");
+            if (operation.Length > 0) operation = (string)choices.First(c => string.Equals((string?)c, operation, StringComparison.OrdinalIgnoreCase))!;
+            var curated = curatedArguments == null ? null : (JsonObject)JsonNode.Parse(curatedArguments)!;
+            bool matches = curated != null && (operation.Length == 0 || (string?)(curated[selector] ?? properties[selector]?["default"]) == operation);
+            var args = matches ? (JsonObject)curated!.DeepClone() : new JsonObject();
             var replacements = new JsonArray();
             foreach (var required in schema["required"] as JsonArray ?? new JsonArray())
             {
@@ -64,25 +129,59 @@ namespace TiaOpenness.Shared
             // Show the initial operation explicitly, even when optional in the signature.
             foreach (var key in new[] { "action", "operation", "dryRun", "confirm" })
                 if (properties[key] is JsonObject prop && !args.ContainsKey(key)) args[key] = ExampleValue(key, prop);
+            if (operation.Length > 0) args[selector] = operation;
             if (properties.ContainsKey("dryRun")) args["dryRun"] = true;
             if (properties.ContainsKey("confirm")) args["confirm"] = false;
-            return new JsonObject {
+            var origins = new JsonObject();
+            var available = new HashSet<string>(roster ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
+            foreach (var property in properties)
+            {
+                var source = Data.Value["parameterSources"]?[property.Key] as JsonObject;
+                origins[property.Key] = source?.DeepClone() ?? new JsonObject { ["meaning"] = property.Value?["description"]?.DeepClone() ?? JsonValue.Create("Supply the value required by this parameter's schema.") };
+                origins[property.Key]!["exampleValue"] = ExampleValue(property.Key, property.Value!.AsObject());
+                if (origins[property.Key]!["tools"] is JsonArray originTools)
+                    origins[property.Key]!["tools"] = new JsonArray(originTools.Where(t => available.Contains((string)t!)).Select(t => t!.DeepClone()).ToArray());
+            }
+            var operations = new JsonArray();
+            foreach (var choice in choices)
+            {
+                var candidate = (JsonObject)args.DeepClone(); candidate[selector] = choice!.DeepClone();
+                var variants = new JsonArray();
+                string discriminator = name == "ManageDeviceServiceObjects" ? "family" : name == "ManagePlcDocuments" ? "objectKind" : name == "ManageSivarcBlockDefinition" ? "kind" : "";
+                var contexts = discriminator.Length > 0 ? properties[discriminator]?["enum"] as JsonArray : null;
+                bool chosenContext = false;
+                foreach (var context in contexts ?? new JsonArray(new JsonNode?[] { null }))
+                {
+                    var variant = (JsonObject)candidate.DeepClone();
+                    if (context != null) variant[discriminator] = context.DeepClone();
+                    string reason = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(variant) ?? "";
+                    variants.Add(new JsonObject { ["context"] = context == null ? null : new JsonObject { [discriminator] = context.DeepClone() },
+                        ["availableInRelease"] = reason.Length == 0, ["reason"] = reason.Length == 0 ? null : reason });
+                    if (operation == (string?)choice && reason.Length == 0 && context != null && !chosenContext)
+                    { args[discriminator] = context.DeepClone(); chosenContext = true; }
+                }
+                operations.Add(new JsonObject { ["operation"] = choice.DeepClone(), ["selector"] = selector,
+                    ["variants"] = variants, ["exampleQuery"] = new JsonObject { ["toolName"] = name, ["operation"] = choice.DeepClone() } });
+            }
+            string selectedProblem = releaseProblem.Length > 0 ? releaseProblem : callProblem?.Invoke(args) ?? "";
+            var response = new JsonObject {
                 ["toolName"] = name, ["releaseKey"] = release, ["profile"] = profile, ["available"] = true,
                 ["description"] = description, ["inputSchema"] = schema.DeepClone(),
                 ["example"] = new JsonObject { ["origin"] = "project MCP mapping, not Siemens MCP code",
-                    ["kind"] = curatedArguments == null ? "schema-template" : "curated-project-example",
+                    ["kind"] = matches ? "curated-project-example" : "schema-template",
                     ["request"] = new JsonObject { ["method"] = "tools/call", ["params"] = new JsonObject { ["name"] = name, ["arguments"] = args } },
                     ["replaceOrReview"] = replacements,
-                    ["note"] = curatedNote ?? "Template from this engine's actual schema. Resolve every placeholder and read parameter descriptions/defaults. JSON strings must stay strings. Schema-valid does not mean semantically valid for a project." },
+                    ["note"] = matches ? curatedNote : "Required arguments and the selected operation are shown. Add the optional parameters required by this operation using inputSchema and parameterSources. Placeholders are not engineering target values.",
+                    ["validation"] = "Schema/contract checked; native execution of this example NOT RUN.",
+                    ["releaseProblem"] = selectedProblem.Length == 0 ? null : selectedProblem },
                 ["officialReference"] = mapping,
-                ["versionRule"] = "Only this engine's listed contract is available. Official source samples have their own release and dependencies; do not copy a newer API into an older engine. Same tool name can have different foundation/full arguments.",
-                ["workflow"] = new JsonArray("Read this contract and the linked official document including setup and caveats.",
-                    "For native tools, obtain current process/project/device identities from discovery; for offline tools, supply the requested local files or content. Never guess paths, indexes or version support.",
-                    profile == "plc-foundation" ? "Honor preview/confirm/expectedProjectFile and plan hashes exactly as described in inputSchema and description." : "Use PreflightToolCall with the resolved arguments; it checks binding/session evidence, not native safety.",
-                    "Execute only the requested operation. Check its returned result before the next step; compile/save/download are separate unless explicitly described."),
-                ["onFailure"] = "Do not try parameter variants or replay after TIA/channel loss. Preserve the failing arguments and last native log, inspect current state, then correct the cause. A dryRun may still read native objects; it is not a native-crash shield.",
-                ["nativeAcceptance"] = "NOT RUN by this guidance feature; official samples and schema checks are not native acceptance. Consult the tool's specific evidence."
+                ["operations"] = operations, ["parameterSources"] = origins,
+                ["resultContract"] = resultContract?.DeepClone() ?? new JsonObject { ["description"] = "Result structure and operation-specific fields are described in the exact tool description above." },
+                ["resultReading"] = (Data.Value["resultReading"]?[(string?)resultContract?["type"] ?? "default"] ?? Data.Value["resultReading"]!["default"])!.DeepClone(),
+                ["examples"] = Examples(release, profile, available, toolName: name)["examples"]!.DeepClone()
             };
+            if (Data.Value["toolNotes"]?[name] is JsonNode notes && (notes["profile"] == null || (string?)notes["profile"] == profile)) response["interpretation"] = notes.DeepClone();
+            return response;
         }
 
         private static JsonNode? ExampleValue(string name, JsonObject property)

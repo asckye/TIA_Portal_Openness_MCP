@@ -9,7 +9,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => Portal.ReadProjectUserManagement(category,name,devicePathJson,itemPathJson,offset,limit);
         [McpServerTool(Name="ManageProjectUserManagement"), Description("[L2][Security][WRITE] UMAC mutation by exact names: createUser/deleteUser/setUserPassword/activateUser/deactivateUser/assignRole/unassignRole (name=user, roleName), createRole/deleteRole/assignEngineeringRight/unassignEngineeringRight/assignDeviceRight/unassignDeviceRight (name=custom role, rightName, devicePathJson), createDeviceRight/deleteDeviceRight (name, group, comment), activateAnonymousUser/deactivateAnonymousUser (no name; UmacConfigurator.ActivateAnonymousUser/DeactivateAnonymousUser, single anonymous user per protected project - roles are assigned with assignRole name=Anonymous). Default preview; real execution needs dryRun=false AND confirmChange=true. Password goes to the API as SecureString and is never logged. Readback verified; no save/compile/download; system roles and project protection itself are never changed.")]
         public static ResponseMessage ManageProjectUserManagement(
-            string action,
+            [Description("createUser | deleteUser | setUserPassword | activateUser | deactivateUser | assignRole | unassignRole | createRole | deleteRole | assignEngineeringRight | unassignEngineeringRight | assignDeviceRight | unassignDeviceRight | createDeviceRight | deleteDeviceRight | activateAnonymousUser | deactivateAnonymousUser. ")] string action,
             string name,
             string password="",
             [Description("roleName: exact role name.")] string roleName="",
@@ -26,7 +26,7 @@ namespace TiaMcpServer.ModelContextProtocol
             => Portal.ReadProjectProtection();
         [McpServerTool(Name="ManageMultiuserSession"), Description("[L2][Project][WRITE] Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly.")]
         public static ResponseMessage ManageMultiuserSession(
-            string action="read",
+            [Description("read | listServerProjects | readLockState | listLocalSessions | connectServer | disconnectServer | commit. ")] string action="read",
             [Description("serverName: multiuser server name.")] string serverName="",
             [Description("projectName: exact project name.")] string projectName="",
             [Description("protocol: Https or Http.")] string protocol="Https",

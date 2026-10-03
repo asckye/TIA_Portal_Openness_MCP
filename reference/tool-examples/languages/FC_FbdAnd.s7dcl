@@ -1,0 +1,17 @@
+﻿{ S7_Optimized := "TRUE"; S7_PreferredLanguage := "FBD"; S7_Version := "0.1" }
+FUNCTION "FC_FbdAnd" : Void
+    VAR_INPUT
+        Enable : Bool;
+        Permitted : Bool;
+    END_VAR
+    VAR_OUTPUT
+        Run : Bool;
+    END_VAR
+    { S7_Language := "FBD" }
+    NETWORK
+        RUNG #Enable
+            A( in2 := #Permitted )
+            Coil( #Run )
+        END_RUNG
+    END_NETWORK
+END_FUNCTION

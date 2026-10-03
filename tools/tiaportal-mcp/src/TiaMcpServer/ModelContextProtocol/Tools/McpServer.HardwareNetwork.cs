@@ -49,7 +49,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseMessage ManageTransferArea(
             string devicePathJson,
             string itemPathJson,
-            string action,
+            [Description("create | delete | update | createMappingRule | updateMappingRule | deleteMappingRule | createReceiver. ")] string action,
             [Description("kind: standard | multicast.")] string kind="standard",
             string name="",
             [Description("type: None | MS | CD | F_PS | TM | IN | OUT | MSI | MSO | MSO_LOCAL | RECORD_WRITE_STO | RECORD_WRITE_PUB | RECORD_READ_STO | RECORD_READ_PUB | MSI_MSO | IN_OUT | LOCAL_RECORD_STO | LOCAL_RECORD_PUB | SUB_MSI | SUB_MSO | SUB_LOCAL_RECORD_STO_READ | SUB_LOCAL_RECORD_PUB_READ | PROFISAFE_IN12_OUT6 | PROFISAFE_IN6_OUT12 | F_Proxy_CD | DDX | ISOC_STATUS_CONTROL | ISOCHRON_IN | ISOCHRON_OUT | F_CD.")] string type="",

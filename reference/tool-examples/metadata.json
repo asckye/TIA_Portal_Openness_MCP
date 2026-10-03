@@ -1,0 +1,403 @@
+{
+  "schemaVersion": 1,
+  "parameterSources": {
+    "softwarePath": {
+      "tools": [
+        "GetProjectTree",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Select the PLC or HMI software path returned by the tree for this target; station names can differ."
+    },
+    "hmiSoftwarePath": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "Select the HMI software path in the current project."
+    },
+    "blockPath": {
+      "tools": [
+        "GetBlocksWithHierarchy",
+        "GetBlocks",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Use the returned block path, including user groups, relative to the program-block root."
+    },
+    "typePath": {
+      "tools": [
+        "GetTypes",
+        "GetSoftwareTree"
+      ],
+      "meaning": "Use the exact PLC data type path returned by the target software."
+    },
+    "processId": {
+      "tools": [
+        "ListPortalProcessProjects",
+        "ReadPortalInfo"
+      ],
+      "meaning": "Choose the process that contains the requested project from current process discovery."
+    },
+    "projectName": {
+      "tools": [
+        "ListPortalProcessProjects",
+        "ReadPortalInfo"
+      ],
+      "meaning": "Existing project: select its reported name. Creating a project: use the requested new name."
+    },
+    "expectedProjectFile": {
+      "tools": [
+        "GetState"
+      ],
+      "meaning": "Use the exact bound project file from the current session."
+    },
+    "expectedProject": {
+      "tools": [
+        "GetProject",
+        "GetState"
+      ],
+      "meaning": "Use the current project identity returned by this engine."
+    },
+    "devicePathJson": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "JSON STRING containing the exact device path name array; preserve each path segment."
+    },
+    "itemPathJson": {
+      "tools": [
+        "GetProjectTree"
+      ],
+      "meaning": "JSON STRING containing the item hierarchy beneath the selected device."
+    },
+    "screenName": {
+      "tools": [
+        "GetHmiScreens",
+        "GetProjectTree"
+      ],
+      "meaning": "Use an existing screen name for edits; the requested new name for creation."
+    },
+    "tagTableName": {
+      "tools": [
+        "GetPlcTagTables",
+        "GetHmiTagTables"
+      ],
+      "meaning": "Use a table name/path in the selected software; names belong to that software."
+    },
+    "pgPcInterface": {
+      "tools": [
+        "ReadTransferRoutes"
+      ],
+      "meaning": "Use an available transfer route interface for the intended target."
+    },
+    "targetIpAddress": {
+      "tools": [
+        "ReadTransferRoutes",
+        "ScanAccessibleDevices"
+      ],
+      "meaning": "Use the intended device address from the selected route/discovery."
+    },
+    "expectedToken": {
+      "tools": [],
+      "meaning": "Copy the token from this same tool's preview with the same target and proposed content."
+    },
+    "expectedPlanHash": {
+      "tools": [],
+      "meaning": "Copy the plan hash from this same operation's preview."
+    },
+    "expectedInventoryHash": {
+      "tools": [],
+      "meaning": "Copy the inventory hash returned by the operation's preview."
+    },
+    "exportId": {
+      "tools": [
+        "ListExports"
+      ],
+      "meaning": "Copy the exportId returned by the original tool; GetExport pages use its nextOffset."
+    }
+  },
+  "resultReading": {
+    "ResponseMessage": [
+      "Read meta.success / meta.operationSuccess when present; message supplies operation detail.",
+      "Tool-specific result keys are documented in the tool description."
+    ],
+    "ResponseStringList": [
+      "items contains the returned rows or strings; meta supplies status and paging when present."
+    ],
+    "ResponseXmlBuild": [
+      "xml contains generated XML. data contains builder details; generating XML does not import it into TIA."
+    ],
+    "default": [
+      "Read the returned data fields and status using the resultContract below."
+    ],
+    "ResponseCompile": [
+      "Check state, errorCount, warningCount and messages. Native compiler diagnostics, including child messages, are flattened by this wrapper.",
+      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+    ],
+    "ResponseCompileDiagnose": [
+      "Check state and errorCount, then errors/warnings/info and rawMessages. These include nested native compiler diagnostics.",
+      "meta.nodes preserves nested diagnostic context; inspect meta.effectiveState and incomplete. Root and subtree counts overlap; do not sum them."
+    ],
+    "ResponsePlcProgramImport": [
+      "Compare importedBlocks/importedTypes/importedTagTables with requested objects, inspect failed entries and compile.errorCount when compile was requested. A dryRun result is a plan."
+    ]
+  },
+  "toolNotes": {
+    "ManageStartdriveParameter": {
+      "input": "devicePathJson and itemPathJson are JSON strings of names from GetProjectTree. Select the intended drive object from ReadDriveObjects. parameter is the exact parameter name, including index.",
+      "resultCases": [
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": {
+                  "bicoSource": "<source parameter name>",
+                  "parameterText": "<source description>"
+                }
+              }
+            }
+          },
+          "meaning": "DriveParameter reference: this is the configured connection source, not its live numeric value."
+        },
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": {
+                  "value": 12.5
+                }
+              }
+            }
+          },
+          "meaning": "Scalar value of the selected offline engineering parameter, not a sampled live process value."
+        },
+        {
+          "example": {
+            "meta": {
+              "before": {
+                "value": null
+              }
+            }
+          },
+          "meaning": "No accessible value. The API can return null for an invalid connection or inaccessible source; null does not prove the connection is unwired."
+        }
+      ],
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters"
+      ],
+      "profile": "full-engine",
+      "nativeReadsPossible": true
+    },
+    "ImportFromDocuments": {
+      "input": "For FC_Add_SD.s7dcl (+ FC_Add_SD.s7res), importPath is the containing directory and fileNameWithoutExtension is FC_Add_SD.",
+      "result": "This wrapper checks native State internally. Its public response reports meta.success, existsVerified and verifyDetail; contentVerified=null is not a content match. Native failures include imported-name/message details in the error. ManagePlcBlockDocuments exposes a structured native document result when that is required.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/importing-program-block-from-document"
+      ],
+      "profile": "full-engine"
+    },
+    "ManagePlcBlockDocuments": {
+      "result": "For import, inspect meta.result state, imported object names and native messages. Compare the requested object names with the returned set, then inspect the target group and compile; an empty imported set does not prove the requested content was imported.",
+      "profile": "full-engine"
+    },
+    "ExchangeUnifiedScriptModules": {
+      "input": "Global module exchange uses a directory package exported by the selected TIA release. Keep the .hmi.js, .hmi.yml and companion files together. moduleName is for export only.",
+      "result": "Import: inspect meta.nativeSuccess and reported post-import module names. A successful native import is not independent content/compilation verification.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "profile": "full-engine"
+    },
+    "SetUnifiedHmiButtonEventScriptCode": {
+      "input": "scriptCode is the handler body of the named button/event; globalDefinitionAreaScriptCode is that handler's global definition area, not a global module package.",
+      "result": "A missing syntaxErrorCount means the optional native syntax check was not run. Inspect the write response and a separate HMI compile result.",
+      "profile": "full-engine"
+    },
+    "CompileAndDiagnosePlc": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "errors": [
+              "<nested error diagnostic>"
+            ],
+            "rawMessages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileSoftware": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "messages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "messages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileDevice": {
+      "resultCases": [
+        {
+          "example": {
+            "meta": {
+              "apiCallSuccess": true,
+              "effectiveState": "Warning",
+              "rootCounts": {
+                "errors": 0,
+                "warnings": 1
+              },
+              "warnings": [
+                "<native warning diagnostic>"
+              ],
+              "incomplete": false
+            }
+          },
+          "meaning": "The hardware compile returned with a warning. Inspect warnings and nodes; no save/download is implied."
+        },
+        {
+          "example": {
+            "meta": {
+              "apiCallSuccess": true,
+              "effectiveState": "Error",
+              "rootCounts": {
+                "errors": 0,
+                "warnings": 0
+              },
+              "errors": [
+                "<nested error diagnostic>"
+              ],
+              "incomplete": false
+            }
+          },
+          "meaning": "The API returned, but a nested diagnostic establishes compilation failure even when root counts are zero."
+        }
+      ],
+      "result": "This tool returns compilation fields under meta, not top-level state/errorCount. Inspect meta.effectiveState, rootCounts.errors/warnings, errors/warnings and nodes, including nested diagnostics. apiCallSuccess only means the API returned; this wrapper sets success/operationSuccess from the native root state, so those flags alone can miss nested errors. incomplete/truncated/collectFailures explain partial diagnostics; root/subtree counts overlap and must not be added.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "CompileAndDiagnoseHmi": {
+      "resultCases": [
+        {
+          "example": {
+            "state": "Warning",
+            "errorCount": 0,
+            "warningCount": 1,
+            "warnings": [
+              "<diagnostic from native tree>"
+            ],
+            "rawMessages": [
+              "<diagnostic from native tree>"
+            ]
+          },
+          "meaning": "No compile errors, but inspect warnings. Success does not imply saved/downloaded."
+        },
+        {
+          "example": {
+            "errorCount": 2,
+            "errors": [
+              "<nested error diagnostic>"
+            ],
+            "rawMessages": [
+              "<nested error diagnostic>"
+            ]
+          },
+          "meaning": "Compilation failed despite a returned tool response."
+        }
+      ],
+      "result": "Read the typed fields shown in resultContract and meta.effectiveState, meta.rootCounts and meta.nodes. The wrapper traverses native child diagnostics recursively. A missing count is unknown, not zero; root/subtree counts overlap and must not be added. meta.incomplete/truncated/collectFailures explain partial diagnostics.",
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-projects-and-project-data/compiling-a-project"
+      ],
+      "profile": "full-engine"
+    },
+    "ReadDriveParameters": {
+      "profile": "full-engine",
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "nativeReadsPossible": true
+    },
+    "ReadOnlineDriveParameters": {
+      "profile": "full-engine",
+      "precaution": "dryRun=true still reads native Value; it controls writes. p2051[0] has a reported TIA crash with native regression acceptance NOT RUN. Do not replay a failing read automatically; preserve the native invocation log and target details.",
+      "nativeReadsPossible": true
+    },
+    "ManageSinumerikArchive": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ImportSinumerikAlarmTexts": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ManageSinumerikSafetyMode": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "InitializeSimotionScripting": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    },
+    "ExportScadaData": {
+      "profile": "full-engine",
+      "releaseKeys": [
+        "20"
+      ],
+      "result": "The supplied V21 SDK lacks this provider. This wrapper is registered for compatibility but its native implementation is V20-only and requires the corresponding installed Siemens option."
+    }
+  }
+}

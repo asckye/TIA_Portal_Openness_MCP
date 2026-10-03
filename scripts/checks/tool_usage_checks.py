@@ -1,6 +1,7 @@
 """Contract/transport checks for AI-facing usage, without executing example calls."""
 import hashlib
 import json
+import xml.etree.ElementTree as ET
 
 
 def unwrap_usage(reply):
@@ -27,6 +28,7 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
     schemas = {t['name']: t['inputSchema'] for t in tools}
     records = []
     problems = []
+    builder_examples = 0
     selected = names if exhaustive else ['GetToolUsage', 'ManageStartdriveParameter']
     for name in selected:
         usage = unwrap_usage(call('GetToolUsage', {'toolName': name}))
@@ -58,8 +60,29 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert args['confirm'] is False, name
         reference = usage['officialReference']
         assert reference['relationship'] in ('related-api-patterns', 'no-direct-official-example')
-        assert usage['workflow'] and usage['onFailure'] and 'NOT RUN' in usage['nativeAcceptance']
-        records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents']})
+        assert set(usage['parameterSources']) == set(props), name
+        assert usage['resultContract'] and usage['resultReading']
+        result_fields = usage['resultContract'].get('fields')
+        if result_fields:
+            for case in usage.get('interpretation', {}).get('resultCases', []):
+                assert set(case['example']) <= set(result_fields), (name, case['example'], result_fields)
+        assert 'NOT RUN' in example['validation']
+        assert not any(k in usage for k in ('workflow', 'onFailure', 'nativeAcceptance'))
+        operation_records = []
+        selector = 'action' if 'action' in props else 'operation' if 'operation' in props and name != 'GetToolUsage' else None
+        if selector:
+            choices = [v for v in props[selector].get('enum', []) if v]
+            assert choices, name + ': action alternatives are missing'
+            assert [o['operation'] for o in usage['operations']] == choices
+            if exhaustive:
+                for choice in choices:
+                    selected_usage = unwrap_usage(call('GetToolUsage', {'toolName': name, 'operation': choice}))
+                    selected_args = selected_usage['example']['request']['params']['arguments']
+                    assert selected_args[selector] == choice, (name, choice)
+                    assert set(schema.get('required', [])) <= set(selected_args) <= set(props), (name, choice)
+                    operation_records.append({'operation': choice, 'exampleKind': selected_usage['example']['kind'],
+                        'releaseProblem': selected_usage['example']['releaseProblem']})
+        records.append({'toolName': name, 'exampleKind': example['kind'], 'relationship': reference['relationship'], 'documents': reference['documents'], 'operations': operation_records})
     assert not problems, problems
     if verify_documents:
         docs, offset = [], 0
@@ -82,6 +105,37 @@ def check_usage(call, tools, release, exhaustive=True, verify_documents=False):
             assert hashlib.sha256(text.encode()).hexdigest() == doc['sha256'], doc['id']
         ids = {d['id'] for d in docs}
         assert all(set(r['documents']) <= ids for r in records)
+        library = first['exampleLibrary']
+        assert len(library['languages']) >= 12
+        for language in library['languages']:
+            selected_library = unwrap_usage(call('GetToolUsage', {'language': language['id']}))
+            assert selected_library['examples'] or selected_library.get('sourceDocuments'), language
+            assert set(language['tools']) <= set(names)
+        for summary in library['examples']:
+            detail = unwrap_usage(call('GetToolUsage', {'exampleId': summary['id']}))['examples']
+            assert len(detail) == 1 and detail[0]['id'] == summary['id']
+            example = detail[0]
+            assert example.get('files') or example.get('steps'), summary['id']
+            for file in example.get('files', []):
+                assert hashlib.sha256(file['content'].encode()).hexdigest() == file['contentSha256']
+            for step in example.get('steps', []):
+                if not example['profileMatches'] or not example['releaseMatches']:
+                    continue
+                target = schemas[step['tool']]
+                values = step['arguments']
+                assert set(target.get('required', [])) <= set(values) <= set(target['properties']), (summary['id'], step)
+            if example['id'] in ('udt-builder-json', 'db-builder-json') and str(release) in ('20', '21'):
+                data = json.loads(example['files'][0]['content'])['json']
+                tool, argument = ('BuildPlcUdtXml', 'udtJson') if example['id'] == 'udt-builder-json' else ('BuildPlcGlobalDbXml', 'globalDbJson')
+                built = call(tool, {argument: json.dumps(data, ensure_ascii=False)})
+                xml = built['xml']
+                root = ET.fromstring(xml)
+                assert any(e.tag.endswith('Name') and e.text == (data.get('udtName') or data.get('dbName') or data.get('name')) for e in root.iter()), example['id']
+                builder_examples += 1
     return {'releaseKey': str(release), 'registeredToolCount': len(names), 'checkedToolCount': len(records),
             'documentCount': first['documentCount'], 'allSourceTextRetrievedAndHashChecked': verify_documents,
+            'operationExampleCount': sum(len(r['operations']) for r in records),
+            'programmingExampleCount': sum(not e['id'].startswith('sequence/') for e in first['exampleLibrary']['examples']),
+            'callSequenceCount': sum(e['id'].startswith('sequence/') for e in first['exampleLibrary']['examples']),
+            'offlineBuilderExamplesExecuted': builder_examples,
             'exampleCallsExecuted': False, 'tools': records}

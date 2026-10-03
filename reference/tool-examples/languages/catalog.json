@@ -1,0 +1,1174 @@
+{
+  "schemaVersion": 1,
+  "languages": [
+    {
+      "id": "scl",
+      "title": "SCL external source (.scl)",
+      "aliases": [
+        "scl-external"
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "scl-sd",
+      "title": "SCL in SIMATIC SD (.s7dcl)",
+      "aliases": [
+        "s7dcl",
+        "scl-s7dcl"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "lad",
+      "title": "LAD / KOP",
+      "aliases": [
+        "ladder",
+        "kop"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "fbd",
+      "title": "FBD / FUP",
+      "aliases": [
+        "fup"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "mixed",
+      "title": "LAD with SCL networks",
+      "aliases": [
+        "lad-scl"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "db",
+      "title": "Global data block",
+      "aliases": [
+        "globaldb"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware",
+        "BuildPlcGlobalDbXml",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "udt",
+      "title": "PLC data type",
+      "aliases": [
+        "type"
+      ],
+      "tools": [
+        "ManagePlcDocuments",
+        "BuildPlcUdtXml",
+        "ImportType"
+      ]
+    },
+    {
+      "id": "s7res",
+      "title": "Chinese / multilingual resources",
+      "aliases": [
+        "chinese",
+        "resources"
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ]
+    },
+    {
+      "id": "stl",
+      "title": "STL / AWL",
+      "aliases": [
+        "awl"
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "graph",
+      "title": "GRAPH sequence",
+      "aliases": [
+        "s7-graph"
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ]
+    },
+    {
+      "id": "hmi-javascript",
+      "title": "WinCC Unified JavaScript",
+      "aliases": [
+        "javascript",
+        "js",
+        "hmi"
+      ],
+      "tools": [
+        "SetUnifiedHmiButtonEventScriptCode",
+        "ReadUnifiedGlobalScript",
+        "ExchangeUnifiedScriptModules",
+        "UpdateUnifiedGlobalScript"
+      ]
+    },
+    {
+      "id": "hmi-vbscript",
+      "title": "Classic WinCC VBScript",
+      "aliases": [
+        "vbscript",
+        "vbs"
+      ],
+      "tools": [
+        "ExportHmiScreen",
+        "ImportHmiScreen"
+      ]
+    },
+    {
+      "id": "csharp",
+      "title": "Openness C# API examples",
+      "aliases": [
+        "c#",
+        "cs"
+      ],
+      "tools": []
+    }
+  ],
+  "examples": [
+    {
+      "id": "scl-add",
+      "language": "scl",
+      "title": "Complete FC with typed inputs and return value",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Add.scl",
+          "name": "FC_Add.scl",
+          "encoding": "ASCII (UTF-8 without BOM)"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500. Save as .scl, then register the external source and generate blocks.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "NETWORK inside a .scl external source",
+          "correct": "BEGIN ... END_FUNCTION",
+          "reason": "NETWORK is used by the separate SIMATIC SD format."
+        }
+      ]
+    },
+    {
+      "id": "scl-state-timer",
+      "language": "scl",
+      "title": "FB with static timer and edge instance",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_DelayPulse.scl",
+          "name": "FB_DelayPulse.scl",
+          "encoding": "ASCII (UTF-8 without BOM)"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500; TON_TIME and R_TRIG instances belong in static VAR.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "Timer or edge memory in VAR_TEMP",
+          "correct": "Declare the instance in VAR of an FB.",
+          "reason": "State must survive between scans."
+        },
+        {
+          "wrong": "#seconds * T#1s",
+          "correct": "DINT_TO_TIME(INT_TO_DINT(#seconds) * 1000)",
+          "reason": "Convert numeric milliseconds to Time explicitly."
+        }
+      ]
+    },
+    {
+      "id": "scl-control-flow",
+      "language": "scl",
+      "title": "FC with CASE, loop and array",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_ArrayTotal.scl",
+          "name": "FC_ArrayTotal.scl",
+          "encoding": "ASCII (UTF-8 without BOM)"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "S7-1200/S7-1500; every temporary used here is assigned before it is read.",
+        "The official external-source API documents ASCII input. Chinese text is demonstrated separately with SIMATIC SD resources.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/blocks/generating-blocks-from-source"
+      ],
+      "corrections": [
+        {
+          "wrong": "IN_RANGE(...) in SCL",
+          "correct": "(#Value >= #Low) AND (#Value <= #High)",
+          "reason": "Use the comparison expression in SCL."
+        },
+        {
+          "wrong": "EXPT(IN1 := #Value, IN2 := 2.0)",
+          "correct": "#Value ** 2.0",
+          "reason": "SCL uses the exponent operator."
+        }
+      ]
+    },
+    {
+      "id": "scl-sd-add",
+      "language": "scl-sd",
+      "title": "The same FC in SIMATIC SD format",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Add_SD.s7dcl",
+          "name": "FC_Add_SD.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Use the document import route; importPath is a directory, fileNameWithoutExtension is FC_Add_SD."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [
+        {
+          "wrong": "{ S7_Optimized_Access := 'TRUE' } + BEGIN in .s7dcl",
+          "correct": "{ S7_Optimized := \"TRUE\" } + S7_Language + NETWORK",
+          "reason": "External SCL and SIMATIC SD have different envelopes."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "lad-contacts-edge",
+      "language": "lad",
+      "title": "Contacts, coil, persistent edge and Chinese titles",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7dcl",
+          "name": "FB_LadStart.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        },
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7res",
+          "name": "FB_LadStart.s7res",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Both files use the same basename and live in the import directory.",
+        "V20 requires a compatible SIMATIC SD installation/update; this sample is scoped to V21."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [
+        {
+          "wrong": "P_Contact(#Previous)",
+          "correct": "P_Trig(#Previous) or P_Contact(#Signal, #Previous)",
+          "reason": "Power-flow edge and signal contact have different operands."
+        },
+        {
+          "wrong": "One S7_Language pragma for multiple networks",
+          "correct": "Place S7_Language before each NETWORK.",
+          "reason": "The language belongs to each network."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "lad-chinese-resources",
+      "language": "s7res",
+      "title": "Paired LAD and Chinese resource files",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7dcl",
+          "name": "FB_LadStart.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        },
+        {
+          "path": "reference/tool-examples/languages/FB_LadStart.s7res",
+          "name": "FB_LadStart.s7res",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "MLC_Run and MLC_Pulse are resource IDs, not literal titles. Save both files with UTF-8 BOM."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": [],
+      "profile": "full-engine"
+    },
+    {
+      "id": "fbd-and",
+      "language": "fbd",
+      "title": "Complete FBD FC with a boolean AND",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_FbdAnd.s7dcl",
+          "name": "FC_FbdAnd.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "V20 Update 4 or later, or V21. The running release key alone does not identify the installed update."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/representation-of-fbd-program-code-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2",
+        "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"
+      ],
+      "corrections": [
+        {
+          "wrong": "RUNG wire#powerrail in FBD",
+          "correct": "RUNG #Enable",
+          "reason": "FBD begins with an operand rather than a LAD power rail."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "mixed-lad-scl",
+      "language": "mixed",
+      "title": "LAD condition followed by SCL arithmetic",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/FC_Mixed.s7dcl",
+          "name": "FC_Mixed.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "V20 Update 4 or later, or V21. The block keeps LAD as its preferred language; each network declares its own language."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v20-updates/tia-portal-updates-readme/improvements-in-step-7/improvements-in-update-4"
+      ],
+      "corrections": [
+        {
+          "wrong": "S7_EditorMode := \"SCL\" for a mixed block",
+          "correct": "S7_PreferredLanguage := \"LAD\"",
+          "reason": "An SCL-only block cannot contain LAD networks."
+        }
+      ],
+      "profile": "full-engine"
+    },
+    {
+      "id": "db-sd",
+      "language": "db",
+      "title": "Global DB with initial values",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/DB_Example.s7dcl",
+          "name": "DB_Example.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ImportFromDocuments",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "SIMATIC SD data declaration; no BEGIN section."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "udt-sd",
+      "language": "udt",
+      "title": "PLC data type in SIMATIC SD",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/UDT_Status.s7dcl",
+          "name": "UDT_Status.s7dcl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ManagePlcDocuments"
+      ],
+      "notes": [
+        "Import into the PLC type group with the type-document tool listed by the engine.",
+        "Use ManagePlcDocuments with objectKind=type, action=import, directoryPath containing the files and name without extension. ImportFromDocuments targets program blocks."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/creating-and-managing-blocks/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2/exporting-and-importing-blocks-in-simatic-sd-format-s7-1200-s7-1500-s7-1200-g2"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "stl-boolean",
+      "language": "stl",
+      "title": "STL network body with local operands",
+      "kind": "network-fragment",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/stl-boolean.txt",
+          "name": "stl-boolean.txt",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Network body only; declare Enable/Permitted as Bool inputs and Run as a Bool output in an existing STL block.",
+        "S7-1500 example; S7-1200 has no STL. Preserve the exported SimaticML envelope when importing; this text is not an importable .s7dcl file."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/stl-s7-1500/stl-mnemonic-s7-1500/bit-logic-operations-s7-1500/a-and-logic-operation-s7-1500",
+        "https://docs.tia.siemens.cloud/r/en-us/v21/stl-s7-1500/stl-mnemonic-s7-1500/bit-logic-operations-s7-1500/assignment-s7-1500"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "graph-step-text",
+      "language": "graph",
+      "title": "GRAPH step title fragment",
+      "kind": "xml-fragment",
+      "releaseKeys": [
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/graph-step-text.xml",
+          "name": "graph-step-text.xml",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "ExportBlock",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Insert under an existing Step in a native GRAPH XML export. Preserve the Step attributes, transitions, connections and namespace.",
+        "This is a text-edit fragment, not a complete GRAPH block generator. GRAPH remains XML, not .s7dcl."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/export/import/importing/exporting-data-of-a-plc-device/blocks/exporting-graph-blocks-with-multi-language-text"
+      ],
+      "corrections": []
+    },
+    {
+      "id": "unified-tag-read",
+      "language": "hmi-javascript",
+      "title": "Unified button event body: read a tag and log it",
+      "kind": "event-body",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/unified-tag-read.js",
+          "name": "unified-tag-read.js",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [
+        "SetUnifiedHmiButtonEventScriptCode"
+      ],
+      "notes": [
+        "Event body, not an exported global module. hmiSoftwarePath, screenName and buttonName select the target; eventType=\"Tapped\"; scriptCode is the file text. The tag ActualValue must exist.",
+        "For a global module, keep the exported function declarations and paired .hmi.yml metadata from ReadUnifiedGlobalScript.",
+        "Use the event body as scriptCode. The named ActualValue tag and target button must exist."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/runtime-scripting-rt-unified/examples-rt-unified/reading-and-writing-tag-values-rt-unified"
+      ],
+      "corrections": [
+        {
+          "wrong": "SmartTags(\"ActualValue\") in Unified JavaScript",
+          "correct": "Tags(\"ActualValue\").Read()",
+          "reason": "SmartTags is the Classic VBScript interface."
+        }
+      ],
+      "profile": "full-engine",
+      "steps": [
+        {
+          "tool": "SetUnifiedHmiButtonEventScriptCode",
+          "arguments": {
+            "hmiSoftwarePath": "<Unified software>",
+            "screenName": "<existing screen>",
+            "buttonName": "<existing button>",
+            "eventType": "Tapped",
+            "scriptCode": "const value = Tags(\"ActualValue\").Read();\nHMIRuntime.Trace(String(value));",
+            "syntaxCheck": false
+          },
+          "expect": "meta.success reports the write. Missing syntaxErrorCount means NOT CHECKED. CompileAndDiagnoseHmi checks the HMI compilation separately."
+        }
+      ]
+    },
+    {
+      "id": "classic-tag-read",
+      "language": "hmi-vbscript",
+      "title": "Classic VBScript event body",
+      "kind": "event-body",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/classic-tag-read.vbs",
+          "name": "classic-tag-read.vbs",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [],
+      "notes": [
+        "Classic WinCC scripting-capable target only; this is an event body, not a Unified script.",
+        "There is no dedicated Classic script-body writer in the current tool roster. This sample is for editing a native exported script/event; it is not an importable standalone module."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/zh-cn/v21/%E7%BC%96%E8%AF%91%E5%92%8C%E5%8A%A0%E8%BD%BD-basic-panels-panels-comfort-panels-rt-advanced-rt-professional/runtime-professional-rt-professional/%E4%BB%BF%E7%9C%9F%E9%A1%B9%E7%9B%AE-rt-professional/%E4%BD%BF%E7%94%A8%E5%8F%98%E9%87%8F%E4%BB%BF%E7%9C%9F%E5%99%A8%E4%BB%BF%E7%9C%9F%E5%8F%98%E9%87%8F-rt-professional/%E9%80%9A%E8%BF%87%E8%84%9A%E6%9C%AC%E4%BB%BF%E7%9C%9F%E5%8F%98%E9%87%8F-rt-professional"
+      ],
+      "corrections": [],
+      "profile": "full-engine"
+    },
+    {
+      "id": "scl-library-fb_basiclatch",
+      "language": "scl",
+      "title": "FB_BasicLatch",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_BasicLatch.scl",
+          "name": "FB_BasicLatch.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_selftest_template",
+      "language": "scl",
+      "title": "FB_SelfTest_Template",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_SelfTest_Template.scl",
+          "name": "FB_SelfTest_Template.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_stepsequencedemo",
+      "language": "scl",
+      "title": "FB_StepSequenceDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_StepSequenceDemo.scl",
+          "name": "FB_StepSequenceDemo.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fb_timercounterdemo",
+      "language": "scl",
+      "title": "FB_TimerCounterDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FB_TimerCounterDemo.scl",
+          "name": "FB_TimerCounterDemo.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_basicscalelimit",
+      "language": "scl",
+      "title": "FC_BasicScaleLimit",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_BasicScaleLimit.scl",
+          "name": "FC_BasicScaleLimit.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_instructiongallery",
+      "language": "scl",
+      "title": "FC_InstructionGallery",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_InstructionGallery.scl",
+          "name": "FC_InstructionGallery.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "scl-library-fc_mathcomparedemo",
+      "language": "scl",
+      "title": "FC_MathCompareDemo",
+      "kind": "complete-source",
+      "releaseKeys": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/scl-examples/FC_MathCompareDemo.scl",
+          "name": "FC_MathCompareDemo.scl",
+          "encoding": "UTF-8 with BOM"
+        }
+      ],
+      "tools": [
+        "WritePlcSclSourceFile",
+        "ManagePlcExternalSources",
+        "GenerateBlocksFromExternalSource",
+        "CompileSoftware"
+      ],
+      "notes": [
+        "Existing project SCL template; keep declarations together with the complete block body.",
+        "Historical project template; its encoding/language features need checking against the selected CPU and release before import.",
+        "Foundation profiles currently expose PlanPlcExternalSourceImport for planning only; they do not expose native SCL generation. Check availableTools for the running engine."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "db-builder-json",
+      "language": "db",
+      "title": "Structured JSON for BuildPlcGlobalDbXml",
+      "kind": "builder-input",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/plcbuild-json/db_basic_status.json",
+          "name": "db_basic_status.json",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [
+        "BuildPlcGlobalDbXml",
+        "ImportBlock"
+      ],
+      "notes": [
+        "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "udt-builder-json",
+      "language": "udt",
+      "title": "Structured JSON for BuildPlcUdtXml",
+      "kind": "builder-input",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "origin": "project example",
+      "validation": "Source reviewed; native compilation of this example not run in this change.",
+      "files": [
+        {
+          "path": "templates/plc/plcbuild-json/udt_basic_status.json",
+          "name": "udt_basic_status.json",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [
+        "BuildPlcUdtXml",
+        "ImportType"
+      ],
+      "notes": [
+        "Use the inner json object from this file as the builder JSON-string argument. The builder returns XML; its import is a separate call."
+      ],
+      "sourceUrls": [],
+      "corrections": []
+    },
+    {
+      "id": "unified-global-module",
+      "language": "hmi-javascript",
+      "title": "Edit an exported Unified global module",
+      "kind": "module-edit",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "origin": "project example",
+      "validation": "Source reviewed; native import/compilation NOT RUN.",
+      "files": [
+        {
+          "path": "reference/tool-examples/languages/ReadActualValue.hmi.js",
+          "name": "ReadActualValue.hmi.js",
+          "encoding": "UTF-8"
+        }
+      ],
+      "tools": [
+        "ExchangeUnifiedScriptModules",
+        "CompileAndDiagnoseHmi"
+      ],
+      "notes": [
+        "Create/export the named global module in the selected TIA release first. Preserve its generated .hmi.yml and companion files, edit the exported .hmi.js function body and use the same export directory for import. This code file alone is not an import package.",
+        "moduleName selects an export; leave it empty for import. fileName, when used, comes from the actual export."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "corrections": [
+        {
+          "wrong": "SetUnifiedHmiButtonEventScriptCode for a global module",
+          "correct": "ExchangeUnifiedScriptModules for the module package",
+          "reason": "Event handler script and global module are different engineering objects."
+        }
+      ],
+      "steps": [
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<Unified software from GetProjectTree>",
+            "action": "export",
+            "directory": "C:\\Temp\\ModuleExample",
+            "moduleName": "<existing module>",
+            "dryRun": false
+          },
+          "expect": "meta.files and meta.directoryListing identify the generated files; preserve companion metadata."
+        },
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "action": "import",
+            "directory": "C:\\Temp\\ModuleExample",
+            "dryRun": true
+          },
+          "expect": "Preview identifies candidate files."
+        },
+        {
+          "tool": "ExchangeUnifiedScriptModules",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "action": "import",
+            "directory": "C:\\Temp\\ModuleExample",
+            "dryRun": false
+          },
+          "expect": "Inspect meta.nativeSuccess, modulesAfter and operation-specific verification fields."
+        },
+        {
+          "tool": "CompileAndDiagnoseHmi",
+          "arguments": {
+            "softwarePath": "<same software>"
+          },
+          "expect": "Inspect errorCount and diagnostics."
+        }
+      ]
+    },
+    {
+      "id": "unified-update-existing-module",
+      "language": "hmi-javascript",
+      "title": "Update the complete source of an existing global module",
+      "kind": "call-sequence",
+      "releaseKeys": [
+        "20",
+        "21"
+      ],
+      "profile": "full-engine",
+      "origin": "project example",
+      "validation": "Contract checked; native execution NOT RUN.",
+      "files": [],
+      "tools": [
+        "ListUnifiedGlobalScripts",
+        "ReadUnifiedGlobalScript",
+        "UpdateUnifiedGlobalScript"
+      ],
+      "notes": [
+        "Read the complete existing module, preserve its imports/functions and change the intended body. scriptCode is the entire modified source; take expectedToken from the preview, then apply the same text."
+      ],
+      "sourceUrls": [
+        "https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/global-script/import-of-global-script"
+      ],
+      "corrections": [],
+      "steps": [
+        {
+          "tool": "ListUnifiedGlobalScripts",
+          "arguments": {
+            "softwarePath": "<Unified software>",
+            "expectedProject": "<bound project>"
+          },
+          "expect": "Select the exact existing module name."
+        },
+        {
+          "tool": "ReadUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<existing module>"
+          },
+          "expect": "Retrieve the complete exported source; preserve unchanged functions and definitions."
+        },
+        {
+          "tool": "UpdateUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<same module>",
+            "scriptCode": "<complete modified source>",
+            "dryRun": true
+          },
+          "expect": "Review before/after text and copy the returned token."
+        },
+        {
+          "tool": "UpdateUnifiedGlobalScript",
+          "arguments": {
+            "softwarePath": "<same software>",
+            "expectedProject": "<same project>",
+            "moduleName": "<same module>",
+            "scriptCode": "<the same complete modified source>",
+            "dryRun": false,
+            "expectedToken": "<token from previous preview>"
+          },
+          "expect": "Inspect native import and exact text verification; compile separately."
+        }
+      ]
+    }
+  ]
+}

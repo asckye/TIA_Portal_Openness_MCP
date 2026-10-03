@@ -38,7 +38,7 @@ try {
     $apply=Call 'ApplyToolBatch' @{token='not-a-real-token'}
     Check (!$apply.Meta.success) 'Unknown write token accepted'
     $official=Call 'GetAuthoringGuide' @{topic='openness-workflow'}
-    Check ($official.Meta.success -and $official.Message.Contains('ReadOpennessGuidance')) 'Official workflow guide is not reachable'
+    Check ($official.Meta.success -and $official.Meta.usage.totalMatches -gt 0 -and $official.Meta.usage.referenceOnly) 'Official references are not reachable through the unified library'
     foreach($tool in @('SaveProject','CompileSoftware','ApplyToolBatch','RunPlcCompanionTool','ManagePlcGitRepository')) {
         $transactionCalls=ConvertTo-Json -InputObject @(@{name=$tool;arguments=@{}}) -Compress -Depth 8
         $refused=Call 'RunToolsInTransaction' @{callsJson=$transactionCalls;text='Offline refusal';dryRun=$false;confirmChange=$true}

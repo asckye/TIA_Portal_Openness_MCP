@@ -1,80 +1,82 @@
-# AI-facing tool usage and official examples
+# Unified tool and programming examples
 
-Every registered tool in all eight release profiles now routes to `GetToolUsage`.
-The tool is in the V20/V21 lite roster and the complete foundation rosters. Its
-tool-specific result uses the current engine's actual input schema, a curated MCP
-example where available or an explicitly labeled schema template, prerequisites,
-failure handling, source-release limits and related official references. Same-name
-foundation and full-engine tools retain their different contracts.
-
-The embedded reference corpus contains all 36 Markdown documents from the pinned
-32 Siemens AI extension guide groups, and all 41 C# source files, eight project
-files, README, license and two root build files from the pinned Siemens snippet
-repository: 89 complete documents and 381 indexed code blocks/public methods.
-This includes setup, imports, dependencies and caveats, not isolated code fragments.
-Reference code is never compiled or executed by the MCP host.
-
-- [Siemens AI extensions](https://github.com/siemens/tia-portal-ai-extensions),
-  commit `b5c7041648dc10f9225ef082306ade6c335b8771`, MIT.
-- [Siemens code snippets](https://github.com/siemens/tia-portal-openness-code-snippets),
-  commit `4a8cc79d0666633e524e52f3335d99ff993f8830`; source code is MIT under
-  section 2 of the retained [upstream license](../../reference/siemens-code-snippets/LICENSE.md).
-  `Directory.Build.props` selects V21 and fixtures use `.zap21`; its README still
-  says V20. The catalog exposes this discrepancy instead of treating the README
-  as proof of old-release compatibility.
-
-The scope is the entire pinned reference corpus, not every example ever published
-in every Siemens manual. Related API patterns are distinguished from official
-implementations of MCP wrappers. Project-defined tools and API areas without a
-direct vendored example say so explicitly. Additional verified manual links for
-HMI, SiVArc, OPC UA and VCI are filtered to the selected release. There are no
-fabricated manual counterpart URLs or claims that a generic topic covers every
-action of a tool.
-
-## Calling the catalog
+`GetToolUsage` is the single example library for every registered tool in all eight
+release profiles. It returns the actual schema, operations, input origins, return
+contract and examples. Foundation and full-engine contracts remain independent.
 
 ```json
-{"name":"GetToolUsage","arguments":{"toolName":"ManageStartdriveParameter"}}
+{"name":"GetToolUsage","arguments":{"toolName":"ManagePlcDocuments","operation":"import"}}
+{"name":"GetToolUsage","arguments":{"language":"scl"}}
+{"name":"GetToolUsage","arguments":{"exampleId":"scl-add"}}
+{"name":"GetToolUsage","arguments":{"exampleId":"sequence/connect-project"}}
 ```
 
-Read an exact `officialReference.documents` ID through `documentId`. Continue
-with `nextOffset` until null. Use `query` to search all embedded source text.
-Empty selectors list registered tools and reference documents; tool-name and
-document listings have separate continuation offsets. If the normal MCP response
-guard returns an `exportId`, concatenate `GetExport` character pages before parsing
-the complete JSON. The reference tool needs neither network access nor a source
-checkout and does not call the worker, attach to TIA or inspect a project.
+An empty call lists tools, languages, examples and reference documents. `query`
+searches official text; `documentId`, `offset` and `limit` read complete source in
+pages. Tool and document indexes have separate continuation offsets. When a large
+response returns an export ID, assemble its `GetExport` pages before parsing JSON.
 
-Resolve placeholder identities and paths before calling the target tool. A schema
-template checks names and types, not engineering semantics. Official examples
-may contain writes, online operations and automatically starting setup routines;
-their presence in the reference library does not request or authorize execution.
+## Contents
 
-The six pre-existing curated examples for `CompileDevice`, `ManageHardwareObject`,
-`ManagePlcProtection`, `ReadPlcSimAdvancedTags`, `WritePlcSimAdvancedTags` and
-`RunPlcSimAdvancedTestScenario` now encode JSON-string arguments as strings rather
-than JSON arrays/objects. The simulation write example starts with its preview.
+- Each tool has its exact input schema, input origins, representative values and
+  discovery tools filtered to this engine. A matching curated call is retained;
+  other operations receive an explicitly labeled schema template. Optional inputs
+  remain visible in `parameterSources` and `inputSchema`.
+- Full-engine return fields come from its actual return type. Result interpretation
+  and expected outcomes use the same library. Foundation envelopes use their own
+  tool contract descriptions. Existing version policy supplies operation variants
+  for different service families or object kinds; the selected target, license,
+  firmware and installed update still determine native support.
+- Programming examples include source files, encoding, release/update requirements,
+  references and corrections. Complete sources, fragments and exported-module edits
+  are distinguished. Existing templates are referenced instead of copied.
+- Call sequences include ordered requests and expected results. `GetRecipe` reads
+  these same records. `GetAuthoringGuide` resolves to this library, preserving its
+  legacy topics. Initialization and Bootstrap point to examples without repeating
+  mandatory guide/preflight workflows. Actual tool validation remains unchanged.
 
-For the reported BICO crash, read [the incident and exact-read change](startdrive-bico-read-regression.md).
-`dryRun=true` can still read native parameters. No example or preflight establishes
-that `p2051[0]` is safe on the affected device; the target and native crash cause
-remain unconfirmed.
+Languages/formats: external SCL, SIMATIC SD SCL, LAD, FBD, mixed networks, DB, UDT,
+multilingual S7RES, STL, GRAPH text fragments, Unified JavaScript and Classic VBS.
+`language=csharp` lists the complete embedded official C# documents. External SCL
+and SIMATIC SD use separate examples. Foundation profiles currently plan external
+source imports but do not expose native SCL generation.
 
-## Maintenance and verification
+Return-value variants, document import outcomes, event/global-module scripts,
+compiler diagnostics and other tool details use the same data and retrieval path.
 
-`scripts/generate/Generate-ToolUsage.py` deterministically builds the embedded
-catalog from pinned reference files and tool mappings. `--check` rejects stale
-content in CI and the full release build. Changes to the generated JSON are
-included in both build source-hash records.
+## Sources and maintenance
 
-Actual MCP transport checks retrieve usage for every advertised tool, compare
-schemas, validate example keys/types/enums and preview flags, verify exact release
-identity, and reconstruct every reference document to check its SHA-256. Full/lite
-and STDIO/HTTP discovery are tested. Foundation tests additionally use a fake worker
-to prove that guidance does not call it even with native access enabled.
+The editable library is `reference/tool-examples`: `languages/catalog.json` and
+its assets, `sequences.json`, and `metadata.json`. Run
+`scripts/generate/Generate-ToolUsage.py` to embed it; `--check` detects drift.
+Retrieval needs no checkout/network and executes no example.
 
-`scripts/diagnostics/Audit-ToolUsage.py` requires all eight actual tool inventories
-to match the coverage results, and writes [the coverage record](../../manifest/tool-usage-coverage.json).
-Missing, obsolete or inaccessible tool mappings fail this check. These checks
-execute guidance and metadata retrieval, never the sample engineering operations.
-Native acceptance remains separate.
+The retained official corpus contains 89 complete documents and 381 indexed code
+blocks/methods, including setup and dependency context:
+
+- [Siemens AI extensions](https://github.com/siemens/tia-portal-ai-extensions),
+  commit `b5c7041648dc10f9225ef082306ade6c335b8771`, MIT: 36 Markdown files in 32 groups.
+- [Siemens code snippets](https://github.com/siemens/tia-portal-openness-code-snippets),
+  commit `4a8cc79d0666633e524e52f3335d99ff993f8830`: 41 C# files, eight project files,
+  README, license and two build files. Source licensing is retained in the
+  [upstream license](../../reference/siemens-code-snippets/LICENSE.md).
+  Fixtures/build properties select V21 while the README says V20; neither proves
+  compatibility with older releases.
+
+The corpus is not every example ever published by Siemens. Related API patterns,
+project examples and missing direct official examples remain distinct. Templates
+cover the registered surface; they are not all completed target-specific scenarios
+or native-verified calls.
+
+## Verification
+
+Actual MCP checks retrieve every tool/operation, compare schemas and example keys,
+check input origins/results, reconstruct source pages and verify file hashes.
+They validate sequence signatures and compatibility entry points, and execute the
+DB/UDT example inputs through the real offline XML builders. A .NET Framework
+harness retrieves all languages to catch differences from the .NET 8 unit suite.
+
+Full/lite and STDIO/HTTP are checked. Foundation fake-worker tests verify retrieval
+does not invoke the worker. The eight-version audit writes the
+[coverage record](../../manifest/tool-usage-coverage.json). Native PLC/HMI
+import/compile acceptance of the new sources remains NOT RUN.

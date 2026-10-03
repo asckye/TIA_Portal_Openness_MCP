@@ -1,0 +1,22 @@
+FUNCTION_BLOCK "FB_DelayPulse"
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+VAR_INPUT
+    Enable : Bool;
+    Delay : Time := T#500ms;
+END_VAR
+VAR_OUTPUT
+    Ready : Bool;
+    RisingPulse : Bool;
+END_VAR
+VAR
+    OnDelay : TON_TIME;
+    Edge : R_TRIG;
+END_VAR
+BEGIN
+    // Static instances preserve state between scans.
+    #OnDelay(IN := #Enable, PT := #Delay);
+    #Edge(CLK := #OnDelay.Q);
+    #Ready := #OnDelay.Q;
+    #RisingPulse := #Edge.Q;
+END_FUNCTION_BLOCK
