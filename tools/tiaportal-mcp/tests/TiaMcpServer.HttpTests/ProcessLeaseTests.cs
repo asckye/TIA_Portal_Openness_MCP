@@ -20,9 +20,19 @@ internal static partial class Program
     {
         string root = Path.Combine(Path.GetTempPath(), "tia-lease-process-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        Process Start(long ticks) => Process.Start(new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,
-            "\"" + Server.Location + "\" lease-holder \"" + root + "\" " + ticks) {
-            UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true })!;
+        Process Start(long ticks)
+        {
+            var owner = new Process { StartInfo = new ProcessStartInfo(Assembly.GetExecutingAssembly().Location,
+                "\"" + Server.Location + "\" lease-holder \"" + root + "\" " + ticks) {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true } };
+            try
+            {
+                var input = FindServerType(Server, "TiaOpenness.Shared.ChildProcessInput");
+                Check((bool)input.GetMethod("Start", All)!.Invoke(null, new object[] { owner })!, "Lease holder did not start");
+                return owner;
+            }
+            catch { owner.Dispose(); throw; }
+        }
         bool Refused(long ticks)
         {
             try { using var lease = (IDisposable)AcquireTestLease(root, ticks); CleanLease(lease); return false; }
@@ -37,7 +47,9 @@ internal static partial class Program
                     Check(await Bounded(owner.StandardOutput.ReadLineAsync()) == "RESERVED", "Child did not reserve lease");
                     Check(Refused(100), "Competing process acquired the same identity");
                     using (var other = (IDisposable)AcquireTestLease(root, 101)) CleanLease(other);
-                    owner.StandardInput.WriteLine("release"); owner.StandardInput.Flush();
+                    using (var stdin = new StreamWriter(owner.StandardInput.BaseStream, new System.Text.UTF8Encoding(false), 1024, leaveOpen: true) { AutoFlush = true }) {
+                        stdin.WriteLine("release"); stdin.Flush();
+                    }
                     Check(owner.WaitForExit(5000) && owner.ExitCode == 0, "Clean holder failed");
                     using var next = (IDisposable)AcquireTestLease(root, 100); CleanLease(next);
                 }

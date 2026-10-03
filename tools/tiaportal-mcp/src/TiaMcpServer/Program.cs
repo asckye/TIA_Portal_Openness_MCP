@@ -66,6 +66,7 @@ namespace TiaMcpServer
                 // Force stdin/stdout to UTF-8 (no BOM). Without this, on zh-CN Windows the
                 // default Console encoding is GBK (CP936), which mangles Chinese project
                 // names, comments, HMI labels, and any non-ASCII characters in JSON-RPC.
+                // P2-06: child stdin now selects its own UTF-8 encoding and no longer depends on this setup.
                 try
                 {
                     var utf8NoBom = new UTF8Encoding(false);

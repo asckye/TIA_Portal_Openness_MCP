@@ -50,7 +50,9 @@ internal static partial class Program
             engineMajor = mode == "wrong-major" ? 20 : major, engineSha256 = mode == "wrong-hash" ? "bad" : hash, pid = Process.GetCurrentProcess().Id }));
         string? line;
         int calls = 0;
-        while ((line = Console.ReadLine()) != null)
+        var inputFrames = new List<string>();
+        using var rawInput = mode == "stdin-utf8" ? Console.OpenStandardInput() : null;
+        while ((line = rawInput == null ? Console.ReadLine() : ReadWorkerInput(rawInput, inputFrames)) != null)
         {
             var request = Parse(line);
             string method = (string)request["method"];
@@ -77,10 +79,110 @@ internal static partial class Program
             if (mode == "slow") Thread.Sleep(350);
             if (mode == "logical-error") { Console.WriteLine(Json.Serialize(new { jsonrpc = "2.0", id, error = new { code = -32602, message = "Invalid test argument" } })); continue; }
             if (mode == "progress") Console.WriteLine(Json.Serialize(new { jsonrpc = "2.0", method = "notifications/progress", @params = new { progressToken = "test", progress = 1 } }));
+            if (mode == "stdin-utf8") {
+                Console.WriteLine(Reply(id, new { content = new[] { new { type = "text", text = Json.Serialize(new { frames = inputFrames }) } }, isError = false }));
+                continue;
+            }
             Console.WriteLine(Reply(mode == "wrong-id" ? "wrong" : id, new { content = new[] { new { type = "text", text = Json.Serialize(new { Meta = new { success = mode != "binding-fails" }, value = "中文🟦", call = calls }) } }, isError = false }));
             if (mode == "duplicate") Console.WriteLine(Reply(id, new { }));
         }
         return 0;
+    }
+
+    private static string? ReadWorkerInput(Stream input, List<string> frames)
+    {
+        using var bytes = new MemoryStream();
+        int value;
+        while ((value = input.ReadByte()) >= 0) {
+            bytes.WriteByte((byte)value);
+            if (value == '\n') break;
+        }
+        if (bytes.Length == 0) return null;
+        byte[] frame = bytes.ToArray();
+        frames.Add(BitConverter.ToString(frame));
+        return new System.Text.UTF8Encoding(false, true).GetString(frame);
+    }
+
+    private static async Task ChildStdinTests()
+    {
+        int before = Passed, failures = 0;
+        var previous = Console.InputEncoding;
+        async Task Run(string label, Func<Task> test)
+        {
+            try { await Test(label, async () => {
+                var encoding = Console.InputEncoding;
+                await test();
+                Check(Console.InputEncoding.CodePage == encoding.CodePage &&
+                    Console.InputEncoding.GetPreamble().SequenceEqual(encoding.GetPreamble()), "Console input encoding was not restored");
+                if (encoding.GetPreamble().Length == 0)
+                    Check(ReferenceEquals(Console.InputEncoding, encoding), "BOM-free console encoding was unnecessarily replaced");
+            }); }
+            catch (Exception ex) { failures++; Console.Error.WriteLine("FAIL " + label + ": " + ex); }
+        }
+        try {
+            // Deliberately undo the host workaround: both producers must own their encoding.
+            foreach (var encoding in new[] { System.Text.Encoding.UTF8, System.Text.Encoding.GetEncoding(936), new System.Text.UTF8Encoding(false) }) {
+                Console.InputEncoding = encoding;
+                await Run("worker stdin is BOM-free UTF-8 under CP" + encoding.CodePage, async () => {
+                    using var f = new WorkerFixture("stdin-utf8");
+                    for (int call = 0; call < 2; call++) {
+                        var response = await f.Call(arguments: "{\"value\":\"中文🟦\"}");
+                        var result = (Dictionary<string, object>)response["result"];
+                        string text = (string)((Dictionary<string, object>)((IList)result["content"])[0]!)["text"];
+                        var frames = ((IList)Parse(text)["frames"]).Cast<string>().ToArray();
+                        Check(frames.Length == 4 + call, "Worker framing/order changed");
+                        var methods = new[] { "initialize", "notifications/initialized", "tools/list", "tools/call", "tools/call" };
+                        for (int i = 0; i < frames.Length; i++) {
+                            Check(frames[i].StartsWith("7B-") && !frames[i].Contains("EF-BB-BF"), "Worker stdin contains a BOM");
+                            Check(frames[i].EndsWith("-0A") && !frames[i].EndsWith("-0D-0A"), "Worker frame is not LF terminated");
+                            byte[] bytes = frames[i].Split('-').Select(b => Convert.ToByte(b, 16)).ToArray();
+                            var frame = Parse(new System.Text.UTF8Encoding(false, true).GetString(bytes));
+                            Check((string)frame["method"] == methods[i], "Worker message order changed");
+                            if (i >= 3) {
+                                var parameters = (Dictionary<string, object>)frame["params"];
+                                Check((string)((Dictionary<string, object>)parameters["arguments"])["value"] == "中文🟦", "Worker input Unicode corrupted");
+                            }
+                        }
+                    }
+                });
+                foreach (string? input in new[] { "{\"value\":\"中文🟦\"}\nsecond\n", "", null }) {
+                    await Run("LocalProcess stdin/EOF under CP" + encoding.CodePage + " (" + (input == null ? "null" : input.Length.ToString()) + ")", async () => {
+                        string hex = await LocalProcessInput(input);
+                        Check(hex == BitConverter.ToString(new System.Text.UTF8Encoding(false).GetBytes(input ?? "")), "Child bytes differ: " + hex);
+                    });
+                }
+                await Run("failed child start restores CP" + encoding.CodePage + " and preserves the start error", async () => {
+                    string missing = Path.Combine(Environment.CurrentDirectory, "missing-child-" + Guid.NewGuid().ToString("N") + ".exe");
+                    await Fault(LocalProcessInput("", missing), typeof(System.ComponentModel.Win32Exception));
+                });
+                await Run("concurrent worker and LocalProcess starts preserve CP" + encoding.CodePage, async () => {
+                    await Task.WhenAll(Enumerable.Range(0, 8).Select(i => Task.Run(async () => {
+                        if (i % 2 == 0) {
+                            using var f = new WorkerFixture("stdin-utf8", 5);
+                            Check((await f.Call()).ContainsKey("result"), "Concurrent worker handshake failed");
+                        } else {
+                            string hex = await LocalProcessInput("中文🟦\n");
+                            Check(hex == "E4-B8-AD-E6-96-87-F0-9F-9F-A6-0A", "Concurrent child bytes differ: " + hex);
+                        }
+                    })));
+                });
+            }
+        }
+        finally { Console.InputEncoding = previous; }
+        Console.WriteLine("COMPLETE: " + (Passed - before) + " child stdin checks passed; " + failures + " failed");
+        Check(failures == 0, "Child stdin regression failed");
+    }
+
+    private static async Task<string> LocalProcessInput(string? input, string? executable = null)
+    {
+        var type = FindServerType(Server, "TiaOpenness.Shared.LocalProcess");
+        var task = (Task)type.GetMethod("Run")!.Invoke(null, new object?[] {
+            executable ?? Assembly.GetExecutingAssembly().Location, new[] { "stdin-hex-fixture" },
+            Environment.CurrentDirectory, input, 5, 1024 * 1024, null })!;
+        await Bounded(AsResult(task), 10000);
+        object result = task.GetType().GetProperty("Result")!.GetValue(task)!;
+        Check((bool)result.GetType().GetProperty("Success")!.GetValue(result)!, "Hex child failed or did not receive EOF");
+        return ((string)result.GetType().GetProperty("Stdout")!.GetValue(result)!).Trim();
     }
 
     private sealed class WorkerFixture : IDisposable

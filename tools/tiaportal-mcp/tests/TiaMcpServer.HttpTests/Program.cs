@@ -322,12 +322,20 @@ internal static partial class Program
         try { Console.InputEncoding = new System.Text.UTF8Encoding(false); } catch (IOException) { }
         try {
             if(args.Length > 0 && args[0] == "worker-fixture") return RunWorkerFixture(args);
+            if(args.Length > 0 && args[0] == "stdin-hex-fixture") {
+                using var input = Console.OpenStandardInput();
+                using var bytes = new MemoryStream();
+                input.CopyTo(bytes);
+                Console.WriteLine(BitConverter.ToString(bytes.ToArray()));
+                return 0;
+            }
             string exe=Path.GetFullPath(args[0]); string dir=Path.GetDirectoryName(exe)!;
             AppDomain.CurrentDomain.AssemblyResolve+=(sender,e)=>{
                 string dependency=Path.Combine(dir,new AssemblyName(e.Name).Name+".dll");
                 return File.Exists(dependency)?Assembly.LoadFrom(dependency):null;
             };
             Server=Assembly.LoadFrom(exe);
+            if(args.Length > 1 && args[1] == "child-stdin-only") { await ChildStdinTests(); return 0; }
             if (args.Length > 1 && args[1] == "example-library-only") {
                 var catalog = FindServerType(Server, "TiaOpenness.Shared.ToolUsageCatalog");
                 foreach (var language in new[] { "", "scl", "scl-sd", "lad", "fbd", "mixed", "db", "udt", "s7res", "stl", "graph", "hmi-javascript", "hmi-vbscript", "csharp" }) {

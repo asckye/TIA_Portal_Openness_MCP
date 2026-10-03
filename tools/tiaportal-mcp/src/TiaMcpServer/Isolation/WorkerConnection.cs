@@ -15,6 +15,7 @@ namespace TiaMcpServer.Isolation
         internal const int MaxFrameChars = 16 * 1024 * 1024;
         private readonly object sync = new object();
         private readonly Process process;
+        private readonly StreamWriter stdin;
         private readonly Action<string> failed;
         private readonly TaskCompletionSource<JsonObject> hello = NewCompletion();
         private TaskCompletionSource<JsonObject>? pending;
@@ -37,11 +38,12 @@ namespace TiaMcpServer.Isolation
             start.RedirectStandardInput = start.RedirectStandardOutput = start.RedirectStandardError = true;
             start.StandardOutputEncoding = start.StandardErrorEncoding = new UTF8Encoding(false, true);
             process = new Process { StartInfo = start };
-            try { if (!process.Start()) throw new IOException("Worker start failed."); }
+            try { if (!TiaOpenness.Shared.ChildProcessInput.Start(process)) throw new IOException("Worker start failed."); }
             catch { process.Dispose(); throw; }
             Pid = process.Id;
-            process.StandardInput.NewLine = "\n";
-            process.StandardInput.AutoFlush = true;
+            // Framework Process.Dispose/Close only nulls the stream fields, so leaving
+            // its original writer untouched cannot flush it during process cleanup.
+            stdin = new StreamWriter(process.StandardInput.BaseStream, new UTF8Encoding(false)) { NewLine = "\n", AutoFlush = true };
             // Observe faults even if a startup failure occurs before the caller awaits Hello.
             _ = hello.Task.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
             ReaderCompletion = Task.Factory.StartNew(Read, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
@@ -68,12 +70,12 @@ namespace TiaMcpServer.Isolation
                 notification = onNotification;
                 _ = completion.Task.ContinueWith(t => { _ = t.Exception; }, TaskContinuationOptions.OnlyOnFaulted);
             }
-            try { await process.StandardInput.WriteLineAsync(line).ConfigureAwait(false); }
+            try { await stdin.WriteLineAsync(line).ConfigureAwait(false); }
             catch { Fail("RequestPipeFailed"); throw new IOException("Worker request pipe failed; outcome may be unknown."); }
             return await completion.Task.ConfigureAwait(false);
         }
 
-        internal Task NotifyInitializedAsync() => process.StandardInput.WriteLineAsync("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+        internal Task NotifyInitializedAsync() => stdin.WriteLineAsync("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
 
         private static string? ReadLine(TextReader reader)
         {

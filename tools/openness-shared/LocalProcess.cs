@@ -32,11 +32,18 @@ namespace TiaOpenness.Shared
             var stderr = new StringBuilder();
             using (var process = new Process { StartInfo = start })
             {
-                if (!process.Start()) throw new InvalidOperationException("Process did not start.");
+                if (!ChildProcessInput.Start(process)) throw new InvalidOperationException("Process did not start.");
                 var stdoutTask = Drain(process.StandardOutput, stdout, maxOutputCharacters);
                 var stderrTask = Drain(process.StandardError, stderr, maxOutputCharacters);
+#if NETFRAMEWORK
+                // Framework Process.Dispose/Close only nulls the stream fields, so leaving
+                // its original writer untouched cannot flush it during process cleanup.
                 using (var stdin = new StreamWriter(process.StandardInput.BaseStream, new UTF8Encoding(false)))
+#else
+                using (var stdin = process.StandardInput)
+#endif
                 {
+                    stdin.AutoFlush = false;
                     if (input != null) await stdin.WriteAsync(input).ConfigureAwait(false);
                 }
                 bool finished = await Task.Run(() => process.WaitForExit(timeoutSeconds * 1000)).ConfigureAwait(false);
@@ -71,6 +78,47 @@ namespace TiaOpenness.Shared
                 result.Append(buffer, 0, take);
             }
             return truncated;
+        }
+    }
+
+    internal static class ChildProcessInput
+    {
+#if NETFRAMEWORK
+        private static readonly object StartSync = new object();
+#endif
+
+        internal static bool Start(Process process)
+        {
+#if NETFRAMEWORK
+            lock (StartSync)
+            {
+                var previous = Console.InputEncoding;
+                if (previous.GetPreamble().Length == 0) return process.Start();
+                bool changed = false;
+                try
+                {
+                    // P2-06: Framework AutoFlush emits the preamble inside Process.Start,
+                    // before a caller can replace StandardInput with a UTF-8 writer.
+                    // Setting Console.InputEncoding also discards Console.In and its buffered input, so a
+                    // host that reads Console.In concurrently must install a BOM-free InputEncoding at
+                    // startup (the engine's Program.cs does), which makes this switch a no-op there.
+                    try { Console.InputEncoding = new UTF8Encoding(false); changed = true; }
+                    catch (Exception) { /* A host without a console must still attempt process startup. */ }
+                    return process.Start();
+                }
+                finally
+                {
+                    if (changed)
+                    {
+                        try { Console.InputEncoding = previous; }
+                        catch (Exception) { /* The console may have disappeared; preserve the process startup outcome. */ }
+                    }
+                }
+            }
+#else
+            process.StartInfo.StandardInputEncoding = new UTF8Encoding(false);
+            return process.Start();
+#endif
         }
     }
 
