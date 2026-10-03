@@ -5,13 +5,16 @@ import os
 import shutil
 import subprocess
 import uuid
+from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
-PORTAL = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal'
-source = (PORTAL / 'Portal.Software.Reflection.cs').read_text(encoding='utf-8')
-helper = source.split('        // Technology imports require', 1)[1].split('        private static object? TryInvokeExplicitEngineeringMethod', 1)[0]
-helper = '        // Technology imports require' + helper
-technology = (PORTAL / 'Portal.Software.TechnologyObjects.cs').read_text(encoding='utf-8') + (PORTAL.parent / 'Services/TechnologyObjectsService.cs').read_text(encoding='utf-8').split('// ── Technology Objects', 1)[0]
+sources = EngineSources()
+helper = sources.member('TryImportEngineeringObjectIntoCollection', signature='bool overwrite')
+technology = '\n'.join((
+    sources.member('ImportTechnologyObject', owner='Portal', signature='public void'),
+    sources.member('ImportTechnologyObject', signature='private void'),
+    sources.member('ImportTechnologyObject', owner='TechnologyObjectsService', tool=False),
+    sources.member('ImportTechnologyObjectsFromDirectory', tool=False)))
 assert 'bool overwrite = true' in technology
 assert 'importPath, true, new List<string>()' in technology
 assert 'file, overwrite, imported' in technology
@@ -83,7 +86,7 @@ work = parent / ('technology-import-' + uuid.uuid4().hex)
 work.mkdir(parents=True)
 try:
     (work / 'Program.cs').write_text(program, encoding='utf-8', newline='\n')
-    (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>')
+    (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>', encoding='utf-8')
     env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
     subprocess.run([os.environ.get('DOTNET', 'dotnet'), 'run', '--project', str(work / 'Checks.csproj'), '-c', 'Release', '-p:NuGetAudit=false', '-p:RestoreSources=' + str(work)], env=env, check=True)
 finally:

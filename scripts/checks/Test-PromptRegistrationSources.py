@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """Keep the explicit prompt inventory complete, without loading engineering DLLs."""
-from pathlib import Path
 import re
+from engine_sources import EngineSources, block_after
 
-ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
-program = (SRC / "Program.cs").read_text(encoding="utf-8")
-registration = (SRC / "ModelContextProtocol/McpPromptRegistration.cs").read_text(encoding="utf-8")
-assert "WithPromptsFromAssembly(" not in program
+sources = EngineSources()
+program = sources.member('RunStdioHost') + sources.member('RunHttpHost')
+registration = sources.type_text('McpPromptRegistration')
+assert "WithPromptsFromAssembly(" not in sources.all_text()
 assert program.count("ModelContextProtocol.McpPromptRegistration.Configure(mcp);") == 1
 assert program.count("ModelContextProtocol.McpPromptRegistration.Configure(mcpHttp);") == 1
 assert "MCP registration failed: ReflectionTypeLoadException" in program
-assert "WithToolsFromAssembly failed:" not in program
-loader_catch = program.split("catch (ReflectionTypeLoadException ex)", 1)[1].split("// Register the Portal service", 1)[0]
+assert "WithToolsFromAssembly failed:" not in sources.all_text()
+loader_catch = block_after(sources.member('RunStdioHost'), "catch (ReflectionTypeLoadException ex)")
 assert "throw;" in loader_catch and "ex.LoaderExceptions" in loader_catch
 assert "catch" not in registration
 assert "GetTypes(" not in registration
@@ -22,10 +21,7 @@ assert "builder.WithPrompts(new[] {" in registration
 # until it is explicitly registered; never infer feature availability from this.
 containers = []
 prompt_count = 0
-for path in SRC.rglob("*.cs"):
-    if any(part.startswith(("obj", "bin")) for part in path.relative_to(SRC).parts):
-        continue
-    source = path.read_text(encoding="utf-8-sig")
+for path, source in sources.sources.items():
     source = re.sub(r"(?m)^\s*//.*$", "", source)
     if re.search(r"\[McpServerPromptType(?:Attribute)?\]", source):
         found = re.findall(r"\[McpServerPromptType(?:Attribute)?\]\s*public\s+(?:static\s+)?class\s+(\w+)", source)

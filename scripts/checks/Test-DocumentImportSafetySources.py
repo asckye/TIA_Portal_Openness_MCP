@@ -2,13 +2,13 @@
 """Static production wiring guards only; no SDK/native/transactional acceptance."""
 from pathlib import Path
 import unittest
+from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
-PORTAL = (SRC / 'Siemens/Services/DocumentsService.cs').read_text(encoding='utf-8')
-SINGLE = PORTAL.split('public bool ImportFromDocuments(', 1)[1].split('private static string DocumentImportedNamesSuffix', 1)[0]
-BATCH = PORTAL.split('public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(', 1)[1]
-MCP = (SRC / 'ModelContextProtocol/Tools/DocumentsTools.cs').read_text(encoding='utf-8').split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
+sources = EngineSources()
+SINGLE = sources.member('ImportFromDocuments', signature='bool ImportFromDocuments')
+BATCH = sources.member('ImportBlocksFromDocuments', signature='IEnumerable<PlcBlock>')
+MCP = sources.member('ImportBlocksFromDocuments', tool=True)
 
 class DocumentImportSafetySources(unittest.TestCase):
     def test_worker_blocks_reads_and_previews_after_uncertain_document_batch(self):
@@ -64,7 +64,7 @@ class DocumentImportSafetySources(unittest.TestCase):
         self.assertIn('Progress notification failed after import:', MCP)
         self.assertIn('["responseReportingFailed"] = responseReportingFailed', MCP)
         self.assertIn('Post-import result or identity readback failed:', SINGLE)
-        self.assertNotIn('McpHints.Recovery(ex)', MCP.split('[McpServerTool(Name = "DescribeObject")', 1)[0])
+        self.assertNotIn('McpHints.Recovery(ex)', MCP)
 
     def test_override_feature_preserved_but_not_none(self):
         self.assertIn('(option & ImportDocumentOptions.Override) != 0 && existing != null', SINGLE)

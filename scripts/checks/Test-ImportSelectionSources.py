@@ -2,15 +2,16 @@
 """Production wiring assertions only; never load Siemens or call a native importer."""
 from pathlib import Path
 import unittest
+from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
 LOGIC = SRC.parent / "TiaMcp.Logic"
-PORTAL = (SRC / "Siemens/Portal/Portal.Blocks.cs").read_text(encoding='utf-8')
-MCP = (SRC / "ModelContextProtocol/Tools/PlcBlocksTools.cs").read_text(encoding='utf-8')
-SHARED = (SRC / "ModelContextProtocol/Tools/McpServer.Blocks.cs").read_text(encoding='utf-8')
-BATCH = PORTAL.split("public ResponseImportBatch ImportBlocksFromDirectory", 1)[1].split("public bool ImportType", 1)[0]
-PROGRAM = MCP.split("public ResponsePlcProgramImport ImportPlcProgramFromDirectory", 1)[1].split('[McpServerTool(Name = "CompileAndDiagnosePlc")', 1)[0]
+sources = EngineSources()
+MCP = sources.type_text('PlcBlocksTools')
+SHARED = sources.member('BuildPlcProgramImportResponse', signature='private static')
+BATCH = sources.member('ImportBlocksFromDirectory', signature='public ResponseImportBatch', tool=False)
+PROGRAM = sources.member('ImportPlcProgramFromDirectory', tool=True)
 
 class ImportSelectionWiring(unittest.TestCase):
     def test_native_overwrite_flag(self):

@@ -6,6 +6,7 @@ exercise the API inheritance that a compile-only check cannot validate.
 from pathlib import Path
 import argparse
 import subprocess
+from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -14,9 +15,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--work-dir', type=Path, required=True)
     args = parser.parse_args()
-    source = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcExternalSourcesService.cs').read_text(encoding='utf-8-sig')
-    methods = source.split('        public void ImportPlcExternalSource(', 1)[1].split('        private static IEnumerable<object?>? TryGetExternalSourcesCollection', 1)[0]
-    methods = '        public void ImportPlcExternalSource(' + methods
+    sources = EngineSources()
+    methods = '\n'.join(sources.member(name, signature='public void') for name in
+                        ('ImportPlcExternalSource', 'GenerateBlocksFromExternalSource'))
+    methods += '\n' + sources.member('ExternalSourceNameMatches')
     code = r'''
 using System;
 using System.IO;
@@ -62,7 +64,11 @@ internal static class Program {
     private static int checks;
     private static void Check(bool value,string label) { if(!value) throw new Exception(label); checks++; }
     private static void Fails(Action action) { try { action(); } catch(PortalException) { checks++;return; } throw new Exception("Expected reported failure"); }
-    private static void Main() {
+    private static int Main() {
+        try { RunChecks(); return 0; }
+        catch(Exception ex) { Console.Error.WriteLine(ex); return 1; }
+    }
+    private static void RunChecks() {
         var path=Path.Combine(AppContext.BaseDirectory,"source.scl"); File.WriteAllText(path,"FUNCTION Test : Void\nBEGIN\nEND_FUNCTION");
         var p=new Portal(); var plc=p.Container.Software;
         p.ImportPlcExternalSource("PLC", "", path);

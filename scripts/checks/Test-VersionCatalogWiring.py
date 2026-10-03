@@ -3,10 +3,12 @@ from pathlib import Path
 import re
 import unittest
 import xml.etree.ElementTree as ET
+from engine_sources import EngineSources
 
 ROOT = Path(__file__).resolve().parents[2]
 SERVER = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
 LOGIC = ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Logic'
+sources = EngineSources()
 
 
 def read(path):
@@ -15,31 +17,30 @@ def read(path):
 
 class VersionCatalogWiring(unittest.TestCase):
     def test_policy_wraps_direct_and_isolated_dispatch(self):
-        wiring = read(SERVER / 'ModelContextProtocol/Tools/McpServer.ArgDiagnostics.cs')
+        wiring = sources.member('WrapTools')
         self.assertIn('WrapWithVersionPolicy(Isolation.IsolatedWorkerHost.Current', wiring)
-        wrapper = read(SERVER / 'ModelContextProtocol/Tools/McpServer.VersionPolicy.cs')
+        wrapper = sources.member('InvokeAsync', owner='VersionPolicyTool')
         self.assertLess(wrapper.index('VersionCallProblem'), wrapper.index('return inner.InvokeAsync'))
-        profile = read(SERVER / 'ModelContextProtocol/Tools/McpServer.Profile.cs')
+        profile = sources.member('GetLiteTools') + sources.member('GetAllTools')
         self.assertEqual(profile.count('VersionToolProblem(name).Length == 0'), 2)
-        bridge = read(SERVER / 'ModelContextProtocol/Tools/McpServer.ToolBridge.cs')
-        invoke = bridge.split('private static object? InvokeToolMethod', 1)[1]
+        invoke = sources.member('InvokeToolMethod')
         self.assertLess(invoke.index('VersionCallProblem'), invoke.index('method.Invoke(method.IsStatic ? null : EngineServices.Get(method.DeclaringType!), call)'))
-        self.assertIn('AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable)', bridge)
-        self.assertIn('includeUnavailable || VersionToolProblem(kv.Key).Length == 0', bridge)
-        self.assertIn('versionAvailable', bridge)
+        self.assertIn('AvailableToolMethods((_bridgeCatalog ?? ToolCatalog.Engine).Methods, includeUnavailable)', sources.member('AllToolMethods', owner='McpServer'))
+        self.assertIn('includeUnavailable || VersionToolProblem(kv.Key).Length == 0', sources.member('AvailableToolMethods'))
+        for name in ('CallTool', 'PreflightToolCall'):
+            self.assertIn('versionAvailable', sources.member(name, signature='string argumentsJson)'))
 
     def test_version_exclusions_have_real_registered_names(self):
-        policy = read(SERVER / 'Siemens/ToolVersionPolicy.cs').split('internal static string ToolProblem', 1)[0]
+        policy = sources.type_text('ToolVersionPolicy').split('internal static string ToolProblem', 1)[0]
         excluded = re.findall(r'\["([^"]+)"\]\s*=', policy)
         self.assertEqual(len(excluded), 11)
-        sources = '\n'.join(read(p) for p in (SERVER / 'ModelContextProtocol/Tools').glob('*.cs'))
-        registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources))
+        registered = set(re.findall(r'McpServerTool\(Name\s*=\s*"([^"]+)"', sources.all_text()))
         self.assertFalse(set(excluded) - registered)
         for script in ['Test-WorkerIsolation.py', 'Test-LocalStability.py']:
             self.assertIn('477 if args.major == 20 else 488', read(ROOT / 'scripts/checks' / script))
 
     def test_legacy_contract_remains_unbound(self):
-        source = read(SERVER / 'Siemens/OpennessReleaseContract.cs')
+        source = sources.type_text('OpennessReleaseContract')
         self.assertIn('expectedIdentity == null', source)
         self.assertIn('EngineeringAssemblyIdentity.RequireMatch', source)
         self.assertIn('HW.ISoftwareContainer', source)
@@ -49,9 +50,7 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('Assembly.Load', source)
 
     def test_move_refusal_and_recovery_precede_cleanup(self):
-        # P3-13a moved the method into the PLC block service; it is the last member there.
-        source = re.split(r'\n        (?:public|private|internal) ',
-                          read(SERVER / 'Siemens/Services/PlcBlocksService.cs').split('public string MoveBlockToGroup', 1)[1], 1)[0]
+        source = sources.member('MoveBlockToGroup', tool=False)
         self.assertLess(source.index('if (block is OB)'), source.index('EnsurePlcBlockGroup'))
         self.assertLess(source.index('moveVerified = verifyGroup'), source.index('finally'))
         self.assertIn('if (moveVerified)', source.split('finally', 1)[1])
@@ -66,7 +65,7 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertIn('major, true, "v" + key, null', source)
 
     def test_guard_precedes_resolution_and_native_host(self):
-        source = read(SERVER / 'Program.cs')
+        source = sources.member('Main')
         guard = source.index('TiaVersionCatalog.RequireMatchingEngine(tiaMajorVersion, EngineRouter.CompiledTiaMajorVersion)')
         self.assertLess(guard, source.index('AssemblyResolve += Engineering.Resolver'))
         self.assertLess(guard, source.index('Openness.Initialize('))
@@ -74,14 +73,14 @@ class VersionCatalogWiring(unittest.TestCase):
         self.assertNotIn('assembly load will likely fail', source)
 
     def test_diagnostics_remain_reachable(self):
-        source = read(SERVER / 'Program.cs')
+        source = sources.member('Main')
         self.assertLess(source.index('CliOptions.IsInformationalCommand(args)'), source.index('CliOptions.ParseArgs(args)'))
         self.assertLess(source.index('string.Equals(args[0], "doctor"'), source.index('TiaVersionCatalog.RequireRunnable(tiaMajorVersion)'))
-        doctor = read(SERVER / 'Cli/CliCommands.cs').split('private static int DoctorCli', 1)[1]
+        doctor = sources.member('DoctorCli')
         self.assertIn('ready &= supported;', doctor)
 
     def test_registration_reuses_selected_version(self):
-        source = read(SERVER / 'Cli/CliCommands.cs').split('private static int Config(string[] args)', 1)[1].split('string exe =', 1)[0]
+        source = sources.member('Config', signature='string[] args').split('string exe =', 1)[0]
         self.assertIn('Engineering.TiaMajorVersion', source)
         self.assertIn('RequireMatchingEngine', source)
         self.assertNotIn('DetectTiaMajorVersion', source)

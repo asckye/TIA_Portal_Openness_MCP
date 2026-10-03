@@ -1248,9 +1248,10 @@ def hmi_reply(reply, profile, name):
 
 
 def check_coverage(domains):
-    root = Path(__file__).resolve().parents[2] / 'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools'
+    from engine_sources import EngineSources
+    sources = EngineSources()
     for domain in domains:
-        source = (root / (domain + 'Tools.cs')).read_text(encoding='utf-8-sig')
+        source = sources.type_text(domain + 'Tools')
         actual = set(re.findall(r'\[McpServerTool\(Name\s*=\s*"(\w+)"', source))
         covered = {name for name, _, _ in CASES[domain]}
         resources.require(actual == covered, f'{domain} fixture coverage differs: actual={actual}, covered={covered}')
@@ -1656,10 +1657,16 @@ def main():
     parser.add_argument('--baseline-harness', type=Path)
     parser.add_argument('--major', type=int, choices=(20, 21))
     parser.add_argument('--self-test', action='store_true')
+    parser.add_argument('--source-only', action='store_true', help='Check all domain fixture inventories without builds or processes')
     args = parser.parse_args()
     if args.self_test:
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SelfTests))
         return int(not result.wasSuccessful())
+    if args.source_only:
+        domains = args.domain or list(CASES)
+        check_coverage(domains)
+        print(f'PASS: {len(domains)} domain fixture inventories match registered source tools; no engine execution.')
+        return 0
     if not args.domain or any(getattr(args, name) is None for name in (
             'exe', 'baseline_exe', 'public_api', 'host_harness', 'baseline_harness', 'major')):
         parser.error('--domain, both EXEs/harnesses, --public-api and --major are required')

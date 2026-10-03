@@ -54,6 +54,56 @@ V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器
 
 ## 无需运行 TIA 的检查
 
+### 纯 Python 源码契约（Ubuntu CI）
+
+[offline-checks.yml](../../.github/workflows/offline-checks.yml) 的 `source-contracts` job
+执行下列静态检查，无需 .NET、Siemens SDK、引擎进程、TIA 或网络服务。
+其中 `Check-Repository.py --no-binaries` 同时执行 BundleLayout、SwallowedExceptions、
+CommentHygiene、McpText 和 Inventory-ResponseEnvelopes；下表也列出它们的独立复跑命令。
+
+| 命令（仓库根目录） | 守护范围 |
+|---|---|
+| `python scripts/checks/Check-Repository.py --no-binaries` | 文档、入口与下列五个静态门禁 |
+| `python scripts/checks/Check-BundleLayout.py` | 资源路径、版本管理与交付清单 |
+| `python scripts/checks/Check-SwallowedExceptions.py` | 吞异常标记及只减不增基线 |
+| `python scripts/checks/Check-CommentHygiene.py` | 注释与 Leftovers 基线 |
+| `python scripts/checks/Check-McpText.py` | MCP 中文字面量基线 |
+| `python scripts/checks/Inventory-ResponseEnvelopes.py` | 手写响应信封基线 |
+| `python scripts/checks/Check-DeadToolReferences.py` | 工具描述死引用与重名注册 |
+| `python scripts/checks/Test-EngineSources.py` | 成员定位：搬文件、重载、类型、词法边界与缺失/歧义拒绝 |
+| `python scripts/checks/Test-DiagnosticMembershipSources.py` | 诊断只读组检查、显式修复与默认不连接 |
+| `python scripts/checks/Test-DocumentImportSafetySources.py` | 文档导入前置拒绝、不重试、部分结果与报告证据 |
+| `python scripts/checks/Test-ImportSelectionSources.py` | 导入选择、冲突、覆盖与确定性排序 |
+| `python scripts/checks/Test-PromptRegistrationSources.py` | 两种传输的显式 prompt 清单与注册失败处理 |
+| `python scripts/checks/Test-VersionCatalogWiring.py` | 版本门禁、派发、配置与构建接线 |
+| `python scripts/checks/Test-DomainTools.py --source-only` | 所有已迁移领域的工具注册与回归夹具清单一致 |
+
+该 job 还执行 `python scripts/generate/Generate-ToolUsage.py --check`，以及 BundleLayout、
+CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞异常自检仍在
+`offline-tests` job。`Test-CfcTools.py` 是领域检查的兼容入口，CFC 已包含在上述全领域检查中。
+
+按成员验证的引擎检查使用 [engine_sources.py](../../scripts/checks/engine_sources.py)，
+跨 `tools/tiaportal-mcp/src/TiaMcpServer/**/*.cs` 按成员名查找，显式以 UTF-8 读取，
+排除生成和构建文件；重载通过签名、所属类型或 MCP 属性区分，缺失或歧义直接失败。
+词法器保留完整方法体，不依赖相邻成员或迁移前文件路径。它是源码契约检查，不替代 C# 编译或原生验收。
+
+### 需要本地 .NET 或工作目录的源码检查
+
+下列命令不进入 Python-only job。HMI/技术对象需要 .NET 8 引用包与运行时，外部源替身需要 .NET 10；
+依赖须已缓存，替身项目只使用本地还原源。它们编译提取的实际方法体并运行托管替身，不连接 TIA。
+外部源的工作目录保留生成源码与构建证据；HMI/技术对象在 `bin-build` 创建并清理临时目录。
+另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens。
+
+```powershell
+python scripts/checks/Test-HmiImportSafety.py
+python scripts/checks/Test-TechnologyImportSafety.py
+python scripts/checks/Test-ExternalSourceDispatch.py --work-dir bin-build/external-source-dispatch
+python scripts/checks/Test-SupplementaryReadSources.py
+python scripts/checks/Check-TiaFeatures.py
+```
+
+### 构建、离线套件与交付检查
+
 ```powershell
 python scripts/checks/Check-Repository.py
 python scripts/checks/Check-DeadToolReferences.py

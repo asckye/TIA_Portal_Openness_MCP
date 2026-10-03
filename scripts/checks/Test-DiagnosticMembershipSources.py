@@ -1,31 +1,28 @@
 #!/usr/bin/env python3
 """Source-only guard: run without loading Siemens or any Windows identity APIs."""
-from pathlib import Path
 import re
+from engine_sources import EngineSources
 
-ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
-source = (SRC / "ModelContextProtocol/Tools/DiagnosticsTools.cs").read_text(encoding="utf-8")
-session = (SRC / "ModelContextProtocol/Tools/SessionTools.cs").read_text(encoding="utf-8")
-bootstrap = session.split("public async Task<ResponseBootstrap> Bootstrap()", 1)[1].split('[McpServerTool(', 1)[0]
-selftest = source.split("public async Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(", 1)[1].split('[McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest")', 1)[0]
+sources = EngineSources()
+bootstrap = sources.member('Bootstrap', tool=True)
+selftest = sources.member('RunCapabilitySelfTest', tool=True)
 for name, body in (("Bootstrap", bootstrap), ("RunCapabilitySelfTest", selftest)):
     assert body.count("Siemens.Openness.IsUserInGroupNoFix()") == 1, name
     assert not re.search(r"(?:IsUserInGroup|AddUserToGroupAsync|EnsureOpennessUserGroup)\s*\(", body), name
-assert re.search(r"catch\s*(?:/\*.*?\*/\s*)?\{ env.OpennessGroupOk = false; \}", bootstrap)
+assert re.search(r'catch\s*(?:/\*\s*swallow\(env-probe\):\s*[^*]+\*/\s*)?'
+                 r'\{\s*env\.OpennessGroupOk = false;\s*\}', bootstrap)
 assert 'nextTool = "EnsureOpennessUserGroup";' in bootstrap  # recommendation only
 assert 'catch (Exception ex)' in selftest and '"fail", ex.Message' in selftest
 assert 'bool connectIfNeeded = false' in selftest
 assert 'if (!isConnected && connectIfNeeded)' in selftest
 assert 'isConnected = _session.ConnectPortal();' in selftest
-ensure = session.split("public async Task<ResponseMessage> EnsureOpennessUserGroup()", 1)[1].split('[McpServerTool(Name = "Disconnect")', 1)[0]
+ensure = sources.member('EnsureOpennessUserGroup', tool=True)
 assert "await Siemens.Openness.IsUserInGroup()" in ensure
-openness = (SRC / "Siemens/Openness.cs").read_text(encoding="utf-8")
-pure = openness.split("public static bool IsUserInGroupNoFix()", 1)[1].split("public static async", 1)[0]
+pure = sources.member('IsUserInGroupNoFix', body_only=True)
 assert re.fullmatch(r"\s*\{\s*return Api\.Global\.Openness\(\)\.IsUserInGroup\(\);\s*\}\s*", pure)
 print("PASS: both diagnostics use NoFix; failure handling and opt-in connection preserved; explicit repair retained.")
 
-startup = (SRC / "Program.cs").read_text(encoding="utf-8")
+startup = sources.member('Main')
 assert "var opennessUserOk = Openness.IsUserInGroupNoFix();" in startup
 assert not re.search(r"Openness\.IsUserInGroup\s*\(", startup)
 assert "if (opennessUserOk)" in startup
