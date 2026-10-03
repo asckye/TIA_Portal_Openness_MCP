@@ -62,17 +62,17 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | ID | 任务 | 状态 |
 |---|---|---|
 | P0-01 | 提交现有统一工作台改动，作为重构起点 | done |
-| P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | todo |
+| P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | done |
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（需维护者授权） | blocked |
 | P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | todo |
-| P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | todo |
+| P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
 
 ### 阶段 1：构建与验证
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | todo |
-| P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | todo |
+| P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | done |
+| P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
 | P1-03 | 版本号单一来源（根 `Directory.Build.props`），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | todo |
 | P1-04 | 抽出无 Siemens 依赖的纯逻辑库（`Siemens/*Logic.cs`、`Builders`、`openness-shared`），多目标 net461/net48/net8.0；测试改为项目引用，删除逐文件链接 | todo |
 | P1-05 | 测试迁移到 xunit；去掉测试中的 `partial class` 注入和伪造 Siemens 命名空间；HttpTests 字符串反射改为编译期引用 | todo |

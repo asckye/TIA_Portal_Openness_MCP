@@ -59,6 +59,20 @@ PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOO
 官方 API 审计的成员名词法引用只提供排查线索，不证明重载正确、路径可达或原生行为成功。
 按版本的实现与缺口以功能矩阵为准。
 
+## 工具契约兼容检查
+
+[重构计划](refactor-plan.md)的兼容阶段用 `manifest/contracts/baseline` 守护八版工具名称、输入 schema
+及 V20/V21 lite 名单。改动 C# 并重新构建运行目录后执行：
+
+```powershell
+python scripts/checks/Snapshot-ToolContracts.py capture --repo-root . --harness tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --output TiaMcp_Output/contracts
+python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/contracts/baseline --current TiaMcp_Output/contracts
+```
+
+删除工具或 lite 条目、删除参数、新增必填、类型/枚举/默认值变化等破坏性变化返回 1；新增工具或可选参数
+只报告。基线只检查输入契约，不检查返回结构或原生语义。缺少 ASP.NET Core 8 时，抓取前把
+`DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
+
 ## 压力与故障检查
 
 `Test-LocalStability.py` 对 V20/V21 的普通/隔离进程、两种传输和 full/lite
