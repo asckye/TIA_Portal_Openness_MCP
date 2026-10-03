@@ -73,7 +73,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 |---|---|---|
 | P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | done |
 | P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | done |
-| P1-03 | 版本号单一来源（根 `Directory.Build.props`），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | todo |
+| P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
 | P1-04 | 抽出无 Siemens 依赖的纯逻辑库（`Siemens/*Logic.cs`、`Builders`、`openness-shared`），多目标 net461/net48/net8.0；测试改为项目引用，删除逐文件链接 | todo |
 | P1-05 | 测试迁移到 xunit；去掉测试中的 `partial class` 注入和伪造 Siemens 命名空间；HttpTests 字符串反射改为编译期引用 | todo |
 | P1-06 | 合并两个相似的 TransportFixture；把 `src` 下的测试工程移到 `tests` | todo |
@@ -111,7 +111,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P5-01 | 配置器改为真正的 UserControl + ViewModel，去掉运行时 XAML 改写；决定是否保留独立 net48 配置器构建 | todo |
+| P5-01 | 配置器改为编译型 UserControl，去掉运行时 XAML 改写；去掉仅供测试的 .NET Framework 配置器构建（启动器仍由 csc 编译，`configurator-build.json` 格式不变） | doing |
 | P5-02 | 单一主题引擎与单一本地化方案 | todo |
 | P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | todo |
 
