@@ -109,6 +109,30 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 服务注册按约定扫描，不集中编辑同一注册文件，步骤 7–10 可以并行。P1-04 移动的 `*Logic.cs` 与 HttpTests
 查找有交叉，阶段 3 在 P1-04 三步完成后开始。
 
+步骤 5 的 30 个试点工具已迁入以下平铺实例类；`Ecosystem` 与 `EcosystemFiles` 合为同一领域。
+它们由 `EngineRegistration` 通过 `ToolCatalog` 自动注册为单例，不实现 `IDisposable`，也不解析工程会话。
+既有领域算法仍复用 `TiaMcp.Logic` 和共享代码；本步保留工具方法体及纯静态辅助函数，不增加无状态服务转发层。
+
+| 原试点文件（`McpServer.` 前缀） | 实例工具类 | 工具数 |
+|---|---|---|
+| `Ecosystem.cs`、`EcosystemFiles.cs` | [EcosystemTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) | 3 |
+| `V21Ecosystem.cs` | [V21EcosystemTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 4 |
+| `GitWorkflow.cs` | [GitWorkflowTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs) | 1 |
+| `PlcTemplates.cs` | [TemplateTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) | 2 |
+| `QualityAudit.cs` | [QualityAuditTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs) | 1 |
+| `ImportOrder.cs` | [ImportOrderTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs) | 1 |
+| `Guides.cs` | [GuideTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GuideTools.cs) | 1 |
+| `ToolUsage.cs` | [ToolUsageTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ToolUsageTools.cs) | 1 |
+| `PlcSoftware.OfflineSuites.cs` | [OfflineSuiteTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 16 |
+
+[McpServer.PilotTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PilotTools.cs)
+保留指南入口使用的无属性 `GetToolUsage` 转发，并临时暴露对其他领域私有共享辅助方法的调用。
+这些试点工具没有 CLI 静态调用点；CLI 的同名报告命令直接使用既有构造器。
+HttpTests 的 `engineering-api-only` 检查真实实例归属、单例生命周期和指南转发；
+[Test-PilotTools.py](../../scripts/checks/Test-PilotTools.py) 通过 STDIO 覆盖九个领域的直接、桥接及隔离子进程调用。
+传入 `--baseline-exe` 可逐项比较迁移前后的 `tools/list` 序列；`ToolCatalog` 按名称排序，SDK 的线上枚举序列
+仍以实际宿主输出为准，不在本步调整。
+
 ## G9：单 PLC 工程的模糊匹配
 
 维护者于 2026-10-03 批准的 G9 行为调整由 `IEngineeringSession.ResolvePlc(path, PlcAccess)` 实施。

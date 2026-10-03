@@ -1,12 +1,14 @@
 using ModelContextProtocol.Server;
 using System.ComponentModel;
+using static TiaMcpServer.ModelContextProtocol.McpServer;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    public sealed class GuideTools
     {
         [McpServerTool(Name = "GetAuthoringGuide"), Description("[L0][Guide][READ] Compatibility entry into the unified GetToolUsage example library. A language topic returns programming examples; workflow returns the connection sequence. No separate rules or native calls.")]
-        public static ResponseMessage GetAuthoringGuide(
+        public ResponseMessage GetAuthoringGuide(
             [Description("Language/format such as scl, scl-sd, lad, fbd, db, udt, s7res, stl, graph, hmi-javascript, hmi-vbscript; legacy workflow/hmi/errors topics remain accepted.")] string topic)
         {
             switch (topic.Trim().ToLowerInvariant())

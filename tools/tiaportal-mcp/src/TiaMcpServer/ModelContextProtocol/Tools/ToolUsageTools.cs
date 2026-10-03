@@ -6,13 +6,15 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaOpenness.Shared;
+using static TiaMcpServer.ModelContextProtocol.McpServer.PilotToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    public sealed class ToolUsageTools
     {
         [McpServerTool(Name = "GetToolUsage"), Description("[L0][Guide][READ] Unified examples for every tool and operation in this release: exact arguments, parameter sources, result fields, programming files and call sequences. Select toolName + optional operation; language lists programming examples; exampleId returns full files/steps. query/documentId searches/reads embedded official source. Empty selectors list tools, languages and examples. Reads embedded data only.")]
-        public static ResponseMessage GetToolUsage(
+        public ResponseMessage GetToolUsage(
             [Description("Exact available tool name, including non-lite tools. Empty searches/lists references.")] string toolName = "",
             [Description("Space-separated words matched against official source text; empty lists documents.")] string query = "",
             [Description("Exact document ID from a tool's officialReference.documents or search result.")] string documentId = "",

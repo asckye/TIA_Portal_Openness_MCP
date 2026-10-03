@@ -491,6 +491,11 @@ internal static partial class Program
                 return 0;
             }
             bool baseline=args.Skip(1).Contains("baseline");
+            if(args.Skip(1).Contains("router-only")) {
+                await RouterTests();
+                Console.WriteLine("COMPLETE: "+Passed+" router checks passed; no network listener started");
+                return 0;
+            }
             if(!baseline) await RouterTests();
             await HttpTest(baseline);
             Console.WriteLine("COMPLETE: "+Passed+" passed; tested actual EXE "+System.Diagnostics.FileVersionInfo.GetVersionInfo(exe).FileVersion);

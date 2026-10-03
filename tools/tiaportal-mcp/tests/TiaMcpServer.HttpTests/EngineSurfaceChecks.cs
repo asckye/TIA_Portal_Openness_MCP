@@ -128,5 +128,6 @@ internal static class EngineSurfaceChecks
         }
         finally { host.SetValue(null, previous); }
         check(ReferenceEquals(host.GetValue(null), previous), "EngineSurface fixture restores the engine service provider");
+        PilotToolChecks.Run(server, check);
     }
 }
