@@ -17,7 +17,9 @@ namespace TiaMcpServer.ModelContextProtocol
             => RunOfflineAnalysisTool("ReadV21EcosystemCatalog", meta => {
                 if (source != "all" && source != "official" && source != "thirdParty") throw new ArgumentException("source must be all/official/thirdParty.");
                 if (offset < 0 || limit < 1 || limit > 100) throw new ArgumentException("offset >=0; limit 1..100.");
-                var catalog = JsonNode.Parse(File.ReadAllText(Path.Combine(EcosystemFiles.RepositoryRoot(), "reference", "v21-ecosystem.json")))!.AsObject();
+                using var stream = typeof(V21EcosystemTools).Assembly.GetManifestResourceStream("TiaMcp.V21Ecosystem.json")!;
+                using var reader = new StreamReader(stream);
+                var catalog = JsonNode.Parse(reader.ReadToEnd())!.AsObject();
                 var rows = catalog["entries"]!.AsArray().Where(n => (source == "all" || n!["sourceKind"]!.GetValue<string>() == source)
                     && (query.Length == 0 || n!.ToJsonString().IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)).ToArray();
                 meta["surveyDate"] = catalog["surveyDate"]!.DeepClone(); meta["scope"] = catalog["scope"]!.DeepClone();

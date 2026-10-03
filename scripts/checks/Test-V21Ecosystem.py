@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--host-harness', type=Path)
     parser.add_argument('--public-api', type=Path)
     parser.add_argument('--schema-root', type=Path)
+    parser.add_argument('--transport', choices=('stdio', 'http', 'both'), default='both')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--self-test', action='store_true')
     args = parser.parse_args()
@@ -58,7 +59,7 @@ def main():
             resources.require(getattr(args,name) is not None, '--'+name+' required')
             setattr(args,name,getattr(args,name).resolve())
         for isolated in (False,True):
-            for transport in ('stdio','http'):
+            for transport in (('stdio','http') if args.transport == 'both' else (args.transport,)):
                 for profile in ('full','lite'):
                     case=folder/f'{transport}-{profile}-{isolated}'; case.mkdir()
                     cwc=case/'cwc'; (cwc/'control').mkdir(parents=True)

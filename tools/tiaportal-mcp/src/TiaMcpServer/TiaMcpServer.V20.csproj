@@ -37,6 +37,7 @@
     <ProjectReference Include="..\..\..\third-party\TiaGitAddIn.Core\TiaGitAddIn.Core.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath" />
     <Compile Include="..\..\..\third-party\SiemensOpcUaModelled\**\*.cs" LinkBase="SiemensOpcUaModelled" />
     <EmbeddedResource Include="..\..\..\third-party\SiemensOpcUaModelled\Phases\Phase1\InterfaceTemplate.xml" LogicalName="TiaMcp.OpcUa.InterfaceTemplate.xml" />
+    <EmbeddedResource Include="../../../../reference/v21-ecosystem.json" LogicalName="TiaMcp.V21Ecosystem.json" />
   </ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/NativeCallDiagnostics.cs" Link="Shared/NativeCallDiagnostics.Shared.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ImportDependencyPlanner.cs" Link="Shared/ImportDependencyPlanner.cs" /></ItemGroup>

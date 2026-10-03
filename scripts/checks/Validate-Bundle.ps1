@@ -59,6 +59,7 @@ if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at releas
 
 if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
 # Check-BundleLayout.py compares the code table with this enforced resource list.
+# The embedded V21 catalog is also shipped as readable reference documentation.
 $bundleResourcePaths = @(
     'manifest/package-manifest.json',
     'manifest/delivery.json',
