@@ -142,7 +142,7 @@ namespace TiaMcpServer
                 }
                 TiaMcp.Versioning.TiaVersionCatalog.RequireRunnable(tiaMajorVersion);
 
-                // Version-aware self-routing (issue #8): this exe's IL is bound to one TIA major
+                // Version-aware self-routing: this exe's IL is bound to one TIA major
                 // version; when the machine actually wants a different one, re-exec the sibling
                 // exe built for it instead of crashing at the first Siemens assembly load.
                 // stdio is inherited, so MCP hosts and CLI callers are unaffected.
@@ -174,7 +174,7 @@ namespace TiaMcpServer
                     ? "TIA Portal will launch WITH user interface (--with-ui); slower cold start."
                     : "TIA Portal will launch headless (WithoutUserInterface) for faster startup; pass --with-ui to show the GUI.");
 
-                // CLI verb dispatch: `tia gen|patch|compile|export|import|describe|prewarm|schema|version`.
+                // Dispatch the verbs registered by CliCommands.
                 // Engine config (assembly resolver, version, headless) is already applied above, so verb
                 // handlers can connect immediately. Falls through to MCP host when args[0] isn't a verb.
                 if (args.Length > 0 && Cli.CliCommands.IsVerb(args[0]))

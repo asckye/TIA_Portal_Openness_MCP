@@ -879,7 +879,7 @@ END_DATA_BLOCK
                         McpServer.EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
                         McpServer.SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
                         var readback = McpServer.DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
-                        // 证据接到判据上：回读拿到成员才算事件真的挂上了。
+                        // 事件绑定必须回读到成员才算成功。
                         // 只看 Message 不算数 —— 失败路径（Project is null / 找不到 handler）同样带 Message，成员却是空的。
                         if (readback.Members?.Any() ?? false)
                         {
@@ -1395,7 +1395,7 @@ END_DATA_BLOCK
                     McpServer.EnsureUnifiedHmiButtonEventHandler("HMI_RT_1", screenName, buttonName, eventType);
                     McpServer.SetUnifiedHmiButtonEventScriptCode("HMI_RT_1", screenName, buttonName, eventType, scriptCode, "", false);
                     var readback = McpServer.DescribeUnifiedHmiButtonEventScript("HMI_RT_1", screenName, buttonName, eventType, 80);
-                    // 证据接到判据上：回读拿到成员才算事件真的挂上了。
+                    // 事件绑定必须回读到成员才算成功。
                     // 只看 Message 不算数 —— 失败路径（Project is null / 找不到 handler）同样带 Message，成员却是空的。
                     if (readback.Members?.Any() ?? false)
                     {

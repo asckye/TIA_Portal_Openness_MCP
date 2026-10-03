@@ -87,12 +87,6 @@
       "line": 84
     },
     {
-      "fingerprint": "535a73173b943fb6bff733b831fd3b4ec432f2b703074e1f31629f11f9d65a5a",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
-      "line": 2161
-    },
-    {
       "fingerprint": "5b0037ba1f8b3db233dc30d52077fd8cc020dc00f1a117d7bd07382f18d726c2",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.HmiOperation.cs",

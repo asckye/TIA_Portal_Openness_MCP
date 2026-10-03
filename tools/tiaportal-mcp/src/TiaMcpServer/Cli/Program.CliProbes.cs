@@ -22,7 +22,7 @@ namespace TiaMcpServer
     public partial class Program
     {
         // ErrorCount/WarningCount 是 int?，null 专门表示「编译结果没读回来」，不是 0。
-        // 直接插进文本会打出 errors= 后面一片空白，看着像零错误，所以统一显示成 (unreadable)。
+        // 文本输出统一将 null 显示为 (unreadable)，避免与零错误混淆。
         private static string CountText(int? count) => count?.ToString() ?? "(unreadable)";
 
         private static void RunOnlineMonitoringSafetySelfTest()

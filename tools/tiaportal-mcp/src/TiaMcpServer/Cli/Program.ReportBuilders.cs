@@ -1218,8 +1218,8 @@ namespace TiaMcpServer
                 if (string.IsNullOrWhiteSpace(script))
                     throw new InvalidOperationException("Generated action script is empty.");
 
-                // 这条 CLI 的全部目的就是取得真实 SyntaxCheck 证据，所以它显式打开开关；
-                // 默认关闭只针对普通写脚本路径（issue #36）。
+                // 此 CLI 显式启用 SyntaxCheck，以取得真实语法检查结果；
+                // 普通写脚本路径仍默认关闭。
                 root["ensureAction"] = ResponseMessageToJson(McpServer.EnsureUnifiedHmiButtonAction(hmiSoftwarePath, screenName, buttonName, eventType, actionKind, tagName, syntaxCheck: true));
                 var setMeta = root["ensureAction"]?["meta"]?["setMeta"] as JsonObject;
                 var syntaxErrorCount = setMeta?["syntaxErrorCount"]?.GetValue<int>() ?? -1;
@@ -2158,7 +2158,7 @@ namespace TiaMcpServer
                     .Take(maxCount)
                     .ToArray();
             }
-            catch
+            catch /* swallow(parse-fallback): an invalid optional tag-table filter selects no tables for the precheck */
             {
                 return Array.Empty<string>();
             }
