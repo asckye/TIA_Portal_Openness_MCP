@@ -1,4 +1,5 @@
 using System;
+using TiaOpenness.Gui.Localization;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -80,10 +81,10 @@ namespace TiaMcpConfigurator
         public static UpdateInfo ParseRelease(string json, string installed, string repository)
         {
             var release = ConfigCore.Json().Deserialize<Dictionary<string, object>>(json);
-            if (release == null) throw new InvalidOperationException("GitHub 返回的不是 release JSON。");
+            if (release == null) throw new InvalidOperationException(Loc.Current["Config.InvalidReleaseJson"]);
             object tagValue;
             string tag = release.TryGetValue("tag_name", out tagValue) ? Convert.ToString(tagValue) : null;
-            if (Parse(tag) == null) throw new InvalidOperationException("release 的 tag 不是版本号：" + tag);
+            if (Parse(tag) == null) throw new InvalidOperationException(Loc.Current.T("Config.InvalidReleaseTag", tag));
             var info = new UpdateInfo { Installed = installed, Tag = tag, Latest = Parse(tag).ToString(), Source = "api" };
             object url;
             info.ReleaseUrl = release.TryGetValue("html_url", out url) && url != null ? Convert.ToString(url) : "https://github.com/" + repository + "/releases/tag/" + tag;
@@ -117,10 +118,10 @@ namespace TiaMcpConfigurator
                 request.UserAgent = UserAgent(); request.Timeout = 15000; request.ReadWriteTimeout = 15000; request.AllowAutoRedirect = false;
                 string tag;
                 using (var response = (HttpWebResponse)request.GetResponse()) tag = TagFromLocation(response.Headers[HttpResponseHeader.Location]);
-                if (Parse(tag) == null) throw new InvalidOperationException("发布页没有给出最新版本的 tag（API：" + apiError + "）");
+                if (Parse(tag) == null) throw new InvalidOperationException(Loc.Current.T("Config.MissingReleaseTag", apiError));
                 return new UpdateInfo { Installed = installed, Tag = tag, Latest = Parse(tag).ToString(), Source = "page", ReleaseUrl = "https://github.com/" + repository + "/releases/tag/" + tag };
             }
-            catch (Exception ex) { throw new InvalidOperationException("这台机器访问不到 github.com：" + ex.GetBaseException().Message + "。检查网络或代理后再点“检查更新”。", ex); }
+            catch (Exception ex) { throw new InvalidOperationException(Loc.Current.T("Config.UpdateUnreachable", ex.GetBaseException().Message), ex); }
         }
         private static string Download(string url, string accept)
         {

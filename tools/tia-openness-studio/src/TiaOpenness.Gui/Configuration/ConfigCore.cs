@@ -12,6 +12,7 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 using TiaMcp.Versioning;
+using TiaOpenness.Gui.Localization;
 
 
 namespace TiaMcpConfigurator
@@ -39,7 +40,7 @@ namespace TiaMcpConfigurator
             if (!IPAddress.TryParse(address, out ip) || ip.AddressFamily != AddressFamily.InterNetwork ||
                 ip.Equals(IPAddress.Any) || ip.Equals(IPAddress.Broadcast) || port < 1 || port > 65535 ||
                 address != ip.ToString())
-                throw new ArgumentException("请填写完整 IPv4 地址和 1–65535 范围的端口，不要粘贴网页链接。示例：192.0.2.10");
+                throw new ArgumentException(Loc.Current["Config.InvalidEndpoint"]);
             return "http://" + ip + ":" + port + "/";
         }
 
@@ -54,7 +55,7 @@ namespace TiaMcpConfigurator
         }
         public static void ValidateKey(string key)
         {
-            if (String.IsNullOrWhiteSpace(key) || key.Any(Char.IsControl)) throw new ArgumentException("连接密钥不能为空，也不能包含换行或控制字符。");
+            if (String.IsNullOrWhiteSpace(key) || key.Any(Char.IsControl)) throw new ArgumentException(Loc.Current["Config.InvalidSecret"]);
         }
 
         // Windows CommandLineToArgvW/CRT quoting, including embedded quotes and trailing backslashes.
@@ -76,7 +77,7 @@ namespace TiaMcpConfigurator
                 Path.Combine(root, "tools", "tiaportal-mcp", "src", "TiaMcpServer", version.EngineOutputDirectory, "Release", "net48", "TiaMcpServer.exe") } : new[] {
                 Path.Combine(root, "runtime", version.RuntimeDirectory, "TiaMcpServer.exe") };
             var path = candidates.FirstOrDefault(File.Exists);
-            if (path == null) throw new FileNotFoundException("找不到 " + version.DisplayName + " 引擎。请将配置程序放在完整 Release 包的根目录，与 runtime 文件夹同级。");
+            if (path == null) throw new FileNotFoundException(Loc.Current.T("Config.EngineNotFound", version.DisplayName));
             return path;
         }
 
@@ -92,21 +93,21 @@ namespace TiaMcpConfigurator
             int version = descriptor.MajorVersion;
             string env = Environment.GetEnvironmentVariable("TiaPortalLocation");
             if (!string.IsNullOrWhiteSpace(env) && Directory.Exists(env) && PathMatchesVersion(env, version) && HasOpenness(env, releaseKey))
-                return new KeyValuePair<string, string>(env, "TiaPortalLocation 环境变量");
+                return new KeyValuePair<string, string>(env, Loc.Current["Config.TiaEnvironmentSource"]);
             try
             {
                 string regPath = TiaOpenness.Shared.OpennessEnvironment.InstalledPath(Microsoft.Win32.RegistryView.Registry64, releaseKey == "15.1" ? "15_1" : version.ToString(CultureInfo.InvariantCulture), "TIA_Opns");
                 if (!string.IsNullOrWhiteSpace(regPath) && Directory.Exists(regPath) && HasOpenness(regPath, releaseKey))
-                    return new KeyValuePair<string, string>(regPath, "注册表 TIAP" + version + @"\TIA_Opns");
+                    return new KeyValuePair<string, string>(regPath, Loc.Current.T("Config.TiaRegistrySource", version));
             }
             catch (Exception) /* swallow(env-probe): failed registry detection falls through to the default Siemens installation directories */ { }
             foreach (var root in new[] { Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) })
             {
                 if (string.IsNullOrEmpty(root)) continue;
                 string candidate = Path.Combine(root, "Siemens", "Automation", descriptor.InstallFolder);
-                if (Directory.Exists(candidate) && HasOpenness(candidate, releaseKey)) return new KeyValuePair<string, string>(candidate, "默认安装目录");
+                if (Directory.Exists(candidate) && HasOpenness(candidate, releaseKey)) return new KeyValuePair<string, string>(candidate, Loc.Current["Config.TiaDefaultSource"]);
             }
-            return new KeyValuePair<string, string>(null, "环境变量、注册表和默认目录都没有 V" + version + " 的 Openness 安装");
+            return new KeyValuePair<string, string>(null, Loc.Current.T("Config.TiaNotFound", version));
         }
 
         private static bool PathMatchesVersion(string path, int version)
@@ -124,7 +125,7 @@ namespace TiaMcpConfigurator
         {
             var release = TiaVersionCatalog.RequireRunnable(releaseKey);
             if (release.FindApiDirectory(path) == null)
-                throw new DirectoryNotFoundException("该目录未找到 " + release.DisplayName + " Openness API（" + release.ApiAssembly + "）。请选择安装根目录或对应 PublicAPI 目录。");
+                throw new DirectoryNotFoundException(Loc.Current.T("Config.TiaApiNotFound", release.DisplayName, release.ApiAssembly));
         }
 
         public static void AtomicJson(string path, object value)
@@ -149,14 +150,14 @@ namespace TiaMcpConfigurator
         public static void MergeServer(string path, string name, Dictionary<string, object> entry)
         {
             var root = File.Exists(path) ? Json().DeserializeObject(File.ReadAllText(path)) as Dictionary<string, object> : new Dictionary<string, object>();
-            if (root == null) throw new InvalidDataException("现有 Claude 配置不是 JSON 对象，未修改。");
+            if (root == null) throw new InvalidDataException(Loc.Current["Config.InvalidClaudeJson"]);
             object raw;
             Dictionary<string, object> servers;
             if (!root.TryGetValue("mcpServers", out raw)) servers = new Dictionary<string, object>();
             else
             {
                 servers = raw as Dictionary<string, object>;
-                if (servers == null) throw new InvalidDataException("现有 mcpServers 不是 JSON 对象，未修改。");
+                if (servers == null) throw new InvalidDataException(Loc.Current.T("Config.InvalidServerMap", "mcpServers"));
             }
             servers[name] = entry;
             root["mcpServers"] = servers;
@@ -210,10 +211,10 @@ namespace TiaMcpConfigurator
             var ready = GetJson(prefix + "mcp/ready", key);
             object isReady;
             if (ready == null || !ready.TryGetValue("mcpHostReady", out isReady) || !(isReady is bool) || !(bool)isReady)
-                throw new InvalidOperationException("HTTP 服务可达，但 MCP 尚未就绪。请检查虚拟机中的服务日志。");
+                throw new InvalidOperationException(Loc.Current["Config.RemoteNotReady"]);
             object version;
-            string versionText = health != null && health.TryGetValue("fileVersion", out version) ? Convert.ToString(version) : "未知";
-            return "HTTP 可达，鉴权通过，MCP 已就绪。版本：" + versionText + "。尚未验证 TIA 工程连接。";
+            string versionText = health != null && health.TryGetValue("fileVersion", out version) ? Convert.ToString(version) : Loc.Current["Config.UnknownVersion"];
+            return Loc.Current.T("Config.RemoteReady", versionText);
         }
 
         private static void RunChecked(string executable, string arguments)

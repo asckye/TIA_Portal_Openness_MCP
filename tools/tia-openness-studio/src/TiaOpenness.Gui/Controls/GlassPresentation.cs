@@ -28,20 +28,19 @@ public sealed class GlassValueConverter : IValueConverter, IMultiValueConverter
         // A view losing its data context during teardown can still receive a
         // language notification before WPF removes the multi-binding.
         if (value == null || value == System.Windows.DependencyProperty.UnsetValue || value == Binding.DoNothing) return Binding.DoNothing;
-        bool zh = Loc.Current.IsChinese;
         return (string)parameter switch
         {
             "group" => GroupPath(value.ToString() ?? ""),
             "version" => value.ToString()!.Replace("TIA V", "V"),
-            "export" => (bool)value ? (zh ? "导出 · 源文本" : "Export · Source text") : Loc.Current["Glass.ExportXml"],
-            "consistent" => (bool)value ? (zh ? "是" : "Yes") : (zh ? "否" : "No"),
-            "protected" => (bool)value ? (zh ? "受保护" : "Protected") : "—",
+            "export" => (bool)value ? Loc.Current["Glass.ExportSource"] : Loc.Current["Glass.ExportXml"],
+            "consistent" => (bool)value ? Loc.Current["Glass.Yes"] : Loc.Current["Glass.No"],
+            "protected" => (bool)value ? Loc.Current["Glass.Protected"] : "—",
             "compare" => (VcCompareState)value switch
             {
-                VcCompareState.Equal => zh ? "相同" : "Identical",
-                VcCompareState.Unequal => zh ? "有差异" : "Differs",
-                VcCompareState.WorkspaceFileMissing => zh ? "缺失" : "Missing",
-                _ => zh ? "未知" : "Unknown",
+                VcCompareState.Equal => Loc.Current["Glass.Identical"],
+                VcCompareState.Unequal => Loc.Current["Glass.Differs"],
+                VcCompareState.WorkspaceFileMissing => Loc.Current["Glass.Missing"],
+                _ => Loc.Current["Glass.Unknown"],
             },
             _ => value,
         };
@@ -79,14 +78,13 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
     public string DiffRemoved => "−" + model.VersionControl.VcDiffLines.Count(l=>l.Kind==DiffLineKind.Removed);
     public IReadOnlyList<MappedObjectInfo> OtherMappedFiles => model.VersionControl.VcStatusItems
         .Where(i=>i!=model.VersionControl.SelectedVcItem && i.CompareState!=VcCompareState.Equal).Take(3).ToArray();
-    public string BlocksSummary => Loc.Current.IsChinese
-        ? $"{model.Engineering.Blocks.Count} 个程序块 · {model.Engineering.Blocks.Count(b=>b.Selected)} 已选 · {model.Engineering.BlocksView.Cast<BlockRow>().Count()} 显示"
-        : $"{model.Engineering.Blocks.Count} blocks · {model.Engineering.Blocks.Count(b=>b.Selected)} selected · {model.Engineering.BlocksView.Cast<BlockRow>().Count()} shown";
-    public string DifferenceLabel => (Loc.Current.IsChinese ? "差异" : "Differ") + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
-    public string MissingLabel => (Loc.Current.IsChinese ? "缺失" : "Missing") + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
+    public string BlocksSummary => Loc.Current.T("Glass.BlocksSummary", model.Engineering.Blocks.Count,
+        model.Engineering.Blocks.Count(b=>b.Selected), model.Engineering.BlocksView.Cast<BlockRow>().Count());
+    public string DifferenceLabel => Loc.Current["Glass.Differ"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.Unequal);
+    public string MissingLabel => Loc.Current["Glass.Missing"] + " · " + model.VersionControl.VcStatusItems.Count(i=>i.CompareState==VcCompareState.WorkspaceFileMissing);
     public string WorkspaceSummary => model.VersionControl.SelectedWorkspace is null ? model.VersionControl.WorkspaceRootDisplay
-        : Loc.Current.IsChinese ? $"{model.VersionControl.WorkspaceRootDisplay} · {model.VersionControl.SelectedWorkspace.MappedObjectCount} 已映射 · {model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} 存在差异"
-        : $"{model.VersionControl.WorkspaceRootDisplay} · {model.VersionControl.SelectedWorkspace.MappedObjectCount} mapped · {model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal)} differ";
+        : Loc.Current.T("Glass.WorkspaceSummary", model.VersionControl.WorkspaceRootDisplay,
+            model.VersionControl.SelectedWorkspace.MappedObjectCount, model.VersionControl.VcStatusItems.Count(i=>i.CompareState!=VcCompareState.Equal));
     public string Errors { get; private set; } = "—";
     public string Warnings { get; private set; } = "—";
     public string CompileState { get; private set; } = "";
@@ -124,17 +122,17 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
 
     private static string RuleLabel(string id) => id switch
     {
-        "NAMING-001" => Loc.Current.IsChinese ? "命名" : "Naming",
-        "DOC-001" => Loc.Current.IsChinese ? "作者" : "Author",
-        "BUILD-001" => Loc.Current.IsChinese ? "一致性" : "Consistency",
-        "PROT-001" => Loc.Current.IsChinese ? "专有技术" : "Know-how",
-        "DEAD-001" => Loc.Current.IsChinese ? "未使用" : "Unused",
+        "NAMING-001" => Loc.Current["Glass.RuleNaming"],
+        "DOC-001" => Loc.Current["Glass.RuleAuthor"],
+        "BUILD-001" => Loc.Current["Glass.RuleConsistency"],
+        "PROT-001" => Loc.Current["Glass.RuleKnowHow"],
+        "DEAD-001" => Loc.Current["Glass.RuleUnused"],
         _ => id,
     };
 
     private void Refresh()
     {
-        string notRun = Loc.Current.IsChinese ? "未执行" : "Not run";
+        string notRun = Loc.Current["Glass.NotRun"];
         Errors = Warnings = Mapped = Unsupported = Failed = "—";
         InspectionTime = "";
         CompileState = InspectionSummary = MappingSummary = SyncSummary = notRun;
@@ -150,9 +148,9 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
             {
                 Errors = compile.Groups["p1"].Value;
                 Warnings = compile.Groups["p2"].Value;
-                CompileState = Errors != "0" ? (Loc.Current.IsChinese ? "错误" : "Errors")
-                    : Warnings != "0" ? (Loc.Current.IsChinese ? "警告" : "Warnings")
-                    : (Loc.Current.IsChinese ? "已完成" : "Completed");
+                CompileState = Errors != "0" ? Loc.Current["Glass.CompileErrors"]
+                    : Warnings != "0" ? Loc.Current["Glass.CompileWarnings"]
+                    : Loc.Current["Glass.CompileCompleted"];
                 diagnostics = [.. pendingDiagnostics];
                 pendingDiagnostics.Clear();
             }
@@ -163,11 +161,9 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
             if (inspected.Success)
             {
                 InspectionTime = Regex.IsMatch(raw, @"^\d{2}:\d{2}:\d{2}") ? raw[..8] : "";
-                InspectionSummary = Loc.Current.IsChinese
-                    ? $"已检查 {inspected.Groups["p1"].Value} 个程序块，发现 {inspected.Groups["p0"].Value} 处问题。"
-                    : $"Checked {inspected.Groups["p1"].Value} blocks, found {inspected.Groups["p0"].Value} issues.";
-                if (!rules.Any(r => r.StartsWith(Loc.Current.IsChinese ? "专有技术" : "Know-how", StringComparison.Ordinal)))
-                    rules.Add((Loc.Current.IsChinese ? "专有技术" : "Know-how") + " · 0");
+                InspectionSummary = Loc.Current.T("Glass.InspectionSummary", inspected.Groups["p1"].Value, inspected.Groups["p0"].Value);
+                if (!rules.Any(r => r.StartsWith(Loc.Current["Glass.RuleKnowHow"], StringComparison.Ordinal)))
+                    rules.Add(Loc.Current["Glass.RuleKnowHow"] + " · 0");
                 inspection = false;
             }
             var rule = Regex.Match(line, @"^([^\s]+) \((\d+)\)$");
@@ -177,16 +173,17 @@ public sealed class GlassResults : INotifyPropertyChanged, IDisposable
             if (mapped.Success || preview.Success)
             {
                 var result = mapped.Success ? mapped : preview;
-                MappingSummary = line;
+                MappingSummary = mapped.Success
+                    ? Loc.Current.T("Status.VcMapApplied", result.Groups["p0"].Value, result.Groups["p1"].Value, result.Groups["p2"].Value, result.Groups["p3"].Value)
+                    : Loc.Current.T("Status.VcMapDry", result.Groups["p0"].Value, result.Groups["p1"].Value, result.Groups["p2"].Value);
                 Mapped = result.Groups["p0"].Value;
                 Unsupported = result.Groups["p2"].Value;
                 Failed = mapped.Success ? result.Groups["p3"].Value : "—";
             }
             var sync = Outcome(line, "Status.VcSyncDry");
-            if (sync.Success) SyncSummary = Loc.Current.IsChinese
-                ? $"预览：{sync.Groups["p0"].Value} 个对象需要同步，{sync.Groups["p2"].Value} 个已相同。"
-                : $"Preview: {sync.Groups["p0"].Value} objects expected to sync · {sync.Groups["p2"].Value} already identical.";
-            if (Outcome(line, "Status.VcSyncApplied").Success) SyncSummary = line;
+            if (sync.Success) SyncSummary = Loc.Current.T("Glass.SyncPreview", sync.Groups["p0"].Value, sync.Groups["p2"].Value);
+            var synced = Outcome(line, "Status.VcSyncApplied");
+            if (synced.Success) SyncSummary = Loc.Current.T("Status.VcSyncApplied", synced.Groups["p0"].Value, synced.Groups["p1"].Value, synced.Groups["p2"].Value);
         }
         Diagnostics = diagnostics;
         Rules = rules;

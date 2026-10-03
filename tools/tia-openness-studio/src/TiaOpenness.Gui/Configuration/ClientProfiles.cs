@@ -1,4 +1,7 @@
 using System.Globalization;
+using System.ComponentModel;
+using System.Windows;
+using TiaOpenness.Gui.Localization;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,12 +11,14 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpConfigurator
 {
-    public sealed class ClientProfile
+    public sealed class ClientProfile : INotifyPropertyChanged
     {
         public string Id { get; set; }
         public string Name { get; set; }
         public string Path { get; set; }
-        public string Hint { get; set; }
+        // Resolve guidance and detection evidence on read so existing cards follow language changes.
+        private LocalizedText hint;
+        public string Hint { get { return hint.Resolve(); } set { hint = LocalizedText.Literal(value); } }
         // Schema family that decides file layout and entry shape. Brand cards (Qwen → Qwen Code, DeepSeek / GLM / Grok → OpenCode …)
         // write another product's file, so several profiles may map onto one Client.
         public string Client { get; set; }
@@ -21,17 +26,32 @@ namespace TiaMcpConfigurator
         // 2.7.61: whether this machine shows traces of the client (config folder, executable on PATH, install folder,
         // uninstall registry entry) and what was found - so a user on any computer sees which cards apply here.
         public bool Detected { get; set; }
-        public string Evidence { get; set; }
+        private string evidence = "";
+        private IReadOnlyList<LocalizedText>? detectionEvidence;
+        public string Evidence
+        {
+            get { return detectionEvidence == null ? evidence : detectionEvidence.Count == 0 ? Loc.Current["Config.ClientNotFound"] : String.Join(Loc.Current["Config.ReasonSeparator"], detectionEvidence.Select(x => x.Resolve())); }
+            set { evidence = value; detectionEvidence = null; }
+        }
+        internal void SetDetectionEvidence(IReadOnlyList<LocalizedText> found) { detectionEvidence = found; }
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) { PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(null)); }
         public string DisplayName { get { return Id == "vscode" ? "VS Code · Copilot" : Name; } }
         // Tile subtitle without the detection state: the transport family plus, when the card is a model brand, the client that gets written.
         public string CategoryBase { get { string label = ClientProfiles.ClientLabel(Client); return label == null ? Kind : Kind + " · " + label; } }
-        public string Category { get { return CategoryBase + " · " + (Detected ? "已检测" : "未检测到"); } }
+        public string Category { get { return CategoryBase + " · " + (Detected ? Loc.Current["Config.ClientDetected"] : Loc.Current["Config.NotDetected"]); } }
         // Tooltip: the after-save instructions plus where the client was (not) found and the file that will be written.
-        public string Tooltip { get { return Hint + "\n" + (Detected ? "已检测到：" : "未检测到：") + Evidence + "\n写入：" + Path; } }
+        public string Tooltip { get { return Loc.Current.T(Detected ? "Config.ClientTooltipDetected" : "Config.ClientTooltipNotDetected", Hint, Evidence, Path); } }
         public override string ToString() { return Name; }
         public ClientProfile(string id, string name, string path, string hint, string client = null, string kind = "CLI")
         {
             Id = id; Name = name; Path = path; Hint = hint; Client = client ?? id; Kind = kind; Evidence = "";
+            PropertyChangedEventManager.AddHandler(Loc.Current, OnLanguageChanged, nameof(Loc.Language));
+        }
+        internal ClientProfile(string id, string name, string path, LocalizedText hint, string client = null, string kind = "CLI")
+            : this(id, name, path, "", client, kind)
+        {
+            this.hint = hint;
         }
     }
 
@@ -59,25 +79,24 @@ namespace TiaMcpConfigurator
             string kimi = Environment.GetEnvironmentVariable("KIMI_CODE_HOME");
             if (String.IsNullOrWhiteSpace(kimi)) kimi = System.IO.Path.Combine(home, ".kimi-code");
             string opencode = System.IO.Path.Combine(home, ".config", "opencode", "opencode.json");
-            const string opencodeHint = "写入 OpenCode 的 opencode.json；模型在 OpenCode 的 provider 里选 {0}，MCP 配置与模型无关。重启 OpenCode 后新建会话。";
             // VS Code: the stable user folder, or Insiders when only that one exists on this machine.
             string vscodeUser = System.IO.Path.Combine(app, "Code", "User");
             if (!Directory.Exists(vscodeUser) && Directory.Exists(System.IO.Path.Combine(app, "Code - Insiders", "User"))) vscodeUser = System.IO.Path.Combine(app, "Code - Insiders", "User");
             var profiles = new List<ClientProfile> {
-                new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), "官方桌面客户端：重启后选择 Code → Local，新建会话。CLI 也使用此配置。"),
-                new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), "保存后重启 Codex 桌面应用 / CLI，重新打开任务以加载 MCP。"),
-                new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), "重启 Gemini CLI，使用 /mcp 检查服务器状态。"),
+                new ClientProfile("claude-code", "Claude Code", System.IO.Path.Combine(home, ".claude.json"), LocalizedText.Key("Config.ClientHint.ClaudeCode")),
+                new ClientProfile("codex", "Codex", System.IO.Path.Combine(codex, "config.toml"), LocalizedText.Key("Config.ClientHint.Codex")),
+                new ClientProfile("gemini", "Gemini CLI", System.IO.Path.Combine(home, ".gemini", "settings.json"), LocalizedText.Key("Config.ClientHint.Gemini")),
                 // 国产模型与 Grok 没有自带 MCP 客户端，卡片按模型命名，实际写入各家官方 CLI 或 OpenCode。
-                new ClientProfile("qwen", "Qwen", System.IO.Path.Combine(home, ".qwen", "settings.json"), "写入阿里 Qwen Code 的 settings.json（格式同 Gemini CLI）。重启 Qwen Code，用 /mcp 检查服务器。"),
-                new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), "写入月之暗面 Kimi Code CLI 的 mcp.json，尊重 KIMI_CODE_HOME。重启后状态栏显示 MCP 就绪即可新建会话。"),
-                new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), "写入腾讯 CodeBuddy Code CLI 的 .mcp.json（混元 / DeepSeek 等模型在 CodeBuddy 里选）。重启后用 /mcp 检查。"),
-                new ClientProfile("deepseek", "DeepSeek", opencode, String.Format(opencodeHint, "DeepSeek"), "opencode"),
-                new ClientProfile("zhipu", "GLM", opencode, String.Format(opencodeHint, "智谱 GLM"), "opencode"),
-                new ClientProfile("grok", "Grok", opencode, String.Format(opencodeHint, "xAI Grok"), "opencode"),
+                new ClientProfile("qwen", "Qwen", System.IO.Path.Combine(home, ".qwen", "settings.json"), LocalizedText.Key("Config.ClientHint.Qwen")),
+                new ClientProfile("kimi", "Kimi", System.IO.Path.Combine(kimi, "mcp.json"), LocalizedText.Key("Config.ClientHint.Kimi")),
+                new ClientProfile("codebuddy", "Yuanbao", System.IO.Path.Combine(home, ".codebuddy", ".mcp.json"), LocalizedText.Key("Config.ClientHint.CodeBuddy")),
+                new ClientProfile("deepseek", "DeepSeek", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "DeepSeek"), "opencode"),
+                new ClientProfile("zhipu", "GLM", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", LocalizedText.Key("Config.ClientModel.GLM")), "opencode"),
+                new ClientProfile("grok", "Grok", opencode, LocalizedText.Key("Config.ClientHint.OpenCode", "xAI Grok"), "opencode"),
                 // 千问工作助理（桌面应用）只读 ~/.qwen-agent/mcp.json（或项目下 .qwen-agent/mcp.json）：url + Bearer 头，不走 OAuth；改完必须完全退出进程再打开才会重新读取。
-                new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), "写入千问工作助理（Qwen Agent）的 .qwen-agent\\mcp.json（url + Bearer 头，不走 OAuth）。必须完全退出千问工作助理进程（不是关窗口）再打开才会重新读取；只对一个项目生效时把同名文件放到 <项目>\\.qwen-agent\\mcp.json。", "qwen-agent", "Desktop"),
-                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), "重启 Cursor，在 MCP 设置中检查 tia-portal-vm 并启用。", null, "IDE"),
-                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), "适用于 VS Code 默认用户配置（本机只有 Insiders 时写 Insiders）。重载窗口，在 MCP 服务器列表中启动并信任该服务。", null, "IDE")
+                new ClientProfile("qwen-agent", "Qwen Agent", System.IO.Path.Combine(home, ".qwen-agent", "mcp.json"), LocalizedText.Key("Config.ClientHint.QwenAgent"), "qwen-agent", "Desktop"),
+                new ClientProfile("cursor", "Cursor", System.IO.Path.Combine(home, ".cursor", "mcp.json"), LocalizedText.Key("Config.ClientHint.Cursor"), null, "IDE"),
+                new ClientProfile("vscode", "VS Code / Copilot", System.IO.Path.Combine(vscodeUser, "mcp.json"), LocalizedText.Key("Config.ClientHint.VsCode"), null, "IDE")
             };
             foreach (var profile in profiles) Detect(profile);
             return profiles;
@@ -88,25 +107,25 @@ namespace TiaMcpConfigurator
         // folder, an uninstall entry in the registry. Nothing here needs the client to be running; nothing is written.
         public static void Detect(ClientProfile profile)
         {
-            var found = new List<string>();
+            var found = new List<LocalizedText>();
             try
             {
                 string dir = System.IO.Path.GetDirectoryName(profile.Path);
-                if (File.Exists(profile.Path)) found.Add("配置文件 " + profile.Path);
-                else if (dir != null && Directory.Exists(dir)) found.Add("配置目录 " + dir);
+                if (File.Exists(profile.Path)) found.Add(LocalizedText.Key("Config.ClientConfigFile", profile.Path));
+                else if (dir != null && Directory.Exists(dir)) found.Add(LocalizedText.Key("Config.ClientConfigDirectory", dir));
                 foreach (var exe in ExecutableNames(profile.Client))
                 {
                     string hit = OnPath(exe);
-                    if (hit != null) { found.Add("PATH 上的 " + System.IO.Path.GetFileName(hit)); break; }
+                    if (hit != null) { found.Add(LocalizedText.Key("Config.ClientExecutable", System.IO.Path.GetFileName(hit))); break; }
                 }
                 foreach (var folder in InstallFolders(profile.Client))
-                    if (Directory.Exists(folder)) { found.Add("安装目录 " + folder); break; }
+                    if (Directory.Exists(folder)) { found.Add(LocalizedText.Key("Config.ClientInstallDirectory", folder)); break; }
                 string registry = UninstallEntry(RegistryKeywords(profile.Client));
-                if (registry != null) found.Add("已安装程序 " + registry);
+                if (registry != null) found.Add(LocalizedText.Key("Config.ClientInstalledProgram", registry));
             }
             catch (Exception) /* swallow(env-probe): client detection is advisory; retain evidence collected before a local installation probe failed */ { }
             profile.Detected = found.Count > 0;
-            profile.Evidence = found.Count > 0 ? String.Join("；", found) : "本机没有它的配置目录、可执行文件、安装目录或卸载项（仍可写入，安装后即生效）";
+            profile.SetDetectionEvidence(found);
         }
 
         private static string[] ExecutableNames(string client)
@@ -255,10 +274,10 @@ namespace TiaMcpConfigurator
             }
             string rootKey = RootKey(profile);
             var root = File.Exists(profile.Path) ? ConfigCore.Json().DeserializeObject(StripJsonComments(File.ReadAllText(profile.Path))) as Dictionary<string, object> : new Dictionary<string, object>();
-            if (root == null) throw new InvalidDataException("现有客户端配置不是 JSON 对象，未修改。");
+            if (root == null) throw new InvalidDataException(Loc.Current["Config.InvalidClientJson"]);
             object raw;
             var servers = root.TryGetValue(rootKey, out raw) ? raw as Dictionary<string, object> : new Dictionary<string, object>();
-            if (servers == null) throw new InvalidDataException("现有 " + rootKey + " 不是 JSON 对象，未修改。");
+            if (servers == null) throw new InvalidDataException(Loc.Current.T("Config.InvalidServerMap", rootKey));
             servers[name] = entry; root[rootKey] = servers;
             ConfigCore.AtomicJson(profile.Path, root);
         }
@@ -282,7 +301,7 @@ namespace TiaMcpConfigurator
                 if (c == '/' && i + 1 < text.Length && text[i + 1] == '*')
                 {
                     int end = text.IndexOf("*/", i + 2, StringComparison.Ordinal);
-                    if (end < 0) throw new InvalidDataException("JSON 注释未闭合，未修改配置。");
+                    if (end < 0) throw new InvalidDataException(Loc.Current["Config.UnclosedJsonComment"]);
                     i = end + 1; result.Append(' '); continue;
                 }
                 result.Append(c);
@@ -318,11 +337,11 @@ namespace TiaMcpConfigurator
                 string trimmed = line.Trim();
                 if (multiline == null && header.IsMatch(trimmed)) { skipping = target.IsMatch(trimmed); inParent = Regex.IsMatch(trimmed, @"^\[\s*" + mcp + @"\s*\]\s*(?:#.*)?$"); }
                 if (multiline == null && (Regex.IsMatch(trimmed, @"^" + mcp + @"\s*(?:=|\.)") || (inParent && Regex.IsMatch(trimmed, "^" + token + @"\s*(?:=|\.)")) || trimmed.StartsWith("[[mcp_servers." + name)))
-                    throw new InvalidDataException("Codex 配置使用内联或特殊 MCP 表定义，无法安全合并；原文件未修改。");
+                    throw new InvalidDataException(Loc.Current["Config.UnsupportedTomlTable"]);
                 if (!skipping) kept.Append(line);
                 ScanTomlStrings(line, ref multiline);
             }
-            if (multiline != null) throw new InvalidDataException("TOML 多行字符串未闭合，原文件未修改。");
+            if (multiline != null) throw new InvalidDataException(Loc.Current["Config.UnclosedTomlMultiline"]);
             var block = new StringBuilder(); block.AppendLine("[mcp_servers." + name + "]");
             if (remote)
             {
@@ -367,7 +386,7 @@ namespace TiaMcpConfigurator
                     else quote = line[i];
                 }
             }
-            if (quote != '\0') throw new InvalidDataException("TOML 字符串未闭合，原文件未修改。");
+            if (quote != '\0') throw new InvalidDataException(Loc.Current["Config.UnclosedTomlString"]);
         }
     }
 }

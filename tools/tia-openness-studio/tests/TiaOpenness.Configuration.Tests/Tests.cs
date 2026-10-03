@@ -183,7 +183,18 @@ namespace TiaMcpConfigurator
                 Assert(profiles[0].Id == "claude-code" && profiles[1].Id == "codex", "Claude Code and Codex are the first two cards");
                 Assert(profiles.TakeWhile(x => x.Kind == "CLI").Count() == 9 && profiles[9].Kind == "Desktop" && profiles.Skip(10).All(x => x.Kind == "IDE"), "CLI cards, then the desktop assistant, then IDE cards");
                 // 2.7.61: detection never throws, every card carries evidence text, and the qwen-agent file is url + headers without a type
-                Assert(profiles.All(x => !String.IsNullOrEmpty(x.Evidence) && x.Category.EndsWith(x.Detected ? "已检测" : "未检测到") && x.Tooltip.Contains(x.Path)), "every card reports what was (not) found on this machine");
+                var previousLanguage = Loc.Current.Language;
+                try
+                {
+                    foreach (var language in new[] { AppLanguage.English, AppLanguage.Chinese })
+                    {
+                        Loc.Current.Language = language;
+                        string detected = language == AppLanguage.Chinese ? "已检测" : "Detected";
+                        string missing = language == AppLanguage.Chinese ? "未检测到" : "Not detected";
+                        Assert(profiles.All(x => !String.IsNullOrEmpty(x.Evidence) && x.Category.EndsWith(x.Detected ? detected : missing) && x.Tooltip.Contains(x.Path)), "every card reports detection in " + language);
+                    }
+                }
+                finally { Loc.Current.Language = previousLanguage; }
                 var agent = profiles.First(x => x.Id == "qwen-agent");
                 var agentEntry = ClientProfiles.Entry(agent, true, "192.0.2.10", 8765, secret, null, 21, null);
                 Assert(agent.Path.EndsWith(Path.Combine(".qwen-agent", "mcp.json")) && ClientProfiles.RootKey(agent) == "mcpServers" && agentEntry.ContainsKey("url") && !agentEntry.ContainsKey("type") && ((Dictionary<string, object>)agentEntry["headers"]).ContainsKey("Authorization"), "Qwen Agent writes ~/.qwen-agent/mcp.json with url + Bearer header and no type");
