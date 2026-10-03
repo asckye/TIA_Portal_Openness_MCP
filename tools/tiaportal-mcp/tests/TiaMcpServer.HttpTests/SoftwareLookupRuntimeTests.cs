@@ -197,12 +197,18 @@ internal static class SoftwareLookupRuntimeTests
         var session = server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!;
         check(session.GetMethod("ResolvePlc")!.GetParameters()[1].ParameterType == accessType,
             "EXE session exposes PLC resolution with explicit access intent");
+        var sessionResolver = session.GetMethod("ResolvePlc")!;
+        var sessionMap = kernel.DeclaringType!.GetInterfaceMap(session);
+        var sessionForwarder = sessionMap.TargetMethods[Array.IndexOf(sessionMap.InterfaceMethods, sessionResolver)];
+        EngineSurface.CheckIl(check, Calls(sessionForwarder, kernel),
+            "EXE session PLC resolver forwards to the same kernel", sessionForwarder, kernel);
         foreach (var name in new[] { "ImportPlcTagTable", "ImportAlarmClasses", "SetOpcUaInterfaceEnabled", "DownloadToPlc", "GoOnline" })
         {
             var writer = name == "GoOnline"
                 ? portal.Method(name, new[] { typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(bool) })
                 : portal.Method(name);
-            EngineSurface.CheckIl(check, Calls(writer, kernel, 1), "EXE write path records Write through same PLC kernel: " + name, writer, kernel);
+            var resolver = writer.DeclaringType == kernel.DeclaringType ? kernel : sessionResolver;
+            EngineSurface.CheckIl(check, Calls(writer, resolver, 1), "EXE write path records Write through same PLC kernel: " + name, writer, resolver);
         }
         EngineSurface.CheckIl(check, Calls(portal.Method("GetPlcSoftware"), kernel, 0), "EXE read path records Read through same PLC kernel", kernel);
         var strict = server.GetType("TiaMcpServer.Siemens.SoftwareContainerLookup", true)!

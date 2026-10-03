@@ -5,7 +5,6 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using System;
-using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
@@ -126,6 +125,8 @@ namespace TiaMcpServer.Siemens
         bool? IsConnectedTyped(object iface);
         Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber);
         bool ConnectTyped(object iface, MotionProDiagClassicHmiLogic.ConnectionTarget target, string softwarePath, ConnectOption option);
+        void ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames);
+        bool TrySetProperty(object target, string propName, object? value);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

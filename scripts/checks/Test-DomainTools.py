@@ -27,7 +27,9 @@ snapshots.RAW_MASK_RULES = [*snapshots.RAW_MASK_RULES,
     {'tool': '*', 'path': ['Meta', 'timestamp'], 'reason': 'CallTool POCO envelope wall clock'},
     *({'tool': name, 'path': [key, 'timestamp'], 'reason': 'Watch-table read/probe DateTime.Now.ToString("O")'}
       for name in ('ReadPlcWatchTableCurrentValuesReadOnly', 'ProbePlcMonitorOnlineCapabilities')
-      for key in ('data', 'Data'))]
+      for key in ('data', 'Data')),
+    {'tool': 'GetOpcUaConfig', 'path': ['data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, direct serialization'},
+    {'tool': 'GetOpcUaConfig', 'path': ['Data', 'timestamp'], 'reason': 'GetOpcUaConfig DateTime.Now, bridge serialization'}]
 
 
 ERROR_PATHS = {('"meta"', '"error"'), ('"Meta"', '"error"')}
@@ -292,7 +294,30 @@ CASES = {
                   softwarePath=PLC, listKind='text', listName='List1', filePath='C:/domain-offline.xml')
         + [('ReadClassicHmiGlobalization', 'read', {'softwarePath': PLC}),
            ('ReadClassicHmiFaceplates', 'read', {}),
-           ('ExportPlcProDiagInfo', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'directoryPath': 'C:/domain-offline'})]
+           ('ExportPlcProDiagInfo', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'directoryPath': 'C:/domain-offline'})],
+    'Alarms': [(name, 'export', {'softwarePath': PLC, 'exportPath': 'C:/domain-offline.' + extension})
+               for name, extension in (('ExportAlarmClasses', 'dat'), ('ExportAlarmTextLists', 'xlsx'), ('ExportAlarmInstanceTexts', 'xlsx'))]
+        + [(name, 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.' + extension})
+           for name, extension in (('ImportAlarmClasses', 'dat'), ('ImportAlarmTextLists', 'xlsx'))]
+        + actions('ExchangePlcAlarmTextListsXlsx', 'export import', softwarePath=PLC, filePath='C:/domain-offline.xlsx')
+        + [('ImportPlcAlarmInstanceTexts', 'import', {'softwarePath': PLC, 'filePath': 'C:/domain-offline.xlsx', 'culturesJson': '["en-US"]'})]
+        + actions('ManagePlcAlarmTextList', 'read delete createFromMasterCopy', softwarePath=PLC, name='List1', libraryName='Library1', masterCopyPath='List1'),
+    'OpcUa': [('GetOpcUaConfig', 'read', {'softwarePath': PLC})]
+        + actions('ManageOpcUaInterface', 'read delete', softwarePath=PLC, interfaceName='Interface1')
+        + [('SetOpcUaInterfaceEnabled', 'set', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'enabled': True}),
+           ('ExportOpcUaInterface', 'export', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'exportPath': 'C:/domain-offline.xml'}),
+           ('ImportOpcUaInterface', 'import', {'softwarePath': PLC, 'importPath': 'C:/domain-offline.xml'}),
+           ('GenerateOpcUaModelledInterface', 'generate', {'softwarePath': PLC, 'interfaceName': 'Interface1', 'namespaceUri': 'urn:domain:offline', 'outputPath': 'C:/domain-offline.xml'})]
+        + [('ReadOpcUaAccessControl', section, {'softwarePath': PLC, 'section': section}) for section in ('roles', 'restrictions')]
+        + actions('ManageOpcUaAccessControl', 'createRole addStandardRole deleteRole setProjectRole setPermission setRestriction',
+                  softwarePath=PLC, roleName='Role1', definedInNamespace='urn:domain:offline', projectRole='Role1', namespaceUri='urn:domain:offline'),
+    'TechnologyObjects': [('GetTechnologyObjects', 'read', {'softwarePath': PLC}),
+           ('ExportTechnologyObject', 'export', {'softwarePath': PLC, 'toName': 'Object1', 'exportPath': 'C:/domain-offline.xml'}),
+           ('ExportTechnologyObjectsToDirectory', 'export', {'softwarePath': PLC, 'exportDir': 'C:/domain-offline'}),
+           ('ImportTechnologyObject', 'import', {'softwarePath': PLC, 'folderPath': '', 'importPath': 'C:/domain-offline.xml'}),
+           ('ImportTechnologyObjectsFromDirectory', 'import', {'softwarePath': PLC, 'folderPath': '', 'dir': 'C:/domain-offline'}),
+           ('ReadTechnologyObjectTree', 'read', {'softwarePath': PLC})]
+        + actions('ManageTechnologyObject', 'read create delete setParameter', softwarePath=PLC, objectPath='Object1')
 }
 
 
@@ -331,6 +356,15 @@ def check_coverage(domains):
         resources.require(actual == covered, f'{domain} fixture coverage differs: actual={actual}, covered={covered}')
 
 
+THROWING_GUARDS = {
+    'GetTechnologyObjects': 'GetTechnologyObjects: no project is open. Call Connect + OpenProject (or AttachToOpenProject) first.',
+    'ImportTechnologyObject': "Failed importing technology object from 'C:/domain-offline.xml' [InvalidState]: No project is open."
+}
+SIMPLE_GUARDS = {'ExportAlarmClasses', 'ImportAlarmClasses', 'ExportAlarmTextLists', 'ImportAlarmTextLists',
+                 'ExportAlarmInstanceTexts', 'GetOpcUaConfig', 'SetOpcUaInterfaceEnabled', 'ExportOpcUaInterface',
+                 'ImportOpcUaInterface', 'ExportTechnologyObject'}
+
+
 def capture(args, exe, harness, profile, isolated):
     responses = {}
     with resources.server(exe.resolve(), args.public_api.resolve(), args.major, 'stdio', profile,
@@ -361,7 +395,13 @@ def capture(args, exe, harness, profile, isolated):
                     reached_child = True
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
-                if (hidden or version_action) and profile == 'full':
+                throwing = name in THROWING_GUARDS
+                if throwing and profile == 'full':
+                    resources.require(reply.get('result', {}).get('isError') is True, f'{name}: expected MCP error: {reply}')
+                    raw = reply['result']['content'][0]['text']
+                    resources.require(THROWING_GUARDS[name] in raw, f'{name}: missing disconnected guard: {raw}')
+                    reached_child = True
+                elif (hidden or version_action) and profile == 'full':
                     resources.require('error' in reply or reply.get('result', {}).get('isError'),
                                       f'Unavailable tool/action unexpectedly ran: {reply}')
                     raw = json.dumps(reply.get('error', reply.get('result')), ensure_ascii=False)
@@ -370,9 +410,9 @@ def capture(args, exe, harness, profile, isolated):
                     raw = reply['result']['content'][0]['text']
                     if profile == 'lite':
                         bridge = json.loads(raw)
-                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not hidden and not version_action),
+                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not hidden and not version_action and not throwing),
                                           f'{name}: unexpected bridge status: {raw}')
-                        if not hidden and not version_action:
+                        if not hidden and not version_action and not throwing:
                             raw = bridge['message']
                     value = json.loads(raw)
                     meta = value.get('meta', value.get('Meta', {}))
@@ -404,6 +444,24 @@ def capture(args, exe, harness, profile, isolated):
                                           and meta.get('error', '').splitlines()[0] == error_type + ': Connect to TIA first.'
                                           and meta.get('tool') == name and meta.get('operationSuccess') is False,
                                           f'{name}: missing disconnected portal response: {raw}')
+                    elif throwing:
+                        resources.require(THROWING_GUARDS[name] in value['message'], f'{name}: missing disconnected guard: {raw}')
+                        reached_child = True
+                    elif name in SIMPLE_GUARDS:
+                        resources.require(value.get('message', value.get('Message')) == 'No project open.',
+                                          f'{name}: missing disconnected guard: {raw}')
+                        reached_child = True
+                    elif name == 'GenerateOpcUaModelledInterface':
+                        resources.require(value.get('message', value.get('Message')) == 'Generation failed: No project is bound.'
+                            and meta.get('success') is False and meta.get('imported') is False,
+                            f'{name}: missing disconnected guard: {raw}')
+                        reached_child = True
+                    elif name in ('ImportTechnologyObjectsFromDirectory', 'ExportTechnologyObjectsToDirectory'):
+                        expected = 'Project is null' if name.startswith('Import') else 'No project open.'
+                        failures = value.get('failed', value.get('Failed'))
+                        resources.require(value.get('imported', value.get('Imported')) == [] and len(failures) == 1
+                            and failures[0].get('error', failures[0].get('Error')) == expected and meta.get('success') is False,
+                            f'{name}: missing disconnected guard: {raw}')
                         reached_child = True
                     else:
                         resources.require(value.get('message', value.get('Message')) == 'Project is null'

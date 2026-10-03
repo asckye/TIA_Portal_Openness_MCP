@@ -48,27 +48,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
             bool dryRun=true)
             => Portal.ExchangeSystemDiagnosticsSettings(action,filePath,devicePathJson,itemPathJson,confirmImport,dryRun);
-        [McpServerTool(Name="ReadOpcUaAccessControl"), Description("[L2][PLC-OpcUA][READ] Read the PLC OPC UA server access control (ServerInterfaceGroup.AccessControl): section roles (RoleMappings with per-namespace permissions) or restrictions (NamespaceAccessRestrictions). Exact softwarePath; offset/limit pagination. NotSupported on TIA V20. No secrets, nothing modified.")]
-        public static ResponseMessage ReadOpcUaAccessControl(
-            string softwarePath,
-            [Description("section: roles | restrictions.")] string section="roles",
-            int offset=0,
-            int limit=100)
-            => Portal.ReadOpcUaAccessControl(softwarePath,section,offset,limit);
-        [McpServerTool(Name="ManageOpcUaAccessControl"), Description("[L2][PLC-OpcUA][WRITE] Modify PLC OPC UA server access control: createRole (roleName, definedInNamespace), addStandardRole (roleName), deleteRole (roleName), setProjectRole (roleName, projectRole), setPermission (roleName, exact namespaceUri, permission Browse|Read|Write|Call|ReceiveEvents|ReadRolePermissions, enabled), setRestriction (exact namespaceUri, propertiesJson of scalar properties). Exact names only; ambiguity refused. Real run needs confirmChange=true, Offline PLC and exclusive access; readback verified. NotSupported on TIA V20. Default preview; no save/compile/download.")]
-        public static ResponseMessage ManageOpcUaAccessControl(
-            string softwarePath,
-            [Description("action: the operation to perform - createRole | addStandardRole | deleteRole | setProjectRole | setPermission | setRestriction.")] string action,
-            [Description("roleName: exact role name.")] string roleName="",
-            [Description("definedInNamespace: namespace URI in which the role is defined.")] string definedInNamespace="",
-            [Description("projectRole: exact project role name.")] string projectRole="",
-            [Description("namespaceUri: OPC UA namespace URI.")] string namespaceUri="",
-            [Description("permission: Browse | Read | Write | Call | ReceiveEvents | ReadRolePermissions.")] string permission="",
-            [Description("enabled: true enables, false disables.")] bool enabled=false,
-            string propertiesJson="{}",
-            bool confirmChange=false,
-            bool dryRun=true)
-            => Portal.ManageOpcUaAccessControl(softwarePath,action,roleName,definedInNamespace,projectRole,namespaceUri,permission,enabled,propertiesJson,confirmChange,dryRun);
         [McpServerTool(Name="ImportDeviceAml"), Description("[L2][Hardware][FILE] Import an AutomationML/CAx (.aml) file into the open project via CaxProvider.Import(file, logFile, option). filePath must exist (absolute); logFilePath is a NEW absolute file; importOption RetainTiaDevice|OverwriteTiaDevice|MoveToParkingLot. May add or replace devices; real run needs confirmImport=true and exclusive access. Returns native bool result, device counts and the log file sha256. Default preview; no save/compile/download.")]
         public static ResponseMessage ImportDeviceAml(
             string filePath,

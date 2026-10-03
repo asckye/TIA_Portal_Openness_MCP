@@ -2,15 +2,16 @@
 """Source wiring guards + extracted production helper against fake collections; never loads Siemens."""
 from pathlib import Path
 import os
+import shutil
 import subprocess
-import tempfile
+import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 PORTAL = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal'
-source = (PORTAL / 'Portal.Software.Reflection.cs').read_text()
-helper = source.split('        // Technology imports require', 1)[1].split('        private static string? BestEffortExtractFirstName', 1)[0]
+source = (PORTAL / 'Portal.Software.Reflection.cs').read_text(encoding='utf-8')
+helper = source.split('        // Technology imports require', 1)[1].split('        private static object? TryInvokeExplicitEngineeringMethod', 1)[0]
 helper = '        // Technology imports require' + helper
-technology = (PORTAL / 'Portal.Software.TechnologyObjects.cs').read_text().split('// ── Technology Objects', 1)[0]
+technology = (PORTAL / 'Portal.Software.TechnologyObjects.cs').read_text(encoding='utf-8') + (PORTAL.parent / 'Services/TechnologyObjectsService.cs').read_text(encoding='utf-8').split('// ── Technology Objects', 1)[0]
 assert 'bool overwrite = true' in technology
 assert 'importPath, true, new List<string>()' in technology
 assert 'file, overwrite, imported' in technology
@@ -76,10 +77,17 @@ class Program {
 __HELPER__
 }
 '''.replace('__HELPER__', helper)
-with tempfile.TemporaryDirectory(prefix='technology-import-') as directory:
-    work = Path(directory)
-    (work / 'Program.cs').write_text(program)
+parent = (ROOT / 'bin-build').resolve()
+work = parent / ('technology-import-' + uuid.uuid4().hex)
+# Inherit the worktree ACL; TemporaryDirectory's private Windows ACL blocks sandboxed builds.
+work.mkdir(parents=True)
+try:
+    (work / 'Program.cs').write_text(program, encoding='utf-8', newline='\n')
     (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>')
-    env = dict(os.environ, DOTNET_CLI_HOME='/workspace/shared/dotnet-home', DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
-    subprocess.run(['/workspace/shared/dotnet/dotnet', 'run', '--project', str(work / 'Checks.csproj')], env=env, check=True)
+    env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
+    subprocess.run([os.environ.get('DOTNET', 'dotnet'), 'run', '--project', str(work / 'Checks.csproj'), '-c', 'Release', '-p:NuGetAudit=false', '-p:RestoreSources=' + str(work)], env=env, check=True)
+finally:
+    if work.resolve().parent != parent:
+        raise ValueError('scratch directory escaped bin-build')
+    shutil.rmtree(work)
 print('Technology import source wiring guards passed; no Siemens runtime acceptance claimed.')

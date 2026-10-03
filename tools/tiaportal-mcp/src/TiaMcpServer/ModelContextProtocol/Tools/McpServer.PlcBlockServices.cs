@@ -38,25 +38,5 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100,
             bool dryRun=true)
             => Portal.ReadPlcBlockFingerprints(softwarePath,targetIpAddress,pgPcInterface,password,offset,limit,dryRun);
-        [McpServerTool(Name="ImportPlcAlarmInstanceTexts"), Description("[L2][PLC-Alarms][WRITE] Native PlcAlarmTextProvider.ImportInstanceTextsFromXlsx for one exact PLC from an existing absolute xlsx and a JSON array of exact project culture names (each must be a project language). Returns native state and log file path; text changes need separate export/readback. Default preview; execution requires Offline PLC. No save/compile/download.")]
-        public static ResponseMessage ImportPlcAlarmInstanceTexts(
-            string softwarePath,
-            string filePath,
-            [Description("culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).")] string culturesJson,
-            bool dryRun=true)
-            => Portal.ImportPlcAlarmInstanceTexts(softwarePath,filePath,culturesJson,dryRun);
-        [McpServerTool(Name="ManagePlcAlarmTextList"), Description("[L2][PLC-Alarms][WRITE] read/createFromMasterCopy/delete PLC alarm text lists (PlcAlarmTextlistGroup system+user lists; entries are not exposed by Openness). read paginates Name/ID/ListRange, optionally one exact name. createFromMasterCopy needs an open library name and exact master copy path; copyMode ThrowIfExists/Rename/Replace optional. delete refuses system lists and requires confirmDelete=true besides dryRun=false; absence verified. Default preview, Offline PLC for execution; no save/compile/download.")]
-        public static ResponseMessage ManagePlcAlarmTextList(
-            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
-            [Description("action: read | createFromMasterCopy | delete.")] string action="read",
-            [Description("name: exact alarm text list name (delete) or the name to give the copy (createFromMasterCopy).")] string name="",
-            [Description("libraryName: for createFromMasterCopy - global library name ('' = the project library).")] string libraryName="",
-            [Description("masterCopyPath: for createFromMasterCopy - 'Folder/Name' of the master copy.")] string masterCopyPath="",
-            [Description("copyMode: for createFromMasterCopy - ThrowIfExists | Rename | Replace.")] string copyMode="",
-            [Description("confirmDelete: must be true together with dryRun=false to delete.")] bool confirmDelete=false,
-            [Description("offset: first list to return (paging).")] int offset=0,
-            [Description("limit: maximum lists to return.")] int limit=100,
-            [Description("dryRun: true (default) previews; false executes.")] bool dryRun=true)
-            => Portal.ManagePlcAlarmTextList(softwarePath,action,name,libraryName,masterCopyPath,copyMode,confirmDelete,offset,limit,dryRun);
     }
 }

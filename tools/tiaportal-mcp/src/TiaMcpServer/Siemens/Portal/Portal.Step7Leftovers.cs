@@ -167,46 +167,6 @@ namespace TiaMcpServer.Siemens
                 return "System block / type groups read; no modification.";
             });
 
-        // ---- alarm text lists XLSX ----------------------------------------------------------------------------------------------------------
-        public ResponseMessage ExchangePlcAlarmTextListsXlsx(string softwarePath, string action, string filePath, string unitName = "", string unitKind = "unit",
-            string textListNamesJson = "[]", string culturesJson = "[]", string importOption = "None", bool confirmImport = false, bool dryRun = true)
-            => RunHmiStepTool("ExchangePlcAlarmTextListsXlsx", meta => {
-                var request = Step7LeftoversLogic.ValidateXlsxRequest(action, filePath, unitName, unitKind, textListNamesJson, culturesJson, importOption, confirmImport, dryRun);
-                bool writing = request.Writing;
-                using var access = writing ? AcquireHmiEditAccess() : null;
-                var plc = ExactPlcForEngineering(softwarePath, writing);
-                var unit = OptionalUnit(plc, unitName, unitKind);
-                PlcAlarmTextListProvider provider = (unit == null ? plc.GetService<PlcAlarmTextListProvider>() : unit.GetService<PlcAlarmTextListProvider>())
-                    ?? throw new NotSupportedException("PlcAlarmTextListProvider unavailable on this " + (unit == null ? "PLC" : "unit") + ".");
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["owner"] = unit?.Name ?? plc.Name;
-                if (action == "export")
-                {
-                    var file = NativeFileOutput.Plan(filePath);
-                    Language[] languages = Array.Empty<Language>();
-                    if (request.Cultures.Length > 0)
-                    {
-                        LanguageComposition available = _project!.LanguageSettings.Languages;
-                        languages = request.Cultures.Select(c => available.Find(CultureInfo.GetCultureInfo(c)) ?? throw new PortalException(PortalErrorCode.NotFound, "Project language not found: " + c + " (available: " + string.Join(", ", EngineeringGroupOperations.Items(available).Cast<Language>().Select(l => l.Culture?.Name)) + ").")).ToArray();
-                        meta["languages"] = new JsonArray(languages.Select(l => (JsonNode)l.Culture?.Name).ToArray()); meta["textLists"] = new JsonArray(request.TextLists.Select(t => (JsonNode)t).ToArray());
-                    }
-                    if (dryRun) return "Text list XLSX export preview; no file written.";
-                    meta["mayHaveWrittenFiles"] = true;
-                    TextListXlsxResult result = languages.Length == 0 ? provider.ExportToXlsx(file) : provider.ExportToXlsx(file, request.TextLists, languages);
-                    meta["apiCallSuccess"] = true; meta["nativeState"] = result?.State.ToString(); meta["logFile"] = result?.LogFilePath?.FullName;
-                    if (result?.State == TextListXlsxResultState.Error) throw new PortalException(PortalErrorCode.ExportFailed, "ExportToXlsx reported Error (see logFile " + result.LogFilePath?.FullName + ").");
-                    meta["file"] = NativeFileOutput.Verify(file);
-                    return "Alarm text lists exported to XLSX and hashed; no project change.";
-                }
-                var source = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath"); meta["sourceFile"] = SoftwareUnitDeepLogic.FileRow(source);
-                var option = (ImportOptions)EngineeringScalarProperties.ConvertValue(JsonValue.Create(importOption), typeof(ImportOptions))!;
-                meta["importOption"] = option.ToString();
-                if (!writing) return "Text list XLSX import preview; no changes.";
-                meta["mayHaveChanged"] = true;
-                TextListXlsxResult imported = provider.ImportFromXlsx(source, option);
-                meta["apiCallSuccess"] = true; meta["nativeState"] = imported?.State.ToString(); meta["logFile"] = imported?.LogFilePath?.FullName;
-                if (imported?.State == TextListXlsxResultState.Error) throw new PortalException(PortalErrorCode.ImportFailed, "ImportFromXlsx reported Error (see logFile " + imported.LogFilePath?.FullName + ").");
-                return "Alarm text lists imported from XLSX (native state attached); project not saved / compiled.";
-            });
 
     }
 }

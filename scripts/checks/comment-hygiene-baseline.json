@@ -34,15 +34,9 @@
     },
     {
       "kind": "tombstone",
-      "fingerprint": "17dcda47ab34d3f7640defe3b5d0f2c9e887298375213bba7d6b2ccd895c60e0",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 765
-    },
-    {
-      "kind": "tombstone",
       "fingerprint": "1bea0889bd30f408f66ea0c159d4fa0e4a2c87f76f3deedd8db14971d39de941",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 773
+      "line": 771
     },
     {
       "kind": "product-version",
@@ -372,7 +366,7 @@
       "kind": "tombstone",
       "fingerprint": "9b8a644aacc24730fbd20ad4c7e6adbb47489b5ef2b20801510c629f061600b8",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 775
+      "line": 773
     },
     {
       "kind": "product-version",
@@ -609,12 +603,6 @@
       "line": 267
     },
     {
-      "kind": "tombstone",
-      "fingerprint": "c473d28b9db344197dddd435cf031dd08f59cd5f7f00fe235184a142f2276100",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 767
-    },
-    {
       "kind": "product-version",
       "fingerprint": "c81c2b251824e5567aa17ee65dc1c6a9c86b9cb05aea07ccdabef859266b5558",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.HmiExchange.cs",
@@ -810,7 +798,7 @@
       "kind": "tombstone",
       "fingerprint": "e998834799d692ba7793184a1440d989e9475d0c0fa5ee39303136e93802dda5",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 769
+      "line": 767
     },
     {
       "kind": "product-version",
@@ -834,7 +822,7 @@
       "kind": "tombstone",
       "fingerprint": "f667eccedf482309cd6f01f0507f2a6938f2bfb0accd406bd35ee876c385e2ec",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 771
+      "line": 769
     },
     {
       "kind": "product-version",

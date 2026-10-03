@@ -5,7 +5,6 @@ using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.TechnologicalObjects;
 using Siemens.Engineering.SW.TechnologicalObjects.Motion;
 using System;
-using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
@@ -127,6 +126,9 @@ namespace TiaMcpServer.Siemens
         bool? IEngineeringSession.IsConnectedTyped(object iface) => IsConnectedTyped(iface);
         Channel IEngineeringSession.ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber) => ExactChannel(item, channelType, channelIoType, channelNumber);
         bool IEngineeringSession.ConnectTyped(object iface, MotionProDiagClassicHmiLogic.ConnectionTarget target, string softwarePath, ConnectOption option) => ConnectTyped(iface, target, softwarePath, option);
+        void IEngineeringSession.ImportTechnologyObject(string softwarePath, string folderPath, string importPath, bool overwrite, List<string> importedNames)
+            => ImportTechnologyObject(softwarePath, folderPath, importPath, overwrite, importedNames);
+        bool IEngineeringSession.TrySetProperty(object target, string propName, object? value) => TrySetProperty(target, propName, value);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

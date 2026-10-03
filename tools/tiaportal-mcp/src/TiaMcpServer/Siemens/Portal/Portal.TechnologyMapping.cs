@@ -211,36 +211,5 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // ---- ReadTechnologyObjectTree ---------------------------------------------------------------------------------------------------
-        private static JsonObject TechnologyGroupRow(TechnologicalInstanceDBGroup group, bool includeParameters, int depth, int maxDepth)
-        {
-            TechnologicalInstanceDBComposition objects = group.TechnologicalObjects; TechnologicalInstanceDBUserGroupComposition groups = group.Groups;
-            var row = new JsonObject { ["name"] = group.Name, ["groupClass"] = group.GetType().Name, ["objectCount"] = objects.Count, ["groupCount"] = groups.Count };
-            row["technologicalObjects"] = new JsonArray(EngineeringGroupOperations.Items(objects).Cast<TechnologicalInstanceDB>().Take(200).Select(db =>
-            {
-                var o = TechnologyObjectRow(db);
-                if (includeParameters) Safe(o, "parameters", () => { TechnologicalParameterComposition parameters = db.Parameters; return new JsonArray(EngineeringGroupOperations.Items(parameters).Cast<TechnologicalParameter>().Take(500).Select(p => (JsonNode)ParameterRow(p)).ToArray()); });
-                return (JsonNode)o;
-            }).ToArray());
-            if (depth < maxDepth) row["groups"] = new JsonArray(EngineeringGroupOperations.Items(groups).Cast<TechnologicalInstanceDBUserGroup>().Select(g => (JsonNode)TechnologyGroupRow(g, includeParameters, depth + 1, maxDepth)).ToArray());
-            else row["groupsTruncated"] = groups.Count > 0;
-            return row;
-        }
-        public ResponseMessage ReadTechnologyObjectTree(string softwarePath, string groupPath = "", bool includeParameters = false, bool includeMotionView = false, int maxDepth = 4)
-            => RunHmiStepTool("ReadTechnologyObjectTree", meta => {
-                if (maxDepth < 1 || maxDepth > 16) throw new ArgumentException("maxDepth 1..16 required.");
-                var plc = ExactPlcForEngineering(softwarePath, false);
-                TechnologicalInstanceDBGroup root = (TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, groupPath);
-                meta["groupPath"] = groupPath; meta["tree"] = TechnologyGroupRow(root, includeParameters, 1, maxDepth);
-                if (includeMotionView)
-                {
-                    var views = new JsonObject();
-                    foreach (TechnologicalInstanceDB db in EngineeringGroupOperations.Items(root.TechnologicalObjects).Cast<TechnologicalInstanceDB>().Take(50)) Safe(views, db.Name, () => TypedMotionView(db));
-                    meta["motionViews"] = views;
-                }
-                meta["apiCallSuccess"] = true;
-                meta["scope"] = "TechnologicalInstanceDBGroup Name / TechnologicalObjects (TechnologicalInstanceDB Name, Number, OfSystemLibElement, OfSystemLibVersion, IsConsistent, parameter count) / Groups recursive to maxDepth; includeParameters adds TechnologicalParameter Name / Value (first 500 per object); includeMotionView adds the typed hardware interfaces, master values and mappings of the root group's objects (first 50). No modification.";
-                return "Technology object tree read; no modification.";
-            });
     }
 }

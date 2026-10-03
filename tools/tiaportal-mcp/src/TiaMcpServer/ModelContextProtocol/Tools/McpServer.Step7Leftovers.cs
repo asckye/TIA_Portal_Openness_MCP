@@ -32,19 +32,5 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeBlocks: true also returns the blocks of each chart / group.")] bool includeBlocks=true,
             int maxDepth=4)
             => Portal.ReadPlcSystemGroups(softwarePath,unitName,unitKind,includeBlocks,maxDepth);
-
-        [McpServerTool(Name="ExchangePlcAlarmTextListsXlsx"), Description("[L2][PLC-Alarms][WRITE] Native XLSX exchange of PLC alarm text lists through PlcAlarmTextListProvider of the exact PLC or of a unit (unitName + unitKind): export writes a NEW absolute .xlsx (every user text list in every project language, or the filtered overload with textListNamesJson + culturesJson, both required together; TIA refuses system text lists and inactive languages natively) and returns the TextListXlsxResult state, log file and file hash; import (importOption None refuses existing lists, Override replaces their entries) needs confirmImport=true besides dryRun=false and an Offline PLC. No save/compile/download.")]
-        public static ResponseMessage ExchangePlcAlarmTextListsXlsx(
-            string softwarePath,
-            [Description("action: the operation to perform - export | import.")] string action,
-            string filePath,
-            string unitName="",
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            [Description("textListNamesJson: JSON array of text list names ('[]' = all).")] string textListNamesJson="[]",
-            [Description("culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages).")] string culturesJson="[]",
-            [Description("importOption: import option - None | Override.")] string importOption="None",
-            [Description("confirmImport: must be true together with dryRun=false to import (imports replace project data).")] bool confirmImport=false,
-            bool dryRun=true)
-            => Portal.ExchangePlcAlarmTextListsXlsx(softwarePath,action,filePath,unitName,unitKind,textListNamesJson,culturesJson,importOption,confirmImport,dryRun);
     }
 }

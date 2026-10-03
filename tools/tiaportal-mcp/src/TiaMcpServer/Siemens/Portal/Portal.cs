@@ -762,9 +762,7 @@ namespace TiaMcpServer.Siemens
 
         // #region software — moved to Portal.Software.cs
 
-        // #region alarms — moved to Portal.Alarms.cs
 
-        // #region opcua — moved to Portal.OpcUa.cs
 
         // #region download — moved to Portal.Download.cs
 

@@ -3,13 +3,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.36 Step7 sub-batch 3 (Portal.TechnologyMapping.cs and the typed technology-object retrofits of
-// ReadMotionAxisConfiguration / ManageMotionAxis / ManageTechnologyObject / ConfigureMotionHardwareConnection), verified member by
+// Native members used by Portal.TechnologyMapping.cs, TechnologyObjectsService.cs and the typed technology-object operations of
+// ReadMotionAxisConfiguration / ManageMotionAxis / ManageTechnologyObject / ConfigureMotionHardwareConnection, verified member by
 // member against the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base / Siemens.Engineering.Step7) PublicAPI.
 internal static class TechnologyMappingShapeChecks
 {
     internal static void Run(Assembly server, Action<bool,string> check)
     {
+        CheckDomainServices(server, check);
         Assembly Api(string split,string legacy) { try { return Assembly.Load(split); } catch(FileNotFoundException) { return Assembly.Load(legacy); } }
         var step7=Api("Siemens.Engineering.Step7","Siemens.Engineering");
         var core=Api("Siemens.Engineering.Base","Siemens.Engineering");
@@ -99,5 +100,49 @@ internal static class TechnologyMappingShapeChecks
             Service(motion+"SuperimposingAxes"); Property(step7,motion+"SuperimposingAxes","SetPointCoupling","TechnologicalInstanceDBAssociation");
             Service(to+"Ident.IdentTechnologicalObjectProvider"); Property(step7,to+"Ident.IdentTechnologicalObjectProvider","ConnectedIdentDevice","DeviceItem"); Method(step7,to+"Ident.IdentTechnologicalObjectProvider","Connect",new[]{deviceItem},"Void");
         }
+    }
+
+    private static void CheckDomainServices(Assembly server, Action<bool,string> check)
+    {
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        var surface = EngineSurface.For(server);
+        var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
+        var sessionType = server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!;
+        var session = provider.GetService(sessionType);
+        var kernel = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
+        foreach (var domain in new[] {
+            ("Alarms", "ExportAlarmClasses ImportAlarmClasses ExportAlarmTextLists ImportAlarmTextLists ExportAlarmInstanceTexts ExchangePlcAlarmTextListsXlsx ImportPlcAlarmInstanceTexts ManagePlcAlarmTextList"),
+            ("OpcUa", "GetOpcUaConfig ManageOpcUaInterface SetOpcUaInterfaceEnabled ExportOpcUaInterface ImportOpcUaInterface GenerateOpcUaModelledInterface ReadOpcUaAccessControl ManageOpcUaAccessControl"),
+            ("TechnologyObjects", "GetTechnologyObjects ExportTechnologyObject ExportTechnologyObjectsToDirectory ImportTechnologyObject ImportTechnologyObjectsFromDirectory ReadTechnologyObjectTree ManageTechnologyObject")
+        })
+        {
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Item1 + "Service", true)!;
+            var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Item1 + "Tools", true)!;
+            var target = provider.GetService(service);
+            var toolTarget = provider.GetService(tools);
+            foreach (var type in new[] { service, tools })
+                check(type.IsSealed && !typeof(IDisposable).IsAssignableFrom(type)
+                    && !type.GetInterfaces().Any(item => item.Name == "IAsyncDisposable"), type.Name + " is sealed and non-disposable");
+            check(service.GetConstructors().Single().GetParameters().Single().ParameterType == sessionType
+                && ReferenceEquals(target, provider.GetService(service)) && ReferenceEquals(toolTarget, provider.GetService(tools))
+                && ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target),
+                domain.Item1 + " singletons share the engineering session");
+            foreach (var name in domain.Item2.Split(' '))
+            {
+                var tool = surface.Tool(name);
+                var method = service.GetMethod(name)!;
+                check(!tool.IsStatic && tool.DeclaringType == tools && ReferenceEquals(surface.Target(tool), toolTarget),
+                    name + " resolves to the registered instance tool");
+                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+                bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+                EngineSurface.CheckIl(check, callsService, name + " calls its domain service", tool, method);
+                check(surface.Method(name).DeclaringType == (name == "ImportTechnologyObject" ? kernel : service),
+                    name + " keeps its intended service or shared kernel owner");
+            }
+        }
+        foreach (var name in new[] { "ParameterRow", "TechnologyObjectRow", "TypedMotionView", "InterfaceRow", "MappingRow", "ConnectTyped", "DisconnectTyped", "IsConnectedTyped" })
+            check(surface.Method(name, all).DeclaringType == kernel, name + " remains on the kernel for Motion and Startdrive");
     }
 }

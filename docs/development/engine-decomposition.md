@@ -187,6 +187,32 @@ VCI 的 `_vciOwnerProject`、`_vciCached`、`_vciKeepAlive` 成为服务实例�
 `DomainShapeChecks` 验证工具归属、共享会话、单例与调用关系，并验证 VCI 保活列表不跨实例共享、断开时清理旧引用。
 `Test-DomainTools.py` 的 `Library`、`VersionControl`、`Sivarc` 用例覆盖全部工具，比较 full/lite 与直接/隔离调用的响应字节，
 只屏蔽原有时间戳和 D1 允许变化的堆栈帧。原生调用的顺序、参数和线程归属不变，真机验收仍未执行。
+### 报警、OPC UA 与工艺对象
+
+| 领域 | 服务 / 工具类 | 工具数 |
+|---|---|---|
+| 报警 | [AlarmsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AlarmsService.cs) / [AlarmsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) | 8 |
+| OPC UA | [OpcUaService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs) / [OpcUaTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) | 8 |
+| 工艺对象 | [TechnologyObjectsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TechnologyObjectsService.cs) / [TechnologyObjectsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 7 |
+
+报警服务包括 `Step7Leftovers` 中的 XLSX 交换以及 `PlcBlockServices` 中的实例文本导入、文本列表管理；
+OPC UA 服务包括 `HardwareServices` 中的访问控制；工艺对象工具包括 `EngineeringManagement` 中的管理入口。
+这些工具没有 CLI 静态调用点。通用 PLC 程序批量导入仍使用 `Portal.ImportTechnologyObject`，因此其两个重载
+保留在 [Portal.Software.TechnologyObjects.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.TechnologyObjects.cs)，
+工艺对象服务通过会话接口复用带 `overwrite` 和 `importedNames` 的重载。
+
+[Portal.TechnologyMapping.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.TechnologyMapping.cs)
+保留 Motion 和 Startdrive 使用的 `ParameterRow`、`TechnologyObjectRow`、`TypedMotionView`、`InterfaceRow`、
+`MappingRow`、`ConnectTyped`、`DisconnectTyped`、`IsConnectedTyped`，以及它们依赖的
+`ModuleRef`、`ChannelRef`、`AxisEncoderInterfaceRow`、`TorqueInterfaceRow`、`MeasuringInputRow`、`OutputCamRow`、
+`AssociationNames`、`ToMappingRow`、`DbMemberMappingRow`。树读取及其专用 `TechnologyGroupRow` 迁入服务。
+
+会话接口新增九个成员：只读 `Logger`、`AvailablePlcPathsSuffix`、五参数 `ImportTechnologyObject`、
+`TryExportEngineeringObject`、`TrySetProperty`、`TryInvokeMethodByName`、`ParameterRow`、`TechnologyObjectRow`、
+`TypedMotionView`；显式实现转发原有内核成员，保持原日志类别、反射回退与原生调用顺序。
+`TechnologyMappingShapeChecks` 检查三组单例的会话共享、23 个工具的声明类型与服务调用，以及共享成员归属。
+`Test-DomainTools.py` 的三个领域覆盖所有工具和操作；保留各入口的断开错误语义，额外仅屏蔽
+`GetOpcUaConfig` 的 `data.timestamp` / 桥接 `Data.timestamp` 时钟字段。
 
 ### 首批可选包领域
 
