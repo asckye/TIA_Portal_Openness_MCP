@@ -15,12 +15,13 @@ using Logic = TiaMcpServer.Siemens.ClassicHmiFoldersLogic;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 5 (2.7.37): classic (non-Unified) WinCC folder hierarchy. Official pages: "Exporting / Importing a pop-up screen",
+    // Classic (non-Unified) WinCC folder hierarchy. Official pages: "Exporting / Importing a pop-up screen",
     // "Exporting / Importing a slide-in screen", "Exporting screen templates from a folder" / "Deleting a screen template from a
     // folder", "Deleting a user-defined folder of an HMI device", "Creating user-defined folders for HMI tags", "Exporting VB scripts
     // from a folder", "Exporting/importing graphics". Everything is the official V20/V21 Siemens.Engineering.Hmi API; the
     // GraphicsProvider service (multilingual graphics) is V21 only. The reference project's HMI is Unified, so these tools were
-    // verified by shape checks and by their Unified refusal on the real project.
+    // verified by shape checks and by their Unified refusal on TIA Portal V21 (2026-09-19);
+    // see docs/reference/real-machine-ledger.md for the native acceptance scope.
     public partial class Portal
     {
         // ---- rows ------------------------------------------------------------------------------------------------------------------

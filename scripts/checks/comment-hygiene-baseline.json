@@ -16,12 +16,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "0917a599263044b8c2a0cfdaf43d6ac207f541d99ccb3dfb3672994fa58cc7e5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MotionProDiagClassicHmi.cs",
-      "line": 581
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "0d31c1cacf88c0319eebcb1f6443d1d5c25fbd2df712daa3de44af08e97b9fad",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Step7Leftovers.cs",
       "line": 22
@@ -37,12 +31,6 @@
       "fingerprint": "0f957ca34f2a4bd176097d40a05c3b51d1e96203fe2dd2ae76ed66fe15257eb5",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
       "line": 152
-    },
-    {
-      "kind": "old-phase",
-      "fingerprint": "118c356870dd4a2d98c4588277060cf9151d67e38c5810f67afc5e1a3bf910b1",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.ClassicHmiFolders.cs",
-      "line": 18
     },
     {
       "kind": "product-version",
@@ -253,12 +241,6 @@
       "fingerprint": "59cd7ccfe00abaf50f5d832c08e0ab668488fae86b1870e9e416ec19afd057b1",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
       "line": 885
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "59ce326d166632744dd06dff6f7b99c7bb1357ea58ee5bc5a29db7feb69870bd",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MotionProDiagClassicHmi.cs",
-      "line": 373
     },
     {
       "kind": "product-version",
@@ -475,12 +457,6 @@
       "fingerprint": "9c1749befc02664e8b6e64e8f11d96fef2c145f15dc2c47b2aed0d808aab62d5",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Online.cs",
       "line": 81
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "9f771ae8b03f1a3b252ce3ecc7f0d5e12828fcfd169793feb3e030fbcc5f556a",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MotionProDiagClassicHmi.cs",
-      "line": 155
     },
     {
       "kind": "product-version",
@@ -711,12 +687,6 @@
       "line": 108
     },
     {
-      "kind": "product-version",
-      "fingerprint": "b889a12150de90ed34ecbad581808618e2b7164141559fc6b0e7e6c6b2960b98",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MotionProDiagClassicHmi.cs",
-      "line": 269
-    },
-    {
       "kind": "tombstone",
       "fingerprint": "b9b25f3a4e43700dcf8bcb7de0a18b844eb7312d81384e52ba2c303be9cafabf",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
@@ -910,12 +880,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "e2bc2924b2aa1019edaa52f34831bcb6a8d654b29639deb3503a503c79c2d88b",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.ClassicHmiFolders.cs",
-      "line": 18
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "e31f96167f2aedcdc388eb49d5bbd7bb0c4ffa54f7b39ea504f1e527b2bbf79c",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Download.cs",
       "line": 691
@@ -985,12 +949,6 @@
       "fingerprint": "ec073f2e7d79dcdeee0aac87c637ad91a414e5ba78d3ba5c3bc6b873a2cb01df",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.HardwareServices.cs",
       "line": 196
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "efc62756fc577d6f4c7b947d6f0f21b06e20721fbc10b6c7d6e51dfa8b32a3f3",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.MotionProDiagClassicHmi.cs",
-      "line": 441
     },
     {
       "kind": "tombstone",

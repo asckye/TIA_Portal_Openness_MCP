@@ -152,7 +152,7 @@ namespace TiaMcpServer.Siemens
                     if (matches.Count > 1) throw new InvalidOperationException("Ambiguous alias: " + name);
                     var existing = matches.SingleOrDefault();
 #if !TIA_V20
-                    // 2.7.36: typed composition lookups (TOMappingComposition / DBMemberMappingComposition Find by alias).
+                    // Typed composition lookups (TOMappingComposition / DBMemberMappingComposition Find by alias).
                     if (existing == null && composition is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.TOMappingComposition toMappings) existing = toMappings.Find(name);
                     if (existing == null && composition is global::Siemens.Engineering.SW.TechnologicalObjects.Motion.DBMemberMappingComposition dbMappings) existing = dbMappings.Find(name);
 #endif
@@ -266,7 +266,7 @@ namespace TiaMcpServer.Siemens
                     if (property == "") iface = service;
                     else if (service is AxisHardwareConnectionProvider axisProvider)
                     {
-                        // 2.7.36: typed AxisHardwareConnectionProvider navigation (ActorInterface / SensorInterface[i] / TorqueInterface).
+                        // Typed AxisHardwareConnectionProvider navigation (ActorInterface / SensorInterface[i] / TorqueInterface).
                         if (aspect == "sensor")
                         {
                             AxisEncoderHardwareConnectionInterfaceComposition sensors = axisProvider.SensorInterface;
@@ -370,7 +370,7 @@ namespace TiaMcpServer.Siemens
                     meta["mayHaveChanged"] = import; meta["mayHaveWrittenFiles"] = !import;
                     var result = EngineeringGroupOperations.Call(provider, method, new[] { typeof(FileInfo) }, file);
                     OfficialServiceAccess.AttachResult(meta, result);
-                    // 2.7.35: typed SupervisionSettingsExportImportResult (State / ErrorCount / WarningCount / Messages of SupervisionSettingsExportImportResultMessage).
+                    // Typed SupervisionSettingsExportImportResult (State / ErrorCount / WarningCount / Messages of SupervisionSettingsExportImportResultMessage).
                     if (result is global::Siemens.Engineering.SW.Supervision.SupervisionSettingsExportImportResult typed)
                     {
                         meta["errorCount"] = typed.ErrorCount; meta["warningCount"] = typed.WarningCount;
@@ -438,7 +438,7 @@ namespace TiaMcpServer.Siemens
             var software = ResolveSoftwareContainerUncached(softwarePath)?.Software ?? throw new PortalException(PortalErrorCode.NotFound, "Exact HMI software not found: " + softwarePath);
             return software as HmiTarget ?? throw new NotSupportedException("Selected software is not a classic WinCC HmiTarget (" + software.GetType().FullName + "); Unified targets use the Unified tools.");
         }
-        // 2.7.37: typed VBScriptSystemFolder / VBScriptUserFolder navigation (Portal.ClassicHmiFolders.cs).
+        // Typed VBScriptSystemFolder / VBScriptUserFolder navigation (Portal.ClassicHmiFolders.cs).
         private static object ClassicScriptFolder(HmiTarget hmi, IEnumerable<string> folderPath) => ExactVbScriptFolder(hmi, folderPath);
         private static JsonObject ClassicRow(object target, string? path = null)
         {
@@ -578,7 +578,7 @@ namespace TiaMcpServer.Siemens
                         Logic.ParseAttributes(attributesJson, false);
                         if (script is global::Siemens.Engineering.Hmi.RuntimeScripting.VBScript typedScript)
                         {
-                            // 2.7.37: typed VBScript.Export(FileInfo, ExportOptions).
+                            // Typed VBScript.Export(FileInfo, ExportOptions).
                             var file = NativeFileOutput.Plan(filePath);
                             if (dryRun) return "Native export preview; no file written.";
                             meta["mayHaveWrittenFiles"] = true; typedScript.Export(file, ExportOptions.None); meta["apiCallSuccess"] = true; meta["file"] = NativeFileOutput.Verify(file);
