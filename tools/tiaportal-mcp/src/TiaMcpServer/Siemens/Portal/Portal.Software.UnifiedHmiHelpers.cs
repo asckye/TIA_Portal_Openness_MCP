@@ -1,3 +1,4 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using Microsoft.Extensions.Logging;
 using Siemens.Engineering;
 using Siemens.Engineering.Cax;
@@ -59,17 +60,6 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        private object ResolveHmiSoftwareOrThrow(string hmiSoftwarePath)
-        {
-            var sc = GetSoftwareContainer(hmiSoftwarePath);
-            var software = sc?.Software;
-            if (software == null)
-            {
-                throw new InvalidOperationException($"HMI software not found at '{hmiSoftwarePath}'.");
-            }
-
-            return software;
-        }
 
         private object ResolveHmiScreenOrThrow(string hmiSoftwarePath, string screenName)
         {

@@ -1,3 +1,4 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,8 +43,6 @@ namespace TiaMcpServer.Siemens
         private UmacDevice RequireUmacDevice(string devicePathJson, string itemPathJson)
             => HardwareService<UmacDevice>(ExactEngineeringHardware(devicePathJson, itemPathJson))
                ?? throw new NotSupportedException("UmacDevice service unavailable on the selected hardware object. On the reference project it lives on the Device (devicePathJson only, itemPathJson=[]), not on the CPU DeviceItem; address the Device or the DeviceItem that owns the UMAC configuration.");
-        private static JsonArray Names(object collection)
-            => new JsonArray(EngineeringGroupOperations.Items(collection).Select(x => (JsonNode)JsonValue.Create(EngineeringGroupOperations.Get(x, "Name").ToString())!).ToArray());
         private static JsonObject UmacRow(object item)
         {
             var row = EngineeringScalarProperties.Read(item);
@@ -308,7 +307,7 @@ namespace TiaMcpServer.Siemens
                         meta["mayHaveChanged"] = true; meta["sessionClosed"] = false;
                         int committed = _session.CloseAndCommit(commitComment);
                         meta["apiCallSuccess"] = true; meta["nativeResult"] = committed; meta["sessionClosed"] = true;
-                        _session = null; _project = null; _projectOpenedByUs = false; InvalidateHmiSoftwareCache();
+                        ReleaseProject();
                         return "Local session committed and closed by the native CloseAndCommit; the MCP project binding was cleared. Re-open a session explicitly to continue.";
                     }
                 }

@@ -1,3 +1,4 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -64,13 +65,6 @@ namespace TiaMcpServer.Siemens
 
         // ---- rows ------------------------------------------------------------------------------------------------------------------
         private static JsonObject RelationRow(PlcUnitRelation relation) => new JsonObject { ["relatedObject"] = relation.RelatedObject, ["relationType"] = relation.RelationType.ToString() };
-        private static JsonArray Names(object composition, int max = 200)
-            => new JsonArray(EngineeringGroupOperations.Items(composition).Take(max).Select(x => (JsonNode)EngineeringGroupOperations.Get(x, "Name").ToString()!).ToArray());
-        private static void Safe(JsonObject row, string key, Func<JsonNode?> read)
-        {
-            try { row[key] = read(); }
-            catch (Exception ex) { row[key] = null; row[key + "Error"] = ex.GetBaseException().Message; }
-        }
         private static JsonObject UnitRow(PlcUnitBase unit, string kind, bool includeContents)
         {
             var row = new JsonObject { ["name"] = unit.Name, ["kind"] = kind, ["unitClass"] = unit.GetType().Name, ["author"] = unit.Author, ["namespacePreset"] = unit.NamespacePreset };

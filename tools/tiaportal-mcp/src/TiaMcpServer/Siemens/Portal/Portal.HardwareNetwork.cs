@@ -1,3 +1,4 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -112,13 +113,6 @@ namespace TiaMcpServer.Siemens
         {
             try { int n = EngineeringGroupOperations.Items(composition()).Count(); meta[key] = n; return n; }
             catch (Exception ex) when (HmiReadSafety.DisposedObjectOnly(ex)) { meta[key] = null; meta[key + "Error"] = ex.GetBaseException().Message; return null; }
-        }
-        private static JsonObject Page(JsonNode[] all, int offset, int limit, JsonObject meta)
-        {
-            var rows = all.Skip(offset).Take(limit).ToArray();
-            meta["records"] = new JsonArray(rows);
-            foreach (var pair in HardwareServicesLogic.PageMeta(all.Length, offset, limit, rows.Length)) meta[pair.Key] = pair.Value?.DeepClone();
-            return meta;
         }
 
         // ---- rows -------------------------------------------------------------------------------------------------

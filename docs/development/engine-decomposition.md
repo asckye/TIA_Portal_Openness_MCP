@@ -65,6 +65,11 @@ partial。领域私有状态（Teamcenter 连接、`migrationPages`、三个锁�
 
 ## 每一步的验收
 
+P3-04 的接口沿用 `RunHmiStepTool` / `AcquireHmiEditAccess`，对应上文的 `RunStep` / `AcquireWriteAccess`；
+`Portal` 显式转发现有成员，工程句柄沿用 `CurrentProject`，另以只读接口属性暴露 `CurrentPortal` / `CurrentSession`。
+`AdoptProject(project, missingProjectMessage)` 和 `ReleaseProject()` 分别保留归档取回与会话提交后的原有状态转换；
+前者接收原调用点的空结果错误文本，后者仅清理已被原生提交关闭的句柄及软件缓存，不增加绑定或健康状态重置。
+
 除 [重构计划](refactor-plan.md) 的 L0–L2 外：
 
 1. 兼容快照与基线比较为 0 breaking、0 compatible、0 info，lite 名单一致。`tools/list` 顺序不属于契约；

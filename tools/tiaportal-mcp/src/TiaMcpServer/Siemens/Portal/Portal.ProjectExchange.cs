@@ -48,11 +48,9 @@ namespace TiaMcpServer.Siemens
                 if (!dryRun)
                 {
                     meta["mayHaveWrittenFiles"] = true;
-                    _project = upgrade ? _portal.Projects.RetrieveWithUpgrade(file, directory) : _portal.Projects.Retrieve(file, directory);
-                    if (_project == null) throw new InvalidOperationException("Retrieve returned no project; inspect destination for partial files.");
-                    _projectOpenedByUs = true; RememberExpectedProject();
-                    InvalidateHmiSoftwareCache(); ResetHmiReadHealth();
-                    meta["project"] = EngineeringScalarProperties.Read(_project); meta["openedProject"] = true;
+                    AdoptProject(upgrade ? _portal.Projects.RetrieveWithUpgrade(file, directory) : _portal.Projects.Retrieve(file, directory),
+                        "Retrieve returned no project; inspect destination for partial files.");
+                    meta["project"] = EngineeringScalarProperties.Read(_project!); meta["openedProject"] = true;
                 }
                 return dryRun ? "Archive retrieval preview; no project opened or files created." : "Archive retrieved and returned project bound. No compile/download; native retrieval may upgrade only when upgrade=true.";
             }, requiresProject: false);

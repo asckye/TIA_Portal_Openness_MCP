@@ -1,3 +1,4 @@
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using Siemens.Engineering;
 using TiaMcpServer.ModelContextProtocol;
 using Siemens.Engineering.SW.Blocks;

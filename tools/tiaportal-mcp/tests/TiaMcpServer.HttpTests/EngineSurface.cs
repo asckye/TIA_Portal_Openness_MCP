@@ -15,6 +15,7 @@ internal sealed class EngineSurface
     // engine-decomposition.md: Portal remains the session; add the registered domain services here as they move.
     // There are no domain services yet. Do not scan arbitrary Siemens helpers or SDK types as services.
     private static readonly string[] serviceTypeNames = Array.Empty<string>();
+    private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;
     private readonly Type[] toolTypes;
     private readonly Type sessionType;
@@ -22,7 +23,7 @@ internal sealed class EngineSurface
 
     internal static EngineSurface For(Assembly engine) => surfaces.GetValue(engine, assembly =>
         new EngineSurface(assembly, LoadableTypes(assembly), assembly.GetType("TiaMcpServer.Siemens.Portal", true)!,
-            serviceTypeNames.Select(name => assembly.GetType(name, true)!).ToArray()));
+            serviceTypeNames.Concat(helperTypeNames).Select(name => assembly.GetType(name, true)!).ToArray()));
 
     // Explicit types let the harness exercise future instance tools and services without adding engine fixtures.
     internal EngineSurface(Assembly engine, IEnumerable<Type> toolTypes, Type sessionType, params Type[] serviceTypes)

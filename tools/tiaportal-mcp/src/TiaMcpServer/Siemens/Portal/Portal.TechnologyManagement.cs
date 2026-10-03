@@ -10,14 +10,6 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        private PlcSoftware ExactPlcForEngineering(string softwarePath, bool writing)
-        {
-            var plc = ResolveSoftwareContainerUncached(softwarePath)?.Software as PlcSoftware
-                ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath);
-            if (writing && ResolvePlcService<OnlineProvider>(softwarePath, plc)?.State.ToString() != "Offline")
-                throw new PortalException(PortalErrorCode.InvalidState, "Confirmed Offline state is required.");
-            return plc;
-        }
         public ResponseMessage ManageTechnologyObject(string softwarePath, string objectPath, string action, string typeIdentifier = "",
             string version = "", string parameter = "", string valueJson = "null", bool dryRun = true)
             => RunHmiStepTool("ManageTechnologyObject", meta => {

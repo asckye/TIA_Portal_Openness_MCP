@@ -10,9 +10,6 @@ namespace TiaMcpServer.Siemens
 {
     public partial class Portal
     {
-        private object ExactOpenEngineeringLibrary(string libraryName)
-            => string.IsNullOrEmpty(libraryName) ? _project!.ProjectLibrary
-                : EngineeringGroupOperations.Find(_portal!.GlobalLibraries, libraryName) ?? throw new InvalidOperationException("Exact open global library not found. Open it in TIA first; no implicit open or close.");
         // ProjectLibrary has no Name in the PublicAPI (2.7.31 real project); GlobalLibrary does.
         private static string LibraryLabel(object library) => library is GlobalLibrary global ? global.Name : LibraryDeepLogic.ProjectLibraryLabel;
         private JsonObject LibraryRef(object library)
