@@ -115,7 +115,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D4（worker 改 net48）、D7（删除 WorkerProtocol，先移植规则）已决定，其余随对应步骤决定 | done |
 | P4-B | 第 B 步：`TiaMcp.Adapters.Contracts`（原样迁移 DTO、错误类型、黄金 JSON 测试；适配器内 `TiaVersionCatalog` 改为 internal）；48 个类型原样迁移，`adapter-contracts` 套件 232 项 | done |
 | P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变；`tools/openness-shared/TiaFeatures.props` + `Check-TiaFeatures.py`（validate 流程） | done |
-| P4-02 | Foundation worker 迁移到共享适配器（第 D 步：源码移入 `TiaMcp.Adapters/Native`、`Policy` 并以委托实现契约接口，进行中；第 E 步：worker 改 net48 与协议 2） | doing |
+| P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48 与协议 2） | doing |
 | P4-03 | Studio 桥接进程迁移到共享适配器 | todo |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
 
