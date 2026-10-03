@@ -5,6 +5,8 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.Library.MasterCopies;
 using Siemens.Engineering.Library.Types;
+using Siemens.Engineering.MC.Drives;
+using Siemens.Engineering.MC.Drives.Dcc;
 using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
@@ -54,6 +56,15 @@ namespace TiaMcpServer.Siemens
         JsonArray IEngineeringSession.DocumentMessages(DocumentResultMessageComposition? messages) => DocumentMessages(messages);
         JsonObject IEngineeringSession.DocumentExportRow(DocumentExportResult result) => DocumentExportRow(result);
         JsonObject IEngineeringSession.DocumentImportRow(DocumentImportResult result, JsonArray imported) => DocumentImportRow(result, imported);
+
+        DeviceItem IEngineeringSession.ExactDriveItem(string devicePathJson, string itemPathJson) => ExactDriveItem(devicePathJson, itemPathJson);
+        DriveObjectContainer IEngineeringSession.ExactDriveContainer(DeviceItem item) => ExactDriveContainer(item);
+        DriveObject IEngineeringSession.ExactDriveObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, int driveObjectIndex) => ExactDriveObject(devicePathJson, itemPathJson, driveObjectNumber, driveObjectIndex);
+        JsonObject? IEngineeringSession.DccContainerSummary(DriveObject drive) => DccContainerSummary(drive);
+        JsonObject IEngineeringSession.DcbLibraryRow(DcbLibrary library, bool types) => DcbLibraryRow(library, types);
+        JsonObject IEngineeringSession.AddressRow(Address address) => AddressRow(address);
+        object IEngineeringSession.ExactTechnology(string softwarePath, string objectPath, bool writing) => ExactTechnology(softwarePath, objectPath, writing);
+        JsonObject IEngineeringSession.InterfaceRow(object iface) => InterfaceRow(iface);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

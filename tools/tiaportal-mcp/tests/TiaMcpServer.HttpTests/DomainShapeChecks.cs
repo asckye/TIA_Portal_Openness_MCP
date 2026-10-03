@@ -17,7 +17,8 @@ internal static class DomainShapeChecks
         var domains = new[] {
             (Name: "TestSuite", Count: 4), (Name: "V20Options", Count: 5),
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
-            (Name: "SoftwareUnitDeep", Count: 7)
+            (Name: "SoftwareUnitDeep", Count: 7),
+            (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11)
         };
         foreach (var domain in domains)
         {
@@ -54,5 +55,15 @@ internal static class DomainShapeChecks
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " stays on the kernel and is exposed through IEngineeringSession");
         check(surface.Method("LinkedTagRows", all).DeclaringType == portal, "LinkedTagRows remains shared with hardware on the kernel");
+        foreach (var name in new[] { "ExactDriveItem", "ExactDriveContainer", "DccContainerSummary", "DcbLibraryRow",
+            "AddressRow", "ExactTechnology", "InterfaceRow" })
+            check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
+                name + " stays on the kernel and is exposed through IEngineeringSession");
+        check(surface.Method("ExactDriveObject", all, new[] { typeof(string), typeof(string), typeof(ushort), typeof(int) }).DeclaringType == portal
+            && contract.GetMethod("ExactDriveObject") != null, "Shared drive resolution stays on the kernel");
+        var teamcenter = server.GetType("TiaMcpServer.Siemens.Services.TeamcenterService", true)!;
+        foreach (var name in new[] { "_teamcenterConnection", "_teamcenterConnectionLabel" })
+            check(surface.Field(name, all).DeclaringType == teamcenter && portal.GetField(name, all) == null,
+                name + " is private Teamcenter service state");
     }
 }

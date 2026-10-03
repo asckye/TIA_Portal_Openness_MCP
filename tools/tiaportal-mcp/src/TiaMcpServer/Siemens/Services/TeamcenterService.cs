@@ -12,25 +12,29 @@ using Siemens.Engineering.TeamcenterGateway;
 using TiaMcpServer.ModelContextProtocol;
 using Logic = TiaMcpServer.Siemens.TeamcenterLogic;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Typed Teamcenter Gateway option package (Siemens.Engineering.TeamcenterGateway, identical on V20 / V21).
     // Official entry: TiaPortal.GetService<TeamcenterConnectionProvider>() -> Connect / ConnectSSO answer an encrypted
     // TcGatewayConnectionInfo that every other call must present; TcGatewayLockProvider and TcGatewaySearchAndDownloadProvider are
     // services of the TiaPortal, TcGatewayWorkflowProvider is a service of the open Project or GlobalLibrary. The engine keeps the
     // one active connection info in memory (never serialised - only the session token's SHA-256 prefix is reported).
-    public partial class Portal
+    internal sealed class TeamcenterService
     {
+        private readonly IEngineeringSession _session;
+
+        public TeamcenterService(IEngineeringSession session) => _session = session;
+
         private TcGatewayConnectionInfo? _teamcenterConnection;
         private JsonObject? _teamcenterConnectionLabel;
 
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         private TeamcenterConnectionProvider RequireTeamcenterConnectionProvider()
-            => _portal!.GetService<TeamcenterConnectionProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TeamcenterConnectionProvider is not provided by this TIA Portal (Teamcenter Gateway not installed).");
+            => _session.CurrentPortal!.GetService<TeamcenterConnectionProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TeamcenterConnectionProvider is not provided by this TIA Portal (Teamcenter Gateway not installed).");
         private TcGatewayConnectionInfo RequireTeamcenterConnection()
             => _teamcenterConnection ?? throw new PortalException(PortalErrorCode.InvalidState, "No active Teamcenter connection in this engine session; run ManageTeamcenterConnection connect / connectSso first.");
         private IEngineeringServiceProvider ExactWorkflowOwner(string target, string libraryName)
-            => target == "globalLibrary" ? (IEngineeringServiceProvider)(EngineeringGroupOperations.Find(_portal!.GlobalLibraries, libraryName) as GlobalLibrary ?? throw new PortalException(PortalErrorCode.NotFound, "Exact open global library not found: " + libraryName + " (open it in TIA first).")) : _project!;
+            => target == "globalLibrary" ? (IEngineeringServiceProvider)(EngineeringGroupOperations.Find(_session.CurrentPortal!.GlobalLibraries, libraryName) as GlobalLibrary ?? throw new PortalException(PortalErrorCode.NotFound, "Exact open global library not found: " + libraryName + " (open it in TIA first).")) : _session.CurrentProject!;
         private static TcGatewayWorkflowProvider RequireWorkflowProvider(IEngineeringServiceProvider owner)
             => owner.GetService<TcGatewayWorkflowProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewayWorkflowProvider is not provided by " + owner.GetType().Name + " (Teamcenter Gateway not installed, or the object was not opened from Teamcenter).");
         private static string TokenFingerprint(string? token)
@@ -72,12 +76,12 @@ namespace TiaMcpServer.Siemens
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ManageTeamcenterConnection(string action = "read", string userName = "", string password = "", string group = "", string role = "", string hostUrl = "", string instance = "", string loginUrl = "", string applicationId = "", bool dryRun = true)
-            => RunHmiStepTool("ManageTeamcenterConnection", meta =>
+            => _session.RunHmiStepTool("ManageTeamcenterConnection", meta =>
             {
                 var r = Logic.ValidateConnectionRequest(action, userName, password, group, role, hostUrl, instance, loginUrl, applicationId, dryRun);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["before"] = ConnectionRow();
-                if (action == "read") { Safe(meta, "providerAvailable", () => _portal!.GetService<TeamcenterConnectionProvider>() != null); return "Teamcenter connection state of this engine session read; nothing changed."; }
+                if (action == "read") { Safe(meta, "providerAvailable", () => _session.CurrentPortal!.GetService<TeamcenterConnectionProvider>() != null); return "Teamcenter connection state of this engine session read; nothing changed."; }
                 var provider = RequireTeamcenterConnectionProvider();
                 if (action == "disconnect") { RequireTeamcenterConnection(); }
                 else if (_teamcenterConnection != null) throw new PortalException(PortalErrorCode.InvalidState, "A Teamcenter connection is already active in this session; disconnect it first (one TcGatewayConnectionInfo per session).");
@@ -105,14 +109,14 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageTeamcenterDataset(string action, string itemId = "", string revisionId = "", string datasetType = "", string datasetName = "", string itemType = "", string tiaObjectName = "", string itemName = "", string localCacheOption = "", bool dryRun = true)
-            => RunHmiStepTool("ManageTeamcenterDataset", meta =>
+            => _session.RunHmiStepTool("ManageTeamcenterDataset", meta =>
             {
                 var r = Logic.ValidateDatasetRequest(action, itemId, revisionId, datasetType, datasetName, itemType, tiaObjectName, itemName, localCacheOption, dryRun);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["connection"] = ConnectionRow();
                 var info = RequireTeamcenterConnection();
                 if (action == "search")
                 {
-                    var search = _portal!.GetService<TcGatewaySearchAndDownloadProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewaySearchAndDownloadProvider is not provided by this TIA Portal.");
+                    var search = _session.CurrentPortal!.GetService<TcGatewaySearchAndDownloadProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewaySearchAndDownloadProvider is not provided by this TIA Portal.");
                     var type = (ItemType)Enum.Parse(typeof(ItemType), r.ItemType); meta["nativeSignature"] = "TcGatewaySearchAndDownloadProvider.Search(info, ItemType." + type + ", tiaObjectName, itemId, itemName, revisionId)";
                     var results = search.Search(info, type, tiaObjectName, itemId, itemName, revisionId);
                     meta["records"] = new JsonArray(results.Take(500).Select(x => (JsonNode)SearchResultRow(x)).ToArray()); meta["expectedCount"] = results.Count; meta["actualCount"] = Math.Min(results.Count, 500);
@@ -122,14 +126,14 @@ namespace TiaMcpServer.Siemens
                 meta["mayHaveChanged"] = true;
                 if (action == "download")
                 {
-                    var search = _portal!.GetService<TcGatewaySearchAndDownloadProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewaySearchAndDownloadProvider is not provided by this TIA Portal.");
+                    var search = _session.CurrentPortal!.GetService<TcGatewaySearchAndDownloadProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewaySearchAndDownloadProvider is not provided by this TIA Portal.");
                     var type = (ItemType)Enum.Parse(typeof(ItemType), r.ItemType); var cache = (LocalCacheOption)Enum.Parse(typeof(LocalCacheOption), r.LocalCacheOption);
                     meta["nativeSignature"] = "TcGatewaySearchAndDownloadProvider.Download(info, itemId, revisionId, ItemType." + type + ", LocalCacheOption." + cache + ") -> FileInfo";
                     FileInfo starter = search.Download(info, itemId, revisionId, type, cache);
                     starter.Refresh(); meta["starterFile"] = new JsonObject { ["path"] = starter.FullName, ["exists"] = starter.Exists, ["bytes"] = starter.Exists ? starter.Length : (long?)null };
                     return "Project / global library downloaded into the Teamcenter cache; open the starter file with OpenProject / ManageGlobalLibrary (nothing was opened automatically).";
                 }
-                var locks = _portal!.GetService<TcGatewayLockProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewayLockProvider is not provided by this TIA Portal.");
+                var locks = _session.CurrentPortal!.GetService<TcGatewayLockProvider>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TcGatewayLockProvider is not provided by this TIA Portal.");
                 var dataset = (DatasetType)Enum.Parse(typeof(DatasetType), r.DatasetType);
                 switch (action)
                 {
@@ -142,7 +146,7 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageTeamcenterWorkflow(string action, string target = "project", string libraryName = "", string itemType = "", string itemId = "", string revisionId = "", string localCacheOption = "", string itemDetailsJson = "{}", string revisionDetailsJson = "{}", string customAttributesJson = "{}", bool confirmSave = false, bool dryRun = true)
-            => RunHmiStepTool("ManageTeamcenterWorkflow", meta =>
+            => _session.RunHmiStepTool("ManageTeamcenterWorkflow", meta =>
             {
                 var r = Logic.ValidateWorkflowRequest(action, target, libraryName, itemType, itemId, revisionId, localCacheOption, itemDetailsJson, revisionDetailsJson, customAttributesJson, confirmSave, dryRun);
                 meta["action"] = action; meta["target"] = r.Target; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["connection"] = ConnectionRow();

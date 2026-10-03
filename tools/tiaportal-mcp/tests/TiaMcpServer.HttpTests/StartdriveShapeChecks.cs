@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.39 phase 6 ⑥-② Startdrive option-package tools (Portal.Startdrive.cs), verified member by member
+// Native members used by the 2.7.39 phase 6 ⑥-② Startdrive option-package tools (StartdriveService.cs), verified member by member
 // against the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Startdrive) PublicAPI. V21 adds DriveItemHardwareModule,
 // SafetyAcceptanceTestProvider / Report, TestFunction, FileOperations and the SDR hardware-connection interfaces (Telegram connects moved
 // off the base interfaces, which carry them on V20 with MC.Drives.Enums.ConnectOption).

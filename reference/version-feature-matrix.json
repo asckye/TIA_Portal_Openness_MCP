@@ -2595,7 +2595,7 @@
         "T:Siemens.Engineering.MC.Drives.DriveParameter"
       ],
       "sourceFiles": [
-        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Startdrive.cs",
+        "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/StartdriveService.cs",
         "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs"
       ],
       "nextStep": "Port version-specific parameter contracts, teaching returned parameter references, ordinary values and null through the shared example library.",

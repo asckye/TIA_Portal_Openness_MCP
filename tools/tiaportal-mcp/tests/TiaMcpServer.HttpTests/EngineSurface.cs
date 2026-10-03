@@ -20,7 +20,10 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.V20OptionsService",
         "TiaMcpServer.Siemens.Services.OptionalEngineeringService",
         "TiaMcpServer.Siemens.Services.SpecializedExchangeService",
-        "TiaMcpServer.Siemens.Services.SoftwareUnitDeepService"
+        "TiaMcpServer.Siemens.Services.SoftwareUnitDeepService",
+        "TiaMcpServer.Siemens.Services.DccService",
+        "TiaMcpServer.Siemens.Services.TeamcenterService",
+        "TiaMcpServer.Siemens.Services.StartdriveService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

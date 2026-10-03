@@ -133,7 +133,43 @@ CASES = {
            ('ReadPlcObjectFingerprints', 'read', {'softwarePath': PLC, 'objectKind': 'block', 'objectPath': 'Block1'})]
         + actions('ManagePlcBlockWriteProtection', 'read define protect unprotect change remove',
                   softwarePath=PLC, blockPath='Block1')
-        + actions('ManageProjectCompilationSettings', 'read update')
+        + actions('ManageProjectCompilationSettings', 'read update'),
+    'Dcc': [('ReadDccCharts', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
+        + actions('ManageDccChart', 'read readSequence create update delete export exportAll import optimizeSequence showEditor',
+                  devicePathJson='[]', itemPathJson='[]', chartName='Chart1')
+        + actions('ManageDccBlock', 'read create update delete setAsPredecessor',
+                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', blockName='Block1')
+        + actions('ManageDccPin', 'read update connect disconnect publish unpublish updateParameter',
+                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', blockName='Block1', pinName='Pin1')
+        + actions('ManageDccChartInterface', 'read create update delete',
+                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', interfaceName='Interface1')
+        + actions('ManageDccChartPartition', 'read create update delete',
+                  devicePathJson='[]', itemPathJson='[]', chartPath='Chart1', partitionName='Partition1')
+        + actions('ManageDcbLibraries', 'read import')
+        + [('ReadDccObject', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})],
+    'Teamcenter': actions('ManageTeamcenterConnection', 'read connect connectSso disconnect')
+        + actions('ManageTeamcenterDataset', 'checkout checkin cancelCheckout search download')
+        + actions('ManageTeamcenterWorkflow', 'readCustomAttributes save saveWithProxyObject saveToItem saveToItemWithProxyObject '
+                  'saveAsNewItem saveAsNewItemWithProxyObject saveAsNewRevision saveAsNewRevisionWithProxyObject'),
+    'Startdrive': [('ReadDriveObjects', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'}),
+                  ('ReadDriveParameters', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
+        + actions('ManageStartdriveParameter', 'read write', devicePathJson='[]', itemPathJson='[]',
+                  driveObjectNumber=0, parameter='p2051[0]')
+        + actions('ManageDriveTelegrams', 'read check insert erase changeNumber changeSize connectTechnologyObject',
+                  devicePathJson='[]', itemPathJson='[]')
+        + actions('ManageDriveFunctions', 'read changeDriveObjectType changeActivationState activateFunction deactivateFunction '
+                  'setSIAxisType setMotorCode setSimoGearMlfb updateCheckSums setMotorType readMotorConfiguration '
+                  'projectMotorConfiguration setEquivalentCircuitDiagramData setEncoder readEncoderConfiguration '
+                  'setEncoderType projectEncoderConfiguration', devicePathJson='[]', itemPathJson='[]')
+        + actions('ManageDriveSecurity', 'read activateUmac deactivateUmac activateEncryption deactivateEncryption',
+                  devicePathJson='[]', itemPathJson='[]')
+        + actions('ManageTechnologyExtensions', 'read activate deactivate readPackages install installAndGetIdentifier uninstall')
+        + actions('ManageDriveHardwareModule', 'read changeType setPositionNumber', devicePathJson='[]', itemPathJson='[]')
+        + actions('ManageDriveSafetyAcceptanceTest', 'read setActive resetTestFunctions createProtocol',
+                  devicePathJson='[]', itemPathJson='[]')
+        + [('ReadOnlineDriveParameters', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
+        + actions('ManageOnlineDriveFunctions', 'read performFactoryReset performRamToRomCopy changeActivationState',
+                  devicePathJson='[]', itemPathJson='[]')
 }
 
 
@@ -157,9 +193,11 @@ def capture(args, exe, harness, profile, isolated):
         reached_child = False
         for domain in args.domain:
             for name, case, arguments in CASES[domain]:
-                hidden = args.major == 20 and name == 'ManagePlcBlockWriteProtection'
-                version_action = args.major == 20 and name == 'ManagePlcDocuments' and arguments['action'] in (
-                    'createFromMasterCopy', 'createFromLibraryType')
+                hidden = args.major == 20 and name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest')
+                version_action = args.major == 20 and (
+                    name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType')
+                    or name == 'ManageDcbLibraries' and arguments['action'] == 'import'
+                    or name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
                 if profile == 'full':
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {

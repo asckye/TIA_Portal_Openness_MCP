@@ -193,6 +193,31 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 通用领域测试也比较这些拒绝响应，不屏蔽 `meta.error` 中的异常堆栈。类迁移会改变这类堆栈的类型名及
 编译器闭包编号，因此常规契约/响应快照零差异不足以证明全部领域响应逐字节一致；此项须单独审查。
 
+### DCC、Teamcenter 与 Startdrive
+
+| 领域 | 服务 / 工具类 | 工具数 |
+|---|---|---|
+| DCC | [DccService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DccService.cs) / [DccTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) | 8 |
+| Teamcenter | [TeamcenterService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TeamcenterService.cs) / [TeamcenterTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) | 3 |
+| Startdrive | [StartdriveService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/StartdriveService.cs) / [StartdriveTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) | 11 |
+
+这些工具没有 CLI 静态调用点，继续按约定注册为单例。Teamcenter 的 `_teamcenterConnection` 与
+`_teamcenterConnectionLabel` 随方法迁入服务，不增加连接、断开或清理动作。
+
+跨领域实现继续保留在内核，新增八个 `IEngineeringSession` 转发：
+
+- `Portal.Startdrive.cs`：`ExactDriveItem`、`ExactDriveContainer`、接收路径的 `ExactDriveObject`，
+  以及其私有辅助 `SafeDriveObjectNumber`、接收容器的 `ExactDriveObject`；DCC 和 Startdrive 共用解析。
+- `Portal.Dcc.cs`：`DccContainerSummary`、`DcbLibraryRow`；供 Startdrive 摘要及 DCC 库视图共用。
+- 原硬件与工艺对象实现：`AddressRow`、`ExactTechnology`、`InterfaceRow`；其方法体原样保留。
+
+`TelegramRow` 和 `DriveObjectRow` 改为服务实例辅助方法，以通过会话接口访问上述共享成员。
+`ManageStartdriveParameter` 的解析、单值读取、写入和读回顺序不变；
+[`p2051[0]` 崩溃事项](../reference/real-machine-ledger.md)仍待原生复测。
+通用领域测试的 `Dcc`、`Teamcenter`、`Startdrive` 用例覆盖全部 22 个工具及 V20 的工具/操作拒绝。
+原 `ConnectionRow` 的两个重载分别迁入 DCC 和 Teamcenter；原生清单比对须显式列出这三个同名方法族的
+`--allow-unmatched` 例外，并另按重载及其 lambda 核对全部调用点，不能只检查全局成员多重集合。
+
 ## G9：单 PLC 工程的模糊匹配
 
 维护者于 2026-10-03 批准的 G9 行为调整由 `IEngineeringSession.ResolvePlc(path, PlcAccess)` 实施。

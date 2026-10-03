@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 
-// Native members used by the 2.7.42 phase 6 ⑥-③ Teamcenter Gateway tools (Portal.Teamcenter.cs), verified member by member against
+// Native members used by the 2.7.42 phase 6 ⑥-③ Teamcenter Gateway tools (TeamcenterService.cs), verified member by member against
 // the installed V20 / V21 PublicAPI (Siemens.Engineering.TeamcenterGateway is a separate assembly on both versions; identical surface).
 internal static class TeamcenterShapeChecks
 {

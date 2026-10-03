@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.39 phase 6 ⑥-② SINAMICS DCC option-package tools (Portal.Dcc.cs), verified member by member against
+// Native members used by the 2.7.39 phase 6 ⑥-② SINAMICS DCC option-package tools (DccService.cs), verified member by member against
 // the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.DCC) PublicAPI. V21 adds DcbLibraryImporter; the 39 DccException
 // classes are identical on both versions and every one is named in Portal.KnownDccExceptions.
 internal static class DccShapeChecks

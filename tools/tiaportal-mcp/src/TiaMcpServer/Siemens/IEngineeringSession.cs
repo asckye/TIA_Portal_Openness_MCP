@@ -6,6 +6,8 @@ using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.HW.Utilities;
 using Siemens.Engineering.Library.MasterCopies;
 using Siemens.Engineering.Library.Types;
+using Siemens.Engineering.MC.Drives;
+using Siemens.Engineering.MC.Drives.Dcc;
 using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
@@ -53,6 +55,15 @@ namespace TiaMcpServer.Siemens
         JsonArray DocumentMessages(DocumentResultMessageComposition? messages);
         JsonObject DocumentExportRow(DocumentExportResult result);
         JsonObject DocumentImportRow(DocumentImportResult result, JsonArray imported);
+
+        DeviceItem ExactDriveItem(string devicePathJson, string itemPathJson);
+        DriveObjectContainer ExactDriveContainer(DeviceItem item);
+        DriveObject ExactDriveObject(string devicePathJson, string itemPathJson, ushort driveObjectNumber, int driveObjectIndex);
+        JsonObject? DccContainerSummary(DriveObject drive);
+        JsonObject DcbLibraryRow(DcbLibrary library, bool types);
+        JsonObject AddressRow(Address address);
+        object ExactTechnology(string softwarePath, string objectPath, bool writing);
+        JsonObject InterfaceRow(object iface);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);
