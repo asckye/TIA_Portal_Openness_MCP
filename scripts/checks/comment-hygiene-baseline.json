@@ -24,7 +24,7 @@
       "kind": "tombstone",
       "fingerprint": "1bea0889bd30f408f66ea0c159d4fa0e4a2c87f76f3deedd8db14971d39de941",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 771
+      "line": 769
     },
     {
       "kind": "product-version",
@@ -66,7 +66,7 @@
       "kind": "commented-code",
       "fingerprint": "368aa0f95f5e9e23e8a2285243bce5a085ce05241bab0221f9325875b472e8b5",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 1429
+      "line": 1350
     },
     {
       "kind": "product-version",
@@ -198,7 +198,7 @@
       "kind": "product-version",
       "fingerprint": "7dfa82cc94511706e24dabdfd1aa038c82f5d5544894c0aae818de1527b877b4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 2091
+      "line": 2012
     },
     {
       "kind": "old-phase",
@@ -234,7 +234,7 @@
       "kind": "tombstone",
       "fingerprint": "9b8a644aacc24730fbd20ad4c7e6adbb47489b5ef2b20801510c629f061600b8",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 773
+      "line": 771
     },
     {
       "kind": "product-version",
@@ -444,7 +444,7 @@
       "kind": "commented-code",
       "fingerprint": "ca1374865512885ddeaff07a71408efbd9178ed3b5cb23606af31d3b50cf845e",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
-      "line": 1467
+      "line": 1388
     },
     {
       "kind": "product-version",
@@ -565,18 +565,6 @@
       "fingerprint": "e87f17fa8f6174a3d85665f7ebade56a686dcc1f6fa8b133969aba6837197220",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
       "line": 45
-    },
-    {
-      "kind": "tombstone",
-      "fingerprint": "e998834799d692ba7793184a1440d989e9475d0c0fa5ee39303136e93802dda5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 767
-    },
-    {
-      "kind": "tombstone",
-      "fingerprint": "f667eccedf482309cd6f01f0507f2a6938f2bfb0accd406bd35ee876c385e2ec",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.cs",
-      "line": 769
     },
     {
       "kind": "product-version",

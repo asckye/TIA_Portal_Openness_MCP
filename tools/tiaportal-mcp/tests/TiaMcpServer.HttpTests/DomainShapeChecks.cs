@@ -19,7 +19,7 @@ internal static class DomainShapeChecks
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
             (Name: "SoftwareUnitDeep", Count: 7),
             (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
-            (Name: "Library", Count: 12), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9)
+            (Name: "Library", Count: 12), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
         };
         foreach (var domain in domains)
         {
@@ -33,7 +33,10 @@ internal static class DomainShapeChecks
             foreach (var tool in methods)
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
-                var method = surface.Method(name);
+                // Tool and service signatures may differ (casts in the tool); parameter types only separate overloads.
+                MethodInfo method;
+                try { method = surface.Method(name); }
+                catch (AmbiguousMatchException) { method = surface.Method(name, tool.GetParameters().Select(parameter => parameter.ParameterType).ToArray()); }
                 var target = surface.Target(method);
                 var toolTarget = surface.Target(tool);
                 check(method.DeclaringType == service && surface.Tool(name) == tool && !tool.IsStatic
@@ -52,7 +55,9 @@ internal static class DomainShapeChecks
         }
         foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",
             "ExactMasterCopy", "ExactLibraryType", "ExactTypeVersion", "MultilingualJson", "RequireUnitProvider", "ExactUnit",
-            "OptionalUnit", "BlockRootOf", "TypeRootOf", "ExactObjectUnder", "DocumentMessages", "DocumentExportRow", "DocumentImportRow" })
+            "OptionalUnit", "BlockRootOf", "TypeRootOf", "ExactObjectUnder", "DocumentMessages", "DocumentExportRow", "DocumentImportRow",
+            "AvailablePlcPathsSuffix", "GetAllPlcSoftware", "ReadPlcConsistency", "RecoverableAuditError",
+            "ReadReflectedString", "EnumerateReflectedProperty" })
             check(surface.Method(name, all).DeclaringType == portal && contract.GetMethod(name) != null,
                 name + " stays on the kernel and is exposed through IEngineeringSession");
         check(surface.Method("LinkedTagRows", all).DeclaringType == portal, "LinkedTagRows remains shared with hardware on the kernel");
@@ -100,5 +105,7 @@ internal static class DomainShapeChecks
         }
         check(roots.Count == 0 && owner.GetValue(first) == null && vci.GetField("_vciCached", all)!.GetValue(first) == null,
             "Disconnected VCI acquisition clears the cached owner and retained proxies");
+        check(ReferenceEquals(contract.GetProperty("Logger")!.GetValue(session), portal.GetField("_logger", all)!.GetValue(session)),
+            "Online/download keeps the existing Portal logger instance and category");
     }
 }

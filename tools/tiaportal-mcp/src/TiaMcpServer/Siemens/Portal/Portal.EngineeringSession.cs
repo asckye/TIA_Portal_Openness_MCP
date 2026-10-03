@@ -149,6 +149,13 @@ namespace TiaMcpServer.Siemens
         void IEngineeringSession.ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write) => ApplyScalarsAndAttributes(target, propertiesJson, attributesJson, meta, write);
         IEngineeringServiceProvider IEngineeringSession.ServiceProvider(HardwareObject owner) => ServiceProvider(owner);
         JsonNode? IEngineeringSession.LinkedTagRows(Channel channel, JsonObject row) => LinkedTagRows(channel, row);
+        System.Collections.Generic.List<PlcSoftware> IEngineeringSession.GetAllPlcSoftware() => GetAllPlcSoftware();
+        System.Collections.Generic.List<(string Path, bool? Consistent)> IEngineeringSession.ReadPlcConsistency(string softwarePath)
+            => ReadPlcConsistency(softwarePath);
+        bool IEngineeringSession.RecoverableAuditError(Exception ex) => RecoverableAuditError(ex);
+        string IEngineeringSession.ReadReflectedString(object? owner, string propertyName) => ReadReflectedString(owner, propertyName);
+        System.Collections.Generic.List<object?> IEngineeringSession.EnumerateReflectedProperty(object? owner, string propertyName)
+            => EnumerateReflectedProperty(owner, propertyName);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

@@ -99,56 +99,6 @@ namespace TiaMcpServer.Siemens
                 return "Portal diagnostics read; no modification.";
             }, requiresProject: false);
 
-        // ---- transfer routes and R/H providers --------------------------------------------------------------------------------
-        private static JsonArray AddressRows(ConfigurationAddressComposition addresses) => new JsonArray(EngineeringGroupOperations.Items(addresses).Cast<ConfigurationAddress>().Select(a => (JsonNode)new JsonObject { ["name"] = a.Name, ["address"] = a.Address }).ToArray());
-
-        public ResponseMessage ReadTransferRoutes(string softwarePath, int maxItems = 500)
-            => RunHmiStepTool("ReadTransferRoutes", meta => {
-                LibraryDeepLogic.ValidateBounds(1, maxItems);
-                var plc = GetPlcSoftware(softwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + softwarePath + AvailablePlcPathsSuffix());
-                var download = ResolvePlcService<DownloadProvider>(softwarePath, plc);
-                meta["downloadProviderAvailable"] = download != null;
-                int items = 0; bool truncated = false;
-                if (download != null)
-                {
-                    ConnectionConfiguration configuration = download.Configuration;
-                    var modes = new JsonArray(); meta["modes"] = modes;
-                    foreach (ConfigurationMode mode in EngineeringGroupOperations.Items(configuration.Modes).Cast<ConfigurationMode>())
-                    {
-                        var modeRow = new JsonObject { ["name"] = mode.Name }; var interfaces = new JsonArray(); modeRow["pcInterfaces"] = interfaces; modes.Add(modeRow);
-                        foreach (ConfigurationPcInterface pcInterface in EngineeringGroupOperations.Items(mode.PcInterfaces).Cast<ConfigurationPcInterface>())
-                        {
-                            if (++items > maxItems) { truncated = true; break; }
-                            var row = new JsonObject { ["name"] = pcInterface.Name, ["number"] = pcInterface.Number };
-                            try { row["addresses"] = AddressRows(pcInterface.Addresses); } catch (Exception ex) { row["addressesError"] = ex.GetBaseException().Message; }
-                            try
-                            {
-                                row["subnets"] = new JsonArray(EngineeringGroupOperations.Items(pcInterface.Subnets).Cast<ConfigurationSubnet>().Select(s => (JsonNode)new JsonObject
-                                {
-                                    ["name"] = s.Name, ["addresses"] = AddressRows(s.Addresses),
-                                    ["gateways"] = new JsonArray(EngineeringGroupOperations.Items(s.Gateways).Cast<ConfigurationGateway>().Select(g => (JsonNode)new JsonObject { ["name"] = g.Name, ["addresses"] = AddressRows(g.Addresses) }).ToArray())
-                                }).ToArray());
-                            }
-                            catch (Exception ex) { row["subnetsError"] = ex.GetBaseException().Message; }
-                            try { row["targetInterfaces"] = new JsonArray(EngineeringGroupOperations.Items(pcInterface.TargetInterfaces).Cast<ConfigurationTargetInterface>().Select(t => (JsonNode)new JsonObject { ["name"] = t.Name, ["addresses"] = AddressRows(t.Addresses) }).ToArray()); }
-                            catch (Exception ex) { row["targetInterfacesError"] = ex.GetBaseException().Message; }
-                            interfaces.Add(row);
-                        }
-                        if (truncated) break;
-                    }
-                }
-                // R/H systems expose the redundant providers instead of / next to the standard ones; the CPU on the reference project is not R/H.
-                var rhDownload = ResolvePlcService<RHDownloadProvider>(softwarePath, plc); meta["rhDownloadProviderAvailable"] = rhDownload != null;
-                var rhOnline = ResolvePlcService<RHOnlineProvider>(softwarePath, plc); meta["rhOnlineProviderAvailable"] = rhOnline != null;
-                if (rhOnline != null) { try { meta["rhOnline"] = new JsonObject { ["primaryState"] = rhOnline.PrimaryState.ToString(), ["backupState"] = rhOnline.BackupState.ToString() }; } catch (Exception ex) { meta["rhOnlineError"] = ex.GetBaseException().Message; } }
-                var onlineProvider = ResolvePlcService<OnlineProvider>(softwarePath, plc); meta["onlineProviderAvailable"] = onlineProvider != null;
-                if (onlineProvider != null) { try { meta["onlineState"] = onlineProvider.State.ToString(); } catch (Exception ex) { meta["onlineStateError"] = ex.GetBaseException().Message; } }
-                meta["compileProviderNote"] = "Siemens.Engineering.Compiler.CompileProvider is internal in the V20/V21 PublicAPI (documented, not public); compilation goes through ICompilable.";
-                meta["truncated"] = truncated; meta["apiCallSuccess"] = true; meta["dataComplete"] = !truncated;
-                meta["scope"] = "ConnectionConfiguration route tree of the download provider (Modes -> PcInterfaces with Addresses / Subnets (Gateways) / TargetInterfaces) plus availability of RHDownloadProvider / RHOnlineProvider (with Primary/BackupState) / OnlineProvider. Read-only; nothing is applied.";
-                return "Transfer routes read; no route applied, no modification.";
-            });
-
         // ---- hardware utilities ------------------------------------------------------------------------------------------------
         private T RequireHardwareUtility<T>(string identifier) where T : HardwareUtility
         {

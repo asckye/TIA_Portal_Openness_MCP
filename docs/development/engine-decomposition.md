@@ -354,6 +354,35 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 `Test-DomainTools.py` 的 `HardwareNetwork` / `HardwareServices` 用例覆盖全部迁移工具、full/lite、
 直接及隔离子进程路径，并比较 V20 的通信连接和设备服务对象版本拒绝。
 HttpTests 保留全部既有断言，另检查两个领域的工具归属、共享会话、单例、生命周期和工具到服务的 IL 调用。
+### 在线、下载与设备传输
+
+`OnlineDownloadService` 与 `OnlineDownloadTools` 合并承载在线、下载及设备传输的 12 个工具，
+包括从 `Portal.BaseLeftovers.cs` / `McpServer.BaseLeftovers.cs` 移入的 `ReadTransferRoutes`。
+原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
+下载提示处理位于 [OnlineDownloadService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs)，
+工具位于 [OnlineDownloadTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
+`McpServer.PlcSoftware.Online.cs` 中的五个硬件工具仍归硬件领域；跨领域的 `IsOnlineModeError`、
+`WithAutoOffline` 保持原入口，后者通过容器取得同一服务，保留下线后仅重试一次的行为。
+这 12 个工具没有 `Program*.cs` / `Cli/` 静态调用点，无需 CLI 转发。
+
+在线连接、路由选择、凭据及提示策略均为调用局部对象；没有由断开连接或工程关闭清理的在线字段或锁。
+认证事件与 `HandlerScope` 随领域迁入服务，仍在原调用的 `using` 范围内解绑和释放凭据。
+服务与工具按现有约定注册为非 `IDisposable` 单例，共享 `IEngineeringSession`。
+
+新增的内核接口成员只转发现有实现，不写会话状态：
+
+- `Logger` 保留原 `ILogger<Portal>` 实例及日志类别。
+- `AvailablePlcPathsSuffix`、`GetAllPlcSoftware` 继续共用 PLC 解析诊断和项目枚举。
+- `ReadPlcConsistency`、`RecoverableAuditError` 继续共用 PLC 程序审计的一致性读取和错误筛选。
+- `ReadReflectedString`、`EnumerateReflectedProperty` 留在 `Portal.Download.cs`，供 PLC 块服务与传输路由共用；
+  使用它们的七个领域路由辅助方法改为实例方法，通过接口访问内核。
+
+迁移保持原生调用顺序、参数、条件分支与 lambda 位置。`GoOnline` 仍依次解析 PLC/服务、绑定认证事件、
+选择并应用路由、调用原版本对应的在线重载；`DownloadToPlc` 仍依次解析服务/配置、绑定事件和提示委托、
+选择路由、进入创建地址/RH/普通下载分支、构造结果；上载仍在原写访问范围内绑定事件并调用原生方法。
+`Compare-NativeCallOrder.py` 分别对 Siemens 领域和工具领域清单进行比较，以区分两层同名的
+`GoOfflineAll`；两份清单覆盖完整调用点，V20/V21 各 38 个迁移方法族（含 lambda）顺序一致，
+全局 Siemens 直接调用成员多重集合也一致。该静态证明不替代真机验收。
 
 ## G9：单 PLC 工程的模糊匹配
 

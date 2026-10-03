@@ -146,6 +146,11 @@ namespace TiaMcpServer.Siemens
         void ApplyScalarsAndAttributes(object target, string propertiesJson, string attributesJson, JsonObject meta, bool write);
         IEngineeringServiceProvider ServiceProvider(HardwareObject owner);
         JsonNode? LinkedTagRows(Channel channel, JsonObject row);
+        System.Collections.Generic.List<PlcSoftware> GetAllPlcSoftware();
+        System.Collections.Generic.List<(string Path, bool? Consistent)> ReadPlcConsistency(string softwarePath);
+        bool RecoverableAuditError(Exception ex);
+        string ReadReflectedString(object? owner, string propertyName);
+        System.Collections.Generic.List<object?> EnumerateReflectedProperty(object? owner, string propertyName);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

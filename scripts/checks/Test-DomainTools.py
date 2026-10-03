@@ -380,7 +380,18 @@ CASES = {
             ('webApplications', 'read setDefault'), ('telecontrolDataPoints', 'read update delete export import'),
             ('certificateServices', 'read update setServiceGroupName createService deleteService'))
            for tool, case, arguments in actions('ManageDeviceServiceObjects', values, **HARDWARE,
-               family=family, name='1', filePath='C:/domain-offline.xml')]
+               family=family, name='1', filePath='C:/domain-offline.xml')],
+    'OnlineDownload': [(name, 'disconnected', {'softwarePath': PLC}) for name in (
+        'GetOnlineState', 'GoOffline', 'CompareSoftwareToOnline', 'CheckDownloadReadiness', 'DownloadToPlc',
+        'ReadTransferRoutes')]
+        + [('GoOnline', target or 'standard', {'softwarePath': PLC, 'rhTarget': target})
+           for target in ('', 'primary', 'backup')]
+        + [('GoOfflineAll', 'disconnected', {}), ('ScanAccessibleDevices', 'disconnected', {}),
+           ('UploadStationFromPlc', 'disconnected', {'targetIpAddress': '192.0.2.1'}),
+           ('UploadDeviceParameters', 'disconnected', {'devicePathJson': '[]', 'itemPathJson': '[]',
+                                                     'targetIpAddress': '192.0.2.1'}),
+           ('DownloadPlcToFolder', 'disconnected', {'softwarePath': PLC,
+                                                  'destinationDirectory': 'C:/domain-offline-card'})]
 }
 
 
@@ -496,11 +507,14 @@ def capture(args, exe, harness, profile, isolated):
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
                 throwing = name in THROWING_GUARDS
+                disconnected_error = domain == 'OnlineDownload' and name in (
+                    'GetOnlineState', 'GoOnline', 'GoOffline', 'CompareSoftwareToOnline')
                 if throwing and profile == 'full':
                     resources.require(reply.get('result', {}).get('isError') is True, f'{name}: expected MCP error: {reply}')
                     raw = reply['result']['content'][0]['text']
                     resources.require(THROWING_GUARDS[name] in raw, f'{name}: missing disconnected guard: {raw}')
-                if name in HARDWARE_TERMINALS:
+                    reached_child = True
+                elif name in HARDWARE_TERMINALS:
                     resources.require('result' in reply, f'{name}: missing tool result: {reply}')
                     resources.require(bool(reply['result'].get('isError')) is (profile == 'full' and name in HARDWARE_THROWS),
                                       f'{name}: unexpected MCP error status: {reply}')
@@ -517,6 +531,17 @@ def capture(args, exe, harness, profile, isolated):
                         decoded = raw
                     resources.require(HARDWARE_TERMINALS[name] in decoded,
                                       f'{name}/{case} did not reach its offline terminal: {raw}')
+                    reached_child = True
+                elif disconnected_error:
+                    resources.require('result' in reply, str(reply))
+                    raw = reply['result']['content'][0]['text']
+                    if profile == 'full':
+                        resources.require(reply['result'].get('isError') is True, str(reply))
+                    else:
+                        bridge = json.loads(raw)
+                        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is False
+                                          and bridge['meta'].get('operationStatus') == 'notCompleted', raw)
+                    resources.require('no project is open' in raw, f'{name}: missing disconnected refusal: {raw}')
                     reached_child = True
                 elif (hidden or version_action) and profile == 'full':
                     resources.require('error' in reply or reply.get('result', {}).get('isError'),
@@ -536,6 +561,16 @@ def capture(args, exe, harness, profile, isolated):
                     if hidden or version_action:
                         resources.require('V20' in raw and ('unavailable' in raw or 'requires' in raw),
                                           f'{name}: missing version refusal: {raw}')
+                    elif domain == 'OnlineDownload' and name in ('GoOfflineAll', 'CheckDownloadReadiness', 'DownloadToPlc'):
+                        get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
+                        if name == 'CheckDownloadReadiness':
+                            resources.require(get('ready') is False and get('issues') == ['No project open.'], raw)
+                        else:
+                            resources.require(get('message') == 'No project open.'
+                                              and get('ok') is (name == 'GoOfflineAll'), raw)
+                        if name == 'GoOfflineAll':
+                            resources.require(get('data') == {'message': 'No project open.', 'allOffline': True, 'plcs': []}, raw)
+                        reached_child = True
                     elif domain == 'V20Options' and args.major == 21:
                         resources.require(meta.get('tool') == name and meta.get('operationSuccess') is False
                                           and 'absent from the supplied V21 SDK' in raw,

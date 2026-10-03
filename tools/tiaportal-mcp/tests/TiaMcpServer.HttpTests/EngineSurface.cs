@@ -44,7 +44,8 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.ModulesService",
         "TiaMcpServer.Siemens.Services.AddressesService",
         "TiaMcpServer.Siemens.Services.HardwareNetworkService",
-        "TiaMcpServer.Siemens.Services.HardwareServicesService"
+        "TiaMcpServer.Siemens.Services.HardwareServicesService",
+        "TiaMcpServer.Siemens.Services.OnlineDownloadService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

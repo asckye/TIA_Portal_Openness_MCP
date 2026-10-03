@@ -14,12 +14,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("includeProducts: list the installed TIA products / option packages (TiaPortalProduct).")] bool includeProducts=true)
             => Portal.ReadPortalInfo(includeProcesses,includeSessions,includeProducts);
 
-        [McpServerTool(Name="ReadTransferRoutes"), Description("[L2][PLC-Online][READ] The PG/PC route tree of the exact PLC's DownloadProvider.Configuration: Modes (ConfigurationMode.Name) -> PcInterfaces (Name, Number, Addresses, Subnets with Addresses and Gateways, TargetInterfaces with Addresses), plus availability of RHDownloadProvider / RHOnlineProvider (R/H systems, with PrimaryState/BackupState), OnlineProvider (State) and CompileProvider. Nothing is applied or changed; use it to pick pgPcInterface/targetIpAddress for DownloadToPlc / GoOnline.")]
-        public static ResponseMessage ReadTransferRoutes(
-            [Description("softwarePath: PLC software path from GetProjectTree, e.g. 'PLC_1'.")] string softwarePath,
-            [Description("maxItems: cap on route-tree rows returned.")] int maxItems=500)
-            => Portal.ReadTransferRoutes(softwarePath,maxItems);
-
         [McpServerTool(Name="ManageHardwareUtilities"), Description("[L2][Hardware][FILE] Project.HwUtilities: list (Identifier + class), findModuleTypes / findContainerTypes / normalizeTypeIdentifier (ModuleInformationProvider on a typeIdentifier), exportOpcUa (OpcUaExportProvider.Export(PLC DeviceItem, new .xml file)), exportCardReaderPsc (CardReaderPscProvider.Export(Device, new .psc file[, password] - creates the card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+). Exports refuse to overwrite; default dryRun=true; the password is never echoed.")]
         public static ResponseMessage ManageHardwareUtilities(
             [Description("action: the operation to perform - list | findModuleTypes | findContainerTypes | normalizeTypeIdentifier | exportOpcUa | exportCardReaderPsc.")] string action="list",

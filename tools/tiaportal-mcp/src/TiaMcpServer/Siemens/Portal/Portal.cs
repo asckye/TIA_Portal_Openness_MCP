@@ -764,9 +764,7 @@ namespace TiaMcpServer.Siemens
 
 
 
-        // #region download — moved to Portal.Download.cs
 
-        // #region online — moved to Portal.Online.cs
 
         // #region blocks/types — moved to Portal.Blocks.cs
 
