@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+  <Target Name="RejectDirectHarnessTest" BeforeTargets="VSTest"
+          Condition="'$(BuildingSolutionFile)' != 'true'">
+    <Error Text="$(MSBuildProjectName) is a console harness. Use dotnet run --project &quot;$(MSBuildProjectFullPath)&quot; -c Release with its documented arguments; dotnet test does not execute its checks." />
+  </Target>
+</Project>

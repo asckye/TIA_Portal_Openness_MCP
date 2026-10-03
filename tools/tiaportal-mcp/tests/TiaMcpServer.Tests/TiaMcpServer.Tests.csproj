@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../Shared/Xunit.props" />
   <!--
     最小离线自检套件。
 
     已迁移的纯逻辑通过 TiaMcp.Logic 项目引用复用；其余引擎文件继续链接源码，
     以便在没有 Siemens.Engineering 运行时的环境中执行离线断言。
 
-    ⚠️ 千万别用 `dotnet test` 跑它：那样只会还原、一个用例都不跑、然后退 0 ——
-    一个和「全部通过」长得一模一样的假绿灯。CI 里写死的是 `dotnet run`。
+    通过共享 xunit 适配器和 trx 最低数量门禁运行，每项 Check 对应一条测试结果。
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>

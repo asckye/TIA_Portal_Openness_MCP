@@ -110,7 +110,8 @@ class VersionCatalogWiring(unittest.TestCase):
         for suffix in ['Siemens/TiaVersionCatalog.cs', 'Siemens/Capability.cs', 'CliOptions.cs']:
             self.assertFalse(any(p.endswith(suffix) for p in linked), suffix)
             self.assertTrue((LOGIC / suffix).is_file(), suffix)
-        self.assertIn('TiaVersionCatalogTests.Run(Check)', read(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/Program.cs'))
+        self.assertIn('CheckSuite.Run(nameof(TiaVersionCatalogTests), TiaVersionCatalogTests.Run)',
+                      read(ROOT / 'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/OfflineChecks.cs'))
 
 
 if __name__ == '__main__':

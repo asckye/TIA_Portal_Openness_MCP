@@ -11,17 +11,20 @@ on:
 
 jobs:
   offline-tests:
-    # 回归套件是**控制台 Exe**，不是 VSTest 工程：
-    # `dotnet test` 在它上面只会还原、一个用例都不跑、然后退 0 ——
-    # 一个和「全部通过」长得一模一样的假绿灯。所以这里写死 `dotnet run`。
+    # 已迁移的 xunit 套件逐项生成 trx；最低数量门禁拒绝零测试、失败和超限跳过。
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '8.0.x'
-      - name: Offline regression suite
-        run: dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj -c Release --nologo
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: TRX gate self-checks
+        run: python scripts/checks/Test-DotnetSuites.py --self-test
+      - name: Offline regression and MCP SDK version policy
+        run: python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
       - name: Shared legacy and modern JSON protocol regression
         run: |
           dotnet run --project tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests.csproj -c Release --nologo

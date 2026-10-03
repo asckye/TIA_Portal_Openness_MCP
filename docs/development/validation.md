@@ -59,13 +59,23 @@ V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器
 python scripts/checks/Check-Repository.py
 python scripts/checks/Check-DeadToolReferences.py
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
-dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj -c Release
+python scripts/checks/Test-DotnetSuites.py --self-test
+python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
 dotnet run --project tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj -c Release
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
-控制台用例必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块在实际 .NET 10 桌面宿主执行，保留至少 157 项检查。`Build-Configurator.ps1 -Test` 需要 .NET 10 SDK；Framework csc 仅编译兼容启动器，配置测试通过后生成同格式的 `configurator-build.json`。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
+已迁移的 offline、offline-v20、version-policy 使用 xunit，每个原有 Check 对应一条结果；
+[最低数量表](../../tools/tiaportal-mcp/tests/test-suites.json)分别要求至少 3086、3086、10 项通过，均不允许跳过。
+门禁按请求顺序执行（两种编译符号共享输出目录），拒绝失败、数量不足、超限跳过、零执行及缺失或不一致的 trx；
+每次清除同名旧结果，在 `test-results/` 写入 `<suite>.trx` 和按测试类/方法统计的 `<suite>.json`，失败时也保存诊断。
+可用 `--results-directory <dir>`、`--dotnet <path>`、`--no-restore` 或重复的 `--dotnet-arg=<arg>` 定制执行。
+开发时可直接运行 `dotnet test <csproj> -c Release`（V20 加 `-p:DefineConstants=TIA_V20`），正式门禁仍用脚本核对数量。
+普通 `dotnet run` 对这两个已迁移工程返回 2；离线工程保留 `--local-process-fixture` 子进程入口。
+共享 [Harness.props](../../tools/tiaportal-mcp/tests/Shared/Harness.props)供后续控制台框架显式导入，直接 `dotnet test` 时明确报错；本步尚未应用到其他工程。
+
+未迁移的控制台用例仍必须用 `dotnet run` 执行。WPF 检查包括统一主窗口的导航、共同设置、退出清理与渲染；配置模块在实际 .NET 10 桌面宿主执行，保留至少 157 项检查。`Build-Configurator.ps1 -Test` 需要 .NET 10 SDK；Framework csc 仅编译兼容启动器，配置测试通过后生成同格式的 `configurator-build.json`。测试使用隔离配置和模拟 HTTP，覆盖客户端配置、
 合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。
 
 GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。push/PR CI 不比对构建记录中的源码哈希；
