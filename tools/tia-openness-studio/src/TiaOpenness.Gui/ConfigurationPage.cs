@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows;
 using TiaMcpConfigurator;
 using TiaOpenness.Gui.Localization;
-using TiaOpenness.Gui.Themes;
 using TiaOpenness.Gui.ViewModels;
 
 namespace TiaOpenness.Gui;
@@ -42,10 +41,7 @@ public partial class MainWindow
             page.CanUpdate = () => _model.CanSelectRelease;
             page.ServiceStateChanged += OnServiceStateChanged;
             ConfigurationHost.Content = page;
-            Loc.Current.LanguageChanged += OnDesktopLanguageChanged;
-            ThemeManager.Current.PropertyChanged += OnDesktopThemeChanged;
             _model.PropertyChanged += OnDesktopModelChanged;
-            ApplyConfigurationAppearance();
         }
         EngineeringWorkspace.Visibility = Visibility.Collapsed;
         ConfigurationHost.Visibility = Visibility.Visible;
@@ -78,20 +74,8 @@ public partial class MainWindow
         if (e.PropertyName == nameof(MainViewModel.SelectedReleaseKey)) Configuration.SelectedReleaseKey = _model.SelectedReleaseKey;
         if (e.PropertyName == nameof(MainViewModel.CanSelectRelease)) Configuration.SetReleaseEnabled(_model.CanSelectRelease);
     }
-    private void OnDesktopLanguageChanged(object? sender, EventArgs e) => ApplyConfigurationAppearance();
-    private void OnDesktopThemeChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(ThemeManager.EffectivelyDark)) Configuration?.ApplyTheme(ThemeManager.Current.EffectivelyDark ? "Dark" : "Light");
-    }
-    private void ApplyConfigurationAppearance()
-    {
-        Configuration?.ApplyLanguage(Loc.Current.IsChinese ? "zh" : "en");
-        Configuration?.ApplyTheme(ThemeManager.Current.EffectivelyDark ? "Dark" : "Light");
-    }
     private void DisposeConfiguration()
     {
-        Loc.Current.LanguageChanged -= OnDesktopLanguageChanged;
-        ThemeManager.Current.PropertyChanged -= OnDesktopThemeChanged;
         _model.PropertyChanged -= OnDesktopModelChanged;
         if (Configuration != null)
         {

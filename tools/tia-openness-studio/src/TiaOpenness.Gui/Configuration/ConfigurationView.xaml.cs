@@ -16,6 +16,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using TiaMcp.Versioning;
+using TiaOpenness.Gui.Localization;
 
 namespace TiaMcpConfigurator
 {
@@ -48,7 +49,7 @@ namespace TiaMcpConfigurator
             get
             {
                 var selected = Find<ComboBox>("Version").SelectedItem as TiaVersionDescriptor;
-                if (selected == null) throw new InvalidOperationException("请选择可运行的 TIA Portal 版本。");
+                if (selected == null) throw new InvalidOperationException(Loc.Current["Config.SelectRelease"]);
                 return TiaVersionCatalog.RequireRunnable(selected.Key).Key;
             }
         }
@@ -63,10 +64,6 @@ namespace TiaMcpConfigurator
             Window = owner;
             root = bundleRoot;
             InitializeComponent();
-            string assembly = Assembly.GetExecutingAssembly().GetName().Name;
-            Resources["Ui.Font"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#Manrope, Segoe UI Variable, Microsoft YaHei UI");
-            Resources["Ui.FontMono"] = new FontFamily(new Uri("pack://application:,,,/" + assembly + ";component/"), "./Fonts/#JetBrains Mono, Consolas");
-            ApplyTheme("Auto");
             var versions = Find<ComboBox>("Version");
             versions.ItemsSource = TiaVersionCatalog.Runnable.ToList();
             versions.SelectedValue = "21";
@@ -75,9 +72,9 @@ namespace TiaMcpConfigurator
             var choices = Find<ListBox>("ClientChoices");
             var cards = ClientProfiles.All(); choices.ItemsSource = cards;
             int firstDetected = cards.FindIndex(x => x.Detected); choices.SelectedIndex = firstDetected < 0 ? 0 : firstDetected;
-            Append("客户端检测：" + String.Join("，", cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –"))) + "（✓ = 本机检测到；未检测到的仍可写入）");
+            Append(Loc.Current.T("Config.ClientDetection", String.Join(Loc.Current["Config.ClientListSeparator"], cards.Select(x => x.DisplayName + (x.Detected ? " ✓" : " –")))));
             choices.SelectionChanged += delegate { UpdateInstructions(); };
-            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, "客户端使用说明", MessageBoxButton.OK, MessageBoxImage.Information); };
+            Find<TextBlock>("ClientSelection").MouseLeftButtonUp += delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); };
             Find<PasswordBox>("Key").PasswordChanged += delegate { UpdateKeyPlaceholder(); };
             Find<TextBox>("KeyVisible").TextChanged += delegate { UpdateKeyPlaceholder(); };
             Find<CheckBox>("ShowKey").Click += delegate {
@@ -93,7 +90,7 @@ namespace TiaMcpConfigurator
             Find<TextBox>("ServerAddress").TextChanged += delegate { UpdateLink(); };
             Find<TextBox>("ServerPort").TextChanged += delegate { UpdateLink(); };
             Click("BrowseTia", delegate {
-                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = "选择 Portal V" + SelectedVersion + " 安装目录，不带 Bin", SelectedPath = Text("TiaPath") })
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog { Description = Loc.Current.T("Config.BrowseTiaDescription", SelectedVersion), SelectedPath = Text("TiaPath") })
                     if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) Find<TextBox>("TiaPath").Text = dialog.SelectedPath;
             });
             Click("DetectTia", delegate { DetectTiaPath(true); });
@@ -107,9 +104,9 @@ namespace TiaMcpConfigurator
             MenuClick("CheckUpdate", async delegate { await OnCheckUpdate(true); });
             MenuClick("RunUpdate", OnRunUpdate);
             MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
-            MenuClick("ShowClientHelp", delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, "客户端使用说明", MessageBoxButton.OK, MessageBoxImage.Information); });
+            MenuClick("ShowClientHelp", delegate { MessageBox.Show(Window, Find<TextBlock>("ClientInstructions").Text, Loc.Current["Config.ClientInstructionsCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
             MenuClick("OpenProjectPage", delegate { Process.Start(new ProcessStartInfo("https://github.com/" + UpdateCheck.Repository) { UseShellExecute = true }); });
-            MenuClick("AboutItem", delegate { MessageBox.Show(Window, "TIA Portal · MCP Bridge 配置器 " + Assembly.GetExecutingAssembly().GetName().Version + "\n引擎：" + (UpdateCheck.Installed(root) ?? "未知（不在交付包里）") + "\n目录：" + root + "\n\n更新走菜单“更新 → 更新引擎…”，由 scripts\\operations\\Update-Engine.ps1 在引擎停止后完成。", "关于", MessageBoxButton.OK, MessageBoxImage.Information); });
+            MenuClick("AboutItem", delegate { MessageBox.Show(Window, Loc.Current.T("Config.AboutDetails", Assembly.GetExecutingAssembly().GetName().Version, UpdateCheck.Installed(root) ?? Loc.Current["Config.UnknownInstalledEngine"], root), Loc.Current["Config.AboutCaption"], MessageBoxButton.OK, MessageBoxImage.Information); });
             ShowInstalledVersion();
             Find<ComboBox>("Version").SelectionChanged += delegate { Guard(delegate { LoadServer(loadExisting); }); UpdateLink(); };
             if (loadExisting)
@@ -121,8 +118,9 @@ namespace TiaMcpConfigurator
                 var ignored = OnCheckUpdate(false);   // background; the band reports the outcome, nothing blocks
             }
             else { Find<TextBox>("TiaPath").Text = @"C:\Program Files\Siemens\Automation\Portal V21"; DetectTiaPath(false); }
-            ApplyLanguage(loadExisting && System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "zh" ? "zh" : "en");
-            Append("就绪。服务与客户端配置在同一页完成，两端使用同一密钥。");
+            UpdateLanguage();
+            Loc.Current.LanguageChanged += OnLanguageChanged;
+            Append(Loc.Current["Config.Ready"]);
             Window.Closing += OnClosing;
             // The desktop owns the version selector; this field only mirrors its state.
             Find<ComboBox>("Version").IsHitTestVisible = false;
@@ -130,46 +128,37 @@ namespace TiaMcpConfigurator
             Find<ComboBox>("Version").IsEnabled = false;
         }
 
-        private static ResourceDictionary LoadDictionary(string path)
+        private void OnLanguageChanged(object? sender, EventArgs e) { UpdateLanguage(); }
+        private void UpdateLanguage()
         {
-            return new ResourceDictionary { Source = new Uri("/TiaOpenness;component/" + path, UriKind.Relative) };
-        }
-
-        public void ApplyTheme(string theme)
-        {
-            string resolved = theme;
-            if (theme == "Auto")
-            {
-                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
-                    resolved = key != null && Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) == 0 ? "Dark" : "Light";
-            }
-            var palette = LoadDictionary("Themes/Palette." + resolved + ".xaml");
-            foreach (object key in palette.Keys) Resources[key] = palette[key];
-        }
-
-        private string T(string key) { return (string)Resources["Text." + key]; }
-        private string F(string key, object value) { return String.Format(T(key), value); }
-        public void ApplyLanguage(string language)
-        {
-            var strings = LoadDictionary("Configuration/Glass.Strings." + language + ".xaml");
-            foreach (object key in strings.Keys) Resources[key] = strings[key];
-            Language = System.Windows.Markup.XmlLanguage.GetLanguage(language == "zh" ? "zh-CN" : "en-US");
+            Language = System.Windows.Markup.XmlLanguage.GetLanguage(Loc.Current.IsChinese ? "zh-CN" : "en-US");
             Mode(Remote); UpdateInstructions(); UpdateDetectionLabel(); UpdateLastTest(); UpdateLogCount();
+            foreach (var update in localizedText.Values) update();
         }
+
+        // Retain format arguments for current labels; activity-log history stays as written.
+        private readonly Dictionary<string, Action> localizedText = new Dictionary<string, Action>();
+        private void SetLocalizedText(string name, DependencyProperty property, string key, params object[] args)
+        {
+            Action update = delegate { Find<FrameworkElement>(name).SetValue(property, Loc.Current.T(key, args)); };
+            localizedText[name] = update;
+            update();
+        }
+
         private void UpdateDetectionLabel()
         {
-            Find<TextBlock>("DetectionSource").Text = tiaDetected ? "● " + T("Detected") : T("NotDetected");
+            Find<TextBlock>("DetectionSource").Text = tiaDetected ? "● " + Loc.Current["Config.Detected"] : Loc.Current["Config.NotDetected"];
             Find<TextBlock>("DetectionSource").SetResourceReference(TextBlock.ForegroundProperty, tiaDetected ? "Ui.Accent" : "Ui.TertiaryLabel");
         }
         private void UpdateLastTest()
-        { Find<TextBlock>("LastTest").Text = F("LastTest", lastTestResult ?? T(lastTestFailed ? "TestFailed" : "TestNotRun")); }
+        { Find<TextBlock>("LastTest").Text = Loc.Current.T("Config.LastTest", lastTestResult ?? Loc.Current[lastTestFailed ? "Config.TestFailed" : "Config.TestNotRun"]); }
         private void UpdateLogCount()
-        { Find<TextBlock>("LogCount").Text = F(logEntries == 1 ? "Entry" : "Entries", logEntries); }
+        { Find<TextBlock>("LogCount").Text = Loc.Current.T(logEntries == 1 ? "Config.Entry" : "Config.Entries", logEntries); }
 
         private void Click(string name, Action action) { Find<Button>(name).Click += delegate { Guard(action); }; }
         private void MenuClick(string name, Action action) { Find<MenuItem>(name).Click += delegate { Guard(action); }; }
         private void Guard(Action action) { try { action(); } catch (Exception ex) { Report(ex); } }
-        private void SetStatus(string status) { Find<TextBlock>("Status").Text = status; }
+        private void SetStatus(string key, params object[] args) { SetLocalizedText("Status", TextBlock.TextProperty, key, args); }
         private void ServiceStatus(bool active)
         {
             Find<System.Windows.Shapes.Ellipse>("StatusDot").SetResourceReference(System.Windows.Shapes.Shape.FillProperty, active ? "Ui.Accent" : "Ui.StatusIdle");
@@ -182,14 +171,14 @@ namespace TiaMcpConfigurator
         private void Mode(bool remote)
         {
             var eyebrow = Find<TextBlock>("PageStep"); eyebrow.Inlines.Clear();
-            foreach (char character in T("Eyebrow"))
+            foreach (char character in Loc.Current["Config.Eyebrow"])
             {
                 eyebrow.Inlines.Add(new System.Windows.Documents.Run(character.ToString()));
                 eyebrow.Inlines.Add(new System.Windows.Documents.InlineUIContainer(new Border { Width = 1.54 }));
             }
-            Find<TextBlock>("PageTitle").Text = T(remote ? "RemoteTitle" : "LocalTitle");
-            Find<TextBlock>("PageSubtitle").Text = T(remote ? "RemoteSubtitle" : "LocalSubtitle");
-            Find<TextBlock>("ServerCardTitle").Text = T(remote ? "HttpService" : "LocalEngine");
+            Find<TextBlock>("PageTitle").Text = Loc.Current[remote ? "Config.RemoteTitle" : "Config.LocalTitle"];
+            Find<TextBlock>("PageSubtitle").Text = Loc.Current[remote ? "Config.RemoteSubtitle" : "Config.LocalSubtitle"];
+            Find<TextBlock>("ServerCardTitle").Text = Loc.Current[remote ? "Config.HttpService" : "Config.LocalEngine"];
             Find<TextBlock>("ServerCardNote").Text = remote ? "HTTP" : "stdio";
             Find<TextBlock>("Transport").Text = remote ? "HTTP" : "stdio";
             Find<Grid>("AddressRow").Visibility = remote ? Visibility.Visible : Visibility.Collapsed;
@@ -205,20 +194,20 @@ namespace TiaMcpConfigurator
         {
             bool remote = Remote;
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? T("NoSelection") : selected.Count == 1 ? selected[0].DisplayName : F("Selected", selected.Count);
+            Find<TextBlock>("LinkClient").Text = selected.Count == 0 ? Loc.Current["Config.NoSelection"] : selected.Count == 1 ? selected[0].DisplayName : Loc.Current.T("Config.Selected", selected.Count);
             Find<TextBlock>("LinkClient").ToolTip = String.Join("、", selected.Select(x => x.DisplayName));
             Find<TextBlock>("LinkServer").Text = "MCP · TIA Portal " + TiaVersionCatalog.Get(SelectedVersion).DisplayName;
             bool running = server != null && !server.HasExited;
             string address = Text("ServerAddress");
-            Find<TextBlock>("LinkEndpoint").Text = !remote ? T("LocalAddress") : address.Length == 0 ? T("NoAddress") : address + ":" + Text("ServerPort");
-            Find<TextBlock>("LinkState").Text = T(!remote ? "Local" : running ? "Running" : "Idle");
+            Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
+            Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
         }
         private void UpdateInstructions()
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            Find<TextBlock>("ClientSelection").Text = F("Selected", selected.Count);
-            Find<TextBlock>("ClientInstructions").Text = selected.Count == 0 ? "选择一个或多个客户端，保存后将自动写入对应配置。" :
-                String.Join("\n", selected.Select(x => x.Name + "：" + x.Hint + "（" + (x.Detected ? "已检测到：" : "未检测到：") + x.Evidence + "）"));
+            Find<TextBlock>("ClientSelection").Text = Loc.Current.T("Config.Selected", selected.Count);
+            Find<TextBlock>("ClientInstructions").Text = selected.Count == 0 ? Loc.Current["Config.ChooseClients"] :
+                String.Join("\n", selected.Select(x => Loc.Current.T(x.Detected ? "Config.ClientInstructionsDetected" : "Config.ClientInstructionsNotDetected", x.Name, x.Hint, x.Evidence)));
             Find<TextBlock>("ClientSelection").ToolTip = Find<TextBlock>("ClientInstructions").Text;
             UpdateLink();
         }
@@ -235,17 +224,17 @@ namespace TiaMcpConfigurator
         {
             string message = ex.GetBaseException().Message;
             var http = ex as HttpListenerException;
-            if (http != null) message = "HTTP 监听失败（" + http.NativeErrorCode + "）：" + message + "。拒绝访问时点击“网络权限”；端口占用时停止旧 MCP 或更换端口。";
+            if (http != null) message = Loc.Current.T("Config.HttpListenFailed", http.NativeErrorCode, message);
             var web = ex as WebException;
             if (web != null)
             {
                 var response = web.Response as HttpWebResponse;
-                message = response != null && response.StatusCode == HttpStatusCode.Unauthorized ? "鉴权失败（401）：请检查两端连接密钥是否一致。" :
-                    "连接失败：" + message + " 请检查虚拟机服务、IP、端口和防火墙。";
+                message = response != null && response.StatusCode == HttpStatusCode.Unauthorized ? Loc.Current["Config.Unauthorized"] :
+                    Loc.Current.T("Config.ConnectionFailed", message);
                 if (response != null) response.Close();
             }
             string secret = Secret(); if (!String.IsNullOrEmpty(secret)) message = message.Replace(secret, "[redacted]");
-            SetStatus("需要处理"); Append(message); MessageBox.Show(Window, message, "需要处理", MessageBoxButton.OK, MessageBoxImage.Warning);
+            SetStatus("Config.NeedsAttention"); Append(message); MessageBox.Show(Window, message, Loc.Current["Config.NeedsAttention"], MessageBoxButton.OK, MessageBoxImage.Warning);
         }
         // 自动探测安装目录：环境变量 → 注册表 → 默认目录（与引擎同一顺序）。explicit=false 时只在探测成功才覆盖文本框，找不到保持原值不打扰。
         private void DetectTiaPath(bool explicitRequest)
@@ -253,8 +242,8 @@ namespace TiaMcpConfigurator
             var found = ConfigCore.DetectTia(SelectedVersion);
             tiaDetected = found.Key != null; UpdateDetectionLabel();
             Find<TextBlock>("DetectionSource").ToolTip = found.Value;
-            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append("已自动检测到 V" + SelectedVersion + " 安装目录（" + found.Value + "）：" + found.Key); }
-            else if (explicitRequest) Append("未自动检测到：" + found.Value + "。请用“浏览”手动选择 Portal V" + SelectedVersion + " 安装根目录。");
+            if (found.Key != null) { Find<TextBox>("TiaPath").Text = found.Key; Append(Loc.Current.T("Config.TiaDetected", SelectedVersion, found.Value, found.Key)); }
+            else if (explicitRequest) Append(Loc.Current.T("Config.TiaNotDetected", found.Value, SelectedVersion));
         }
         private void LoadServer(bool loadExisting)
         {
@@ -263,9 +252,9 @@ namespace TiaMcpConfigurator
             if (!loadExisting || !File.Exists(StatePath)) { DetectTiaPath(false); return; }
             var settings = ConfigCore.Json().Deserialize<ServerSettings>(File.ReadAllText(StatePath));
             ConfigCore.Prefix(settings.Address, settings.Port);
-            if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException("已保存配置中的 TIA 版本不匹配。");
+            if (settings.EffectiveReleaseKey != SelectedVersion) throw new InvalidDataException(Loc.Current["Config.SavedReleaseMismatch"]);
             Find<TextBox>("TiaPath").Text = settings.TiaPath; Find<TextBox>("ServerAddress").Text = settings.Address; Find<TextBox>("ServerPort").Text = settings.Port.ToString();
-            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append("已载入 V" + SelectedVersion + " 服务配置。");
+            SetSecret(ConfigCore.Unprotect(settings.ProtectedKey)); Append(Loc.Current.T("Config.ServerLoaded", SelectedVersion));
         }
         // 宿主机上没有服务端配置，用上次填写的连接信息补齐同一组字段。
         private void LoadClient()
@@ -289,35 +278,35 @@ namespace TiaMcpConfigurator
             int port = Int32.Parse(Text("ServerPort")); string ip = Text("ServerAddress"), secret = Secret();
             ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret);
             ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
-            Append("客户端侧连接信息已按当前 Windows 用户加密保存。");
-            try { ConfigCore.AtomicJson(StatePath, Settings()); Append("服务端配置已保存。下一步：网络权限 → 启动服务。"); }
-            catch (Exception ex) { Append("本机未通过服务端校验，只保存了客户端侧信息：" + ex.GetBaseException().Message); }
-            SetStatus("已保存");
+            Append(Loc.Current["Config.ClientConnectionSaved"]);
+            try { ConfigCore.AtomicJson(StatePath, Settings()); Append(Loc.Current["Config.ServerSaved"]); }
+            catch (Exception ex) { Append(Loc.Current.T("Config.ClientOnlySaved", ex.GetBaseException().Message)); }
+            SetStatus("Config.Saved");
         }
 
         private void SaveClients(bool remote)
         {
             var selected = Find<ListBox>("ClientChoices").SelectedItems.Cast<ClientProfile>().ToList();
-            if (selected.Count == 0) throw new InvalidOperationException("请先选择一个或多个 AI 客户端。");
+            if (selected.Count == 0) throw new InvalidOperationException(Loc.Current["Config.SelectClientsFirst"]);
             string engine = null, ip = null, secret = null; int port = 0;
             if (remote) { ip = Text("ServerAddress"); port = Int32.Parse(Text("ServerPort")); secret = Secret(); ConfigCore.Prefix(ip, port); ConfigCore.ValidateKey(secret); }
             else { engine = ConfigCore.Engine(root, SelectedVersion); ConfigCore.ValidateTia(Text("TiaPath"), SelectedVersion); }
             // DeepSeek / 智谱 / Grok are brand cards over the same OpenCode file: write it once, name every brand.
             var targets = selected.GroupBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
                 .Select(g => new { Profile = g.First(), Names = String.Join(" / ", g.Select(x => x.Name)) }).ToList();
-            string message = "请先退出所选客户端，避免配置同时写入。\n将保留其它设置并备份原文件：\n\n" + String.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
-            message += "\n\n客户端配置按其格式保存密钥，请勿分享文件或备份。继续？";
-            if (MessageBox.Show(Window, message, "写入客户端配置", MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+            string message = Loc.Current["Config.WriteClientsPrompt"] + String.Join("\n", targets.Select(x => x.Names + "\n" + x.Profile.Path));
+            message += Loc.Current["Config.WriteClientsContinue"];
+            if (MessageBox.Show(Window, message, Loc.Current["Config.Write"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
             int saved = 0; var errors = new List<string>();
             foreach (var target in targets)
             {
-                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")); saved++; Append(target.Names + " 已保存：" + target.Profile.Path); }
+                try { ClientProfiles.Save(target.Profile, remote, ip, port, secret, engine, SelectedVersion, Text("TiaPath")); saved++; Append(Loc.Current.T("Config.ClientSaved", target.Names, target.Profile.Path)); }
                 catch (Exception ex) { errors.Add(target.Names + "：" + ex.Message); }
             }
             if (remote && saved > 0) ConfigCore.AtomicJson(Path.Combine(ConfigCore.StateDirectory, "client.json"), new ServerSettings { Address = ip, Port = port, ProtectedKey = ConfigCore.Protect(secret) });
-            SetStatus("已配置 " + saved + " 个客户端");
-            Append("重启已配置的客户端，使用 " + (remote ? "tia-portal-vm" : "tia-portal") + " 读取工程树。不要让多个 AI 同时修改同一工程。");
-            if (errors.Count > 0) throw new InvalidOperationException("部分客户端未保存，其它成功项已保留：\n" + String.Join("\n", errors));
+            SetStatus("Config.ClientsConfigured", saved);
+            Append(Loc.Current.T("Config.RestartClients", remote ? "tia-portal-vm" : "tia-portal"));
+            if (errors.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.SomeClientsNotSaved", String.Join("\n", errors)));
         }
         private void SetBusy(bool value)
         {
@@ -329,17 +318,16 @@ namespace TiaMcpConfigurator
         private void ShowInstalledVersion()
         {
             string installed = UpdateCheck.Installed(root);
-            var item = Find<MenuItem>("UpdateInstalledItem");
-            if (installed == null) { item.Header = "引擎版本未知：这里不是解压后的交付包（没有 manifest\\delivery.json）"; Find<MenuItem>("CheckUpdate").IsEnabled = false; return; }
-            item.Header = "引擎 " + installed + "（" + UpdateCheck.InstalledPackage(root) + "）";
-            if (UpdateCheck.IsSourceRepository(root)) Find<MenuItem>("UpdateStateItem").Header = "源码仓库（有 .git）：不在这里更新，发布走 scripts\\build\\Release.ps1";
+            if (installed == null) { SetLocalizedText("UpdateInstalledItem", MenuItem.HeaderProperty, "Config.EngineOutsideBundle"); Find<MenuItem>("CheckUpdate").IsEnabled = false; return; }
+            SetLocalizedText("UpdateInstalledItem", MenuItem.HeaderProperty, "Config.InstalledEngine", installed, UpdateCheck.InstalledPackage(root));
+            if (UpdateCheck.IsSourceRepository(root)) SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.SourceRepositoryUpdate");
         }
         private async Task OnCheckUpdate(bool explicitRequest)
         {
             string installed = UpdateCheck.Installed(root);
             if (installed == null) return;
-            var state = Find<MenuItem>("UpdateStateItem"); var check = Find<MenuItem>("CheckUpdate"); var menu = Find<MenuItem>("UpdateMenu");
-            check.IsEnabled = false; state.Header = "正在检查 GitHub 最新版本…";
+            var check = Find<MenuItem>("CheckUpdate");
+            check.IsEnabled = false; SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.CheckingUpdate");
             try
             {
                 var info = await Task.Run(() => UpdateCheck.Latest(installed, UpdateCheck.Repository));
@@ -347,39 +335,39 @@ namespace TiaMcpConfigurator
                 if (info.UpdateAvailable)
                 {
                     string size = info.ZipSizeText.Length > 0 ? "（" + info.ZipSizeText + "）" : "";
-                    state.Header = "可更新到 " + info.Latest + size + " · 先停引擎，再点下面的“更新引擎…”";
-                    menu.Header = "更新 · 有新版本 " + info.Latest + "(_U)";
+                    SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.UpdateAvailable", info.Latest, size);
+                    SetLocalizedText("UpdateMenu", MenuItem.HeaderProperty, "Config.UpdateMenuAvailable", info.Latest);
                     Find<MenuItem>("RunUpdate").IsEnabled = !UpdateCheck.IsSourceRepository(root);
-                    Append("检查更新：" + installed + " → " + info.Latest + size + "，菜单“更新 → 更新引擎…”执行（" + info.ReleaseUrl + "）");
+                    Append(Loc.Current.T("Config.UpdateAvailableLog", installed, info.Latest, size, info.ReleaseUrl));
                 }
                 else
                 {
-                    state.Header = "已是最新（" + info.Tag + "）"; menu.Header = "更新(_U)";
+                    SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.UpToDate", info.Tag); SetLocalizedText("UpdateMenu", MenuItem.HeaderProperty, "Config.Update");
                     Find<MenuItem>("RunUpdate").IsEnabled = false;
-                    Append("检查更新：" + installed + " 已是最新（" + info.Source + "）");
+                    Append(Loc.Current.T("Config.UpToDateLog", installed, info.Source));
                 }
             }
             catch (Exception ex)
             {
-                state.Header = "无法检查：" + ex.GetBaseException().Message;
-                if (explicitRequest) Append("检查更新失败：" + ex.GetBaseException().Message);
+                SetLocalizedText("UpdateStateItem", MenuItem.HeaderProperty, "Config.CannotCheckUpdate", ex.GetBaseException().Message);
+                if (explicitRequest) Append(Loc.Current.T("Config.UpdateCheckFailed", ex.GetBaseException().Message));
             }
             finally { check.IsEnabled = true; }
         }
         private void OnRunUpdate()
         {
-            if (CanUpdate != null && !CanUpdate()) throw new InvalidOperationException("请先完成工程操作并断开 TIA 会话，再更新软件。");
+            if (CanUpdate != null && !CanUpdate()) throw new InvalidOperationException(Loc.Current["Config.FinishOperationsBeforeUpdate"]);
             if (busy) return;
-            if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException("这是源码仓库，不在这里更新。");
-            if (server != null && !server.HasExited) throw new InvalidOperationException("先点“停止”结束本窗口启动的 MCP，再更新。");
+            if (UpdateCheck.IsSourceRepository(root)) throw new InvalidOperationException(Loc.Current["Config.CannotUpdateSource"]);
+            if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.StopServiceBeforeUpdate"]);
             var running = UpdateCheck.RunningEngines();
-            if (running.Count > 0) throw new InvalidOperationException("引擎仍在运行，更新器会拒绝：" + String.Join("；", running) + "。请先停止它（可能是某个 AI 客户端启动的：关闭那个会话），再更新。");
+            if (running.Count > 0) throw new InvalidOperationException(Loc.Current.T("Config.EnginesStillRunning", String.Join("；", running)));
             string updater = UpdateCheck.UpdaterPath(root);
-            if (!File.Exists(updater)) throw new InvalidOperationException("找不到更新器 " + updater + "。请从 GitHub Releases 重新下载完整交付包。");
-            string target = latest != null && latest.UpdateAvailable ? latest.Latest : "最新版";
-            if (MessageBox.Show(Window, "将关闭本程序，在新的 PowerShell 窗口里把\n" + root + "\n更新到 " + target + "：下载 ZIP 与 .sha256、校验 SHA-256、备份到 .previous、替换 runtime 与 manifest。完成后自动重新打开本程序；失败时该窗口保留错误信息，-Rollback 可换回上一版。\n\n继续？", "更新引擎", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
+            if (!File.Exists(updater)) throw new InvalidOperationException(Loc.Current.T("Config.UpdaterMissing", updater));
+            string target = latest != null && latest.UpdateAvailable ? latest.Latest : Loc.Current["Config.LatestVersion"];
+            if (MessageBox.Show(Window, Loc.Current.T("Config.RunUpdatePrompt", root, target), Loc.Current["Config.RunUpdateCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK) return;
             Process.Start(UpdateCheck.Launch(root, Process.GetCurrentProcess().Id));
-            Append("更新器已在新窗口启动，本程序即将关闭。");
+            Append(Loc.Current["Config.UpdaterStarted"]);
             Window.Close();
         }
         private async Task OnTestClient()
@@ -388,10 +376,10 @@ namespace TiaMcpConfigurator
             try
             {
                 string ip = Text("ServerAddress"), secret = Secret(); int port = Int32.Parse(Text("ServerPort"));
-                SetBusy(true); SetStatus("正在测试…");
+                SetBusy(true); SetStatus("Config.Testing");
                 string result = await Task.Run(() => ConfigCore.TestRemote(ip, port, secret));
                 lastTestResult = result; lastTestFailed = false; UpdateLastTest();
-                Append(result); SetStatus("连接正常");
+                Append(result); SetStatus("Config.ConnectionOk");
             }
             catch (Exception ex) { lastTestResult = null; lastTestFailed = true; UpdateLastTest(); Report(ex); }
             finally { SetBusy(false); }
@@ -402,23 +390,23 @@ namespace TiaMcpConfigurator
             try
             {
                 string ip = Text("ServerAddress"); int port = Int32.Parse(Text("ServerPort")); ConfigCore.Prefix(ip, port);
-                if (MessageBox.Show(Window, "为当前用户授权此 HTTP 地址，并放行本地子网到此端口。\n接下来会出现 Windows 管理员权限提示，继续？", "网络权限", MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
+                if (MessageBox.Show(Window, Loc.Current["Config.NetworkPrompt"], Loc.Current["Config.Network"], MessageBoxButton.OKCancel, MessageBoxImage.Information) != MessageBoxResult.OK) return;
                 var args = new[] { "--network", ip, port.ToString(), WindowsIdentity.GetCurrent().User.Value };
                 var info = new ProcessStartInfo(Process.GetCurrentProcess().MainModule.FileName, String.Join(" ", args.Select(ConfigCore.Quote))) { UseShellExecute = true, Verb = "runas", WindowStyle = ProcessWindowStyle.Hidden };
-                SetBusy(true); SetStatus("配置网络…");
+                SetBusy(true); SetStatus("Config.ConfiguringNetwork");
                 using (var process = Process.Start(info))
                 {
                     await Task.Run(() => process.WaitForExit());
-                    if (process.ExitCode != 0) throw new InvalidOperationException("网络配置未完成，请查看管理员窗口中的错误信息。");
+                    if (process.ExitCode != 0) throw new InvalidOperationException(Loc.Current["Config.NetworkIncomplete"]);
                 }
-                SetStatus("网络已配置"); Append("网络权限配置完成。现在可以启动服务。");
+                SetStatus("Config.NetworkConfigured"); Append(Loc.Current["Config.NetworkReady"]);
             }
             catch (Exception ex) { Report(ex); }
             finally { SetBusy(false); }
         }
         private void OnStartServer()
         {
-            if (server != null && !server.HasExited) throw new InvalidOperationException("此窗口已经启动 MCP。");
+            if (server != null && !server.HasExited) throw new InvalidOperationException(Loc.Current["Config.ServiceAlreadyStarted"]);
             var settings = Settings(); ConfigCore.CheckListener(ConfigCore.Prefix(settings.Address, settings.Port));
             ConfigCore.AtomicJson(StatePath, settings); runningKey = Secret();
             var info = new ProcessStartInfo(ConfigCore.Engine(root, SelectedVersion), ConfigCore.Arguments(settings, runningKey)) {
@@ -429,27 +417,27 @@ namespace TiaMcpConfigurator
             process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.Exited += delegate {
-                Append("MCP 已退出，退出码：" + process.ExitCode);
-                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("服务已停止"); ServiceStatus(false); }));
+                Append(Loc.Current.T("Config.ServiceExited", process.ExitCode));
+                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false); }));
             };
-            try { if (!process.Start()) throw new InvalidOperationException("MCP 进程未启动。"); }
+            try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }
             catch { process.Dispose(); throw; }
             server = process;
             Find<Button>("StartServer").IsEnabled = false; Find<Button>("StopServer").IsEnabled = true; Find<ComboBox>("Version").IsEnabled = false;
-            process.BeginOutputReadLine(); process.BeginErrorReadLine(); SetStatus("服务进程运行中");
+            process.BeginOutputReadLine(); process.BeginErrorReadLine(); SetStatus("Config.ServiceRunning");
             ServiceStatus(true);
-            Append("请检查日志中的 listening 提示，并在宿主机测试连接。保持此窗口打开。");
+            Append(Loc.Current["Config.CheckListening"]);
         }
         private void OnStopServer()
         {
             if (server == null || server.HasExited) return;
-            if (MessageBox.Show(Window, "将停止本窗口启动的 MCP，中断客户端连接。\n请确认没有正在执行的工程操作。继续？", "停止 MCP", MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
+            if (MessageBox.Show(Window, Loc.Current["Config.StopServicePrompt"], Loc.Current["Config.StopServiceCaption"], MessageBoxButton.OKCancel, MessageBoxImage.Warning) != MessageBoxResult.OK) return;
             server.Kill(); server.WaitForExit();
         }
         private void OnClosing(object sender, CancelEventArgs e)
         {
             if (e.Cancel) return;
-            if (busy) { e.Cancel = true; Append("正在处理配置，请稍候再关闭。"); return; }
+            if (busy) { e.Cancel = true; Append(Loc.Current["Config.WaitBeforeClosing"]); return; }
             try { OnStopServer(); if (server != null && !server.HasExited) { e.Cancel = true; return; } }
             catch (Exception ex) { e.Cancel = true; Report(ex); return; }
             closing = true;
@@ -471,6 +459,7 @@ namespace TiaMcpConfigurator
         public void Dispose()
         {
             Window.Closing -= OnClosing;
+            Loc.Current.LanguageChanged -= OnLanguageChanged;
             closing = true;
             if (server != null && server.HasExited) server.Dispose();
         }

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using TiaOpenness.Gui.Localization;
 using Xunit;
@@ -30,6 +32,29 @@ public class StringsTests
     public void The_catalogue_is_not_empty()
     {
         Assert.NotEmpty(Strings.Catalogue);
+    }
+
+    [Fact]
+    public void Migrated_configuration_entries_preserve_both_original_dictionaries()
+    {
+        string[] keys =
+        [
+            "Eyebrow", "RemoteTitle", "LocalTitle", "RemoteSubtitle", "LocalSubtitle", "RemoteMode", "LocalMode",
+            "RemoteNote", "LocalNote", "Installation", "Version", "InstallPath", "Browse", "Detect", "Detected",
+            "NotDetected", "HttpService", "LocalEngine", "Ip", "Port", "Network", "Start", "Stop", "LocalEngineNote",
+            "LocalActionsNote", "AiClients", "ClientNote", "Secret", "Generate", "Show", "Test", "Write", "Summary",
+            "Clients", "Service", "Address", "Transport", "Log", "Idle", "Running", "Local", "NoSelection", "Selected",
+            "NoAddress", "LocalAddress", "LastTest", "TestNotRun", "TestFailed", "InitialTest", "Entries", "Entry",
+            "EmptyLog", "Light", "Dark", "Auto", "SaveBoth", "Minimize", "Maximize", "Close", "Update", "UnknownEngine",
+            "NotChecked", "CheckUpdate", "RunUpdate", "Releases", "ClientHelp", "ProjectPage", "About",
+        ];
+        Assert.Equal(68, keys.Length);
+        // SHA-256 of the former XML entries, sorted by Config key: key\0English\0Chinese\n.
+        // This also preserves trailing spaces, punctuation and the untranslated legacy menu labels.
+        var entries = keys.Select(key => "Config." + key).OrderBy(key => key, StringComparer.Ordinal);
+        var text = string.Concat(entries.Select(key => key + "\0" + Strings.English[key] + "\0" + Strings.Chinese[key] + "\n"));
+        Assert.Equal("8CF4DD14D002189297185CB1529CFAD20E0301A1DE1308E7C0430519F564E1F3",
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text))));
     }
 
     [Fact]
@@ -98,6 +123,9 @@ public class StringsTests
             // prose, so translating them would be inventing a difference rather than removing one.
             "App.Title", "App.Monogram", "Badge.NoVersion", "Badge.Version",
             "Lang.English", "Lang.Chinese", "Status.Working",
+            // P5-02 preserves all 68 legacy dictionary entries verbatim, including these menus.
+            "Config.Update", "Config.UnknownEngine", "Config.NotChecked", "Config.CheckUpdate", "Config.RunUpdate",
+            "Config.Releases", "Config.ClientHelp", "Config.ProjectPage", "Config.About",
         ];
 
         var untranslated = Strings.Catalogue

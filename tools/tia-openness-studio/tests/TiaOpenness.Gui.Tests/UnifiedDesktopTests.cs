@@ -88,13 +88,136 @@ public sealed class UnifiedDesktopTests(WpfContext wpf)
                 var page = window.Configuration!;
                 Assert.Equal("zh-cn", page.Language.IetfLanguageTag);
                 var expected = (SolidColorBrush)Application.Current.FindResource("Ui.WindowBackground");
-                var actual = (SolidColorBrush)page.Resources["Ui.WindowBackground"];
-                Assert.Equal(expected.Color, actual.Color);
+                Assert.Same(expected, page.Background);
                 window.Close();
                 Loc.Current.Language = AppLanguage.English;
                 Assert.Equal("zh-cn", page.Language.IetfLanguageTag);
             }
             finally { window.Close(); ThemeManager.Current.Theme = previousTheme; }
+        });
+    }
+
+    [Theory]
+    [InlineData(AppLanguage.English, AppTheme.Light, AppLanguage.Chinese, AppTheme.Dark)]
+    [InlineData(AppLanguage.Chinese, AppTheme.Dark, AppLanguage.English, AppTheme.Light)]
+    public void Hosted_configuration_uses_workbench_resources_in_both_directions(
+        AppLanguage initialLanguage, AppTheme initialTheme, AppLanguage nextLanguage, AppTheme nextTheme)
+    {
+        wpf.RunWithLanguage(initialLanguage, () =>
+        {
+            var previousTheme = ThemeManager.Current.Theme;
+            ThemeManager.Current.Theme = initialTheme;
+            var window = new MainWindow();
+            try
+            {
+                window.ShowConfiguration(false);
+                var page = window.Configuration!;
+                var choices = (ListBox)page.FindName("ClientChoices");
+                choices.SelectedItems.Clear();
+                var fixtures = new[]
+                {
+                    new ClientProfile("first", "First", @"C:\fixture\first.json", "first hint") { Detected = true, Evidence = "first evidence" },
+                    new ClientProfile("second", "Second", @"C:\fixture\second.json", "second hint") { Evidence = "second evidence" },
+                };
+                choices.ItemsSource = fixtures;
+                foreach (var fixture in fixtures) choices.SelectedItems.Add(fixture);
+                var address = (TextBox)page.FindName("ServerAddress");
+                address.Text = "192.0.2.77";
+                var secret = (PasswordBox)page.FindName("Key");
+                secret.Password = "language-switch-fixture";
+                var log = (TextBox)page.FindName("Log");
+                string history = log.Text;
+                int entries = history.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries).Length;
+                var brush = page.Background;
+                bool detected = (bool)typeof(ConfigurationView).GetField("tiaDetected",
+                    System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.GetValue(page)!;
+
+                AssertAppearance(initialLanguage);
+                Loc.Current.Language = nextLanguage;
+                ThemeManager.Current.Theme = nextTheme;
+                AssertAppearance(nextLanguage);
+                Assert.NotSame(brush, page.Background);
+                Loc.Current.Language = initialLanguage;
+                ThemeManager.Current.Theme = initialTheme;
+                AssertAppearance(initialLanguage);
+
+                choices.SelectedItems.Clear();
+                ((RadioButton)page.FindName("LocalNav")).IsChecked = true;
+                Loc.Current.Language = nextLanguage;
+                FlushBindings();
+                Assert.Equal(Loc.Current["Config.ChooseClients"], Text("ClientInstructions"));
+                Assert.Equal(Loc.Current["Config.LocalTitle"], Text("PageTitle"));
+                Assert.Equal(Loc.Current["Config.NoSelection"], Text("LinkClient"));
+                Assert.Equal(Loc.Current["Config.Local"], Text("LinkState"));
+
+                void FlushBindings() => window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+                string Text(string name) => ((TextBlock)page.FindName(name)).Text;
+                void AssertAppearance(AppLanguage language)
+                {
+                    FlushBindings();
+                    Assert.Equal(language == AppLanguage.Chinese ? "zh-cn" : "en-us", page.Language.IetfLanguageTag);
+                    Assert.False(page.Resources.Contains("Ui.WindowBackground"));
+                    Assert.Same(Application.Current.FindResource("Ui.WindowBackground"), page.Background);
+                    Assert.Same(Application.Current.FindResource("Ui.Font"), page.FontFamily);
+                    Assert.Equal(Loc.Current["Config.RemoteTitle"], Text("PageTitle"));
+                    Assert.Equal(Loc.Current["Config.Write"], ((Button)page.FindName("SaveClient")).Content);
+                    Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("ClientSelection"));
+                    Assert.Equal(Loc.Current.T("Config.Selected", 2), Text("LinkClient"));
+                    Assert.Equal(Loc.Current.T("Config.Entries", entries), Text("LogCount"));
+                    Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestNotRun"]), Text("LastTest"));
+                    Assert.Equal(detected ? "● " + Loc.Current["Config.Detected"] : Loc.Current["Config.NotDetected"], Text("DetectionSource"));
+                    Assert.Equal(Loc.Current.T("Config.ClientInstructionsDetected", "First", "first hint", "first evidence") + "\n" +
+                        Loc.Current.T("Config.ClientInstructionsNotDetected", "Second", "second hint", "second evidence"), Text("ClientInstructions"));
+                    Assert.Equal(Text("ClientInstructions"), ((TextBlock)page.FindName("ClientSelection")).ToolTip);
+                    Assert.Equal("192.0.2.77", address.Text);
+                    Assert.Equal("language-switch-fixture", secret.Password);
+                    Assert.Equal(history, log.Text);
+                }
+            }
+            finally { window.Close(); ThemeManager.Current.Theme = previousTheme; }
+        });
+    }
+
+    [Theory]
+    [InlineData(AppLanguage.Chinese, "客户端检测：", "就绪。服务与客户端配置在同一页完成，两端使用同一密钥。", "已配置 3 个客户端")]
+    [InlineData(AppLanguage.English, "Client detection: ", "Ready. Configure the service and clients on one page, using the same secret on both sides.", "3 clients configured")]
+    public void Configuration_localizes_new_messages_and_refreshes_current_status_without_rewriting_logs(
+        AppLanguage language, string detection, string ready, string status)
+    {
+        wpf.RunWithLanguage(language, () =>
+        {
+            var window = new MainWindow();
+            try
+            {
+                window.ShowConfiguration(false);
+                var page = window.Configuration!;
+                var log = (TextBox)page.FindName("Log");
+                Assert.Contains(detection, log.Text);
+                Assert.Contains(ready, log.Text);
+                string history = log.Text;
+                const System.Reflection.BindingFlags flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                typeof(ConfigurationView).GetMethod("SetStatus", flags)!.Invoke(page, new object[] { "Config.ClientsConfigured", new object[] { 3 } });
+                typeof(ConfigurationView).GetField("lastTestFailed", flags)!.SetValue(page, true);
+                typeof(ConfigurationView).GetField("tiaDetected", flags)!.SetValue(page, true);
+                Assert.Equal(status, ((TextBlock)page.FindName("Status")).Text);
+
+                Loc.Current.Language = language == AppLanguage.Chinese ? AppLanguage.English : AppLanguage.Chinese;
+                window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+                Assert.Equal(Loc.Current.T("Config.ClientsConfigured", 3), ((TextBlock)page.FindName("Status")).Text);
+                Assert.Equal(Loc.Current.T("Config.LastTest", Loc.Current["Config.TestFailed"]), ((TextBlock)page.FindName("LastTest")).Text);
+                Assert.Equal("● " + Loc.Current["Config.Detected"], ((TextBlock)page.FindName("DetectionSource")).Text);
+                var installed = (MenuItem)page.FindName("UpdateInstalledItem");
+                string root = MainWindow.FindBundleRoot(AppContext.BaseDirectory);
+                string? version = UpdateCheck.Installed(root);
+                Assert.Equal(version == null ? Loc.Current["Config.EngineOutsideBundle"] :
+                    Loc.Current.T("Config.InstalledEngine", version, UpdateCheck.InstalledPackage(root)), installed.Header);
+                Assert.Equal(history, log.Text);
+                Loc.Current.Language = language;
+                window.Dispatcher.Invoke(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+                Assert.Equal(status, ((TextBlock)page.FindName("Status")).Text);
+                Assert.Equal(history, log.Text);
+            }
+            finally { window.Close(); }
         });
     }
 

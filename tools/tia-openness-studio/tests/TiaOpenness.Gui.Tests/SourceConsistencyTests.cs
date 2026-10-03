@@ -32,6 +32,8 @@ public class SourceConsistencyTests(WpfContext wpf)
         new(@"SetStatus\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"Guarded\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
         new(@"LocalizedText\.(?:Key|Working)\(""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"SetLocalizedText\(""[^""]+"", [^,]+, ""([A-Za-z][\w.]*)""", RegexOptions.Compiled),
+        new(@"[?:]\s*""(Config\.[\w.]+)""", RegexOptions.Compiled),
     ];
 
     // {StaticResource Ui.Button} / {DynamicResource Ui.Accent}
@@ -152,6 +154,9 @@ public class SourceConsistencyTests(WpfContext wpf)
 
         // Built by LocalizedText.Working rather than named at any call site.
         used.Add("Status.Working");
+
+        // P5-02 preserves the complete legacy dictionary, including former window chrome keys.
+        used.UnionWith(new[] { "Config.Light", "Config.Dark", "Config.Auto", "Config.Minimize", "Config.Maximize", "Config.Close" });
 
         var unused = Strings.Catalogue
             .Select(e => e.Key)

@@ -9,6 +9,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TiaMcp.Versioning;
+using TiaOpenness.Gui;
+using TiaOpenness.Gui.Localization;
+using TiaOpenness.Gui.Themes;
 
 namespace TiaMcpConfigurator
 {
@@ -246,6 +249,10 @@ namespace TiaMcpConfigurator
                 Assert(launch.StartsWith("-NoProfile -ExecutionPolicy Bypass -NoExit -File \"C:\\TIA MCP\\scripts\\operations\\Update-Engine.ps1\" -InstallRoot \"C:\\TIA MCP\" -WaitForPid 4242 -RelaunchConfigurator"), "update: the updater is launched visibly with the install root (no trailing backslash), the caller pid and the relaunch switch");
                 Assert(UpdateCheck.Launch(delivery, 1).FileName.EndsWith("powershell.exe") && UpdateCheck.Launch(delivery, 1).UseShellExecute && UpdateCheck.UpdaterPath(delivery).EndsWith(@"scripts\operations\Update-Engine.ps1"), "update: Windows PowerShell runs scripts\\operations\\Update-Engine.ps1 from the install root");
                 Assert(UpdateCheck.RunningEngines().All(x => x.StartsWith("TiaMcpServer.exe PID ")), "update: running engines are listed by pid (the updater refuses while any runs)");
+                var app = new App { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+                app.InitializeComponent();
+                ThemeManager.Current.Theme = AppTheme.Light;
+                Loc.Current.Language = AppLanguage.English;
                 using (var form = new ConfigurationView(new System.Windows.Window {
                     Width = 1200, Height = 780, MinWidth = 1200, MinHeight = 780,
                     WindowStyle = System.Windows.WindowStyle.None, ResizeMode = System.Windows.ResizeMode.NoResize
@@ -272,7 +279,12 @@ namespace TiaMcpConfigurator
                     var runUpdate = (System.Windows.Controls.MenuItem)form.FindName("RunUpdate");
                     var installedItem = (System.Windows.Controls.MenuItem)form.FindName("UpdateInstalledItem");
                     Assert(menuBar != null && form.FindName("UpdateBand") == null && !runUpdate.IsEnabled && !installedItem.IsEnabled && ((System.Windows.Controls.MenuItem)form.FindName("CheckUpdate")).Header.ToString().StartsWith("检查更新"), "update menu: check / run / releases items, run disabled until a newer release is known, no band on the page");
+                    Assert(installedItem.Header.ToString().StartsWith("Engine "), "English update menu names the installed engine version from the delivery manifest");
+                    Loc.Current.Language = AppLanguage.Chinese;
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(installedItem.Header.ToString().StartsWith("引擎 ") || installedItem.Header.ToString().StartsWith("引擎版本未知"), "update menu names the installed engine version from manifest\\delivery.json");
+                    Loc.Current.Language = AppLanguage.English;
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(form.FindName("ShowClientHelp") != null && form.FindName("OpenProjectPage") != null && form.FindName("AboutItem") != null && form.FindName("OpenReleases") != null, "help menu: client instructions, project page, about; update menu: GitHub Releases");
                     var generate = (System.Windows.Controls.Button)form.FindName("GenerateKey");
                     generate.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
@@ -328,13 +340,14 @@ namespace TiaMcpConfigurator
                     System.Windows.Media.GlyphTypeface glyph;
                     Assert(new System.Windows.Media.Typeface(font, System.Windows.FontStyles.Normal, System.Windows.FontWeights.Normal, System.Windows.FontStretches.Normal).TryGetGlyphTypeface(out glyph)
                         && glyph.FontUri.ToString().ToLowerInvariant().Contains("manrope"), "Manrope is loaded from the embedded font resource");
-                    form.ApplyTheme("Dark");
-                    Assert(((System.Windows.Media.SolidColorBrush)form.Resources["Ui.WindowBackground"]).Color.ToString() == "#FF0B1420", "dark palette switches live");
-                    form.ApplyTheme("Light");
-                    Assert(((System.Windows.Media.SolidColorBrush)form.Resources["Ui.WindowBackground"]).Color.ToString() == "#FFE7ECF1", "light palette switches live");
+                    ThemeManager.Current.Theme = AppTheme.Dark;
+                    Assert(((System.Windows.Media.SolidColorBrush)form.Background).Color.ToString() == "#FF0B1420", "dark palette switches live");
+                    ThemeManager.Current.Theme = AppTheme.Light;
+                    Assert(((System.Windows.Media.SolidColorBrush)form.Background).Color.ToString() == "#FFE7ECF1", "light palette switches live");
                     string preservedSecret = "language-switch-fixture";
                     password.Password = preservedSecret;
-                    form.ApplyLanguage("zh");
+                    Loc.Current.Language = AppLanguage.Chinese;
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "一页连接 TIA 与 AI"
                         && ((System.Windows.Controls.Button)form.FindName("SaveClient")).Content.ToString() == "写入客户端配置"
                         && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "空闲", "Chinese page updates title, action and service state");
@@ -343,7 +356,8 @@ namespace TiaMcpConfigurator
                     ((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked = true;
                     Assert(((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "同机连接，一次配置"
                         && ((System.Windows.Controls.TextBlock)form.FindName("LinkState")).Text == "本地", "Chinese local mode is localized");
-                    form.ApplyLanguage("en");
+                    Loc.Current.Language = AppLanguage.English;
+                    window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                     Assert(((System.Windows.Controls.RadioButton)form.FindName("LocalNav")).IsChecked == true
                         && ((System.Windows.Controls.TextBlock)form.FindName("PageTitle")).Text == "Same machine, one pass", "switching language preserves the selected transport");
                     ((System.Windows.Controls.RadioButton)form.FindName("RemoteNav")).IsChecked = true;
@@ -367,10 +381,11 @@ namespace TiaMcpConfigurator
                         ((System.Windows.Controls.TextBox)form.FindName("Log")).Text="09:41:02   Config loaded · tia-portal-vm\n09:41:03   Install path detected (registry)\n09:41:03   Client scan · 3 detected\n09:42:17   Secret generated · [redacted]\n09:42:40   Both-side config saved\n09:43:05   Test · HTTP ok · auth ok · MCP ready\n09:43:05   Status · Connection OK";
                         ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 entries";
                         form.CapturePage(Path.Combine(capture,"configurator-light.png"),0);
-                        form.ApplyTheme("Dark");
+                        ThemeManager.Current.Theme = AppTheme.Dark;
                         form.CapturePage(Path.Combine(capture,"configurator-dark.png"),0);
                         form.CapturePage(Path.Combine(capture,"configurator-local-dark.png"),1);
-                        form.ApplyLanguage("zh");
+                        Loc.Current.Language = AppLanguage.Chinese;
+                        window.Dispatcher.Invoke(delegate { }, System.Windows.Threading.DispatcherPriority.Render);
                         ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).Text="● 已通过注册表检测";
                         ((System.Windows.Controls.TextBlock)form.FindName("DetectionSource")).SetResourceReference(System.Windows.Controls.TextBlock.ForegroundProperty,"Ui.Accent");
                         ((System.Windows.Controls.TextBlock)form.FindName("LastTest")).Text="上次测试 · HTTP 可达，鉴权通过，MCP 就绪。版本 1.4.2。尚未验证 TIA 工程连接。";
@@ -378,7 +393,7 @@ namespace TiaMcpConfigurator
                         ((System.Windows.Controls.TextBlock)form.FindName("LogCount")).Text="7 条记录";
                         form.CapturePage(Path.Combine(capture,"configurator-zh-dark.png"),0);
                         form.CapturePage(Path.Combine(capture,"configurator-local-zh-dark.png"),1);
-                        form.ApplyTheme("Light");
+                        ThemeManager.Current.Theme = AppTheme.Light;
                         form.CapturePage(Path.Combine(capture,"configurator-zh-light.png"),0);
                         form.CapturePage(Path.Combine(capture,"configurator-local-zh-light.png"),1);
 
