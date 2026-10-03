@@ -75,8 +75,9 @@ Use a separately negotiated v2 codec/entry mode. Keep the current modern full
 V20/V21 service path unchanged until its independent v2 transport tests pass.
 The future codec must reject duplicate/unknown/missing identity fields, preserve
 the existing outer-ID type and map it to the internal request ID, validate progress
-identity, and enforce current frame limits before decoding. No codec is included
-here, and typed fake frames do not establish JSON wire compatibility.
+identity, and enforce current frame limits before decoding. This core contains no codec;
+the sibling JsonV2 and JsonLegacy projects supply separate, unwired codec candidates.
+Typed fake frames do not establish production JSON wire compatibility.
 
 The following ownership handoff is required before touching existing files:
 
@@ -99,9 +100,9 @@ The following ownership handoff is required before touching existing files:
    `WorkerConnection.cs`, `McpServer.SerializedCalls.cs` and the binding snapshot
    owner. Keep worker generation, binding generation and request ID distinct.
 
-None of these existing files is changed by this patch. Publication/native gates
-from the adapter workstream remain in place. Official per-tool semantics and
-native acceptance remain owned by the functional migration workstream.
+Production v2 wiring remains pending independently of the shipped eight-version
+v1/foundation and full-engine builds. Official per-tool semantics and native
+acceptance remain owned by the functional migration workstream.
 
 ## Validation
 

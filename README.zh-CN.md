@@ -1,74 +1,44 @@
 # TIA Portal Openness MCP
 
-[English](README.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
+[English](README.md) · [新手使用指南](docs/getting-started/beginners.zh-CN.md) · [文档目录](docs/README.md) · [下载完整包](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
+通过 MCP 让 AI 操作西门子 TIA Portal，或使用包内 Studio 自己浏览、导入导出和编译工程。配置器与 Studio 均支持中文和英文。
 
-通过西门子官方 Openness API，按版本连接 TIA Portal V14 SP1、V15.1、V16–V21。V14 SP1–V19 使用 PLC 基础工具集，V20/V21 保留完整引擎；共用和独立工具见[逐版本矩阵](docs/reference/version-tools.md)。包含 MCP 服务、WPF 图形配置器、JSON/YAML 命令行工程生成流程及通用 PLC / WinCC Unified 模板。
+![架构图](docs/assets/architecture.svg)
 
-![TIA Portal MCP 架构图](docs/assets/architecture.svg)
+## 第一次使用
 
-[v3.2.0 正式包](docs/releases/v3.2.0.md) 已包含八版 MCP 运行文件和 Studio。完整八版本包使用 `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK根目录> -Test` 构建。TIA Portal、Openness 和许可证需自行安装。完整引擎需要 .NET Framework 4.8；旧版本宿主还需 .NET 8 和 ASP.NET Core 8；Studio 需 .NET 10 Desktop Runtime。新增版本尚待真实 TIA 工程验收。
+从 Releases 下载 **TIA_MCP_Delivery** ZIP，完整解压到较短的固定目录。GitHub 的 `Source code` 压缩包只含源码。
 
-## 从这里开始
+- **用 AI 操作：**双击 `TiaMcpConfigurator.exe`，选择实际安装的 TIA 版本和“同一台电脑”或“虚拟机 ↔ 宿主机”，选择实际使用的 MCP 客户端，写入配置后重启客户端并新建会话。
+- **自己操作：**双击 `runtime\studio\TiaOpenness.exe`，连接前选择 TIA 版本，连接工程后选择目标 PLC。Studio 直接调用 Openness，无需配置 MCP。
+- **先看演示：**在包根目录运行 `runtime\studio\TiaOpenness.exe --mock --lang zh`。演示使用模拟数据。
 
-第一次使用请按[新手使用指南](docs/getting-started/beginners.zh-CN.md)操作：下载与环境准备、选择版本、连接 AI、Studio 手动操作，以及第一个 SCL 导入和编译练习。
+按[新手使用指南](docs/getting-started/beginners.zh-CN.md)完成安装、连接和第一个 SCL 导入编译练习；具体客户端配置见[配置指南](docs/getting-started/configuration.md)。
 
-从 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest) 下载 **TIA_MCP_Delivery** ZIP，完整解压，双击根目录 **TiaMcpConfigurator.exe**。以后升级不必重新解压：先停掉引擎，用配置器菜单 **更新 → 更新引擎…**（配置器自己关闭，`scripts\operations\Update-Engine.ps1` 在新窗口里在线取最新版、校验、备份到 `.previous\`、用 robocopy 替换文件，然后自动重开配置器；TIA 机器要能访问 github.com；`-Rollback` 换回上一版）；脚本也可以手动运行，引擎内的 `CheckForUpdate` 工具只报版本、不改文件。
+## 版本和工具
 
-| 使用方式 | 配置步骤 |
-|---|---|
-| TIA 在虚拟机 | 保持“虚拟机 ↔ 宿主机”模式，在虚拟机填 A 栏：TIA 版本、安装根目录、IPv4、端口和共用密钥，然后“网络权限 → 启动服务”。 |
-| AI 在宿主机 | 把配置器 EXE 复制到宿主机，填同一地址、端口和密钥，在 B 栏选客户端，“测试连接 → 写入客户端配置”。宿主机无需安装 TIA。 |
-| TIA 与 AI 同机 | 右上角切到“同一台电脑”。A 栏只需版本和目录，客户端经 stdio 自动启动引擎，不用地址、端口和密钥。 |
+| TIA 版本 | 注册工具数 | MCP 实现 |
+|---|---:|---|
+| V14 SP1 | 57 | PLC 基础引擎 |
+| V15.1 | 58 | PLC 基础引擎 |
+| V16 / V17 / V18 | 各 60 | PLC 基础引擎 |
+| V19 | 62 | PLC 基础引擎 |
+| V20 | 477 | 完整引擎 |
+| V21 | 488 | 完整引擎 |
 
-卡片一律用英文名，按 CLI 在前排列：**Claude Code、Codex、Gemini CLI、Qwen（写 Qwen Code）、Kimi（写 Kimi Code CLI）、Yuanbao（写 CodeBuddy Code）、DeepSeek / GLM / Grok（写 OpenCode，在其 provider 里选模型）**，其后是桌面应用 **Qwen Agent**（千问工作助理），最后是 **Cursor、VS Code / Copilot**。模型品牌和 Grok 没有自带的 MCP 客户端，卡片按模型命名、实际写入各家官方 CLI 或 OpenCode。官方 Claude 客户端的 **Code** 页面选“Claude Code”。
+V20/V21 默认 lite 档显示 63 个常用工具，其余通过 `FindTools` 查找、`CallTool` 调用，也可配置 `--profile full`。旧版本直接显示各自的基础目录，参数和返回值可能不同。准确范围见[逐版本工具说明](docs/reference/version-tools.md)及当前服务的 `tools/list`。V14 SP1、V15.1 不等于原版 V14、V15。
 
-服务运行时保持配置器窗口打开。保存配置后重启客户端并新建会话。配置位置、权限、备份和客户端差异统一见 [图形配置指南](docs/getting-started/configuration.md)。
+AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取本版参数、示例和结果解释；用 `language` 查编程语言示例，用 `exampleId` 取完整源码或调用序列。全部工具共用这套示例入口，官方 API 模式与本项目封装示例分别标明。
 
-## 命令行
+## 环境与验证
 
-在交付包根目录打开 PowerShell，以 V21 为例：
+按需安装对应版本的 TIA Portal、Openness 和许可证。配置器及完整引擎需要 .NET Framework 4.8；基础引擎另外需要 .NET 8 和 ASP.NET Core 8；Studio 需要 .NET 10 Desktop Runtime。具体文件位置见[运行目录](runtime/README.md)。
 
-```powershell
-.\runtime\v21\TiaMcpServer.exe doctor
-.\runtime\v21\TiaMcpServer.exe schema
-.\runtime\v21\TiaMcpServer.exe gen .\templates\project-blueprints\scaffold_spec_motor.json --dry-run
-```
+八版本运行文件、Studio、协议、离线功能和官方 SDK/XSD 检查已有构建记录；新增功能的真实 TIA 工程验收仍为 **NOT RUN**。工具数量不等于完整覆盖所有 Siemens API，当前范围见[能力与验收说明](docs/reference/capabilities.md)。
 
-最后一条仅离线检查 spec；准备创建工程时才去掉 `--dry-run`。V20 改用 `runtime/v20/TiaMcpServer.exe`。更多生成、增量修改、预热及安装目录参数见 [CLI 指南](docs/getting-started/cli.md)。
+## 开发和维护
 
-## 能力与验证范围
+仅维护 `master`。运行二进制随完整 Release 分发，不提交到 Git。准备 SDK 和伴随 Python 环境后，使用 `Build-MultiVersion.ps1 -Test` 构建全部版本。
 
-V21 完整引擎静态清单共 **488 个工具**（V20 可用 477 个），分 7 个大类（会话、工程、PLC 软件、PLC 在线、硬件、HMI、运行时）；默认 **lite** 档直接暴露 **63 个**，其余经 `FindTools` 查找、`CallTool` 调用（`ListToolCategories` 列出分类，`FindTools(category=…)` 按类浏览）。实际列表以运行服务的 `tools/list` 为准，全量暴露需显式使用 `--profile full`。
-
-调用不熟悉的工具前，先用 `GetToolUsage(toolName)` 读取当前版本的 MCP 示例/模板、准确参数、调用步骤和官方来源。八个版本均提供此离线参考工具；[覆盖范围与来源](docs/development/official-tool-usage.md) 明确区分官方 API 示例、项目模板和真机验收。
-
-3.1.0 提供可选[工作进程隔离](docs/guides/openness-worker-isolation.md)：`--isolate-openness` 默认关闭，工作进程故障后仍可查询宿主诊断。真实 TIA 验收、精确工程身份绑定及不同 MCP 服务间的协调仍未完成。
-
-`master` 是唯一维护分支。配置器可选择全部八个版本，各旧版本运行包只带一个准确匹配的 Worker；Studio 通过对应适配器直接调用 Openness，保持中英双语。原分支备份见[版本历史](docs/reference/version-branches.md)。工具可选、SDK 编译检查和真实 TIA 验收分别记录。
-
-覆盖工程/会话、PLC 块/类型/变量、硬件网络、Unified HMI、文件交换、库、版本控制及在线只读监视。详细范围见 [工具矩阵](docs/reference/tool-matrix.md) 和 [能力边界](docs/reference/capabilities.md)。实现工具、API 签名检查与真实工程验收是不同状态，不代表覆盖西门子全部 API。
-
-交付版本与引擎版本分别记录。[交付清单](manifest/delivery.json) 绑定引擎及配置器的构建哈希；[验证说明](docs/development/validation.md) 解释各类检查的范围。
-
-## 目录与维护
-
-| 目录 | 用途 |
-|---|---|
-| [docs](docs/README.md) | 入门、操作、参考、排错、开发及历史记录 |
-| [runtime](runtime/README.md) | 八版本 MCP、Studio 运行路径及依赖 |
-| [tools](tools/README.md) | 引擎源码/测试、AI skill、WPF 源码 |
-| [scripts](scripts/README.md) | 构建、检查、生成、诊断和可选操作 |
-| [templates](templates/README.md) | PLC/HMI 模板与工程 spec |
-| [manifest](manifest/README.md) | 文件清单、版本、验证记录及哈希 |
-
-原根目录配置及启动 CMD/BAT 已由 GUI 替代。交付包不再附带 `bin/Release` 引擎副本，各版本使用 `runtime/v<版本标识>`，Studio 使用 `runtime/studio`。调整对照见 [仓库结构说明](docs/development/repository-layout.md)。
-
-开发前阅读 [贡献说明](.github/CONTRIBUTING.md)、[验证说明](docs/development/validation.md) 及 [发布流程](docs/development/release-workflow.md)。提问看 [支持说明](.github/SUPPORT.md)；安全问题按 [安全策略](.github/SECURITY.md) 私下报告，不要开公开 issue。变更进入 `master`，用户可见变化记入 [CHANGELOG](CHANGELOG.md)，旧版证据见 [历史发布说明](docs/archive/release-notes.md)。
-
-本项目由 asckye 独立维护，原始来源和依赖声明保留于 [NOTICE](NOTICE.md) 与 [LICENSE](LICENSE)。
-
-### 融合版桌面（尚未发布）
-
-[TIA Openness Studio](tools/tia-openness-studio/README.md) 已加入中英双语 WPF 桌面和离线演示。实际工程操作通过本地原生 Bridge 选择八版 Openness 适配器，Studio 不再依赖 MCP；原 Studio 的完整源码与历史已保留。Studio 已纳入正式交付包，新功能的原生验收仍待完成。
+[构建与验证](docs/development/validation.md) · [发布流程](docs/development/release-workflow.md) · [当前交接](docs/development/handoff.md) · [变更记录](CHANGELOG.md) · [第三方许可证](docs/licenses/THIRD-PARTY-NOTICES.md)

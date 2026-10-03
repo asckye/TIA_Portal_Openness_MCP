@@ -20,10 +20,10 @@ The dedicated `tests/TiaMcp.TransportFixture` executable is a test-only JSON pee
 From `tools/tiaportal-mcp` using the installed .NET 8 SDK (no network or installation needed for the net8-only graph):
 
 ```sh
-DOTNET_CLI_HOME=/workspace/shared/dotnet-home DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
-  /workspace/shared/dotnet/dotnet build tests/TiaMcp.WorkerProtocol.HostTransport.Tests \
+DOTNET_CLI_HOME="$PWD/.dotnet-home" DOTNET_GENERATE_ASPNET_CERTIFICATE=false \
+  dotnet build tests/TiaMcp.WorkerProtocol.HostTransport.Tests \
   -c Release -p:TargetFrameworks=net8.0 -m:1
-/workspace/shared/dotnet/dotnet \
+dotnet \
   tests/TiaMcp.WorkerProtocol.HostTransport.Tests/bin/Release/net8.0/TiaMcp.WorkerProtocol.HostTransport.Tests.dll \
   "$PWD/tests/TiaMcp.TransportFixture/bin/Release/net8.0/TiaMcp.TransportFixture.dll"
 ```

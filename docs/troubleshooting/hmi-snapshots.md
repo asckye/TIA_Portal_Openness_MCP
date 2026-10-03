@@ -1,12 +1,12 @@
 # HMI 快照稳定性诊断
 
-本次变更针对只读 `ReadHmiScreenSnapshot`。离线与宿主机测试不能证明真实 TIA 工程稳定，也不能把成功返回的有界快照视为完整项目。
+本页说明完整引擎中只读 `ReadHmiScreenSnapshot` 的当前行为。离线与宿主机测试不能证明真实 TIA 工程稳定，也不能把成功返回的有界快照视为完整项目。
 
-## 已确认的问题
+## 当前读取行为
 
-- 旧实现即使传入绝对页面路径，也会先遍历整个 HMI 页面树；现在仅遍历目标路径的各级集合。裸页面名仍需要遍历，以拒绝重名歧义。
-- 旧实现把属性内的句柄释放异常记录为普通 `ReadFailed` 后继续访问其他代理，顶层仍可能返回 `success=true`。现在遇到句柄释放、IPC 或不可恢复错误立即停止，保留已读取节点，并返回 `apiCallSuccess=false`、`dataComplete=false`。
-- 显式重新绑定成功后，旧实现可能因项目对象引用未改变而沿用旧软件缓存。现在每次成功绑定都清空软件缓存。
+- 绝对页面路径仅遍历目标路径的各级集合。裸页面名仍需要遍历，以识别重名歧义。
+- 遇到句柄释放、IPC 或不可恢复错误时停止，保留已读取节点，并返回 `apiCallSuccess=false`、`dataComplete=false`。
+- 每次显式绑定成功都会清空软件缓存。
 
 ## 诊断控件属性暂缓读取
 
@@ -14,8 +14,7 @@
 
 现在对该属性返回 `Quarantined`、`readAttempted=false`，不调用 getter，明确保留数据缺口。`ReadUnifiedScreenBranch` 的属性/属性值读取也不能绕过这一限制。其他诊断控件属性和已读脚本仍可作为部分证据。
 
-V21 官方系统诊断控件属性说明：
-https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/controls/accessing-system-diagnosis-control-properties
+[V21 官方系统诊断控件属性说明](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-accessing-the-data-of-an-hmi-unified-device/hmisoftware/screens/screenitems/controls/accessing-system-diagnosis-control-properties)
 
 该官方页面未列出上述属性；不能仅凭未列出就认定 Siemens 明确禁止调用，或认定所有 V21 更新均有相同问题。
 

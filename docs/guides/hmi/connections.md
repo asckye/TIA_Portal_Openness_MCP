@@ -1,65 +1,29 @@
-# HMI 连接驱动选择表
+# HMI 连接与驱动选择
 
-## 0. 先决：经典屏 vs Unified 屏（能力边界，选屏前必读）
+适用于 V20/V21 完整引擎。先用 `GetHmiProgramInfo` 确认目标是 WinCC Unified 还是 Classic，再读取相应工具的 `GetToolUsage`。V14 SP1–V19 的 MCP 基础目录没有本页 HMI 工具。
 
-**本套 MCP 的 HMI 全自动（连接 + 变量绑定 + 画面）只对 WinCC Unified 屏成立。**
+## Unified 连接
 
-| 屏类型 | 连接创建 | 变量绑定 | 画面生成 | 结论 |
-|---|---|---|---|---|
-| **WinCC Unified**（如 MTP700 Unified Basic `6AV2 123-3GB32-0AW0`） | ✅ `EnsureUnifiedHmiConnection` | ✅ `EnsureUnifiedHmiTag`（带绝对地址） | ✅ `ApplyUnifiedHmiScreenDesignJson` | **可端到端全自动** |
-| **经典 / 精简 / 舒适屏**（KTP Basic、TP/KTP Comfort） | ❌ Openness 未暴露 `CommunicationConnections` 服务 | ❌ 无集成连接则任何 PLC 符号都解析不了 | ❌ 画面 XML 导入极脆（`IOField.set_Visible`、`PropertyComposition.Create` 等属性被拒） | **无法全自动**，只能 GUI 手建连接 / 导模板 |
+1. 从 `GetProjectTree` 取得实际 PLC 和 HMI 软件路径。
+2. 读取 `GetToolUsage(toolName="EnsureUnifiedHmiConnection")` 并按当前参数创建或核对连接。
+3. 检查返回的 `CommunicationDriver` 与 PLC 系列一致，并读回 Partner、Station、Node 等实际连接信息。
+4. 用实际变量和地址完成[变量绑定](tag-binding.md)，再编译和核对工程。
 
-> **给调用方模型的硬规矩**：若用户没有硬性指定经典屏，且需要"自动建好 HMI"，**在 `AddDevice` 阶段就选 Unified 屏**，不要选 KTP Basic 后再试图自动建连接——那条路在本 build 上走不通，只会反复失败绕圈。
-> 若现场必须用经典屏：连接需在 TIA 网络视图手动拉一条（约 15 秒），或从一个已有连接的工程 `ExportHmiConnection` 出 XML 当模板再 `ImportHmiConnection`；变量可用**绝对地址** XML 导入（见 `hmi-plc-tag-binding-and-addressing.md`）。
+| PLC 系列 | 对应驱动系列 |
+|---|---|
+| S7-1200 | SIMATIC S7 1200 |
+| S7-1500、相应 ET 200SP CPU | SIMATIC S7 1500 |
+| S7-300、S7-400 | SIMATIC S7 300/400 |
+| 仿真目标 | 按被仿真的 CPU 系列选择 |
 
----
+工具依据实际设备 `TypeIdentifier` 判断系列，不应根据用户自定义设备名猜测。若读回仍与硬件不符，保留诊断并检查 TIA 中的连接设置。IP、子网和伙伴路径均来自目标工程或现场明确配置，不照抄示例值。
 
-本文件给出 `EnsureUnifiedHmiConnection` 与 TIA 内创建 HMI 连接时，**通讯驱动（CommunicationDriver）** 的取值规则。驱动错配会导致 HMI 变量整列红字、运行时无值或连接处显示「未连接」。
+## Classic 连接
 
-## 选择规则
+Classic 与 Unified 使用不同对象模型，不能把 `EnsureUnifiedHmiConnection` 套到 KTP/TP Classic 设备。已有连接可按 `ExportHmiConnection` / `ImportHmiConnection` 的当前示例导出、导入。新建连接及特定设备的编辑能力需检查实际 API；不支持的步骤在 TIA 中完成后读回验证。
 
-| PLC CPU 系列 | 典型订货号前缀 | CommunicationDriver（包含子串） |
-|--------------|------------------|----------------------------------|
-| S7-1500 | `6ES7 5xx-…` | `SIMATIC S7 1500` |
-| S7-1200 | `6ES7 21x-…` | `SIMATIC S7 1200` |
-| S7-300 | `6ES7 31x-…` | `SIMATIC S7 300/400` |
-| S7-400 | `6ES7 41x-…` | `SIMATIC S7 300/400` |
-| SIMATIC ET 200SP CPU | `6ES7 51x-…` | `SIMATIC S7 1500` |
-| SoftPLC / S7-PLCSIM Adv. | （仿真目标） | `SIMATIC S7 1500` 或 `SIMATIC S7 1200`（取决于仿真 CPU 类型） |
+选用面板应符合项目需求；不要仅为迁就某条工具路径自动替换用户的设备型号。
 
-匹配方式：MCP 实现按 PLC 设备 `TypeIdentifier` 中的「订货号」推断系列。**注意**：TIA 目录里订货号常带空格（如 `6ES7 211-1BE40-0XB0`）。旧版实现若只匹配无空格的 `6ES721…`，会误判为 UNKNOWN，连接仍显示默认的 **S7-300/400** 驱动。已在源码 `Portal.cs` → `InferUnifiedPlcFamilyFromSoftwarePath` 中去除空格后再匹配；**请重新编译 `TiaMcpServer.exe` 并替换交付包内同名可执行文件**（或直接用仓库 `tools/tiaportal-mcp` 下新生成的 Release 输出）。
+## 结果检查
 
-若仍命中默认的 `SIMATIC S7 300/400`，应 **手工在 TIA 中切换** 为对应驱动后，再用 `DescribeObject` 读回校验。
-
-## 根因速查（S7-1200 却显示 300/400）
-
-| 根因 | 说明 |
-|------|------|
-| 订货号带空格 | `TypeIdentifier` 含 `6ES7 211…` 而非 `6ES7211…`，旧逻辑未识别 → 升级 MCP 可执行文件（见上） |
-| 未连 PN 子网 | 仅影响在线，不总改驱动显示，但变量会红 | `ConnectDeviceNodesToProfinetSubnet` 或手工拖子网 |
-| 枚举名地区差异 | 极少数安装语言下字符串写入失败 | TIA 内手动选驱动一次 |
-
-## 关键参数
-
-| 字段 | 取值规则 |
-|------|----------|
-| `Partner` | PLC 设备名（与 `GetProjectTree` 中 `Devices` 节点名一致，例如 `PLC_Main`） |
-| `Station` | 多 CPU 项目下选 CPU 所在 Station |
-| `Node` | PROFINET 接口名，例如 `PROFINET 接口_1` |
-| `InitialAddress` | PLC PN 口 IP，例如 `192.168.0.1`（在线读取） |
-| `CommunicationDriver` | 见上表 |
-
-## 自检清单
-
-1. `DescribeObject(HmiConnection)` 读回 `CommunicationDriver` 名称包含正确子串。  
-2. HMI 与 PLC PN 口在 **同一子网**（`ConnectDeviceNodesToProfinetSubnet`）。  
-3. PLC 已编译通过；HMI 标签所引用的 DB 已存在并编译。  
-4. HMI 接口 DB 采用 **非优化（Standard）** 访问，便于以绝对地址寻址。
-
-## 常见错配
-
-| 现象 | 原因 | 处理 |
-|------|------|------|
-| 全列红 | 驱动落到 `SIMATIC S7 300/400`、PLC 实际是 1200/1500 | 在 TIA 中把 CommunicationDriver 切换到匹配项，保存后重读 |
-| 仅部分 Tag 红 | 地址越界 / DB 编号或字节偏移错 | 用 `DBn.DBW/DBD` 字宽与对齐重核对 |
-| 连接灰色 | Partner/Station/Node 三个字段未配齐 | 重建 `EnsureUnifiedHmiConnection` 或在 TIA 内补齐 |
+连接对象存在只证明工程组态已建立，不能证明 Runtime 已连通。变量无效时依次核对驱动、伙伴、接口、变量类型和地址。实时通道检查另见[在线读取](../online-monitoring.md)。

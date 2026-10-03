@@ -1,6 +1,6 @@
 # 原生 MCP 会话验收流程
 
-`scripts/checks/Test-NativeMcpSession.py` 使用实际生产 MCP STDIO 入口及 `--isolate-openness`，补充原来的独立 net48 原生生命周期框架。本次只运行该脚本的离线安全检查，**没有执行下述原生流程**。
+`scripts/checks/Test-NativeMcpSession.py` 使用实际生产 MCP STDIO 入口及 `--isolate-openness`，补充原来的独立 net48 原生生命周期框架。当前发布构建只运行该脚本的离线安全检查；新增原生流程验收状态为 **NOT RUN**。本页命令与独立生命周期测试都只覆盖 V20/V21，其他六个版本的工程验收按[验证说明](validation.md)分别记录。
 
 在具有匹配 TIA、许可证、Openness 用户组和已获准测试程序的 Windows 环境中，先生成计划：
 

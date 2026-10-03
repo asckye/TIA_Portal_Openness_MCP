@@ -1,111 +1,44 @@
 # Contributing
 
-This project is independently maintained by asckye. Original copyrights and
-provenance are retained in NOTICE.md and LICENSE. The bar for a change is simple: **does it help someone drive a real
-TIA Portal project without clicking through the UI?**
+Contributions and reports are welcome in English or Chinese. Preserve the original copyrights, [LICENSE](../LICENSE), [NOTICE](../NOTICE.md) and component provenance.
 
-Issues, bug reports and PRs are all welcome, in **English or Chinese** — both are
-read. 中英文皆可，随便哪种都行。
+## Branch and version scope
 
----
+All maintained changes target `master`. There are no maintained version branches. The current release keys are `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC foundation host and matching worker, while V20/V21 use the full engine. Studio uses eight direct Openness adapters. See [version scope](../docs/reference/version-tools.md).
 
-## Before you open an issue
+Shared behavior belongs in API-independent code; native differences stay in their exact-version adapters. Test every affected release, not only V20/V21. A tool present in one catalog must not be advertised for another without a working implementation and matching contract.
 
-Most problems on Windows + Openness are environment problems, and the bundle can
-tell you which one:
+## Reports
 
-```bat
-runtime\v21\TiaMcpServer.exe doctor          :: TIA V21
-runtime\v20\TiaMcpServer.exe doctor      :: TIA V20
+Include the exact TIA release, known Update/Hotfix, Windows version, application/engine version, selected runtime, client or Studio, expected behavior, actual result and redacted error text. The full engines provide the `doctor` CLI; foundation hosts use their advertised environment tools. Do not apply full-engine CLI switches to foundation executables.
+
+Do not attach customer projects or credentials. Use the smallest reproducible sample and distinguish a returned error from TIA exiting. [Issue templates](ISSUE_TEMPLATE) collect this information.
+
+## Changes and validation
+
+1. Describe the concrete behavior changed and the affected release profiles.
+2. Use the actual schema and `GetToolUsage` library for tool examples, result interpretation and language samples. Update the shared example records when a contract changes; do not add parallel instruction systems.
+3. Run functional checks appropriate to the change. Separate offline tests, SDK shape checks, protocol checks, mock UI checks and real TIA acceptance. Record native acceptance as NOT RUN when it was not performed.
+4. For actual import/compile acceptance, report the selected test project/PLC, imported identities, compile error/warning counts and readback. A build or successful method return does not establish engineering success.
+5. Update affected docs and add user-visible changes to `CHANGELOG.md` using the existing format. Keep dates and versions accurate.
+
+Build outputs are not committed. Siemens SDKs come from a licensed local installation and are not distributed. `Build-Release.ps1` builds the full engines/configurator; `Build-MultiVersion.ps1` builds and validates the other runtimes and Studio adapters. Formal packaging runs both required stages and verifies their manifests. Follow [validation](../docs/development/validation.md) and the [release workflow](../docs/development/release-workflow.md); source or test changes require refreshed matching evidence.
+
+Repository checks include:
+
+```powershell
+python scripts/checks/Check-Repository.py
+python scripts/checks/Check-DeadToolReferences.py
 ```
 
-It checks the TIA installation, the exe/version match, the local
-`Siemens TIA Openness` group and the host registration, and prints the exact fix
-for each. Paste its output into the issue — that alone usually settles it.
+The full-engine offline suite is a console test program, invoked with `dotnet run`, not `dotnet test`; other projects use their documented test runner. See the validation guide for the correct commands and prerequisites.
 
-Please include:
+## Repository conventions
 
-- TIA Portal version (V20 or V21) and Windows version
-- Which exe / branch you are on (`runtime\v21\TiaMcpServer.exe version`)
-- The MCP client (Cursor, VS Code, Claude Desktop, own HTTP client) or the CLI
-  command you ran
-- What you expected, what happened, and the full error text
+Use an imperative English commit message without AI attribution trailers. Preserve source style and `.gitattributes`; do not apply a blanket BOM rule to every language or export format. Programming examples document their specific encoding and target-version requirements, including the foundation external-source ASCII boundary.
 
-**Do not attach real customer projects.** If a project is needed to reproduce,
-strip it down to the smallest block that still fails.
+Do not commit TIA projects, SDKs, generated binaries, logs, local machine paths, scratch data or customer material. Keep real-machine evidence and unresolved limitations linked from the current [acceptance index](../docs/reference/real-machine-ledger.md).
 
-Issue templates live in [`.github/ISSUE_TEMPLATE/`](ISSUE_TEMPLATE).
+## License
 
----
-
-## Which branch does my change go to?
-
-Mainline changes target this repository's `master`, which supports TIA Portal V20 / V21.
-The two versions share source and are built with their matching PublicAPI assemblies.
-Check both runtimes when a shared change can affect either version.
-
-Since 2026-09-29, `v17` through `v21` also retain independently synchronized upstream snapshots at the maintainer's request. Version-branch work targets its corresponding branch; it is not implicitly merged into `master`. See [version scope and pinned commits](../docs/reference/version-branches.md). The branch name alone is not a compatibility guarantee: `v18` and `v19` currently share an old snapshot without dedicated version projects. There is no automatic synchronization or Dependabot configuration.
-Preserve LICENSE, NOTICE.md and dependency notices.
-
----
-
-## Pull requests
-
-1. Keep it focused. One problem per PR; a 40-line PR gets merged, a 4000-line one
-   waits for a weekend that may not come.
-2. Say **how you verified it**. For anything touching the Openness layer, separate offline/API checks from real-project acceptance. For the latter: import the block,
-   run `CompileSoftware`, and report the actual error/warning counts. "It builds" is not
-   real-project acceptance — Openness accepts plenty of input that only explodes at compile
-   time.
-3. If you could not test on real hardware or a real TIA install, say so plainly in
-   the PR. An honest "untested on real TIA V20/V21" is far more useful than silence.
-4. Match the surrounding style. This is a mixed C# / PowerShell / docs repo; each
-   part already has a convention.
-5. Update the docs you invalidate — `docs/` and
-   `tools/tiaportal-mcp/skill/SKILL.md` (the tool spec) are part of the product,
-   not an afterthought.
-6. Add a `CHANGELOG.md` entry under `[Unreleased]` for user-visible changes ([Keep a Changelog](https://keepachangelog.com/en/1.1.0/) layout: newest first, ISO dates); the maintainer moves it under the version heading at release time.
-
-### Please do not commit
-
-TIA project files (`.ap16`…`.ap21`), `bin/` or `obj/`, logs, screenshots,
-backups, machine-specific absolute paths, scratch/verification projects, or any
-customer data.
-
----
-
-## Development
-
-- **Offline suite** (no TIA needed, .NET 8 SDK): `dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj -c Release` - it is a console program, `dotnet test` runs nothing. Repository checks: `python scripts/checks/Check-Repository.py`, `python scripts/checks/Check-DeadToolReferences.py`. Details: [docs/development/validation.md](../docs/development/validation.md).
-- **Engine build** needs the Siemens Openness PublicAPI of V20 and V21 on the machine (licensed, never committed): `scripts/build/Build-Release.ps1` builds both engines, runs the offline suite and the API shape checks, regenerates `manifest/*` and writes the binaries to `runtime/v20`, `runtime/v21` and `TiaMcpConfigurator.exe`. Those binaries are **not tracked in Git** (since 2.8.1; a fresh clone has none until the script has run) - only their hashes are, in `manifest/release-build.json` and `manifest/configurator-build.json`, and the maintainer's `Release.ps1` uploads the delivery ZIP straight to the GitHub release. Any change under `tools/tiaportal-mcp/src` or `tests` invalidates the committed manifests until that script has run - the `validate-bundle` workflow refuses a mismatch. Layout: [docs/development/repository-layout.md](../docs/development/repository-layout.md).
-- **Tool conventions**: every tool description starts with `[L?][Domain][OPERATION]` (registered domains in `ModelContextProtocol/ToolTaxonomy.cs`); every parameter carries a `[Description]` - the schema hints, `PreflightToolCall` and the examples are generated from it, and the build refuses when the count of undocumented parameters goes up; write tools default to `dryRun=true`; a name mentioned in a description must be a real tool (`Check-DeadToolReferences.py`).
-- **Commit messages**: one imperative English sentence saying what changed and why (long is fine); no AI attribution trailers (`Co-Authored-By`, "Generated with ...") anywhere - commits, PRs or releases. Releases are cut by the maintainer with `scripts/build/Release.ps1` ([docs/development/release-workflow.md](../docs/development/release-workflow.md)); version tags are `vX.Y.Z` and point at `master` HEAD.
-- **Real-machine facts** learned while testing go into [docs/development/handoff.md](../docs/development/handoff.md) section 6 and the [real-machine ledger](../docs/reference/real-machine-ledger.md), not into commit messages only.
-
----
-
-## Encoding traps (this bites everyone once)
-
-This repo is edited on Chinese Windows, and text encoding is the most common cause
-of a "mysteriously broken" file:
-
-- `.s7dcl` and Openness XML must be saved as **UTF-8 *with* BOM**.
-- `.scl` must be **UTF-8 *without* BOM**.
-- `.ps1` scripts that contain Chinese text must be **UTF-8 with BOM**, otherwise
-  Windows PowerShell 5.1 silently swallows a line ending and eats the next line
-  into a comment.
-- Do not "fix" mojibake by rewriting the text — check the encoding first.
-
----
-
-## Scope
-
-This project drives TIA Portal through the official **Siemens Openness** API. It
-does not ship, unlock, or work around any Siemens licensing, and it does not
-bundle Siemens installation media. Contributions must stay on that side of the
-line.
-
-## Licence
-
-By contributing you agree that your contribution is licensed under the
-[MIT Licence](../LICENSE), the same as the rest of the project.
+Contributions to this project use the [MIT License](../LICENSE). Existing third-party code retains its own license and notices. This project does not bypass Siemens licensing or ship TIA installation media.

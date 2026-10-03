@@ -105,3 +105,18 @@ Full/lite and STDIO/HTTP are checked. Foundation fake-worker tests verify retrie
 does not invoke the worker. The eight-version audit writes the
 [coverage record](../../manifest/tool-usage-coverage.json). Native PLC/HMI
 import/compile acceptance of the new sources remains NOT RUN.
+
+## Adding or changing an example
+
+Use the selected release's real schema before editing a call. Put dynamic project,
+PLC, group and path values in the record's bindings/input origins; paths refer to
+the computer running TIA/MCP. Keep import, block generation, compilation and Save
+as separate sequence steps when the tool contract requires them. A compiled block
+is not automatically executed on a PLC, and import/compile success does not imply
+the project was saved.
+
+Choose a complete source, a fragment or an exported-module edit honestly. Update
+the same record's operation-specific result interpretation, version/encoding
+constraints and official source links. Run the generator and the functional
+retrieval checks for every affected release; do not add a second guide system
+for one API incident or language. Current build/test scope is in [validation](validation.md).

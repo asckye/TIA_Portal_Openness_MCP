@@ -1,23 +1,11 @@
-# MCP Full E2E Verify（验证素材）
+# MCP 导入与编译验证素材
 
-本目录提供 **LAD / SCL / Tag** 等导入样例，用于在**已有工程**里验证 MCP 导入与编译链路，与 **`full_plc_hmi_project.json` 蓝图生成的主工程**相互独立。
+本目录保留 LAD / SCL / Tag 等已有工程用素材。它们是测试输入，不是全版本已验收程序，也不会自行创建或下载到 PLC。
 
-## 与 skill cookbook 的关系
+先通过当前服务 `GetToolUsage` 获取所选工具和流程的实际参数。核对 XML 导出版本、CPU 和依赖；不能只改 XML 版本标记就把旧素材变成另一版本格式。基础宿主与完整引擎的工具参数、编译入口和返回结构不同。
 
-| 位置 | 用途 |
-|------|------|
-| `templates/mcp-full-e2e-verify/` | 打包验收：相对路径固定，便于脚本或文档引用 |
-| `tools/tiaportal-mcp/skill/lad-cookbook/`、`scl-cookbook/` | SKILL 文档中的同名示例源；内容应与验证块保持一致策略 |
+`plc/blocks/` 的四个 `MCPVerify_*_LAD*.xml` 保留与 skill LAD cookbook 同名素材对应的副本，用于固定测试相对路径；修改素材时应同步核对两处。`manifest.json` 中部分目录为预留项，目录缺内容不代表对应功能已测试。
 
-`plc/blocks/` 下的 4 个 `MCPVerify_*_LAD*.xml` 与 `lad-cookbook/` 中同名文件**逐字节相同**，这里刻意保留副本以保证本目录自包含、相对路径固定。修改任一侧时请同步另一侧。`manifest.json` 中的 `plc/types`、`hmi/screens`、`hmi/tags` 为预留目录，当前无内容。
+导入路径必须是 MCP 服务所在电脑的绝对路径。先读取目标工程、PLC 和已存在对象；重名时按工具实际覆盖语义处理，不要自动删除原对象来绕过冲突。可用 `PlanArtifactImportOrder` 辅助检查依赖顺序，它只返回计划。
 
-导入 **`ImportBlock`** / **`ImportPlcExternalSource`** 时请使用 **绝对路径**。同一 FC/FB **勿重复导入同名**，否则报名称冲突（可先删外部源或块再导入）。
-
-## 建议顺序（PLC）
-
-1. Tag 表（若有 `import/*.xml`）  
-2. `plc/blocks/` 下 XML（按依赖：先 FC，含实例的再 FB）  
-3. `plc/scl/*.scl`：外部源导入后 **`GenerateBlocksFromExternalSource`**  
-4. **`CompileAndDiagnosePlc`**
-
-详见根目录 **`tools/tiaportal-mcp/skill/SKILL.md`** §9–§11（LAD）、§10（SCL DSL）、§14（外部 SCL）。
+一般过程为：核对依赖 → 导入标签/类型和块 → 外部源生成块 → 调用当前版本编译工具 → 检查嵌套诊断及实际对象 → 需要时单独保存。导入源、生成块、编译和保存是不同步骤。语言文件编码和已知限制以统一示例库为准。

@@ -1,317 +1,42 @@
-# PLC Builder MCP Tools
+# PLC XML builders
 
 Document id: `plc-builders`
 
-This document is the stable contract for the PLC XML builder tools exposed by the TIA MCP server.
-All tools in this page are designed for TIA Portal V21 XML shapes and keep the existing safety gates:
+The builders create XML without connecting to TIA. Their presence in a version's tool list does not mean every XML format they produce belongs to that version. Read `GetToolUsage(toolName="...")` on the selected engine for the current parameters and examples.
 
-- Build-only tools are offline and return XML strings only.
-- `PlcBuildAndImport` defaults to `dryRun=true`; it builds XML, writes a temp file, classifies it, and returns an import plan.
-- Real TIA writes happen only when `dryRun=false`, after the caller has resolved `softwarePath` and group paths from `GetProjectTree` / `ValidateAutomationContext`.
-- Import is not a compile proof. For `dryRun=false`, keep `compileAfter=true` unless you have a specific reason not to.
-- Do not use guessed addresses or guessed DB members for HMI/PLC integration. Use exported symbols or an explicit mapping.
+## Select the output format
 
-## Tool Selection
-
-Use build-only tools when you need XML for review, reports, or later import:
-
-| Tool | Scope | Writes Project |
+| Tool | Output | Target format |
 |---|---|---|
-| `BuildPlcUdtXml` | UDT / `SW.Types.PlcStruct` | No |
-| `BuildPlcTagTableXml` | PLC tag table / `SW.Tags.PlcTagTable` | No |
-| `BuildPlcGlobalDbXml` | Global DB / `SW.Blocks.GlobalDB` | No |
-| `BuildStructuredTextXml` | SCL `StructuredText/v4` fragment | No |
-| `BuildFlgNetCallXml` | LAD `FlgNet/v5` FC call network | No |
-| `ComposePlcFcBlockXml` | SCL FC block XML | No |
-| `ComposePlcFbBlockXml` | SCL FB block XML, no instance DB | No |
+| `BuildPlcUdtXml` | PLC data type / `SW.Types.PlcStruct` | All eight releases, selected by `outputReleaseKey` |
+| `BuildPlcGlobalDbXml` | Global DB / `SW.Blocks.GlobalDB` | All eight releases, selected by `outputReleaseKey` |
+| `BuildPlcTagTableXml` | PLC tag table | V21 candidate XML |
+| `BuildStructuredTextXml` | SCL XML fragment | V21 candidate XML |
+| `BuildFlgNetCallXml` | One LAD network calling an FC | V21 candidate XML |
+| `ComposePlcFcBlockXml` | SCL FC | V21 candidate XML |
+| `ComposePlcFbBlockXml` | SCL FB, without an instance DB | V21 candidate XML |
+| `ComposePlcLadFcBlockXml` | LAD FC containing FC-call networks | V21 candidate XML |
 
-Use `PlcBuildAndImport` when you want one call to build and prepare the import path:
+Use the exact release key: `14sp1`, `15.1`, `16`, `17`, `18`, `19`, `20`, or `21`. Foundation engines require an explicit `outputReleaseKey`; V20/V21 engines default to `21`, so pass the intended target explicitly. Changing an XML version marker is not a format conversion.
 
-| Mode | Behavior |
-|---|---|
-| `dryRun=true` | Build XML, write a temp XML file, classify it, return discovered objects. No TIA connection and no project write. |
-| `dryRun=false` | Build XML, write a temp XML file, import by classified kind, optionally compile. Requires a connected project and verified paths. |
+The declaration builders use Interface/v2 for V14 SP1, v3 for V15.1, v4 for V16/V17, and v5 for V18–V21. Interface-fragment XSD checks do not establish that an entire document, CPU or user-defined datatype can be imported into a real project.
 
-## BuildPlcUdtXml
+## Prepare, import and check
 
-Input:
+1. Read the selected tool's example with `GetToolUsage`. Builder input is a JSON **string** parameter, such as `udtJson` or `globalDbJson`; do not pass its members as top-level tool arguments.
+2. Build XML for the intended release and inspect the returned content. Build-only tools neither save a file nor import it.
+3. Save the returned XML on the computer running TIA/MCP. Resolve the PLC and group paths from the actual project tree.
+4. Use the current engine's `ImportType`, `ImportBlock` or `ImportPlcTagTable` example for the relevant artifact. Check the actual imported object and path.
+5. Compile the PLC and examine the error count and nested diagnostics. Save the project after reviewing the result.
 
-```json
-{
-  "members": [
-    {
-      "name": "FaultActive",
-      "datatype": "Bool",
-      "externalWritable": true,
-      "comment": "Fault active"
-    },
-    {
-      "name": "FaultCode",
-      "datatype": "Int",
-      "comment": "Fault code"
-    }
-  ]
-}
-```
+V20/V21 additionally expose `PlcBuildAndImport`. Its `dryRun=true` produces a plan; `dryRun=false` executes the import. Read its own example and output-format limits before using it. It is absent from the V14 SP1–V19 foundation catalog.
 
-Required fields:
+The structured-text builder covers a small operation vocabulary, not a general SCL parser. For expressions, loops, state machines and timers, use complete SCL source examples through the [SCL workflow](scl.md). The LAD builders only build FC-call networks; [general LAD examples](lad.md) use a different route.
 
-| Path | Meaning |
-|---|---|
-| `$.members[]` | At least one UDT member |
-| `$.members[].name` | Member name |
-| `$.members[].datatype` | TIA datatype, for example `Bool`, `Int`, `Real`, `"MyUDT"` |
+## PLC data-type folders
 
-Optional fields:
+V20/V21 expose `CreatePlcTypeGroup` for folders under **PLC data types**. It creates folders, not UDT definitions or library types. Get its exact preview/application parameters from `GetToolUsage(toolName="CreatePlcTypeGroup")`.
 
-| Path | Meaning |
-|---|---|
-| `$.members[].externalWritable` | Emits `ExternalWritable` boolean attribute |
-| `$.members[].comment` (alias `commentZhCn`) | Member comment text, any language |
+Use the actual PLC software path and a relative folder path such as `Common/Motors`. Missing parents are created and existing folders reused. Inspect `createdPaths`, `createdCount` and `alreadyExisted`. If a creation fails midway, the reported parent folders may already exist; read them back before repeating the operation. The tool does not automatically compile or save.
 
-## BuildPlcTagTableXml
-
-Input:
-
-```json
-{
-  "tableName": "StartStop",
-  "tags": [
-    { "name": "StartPB", "dataTypeName": "Bool", "logicalAddress": "%I0.0" },
-    { "name": "RunOut", "dataTypeName": "Bool", "logicalAddress": "%Q0.0" }
-  ]
-}
-```
-
-Aliases:
-
-- `tableName` may be `name`.
-- `dataTypeName` may be `datatype` or `dataType`.
-- `logicalAddress` may be `address`.
-
-Validation:
-
-- Each tag must have a name, datatype, and absolute TIA logical address.
-- Logical address must start with `%`.
-
-## BuildPlcGlobalDbXml
-
-Input:
-
-```json
-{
-  "dbName": "DB_HMI_Template_Data",
-  "dbNumber": 101,
-  "staticMembers": [
-    {
-      "name": "MotorRun",
-      "datatype": "Bool",
-      "externalWritable": true,
-      "comment": "Motor running",
-      "startValue": "false"
-    },
-    {
-      "name": "SpeedSet",
-      "datatype": "Int",
-      "comment": "Speed setpoint",
-      "startValue": "0"
-    }
-  ]
-}
-```
-
-Aliases:
-
-- `dbName` may be `name`.
-- `dbNumber` may be `number`.
-- `staticMembers` may be `members`.
-
-## BuildStructuredTextXml
-
-Input:
-
-```json
-{
-  "operations": [
-    { "op": "if", "condition": "Start" },
-    { "op": "assignment", "target": "Run", "value": "TRUE", "indent": 2 },
-    { "op": "else" },
-    { "op": "assignment", "target": "Run", "value": "FALSE", "indent": 2 },
-    { "op": "endif" }
-  ]
-}
-```
-
-Supported operations:
-
-| `op` | Required fields | Notes |
-|---|---|---|
-| `if` / `ifheader` | `condition` | Emits `IF <condition> THEN` |
-| `else` | none | Emits `ELSE` |
-| `endif` / `end_if` | none | Emits `END_IF;` |
-| `assignment` / `assign` | `target`, `literalValue` or `value` | Emits `<target> := <value>;` |
-| `token` | `text` | Low-level token escape hatch |
-| `blank` | optional `count` | Low-level spacing |
-| `newline` | none | Low-level line break |
-
-Set `innerOnly=true` when embedding the result into `ComposePlcFcBlockXml`.
-
-## BuildFlgNetCallXml
-
-Input:
-
-```json
-{
-  "callName": "Limit_Protect",
-  "parameters": [
-    {
-      "name": "Current_Location",
-      "section": "Input",
-      "dataType": "Real",
-      "symbol": "DB_Axis.Actual.Position"
-    },
-    {
-      "name": "Enable",
-      "section": "Input",
-      "dataType": "Bool",
-      "sourceKind": "constant",
-      "value": "1"
-    },
-    {
-      "name": "Fault",
-      "section": "Output",
-      "dataType": "Bool",
-      "symbolPath": ["DB_Axis", "Fault"]
-    }
-  ]
-}
-```
-
-Rules:
-
-- `callName` may be `name`.
-- Global variables use `symbolPath[]` or dotted `symbol` / `path` / `plcTag`.
-- Constants use `sourceKind=constant` and `value`.
-- `section` is usually `Input` or `Output`.
-
-## ComposePlcFcBlockXml
-
-Input:
-
-```json
-{
-  "blockName": "FC_StartStop",
-  "blockNumber": 1,
-  "inputs": [
-    { "name": "Start", "datatype": "Bool" },
-    { "name": "Stop", "datatype": "Bool" }
-  ],
-  "outputs": [
-    { "name": "Run", "datatype": "Bool" }
-  ],
-  "structuredText": {
-    "operations": [
-      { "op": "if", "condition": "Stop" },
-      { "op": "assignment", "target": "Run", "value": "FALSE", "indent": 2 },
-      { "op": "else" },
-      { "op": "assignment", "target": "Run", "value": "TRUE", "indent": 2 },
-      { "op": "endif" }
-    ]
-  }
-}
-```
-
-Aliases:
-
-- `blockName` may be `name`.
-- `blockNumber` may be `number`.
-
-You may provide either:
-
-- `structuredTextInnerXml`, or
-- `structuredText.operations[]`.
-
-## ComposePlcFbBlockXml
-
-Input:
-
-```json
-{
-  "blockName": "FB_Motor",
-  "blockNumber": 20,
-  "inputs": [
-    { "name": "Start", "datatype": "Bool" },
-    { "name": "Stop", "datatype": "Bool" }
-  ],
-  "outputs": [
-    { "name": "Run", "datatype": "Bool" }
-  ],
-  "statics": [
-    { "name": "Latch", "datatype": "Bool" }
-  ],
-  "structuredText": {
-    "operations": [
-      { "op": "if", "condition": "Stop" },
-      { "op": "assignment", "target": "Latch", "value": "FALSE", "indent": 2 },
-      { "op": "else" },
-      { "op": "assignment", "target": "Latch", "value": "TRUE", "indent": 2 },
-      { "op": "endif" },
-      { "op": "assignment", "target": "Run", "value": "Latch" }
-    ]
-  }
-}
-```
-
-Supported interface arrays:
-
-| Path | TIA section |
-|---|---|
-| `inputs[]` | Input |
-| `outputs[]` | Output |
-| `inouts[]` / `inOuts[]` | InOut |
-| `statics[]` / `staticMembers[]` | Static |
-| `temps[]` / `tempMembers[]` | Temp |
-
-This tool does not create an instance DB. Import the FB first, compile in TIA, then create or regenerate instance DBs through a separately verified workflow.
-
-## PlcBuildAndImport
-
-Minimal dry run:
-
-```json
-{
-  "softwarePath": "",
-  "kind": "fc",
-  "json": "{ \"blockName\":\"FC_DryRun\", \"blockNumber\":12, \"inputs\":[{\"name\":\"Start\",\"datatype\":\"Bool\"}], \"outputs\":[{\"name\":\"Run\",\"datatype\":\"Bool\"}], \"structuredText\":{\"operations\":[{\"op\":\"if\",\"condition\":\"Start\"},{\"op\":\"assignment\",\"target\":\"Run\",\"value\":\"TRUE\",\"indent\":2},{\"op\":\"endif\"}]}}",
-  "dryRun": true
-}
-```
-
-Real import checklist:
-
-1. Run `Connect`.
-2. Run `GetProjectTree`.
-3. Run `ValidateAutomationContext`.
-4. Resolve `softwarePath` and the target group path from the tree.
-5. Run `PlcBuildAndImport(..., dryRun=true)` first and inspect `WrittenFiles` / `Discovered*`.
-6. Run `PlcBuildAndImport(..., dryRun=false, compileAfter=true)`.
-7. Check `Failed` and `Compile.ErrorCount`.
-8. Save only after successful compile/readback.
-
-Supported `kind` values:
-
-| Kind | Classified XML | Import path |
-|---|---|---|
-| `udt` | `SW.Types.PlcStruct` | `ImportType` |
-| `tagtable` | `SW.Tags.PlcTagTable` | `ImportPlcTagTable` |
-| `globaldb` | `SW.Blocks.GlobalDB` | `ImportBlock` |
-| `fc` | `SW.Blocks.FC` | `ImportBlock` |
-| `fb` | `SW.Blocks.FB` | `ImportBlock` |
-
-Not yet supported by this one-step builder:
-
-- `ob`
-- `instanceDb`
-- partial network editing
-
-Use explicit existing import tools for artifacts you already have as verified TIA exports.
+See [version support](../../reference/version-tools.md), [template files](templates.md) and the [central example catalog](../../../reference/tool-examples/languages/catalog.json). New native import acceptance remains separate from offline checks.

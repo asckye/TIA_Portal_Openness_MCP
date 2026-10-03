@@ -1,10 +1,11 @@
 # TIA Openness V18–V21: targeted adapter evidence matrix
 
-Reviewed 2026-10-02 against official Siemens online manuals and the local tia-unified source. Read-only research; no live TIA calls, repository modifications, or claim of a complete 486-tool audit. “Documented” does not mean SDK compilation or native acceptance has passed. Absence of evidence is unknown, not unsupported.
+Reviewed 2026-10-02 against official Siemens online manuals and the local tia-unified source. Read-only research; no live TIA calls, repository modifications, or claim of a complete all-tool audit. “Documented” does not mean SDK compilation or native acceptance has passed. Absence of evidence is unknown, not unsupported.
 
-Overall target scope starts at V14 SP1 and excludes original V14 and V15;
-V15.1 remains a target. V18/V19 below are planned, while only V20/V21 have
-existing runnable engine build targets.
+Current build scope includes V14 SP1, V15.1 and V16–V21; original V14 and V15
+are excluded. All eight exact SDK targets have compiled. V14 SP1–V19 use the
+foundation host; V20/V21 use the full engines. Native acceptance remains separate
+from these build results; see the [current version matrix](version-tools.md).
 
 ## Implementation status
 

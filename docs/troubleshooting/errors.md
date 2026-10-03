@@ -1,64 +1,19 @@
-# Error Model and Exception Metadata
+# 调用失败时如何处理
 
-This document standardizes how errors are raised in the Siemens portal layer and mapped to MCP responses, and where exception metadata is attached for consistency and observability.
+先记录当前服务版本、工具名、返回错误及调用 ID，再按实际问题处理。同名工具在基础宿主和完整引擎上的返回结构可能不同，使用 `GetToolUsage` 核对正在连接的版本。
 
-## Principles
+| 现象 | 下一步 |
+|---|---|
+| 参数缺少、类型错误或动作不支持 | 读取当前 schema 和对应 `operation` 示例，按返回的参数名修正；不要套用其他版本签名。 |
+| 对象不存在或名称有歧义 | 重新读取选定工程的 PLC、组和对象路径，使用准确返回值。文件路径必须属于服务所在电脑。 |
+| 无法导出不一致的块/类型 | 按实际目标编译并检查错误和嵌套诊断。批量导出同时核对成功项、跳过项和失败项。 |
+| HTTP 401 / 无法建立连接 | 核对配置器中的地址、端口与密钥；连接测试通过后仍需确认工程绑定。详见[配置指南](../getting-started/configuration.md)。 |
+| 原生 API / I/O / 选件异常 | 核对安装版本、选件和返回的原生原因。缺少服务不能解释为集合为空或操作成功。 |
+| TIA 退出、句柄失效或连接受阻 | 先检查 TIA 进程和工程实际状态，再查看调用日志及[原生限制](openness-limitations.md)；不要自动换接口重放。 |
+| 写入结果未知或部分成功 | 检查已返回的对象与文件以及 `mayHaveChanged` 等字段，再决定补救动作。异常不保证原子回滚。 |
 
-- Clear categories
-  - Validation: invalid input, missing resources → `PortalErrorCode.InvalidParams` / MCP `InvalidParams`.
-  - Invalid state: operation cannot proceed due to project or item state (e.g., inconsistent block/type) → `PortalErrorCode.InvalidState` / MCP `InvalidParams` with guidance.
-  - Operation failure: environment/IO/underlying API issues → `PortalErrorCode.ExportFailed` (or similar) / MCP `InternalError` with concise reason.
+`success`、原生导入状态、内容核对、编译结果、工程保存结果需要分别判断。质量审计的 `qualityPassed` 和 XSD 的 `fragmentSchemasPassed` 才是对应检查结论。
 
-- Single decoration point
-  - Do not attach `Exception.Data` inline at throw sites.
-  - Each public portal method (e.g., `ExportBlock`, `ExportType`) attaches standard context keys in a single catch block just before rethrowing, ensuring uniform metadata on all failures:
-    - `softwarePath`
-    - `blockPath` / `typePath` (as applicable)
-    - `exportPath` (as applicable)
+完整引擎可用 `ReadOpennessCompatibility` 查看加载程序集版本，用 `ReadNativeInvocationLog` 读取已记录的调用边界。日志中的 `BEFORE` / `RETURNED` / `THREW` 用于定位时间和调用；它们不替代业务结果，也不能单独确认 Siemens 崩溃根因。HMI 快照的独立日志及完整性说明见[快照诊断](hmi-snapshots.md)。
 
-- Consistency requirement (TIA Portal)
-  - TIA Portal does not export inconsistent blocks/types (`IsConsistent == false`). Single-item exports throw `InvalidState` with a clear message to compile first. Bulk exports skip inconsistent items and report them in a dedicated list.
-
-## Portal Layer Pattern
-
-Within `src/TiaMcpServer/Siemens/Portal/Portal*.cs` methods:
-
-- Throw lightweight `PortalException` with an appropriate `Code` from locations that detect an error (validation, not-found, invalid state).
-- Use a single `catch (Exception ex)` per method and funnel into the canonical wrapping pattern (see `ExportBlock`):
-
-```csharp
-catch (Exception ex)
-{
-    var pex = ex as PortalException ?? new PortalException(PortalErrorCode.ExportFailed, "Export failed", null, ex);
-
-    pex.Data["softwarePath"] = softwarePath;
-    pex.Data["blockPath"] = blockPath;
-    pex.Data["exportPath"] = exportPath;
-
-    _logger?.LogError(pex, "{MethodName} failed for {SoftwarePath} {BlockPath} -> {ExportPath}", softwarePath, blockPath, exportPath);
-    throw pex;
-}
-```
-
-  - Always attach metadata and log inside this single block; avoid branching on `ex` type or duplicating metadata assignments elsewhere.
-  - Keep C# portal-layer files encoded as UTF-8 with BOM (Windows "UTF-8 signature") and CRLF line endings so Siemens tooling keeps metadata intact.
-
-This keeps the decoration and logging in one place, avoids repeated code, and guarantees consistent context even for early-validation failures.
-
-## MCP Mapping
-
-- Map `PortalErrorCode.InvalidParams` and `InvalidState` to MCP `InvalidParams` with user-guidance messages.
-- Map `PortalErrorCode.ExportFailed` (and similar) to MCP `InternalError`, include a concise `Reason` from the inner exception, and log full details.
-- For `NotFound`, provide suggestions when the input is ambiguous (e.g., single-name block paths).
-
-## Bulk Export Reporting
-
-- Responses for bulk operations include both exported items and a list of inconsistent (skipped) items:
-  - `ResponseExportBlocks`: `Items` (exported), `Inconsistent` (skipped)
-  - `ResponseExportTypes`: `Items` (exported), `Inconsistent` (skipped)
-- `Meta` contains counts for totals, exported, and inconsistent.
-
-## Formatting
-
-- Portal-layer C# files and their unit tests must retain Windows CRLF line endings to avoid newline parsing faults during deploy scripts.
-- Markdown docs in this repo should also use CRLF and UTF-8 with BOM when committed from Windows to prevent the "UTF-8 signature" warnings the tooling flags.
+开发者应沿用现有错误类型和结果封装，不在本页维护第二套编码、异常装饰或日志规范。仓库行尾与编码以 `.gitattributes` 和现有构建检查为准。

@@ -25,7 +25,7 @@
     TIA Portal MCP &#8212; architecture
   </text>
   <text x="490" y="80" class="sub" text-anchor="middle">
-    Drive Siemens TIA Portal V20 / V21 from any MCP client &#8212; one server, two version-matched builds.
+    TIA Portal V14 SP1, V15.1 and V16&#8211;V21 &#8212; eight version-matched runtimes.
   </text>
 
   <!-- pipeline arrows (behind cards' gaps) -->
@@ -40,7 +40,7 @@
     <text x="108.5" y="34" class="h2" text-anchor="middle">MCP Client</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
       <tspan x="108.5" dy="0">Claude Code &#183; Codex</tspan>
-      <tspan x="108.5" dy="1.7em">Cursor &#183; VS Code &#183; Claude Desktop</tspan>
+      <tspan x="108.5" dy="1.7em">Cursor &#183; VS Code &#183; Gemini CLI</tspan>
       <tspan x="108.5" dy="1.7em">and other MCP clients</tspan>
     </text>
   </g>
@@ -51,9 +51,9 @@
     <rect width="217" height="6" rx="3" fill="#1F4E89"/>
     <text x="108.5" y="34" class="h2" text-anchor="middle">TiaMcpServer.exe</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">V21 &#8594; runtime/v21</tspan>
-      <tspan x="108.5" dy="1.7em">V20 &#8594; runtime/v20</tspan>
-      <tspan x="108.5" dy="1.7em">L0 / L1 / L2 tools</tspan>
+      <tspan x="108.5" dy="0">V14 SP1&#8211;V19: foundation</tspan>
+      <tspan x="108.5" dy="1.7em">V20/V21: full engines</tspan>
+      <tspan x="108.5" dy="1.7em">GetToolUsage: unified examples</tspan>
     </text>
   </g>
 
@@ -63,9 +63,9 @@
     <rect width="217" height="6" rx="3" fill="#8E44AD"/>
     <text x="108.5" y="34" class="h2" text-anchor="middle">Siemens Openness</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
-      <tspan x="108.5" dy="0">V21 split DLLs</tspan>
-      <tspan x="108.5" dy="1.7em">V20 monolithic DLL</tspan>
-      <tspan x="108.5" dy="1.7em">version-safe import</tspan>
+      <tspan x="108.5" dy="0">Exact installed API identity</tspan>
+      <tspan x="108.5" dy="1.7em">Typed version adapters</tspan>
+      <tspan x="108.5" dy="1.7em">Release-specific capabilities</tspan>
     </text>
   </g>
 
@@ -73,21 +73,21 @@
   <g transform="translate(743,100)">
     <rect width="217" height="150" rx="10" fill="#FFFFFF" stroke="#CBD3DE" stroke-width="1.2" filter="url(#sh)"/>
     <rect width="217" height="6" rx="3" fill="#E07A22"/>
-    <text x="108.5" y="34" class="h2" text-anchor="middle">TIA Portal V20/V21</text>
+    <text x="108.5" y="34" class="h2" text-anchor="middle">Selected TIA Portal</text>
     <text x="108.5" y="66" class="body" text-anchor="middle">
       <tspan x="108.5" dy="0">live project</tspan>
-      <tspan x="108.5" dy="1.7em">PLC &#183; WinCC HMI</tspan>
-      <tspan x="108.5" dy="1.7em">compile &#183; download</tspan>
+      <tspan x="108.5" dy="1.7em">PLC foundation on all releases</tspan>
+      <tspan x="108.5" dy="1.7em">Broader tools on V20/V21</tspan>
     </text>
   </g>
 
   <!-- flow caption -->
   <text x="490" y="272" class="lbl" text-anchor="middle">
-    JSON-RPC over stdio / HTTP  &#8594;  Openness reflection  &#8594;  attached TIA project
+    JSON-RPC over stdio / HTTP  &#8594;  matching Openness runtime  &#8594;  selected TIA project
   </text>
 
   <!-- outputs -->
-  <text x="20" y="298" class="lbl">What it generates</text>
+  <text x="20" y="298" class="lbl">Capabilities depend on the selected release and installed products</text>
   <g class="chip">
     <rect x="20"  y="306" width="220" height="42" rx="8" fill="#E8F5EE" stroke="#2E8B57" stroke-width="1.1"/>
     <text x="130" y="331" text-anchor="middle">Project &amp; Hardware</text>
@@ -101,6 +101,6 @@
 
   <!-- footnote -->
   <text x="490" y="376" class="foot" text-anchor="middle">
-    Free &amp; open (MIT) &#183; prebuilt runtime, no license key required
+    Studio uses Openness directly across eight releases. Siemens product licenses remain separate.
   </text>
 </svg>

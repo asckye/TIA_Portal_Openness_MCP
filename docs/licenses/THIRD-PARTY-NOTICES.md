@@ -2,7 +2,7 @@
 
 [文档目录](../README.md) · [NOTICE](../../NOTICE.md)
 
-本清单覆盖 `runtime/v20` 与 `runtime/v21` 中随交付包分发的**全部**第三方程序集。版本与许可证信息取自构建时实际还原的 NuGet 包元数据（`.nuspec`）及包内嵌许可证文件，核对日期 2026-09-17。本目录中的许可证原文来自对应 NuGet 包内嵌文件；未内嵌原文的以官方链接标注。
+本清单登记随 v3.2.0 八版 MCP、Studio 和配置器交付的第三方组件及源码来源。下表按组件范围列示，早期 V20/V21 依赖项保留其核对版本；实际文件版本与哈希以 `manifest/release-build.json` 和 `manifest/multi-version-build.json` 为准。许可原文和版权声明继续保留，不将一个运行时的依赖清单视为所有适配器都相同。
 
 Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取得许可的 TIA Portal 提供，**不随本包分发**，不在此列。
 
@@ -36,7 +36,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 仅依赖 .NET Framework 4.8 自带的 WPF 与基础类库，无第三方程序集。
 
-## 本地生态集成（Unreleased，2026-09-29）
+## 随包生态集成
 
 | 组件 | 固定来源 | 许可与本地文件 |
 |---|---|---|
@@ -64,7 +64,7 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 - 新增会随包分发的程序集，必须先在此登记许可证，再进入 `runtime/`。
 - 与 MIT 不兼容的许可证（GPL/AGPL 等）不得以静态链接或打包方式进入交付包；LGPL 组件只能以独立进程或动态链接方式使用并保留替换可能。
 
-## TIA Openness Studio desktop integration (unreleased)
+## TIA Openness Studio desktop integration
 
 - Source: [asckye/tia-openness-studio](https://github.com/asckye/tia-openness-studio), commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, v2.4.0.
 - Copyright (c) 2026 asckye; [MIT license](../../tools/tia-openness-studio/LICENSE).

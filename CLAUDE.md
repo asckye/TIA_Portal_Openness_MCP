@@ -1,9 +1,8 @@
 # 给 AI 编码助手
 
-- 工具调用示例、语言代码、输入来源、结果解释和官方出处统一维护在 `reference/tool-examples`，由 `GetToolUsage` 按当前版本/工具/操作/语言返回；不要为个别问题另建规则或专项入口。旧 `GetAuthoringGuide` / `GetRecipe` 复用同一数据。保留真实功能校验，区分完整源码、片段、参数模板与原生验证。修改后生成嵌入目录，并通过八版本实际 MCP 检索、操作覆盖、示例文件及离线功能检查。
-
-- 继续"官方 Openness API 全量对齐"计划前先读 `docs/development/handoff.md`（现状、下一步、每阶段固定动作、发布闸门、真机验证约定、只在真机上学到的 API 事实）；逐版本历史在 `docs/development/handoff-history.md`——新发布后 handoff §1 只改现状表，条目加到 history 顶部。
-- 换了机器接手：先读 `docs/development/handoff-checklist.md`（新机器准备、虚拟机现状、部署后按序要做的事、真机批跑工具 `scripts/diagnostics/campaign/`）。
-- 提交信息、PR、Release 正文不加任何 AI 署名行（`Co-Authored-By`、"Generated with …"）。
-- 不要 `git add -A`；引擎或测试源码改动后必须重跑 `scripts/build/Build-Release.ps1` 再提交清单（见 handoff §4）。二进制（`runtime/v20`、`runtime/v21`、`TiaMcpConfigurator.exe`）不入库，clone 后先跑 Build-Release 才有。
-- 发版走 `scripts/build/Release.ps1 -Version X.Y.Z -Summary "…"`（先手写 CHANGELOG 顶部条目与 `docs/releases/vX.md`；脚本自己做版本号、Build-Release、闸门、一次提交、打包、推送、CI、tag、从本机上传 ZIP、等验证工作流）。按维护者 2026-10-02 最新要求只维护 master 分支；原 v17–v21 分支历史保存在删除前的完整 Git bundle，范围、提交和恢复说明见 `docs/reference/version-branches.md`，不得将历史分支的版本号当作已验证的支持能力；英文文档不含中文；提交说明英文。
+- 接续开发先读 `docs/development/handoff.md`；当前缺口见 `docs/development/roadmap.md` 和 `docs/reference/openness-coverage.md`。机器地址、PID 和旧会话状态从当前环境确认，不从历史文档推断。
+- 工具示例、语言代码、参数来源、结果解释和官方出处统一在 `reference/tool-examples` 维护，由 `GetToolUsage` 按版本返回。兼容入口复用同一数据，不为个别问题新增规则文档。修改示例后生成嵌入目录并执行八版检索和功能检查。
+- 本地 SDK、用户工程、设计交接和密钥不纳入发布。第三方来源和许可证保留；纯逻辑优先复用，共用代码与版本 API 差异分别维护。
+- 引擎或测试源码变动后按 `docs/development/validation.md` 完成对应构建及全部版本检查。文档变动核对链接、路径、工具适用版本和引用；不手工改测试哈希。
+- 仅维护 master。使用明确的 `git add` 路径，不用 `git add -A`。运行二进制不进 Git；英文提交，不添加 AI 署名。
+- 发布使用 `scripts/build/Release.ps1 -Version X.Y.Z -Summary "..."`，流程见 `docs/development/release-workflow.md`。发布后更新当前交接及 `manifest/publication-vX.Y.Z.json`，历史变化记录在 CHANGELOG 和 GitHub Releases。

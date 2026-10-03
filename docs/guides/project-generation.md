@@ -1,149 +1,34 @@
-# 完整项目生成运行手册
+# 从蓝图生成 PLC 与 Unified 工程
 
-本手册描述从空项目生成 PLC + WinCC Unified 工程的完整流程。所有文件均在交付包内。
+本流程使用 V20/V21 完整引擎的项目、硬件、PLC 和 HMI 工具。V14 SP1–V19 基础目录不提供整套 HMI 生成能力；旧版 PLC 开发使用[SCL 流程](plc/scl.md)及该版本工具示例。
 
-## 零、交付包自检（推荐先做）
+## 准备输入
 
-在包根目录执行（无需启动 TIA）：
+- [完整项目蓝图](../../templates/project-blueprints/full_plc_hmi_project.json)：按实际 CPU、HMI、程序和地址修改。
+- [PLC 模板](../../templates/plc/README.md)与[HMI 模板](../../templates/hmi/README.md)：可修改的输入文件。
+- `GetToolUsage`：当前版本的参数、调用序列、完整程序例子及结果解释。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\checks\Validate-Bundle.ps1
-```
+模板能被解析不等于已适配所有 TIA 版本。UDT/Global DB builder 可显式输出八版格式；其余六种 PLC builder 仍输出 V21 候选 XML。使用 V20 时核对每项输入格式与实际原生支持，参见 [Builder](plc/builders.md)。
 
-通过后再连 MCP；`-Strict` 可选。
+## 分阶段操作
 
-## 输入文件
+| 阶段 | 做什么 | 检查什么 |
+|---|---|---|
+| 连接 | 按 `sequence/connect-project` 获取或打开实际目标 | 工程路径、TIA 版本和绑定状态 |
+| 硬件 | 按 `sequence/hardware-device` 创建明确型号的设备 | 实际设备和软件路径、网络读回 |
+| PLC 数据 | 按依赖导入类型、接口 DB 和变量表 | 实际类型、块、成员及地址 |
+| PLC 程序 | 按 `sequence/plc-scl-block` 导入完整源并生成 | 实际生成块、接口及 PLC 编译诊断 |
+| HMI | 按 `sequence/hmi-unified-screen` 创建连接、变量、画面及控件 | 连接驱动、变量来源、控件和事件正文 |
+| 保存 | 确认目标工程后调用保存工具 | 实际保存结果 |
 
-| 文件 | 用途 |
-|---|---|
-| `tools/tiaportal-mcp/skill/SKILL.md` | 工具调用规则 |
-| `templates/project-blueprints/full_plc_hmi_project.json` | 项目蓝图 |
-| `templates/plc/README.md` | PLC 模板索引 |
-| `templates/hmi/README.md` | HMI 模板索引 |
-| `docs/guides/plc/templates.md` | PLC 指令说明、网络模式与扩展写法 |
-| `docs/guides/hmi/design.md` | HMI 画面规范 |
-| `docs/guides/hmi/tag-binding.md` | HMI↔PLC 符号/绝对地址与红字排障 |
-| `docs/getting-started/configuration.md` | MCP 与 IDE 无关、工具列表权威来源 |
-| `templates/README.md` | 模板总览与可选外部参考说明 |
+以上 `sequence/...` 均通过 `GetToolUsage(exampleId="...")` 获取。每步使用上一步返回的实际路径，不直接复制示例设备名。
 
-## 一、环境检查
+使用 `PlcBuildAndImport` 时，先检查预览生成的文件、分类和目标，再按其执行示例导入；导入结果与编译结果分别检查。外部 SCL 导入、生成块和编译同样是三个阶段。
 
-```text
-Bootstrap
-Connect
-GetState
-```
+HMI 外部变量的符号引用和实际地址在 `EnsureUnifiedHmiTag` 的同一次调用中传入。固定 DB200 地址仅适用于对应模板布局。详见[变量绑定](hmi/tag-binding.md)、[连接](hmi/connections.md)和[画面生成](hmi/design.md)。
 
-检查项：
+## 完成标准
 
-- TIA Portal 可连接。
-- 用户具备 Openness 权限。
-- PublicAPI 与 TIA 版本匹配。
-- 当前会话没有未处理的错误。
+工程树中能找到预期设备、PLC/HMI 软件和程序；PLC/HMI 编译结果没有未解决的错误；变量和事件能读回；保存结果明确。编译、导入和保存均不证明已下载或运行，目标设备验收另行进行。
 
-## 二、创建项目与硬件
-
-```text
-CreateProject
-AddDeviceWithFallback
-AddHardwareCatalogDeviceWithProbe
-ConnectDeviceNodesToProfinetSubnet
-GetProjectTree
-ValidateAutomationContext
-```
-
-要求：
-
-- CPU 与 HMI 实例创建成功。
-- PROFINET 连接有读回证据。
-- PLC software path、HMI software path、PLC name 均来自 `GetProjectTree`。
-
-## 三、生成 PLC
-
-导入顺序：
-
-```text
-tagtable
-udt
-globaldb
-fc
-fb
-ladRecipe
-externalSclExample
-compile
-```
-
-模板来源：
-
-```text
-templates/plc/plcbuild-json/*.json
-templates/plc/lad-recipes/lad_call_recipes.json
-templates/plc/scl-examples/FC_InstructionGallery.scl
-```
-
-执行要求：
-
-1. 每个 `plcbuild-json` 模板先执行 `PlcBuildAndImport(dryRun=true)`。
-2. dryRun 通过后再执行 `dryRun=false`。
-3. 真实导入后执行 `CompileAndDiagnosePlc`。
-4. 编译错误为 0 后进入 HMI 生成。
-
-## 四、生成 HMI
-
-画面：
-
-```text
-Overview
-Dashboard
-ControlStrip
-Parameters
-Trend
-TagDiagnostics
-Events
-```
-
-执行顺序：
-
-```text
-GetHmiProgramInfo
-EnsureUnifiedHmiConnection
-EnsureUnifiedHmiTagTable
-EnsureUnifiedHmiTag
-EnsureUnifiedHmiScreen
-ApplyUnifiedHmiScreenDesignJson
-BindUnifiedHmiTagDynamization
-EnsureUnifiedHmiButtonAction
-```
-
-要求：
-
-- HMI 连接必须使用 `GetProjectTree` 读回的实际 PLC 软件节点，不手写目录显示名；工具会按 PLC 设备 `TypeIdentifier` 推断 S7-1200/1500/300/400 驱动，并写入 Partner、Station、Node。
-- HMI Tag 按蓝图 `tags[]` 同时传入 `plcTag` 与 `address`：`plcTag` 用于符号说明和读回诊断，`address` 绑定到 `DB_HMI_Interface` 的标准访问绝对地址（例如 `%DB200.DBX0.0`）。
-- `DB_HMI_Interface` 必须先导入并编译，且保持 `MemoryLayout=Standard`、`dbNumber=200`，否则 HMI 变量无法稳定连到 PLC 内部数据。
-- 画面尺寸与模板一致。
-- 按钮动作使用 `Down` / `Up`。
-- 动态化绑定在控件创建后执行。
-
-## 五、验收
-
-必须满足：
-
-- `GetProjectTree` 可读回 PLC 和 HMI。
-- PLC 编译错误为 0。
-- HMI 画面创建成功。
-- HMI 连接读回 `CommunicationDriver` 与实际 PLC 系列匹配，`Partner/Station/Node` 至少有一个可解释的实际 PLC/PN 接口值。
-- HMI Tag 读回 `Connection=HMI_Connection_1`，并且 `Address` 或 `LogicalAddress` 等于蓝图中的 `%DB200...` 地址。
-- `ApplyUnifiedHmiScreenDesignJson` 无不可解释失败。
-- 按钮动作通过 SyntaxCheck。
-- 动态化绑定返回成功或可读回。
-- `SaveProject` 成功。
-
-## 六、失败处理
-
-| 现象 | 处理 |
-|---|---|
-| 找不到 software path | 重新执行 `GetProjectTree`，不要猜路径 |
-| PLC 导入失败 | 回到 dryRun 输出，检查生成 XML 和导入类型 |
-| HMI 控件找不到 | 先应用画面模板，再绑定动作和动态化 |
-| HMI Tag 红字 | 检查连接、PLC 符号、DB 成员和编译状态 |
-| 编译错误 | 导出诊断，修正 PLC 模板或导入顺序 |
+若使用命令行生成 JSON/YAML spec，参见 [CLI 指南](../getting-started/cli.md)。首次练习建议先完成[新手指南](../getting-started/beginners.zh-CN.md)的单个函数导入，再扩展到整工程。

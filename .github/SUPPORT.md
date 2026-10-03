@@ -1,10 +1,10 @@
 # Support
 
-English or Chinese, both are read. 中英文皆可。
+Support requests may be written in English or Chinese.
 
 ## Before asking
 
-1. Run the built-in doctor on the machine with TIA Portal - it names the exact environment fix for most problems:
+1. For a V20/V21 full engine, run doctor on the TIA computer. For older foundation releases, use Studio Doctor or the connected host's environment tools and their GetToolUsage examples:
 
    ```bat
    runtime\v21\TiaMcpServer.exe doctor
@@ -17,13 +17,13 @@ English or Chinese, both are read. 中英文皆可。
    - Errors and Openness limits: [docs/troubleshooting/errors.md](../docs/troubleshooting/errors.md), [docs/troubleshooting/openness-limitations.md](../docs/troubleshooting/openness-limitations.md)
    - What is verified on a real machine and what is not: [docs/reference/capabilities.md](../docs/reference/capabilities.md), [docs/reference/real-machine-ledger.md](../docs/reference/real-machine-ledger.md)
 
-3. Inside an AI session, `Bootstrap`, `Doctor`, `FindTools`, `PreflightToolCall` and `GetRecipe` answer most "which tool / which arguments / which order" questions without guessing.
+3. Inside an AI session, retrieve `GetToolUsage` for the current release, tool and operation. Full engines also offer `Bootstrap`, `Doctor` and `FindTools`; foundation hosts use their own catalog.
 
 ## Where to ask
 
 - **Bug or unexpected behaviour** → open an issue with the [bug report template](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=bug_report.md); paste the `doctor` output and the full error text.
 - **Missing tool or workflow** → [feature request](https://github.com/asckye/TIA_Portal_Openness_MCP/issues/new?template=feature_request.md).
-- **Question** → open an issue with the `question` label; say which TIA version, client and engine version (`Bootstrap` → `serverVersion`).
+- **Question** → open an issue with the `question` label; say which TIA version, client and engine version (from the current host's state/environment output).
 - **Security problem** → do not open a public issue; follow [SECURITY.md](SECURITY.md).
 
 Please do not attach real customer projects or unredacted logs. Reduce a reproduction to the smallest block or spec that still fails.

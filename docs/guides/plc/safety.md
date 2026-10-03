@@ -1,67 +1,32 @@
 # Safety（F 程序）工具
 
-[文档目录](../../README.md) · [能力与验收边界](../../reference/capabilities.md) · [官方 API 覆盖清单](../../reference/openness-coverage.md)
+本页针对 V20/V21 完整引擎。工具可用性还取决于 F-CPU、Safety 产品和具体版本；V14 SP1–V19 的基础目录不提供这一工具族。
 
-2.7.25 起，`Siemens.Engineering.Safety` 程序集的全部 12 个类型 / 54 个成员都有专用工具，按官方 "F-related Openness" 章节逐页对照实现。适用于 S7-1200/1500 F-CPU；不是 F-CPU 时 `ManagePlcSafety` 返回 `NotSupportedOnVersion`，`ReadSafetyBlockSignatures` 返回 `fCpu=false` 与 0 条记录。所有工具都是 L2，经 `FindTools("safety")` + `CallTool` 调用。
+## 先读取目标程序
 
-## 先读一遍：验收快照
+1. 从工程树取得实际 PLC 软件路径。
+2. 通过 `GetToolUsage(toolName="ManagePlcSafety", operation="read")` 获取本版本示例。
+3. 检查实际 F 能力、登录状态、设置、运行组及支持的签名类型。
+4. 需要逐块签名时读取 `ReadSafetyBlockSignatures` 的示例；需要安全打印件时读取 `ExportSafetyPrintout` 的示例。
 
-```text
-ManagePlcSafety(softwarePath="+S1-K1", action="read")
-```
+| 返回内容 | 用途 |
+|---|---|
+| `administration` | 密码设置与当前登录状态 |
+| `settings` | F 程序设置、号段、当前和可选安全系统版本 |
+| `runtimeGroups` | 主安全块、实例 DB、前后处理及周期设置 |
+| `programSignatures` | 当前 API 提供的程序签名；V20/V21 字段能力不同 |
+| `cpu` | 实际 CPU F 能力和可用服务 |
 
-返回一次性拿全：
+签名是离线工程数据。无有效签名或未编译状态不能当成验收通过；普通 `CompileSoftware` 的成功也不等于完成 F 编译和功能安全验收。
 
-| 字段 | 内容 | 官方成员 |
-|---|---|---|
-| `administration` | 是否设了 F 程序密码、当前是否已登录 | `IsSafetyOfflineProgramPasswordSet` / `IsLoggedOnToSafetyOfflineProgram` |
-| `settings.values` | `ActivationOfFChangeHistory`、`CreateDriverInstanceDataBlocksWithoutPrefix`、`SafetyModeCanBeDisabled` | `SafetySettings` |
-| `settings.assignmentOfBlockNumbers` | `managementMode`（`FSystemManaged` / `FixedRange`）与 FB/FC/DB 号段 | `AssignmentOfBlockNumbers` |
-| `settings.safetySystemVersion` / `applicableSafetySystemVersions` | 当前安全系统版本与可选版本（升序） | `SafetySystemVersion`、`GetApplicableSafetySystemVersions()` |
-| `settings.attributes` | `EnableConsistentUploadFromFCpu`、`EnableFCommunicationIdTag`（特定 F-CPU 才有，缺省为 `null` + 原生原因） | 文档化 `GetAttribute` |
-| `runtimeGroups[]` | 主安全块 / IDB / 前后处理 / 信息 DB / 周期时间 + `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority` | `RuntimeGroup` |
-| `programSignatures[]` | 集体 / 软件 / 硬件 / 通信地址 F 签名（`type`、`value`、`hex`、`valid`）；**V21**，V20 为 `null` | `SafetyAdministration.ProgramSignatures` |
-| `globalSettings` | TIA Portal 级四项设置 | `GlobalSettings` |
-| `cpu` | `Failsafe_FCapabilityActivated` 与 `SafetyPrintout` / `SafetyBaseIdProvider` / `SafetySignatureProvider` 可用性 | 硬件属性 + 服务探测 |
+## 修改设置或运行组
 
-逐块签名单独一个工具，整 PLC 递归或指定一块：
+用 `GetToolUsage(toolName="ManagePlcSafety")` 查看当前版本动作，再对选定动作读取 `operation` 示例。按示例完成实际项目、离线状态和登录准备，先检查预览，再执行所需修改。检查实际设置、运行组或签名的读回结果，随后完成 TIA 要求的编译和项目验证。
 
-```text
-ReadSafetyBlockSignatures(softwarePath="+S1-K1")                      # 全部 F 块，分页
-ReadSafetyBlockSignatures(softwarePath="+S1-K1", blockPath="Safety/Main_Safety_RTG1")
-```
+`ManageSafetyGlobalSettings` 是 TIA Portal 级设置，影响范围不同于单个 PLC。CPU 的 `Failsafe_FCapabilityActivated` 也不同于普通运行组设置，关闭 F 能力可能删除安全程序，不能作为一般故障处理步骤。
 
-`value` 为 0 表示"自上次 F 编译后已改动、尚无有效签名"——官方语义，工具不会把它当成一个签名值。签名都是离线工程里的值，不是从 CPU 读的。
+## 版本差异
 
-官方安全打印件（TIA 里"安全摘要"的打印）：
+V21 增加若干安全签名、BaseID 和安全激活测试路径；V20 不能套用这些动作。工具级和动作级差异以当前 `GetToolUsage` 及[版本清单](../../reference/version-tools.md)为准，不把某个程序集的类型数当成全部功能已验收。
 
-```text
-ExportSafetyPrintout(softwarePath="+S1-K1", filePath="D:\\acceptance\\S1-K1_safety.pdf", option="All", dryRun=false)
-```
-
-前提：TIA 所在机器启用了 "Microsoft Print to PDF"（或 XPS Document Writer，配 `.xps`/`.oxps`）；文件不能已存在（原生 `Print` 会覆盖，工具拒绝）。返回原生 `bool`、字节数与 SHA-256，内容不解析。
-
-## 写入（默认预览）
-
-| 动作 | 说明 | 额外要求 |
-|---|---|---|
-| `createRuntimeGroup` | 不给块 → TIA 自动生成主安全 FB + IDB；`mainSafetyBlockPath` 指向 FC → `Create(name, FC)`；FC 换成 FB 并给 `mainSafetyInstanceDbPath` → `Create(name, FB, IDB)` | Offline、已登录 |
-| `updateRuntimeGroup` | `propertiesJson`：`WarnCycleTime` / `MaximumCycleTime` / `PreProcessingName` / `PostProcessingName` / `InfoDbName` 与 `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority`；不改名 | 同上 |
-| `updateSettings` | `propertiesJson` 可混写：标量（`ActivationOfFChangeHistory` 等）、`AssignmentOfBlockNumbers`（对象或 `AssignmentOfBlockNumbers.FromFB` 或裸 `FromFB`）、`SafetySystemVersion`（精确字符串，须在 `applicableSafetySystemVersions` 里）、两个文档化属性。`ManagementMode` 先于号段写入 | 同上；`SafetyModeCanBeDisabled` 需 `confirmSafetyChange` |
-| `deleteRuntimeGroup` | 删除后核对不存在 | `confirmSafetyChange` |
-| `generateGlobalFIOStatusBlock` | 创建或覆盖全局 F-I/O 状态块，返回块名/号/路径 | `confirmSafetyChange` |
-| `cleanSystemGeneratedObjects` | 清理上次 F 编译生成的对象 | `confirmSafetyChange` |
-| `generateBaseId` | 生成并分配 F-BaseID（V21，S7-1200 G2/1500 FW ≥ V4.1）；手动分配或延迟传输激活时原生抛错 | `confirmSafetyChange` |
-| `login` / `logoff` | `password` 直传 `LoginToSafetyOfflineProgram(SecureString)`，不记录；已登录/未设密码时拒绝 | 不要求 Offline |
-| `setPassword` / `revokePassword` | 设置或撤销 F 程序密码，读回 `IsSafetyOfflineProgramPasswordSet` 核对 | `confirmSafetyChange` |
-
-`ManageSafetyGlobalSettings(action="update", propertiesJson="{\"SafetyModificationsPossible\":false}")` 在 TIA Portal 级锁住所有 F 程序修改（与登录状态无关）；`UsernameForFChangeHistory` 超过 256 字符直接拒绝，空串恢复默认。
-
-CPU 的 `Failsafe_FCapabilityActivated` 是普通硬件属性，用 `SetDeviceItemAttribute` 修改；**关闭它会删除安全程序**，本工具族只读它。
-
-## 边界
-
-- **F 编译不在 Openness PublicAPI 内**：签名只在 TIA 内 F 编译后更新，`CompileSoftware` 不触发 F 编译。工具能拿到签名快照，不能替代功能安全验收。
-- 读取不需要 Safety 许可证，写入需要；无许可证时原生抛异常并原样回传。
-- V20 差异：`ProgramSignatures`、`SafetyBaseIdProvider` 与集体/软件/硬件/通信地址四种 `SafetySignatureType` 是 V21 API；逐块签名、设置、运行组、打印件、GlobalSettings 两版一致。
-- `SafetyValidation`（安全验证助手，独立选件）未封装。
+打印件工具检查原生结果及输出文件；PDF/XPS 依赖 TIA 电脑上的相应打印支持。输出路径属于服务端电脑。真实 Safety 操作和验收状态见[能力说明](../../reference/capabilities.md)。

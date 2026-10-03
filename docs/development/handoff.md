@@ -1,109 +1,96 @@
 # Current development handoff
 
-## 1. Current state
+## Current state
 
-Release v3.2.0 includes the eight MCP runtimes, configurator and direct Openness Studio.
-The public package is built from the reviewed master release commit with runtime/source
-hashes and independent GitHub asset verification; new native acceptance remains NOT RUN.
+Published [v3.2.0](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0) from `299f947d4b54a92873e9321a39f6b3dc39279e11`. Both pre-release CI workflows and the independent published-asset verification passed. The release ZIP includes the original beginner guide; the subsequent documentation cleanup is maintained on master. See [publication evidence](../../manifest/publication-v3.2.0.json) and the [current beginner guide (Chinese)](../getting-started/beginners.zh-CN.md).
 
-The only maintained branch is `master`. The current development target is V14 SP1,
-V15.1 and V16–V21. The configurator selects exact release keys. V14 SP1–V19 use
-the PLC foundation host and one typed worker per release; V20/V21 retain their
-full engines. These profiles intentionally have different tool contracts and scope.
-Studio uses direct Openness through eight adapters, with Chinese/English Glass views.
+The v3.2.0 release build includes eight MCP runtimes, the configurator and direct
+Openness Studio. All eight exact SDK targets have compiled; the full V20/V21 and
+multi-version functional build gates have completed. Publication and independent
+GitHub asset verification are separate steps: consult the actual
+[GitHub Release](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) for their
+current outcome. New native acceptance remains **NOT RUN**.
 
-Use [the version matrix](../reference/version-tools.md), `manifest/version-tools.json`,
-`manifest/version-api-audit.json`, `manifest/multi-version-build.json` and
-`manifest/release-build.json` for current numbers and evidence. Native acceptance
-for the new routes is NOT RUN. Compile/transport/mock results do not establish it.
+Only `master` is maintained. Exact release keys are `14sp1`, `15.1`, `16`, `17`,
+`18`, `19`, `20`, `21`; original V14/V15 are excluded. V14 SP1–V19 use the PLC
+foundation host and a matching typed worker; V20/V21 retain their full engines.
+Studio connects directly through eight Openness adapters and has Chinese/English
+Glass views. Selecting a version does not convert an existing project.
 
-## 2. Shared code and GitHub reuse
+Current evidence is maintained in the [version matrix](../reference/version-tools.md),
+[functional gap matrix](../../reference/version-feature-matrix.json),
+[full build record](../../manifest/release-build.json),
+[multi-version build record](../../manifest/multi-version-build.json), and
+[tool-example coverage](../../manifest/tool-usage-coverage.json). Compile, mock,
+transport and SDK-signature results do not establish engineering semantics.
 
-All registered tools expose [AI-readable usage and official examples](official-tool-usage.md)
-through `GetToolUsage`, including foundation and full/lite profiles. Its embedded
-corpus is generated from pinned Siemens references. Regenerate with
-`scripts/generate/Generate-ToolUsage.py`; CI rejects stale content, and the
-multi-version build checks actual per-tool retrieval in `manifest/tool-usage-coverage.json`.
-Templates and topic references are not native acceptance or official MCP wrappers.
+## Architecture and examples
 
-The library now also resolves `operation`, `language` and `exampleId`. Edit call
-sequences, programming assets, input origins and result interpretation together in
-`reference/tool-examples`; do not create separate issue-specific guide systems.
-The older `GetAuthoringGuide` and `GetRecipe` entries reuse this data. Initialization
-points to examples instead of imposing a repeated guide/preflight workflow. Preserve
-functional tool checks. `calls.json` now holds separate foundation/full-engine
-calls for the entire registered surface and action overrides; the old inline C#
-example table reads this same data. Keep dynamic target bindings explicit and do
-not claim native acceptance from schema validation. Coverage distinguishes parameterized calls,
-complete sources, fragments and exported-module edits; native acceptance is separate.
-The transport audit executes allowlisted in-memory examples on all eight releases.
-Object property paths use `{property,name?}` steps; device/item name paths are a
-different grammar. UDT/GlobalDB builders select an explicit exact output release;
-other shared builders still emit V21 XML. Preserve output-format notes and exact
-project extensions such as `.ap15_1`. Foundation external-source import/generation
-now have a dedicated profile sequence in the same library, not a separate guide system.
+Use the [version framework](unified-version-framework.md) for profile differences,
+session contracts and remaining integration boundaries. Shared environment facts,
+version identity, diagnostics, example retrieval and dependency planning belong
+in API-independent code; native assemblies remain compiled per exact release.
+Equal tool names do not imply compatible schemas or response envelopes.
 
-Shared release identities, environment facts and dependency planning live under
-`tools/openness-shared` and the linked version catalog. Native API-bound assemblies
-are compiled separately. Preserve the foundation worker contracts and full-engine
-contracts while sharing independent algorithms; do not merge them by tool name alone.
+`GetToolUsage` is the single [tool and programming example library](official-tool-usage.md).
+It supplies actual schemas, operation-specific calls, input origins, expected
+results, language files and call sequences. Edit `reference/tool-examples` and
+regenerate its embedded data together; do not create separate issue-specific
+guide systems. The existing `GetRecipe` and `GetAuthoringGuide` compatibility
+entries read the same library.
 
-The Eido MIT dependency planner is pinned with its license and modifications under
-`tools/third-party/eido-import-planner`. Existing Siemens guidance, TiaGitAddIn.Core,
-PLC Tools and other integrations remain in place. Check source availability, license,
-actual integration points and the version-specific API before adding upstream code.
+GitHub integrations retain their pinned source and licenses. Current reusable
+components and provenance are documented in [the ecosystem reference](../reference/ecosystem-tools.md)
+and `NOTICE.md`. New upstream code needs an actual integration point, compatible
+licensing and evidence for the selected API; another project's version label
+does not supply compatibility evidence.
 
-## 3. Remaining work
+## Remaining work
 
-A [p2051[0] BICO read crash](startdrive-bico-read-regression.md) was reported. The exact
-read path now avoids detailed property/bit traversal; native acceptance and the actual
-crash cause remain unconfirmed. This report supersedes any blanket BICO-read claim.
+Prioritize real-project import/generation/readback/compile/explicit-save acceptance
+for each release and both Studio VCI families. Foundation source import and
+block-generation routes now have implementations; five names remain from the
+historical 62-tool migration ledger. They are a subset of the broader API gaps,
+not a total missing-tool count. The [roadmap](roadmap.md) names the remaining work.
 
-The historical 62-tool migration ledger is not the full official API gap count.
-Its external-source import/generation routes now have typed implementations; five
-other pending names and broader API families remain. The current functional matrix
-in `reference/version-feature-matrix.json` distinguishes actual routes, SDK evidence,
-partial scope, unsupported versions and native acceptance.
-Foundation compilation now checks top-level, ungrouped and nested project devices
-instead of refusing every execution. It requires positive Offline observations
-for the selected PLC and all observable project providers. HMI/passive devices without
-a provider are listed in `offlineStateNotExposedByDevices`, not asserted Offline; the
-official all-device offline prerequisite still applies. Compiler
-diagnostics use the documented typed fields and recursive message collection.
-VCI uses legacy APIs on V16–V19 and modern APIs on V20/V21; V14 SP1/V15.1 have no VCI.
-Real project import/export, compile and VCI roundtrips still need per-version acceptance.
+Preserve these unresolved observations in [Openness limitations](../troubleshooting/openness-limitations.md):
 
-## 4. Build and commit rules
+- The reported `p2051[0]` BICO read crash has not received native reacceptance;
+  the simplified read path does not establish its root cause.
+- The Unified library script rename crash remains an unresolved native incident.
+- Native PLC cross-reference remains restricted; neither offline evidence nor
+  process isolation establishes that the unsafe native path is fixed.
 
-After engine/test changes, run `scripts/build/Build-Release.ps1` against the authorized
-V20/V21 PublicAPI directories. For all targets, use:
+Other shared XML builders still emit V21 candidates where their examples say so;
+only the current UDT/GlobalDB declaration builders select all eight formats.
+Foundation binding snapshots remain a separate, unwired lifecycle integration
+boundary. Do not describe PID-only attachment as verified process-start identity.
+
+## Build and release
+
+After engine or test changes, run the full build with the authorized V20/V21
+PublicAPI directories, then build/test every other target:
 
 ```powershell
 pwsh -NoProfile -File ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-This runs the full build unless `-SkipFullEngines` is explicitly chosen after a fresh
-full build. It then builds workers/Studio, runs functional tests, audits the official
-XML and writes runtime/source hashes. Do not edit compiler inputs during a build.
-Set `TIA_MCP_TEST_PUBLIC_API_ROOT` to the SDK root to include eight-release UDT/GlobalDB
-interface-XSD tests; native import/CPU semantics remain separate. Run repository links,
-dead-tool references and strict bundle validation before commit.
-Use explicit `git add` paths, never `git add -A`; preserve local SDKs, handoff files
-and user design references. Keep binaries out of Git. Do not add AI sign-off lines.
+The command runs the full build unless `-SkipFullEngines` follows a fresh full
+build. Set `TIA_MCP_TEST_PUBLIC_API_ROOT` to include the eight official interface
+XSD checks. Do not edit compiler inputs during a build. Use [validation](validation.md)
+for check scope and [the release workflow](release-workflow.md) for public delivery.
+The public pipeline verifies source/runtime hashes and ships all eight runtimes.
 
-After committing reviewed source/manifests, `Package-MultiVersion.py --output <new.zip>`
-checks source/runtime hashes and creates a local all-version development archive.
-`Release.ps1` and `Package-Release.py` remain the separately authorized public-release
-workflow. A build or commit does not authorize tags, uploads, deployment or PLC actions.
+Stage explicit paths; do not use `git add -A`. Preserve user handoff/design files,
+local SDKs and engineering projects. Keep binaries and private evidence out of Git.
+No AI attribution is added to commits. A build is not authorization for a live TIA
+or PLC operation; live testing needs an explicit current target and scope.
 
-## 5. Native testing and history
+## Documentation maintenance
 
-Live operations require an explicit current target and scope. Historical VM addresses,
-PIDs, test project state and permissions are not current facts. Never reuse an old PID
-from a document as authorization to attach or mutate. No new TIA session, project or
-PLC was operated during this multi-version implementation.
-
-Historical releases and empirical API notes remain in [handoff history](handoff-history.md),
-[the dated machine checklist](handoff-checklist.md), and [the previous handoff snapshot](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6f3a5e1f2d4554f2adfefce883843c4bb8f5d6d2/docs/development/handoff.md).
-The old V21 lexical coverage statistics are historical evidence, not a current coverage
-percentage. PublicAPI DLLs/XML and user design handoffs must not be redistributed.
+Keep current behavior here and in the linked reference pages. Old candidate notes,
+local checkpoints, machine addresses/PIDs and duplicate handoff histories have
+been removed; Git history preserves their original evidence. Machine-readable
+SDK audits and migration ledgers remain available, with historical labels kept
+separate from the current build manifests. Never reuse an old machine identity
+or earlier test authorization as a current target.

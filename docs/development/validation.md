@@ -1,12 +1,22 @@
 # 验证分层
 
-[文档目录](../README.md) · [发布流程](release-workflow.md)
+[文档目录](../README.md) · [发布流程](release-workflow.md) · [当前交接](handoff.md)
 
-命令从仓库根目录执行。结果分别存于 [引擎记录](../../manifest/release-build.json) 和 [配置器记录](../../manifest/configurator-build.json)。离线检查不代表真实 TIA 验收。
+命令从仓库根目录运行。v3.2.0 已完成八个精确 SDK 目标及当前离线功能构建；
+新增真实 TIA 工程验收仍为 **NOT RUN**。发布上传、发布后验包和原生验收分别记录。
 
-独立 [V20/V21 原生生命周期框架](native-lifecycle-tests.md) 已纳入本地构建；发布门只编译它并执行离线安全检查和假进程故障注入，不启动 TIA。真正运行必须单独显式启用；当前尚未执行。
+| 证据 | 位置和用途 |
+|---|---|
+| V20/V21 完整构建 | [release-build.json](../../manifest/release-build.json)：编译、离线、实际进程、API 形状及诊断记录 |
+| 配置器 | [configurator-build.json](../../manifest/configurator-build.json)：源码/文件哈希及界面功能测试 |
+| 全版本交付 | [multi-version-build.json](../../manifest/multi-version-build.json)：八版 worker/Studio 适配器、文件与源码哈希 |
+| 统一示例 | [tool-usage-coverage.json](../../manifest/tool-usage-coverage.json)：所有注册工具/操作的检索与可执行离线示例 |
+| 工具与功能范围 | [版本矩阵](../reference/version-tools.md)及 [功能矩阵](../../reference/version-feature-matrix.json) |
 
-## 无需安装 TIA
+旧日期报告里的“SDK 未提供”“仅 Linux 源码验证”属于历史修订，不覆盖当前构建记录。
+机器证据中的历史字段仍保留原意；不要将历史通过数复制成当前测试结果。
+
+## 无需运行 TIA 的检查
 
 ```powershell
 python scripts/checks/Check-Repository.py
@@ -16,37 +26,60 @@ dotnet run --project tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.T
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
 ```
 
-- 仓库检查：本地文档链接、入口和蓝图路径、旧启动器残留、工具统计。
-- 交付检查：JSON、模板、双版本文件、构建哈希及必需入口。
-- 离线回归：需 .NET 8 SDK / 运行时。这是控制台程序，必须使用 `dotnet run`；`dotnet test` 不会执行这些用例。
-- WPF：需 Windows / .NET Framework 4.8；使用隔离配置和模拟 HTTP，验证 12 张客户端卡片、合并/备份、密钥保护及 XAML 渲染，不写真实配置或网络规则。`-Test` 会重编配置器并更新记录；发布前执行 Prepare-Delivery 绑定新记录。
+仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
+控制台用例必须用 `dotnet run` 执行。WPF 检查使用隔离配置和模拟 HTTP，覆盖客户端配置、
+合并/备份、密钥处理与界面渲染，不修改真实客户端配置或系统网络规则。
 
-GitHub `offline-checks` 和 `validate-bundle` 运行对应检查。完整引擎编译需要 Siemens PublicAPI，托管 runner 不具备该环境。
+GitHub 的 offline-checks 与 validate-bundle 执行相应离线检查。托管 runner 没有 Siemens
+PublicAPI，不能替代本机完整构建。修改编译输入后必须重新构建，不能手填 manifest 哈希。
 
-`Build-Release.ps1` 里的 `Generate-ToolsListFromAssembly.ps1` 另有三道构建门（2.7.57–2.7.58）：每条工具示例（`ToolExamples`）与配方步骤（`ToolRecipes`）必须对上真实签名（参数名精确、必填齐全、工具存在）；没有自己的 `[Description]` 的参数数量只能下降（`manifest/tools-list.json` 的 `callDiscipline`）。一键发布 `scripts/build/Release.ps1` 把这些检查、离线套件、三段提交、推送、CI 与 tag 串成一条命令。
+## 完整八版本构建
 
-## PublicAPI / 实际 EXE 检查
+```powershell
+pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
+```
 
-[Build-Release.ps1](../../scripts/build/Build-Release.ps1) 使用本地匹配 PublicAPI 构建 V20/V21，执行实际 EXE 的 HTTP、资源发现、HMI 遍历、文件代理和 API 签名检查。测试数量和日期写入 release-build，不在本页重复维护版本快照。
+此命令先运行 V20/V21 `Build-Release.ps1`，再构建 Foundation worker、Studio 及全部适配器，
+执行功能和传输检查并生成证据。只有刚完成完整引擎构建才使用 `-SkipFullEngines`。
+PLC Tools 功能检查需要现有伴随 Python 环境；可用 `TIA_MCP_PLC_TOOLS_PYTHON` 指向其解释器。
+设置 `TIA_MCP_TEST_PUBLIC_API_ROOT` 可运行八版 UDT/GlobalDB 官方 interface XSD 检查；
+片段 XSD 通过不代表完整文档或目标 CPU 语义通过。
 
-其中"API 签名检查"是 `tests/TiaMcpServer.HttpTests` 的 `engineering-api-only` 分支：每个工具族一份 `*ShapeChecks.cs`，对本机 V20 / V21 PublicAPI 逐成员核对（类型存在、属性类型与可写性、方法签名与返回类型、枚举值、服务接口），期望条数硬编码在 `Build-Release.ps1`（2.7.38：V20 2301 / V21 2497），少一条即构建失败；这是没有对应对象或许可（经典 HMI、选件包）时唯一的验证。覆盖记分板由 `scripts/diagnostics/Audit-OpennessCoverage.ps1` 对 V21 PublicAPI XML 做词法盘点生成，回写到[官方 API 覆盖清单](../reference/openness-coverage.md)；它是词法的（类型名记号 + `.成员` 同时出现即算引用），会有同名记号的误判，以形状检查为准。
+完整引擎构建包含以下不同层次：
 
-专项脚本在 [scripts/checks](../../scripts/checks)。`Check-LiteProfile.py` 等协议探测可能启动服务，只在匹配环境执行。诊断脚本在 `scripts/diagnostics`，不是无 TIA 的 CI 项目。
+- 两种版本编译符号下的纯逻辑回归、实际 MCP SDK 版本准入检查。
+- HTTP/STDIO、full/lite、资源分页、HMI 遍历、文件代理及普通/隔离宿主功能检查。
+- 针对实际匹配 SDK 的类型、属性、方法签名、枚举与服务接口核对。
+- 原生调用织入、覆盖清单核对、假 API 实际执行与崩溃/管道故障注入。
+- 独立原生测试程序的编译和离线安全检查；默认不会启动其 live 分支。
+- 全部工具示例与实际签名一致性、按操作的输入/结果解释、语言文件检索及源文件哈希核对。
 
-### 本地压力测试
+官方 API 审计的成员名词法引用只提供排查线索，不证明重载正确、路径可达或原生行为成功。
+按版本的实现与缺口以功能矩阵为准。
 
-完整构建还必须通过 [Test-LocalStability.py](../../scripts/checks/Test-LocalStability.py)：两版各自运行 STDIO/HTTP、full/lite、正常与故障输入混合序列。默认每组合 50 轮，HTTP 8 并发；`Build-Release.ps1 -LocalStabilityRounds` 可以延长测试。详细范围见[稳定性记录](stability-and-integrations-20260930.md)。
+## 压力与故障检查
 
-单独复测示例（输出目录必须尚不存在，PublicAPI 路径按本机设置）：
+`Test-LocalStability.py` 对 V20/V21 的普通/隔离进程、两种传输和 full/lite
+组合执行正常调用与错误后的恢复检查。默认每组合 50 轮、HTTP 8 并发；
+实际范围和结果由完整构建记录保存。
 
 ```powershell
 python scripts/checks/Test-LocalStability.py --exe runtime/v21/TiaMcpServer.exe --major 21 --public-api TIA_V21_PublicAPI/V21/net48 --host-harness tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe --rounds 50 --output TiaMcp_Output/stability-v21
 ```
 
-脚本只启动属于测试自己的本机服务，强制关闭原生交叉引用，结束时只清理该测试子进程。测试所用运行时和宿主哈希记录在结果中。正常返回、预期错误、HTTP 认证和错误后恢复都要满足断言；测试没有连接 TIA，不证明所有工具或 Siemens 原生调用稳定。
+输出目录必须不存在。脚本仅清理它创建的服务，不连接 TIA，不解禁原生交叉引用。
+假 worker 的超时、异常退出、错误响应和晚到响应检查，验证宿主故障处理而非 Siemens 内部可靠性。
 
 ## 真实工程验收
 
-在可恢复工程上确认设备、许可证、语言和安装版本，再进行读取、预览、授权修改、回读、编译及保存，记录实际错误/警告和未支持项。在线设备操作、网络/UAC、各 AI 客户端需分别验收。HTTP 可达、工具枚举、程序集加载或发布成功均不等于工程语义正确。
+按[独立生命周期](native-lifecycle-tests.md)和[生产 MCP 会话](native-mcp-session-tests.md)
+分别启用原生场景。真实工程需要匹配版本/许可、当前明确的测试目标与操作范围。
+从可恢复工程开始，核对设备和版本，执行读取、预览、修改、回读、编译及显式保存，
+记录实际错误/警告、未支持对象和失败后的状态。
 
-真实写入验收状态见 [能力边界](../reference/capabilities.md)。不向公开仓库提交工程、密钥、现场日志或未经脱敏的截图。
+导入验收应核对对象内容及返回身份，覆盖不允许覆盖、显式覆盖、批次部分完成和依赖顺序；
+外部源需区分创建源、生成块与编译。Studio 再验证相应界面命令。在线设备操作单独验收。
+HTTP 可达、工具枚举、程序构建或公开发布都不等于工程语义正确。
+
+真实写入边界见[能力说明](../reference/capabilities.md)；尚未解决的原生事件见
+[Openness 限制](../troubleshooting/openness-limitations.md)。工程、密钥、现场原始日志及未脱敏截图不进入公开仓库。

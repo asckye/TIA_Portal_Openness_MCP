@@ -1,106 +1,25 @@
-# Hardware / Network Tools
+# Hardware and network configuration
 
 Document id: `hardware-network`
 
-These tools split hardware / network configuration into small, composable, verifiable primitives. The core rule: every path comes from a TIA read-back, every write returns read-back evidence, and nothing guesses a CPU, HMI, interface or attribute from its name.
+The tools below belong to the V20/V21 full engines. The V19 foundation engine has a narrower hardware search/device-creation route; it does not expose this entire network tool family. See [version support](../reference/version-tools.md).
 
-## Safe Workflow
+## Read, plan, apply and check
 
-1. `Connect`
-2. `GetState`
-3. `GetProjectTree`
-4. `GetDeviceItemTree(deviceItemPath)`
-5. `GetDeviceItemNetworkInfo(deviceItemPath)`
-6. `PlanHardwareNetworkConfiguration(planJson)`
-7. `EnsureSubnet(...)`
-8. `AttachDeviceNodeToSubnet(...)`
-9. `SetCpuCommonSettings(...)`
-10. `GetDeviceItemNetworkInfo(...)` or returned `readback`
-11. Compile/save only after the readback and diagnostics are acceptable.
+1. Connect to the intended project and use `GetProjectTree` / `GetDeviceItemTree` to obtain actual device-item paths.
+2. Read `GetDeviceItemNetworkInfo` for interfaces, nodes and current attributes.
+3. Read `GetToolUsage(toolName="PlanHardwareNetworkConfiguration")` and prepare a plan using those paths.
+4. Apply the relevant operation with its own `GetToolUsage` example.
+5. Inspect applied/rejected entries and read back the selected node or CPU settings.
+6. Compile the relevant project configuration and save after reviewing diagnostics.
 
-## PlanHardwareNetworkConfiguration
+| Tool | Purpose |
+|---|---|
+| `PlanHardwareNetworkConfiguration` | Offline plan; does not modify TIA |
+| `EnsureSubnet` | Create or reuse an Industrial Ethernet / PROFINET subnet |
+| `AttachDeviceNodeToSubnet` | Attach a selected interface node |
+| `SetCpuCommonSettings` | Write exact exposed CPU device-item attributes |
 
-`PlanHardwareNetworkConfiguration(planJson)` is offline-only. It does not connect to TIA Portal and does not modify a project.
+Use interface indexes returned for the actual device. `settingsJson.exactAttributes` contains exact attribute names; convenient words such as `ip` are not automatically aliases for a writable TIA property. Values such as addresses and subnet names come from the intended network configuration, not copied example values.
 
-Supported operation types:
-
-- `EnsureSubnet`
-- `AttachDeviceNodeToSubnet`
-- `SetCpuCommonSettings`
-
-Example:
-
-```json
-{
-  "operations": [
-    {
-      "type": "EnsureSubnet",
-      "anchorDeviceItemPath": "PLC_1/PLC_1.CPU_1",
-      "subnetType": "PROFINET",
-      "subnetName": "PN_IE_1",
-      "ip": "192.168.0.1",
-      "mask": "255.255.255.0"
-    },
-    {
-      "type": "AttachDeviceNodeToSubnet",
-      "deviceItemPath": "HMI_1/HMI_1.IE_CP_1",
-      "interfaceIndex": 0,
-      "subnetName": "PN_IE_1"
-    },
-    {
-      "type": "SetCpuCommonSettings",
-      "cpuPath": "PLC_1/PLC_1.CPU_1",
-      "settings": {
-        "exactAttributes": {
-          "Name": "PLC_1"
-        }
-      }
-    }
-  ]
-}
-```
-
-The planner rejects guessed paths such as `PLC`, `CPU`, `HMI`, wildcard paths, unsupported subnet types, invalid IPv4/mask values, and CPU settings that use aliases instead of exact TIA attribute names.
-
-## EnsureSubnet
-
-`EnsureSubnet(anchorDeviceItemPath, subnetType, subnetName)` creates or reuses an Industrial Ethernet / PROFINET subnet by anchoring on a real device item path.
-
-Rules:
-
-- `anchorDeviceItemPath` must come from `GetProjectTree` / `GetDeviceItemTree`.
-- `subnetType` is limited to `PROFINET`, `PN`, `PN/IE`, `IndustrialEthernet`, or `Industrial Ethernet`.
-- The tool returns `readback` lines containing node path, item, node type, and `connectedSubnet`.
-
-## AttachDeviceNodeToSubnet
-
-`AttachDeviceNodeToSubnet(deviceItemPath, interfaceIndex, subnetName, anchorDeviceItemPath?)` attaches one discovered Industrial Ethernet / PROFINET node to a subnet.
-
-Rules:
-
-- Resolve `deviceItemPath` from project readback.
-- Use `interfaceIndex` from the candidate node list in the returned metadata.
-- Pass `anchorDeviceItemPath` only when the subnet may need to be ensured first.
-- The tool returns `readback`; success is true only when the requested subnet and target node are visible after the operation.
-
-## SetCpuCommonSettings
-
-`SetCpuCommonSettings(cpuPath, settingsJson)` writes exact CPU device-item attributes.
-
-`settingsJson` must use this shape:
-
-```json
-{
-  "exactAttributes": {
-    "ExactAttributeNameFromGetDeviceItemNetworkInfo": "value"
-  }
-}
-```
-
-Do not pass aliases such as `ip`, `gateway`, or `profinetName` unless those are the exact TIA attribute names returned by `GetDeviceItemInfo` or `GetDeviceItemNetworkInfo`. The tool rejects missing and non-writable attributes and returns applied/rejected lists plus readback evidence.
-
-## Safety Notes
-
-- These tools are offline project-edit tools; they do not go online and do not perform Force operations.
-- Online monitoring remains read-only and separate from hardware network edits.
-- Never save the project until the returned readback and later compile diagnostics are acceptable.
+These operations edit offline engineering configuration. Their readback confirms the project state, not connectivity to a running CPU. Hardware device creation examples are available via `GetToolUsage(exampleId="sequence/hardware-device")` where listed for the selected release; live reads are covered separately in [online monitoring](online-monitoring.md).

@@ -1,6 +1,6 @@
 # Tools by TIA release
 
-Current development supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
+v3.2.0 supports exact release keys `14sp1`, `15.1`, `16`, `17`, `18`,
 `19`, `20`, `21`. Original V14/V15 are excluded. Each native process uses one exact
 PublicAPI identity; selecting another version does not translate or upgrade a project.
 
@@ -74,6 +74,12 @@ An installed older API under a newer product is identified by its DLL identity, 
 product folder. V15.1 uses `Portal V15_1` and `PublicAPI/V15.1`.
 
 ## Build, test and package
+
+The formal GitHub Release ZIP contains all eight MCP runtimes, Studio and its eight
+adapters. Download that asset for installation; GitHub source archives contain no
+compiled runtimes. `Release.ps1` produces the public package after full and
+multi-version validation. `Package-MultiVersion.py` below produces a local development
+package and does not publish a Release. See [the release workflow](../development/release-workflow.md).
 
 ```powershell
 ./scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test

@@ -2,6 +2,8 @@
 
 本目录提供 TIA Portal 项目生成所需的通用 PLC 模板，覆盖变量表、UDT、全局 DB、SCL FC/FB、LAD 调用配方和外部 SCL 源示例。模板不包含现场项目程序段。
 
+先使用当前服务 `GetToolUsage` 读取工具与语言示例。`PlcBuildAndImport` 属于完整引擎入口；基础宿主使用自身公开工具和合同。两个声明构建器的 `outputReleaseKey` 支持八版 UDT / Global DB，其他模板和生成器不能因此视为八版通用。
+
 ## 目录
 
 | 路径 | 用途 |
@@ -39,21 +41,13 @@
 
 ## 调用顺序
 
-1. `Bootstrap`
-2. `Connect`
-3. `GetProjectTree`
-4. `ValidateAutomationContext`
-5. 逐个模板执行 `PlcBuildAndImport(dryRun=true)`
-6. 按依赖顺序执行 `PlcBuildAndImport(dryRun=false)`
-7. `CompileAndDiagnosePlc`
-8. 读回块、变量表或编译诊断
-9. `SaveProject`
+按统一示例库选取当前版本的流程，读取工程及 PLC 后，再核对目标对象和依赖。需要预览的操作先查看预览结果；外部源导入后另行生成块。之后调用当前版本的编译工具，检查错误、警告及嵌套诊断，读回实际对象，最后根据需要单独保存。
 
-推荐导入顺序：TagTable -> UDT -> GlobalDB -> 外部 SCL（FC/FB）-> LAD/XML 样例。
+依赖顺序由实际引用决定，可用 `PlanArtifactImportOrder` 辅助；不要把 TagTable → UDT → DB → FC/FB 的简表当作任意程序都成立的顺序。
 
 ## 注意
 
 - 所有 `softwarePath`、分组路径和设备路径必须来自 TIA 读回。
 - `PlcBuildAndImport` 的 `json` 参数是字符串，调用前需要把模板中的 `json` 字段序列化。
-- 外部 `.scl` 源导入前应保持 UTF-8 with BOM；若不确定，优先用 `PlcBuildAndImport` 生成 XML。
+- 外部源编码按 `GetToolUsage(language="scl")` 的对应示例处理；基础宿主当前仅验过根目录 ASCII 源。不要为修复编码问题改用不支持该程序逻辑的 DSL。
 - 复杂 LAD/FBD 网络应使用 TIA 导出的已验证 XML 或 `BuildFlgNetCallXml` 生成调用网络。

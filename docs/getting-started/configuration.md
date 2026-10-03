@@ -1,137 +1,98 @@
-# WPF 图形配置指南
+# MCP 图形配置指南
 
-第一次使用请先阅读[新手使用指南](beginners.zh-CN.md)，完成环境准备、连接和第一个工程练习。
+第一次使用请先阅读[新手使用指南](beginners.zh-CN.md)，完成环境准备、连接和单个函数练习。本页用于查询连接选项、客户端文件、升级和故障处理。
 
-可选工作进程隔离需在服务端命令或 MCP 条目中添加 `--isolate-openness`；配置器暂没有对应勾选项。启用前阅读[隔离模式及故障恢复](../guides/openness-worker-isolation.md)。
+双击包根目录 `TiaMcpConfigurator.exe`。右上角 **•••** 可切换中文 / English、主题及保存两端配置。配置器使用 .NET Framework 4.8；TIA 服务端使用完整解压包，只有宿主机客户端配置时可单独使用这个 EXE。
 
-双击 `TiaMcpConfigurator.exe` 打开连接中心。Glass Layers 界面左侧依次为连接模式、TIA 安装、HTTP 服务和 AI 客户端卡片；右侧为连接摘要与活动日志。顶部模式卡片切换 **虚拟机 ↔ 宿主机** 与 **同一台电脑**。右上角 **•••** 菜单可切换中文 / English、浅色 / 深色 / 跟随系统，并保存两端配置；中文 Windows 默认使用中文。切换语言和主题会保留当前输入与选择。日常配置与启动无需 CMD/BAT。需要 Windows .NET Framework 4.8。服务端把此 EXE 放在完整 Release 包根目录（与 `runtime` 文件夹同级）；宿主机配置客户端时只需此 EXE，不用安装 TIA。
+## 同一台电脑
 
-两种模式的差别只有传输方式：**虚拟机 ↔ 宿主机** 走 HTTP，需要地址、端口和密钥；**同一台电脑** 走 stdio，由客户端按需启动引擎，安装卡片保留版本与安装目录，地址、密钥和服务按钮随之隐藏。
+1. 选择 **同一台电脑**。
+2. 选择准确 TIA 版本：V14 SP1、V15.1、V16、V17、V18、V19、V20 或 V21。
+3. 点击 **自动检测**，或 **浏览** 选择安装根目录，例如 `C:\Program Files\Siemens\Automation\Portal V21`，不带 `Bin`。
+4. 选择实际使用的客户端卡片，完全退出该客户端，点击 **写入客户端配置** 并检查结果。
+5. 重启客户端、新建会话，使用服务 `tia-portal`。
 
-## 虚拟机 ↔ 宿主机模式
+本机使用 stdio，由客户端启动对应引擎，不需要 IP、密钥或手动启动 HTTP 服务。所选版本应与实际 TIA 和工程匹配，选择器不转换工程版本。
 
-在安装 TIA 的虚拟机上配置并启动 HTTP 服务，在宿主机上选择 AI 客户端并写入连接信息，两端密钥必须相同。
+## 虚拟机与宿主机，或两台电脑
 
-### 在虚拟机上启动服务
+### TIA 所在电脑：启动服务
 
-1. 用运行 TIA 的 Windows 用户打开 EXE。
-2. 选择准确版本：V14 SP1、V15.1、V16–V21。旧版本使用 PLC 基础目录，完整工具列表以该版本 `tools/list` 为准。安装根目录会自动探测（`TiaPortalLocation` 环境变量 → 注册表 `TIAP{版本}\TIA_Opns` → 默认安装目录，与引擎相同顺序），也可点“自动检测”重新探测或用“浏览”手动选择（到 `Portal Vxx` 为止，不带 `Bin`），例如 `C:\Program Files\Siemens\Automation\Portal V21`。必须安装对应 Openness API。
-3. 填虚拟机 IPv4、端口（默认 8765），在下方密钥条点“生成”，再从 **•••** 菜单点 **保存两端配置**。
-4. **网络权限 → 启动服务**。网络权限按钮会请求 Windows 管理员授权，只为当前用户预留指定 HTTP 地址，并放行本地子网到该地址/端口的 TCP 访问。
-5. 日志出现 listening、连接摘要状态变成“运行中”（English: `running`） 后保持窗口打开。以后打开 EXE，直接点“启动服务”。
+1. 用运行 TIA 的 Windows 用户打开配置器，选择 **虚拟机 ↔ 宿主机**。
+2. 选择 TIA 版本和安装根目录，填写该电脑的实际 IPv4 和端口，默认 `8765`。
+3. 点击 **生成** 得到密钥，从 **••• → 保存两端配置** 保存。
+4. 点击 **网络权限**，完成管理员授权，再点击 **启动服务**。
+5. 查看活动日志的监听信息和连接摘要“运行中”，保持窗口打开。
 
-日常打开程序不需要管理员身份。用户须属于 `Siemens TIA Openness` 组，新增组后注销重登；首次访问 TIA 时处理 Openness 提示。跨路由/VPN 子网连接需管理员另配实际源地址的防火墙规则。程序不关闭防火墙、不覆盖其它用户的 URL 授权。
+用户应属于 `Siemens TIA Openness` 组，添加后注销重登，并处理首次 TIA 访问提示。“网络权限”配置所选 HTTP 地址和本地子网入站规则；跨路由或 VPN 的访问按实际网络另行配置。
 
-服务端配置保存在 `%LOCALAPPDATA%\TiaPortalMcp\http-v21.json`（或 v20），密钥用 Windows DPAPI 按当前用户加密。换电脑/用户时重新配置。IP 改变时重新保存并配置新地址权限，旧规则不会自动删除。
+### AI 所在电脑：写入连接
 
-关闭窗口会询问是否停止本窗口启动的 MCP。停止前确认没有工程操作进行中；不主动关闭博途，也不配置开机自启。
+1. 打开配置器，选择相同模式，填写 TIA 电脑的 IPv4、端口和相同密钥。
+2. 选择实际使用的客户端，点击 **测试连接**。
+3. 完全退出客户端，点击 **写入客户端配置**，检查写入位置及结果。
+4. 重启客户端，新建会话，使用服务 `tia-portal-vm`。
 
-### 在宿主机上写入客户端
+宿主机未安装 TIA 时，“保存两端配置”可能记录客户端信息并报告服务端环境不可用；实际服务端是前一台电脑。测试连接成功说明 MCP 可达，仍需让 AI 确认实际 TIA 工程和 PLC。
 
-1. 在宿主机打开同一个 EXE，在 HTTP 服务卡片填虚拟机 IPv4、端口，在密钥条粘贴服务端的同一把密钥。宿主机没有 TIA 时，**保存两端配置** 只记录客户端侧连接信息，并在日志里说明服务端校验未通过，这是正常的。
-2. 在 AI 客户端卡片点击选择一个或多个客户端。
-3. 点击 **测试连接**。它检查 HTTP、鉴权与 MCP 就绪状态，不修改工程。
-4. 退出选中的 AI 客户端，再点击 **写入客户端配置**。确认窗口会展示具体写入位置。
-5. 重启对应客户端，新建会话，使用 `tia-portal-vm` 读取工程树。不要让多个 AI 同时修改同一工程。
+### 文件、PLC 和保存分别是什么
 
-## 同一台电脑模式
+- **文件路径**：导入工具读取 TIA/MCP 电脑上的文件。在虚拟机模式中，宿主机 `D:\...` 不会自动成为虚拟机的同一路径；先把源文件复制到服务端可读取的位置。
+- **选择 PLC**：一个工程可能包含多台 PLC，程序导入、浏览和编译需要明确目标。使用工程树实际返回的软件路径；Studio 在设备下拉框中选择。
+- **保存工程**：导入和编译可能只改变当前打开的工程。核对结果后调用 `SaveProject`，或在 Studio 点击 **保存项目**，才完成相应保存操作。
 
-顶部模式卡片切到 **同一台电脑**：安装卡片只需版本与安装目录，在 AI 客户端卡片选客户端后点 **写入客户端配置** 即可。客户端通过 stdio 自动启动包内引擎，服务器名为 `tia-portal`，无需地址、端口、密钥、网络权限和“启动服务”。
+这些是完成一次实际操作的步骤，不是另外增加三个功能。
 
-## 客户端卡片
+## 客户端卡片和配置文件
 
-客户端卡片支持多选，标题旁实时显示已选数量；点击该文字可查看所选客户端的使用说明，右侧连接摘要同步显示当前选择。12 张卡片按四列排布，在卡内上下滚动。窗口最小尺寸为 1200×780；地址、路径和说明可通过悬停查看。卡片顺序：CLI 在前（Claude Code、Codex 居首），桌面助理其次，IDE 在后。
+卡片支持多选，副标题显示本机检测结果；未检测到的客户端也可先写配置。模型名称卡片实际对应其支持 MCP 的 CLI 或宿主，按卡片说明选择软件。
 
-**本机检测（2.7.61）**：配置器启动时逐张卡片检测客户端在**这台电脑**上的痕迹——它要写的配置文件 / 目录是否存在、可执行文件是否在 PATH 上（npm 装的 CLI 是 `.cmd`）、已知安装目录（`%LOCALAPPDATA%\Programs\...`、`Program Files`）、控制面板卸载项——卡片副标题显示“已检测 / 未检测到”，鼠标悬停显示找到了什么和将写入的文件，日志里列出全部结果，默认选中第一张检测到的卡片。未检测到的卡片仍可写入（先写配置、后装客户端也行）。写入位置全部按当前用户解析（`%USERPROFILE%`、`%APPDATA%`、`CODEX_HOME` / `KIMI_CODE_HOME` 环境变量；VS Code 只有 Insiders 时写 Insiders 的用户目录），所以同一个 EXE 拷到任何电脑都写到那台电脑的正确位置。
-
-**官方 Claude 桌面客户端的 Code 页**：选择“Claude Code”，保存后重启，进入 **Code → Local → 新建会话**。Claude Desktop 的 Chat 页不再提供卡片。
-
-**Codex 桌面客户端 / CLI**：选择“Codex”，保存后重启并重新打开任务；写入用户级 `config.toml`，尊重 `CODEX_HOME`。
-
-**Qwen、Kimi、Yuanbao、DeepSeek、GLM、Grok**（卡片一律用英文名，2.7.62 起）：这些模型的聊天 App / 网页不支持 MCP，卡片按模型命名，实际写入的是各家官方 CLI 或 OpenCode 的配置（卡片小字标出）；在该客户端里选对应模型即可操作 TIA。
-
-| 卡片 | 实际写入 | 默认配置位置 | 远程条目 |
-|---|---|---|---|
-| Claude Code | Claude Code | `%USERPROFILE%\.claude.json` | `type: http` |
-| Codex | Codex | `%CODEX_HOME%\config.toml`，未设置时用 `%USERPROFILE%\.codex\config.toml` | TOML `url` / `http_headers` |
-| Gemini CLI | Gemini CLI | `%USERPROFILE%\.gemini\settings.json` | `httpUrl` |
-| Qwen | 阿里 Qwen Code（通义千问） | `%USERPROFILE%\.qwen\settings.json` | `httpUrl`（同 Gemini CLI） |
-| Kimi | 月之暗面 Kimi Code CLI | `%KIMI_CODE_HOME%\mcp.json`，未设置时用 `%USERPROFILE%\.kimi-code\mcp.json` | `url` |
-| Yuanbao | 腾讯 CodeBuddy Code CLI（腾讯元宝） | `%USERPROFILE%\.codebuddy\.mcp.json` | `type: http` |
-| DeepSeek / GLM / Grok | OpenCode（provider 分别选 DeepSeek / 智谱 GLM / xAI） | `%USERPROFILE%\.config\opencode\opencode.json` 的 `mcp` 节 | `type: remote` |
-| Qwen Agent | 千问工作助理（桌面应用，qwen-agent） | `%USERPROFILE%\.qwen-agent\mcp.json`（只对一个项目生效时把同名文件放到 `<项目>\.qwen-agent\mcp.json`） | `url` + `headers.Authorization`（静态 Bearer，不走 OAuth） |
-| Cursor | Cursor | `%USERPROFILE%\.cursor\mcp.json` | `url` |
-| VS Code · Copilot | VS Code | `%APPDATA%\Code\User\mcp.json`（本机只有 Insiders 时 `Code - Insiders`） | `servers` / `type: http` |
-
-Qwen Agent（千问工作助理）改完配置后必须**完全退出进程**（不是关窗口）再打开才会重新读取 `mcp.json`；它在内存里留着的旧条目（例如误用图形化“添加服务”走了 OAuth）会让重载时报“已注册，跳过”。
-三张 OpenCode 卡片写同一个文件，多选时只写一次。本机 stdio 模式下 OpenCode 条目为 `type: local` 且 `command` 是含可执行文件的单个数组，其它客户端为 `command` + `args`。VS Code 默认路径针对标准 VS Code 默认用户配置，不涵盖 Insiders、portable 或自定义 profile。Qwen Code / Kimi Code CLI / CodeBuddy / OpenCode 的路径与字段按各自当前官方文档写入，尚未在真实客户端上联调。
-
-豆包没有对应卡片：其 IDE（Trae）的全局 MCP 文件位置未公开、远程只支持 SSE，而本引擎只提供 Streamable HTTP；如需在 Trae 里用，可在其 MCP 面板“手动添加”里粘贴本机 stdio 条目。
-
-配置会保留其它设置和服务，为旧文件创建唯一 `.bak_...` 备份；多选时逐个保存，若有失败会明确列出，不撤销其它成功项。无效 JSON 拒绝覆盖。JSONC 注释和尾随逗号支持读取，重写为标准 JSON，原注释保存在备份中。Codex 保留无关 TOML 文本和多行字符串；罕见的根级内联/点号 MCP 定义无法安全合并时会停止并保留原文件。
-
-AI 客户端依照自身格式保存连接密钥，请勿分享或提交配置和备份。连接中心另在 `%LOCALAPPDATA%\TiaPortalMcp\client.json` 加密保存上次填写的连接信息，方便下次使用。
-
-远程统一使用 `tia-portal-vm`，本机 stdio 使用 `tia-portal`，与插件一致。项目或客户端若已有同名定义，请消除重复配置。
-
-原根目录配置 BAT 和 tia CMD 已删除，日常配置与启动统一使用 GUI；CLI 直接调用 runtime 下的 EXE。
-
-## 菜单栏：更新与帮助（2.8.0）
-
-窗口右上角 **•••** 菜单收纳更新、帮助、语言、主题与保存入口：**更新**菜单第一行是引擎版本与包名（读配置器旁边的 `manifest\delivery.json`），第二行是检查结果——启动时后台联网比对一次 GitHub 最新版（API 限流时读发布页），有新版本时菜单标题变成“更新 · 有新版本 X”。“检查更新”随时重查；“更新引擎…”在确认后关闭配置器、在新的 PowerShell 窗口里运行 `scripts\operations\Update-Engine.ps1`（下载 ZIP 与 `.sha256`、校验、备份到 `.previous\`、用 robocopy 替换 `runtime\` / `manifest\` 并覆盖其余文件），完成或失败后自动重新打开配置器；更新器窗口保留日志。它会拒绝的情况：本窗口启动的 MCP 还在跑（先点“停止”）、机器上有别的 `TiaMcpServer.exe`（列出 pid，可能是某个 AI 客户端启动的，关掉那个会话）、目录里有 `.git`（源码仓库不在这里更新）。“打开 GitHub Releases”看发布说明。帮助入口包括：所选客户端的使用说明、项目主页、关于。虚拟机上更新后记得再点“启动服务”。
-
-## 故障处理与验证边界
-
-- HTTP 拒绝访问：点击“网络权限”。已有其它用户的 URL 授权不会被自动覆盖。
-- 端口占用：停止旧 MCP 或改端口，不要重复运行服务。
-- 找不到 API：确认目录和版本，安装 Openness。
-- 连接超时：检查虚拟机地址、网络模式、服务状态与防火墙。
-- 401：两端密钥不一致；503 / 未就绪：检查服务端日志。
-
-图形入口启动前独立检查 HTTP 监听，直接展示权限/端口错误，避免旧引擎可能把原始错误掩盖为取消异常。原 TIA 引擎二进制没有修改。HTTP 测试成功不等于 TIA 工程已连接。
-
-已用隔离配置和模拟 HTTP 验证 12 张卡片（10 种客户端文件格式）的配置生成、合并、备份、密钥保护，以及两种模式的 WPF 渲染与可见性切换。真实虚拟机网络/UAC、各实际 AI 客户端以及真实 TIA 工程需分别联调；不将配置生成视为实际连接验收。
-
-## 工具显示与手动 HTTP 启动
-
-V20/V21 默认 lite 档显示 63 个常用工具，其余通过 `FindTools` / `CallTool` 使用；完整清单分别为 477 / 488 个，实际以服务的 `tools/list` 为准。需要全量直接显示时给完整引擎传 `--profile full`。V14 SP1–V19 直接注册各自的 57–62 个基础工具，不使用完整引擎的档位和发现入口。修改配置后重启服务与客户端并新建会话，避免读取旧缓存。
-
-如需排查，可在安装 TIA 的电脑上从完整包根目录直接启动（示例 IP/密钥须替换）：
-
-```powershell
-.\runtime\v21\TiaMcpServer.exe --tia-major-version 21 --tia-portal-location "C:\Program Files\Siemens\Automation\Portal V21" --transport http --http-prefix "http://192.0.2.10:8765/" --http-api-key "REPLACE_WITH_YOUR_KEY"
-```
-
-地址必须是该电脑实际持有的 IPv4，前缀保留末尾 `/`。客户端连接使用相同地址端口下的 `/mcp` 端点和相同密钥。优先通过图形页配置网络权限；若出现 `OperationCanceledException`，不能仅凭此判断是用户取消，须检查原始监听错误、端口占用及 URL 授权。
-
-## Claude Code 写保护钩子与审计日志
-
-作为 Claude Code 插件使用时（`.claude-plugin/plugin.json` → `hooks/hooks.json`），每次调用 `tia-portal` 工具前都会经过 `hooks/tia-write-guard.ps1`：
-
-- 非只读调用（WRITE / FILE / ONLINE / ONLINE-WRITE / EXECUTE，含经 `CallTool` 桥接的目标）追加记录到 `%LOCALAPPDATA%\TiaMcpServer\audit\tool-calls.jsonl`，`password` / `secret` / `token` 类参数写为 `<redacted>`；
-- 真实 ONLINE-WRITE 调用（`DownloadToPlc`、站/参数上载、S7 Web / Unified 运行时写值与模式切换、PLCSIM Advanced 实例变更与写值）被拒绝并说明原因；带 `dryRun` 的工具在未显式传 `dryRun=false` 时视为预览放行。
-
-| 环境变量 | 作用 |
+| 卡片 | 配置目标及默认位置 |
 |---|---|
-| `TIA_MCP_ALLOW_ONLINE_WRITE=1` | 放行在线写入（仍审计）。在 Claude Code 的 `settings.json` `env` 中设置，或只在需要下载的会话里设置 |
-| `TIA_MCP_WRITE_GUARD=0` | 完全关闭钩子（不审计、不拒绝） |
-| `TIA_MCP_GUARD_DENY_OPERATIONS=EXECUTE,WRITE` | 追加要拒绝的操作类型 |
-| `TIA_MCP_AUDIT_LOG` | 审计文件路径 |
+| Claude Code | `%USERPROFILE%\.claude.json` |
+| Codex | `%CODEX_HOME%\config.toml`，未设置时为 `%USERPROFILE%\.codex\config.toml` |
+| Gemini CLI | `%USERPROFILE%\.gemini\settings.json` |
+| Qwen | Qwen Code：`%USERPROFILE%\.qwen\settings.json` |
+| Kimi | Kimi Code CLI：`%KIMI_CODE_HOME%\mcp.json`，未设置时为 `%USERPROFILE%\.kimi-code\mcp.json` |
+| Yuanbao | CodeBuddy Code：`%USERPROFILE%\.codebuddy\.mcp.json` |
+| DeepSeek / GLM / Grok | OpenCode：`%USERPROFILE%\.config\opencode\opencode.json` |
+| Qwen Agent | `%USERPROFILE%\.qwen-agent\mcp.json` |
+| Cursor | `%USERPROFILE%\.cursor\mcp.json` |
+| VS Code · Copilot | `%APPDATA%\Code\User\mcp.json`；仅检测到 Insiders 时选择对应目录 |
 
-钩子只对 Claude Code 生效；其他客户端仍依赖工具自身的 `dryRun=true` 默认值与 `confirm*` 参数。自检：`scripts/checks/Test-WriteGuard.ps1`。
+三张 OpenCode 卡片共用一个文件；选择后还需在 OpenCode 中使用相应模型。写入配置不代表已完成真实客户端联调。自定义 profile、portable 安装等位置以写入确认中展示的路径为准。
 
-## 开发
+配置器保留已有其他服务和设置，并为旧文件生成 `.bak_...` 备份。无效输入会报告具体失败；多选客户端时分别查看各项结果。JSONC 重写后为标准 JSON，原文保留在备份中。已有同名 `tia-portal` / `tia-portal-vm` 定义时检查是否存在重复来源。
 
-源码在 `tools/mcp-configurator/`：`MainWindow.xaml` 为 WPF 界面，`Configurator.cs` 为交互，`ConfigCore.cs` 为公共逻辑，`ClientProfiles.cs` 为 12 张卡片（10 种客户端格式）适配与本机检测。
+本机连接记录位于 `%LOCALAPPDATA%\TiaPortalMcp`；HTTP 服务配置按所选版本保存为 `http-v<版本>.json`，客户端记录为 `client.json`。这些本机记录使用当前 Windows 用户的加密保护；客户端自身配置文件按其格式保存密钥，不要公开配置或备份。
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configurator.ps1 -Test
-```
+## 工具显示与示例
 
-使用 Windows 自带 .NET Framework 编译器，XAML、中英文资源与字体嵌入单个 EXE。两套桌面应用共用 `tools/ui-glass` 中的控件样式、日志呈现和 OFL 字体资源。测试输出在 `bin-build/configurator-tests`；不修改真实 AI 配置、防火墙或工程。
+V20/V21 默认 lite 显示 63 个常用工具，其余用 `FindTools` / `CallTool`；完整目录分别为 477 / 488 个。需要全量直接显示时给对应完整引擎传 `--profile full`。
 
-手动配置示例：[cursor.example.json](cursor.example.json) 是本机 V21 stdio 示例，把 `command` 替换为交付包中 `runtime/v21/TiaMcpServer.exe` 的绝对路径；V20 同时修改路径与版本参数。宿主机连接虚拟机及其他客户端优先使用 `TiaMcpConfigurator.exe`。示例不含现场 IP、密钥或用户配置，不能直接当作已配置文件使用。
+基础目录的工具数依次为 V14 SP1 57、V15.1 58、V16/V17/V18 各 60、V19 62，不使用完整引擎的 profile 和发现入口。所有版本都用 `GetToolUsage` 读取自己的工具参数、语言示例和调用序列。修改服务配置后重启服务与客户端，避免旧目录缓存。
 
-配置格式依据：[Claude Code](https://code.claude.com/docs/en/mcp)、[Codex](https://developers.openai.com/codex/mcp)、[Cursor](https://cursor.com/docs/mcp)、[VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)、[Gemini CLI](https://geminicli.com/docs/tools/mcp-server/)、[Qwen Code](https://qwenlm.github.io/qwen-code-docs/en/users/features/mcp/)、[Kimi Code CLI](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/mcp.html)、[CodeBuddy Code](https://www.codebuddy.cn/docs/cli/mcp)、[OpenCode](https://opencode.ai/docs/mcp-servers/)。
+## 更新
 
-设置 `TIA_GLASS_SCREENSHOTS` 为输出目录后运行上面的测试，可生成中英文、浅色和深色的 1200×780 WPF 截图。截图使用合成数据，不连接 TIA、不启动 MCP 服务。
+先结束工程操作并保存需要保留的修改，关闭 Studio、AI 中的 TIA 会话和 MCP 服务。可下载新版本完整 ZIP 到新目录，再用新配置器写入客户端配置。
+
+交付目录也可使用 **••• → 更新 → 更新引擎…**。更新器检查下载校验和、备份到 `.previous`，替换交付文件后重新打开配置器；日志保留在更新窗口。源码 Git 工作区使用仓库的开发流程，不由交付更新器覆盖。虚拟机服务端更新完成后重新启动服务。
+
+## 常见问题
+
+| 现象 | 检查或操作 |
+|---|---|
+| HTTP 地址拒绝访问 | 在服务端点击“网络权限”，检查实际地址 |
+| 端口占用 | 停止旧服务或使用另一个明确端口，并重写客户端配置 |
+| 找不到 API | 版本、安装根目录和对应 Openness 安装 |
+| 连接超时 | 服务端实际 IP、服务运行状态、网络和防火墙规则 |
+| HTTP 401 | 两端密钥及客户端重新加载情况 |
+| HTTP 503 / 未就绪 | 查看服务端日志 |
+| 连接后没有工程 | 用当前版本的连接示例明确绑定目标工程 |
+| 工具不存在 | 检查当前版本目录，V20/V21 再使用 FindTools |
+
+需要命令行诊断时使用 [CLI 指南](cli.md)。V20/V21 可选工作进程隔离的参数与恢复方式见[隔离指南](../guides/openness-worker-isolation.md)，配置器没有对应勾选项。
+
+作为 Claude Code 插件使用时，还会加载仓库的 `hooks/tia-write-guard.ps1`；它记录审计并按环境设置控制在线写入。普通 GUI/MCP 连接不等于加载了该插件。具体工具执行参数与结果解释仍以 `GetToolUsage` 为准。
+
+手动本机 V21 配置见 [cursor.example.json](cursor.example.json)，替换引擎绝对路径后使用。其他版本和远程模式优先由配置器生成，避免复制不匹配参数。

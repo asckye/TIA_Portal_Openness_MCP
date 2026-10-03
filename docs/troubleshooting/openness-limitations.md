@@ -1,100 +1,45 @@
-# TIA Openness — Capability Boundaries
+# Openness 与运行时通道的边界
 
-This document lists what the Siemens TIA Openness Public API **cannot do**, based on
-static inspection of `D:\app\TIA21\Portal V21\PublicAPI\V21\net48\*.xml`.
+本页描述 v3.2.0 当前实现和已知现场问题。八版入口并不具有同一套能力，先核对[版本矩阵](../reference/version-tools.md)与当前服务 `GetToolUsage`。官方 API 存在、工具可列出、离线测试通过、真实工程执行成功是不同证据。
 
-If a capability is listed as **NOT SUPPORTED**, do not attempt to add an MCP tool
-that pretends to do it via reflection — there is no documented path. These
-operations require an alternate channel (OPC UA server on the CPU, S7
-communication library, or physical-panel interaction).
+## 已知未解决的现场问题
 
-> Last verified: 2026-05-09 against TIA Portal V21.0 PublicAPI; cross-checked 2026-09-17 against the
-> official V21 online documentation (docs.tia.siemens.cloud, publication dated 03/2026). No V22 exists as of
-> that date; V21 Update 1/2 add no new Openness API functions.
-
----
-
-## Online operations: what is supported
-
-| Capability | API Type/Method | MCP Tool |
-|---|---|---|
-| Go online / offline | `OnlineProvider.GoOnline / GoOffline` | `GoOnline`, `GoOffline` |
-| Read connection state (Offline/Online/Connecting/...) | `OnlineProvider.State` | `GetOnlineState` |
-| Download project to CPU (full) | `DownloadProvider.Download(...)` | `DownloadToPlc` |
-| Download with retained actual values (do not wipe DB values) | `DataBlockReinitialization` (V20/V21) and `DataBlockReinitializationOrKeepActualValues` (V21) download configurations | `DownloadToPlc` parameter `keepActualValues` (default `true`) |
-| Download-prompt coverage | 43 concrete `Download.Configurations` prompt types exist in V21 (42 in V20). Since 2.7.18 the delegate answers each prompt by its real shape (enum selection / `Checked` / `SetPassword`): caller answers from `promptAnswersJson` first, built-in defaults next (destructive prompts stay NoAction/NoChange), passwords from dedicated parameters; every prompt it could not answer is returned in `Meta.promptsUnanswered` with the TIA prompt text. Before 2.7.18, `UserManagementDownload`, `AlarmTextLibrariesDownload` and `DownloadCertificate` were mishandled as checkboxes and 27 types were never handled. | `DownloadToPlc` (`userManagementMode`, `promptAnswersJson`, `moduleAccessPassword`, `blockBindingPassword`, `masterSecretPassword`) |
-| Download to a Windows folder (memory-card image; also PLCSIM Advanced target; no PLC connection) | `DownloadProvider.Download(DirectoryInfo, delegate)` with `TargetForSoftware`, `OverwriteOnMemoryCard` | `DownloadPlcToFolder` (2.7.18) |
-| Station upload / parameter upload from a live device | `StationUploadProvider.StationUpload`, `ParameterUploadProvider.ParameterUpload` (V21 only) | `UploadStationFromPlc`, `UploadDeviceParameters` (2.7.18) |
-| Pre-download readiness check | (custom probe) | `CheckDownloadReadiness` |
-| Compare offline project vs live CPU | `PlcSoftware.CompareToOnline()` | `CompareSoftwareToOnline` |
-| Set CPU access password (for protected modules) | `OnlinePasswordConfiguration.SetPassword(SecureString)` | `password` parameter on `GoOnline` and `DownloadToPlc` |
-| Read watch-table values online | reflection over `PlcWatchTableEntry` | `ReadPlcWatchTableCurrentValuesReadOnly` |
-| Edit watch-table modify values (offline definition) | `PlcWatchTableEntry.ModifyValue` | `SetWatchTableModifyValue` |
-| Edit force-table values (offline definition) | `PlcForceTableEntry.ForceValue` | *(deliberately not exposed as an MCP tool — forcing is a human-only action)* |
-
-> Note on Watch/Force: TIA Openness exposes the **table definition**, but no
-> documented method to "send modify now" or "apply force now" as a discrete
-> runtime command. The values become effective when TIA Portal is online and
-> the table's trigger fires. If you need precise runtime push, use OPC UA.
-
----
-
-## Online operations: NOT supported via Openness
-
-These were investigated and are **not present** in V21 PublicAPI XML:
-
-| Capability | What was searched | Workaround |
-|---|---|---|
-| **Read CPU operating mode (RUN/STOP/STARTUP)** | `CpuOperatingState`, `OperatingMode`, `RequestStateChange` — none found | OPC UA client; or physical panel readback |
-| **Change CPU operating mode (Run/Stop) as a standalone command** | `Run()`, `Stop()`, `RequestStateChange()` on online providers — none found. **Nuance:** the official chapter "Running and stopping PLC" only exposes `StopModules.CurrentSelection = StopAll` (pre-download) and `StartModules.CurrentSelection = StartModule` (post-download) *inside a `DownloadConfiguration` delegate* — i.e. mode changes are bound to a download, not independently invocable | OPC UA client; manual via TIA Portal UI; or accept the stop/start that a `DownloadToPlc` performs |
-| **Clear all forces / unforce** | `ClearForces`, `Unforce`, `RemoveForce` — none found | Delete force-table entries via project, then download |
-| **Read diagnostic / fault buffer** | `DiagnosticBuffer`, `FaultBuffer`, `DiagnosticEntry` — none found in any XML | OPC UA `Server` namespace; or S7 SZL request |
-| **Selective per-block download** | `DownloadSelectionConfiguration` exists, but no documented filter API | Use full `DownloadToPlc`; reflection probe is fragile |
-
-If a user asks for any of these, the MCP server should politely refuse with a
-pointer to this document, **not** silently fail or return a misleading
-"success". Do not implement reflection-based stubs that look like they work.
-
----
-
-## Hardware operations: NOT supported
-
-| Capability | Status |
+| 问题 | 当前处理与剩余边界 |
 |---|---|
-| Read CPU diagnostic LEDs status remotely | Not exposed |
-| Read module slot health (online) | Not exposed |
-| Identify online PROFINET nodes from a discovery scan | **Supported — `ScanAccessibleDevices` (2.7.18).** `ConfigurationPcInterface.GetAccessibleDevices()` returns a live snapshot of reachable participants on a chosen PC interface (Name / Address / MAC / DeviceSeries) and can feed `StationUpload`. See [official chapter](https://docs.tia.siemens.cloud/r/en-us/v21/tia-portal-openness-api-for-automation-of-engineering-workflows/tia-portal-openness-api/functions-for-accessing-the-data-of-a-plc-device/functions-for-accessing-plc-service/accessing-configuration-accessible-devices). *(Earlier revisions of this file wrongly said this was limited to project config.)* |
+| `ManageStartdriveParameter` 读取 BICO `p2051[0]` 时 TIA 崩溃 | 已按官方 `Parameters.Find(name).Value` 路线改为精确单值读取，仅在找不到条目时检查只读视图；不展开位、限值、枚举或继续读取源参数值。离线回归通过，原生复测 **NOT RUN**，根因未确认。返回另一个 `DriveParameter` 表示连接来源，普通值按标量解释，`null` 保留未知，不能当作零、实时值或未连接证明。 |
+| Unified 脚本模块库类型 `Name` 修改 | 指定样本在项目库和独立全局库两次测试中均伴随 TIA 退出，没有已验证修复；“先在全局库改名再同步”也失败。[原生证据](../../manifest/unified-library-rename-native-20261001.json)。 |
+| PLC 原生交叉引用 | V21 有真实退出记录，默认禁用。工具返回未查询不等于零引用。编译通过也不能证明查询稳定。通用反射入口不能绕过相同策略。 |
+| HMI 深层属性读取 | 故障或限制下可能仅返回部分快照；`HmiSystemDiagnosisControl.ScriptDiagnosisOverviewText` 暂缓读取。[快照诊断](hmi-snapshots.md)说明完整性、会话阻断与日志。 |
 
----
+这些项目仍使用统一调用示例库，不再各自建立规范入口。官方示例：[V20 BICO](https://docs.tia.siemens.cloud/r/en-us/v20/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)、[V21 BICO](https://docs.tia.siemens.cloud/r/en-us/v21/functions-for-startdrive/code-examples/reading-and-writing-bico-parameters)。示例的正确参数不能消除尚未确定的原生故障。
 
-## When to suggest OPC UA instead
+PLC 交叉引用的显式诊断开关为服务进程环境变量 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`；启用后仍检查相关块/类型一致性。它不是日常使用必需步骤，也不是稳定性修复。离线 `AnalyzePlcReferences` 只覆盖提供的导出文件，不能据此证明整个工程没有引用。
 
-The TIA Openness API is fundamentally an **engineering / project-modification**
-API. It models "the project I am editing in TIA Portal", not "the CPU running
-right now". When a user asks for runtime data (current variable value, RUN
-state, alarms, diagnostics history), redirect them to:
+## 工程数据与在线数据
 
-1. Enable the CPU's OPC UA server (`SetOpcUaInterfaceEnabled` MCP tool)
-2. Connect with an OPC UA client (separate component, not this MCP server)
+| 通道 | 当前可以做什么 | 前提与限制 |
+|---|---|---|
+| TIA Openness | 工程对象读写、导入导出、编译；完整引擎还有上线/离线、下载、站上载和在线比较等指定接口。 | 取决于版本、对象、安装选件与原生 API。工程标签或 DB 初始值不是 CPU 实时值。 |
+| S7 Web server API | 完整引擎的 `ReadPlcWebVars` / `WritePlcWebVars`、`ReadPlcWebDiagnostics`、`SetPlcWebOperatingMode`。 | PLC 固件及 Web API 支持、账户权限和证书；独立于 Openness。诊断工具的设备信息和运行模式不等于完整故障缓冲区。 |
+| Unified Open Pipe | 完整引擎读取/写入 Runtime 标签、读取活动报警及限定的单次消息。 | MCP 运行在 Runtime 本机，用户具备对应组权限；不提供任意远程管道或持续订阅。 |
+| PLCSIM Advanced API | 完整引擎管理仿真实例、读写标签并运行限定场景。 | 本机安装匹配 API；仿真通过不等于真实 CPU 验收。 |
+| 其他运行时/伴随工具 | 按各工具声明的 OPC UA、S7 或独立程序接口执行。 | 分别检查连接目标和实际协议，不能因 Openness 已连接就视为这些通道已就绪。 |
 
-This boundary is by design — Siemens publishes OPC UA as the runtime data
-channel and Openness as the engineering channel.
+基础宿主只提供其公开的 PLC 子集，不因完整引擎存在某个运行时工具而自动具备该工具。完整引擎中部分选件入口仅在一个版本有实际调用路径，详情见[专用工具范围](../reference/v20-v21-audit-tools.md)。
 
----
+## 当前没有可承诺的 Openness 路线
 
-## How to keep this document accurate
+- 独立 CPU RUN / STOP 不是普通 Openness 在线接口；下载回调中的停止/启动属于下载流程。需要独立模式切换时核对实际运行时工具。
+- 未实现通过 Openness 读取完整 CPU 诊断缓冲区或在线模块 LED / 健康状态的通用路线。
+- 不提供运行时强制/解除强制入口。删除离线强制表或下载工程不能作为“已清除 CPU 强制”的证明。
+- 没有按任意块集合选择性下载的已验证通用封装。
+- 未证实可从零创建 Unified 面板库类型、直接修改类型内部所有控件和局部脚本，或通过公开 API 重建 PLC 交叉引用索引。
+- Unified 普通按钮事件与全局脚本模块使用不同接口；CWC ZIP、普通画面对象与面板库类型也不能互换。
 
-When a new TIA Portal version is released:
+`ScanAccessibleDevices` 已能经指定 PC 接口查询可访问设备，不应再列为“只能看工程配置”。监控表定义、修改值和当前值的读取能力依对象而异；定义编辑成功不能冒充已经向 PLC 执行了一次修改。
 
-1. Re-run the static API inspection against the new `PublicAPI\V<n>\net48` directory
-2. Diff against the current "supported" / "not supported" lists
-3. Update this file before announcing version support
+## 读懂结果再继续
 
-Search patterns that proved useful (use over `*.xml` files):
+导入先检查状态、消息与实际返回对象；SIMATIC SD 使用目录及不带扩展名的文件名。编译检查错误数和完整嵌套诊断，不能只看请求返回。保存工程需要独立保存操作；下载是另一项明确动作。
 
-- `OperatingState|OperatingMode|RunStop|RequestStateChange` — CPU mode
-- `ForceValue|ModifyValue|ClearForce|ApplyForce` — force/watch
-- `CompareToOnline|CompareTo` — compare APIs
-- `OnlinePassword|SetPassword|OnlineCredentials` — auth
-- `DiagnosticBuffer|FaultBuffer|DiagnosticEntry` — diagnostics
-- `DownloadSelectionConfiguration|DownloadConfiguration` — download configs
+当返回 `mayHaveChanged`、部分结果或结果未知时，先核对当前工程与日志，避免自动重复写入。`RETURNED` 日志只证明调用返回，最后一个 `BEFORE` 也不能单独证明崩溃根因。真实验收与历史原文见[证据索引](../reference/real-machine-ledger.md)。

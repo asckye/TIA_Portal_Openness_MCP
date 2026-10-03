@@ -2,6 +2,8 @@
 
 本目录提供可直接交给 `ApplyUnifiedHmiScreenDesignJson` 的 WinCC Unified `designJson` 模板。模板采用通用工业界面结构：顶栏、导航、卡片、状态灯、参数输入、趋势占位、事件列表和诊断表。
 
+先用当前版本的 `GetToolUsage` 核对 `ApplyUnifiedHmiScreenDesignJson` 及相关动作。此工作流属于完整引擎；基础宿主没有这些 HMI 工具。模板尺寸、控件类型、事件和绑定必须与目标 Unified 设备及版本相符，八版选择器不代表模板已在八版验收。
+
 ## 视觉与参考素材
 
 - 本目录 JSON 为 **脚本友好** 的扁平布局；若要接近西门子 **HMI Template Suite** 的观感，可另行取得匹配版本的官方样板，在 TIA 中查看后转换色值、间距和层次；参考素材不随包提供，见 [模板索引](../README.md)。
@@ -18,7 +20,7 @@
 | `unified_trend_page_1024x768.json` | 1024 x 768 | 趋势页：趋势区域、图例、实时数值 |
 | `unified_basic_tag_diagnostics_1024x768.json` | 1024 x 768 | 标签诊断：Bool 指示、Real IOField |
 | `unified_basic_event_log_1024x768.json` | 1024 x 768 | 事件列表：状态摘要、处理流程步骤、事件明细行（静态版式，Reset 按钮） |
-| `hmi_tag_binding_snippets.json` | （人读）符号互连 / 绝对地址示例，配合 `docs/guides/hmi/tag-binding.md` |
+| `hmi_tag_binding_snippets.json` | — | 符号互连 / 绝对地址示例，配合 HMI 标签绑定指南 |
 
 1. `EnsureUnifiedHmiConnection`
 2. `EnsureUnifiedHmiTagTable`
@@ -27,7 +29,9 @@
 5. `ApplyUnifiedHmiScreenDesignJson`
 6. `BindUnifiedHmiTagDynamization`
 7. `EnsureUnifiedHmiButtonAction`
-8. 读回检查并保存
+8. 检查实际创建对象、绑定和编译诊断，再按需单独保存
+
+上面的工具名用于辨认流程；具体参数、事件脚本与全局脚本的区别统一由 `GetToolUsage` 提供。静态趋势区域和事件列表布局不等于已配置真实历史归档或报警控件。
 
 ## 常用控件绑定
 

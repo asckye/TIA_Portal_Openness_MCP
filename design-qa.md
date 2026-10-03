@@ -69,15 +69,15 @@ WPF backdrop-blur fallback. These captures do not claim byte-identical pixels.
 
 ## Verification
 
-Configurator: 144 passing offline/configuration/WPF assertions. Studio: 604 passing WPF tests and
-36 passing client/bridge tests. V20 and V21 Studio adapters compile with zero warnings and errors.
-Protected ConfigCore, ClientProfiles, UpdateCheck and every existing Studio ViewModel retain their
-pre-change file hashes. Engine, bridge, native adapter and contract source is unchanged by this work.
+The UI review used offline Configurator, Studio WPF and bridge/client tests. Its scope is the
+rendered view and preservation of operation meanings, not a frozen hash of source files that
+have subsequently received functional changes.
 
-The full repository Build-Release workflow and strict bundle validation passed on the final
-source: 3035 offline checks per V20/V21 identity and 10 SDK policy checks; generated evidence is recorded in `manifest/release-build.json`,
-`manifest/configurator-build.json` and `manifest/package-manifest.json`. Native TIA/project/PLC
-acceptance is not performed by these checks. No release is published by this UI task.
+The current eight-version release records full-engine, foundation, adapter and desktop checks
+in `manifest/release-build.json`, `manifest/multi-version-build.json` and
+`manifest/configurator-build.json`. Use those records for current test counts and input hashes.
+Native TIA/project/PLC acceptance is separate from the UI and offline checks. Release status
+is recorded in the release notes, not inferred from this visual review.
 
 Reproduce the captures by setting `TIA_GLASS_SCREENSHOTS` to an output directory and running
 `scripts/build/Build-Configurator.ps1 -Test` plus the Studio WPF test project in Release mode.

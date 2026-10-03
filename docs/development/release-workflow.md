@@ -8,7 +8,7 @@
 
 在 Windows 的 master 工作区操作，审查全部改动，停止该安装目录下的 MCP 和 Studio 进程。需要 PowerShell 7、Git、所需 .NET SDK/运行时与 Framework 开发环境、Python 和八版 SDK。设置 TIA_MCP_PLC_TOOLS_PYTHON 指向已有 PLC Tools 伴随环境。SDK 目录结构见[构建说明](../reference/version-tools.md#build-test-and-package)。
 
-先写 CHANGELOG.md 最新版本条目与 docs/releases/vX.Y.Z.md，更新当前说明和交接历史。发布正文写明各版范围、组件、测试结果和真实工程验收状态。英文文档和提交说明使用英文，不添加 AI 署名。
+先写 CHANGELOG.md 最新版本条目与 docs/releases/vX.Y.Z.md，更新当前说明；发布后在 handoff.md 和 publication-vX.Y.Z.json 记录结果。发布正文写明各版范围、组件、测试结果和真实工程验收状态。英文文档和提交说明使用英文，不添加 AI 署名。
 
 ```powershell
 pwsh -NoProfile -File scripts/build/Release.ps1 -Version X.Y.Z -Summary "Concise English release summary" -PublicApiRoot <SDK-root> -V20ReferenceRoot <V20-SDK> -V21ReferenceRoot <V21-net48-SDK> -Python <python.exe>
@@ -35,6 +35,8 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 -NoPush 完成本地提交、打包和验证后停止；检查具体产物后用相同参数加 -Resume 继续推送、CI、tag 和发布。-NoTag 在推送及 CI 后停止；-DryRun 只到构建与本地检查。
 
 -SkipBuild 只适用于所有源码和运行文件仍与三份构建记录相符的情况，不能用于改版本号却没有重建的产物。Prepare-Delivery.ps1 单独运行只准备完整引擎与配置器；正式发布仍需多版本构建。
+
+长路径环境可用 `Package-Release.py --output-directory <较短的新目录>`，保留生成的 package-result.json 所记录的实际 ZIP 路径；恢复 Release 流程时将该结果记录及同名 ZIP/SHA-256 放到默认版本目录。
 
 已有归档不自动覆盖或删除。先检查、保留，再用 Package-Release.py --output-directory <新目录> 生成本地候选。恢复发布前，默认发布目录的 package-result.json 必须指向此次验证的归档及当前提交。
 

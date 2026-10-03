@@ -99,4 +99,4 @@ session. WPF tests render and inspect the actual controls. Native adapters compi
 official eight-release SDKs locally; CI runs the bridge/client/WPF checks without Siemens DLLs.
 
 Live TIA project acceptance remains pending. `Build-MultiVersion.ps1` deploys the desktop to `runtime/studio`; the v3.2.0 formal release pipeline includes Studio and all eight adapters through `Package-Release.py`. `Package-MultiVersion.py` remains available for local development archives. Full audit findings are in
-[the duplicate-code review](../../docs/development/studio-native-and-duplicates-20261002.md).
+[the shared version framework](../../docs/development/unified-version-framework.md).

@@ -1,6 +1,6 @@
 # 独立原生生命周期测试
 
-2026-09-30：已实现 V20/V21 独立 net48 测试程序及进程监督脚本；本次只编译和执行离线安全测试，**没有启动或连接 TIA，没有执行以下原生场景**。完整发布构建记录各版测试程序哈希、离线断言数与 `liveAcceptance=NOT RUN`，见 [release-build.json](../../manifest/release-build.json)。
+当前构建包含 V20/V21 独立 net48 测试程序及进程监督脚本；默认仅编译并执行离线安全测试，**没有启动或连接 TIA，没有执行以下原生场景**。完整发布构建记录各版测试程序哈希、离线断言数与 `liveAcceptance=NOT RUN`，见 [release-build.json](../../manifest/release-build.json)。
 
 ## 实现与范围
 
@@ -13,7 +13,7 @@
 - [监督器](../../scripts/checks/Test-NativeLifecycle.py) 给整个测试进程设置期限，捕捉异常退出、超时及结果不完整。只终止它启动的测试程序，不结束 TIA 进程、不遍历用户进程、不自动重试操作。超时后原生结果未知，TIA 可能仍运行，需结合 OWNED_PORTAL 记录人工检查；构造 TIA 时卡住可能来不及记录 PID。
 - 只有进程正常退出、报告中的版本/轮次/7 项断言均正确、各阶段日志完全配对、所有轮次和清理均完成，监督器才报告 PASSED。
 
-这套程序测试原始 Openness 的最小生命周期，不经 MCP 工具分发，不能替代 476 个工具的原生验收。尚未覆盖 PLC/HMI 内容、编译、导入、原生并发争用、超时 Attach 晚到代理释放或生产 MCP 工作进程隔离。测试进程监督器也不等于生产 MCP 已具备原生进程隔离。
+这套程序测试原始 Openness 的最小生命周期，不经 MCP 工具分发，不能替代实际注册工具的原生验收。尚未覆盖 PLC/HMI 内容、编译、导入、原生并发争用、超时 Attach 晚到代理释放或生产 MCP 工作进程隔离。测试进程监督器也不等于生产 MCP 已具备原生进程隔离。
 
 ## 本地构建和默认行为
 
@@ -30,7 +30,7 @@ python scripts/checks/Test-NativeLifecycle.py --self-test
 
 ## 将来获准执行时
 
-本轮用户要求只做本地验证，**不要执行此段命令**。将来需要匹配 V20/V21 的专用 Windows TIA 安装、产品许可、Siemens TIA Openness 组权限，以及可信测试 EXE 的防火墙许可。程序不修改组或注册表、不点击防火墙对话框。不能在通用 GitHub hosted runner 上宣布完成原生验收。
+以下命令会启动新的 TIA 实例并创建测试工程，仅在明确获准的测试范围内执行。需要匹配 V20/V21 的专用 Windows TIA 安装、产品许可、Siemens TIA Openness 组权限，以及可信测试 EXE 的防火墙许可。程序不修改组或注册表、不点击防火墙对话框。不能在通用 GitHub hosted runner 上宣布完成原生验收。
 
 ```powershell
 python scripts/checks/Test-NativeLifecycle.py `
@@ -45,4 +45,4 @@ python scripts/checks/Test-NativeLifecycle.py `
 
 遵循项目固定版本的 Siemens [openness-testing](../../reference/siemens-openness/skills/openness-testing/SKILL.md)、[session-and-project](../../reference/siemens-openness/skills/session-and-project/SKILL.md)、[threading-and-concurrency](../../reference/siemens-openness/skills/threading-and-concurrency/SKILL.md) 和 [crash-diagnosis](../../reference/siemens-openness/skills/crash-diagnosis/SKILL.md) 的适用流程。指南面向 V21+；V20 适配另外依据本地 V20 PublicAPI 编译核对，不宣称官方指南保证 V20 行为。
 
-2026-10-01 已加入可选生产 MCP worker，见[使用说明](../guides/openness-worker-isolation.md)与[剩余设计关卡](openness-worker-isolation-plan.md)。本框架仍独立于 MCP 分发；两者的本地测试都不能证明 TIA 不会崩溃。
+V20/V21 提供可选生产 MCP worker，见[使用说明](../guides/openness-worker-isolation.md)与[诊断和隔离边界](native-call-diagnostics.md)。本框架仍独立于 MCP 分发；两者的本地测试都不能证明 TIA 不会崩溃。

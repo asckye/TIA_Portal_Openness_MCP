@@ -4,8 +4,10 @@ Research date: 2026-10-02. Official Siemens system manuals only. No TIA installa
 
 Target scope: V14 SP1, V15.1, V16, V17, V18, V19, V20 and V21. Original
 V14 and V15 are excluded, including from planned targets. Their manual excerpts
-and comparison columns below are historical migration evidence only. V15.1 is
-retained; only V20/V21 currently have runnable engine build targets.
+and comparison columns below are historical migration evidence only. All eight
+exact SDK targets have compiled: V14 SP1–V19 use the foundation host and V20/V21
+use the full engines. Native acceptance remains separate from these build results;
+see the [current version matrix](version-tools.md).
 
 ## Sources and reproducibility
 

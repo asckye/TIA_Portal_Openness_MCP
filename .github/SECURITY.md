@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Security fixes land on this project's `master` (TIA Portal V20 / V21) and are
+Security fixes land on this project's `master` (the eight supported TIA release profiles) and are
 shipped through this repository's releases. This project has no maintained
 version-specific or original-project tracking branches.
 

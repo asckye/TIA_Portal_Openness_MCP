@@ -24,7 +24,7 @@ dotnet build tools/tiaportal-mcp/src/TiaMcp.Adapters/V20/Adapter.20.csproj -c Re
 ```
 
 `scripts/build/Build-PlcAdapterWorkers.ps1 -PublicApiRoot <eight-version-root>`
-builds each source-preview worker with exactly its matching Adapter project. It
+builds each release-matched worker with exactly its matching Adapter project. It
 verifies coverage again on the copied Adapter DLL, checks that no old Foundation
 or Siemens DLL was copied, and records hashes. It never launches a worker or TIA.
 `-SourceRoot` can select a read-only snapshot; outputs stay in the candidate tree.

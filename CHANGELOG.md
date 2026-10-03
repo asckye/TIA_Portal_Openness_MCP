@@ -1,6 +1,6 @@
 # Change Log
 
-格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；每个版本的完整说明在 `docs/releases/vX.Y.Z.md`，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
+格式遵循 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)：最新版本在前，日期为 ISO 8601；当前版本说明在 `docs/releases/`，历史正文保留在 Git 历史与 GitHub Releases，交付包在 [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases)。版本号从 2.8.0 起按[语义化版本](https://semver.org/lang/zh-CN/)：**MAJOR** = 工具名 / 参数 / 返回形状的不兼容改动或删除工具；**MINOR** = 新工具、新参数、新功能、内部重构；**PATCH** = 修缺陷、改文案 / 文档、只动交付脚本。2.7.x 及之前每版都可能新增工具，未按此规则。
 
 ## [3.2.0] - 2026-10-03
 
@@ -17,7 +17,7 @@
 
 ## [3.1.0] - 2026-10-01
 
-V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具，全量 **486**、默认 lite **62**。完整范围、升级方式及未解决问题见 [v3.1.0](docs/releases/v3.1.0.md)。
+V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具，全量 **486**、默认 lite **62**。完整范围、升级方式及未解决问题见 [v3.1.0](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v3.1.0.md)。
 
 - 增加可选 Openness 工作进程隔离、故障锁定、显式恢复、准确工程绑定及进程占用协调；不自动重放失败的原生写入。所有受支持的引擎原生调用边界加入细粒度诊断和覆盖检查。隔离默认关闭，原生稳定性仍待验收。
 - 增加精确 HMI 变量删除，收紧 PLC 交叉引用反射旁路、下载一致性及导入回读检查；已知 V21 Unified 脚本库类型 Name 写入路径继续保护。独立改名诊断包随源码保留，尚无已验证可用的库类型改名修复。
@@ -29,10 +29,10 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [3.0.0] - 2026-09-29
 
-主要版本：事务执行范围及 PLC 交叉引用默认行为收紧；升级须阅读 [v3.0.0 迁移说明](docs/releases/v3.0.0.md)。V20/V21 共 464 个工具（新增 11 个），默认 lite 仍为 59 个。
+主要版本：事务执行范围及 PLC 交叉引用默认行为收紧；升级须阅读 [v3.0.0 迁移说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v3.0.0.md)。V20/V21 共 464 个工具（新增 11 个），默认 lite 仍为 59 个。
 
-- 按 Siemens 官方 `tia-portal-ai-extensions` 的 32 个主题及 V21 API 手册完成[源码与流程审计](docs/development/official-openness-audit-20260929.md)，增加 `GetAuthoringGuide("openness-workflow")` 入口。修复指定工程连接误回退、工程所有权/断开清理、超时 Attach 晚到结果泄漏、版本路径优先级与 DLL 身份校验、事务提交误报及嵌套独占。`RunToolsInTransaction` 收紧为 8 个已审核的同步工程编辑工具，并预检全部参数；其他工具仍可单独使用。尚未做原生事务/关闭行为验收或部署。
-- 补入 11 个生态工具：官方指南检索、LAD 可视差异、批量读取/预览/应用、Git 工作流、PLC Tools 伴随进程、OPC UA 建模接口 XML 生成、工程质量审计（JSON/HTML/PDF）、XML 模板批量展开、布尔别名/报警 LAD 生成。保留 MIT 源码来源与许可证，GPL 功能按需求独立实现；已有工程/设备/PLC/HMI/库功能复用。见[接入记录](docs/development/ecosystem-integration-20260929.md)及[使用说明](docs/reference/ecosystem-tools.md)。本地构建与离线测试，尚未部署到 VM 或进行新工具的原生写入验收。
+- 按 Siemens 官方 `tia-portal-ai-extensions` 的 32 个主题及 V21 API 手册完成[源码与流程审计](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/development/official-openness-audit-20260929.md)，增加 `GetAuthoringGuide("openness-workflow")` 入口。修复指定工程连接误回退、工程所有权/断开清理、超时 Attach 晚到结果泄漏、版本路径优先级与 DLL 身份校验、事务提交误报及嵌套独占。`RunToolsInTransaction` 收紧为 8 个已审核的同步工程编辑工具，并预检全部参数；其他工具仍可单独使用。尚未做原生事务/关闭行为验收或部署。
+- 补入 11 个生态工具：官方指南检索、LAD 可视差异、批量读取/预览/应用、Git 工作流、PLC Tools 伴随进程、OPC UA 建模接口 XML 生成、工程质量审计（JSON/HTML/PDF）、XML 模板批量展开、布尔别名/报警 LAD 生成。保留 MIT 源码来源与许可证，GPL 功能按需求独立实现；已有工程/设备/PLC/HMI/库功能复用。见[接入记录](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/development/ecosystem-integration-20260929.md)及[使用说明](docs/reference/ecosystem-tools.md)。本地构建与离线测试，尚未部署到 VM 或进行新工具的原生写入验收。
 - 所有 MCP 传输共用进程内调用串行门；工具及桥接调用记录 BEFORE/RETURNED/THREW，不记录参数或工程内容。修复引入项目引用后 V20 的中间文件目录传播冲突，并将第三方编译源码与模板纳入发布输入校验。
 
 - PLC 原生交叉引用因 TIA 崩溃反馈改为默认拒绝：`GetCrossReferences` 和三个删除工具共用进程级诊断开关 `TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES=1`；未启用不调用原生服务，显式启用后仍拒绝未编译或编译状态无法读取的块。编译成功不再被描述为不会崩溃的保证。删除预览的 `crossReferenceQueried` 记录是否实际尝试原生查询，被保护拦截时返回 false 和具体原因；尚未部署到虚拟机。
@@ -40,11 +40,11 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.9.2] - 2026-09-21
 
-小修（PATCH）：`DeletePlcBlock` / `DeletePlcType` 传 `crossReferences=true` 被护栏挡住时，结果多一个 `crossReferenceUnavailableReason`、警告里带上原因（2.9.1 真机：只说“取不到”，看不出是“未编译”）。详见 [v2.9.2](docs/releases/v2.9.2.md)。
+小修（PATCH）：`DeletePlcBlock` / `DeletePlcType` 传 `crossReferences=true` 被护栏挡住时，结果多一个 `crossReferenceUnavailableReason`、警告里带上原因（2.9.1 真机：只说“取不到”，看不出是“未编译”）。详见 [v2.9.2](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.9.2.md)。
 
 ## [2.9.1] - 2026-09-21
 
-交叉引用查询的护栏（PATCH：无新参数，`GetCrossReferences` 与 `crossReferences=true` 在 PLC 有未编译块时拒绝）。维护者补了崩溃时间线与事件日志：Override 重导 5 个块、没编译、紧接着对旧 IDB 查交叉引用（返回了 26 条旧引用）→ TIA Portal V21 **自行退出**（Process Exit Monitor 3000 `EVENT_PROCESSTERMINATION_SELF`，退出码 -1，10:42:38Z）。详见 [v2.9.1](docs/releases/v2.9.1.md)。
+交叉引用查询的护栏（PATCH：无新参数，`GetCrossReferences` 与 `crossReferences=true` 在 PLC 有未编译块时拒绝）。维护者补了崩溃时间线与事件日志：Override 重导 5 个块、没编译、紧接着对旧 IDB 查交叉引用（返回了 26 条旧引用）→ TIA Portal V21 **自行退出**（Process Exit Monitor 3000 `EVENT_PROCESSTERMINATION_SELF`，退出码 -1，10:42:38Z）。详见 [v2.9.1](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.9.1.md)。
 
 - **`CrossReferenceGuardLogic`**（新，纯逻辑）：PLC 里任一块 `IsConsistent=false` 就拒绝查询，点名前 10 个并说明“先 CompileSoftware”；`IsConsistent` 读不到的块不算。`Portal.GetCrossReferences` 与 `DeletePlcTagTable(crossReferences=true)` 的表级查询都先过这道门；块列表读不出来也拒绝（宁可不查）。
 - `GetCrossReferences` / 三个删除工具的描述改为“未编译就拒绝”，写明真机事实。离线测试 +5（2461）。
@@ -52,14 +52,14 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.9.0] - 2026-09-21
 
-删除类工具的交叉引用查询改为显式开关（MINOR：三个工具各加一个参数；工具 453、lite 59、离线 2456 不变）。维护者 2026-09-21 真机：“`DeletePlcBlock` 干跑（它会做交叉引用查询）把 TIA 搞挂了。”详见 [v2.9.0](docs/releases/v2.9.0.md)。
+删除类工具的交叉引用查询改为显式开关（MINOR：三个工具各加一个参数；工具 453、lite 59、离线 2456 不变）。维护者 2026-09-21 真机：“`DeletePlcBlock` 干跑（它会做交叉引用查询）把 TIA 搞挂了。”详见 [v2.9.0](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.9.0.md)。
 
 - **`DeletePlcBlock` / `DeletePlcType` / `DeletePlcTagTable`**：新参数 `crossReferences`（默认 `false`）。默认不再调用 `CrossReferenceService.GetCrossReferences`，干跑只解析目标（钉号、警告），响应带 `crossReferenceQueried=false` 与警告“交叉引用未查询——不等于没人引用它”；`crossReferences=true` 才查（描述里写明该查询在真机上让 TIA Portal V21 整个退出，先 SaveProject 再开）。`GetCrossReferences` 描述标明同一风险。
 - 台账：`GetCrossReferences` / 三个删除工具的备注记下此事；handoff §4 退出点 ⑧。
 
 ## [2.8.1] - 2026-09-21
 
-发布模型改动（PATCH：引擎与工具不变，工具 453、lite 59、离线 2456）。维护者推翻 2.8.0 记下的决定：**不提交 exe，发布 ZIP 由本机 `Release.ps1` 直接上传**；同时“需要清理分支，只保留 master”“英文文档就全部用英文”。详见 [v2.8.1](docs/releases/v2.8.1.md)。
+发布模型改动（PATCH：引擎与工具不变，工具 453、lite 59、离线 2456）。维护者推翻 2.8.0 记下的决定：**不提交 exe，发布 ZIP 由本机 `Release.ps1` 直接上传**；同时“需要清理分支，只保留 master”“英文文档就全部用英文”。详见 [v2.8.1](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.8.1.md)。
 
 - **二进制不入库**：`.gitignore` 忽略 `runtime/v20/`、`runtime/v21/`、`TiaMcpConfigurator.exe`，索引里的 133 个二进制文件移除（历史保留）；它们由本机 `Build-Release.ps1` 生成，逐文件哈希仍在提交的 `manifest/release-build.json` / `manifest/configurator-build.json`。`Package-Release.py` 取 Git 树 + 本机二进制打包（缺一个或二进制被跟踪都拒绝）；新脚本 `scripts/checks/Verify-ReleaseAsset.py` 证明 ZIP = 提交树的每个文件（字节相同）+ 清单里记录哈希的二进制 + `RELEASE_STATUS.txt` / `release-file-hashes.json` 的源码提交。
 - **本机上传**：新脚本 `scripts/build/Publish-Release.ps1`（令牌：`-Token` / `GITHUB_TOKEN` / Git Credential Manager 存的 github.com 凭据）——核对包 = master HEAD = tag → 草稿 Release（正文 = 发布说明 + 包名 / 文件数 / 字节 / 源码提交 / SHA-256）→ 上传 ZIP 与 `.sha256`、逐个回读 `state` / 大小 / `digest`（最多 6 次，草稿上的残留资产先删）→ 发布并置 latest；已发布的 Release 永不改动。`Release.ps1` 改为一次提交 `Release X.Y.Z: <summary>`、打包 + 本地验证、推送、带令牌查 Actions API 等两条工作流、tag、调用 Publish-Release、等 `Verify published release`；`-Resume` 从提交后接着走。`Publish-Release.cjs` 删除。
@@ -69,7 +69,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.8.0] - 2026-09-21
 
-引擎按族拆分、配置器菜单栏更新、更新器改用 robocopy（工具 453、lite 59 不变；从本版起按语义化版本）。详见 [v2.8.0](docs/releases/v2.8.0.md)。维护者：“开始做 2.8.0”“Update-Engine.ps1 不能做成 UI 吗”“更新做成到菜单栏里”“Zhipu GLM 直接改为 GLM”。
+引擎按族拆分、配置器菜单栏更新、更新器改用 robocopy（工具 453、lite 59 不变；从本版起按语义化版本）。详见 [v2.8.0](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.8.0.md)。维护者：“开始做 2.8.0”“Update-Engine.ps1 不能做成 UI 吗”“更新做成到菜单栏里”“Zhipu GLM 直接改为 GLM”。
 
 - **引擎拆分**（行为不变，离线 2456 / 形状 V20 2805 / V21 3097 不变）：`Siemens/Portal/Portal.Software.cs`（7,423 行）拆成 `Portal.Software.cs`（查找 + 编译）与 10 个族文件 `Portal.Software.<Family>.cs`（PlcTables / LibrarySeed / TechnologyObjects / HmiDescribe / UnifiedHmi / UnifiedHmiHelpers / HmiExchange / Reflection / CrossReferences / ExternalSources）；`ModelContextProtocol/Tools/McpServer.PlcSoftware.cs`（4,021 行）拆成 `McpServer.PlcSoftware.cs`（GetSoftwareInfo / DescribeObjectProperty / CompileSoftware / GetSoftwareTree）与 11 个族文件 `McpServer.PlcSoftware.<Family>.cs`；`Program.ReportBuilders.cs` / `Program.CliProbes.cs` 移到 `Cli/`。逐行搬迁、每行只落一个文件（拆分脚本校验覆盖），`UnifiedScriptSyntaxCheckTests` 改读新文件。
 - **配置器菜单栏**：新增“更新”菜单（引擎版本与包名、检查结果、检查更新、更新引擎…、打开 GitHub Releases）和“帮助”菜单（所选客户端的使用说明、项目主页、关于）。启动时后台联网比对 GitHub 最新版（API 限流时读发布页跳转），有新版本时菜单标题变为“更新 · 有新版本 X”。“更新引擎…”先确认本窗口没启动 MCP、机器上没有 TiaMcpServer.exe 在跑（列出 pid，绝不代杀）、更新器存在、不是源码仓库（有 `.git` 就禁用），然后关闭本程序、在新 PowerShell 窗口里运行 `Update-Engine.ps1 -InstallRoot <目录> -WaitForPid <本程序 pid> -RelaunchConfigurator`，完成或失败后自动重新打开配置器；页面本身不变。新文件 `UpdateCheck.cs`（版本比较、release JSON 解析、发布页 tag、启动参数），配置器测试 111 项。
@@ -79,14 +79,14 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.62] - 2026-09-21
 
-更新器只保留在线路径，配置器卡片一律英文名（引擎同版本重建，工具 453、lite 59 不变）。详见 [v2.7.62](docs/releases/v2.7.62.md)。维护者：离线更新可以取消、不需要了；AI 客户端的名称都用英文。
+更新器只保留在线路径，配置器卡片一律英文名（引擎同版本重建，工具 453、lite 59 不变）。详见 [v2.7.62](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.62.md)。维护者：离线更新可以取消、不需要了；AI 客户端的名称都用英文。
 
 - **去掉离线更新**：`scripts/operations/Update-Engine.ps1` 不再有 `-ZipPath` / `-SkipHashCheck`；只从 GitHub Release 在线下载 ZIP + `.sha256`（没有 `.sha256` 资产就拒绝），github.com 不通时直接失败并说明原因。`CheckForUpdate` 的 `steps` 由四步改为三步（停引擎 → 在线更新 → 重启验证），描述与网络失败提示不再提离线包；`UpdateLogic.HowToUpdate` 同步，离线测试改为断言无 `-ZipPath`。README、`scripts/README.md`、交接单同步。
 - **客户端卡片英文名**：通义千问 → **Qwen**（写 Qwen Code）、腾讯元宝 → **Yuanbao**（写 CodeBuddy Code）、智谱清言 → **Zhipu GLM**（写 OpenCode）、千问工作助理 → **Qwen Agent**（种类 `桌面` → `Desktop`，副标题不再重复品牌）；`ClientProfiles` 新增测试断言每张卡片的名称与种类都是 ASCII。配置器隔离测试 96 项通过。
 
 ## [2.7.61] - 2026-09-21
 
-配置器 2.7.61（引擎同版本重建，工具 453 不变）。详见 [v2.7.61](docs/releases/v2.7.61.md)。维护者：配置文件的写入要能在不同电脑上用，要能检测 AI 客户端装在哪、再写进去——**所有客户端都一样**。
+配置器 2.7.61（引擎同版本重建，工具 453 不变）。详见 [v2.7.61](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.61.md)。维护者：配置文件的写入要能在不同电脑上用，要能检测 AI 客户端装在哪、再写进去——**所有客户端都一样**。
 
 - **本机客户端检测**：`TiaMcpConfigurator.exe` 启动时逐张卡片检测客户端痕迹（要写的配置文件 / 目录、PATH 上的可执行文件含 npm 的 `.cmd`、`%LOCALAPPDATA%\Programs` 等已知安装目录、控制面板卸载项 HKCU / HKLM / WOW6432Node），卡片副标题显示“已检测 / 未检测到”，悬停显示证据与写入路径，日志列全部结果，默认选中第一张检测到的卡片；未检测到的仍可写入。
 - **写入位置按当前用户解析**（原本已如此，本版补齐并写进文档）：`%USERPROFILE%` / `%APPDATA%` / `CODEX_HOME` / `KIMI_CODE_HOME`；VS Code 本机只有 Insiders 时写 `Code - Insiders\User\mcp.json`。同一个 EXE 拷到任何电脑都写到那台电脑的正确位置。
@@ -94,7 +94,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.60] - 2026-09-21
 
-引擎 2.7.60.0（V20/V21 均重建），工具 453 不变。详见 [v2.7.60](docs/releases/v2.7.60.md)。2.7.59 真机发现的派生示例缺陷。
+引擎 2.7.60.0（V20/V21 均重建），工具 453 不变。详见 [v2.7.60](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.60.md)。2.7.59 真机发现的派生示例缺陷。
 
 - **派生示例的占位符规则重排**（`ToolExamples.PlaceholderValue`）：`*Json` 参数先按名字给 `[]` / `{}`（数组类名字不分大小写：`culturesJson`、`namesJson`……），不再从描述里的 `e.g. [\"PLC_1\"]` 截出 `"["`；`*Path` 参数区分主机路径（`filePath` / `importPath` / `exportPath` / `archivePath` / `*FilePath` / 目录……→ `C:\Temp\...`）与工程内对象路径（`chartPath` / `tablePath` / `typePath` / `rulePath`……→ `<Folder/Name>`）；`e.g.` 值只在是纯值时采用；占位符里的 `<>` 不再被转义成 `\u003C`。
 - 2.7.59 真机：`ManageDccChart action:"bogus"` 的拒绝带 `preflight.allowedValues.action`（10 个取值）通过；`GetAuthoringGuide.topic` 的 schema `enum` 到位，引擎对带空格的值 Trim 后照常回答。
@@ -102,7 +102,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.59] - 2026-09-21
 
-引擎 2.7.59.0（V20/V21 均重建），工具 453 不变，默认 lite 59。详见 [v2.7.59](docs/releases/v2.7.59.md)。参数描述批次 2：**每个参数都有描述了**。
+引擎 2.7.59.0（V20/V21 均重建），工具 453 不变，默认 lite 59。详见 [v2.7.59](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.59.md)。参数描述批次 2：**每个参数都有描述了**。
 
 - **498 个参数补上 `[Description]`**（36 个工具文件）：155 个枚举型参数写明精确取值（`action` / `kind` / `category` / `unitKind` / `copyMode` / `importOption` / `telegramType` / `resetMode`……，取值从各 Logic 类的校验数组 / 字面量 / 拒绝文案里追溯，按 Portal 方法 → Logic 类逐层解析并按到达的类消歧，追不到就不写、不猜），343 个按名称人工写就（`typeIdentifier`、`chartName`、`pinName`、`sequenceIndex`、`archivePath`、`leftPath` / `rightPath`、`numbersJson`、`hostUrl`……）。schema `enum` 提示 67 → **185**（51 → 119 个工具）。
 - 无自身描述的参数 1392 → 894，且 894 个**全部**由词汇表覆盖——`tools/list` 与 `FindTools` 里没有一个参数再是空描述；`callDiscipline` 门禁继续只降不升。
@@ -111,7 +111,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.58] - 2026-09-21
 
-引擎 2.7.58.0（V20/V21 均重建），工具 **453**（+`GetRecipe`），默认 lite 59。详见 [v2.7.58](docs/releases/v2.7.58.md)。维护者 2026-09-21 明确：目标是**规范 AI 对所有工具的调用、不再试错**（不是教它写程序）——本版全部机制由引擎自动执行、对 453 个工具都生效。
+引擎 2.7.58.0（V20/V21 均重建），工具 **453**（+`GetRecipe`），默认 lite 59。详见 [v2.7.58](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.58.md)。维护者 2026-09-21 明确：目标是**规范 AI 对所有工具的调用、不再试错**（不是教它写程序）——本版全部机制由引擎自动执行、对 453 个工具都生效。
 
 - **参数合法值进 `inputSchema`（全部工具）**：注册时把每个参数描述里的文档备选值（`read | create | delete`、`a/b/c`、`value (None, Override)`）写成 `enum`，C# 默认值写成 `default`，人工示例里的值写成 `examples`；会校验 schema 的客户端在发出前就拒绝无效值，任何客户端都把精确选项给模型看。解析规则只认参数自己那句话里独立成段的列表（`kind=globaldb|fc`、`group/folder path`、引号里的正则、后一句的括号列表都不算——真机上曾误判 `password`、`promptAnswersJson`、`folderPath`），本版 67 个 enum 提示落在 51 个工具上，逐条核对过。
 - **失败自动预检（全部工具）**：任何调用失败（`isError` 或 `meta.success=false`，经 `CallTool` 时看内层结果）时，引擎把 `meta.preflight` 附进响应——缺参 / 未知与大小写错的参数名（给最接近的名字）/ 类型 / 不在文档备选值里（`allowedValues`）/ 未满足的前提 / 一条示例 / 下一步。AI 拿到失败的同时拿到改法，不必再调 `PreflightToolCall`，成功响应一字不改。
@@ -122,7 +122,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.57] - 2026-09-21
 
-引擎 2.7.57.0（V20/V21 均重建），工具 **452**（+`PreflightToolCall`、`CheckForUpdate`），默认 lite 58 项（两个新工具都在 L0）。详见 [v2.7.57](docs/releases/v2.7.57.md)。维护者 2026-09-21 定下的第二件事：更新器 + 规范 AI 调用；2.7.56 真机通过（`Connect` 多进程按名附加、不自启）。
+引擎 2.7.57.0（V20/V21 均重建），工具 **452**（+`PreflightToolCall`、`CheckForUpdate`），默认 lite 58 项（两个新工具都在 L0）。详见 [v2.7.57](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.57.md)。维护者 2026-09-21 定下的第二件事：更新器 + 规范 AI 调用；2.7.56 真机通过（`Connect` 多进程按名附加、不自启）。
 
 - **更新器 `scripts/operations/Update-Engine.ps1`**（随交付包）：在解压好的交付包里就地更新——读 `manifest/delivery.json` 的当前版本；**引擎（`TiaMcpServer.exe` / `TiaMcpConfigurator.exe`）在运行就拒绝并列出 pid，从不杀进程**（维护者要求"先关再更"，不做热更新）；从 GitHub Releases 取最新版（API 被限流时改读发布页的重定向与 expanded_assets 片段），或 `-ZipPath` 离线更新；下载 ZIP + `.sha256` 并校验（无 sidecar 需显式 `-SkipHashCheck`）；备份当前安装到 `.previous\<包名>\`（留两份），整体替换 `runtime\` / `manifest\`、覆盖其余文件；`-Check` 只比版本，`-Rollback` 换回上一版，`-Version vX.Y.Z` 指定版本，`-Force` 重装。本机在 2.7.55 的解压包上验证：离线更新到 2.7.56、回滚到 2.7.55、`-Check` 走发布页回退、伪 `TiaMcpServer.exe` 在跑时拒绝。
 - **`CheckForUpdate`**（只读，`[L0][Diagnostics][SESSION]`）：比较引擎版本与最新 Release，回报 ZIP 名 / 大小 / 下载地址 / `.sha256`、`installRoot`、`updaterScript` 与四步更新说明；API 限流时自动改读发布页；不改任何文件。
@@ -133,21 +133,21 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.56] - 2026-09-21
 
-引擎 2.7.56.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.56](docs/releases/v2.7.56.md)。2.7.55 部署后的收口结果与 `Connect` 的多进程修复。
+引擎 2.7.56.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.56](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.56.md)。2.7.55 部署后的收口结果与 `Connect` 的多进程修复。
 
 - **2.7.55 真机**：`RunPlcSimAdvancedTestScenario singleStep` PASSED 8/8、4/4——`operatingModeApplied SingleStep_C`、`cyclesStepped 5`（71 ms）、`Cycles` 304→309 恰好 +5、`Start=false` 后 2 周期不增，**在线族收口**；`SaveProject` 通过（`项目1` 含 `MCP_STD` + 程序、两台 CPU 的保护设置、监控表两行）。
 - **`Connect` 多进程缺陷（真机）**：引擎重启后调用 `Connect` 时虚拟机开着两个 TIA 进程（维护者的 `AutomaticDipCoatingMachine` pid 15100 与 `项目1` pid 4840），两次 30 s 附加都没答复，旧代码于是**启动了第三个空 TIA 实例**（pid 15748）并绑在上面；MCP 客户端早已超时，`GetState` 显示 `project '-'`，`AttachToOpenProject {projectName:"项目1"}` 才换回 4840。修：`ConnectPortal(projectName, allowStart, info)`——有进程时只附加：`projectName` 命中的进程优先（命中即停，不再逐个探测），否则第一个有工程 / 会话的，再否则第一个可附加的；全部附不上 → `PortalException` 逐进程说明（超时毫秒 / 异常文案）并提示"TIA 可能正弹 Openness 访问对话框 / 实例忙 / 重试 / `ListPortalProcessProjects` / `allowStart=true` 或 `ConnectIsolated`"，**不自启**；只有 `GetProcesses()` 为空（或 `allowStart=true` 且无可附加）才 `new TiaPortal`。每进程等待 20 s、总预算 45 s。`Connect` 工具新增 `projectName`（命中时同时记为期望工程）与 `allowStart`（默认 false），`Meta` 回报 `processCount` / `candidates` / `boundProcessId` / `startedNew` / `attachElapsedMs` / `warning`。纯逻辑 `ConnectLogic`（离线 +7 = 2218）。空实例仍没有工具能关（引擎不杀别人的进程），要在 TIA 机器上手动关。
 
 ## [2.7.55] - 2026-09-21
 
-引擎 2.7.55.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.55](docs/releases/v2.7.55.md)。2.7.54 部署后的在线族收尾。
+引擎 2.7.55.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.55](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.55.md)。2.7.54 部署后的在线族收尾。
 
 - **2.7.54 真机**：`RunPlcSimAdvancedTestScenario {mode:"singleStep"}` 的模式切换生效（`operatingModeApplied SingleStep_CP`，写 / 断言步之间实例 `Freeze`），Running 断言通过，但 `{cycles:5}` 后 `Cycles` 只从 303 到 304、整个场景 44 ms——手册 "SingleStep operating modes"：`RunToNextSyncPoint()` 只是解除冻结并立即返回，实例自己跑到下一个同步点才再次 `Freeze`，连发 5 次里 4 次落在还在跑的实例上。`UploadStationFromPlc {targetIpAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}`：接口去重生效（PN/IE `PLCSIM #1`；工程级提供者的三个模式是 MPI / PROFIBUS / PN/IE），项目级扫描把 Softbus 实例列为 `192.168.0.1`（虽已配置 192.168.0.3），预览通过（地址在 PLCSIM 接口上创建），真跑被 TIA 拒 "The selected object cannot be uploaded from the device."——从 PLCSIM Advanced 实例上载站是 TIA 侧不支持，设备数仍 5。`GoOnline MCP_PLC` 现在回报 "Connection to device cannot be established. Online: The connection to the target module cannot be established." 与 `onlineStateAfter Offline`（实例已改为 MCP_STD / 192.168.0.3，预期）。
 - **修单步场景**：`PlcSimAdvancedChannel.StepCycles` 每个周期先等 `OperatingState == Freeze`、`RunToNextSyncPoint()`、再等 `Freeze`（每周期 5 s 预算、2 ms 轮询；超时把步标失败并写明第几个同步点没到），`cyclesStepped` / `waitedMs` / `stateAfterSteps` 回报；`singleStep` 改为优先 `SingleStep_C`（只在周期控制点冻结——每周期一个同步点，`cycles:N` 恰好 N 个周期），其次 `SingleStep_CP`（读过程映像前多一个同步点）、`SingleStep`。离线 +1（2211）。
 
 ## [2.7.54] - 2026-09-21
 
-引擎 2.7.54.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.54](docs/releases/v2.7.54.md)。2.7.53 部署后**在线族在 PLCSIM Advanced 上全链走通**，三处小修。
+引擎 2.7.54.0（V20/V21 均重建），工具 450 不变，默认 lite 56 项不变。详见 [v2.7.54](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.54.md)。2.7.53 部署后**在线族在 PLCSIM Advanced 上全链走通**，三处小修。
 
 - **2.7.53 真机通过**：`ManagePlcProtection read` 报 `MCP_PLC` `NoAccess` / `WithoutPassword`；`setAccessLevel FullAccessIncludingFailsafe` 与 `protectMasterSecret` 读回一致；`CompileDevice MCP_PLC` 0 错 3 警。F-CPU 的 `DownloadToPlc` 被 TIA 拒 "Loading or overloading fail-safe data in Openness is not permitted."——Openness 不能下载故障安全数据，是官方规则，`MCP_PLC` 上的在线族到此为止。按维护者规则新建标准 CPU **`MCP_STD`**（CPU 1515-2 PN V2.9，`AddDeviceWithFallback` + `ConnectDeviceNodesToProfinetSubnet MCP_PN`，X1 192.168.0.3；TIA V21 新建默认同样 `NoAccess` + `WithoutPassword`）→ `setAccessLevel FullAccess` + `protectMasterSecret` → `CompileDevice` 0 错 → `DownloadToPlc {pgPcInterface:"PLCSIM", targetIpAddress:"192.168.0.1", masterSecretPassword}` **Success**（首次走 created 地址，`PlcMasterSecretPassword` 提示由 `masterSecretPassword` 应答；实例变成 CPU1515 "MCP_STD" 192.168.0.3 RUN）→ `GoOnline` **Online** → `GetOnlineState` Online → `CompareSoftwareToOnline` 0 差异 → SCL 外部源生成 `MCP_SimDB` / `MCP_SimLogic` / `Main`（`WritePlcSclSourceFile` + `ManagePlcExternalSources createFromFile / generateBlocks`；SCL 里 `Counter` 是保留字）→ 再次下载 Success（子网路由）→ `ReadPlcSimAdvancedTags` 列出 5 个 DB 标签并读值 → `WritePlcSimAdvancedTags` `Speed 12.5` 写回读 → `RunPlcSimAdvancedTestScenario`（default 模式）**PASSED** 6/6、2/2 断言 → `GoOffline`。`ReadPlcBlockFingerprints` 在 1515-2 PN V2.9 上同样 `FingerprintDataProvider` 为 null（TIA 侧）。
 - **修 `RunPlcSimAdvancedTestScenario singleStep`**：8.0 API 的 `EOperatingMode` 没有 `SingleStep`，只有 `SingleStep_C / _CT / _P / _CP / _CPT / _Bus` 与 `TimespanSynchronized_*`（手册 "EOperatingMode"）；`PlcSimAdvancedLogic.OperatingModeCandidates` 先试 `SingleStep_CP`（循环程序 + 过程映像，即旧的 SingleStep）再 `SingleStep_C` 再 `SingleStep`，`data.operatingModeApplied` 回报实际名。离线 +2（2210）。
@@ -156,7 +156,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.53] - 2026-09-21
 
-引擎 2.7.53.0（V20/V21 均重建），**工具 450**（新增 `ManagePlcProtection`、`CompileDevice`），默认 lite 56 项不变。详见 [v2.7.53](docs/releases/v2.7.53.md)。2.7.52 部署后的真机结果：在线族过了 TLS，卡在 F-CPU V2.9 的安全设置——本版补工具。
+引擎 2.7.53.0（V20/V21 均重建），**工具 450**（新增 `ManagePlcProtection`、`CompileDevice`），默认 lite 56 项不变。详见 [v2.7.53](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.53.md)。2.7.52 部署后的真机结果：在线族过了 TLS，卡在 F-CPU V2.9 的安全设置——本版补工具。
 
 - **2.7.52 真机**：`GoOnline {ipAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}` 的 `meta.tlsVerification` 记录 `plcName MCP_PLC`、`verificationInfo "certificate not matching"`、`NonVerified → Trusted`——TLS 提示确实经 `OnlineLegitimation` 来、答完 TIA 记住（第二次不再问）；`GoOnline` 仍抛无正文的异常，但 `GetOnlineState` 报 `Incompatible`（"online but firmware/config mismatch"）：连接已建立，只是 PLCSIM 实例还没下载过。`DownloadToPlc` 同路由报 "硬件配置编译完成，但出现错误"——用反射 `Device.GetService<ICompilable>().Compile()` 看到 3 个错误：访问级别高于"完全访问"却没设完全访问密码（`PlcProtectionAccessLevel = NoAccess`）、"Password for confidential PLC configuration data is not configured"、"The PLC communication certificate cannot be configured without the password"。这两项设置此前没有任何工具能改，反射桥也传不了枚举 / `SecureString`。
 - **新增 `ManagePlcProtection`**（官方页 "Access level setting" / "Managing PLC Master Secret in PLCs"）：CPU 设备项上的 `PlcAccessLevelProvider`（`read` 回报 `PlcProtectionAccessLevel`；`setAccessLevel` FullAccess / ReadAccess / HMIAccess / NoAccess / FullAccessIncludingFailsafe；`setAccessPassword` / `resetAccessPassword`，只对比所选级别宽松的级别）与 `PlcMasterSecretConfigurator`（`read` 回报 `MasterSecretConfiguration` None / WithoutPassword / WithPassword / WithPasswordAllDataProtection；`protectMasterSecret` / `changeMasterSecret` / `unprotectMasterSecret` / `resetMasterSecret`；V21 另有 `protectAllConfiguration` / `unprotectAllConfiguration`），`itemPathJson []` 自动找站的 CPU 项，密码走 `SecureString` 不回显，改后读回状态；默认预览，真跑要 `dryRun=false` + `confirmChange=true`。纯逻辑 `PlcProtectionLogic`（离线 +9 = 2208）。
@@ -166,7 +166,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.52] - 2026-09-21
 
-引擎 2.7.52.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.52](docs/releases/v2.7.52.md)。2.7.51 部署后的真机结果与在线族的 TLS 信任修复。
+引擎 2.7.52.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.52](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.52.md)。2.7.51 部署后的真机结果与在线族的 TLS 信任修复。
 
 - **2.7.51 真机通过**：`SetWatchTableModifyValue` 绝对地址行 appended（TIA 定 `DisplayFormat` Bool）、符号行 updated（保留 `%I0.0`），`readbackVerified` 都 true，`ManagePlcTableEntries read` 核对 2 行——`ModifyIntention` 读回仍 false：TIA 不按 `ModifyValue` 推导，它是行的"修改"勾选框且 Openness 只读，经 API 只能预置值和触发器。`ReadPlcSimAdvancedInstances` 报 `api.networkMode=TCPIPSingleAdapter`、`managerMembers='SimulationRuntimeManager.NetworkMode {get;set}'`；`powerOff → unregister → register … Softbus` 经全局网络模式通过（`TCPIPSingleAdapter → Softbus`，实例读回 Softbus，`powerOn` 后 `controllerIP 192.168.0.1`）；`ReadTransferRoutes` 只剩 PC 接口 "PLCSIM"（两块物理网卡不再列出），`CheckDownloadReadiness` Ready，`ScanAccessibleDevices` 在 PLCSIM 接口上看到 `S7-1500 CPU:192.168.0.1`——PG 侧不再需要网卡 IP。
 - **在线族的真正阻塞（真机 + 官方页）**：`GoOnline {ipAddress:"192.168.0.1", pgPcInterface:"PLCSIM"}` 报 "Connection to device cannot be established. The device is not trusted. Please check the certificate."，`DownloadToPlc` 同路由报 "连接到模块 MCP_PLC 失败"——S7-1500 FW ≥ 2.9（含 PLCSIM Advanced）首次连接会在 `ConnectionConfiguration.OnlineLegitimation` 上抛 `TlsVerificationConfiguration`，官方答法是 `CurrentSelection = Trusted`；引擎的处理器只在给了密码时才订阅，所以提示从没被应答。现在 `GoOnline` / `DownloadToPlc` / `UploadStationFromPlc` / `UploadDeviceParameters` / `ReadPlcBlockFingerprints` 总是订阅 `OnlineLegitimation`，新参数 `trustDeviceCertificate`（默认 true）把提示答成 `Trusted`（与 TIA 界面里的同一个提示；false 时 TIA 拒绝连接），`Meta.tlsVerification` 记录 `plcName` / `verificationInfo` / 前后选择。纯逻辑 `BaseLeftoversLogic.TlsSelectionToApply`（离线 +2 = 2199）。
@@ -174,7 +174,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.51] - 2026-09-21
 
-引擎 2.7.51.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.51](docs/releases/v2.7.51.md)。2.7.50 部署后的真机结果与三处再修。
+引擎 2.7.51.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.51](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.51.md)。2.7.50 部署后的真机结果与三处再修。
 
 - **2.7.50 真机通过**：`ManagePlcTableEntries deleteTable` 把根级的 `MCP_WT_1` … `MCP_WT_5` 逐张删掉并读回缺席（`GetPlcWatchTables` 只剩 `MCP_W/MCP_WT`），工程已保存；`ManagePlcSimAdvancedInstance register / powerOn` 与 `ScanAccessibleDevices`（虚拟网卡上按 MAC 看到 `MCP_SIM`）通过；`ReadPlcSimAdvancedInstances memberFilter` 列出了实例对象的真实成员。
 - **监控表行（真机）**：SimaticML 往返的 `Import(Override)` 被 TIA 拒 "Cannot update the 'PlcWatchTableEntry' object … 'set_ModifyIntention' is not supported … The property 'ModifyIntention' is read-only"——`ModifyIntention` 由 TIA 自己按 `ModifyValue` 推导，不能写。`WatchTableEntryXml.Upsert` 不再写它，并在导入前把导出带出来的 `ModifyIntention` 从每一行剥掉（`StripReadOnlyAttributes`）。离线新增 1 项。
@@ -184,7 +184,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.50] - 2026-09-21
 
-引擎 2.7.50.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.50](docs/releases/v2.7.50.md)。2.7.49 部署后的真机结果与两处再修。
+引擎 2.7.50.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.50](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.50.md)。2.7.49 部署后的真机结果与两处再修。
 
 - **2.7.49 真机**：`DownloadToPlc` / `GoOnline` 的路由选择通过（`-> address 192.168.0.1 (subnet MCP_PN)`），TIA 真正发起下载 / 连接，失败在 PG 侧（虚拟网卡 "Siemens PLCSIM Virtual Ethernet Adapter" 没有 IP："连接到模块 MCP_PLC 失败" / "The connection partner is not responding"）——环境项，给网卡配 192.168.0.x 后重跑；`GetTechnologyObjects` 递归生效（MCP_TO 里的 PID 列出）；`WritePlcSimAdvancedTags` / `RunPlcSimAdvancedTestScenario` 的失败如实回报；powerOff 文案正确。
 - **监控表条目（真机 + PublicAPI）**：2.7.49 的 `Entries.Create()` + `SetAttribute` 也不行——`Create()` 只建注释行（`PlcTableCommentEntry`），`Address` / `Name` / `ModifyValue` 对它都 "not supported"；类型化 API 根本建不了带变量的行。而且旧代码只在根级找表，`MCP_WT` 在 `MCP_W` 文件夹里，于是每次调用都新建一张（真机留下 `MCP_WT_1` … `MCP_WT_5`）。`SetWatchTableModifyValue` 现在走官方 SimaticML 往返：`PlcWatchTable.Export` → XML 里加 / 改 `PlcWatchTableEntry` 行（绝对地址进 `Address`，符号按 TIA 的写法逐段加引号进 `Name`）→ `PlcWatchTableComposition.Import(ImportOptions.Override)` 回它自己的组 → 类型化读回（`meta.after` / `readbackVerified`）；表按组路径或全树查找，多处同名拒绝。`ManagePlcTableEntries` 新增 `deleteTable`（此前没有任何工具能删监控表）。离线新增 12 项测试（2191）。
@@ -193,7 +193,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.49] - 2026-09-21
 
-引擎 2.7.49.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.49](docs/releases/v2.7.49.md)。2.7.48 部署后在 `项目1` 跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族——在线族被两处缺陷挡住，本版修。
+引擎 2.7.49.0（V20/V21 均重建），工具 448 不变，默认 lite 56 项不变。详见 [v2.7.49](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.49.md)。2.7.48 部署后在 `项目1` 跑了 OPC UA 清理、PID 工艺对象往返和对 PLCSIM Advanced 实例 `MCP_SIM` 的在线族——在线族被两处缺陷挡住，本版修。
 
 - **2.7.48 真机通过**：`ManageOpcUaInterface delete` 删掉空接口后 `MCP_PLC` 编译 Success；`PID_Compact 2.3` 的 `ExportTechnologyObject` / `ExportTechnologyObjectsToDirectory` / 删除 / `ImportTechnologyObject`（进 MCP_TO 文件夹）/ `ImportTechnologyObjectsFromDirectory` 全部通过（`TO_SpeedAxis 5.0` 没有驱动报文不能编译一致，TIA 按规则拒绝导出）；`ScanAccessibleDevices` 在 PLCSIM 虚拟网卡上按 MAC 找到实例；`ManagePlcDataBlockSnapshot createSnapshot / exportSnapshot`、`GetOnlineState` / `GoOffline` / `GoOfflineAll` / `CheckDownloadReadiness` 通过。
 - **下载 / 上线路由（真机）**：`DownloadToPlc {targetIpAddress:"192.168.0.1"}` 报 "No download route reaches"——路由树里 CPU 的配置 IP 只在 `ConfigurationPcInterface.Subnets["MCP_PN"].Addresses` 下（目标接口 `1 X1` 没有地址），而引擎只查 `TargetInterfaces[].Addresses`；`GoOnline` 从不套用路由（`GoOnline()` 用 TIA 上次的路由），首次上线永远 "The connection cannot be established"。现在：地址按目标接口 → 子网 / 网关 查找，都没有时按官方 `ConfigurationAddressComposition.Create(ip)` 在目标接口上建（首次下载到 PLCSIM Advanced 实例 / 出厂 CPU）并走 5 参 `Download(IConfiguration, ConfigurationAddress, …)`；`GoOnline` 新增 `pgPcInterface`，选路由后走 `GoOnline(ConfigurationAddress)`（V20 只有 `GoOnline()`，先 `ApplyConfiguration(address)`）；`ReadPlcBlockFingerprints` / `UploadDeviceParameters` / `UploadStationFromPlc` 同样接受子网 / 网关地址，站上载对扫描到的 IP / MAC 也能建地址。
@@ -203,7 +203,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.48] - 2026-09-21
 
-引擎 2.7.48.0（V20/V21 均重建），**工具 448**（新增 `ManageOpcUaInterface`），默认 lite 56 项不变。详见 [v2.7.48](docs/releases/v2.7.48.md)。2.7.46 / 2.7.47 部署后在 `项目1` 重跑台账 🔁 行与刻意绕开的项目的结果。
+引擎 2.7.48.0（V20/V21 均重建），**工具 448**（新增 `ManageOpcUaInterface`），默认 lite 56 项不变。详见 [v2.7.48](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.48.md)。2.7.46 / 2.7.47 部署后在 `项目1` 重跑台账 🔁 行与刻意绕开的项目的结果。
 
 - **重跑结果**：45 行 🔁 里 43 行转为通过（标签注释、桥接导出、真实文件路径、DB 编号、交叉引用、报警类 .DAT、ProDiag、系统诊断 .dat、PROFINET 子网连接 PLC↔TP700、导轨插 DI16 与地址改写、端口互连、属性多备选、经典变量表递归、`ImportHmiScreen` 剥属性后导入成功、全局库、`ImportOpcUaInterface` 诚实报错、安全自检、DCC 默认值、Unified 面板旧版本守卫……）；宽松绑定四类写法全部生效。
 - **刻意绕开的项也跑了**：`SaveAsProject` / `RetrieveProjectArchive` / `ScaffoldProject`（真建工程，7 步全过）/ `CreateProject` 通过；工艺对象 `PID_Compact 2.3`、`TO_SpeedAxis 5.0`、`TO_PositioningAxis 5.0` 都能建——**crash ⑨ 只在 `TO_PositioningAxis 6.0`**（CPU 不提供的版本不被干净拒绝而是退出），描述改为"用官方表的最低版本"；`ReadMotionAxisConfiguration` / `ManageMotionAxis` / `ConfigureMotionHardwareConnection` 在自建轴上通过。
@@ -214,13 +214,13 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.47] - 2026-09-20
 
-引擎 2.7.47.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.47](docs/releases/v2.7.47.md)。针对维护者反映的"AI 调用工具反复出现格式错误"：`CallTool` 桥接做宽松绑定。
+引擎 2.7.47.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.47](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.47.md)。针对维护者反映的"AI 调用工具反复出现格式错误"：`CallTool` 桥接做宽松绑定。
 
 - **宽松绑定（CallTool 桥接）**：`argumentsJson` 既可是 JSON 字符串也可直接是对象；`*Json` / 字符串参数给成对象或数组时自动转成其 JSON 文本；数字 / 布尔给成字符串（或 0/1）时自动解析；字符串参数给成数字时取其文本；`action` / `kind` 这类枚举值大小写不对时按拒绝信息里列出的合法值改成规范拼写重试一次；所有规范化都在 `Meta.bridgeNormalizedArguments` 里回报。离线新增 5 项测试（2163）。
 
 ## [2.7.46] - 2026-09-20
 
-引擎 2.7.46.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.46](docs/releases/v2.7.46.md)。**全部 447 个工具在自建设备的空工程 `项目1` 上各跑了一遍**（逐工具台账：[真机台账](docs/reference/real-machine-ledger.md)），一天暴露 23 处缺陷与两个新的 TIA 退出点，全部在本版修掉或守住。
+引擎 2.7.46.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.46](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.46.md)。**全部 447 个工具在自建设备的空工程 `项目1` 上各跑了一遍**（逐工具台账：[真机台账](docs/reference/real-machine-ledger.md)），一天暴露 23 处缺陷与两个新的 TIA 退出点，全部在本版修掉或守住。
 
 - **修复（真机发现，23 处）**：`ManagePlcTagDefinition` 注释（MultilingualText 按语言写）；`CallTool` 桥接调不到 `ExportBlocks` / `ExportTypes`（async 工具的 server/context 参数）、`""` 视为关键字默认值、数组参数接受 JSON 字符串；`ExportBlock` / `ExportType` 回报真实文件；`CreatePlcInstanceDb` 自动编号不再生成 DB0；`GetCrossReferences` 类型化并回报原因；报警类 `.DAT`、文本列表 / 实例文本类型化导出导入；ProDiag 导出不再解析 importOptions；HW 通信连接改从 `CommunicationManagement` 取；PROFINET 子网连接递归扫描面板接口；`PlugDeviceItem` 读回递归；精确硬件路径回退到 `Items`；`DumpDeviceAttributes` 多备选过滤；经典 HMI 变量表递归用户文件夹、未知表 NotFound；`ImportHmiScreen` 剥掉面板版本不支持的属性重试；`ManageGlobalLibrary` 空 openMode；探针不再关掉已打开的库；`ImportOpcUaInterface` 不再假成功；安全自检误报；DCC 两个工具的 `driveObjectNumber` 默认值；`GeneratePlcLoadableFile` / `ManageTechnologyObject` / `ExchangeSystemDiagnosticsSettings` 的错误信息。
 - **守卫（TIA 退出点 ⑧ ⑨）**：`AddDevice` / 目录探针拒绝版本主号不等于 Portal 主版本的 WinCC Unified 面板（`/20.0.0.0` 在 V21 上让 TIA 退出）；`ManageTechnologyObject create` 描述标明 `TO_PositioningAxis 6.0` 在 1515F-2 PN V2.9 上让 TIA 退出，建议导入 XML。
@@ -228,7 +228,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.45] - 2026-09-20
 
-引擎 2.7.45.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.45](docs/releases/v2.7.45.md)。在维护者新建的空工程上用自建的临时 S120 首次真机跑通 DCC 全族，顺带修五处。
+引擎 2.7.45.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.45](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.45.md)。在维护者新建的空工程上用自建的临时 S120 首次真机跑通 DCC 全族，顺带修五处。
 
 - **修复（会话绑定）**：`GetState` 的"取第一个可访问工程"重绑现在尊重显式绑定——`AttachToOpenProject` 之后只接受同名工程，绝不静默切到另一 TIA 实例的工程（真机：第二个实例里打开维护者工程后，引擎从 `项目1` 切到 `AutomaticDipCoatingMachine`，临时面板建进了维护者的工程）。
 - **新增参数（硬件）**：`PlugDeviceItem` / `GetDevicePlugLocations` 的 `plugOnDevice=true` 以 Device（站）本身为宿主——Startdrive 驱动组件（电机模块，其下电机 / 编码器）只能这样插（官方 "Creating a drive component"，真机 `Device.CanPlugNew("OrderNumber:6SLxx2x-1xxxx-xxxx", name, 65535)` 为 true，设备项上全为 false）；槽位 65535（任意）插入后按新对象名读回并回报真实位置（此前报"未验证"）。
@@ -238,14 +238,14 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.44] - 2026-09-20
 
-引擎 2.7.44.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.44](docs/releases/v2.7.44.md)。2.7.43 真机重跑首次看到 CFC 空导出的真实结构，修正预检解析器。
+引擎 2.7.44.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.44](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.44.md)。2.7.43 真机重跑首次看到 CFC 空导出的真实结构，修正预检解析器。
 
 - **修复（CFC 预检）**：空导出是 `Document > DocumentInfo / FunctionChartsFolder(Name="Charts") > ObjectList / UsedAlarmClasses`，2.7.43 的解析器把文件夹元素当成一张图表（清单 `["Charts"]`），于是没有图表的 PLC 上 `exportInstructionData` 不会被"无图表"分支拒绝（未跑，否则会再让 TIA 退出）；2.7.44 只认名字含 Chart、且不含 Folder / List、不以 s 结尾的元素（`CfcLogic.IsChartElement`），离线测试改用真实的导出形状。
 - **验证**：离线 2144 项（新增 1 项）；形状检查 V20 2785 / V21 3073 不变。真实工程（2.7.43 引擎）：Test Suite 空组拒绝、条件 NotRelevant 引擎侧拒绝（对象未动）、合法条件 update、`changeEvaluationDevice` 驱动拒绝、CFC 未知图表 NotFound 全部通过，TIA 未退出。真实工程（2.7.44 引擎，同日）：CFC 预检对没有图表的 PLC 回 InvalidState（`read MCP_NONE` / `exportInstructionData` / `selectiveExport`），`export` 附 `inventory`（0 张图表），TIA 未退出。
 
 ## [2.7.43] - 2026-09-20
 
-引擎 2.7.43.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.43](docs/releases/v2.7.43.md)。2.7.42 真机重跑让 TIA Portal V21 退出三次（CFC 两次、Safety Validation 一次），本版加守卫；引擎本身三次都活着。
+引擎 2.7.43.0（V20/V21 均重建），工具 447 不变，默认 lite 56 项不变。详见 [v2.7.43](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.43.md)。2.7.42 真机重跑让 TIA Portal V21 退出三次（CFC 两次、Safety Validation 一次），本版加守卫；引擎本身三次都活着。
 
 - **守卫（CFC）**：`ExchangeCfcCharts selectiveExport / exportInstructionData` 与 `ManageCfcChartProtection` 全部动作先做 `CompleteExport` 预检（临时 ZIP，解析 `Data.xml` 里带 `Name` 的 `*Chart` 元素得到图表清单，`meta.preflight` 报图表数 / 名字 / ZIP 条目 / XML 元素名），PLC 没有图表回 InvalidState、图表名不存在回 NotFound——真机上 `GetChartProtection("MCP_NONE")` 与 `ExportInstructionData` 在没有 CFC 图表文件夹的 1510SP F 上各让 TIA 退出一次；`skipChartPreflight=true` 可跳过（自担风险）；`export` 结果附带解析出的 `inventory`。两个 csproj 引用 `System.IO.Compression`。
 - **守卫（Test Suite）**：`RunTestSuiteCase runAll` 对空的系统组回 InvalidState（真机：application 空组 `TestCaseExecutor.Run` 在 TIA 内抛 NullReferenceException，system 空组回 "No test case(s) in the selected project"，只有样式指南空组回 Success）。
@@ -254,7 +254,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.42] - 2026-09-20
 
-引擎 2.7.42.0（V20/V21 均重建），工具 437 → 447，默认 lite 56 项不变。详见 [v2.7.42](docs/releases/v2.7.42.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-③：SafetyValidation + Test Suite + Teamcenter + CFC 选件包——**最后 25 / 122 个功能类型缺口归零，阶段 6 收口**（SafetyValidation 与 Teamcenter 无许可 / 无环境，只有形状检查）。
+引擎 2.7.42.0（V20/V21 均重建），工具 437 → 447，默认 lite 56 项不变。详见 [v2.7.42](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.42.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-③：SafetyValidation + Test Suite + Teamcenter + CFC 选件包——**最后 25 / 122 个功能类型缺口归零，阶段 6 收口**（SafetyValidation 与 Teamcenter 无许可 / 无环境，只有形状检查）。
 
 - **新增（Safety Validation Assistant，V21）**：`ReadSafetyActivationTests`（激活测试 / 用户组 / 评估设备、单个测试的可用设备与 `TestValidity`）、`ManageSafetyActivationTest`（create / createFromTest / createFromMasterCopy / rename / setAuthor / changeEvaluationDevice / checkValidity / generateReport（.xlsx）/ export / import / delete）、`ManageSafetyActivationTestGroup`、`ManageSafetyFunction`（create / createFrom / update / resetTestResult / checkValidity / setTrace / checkTraceValidity / export / import / delete）、`ManageSafetyFunctionCondition`（按 `Conditions` 位置：create / update / checkValidity / delete）；V20 全部回 NotSupportedOnVersion。
 - **类型化改造（Test Suite）**：`ReadTestSuiteCases` / `ExchangeTestSuiteCase` / `RunTestSuiteCase` 改为强类型（`RuleSet` / `TestCase` / `SystemTestCase` / `ApplicationTestSet`，三类 `LoadFromFile` 的 `RSLoadOptions` / `TCLoadOptions` / `TSLoadOptions`，执行器全部 `Run` 重载，`TestResultsMessage` 递归读取），新增 `kind` testSet、`importTestSets`、`namesJson` / `runAll`；新增 `ManageTestSuiteCase`（rename / setScope（样式指南 `scopeJson` 对象、应用测试 `PlcSoftware` + 实例 + `ExecutionMode`、系统测试 OPC UA 地址 + 接口类型 + 目录）/ copyScope / createFromMasterCopy / showInEditor）。
@@ -265,7 +265,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.41] - 2026-09-20
 
-引擎 2.7.41.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.41](docs/releases/v2.7.41.md)。2.7.40 真机：TIA Portal 退出后 MCP 引擎进程也随之崩溃（退出码 0xE0434352，"Exception.ToString() 失败"），本版让引擎活下来并再加一处 Startdrive 守卫。
+引擎 2.7.41.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.41](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.41.md)。2.7.40 真机：TIA Portal 退出后 MCP 引擎进程也随之崩溃（退出码 0xE0434352，"Exception.ToString() 失败"），本版让引擎活下来并再加一处 Startdrive 守卫。
 
 - **引擎存活**：`App.config` 启用 `legacyUnhandledExceptionPolicy`（Openness 后台线程在 TIA 退出后抛出的异常不再终止进程），`Program.cs` 以不调用 `ToString()` / `Message` 优先的方式把未处理异常与未观察的任务异常记进诊断日志；`GetState` 在绑定的 TIA 进程已不在时直接回 `isConnected=false` + `portalProcess.processAlive=false`，不再抛 "disposed"。
 - **守卫（Startdrive）**：`ManageDriveTelegrams` 对没有任何报文（未联网）的驱动对象拒绝 check / insert / erase（新建 G120C 上 `CanInsertAdditionalTelegram` 抛 "Invalid operation"、`CanInsertTelegram(700, SupplementaryTelegram)` 让 TIA 退出）。
@@ -274,7 +274,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.40] - 2026-09-20
 
-引擎 2.7.40.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.40](docs/releases/v2.7.40.md)。2.7.39 真机重跑暴露了三处让 TIA Portal V21 整个退出的 Startdrive 调用（G120C），本版加守卫与诊断。
+引擎 2.7.40.0（V20/V21 均重建），工具 437 不变，默认 lite 56 项不变。详见 [v2.7.40](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.40.md)。2.7.39 真机重跑暴露了三处让 TIA Portal V21 整个退出的 Startdrive 调用（G120C），本版加守卫与诊断。
 
 - **守卫（Startdrive）**：`ManageDriveTelegrams` 在驱动对象已有主报文时不再调用 `CanInsertMainTelegram` / `InsertMainTelegram`（真机上 TIA 在此崩溃；主报文只在 G220 上可增删），`check` 回 `mainTelegramPresent`，`insert` 明确拒绝；`ReadDriveParameters` / `ReadOnlineDriveParameters` 新增 `includeValue`（默认 true），`Value` 改为最后读且可关闭——先读元数据再决定是否读值（真机上读 `r2139` 与新建驱动上未接线的 `p840[0]` 的值让 TIA 退出）；位参数名（`r722.0`）经父参数 `Bits` 解析（`Find` 对点名回 null），`ManageStartdriveParameter` 的读写与 BICO 源同样支持。
 - **诊断**：引擎记住所绑定的 TIA Portal 进程 id；`GetState` 的 `hmiReadHealth.portalProcess`、连接失败保护的记录与 `GetState` 失败文案都报告该进程是否还在（`processAlive=false` 时直接说"TIA Portal 进程已不在，重启并重新打开工程后 AttachToOpenProject"），不再让人猜"disposed"到底是句柄陈旧还是进程没了。
@@ -283,7 +283,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.39] - 2026-09-19
 
-引擎 2.7.39.0（V20/V21 均重建），工具 421 → 437，默认 lite 56 项不变。详见 [v2.7.39](docs/releases/v2.7.39.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-②：Startdrive + DCC 选件包——**Startdrive 34 / 117 与 DCC 13 / 68 功能类型缺口归零**（形状检查；虚拟机装有 Startdrive Advanced + DCC，部署后真机验证）。
+引擎 2.7.39.0（V20/V21 均重建），工具 421 → 437，默认 lite 56 项不变。详见 [v2.7.39](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.39.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-②：Startdrive + DCC 选件包——**Startdrive 34 / 117 与 DCC 13 / 68 功能类型缺口归零**（形状检查；虚拟机装有 Startdrive Advanced + DCC，部署后真机验证）。
 
 - **修复（2.7.38 真机）**：类型化规则工具 `ManageSivarcRule` 改名 `ManageSivarcTableRule`（`CallTool` 的工具映射不分大小写，被旧工具 `ManageSiVArcRule` 遮蔽，lite 模式下不可达），`Check-DeadToolReferences.py` 新增"工具名不分大小写唯一"闸门；`GenerateSiVArc` 改传 PLC 设备名（`Sivarc.Generate` 的 `plcs` 是设备名，真机报 "PLC device '+S1-K1' not found"）；通用 `ManageSiVArcRule delete` 后从锚点重导航再核对（旧组合代理抛 `EngineeringObjectDisposedException`）；`Probe-McpServer.py` 打印 JSON-RPC 错误。
 - **新增（Startdrive）**：`ReadDriveObjects`（`DriveObjectContainer` 驱动对象 + 报文 + 功能接口视图 + 工艺扩展 + DCC 摘要 + `ModuleAccessPoint` / V21 `DriveItemHardwareModule`）、`ReadDriveParameters`（`ReadParameters` / `Parameters` 按名 / 按号 / 分页，BICO 源、位、枚举）、`ManageDriveTelegrams`（Can* / Insert* / Erase / ChangeSize / TelegramNumber、V21 SDR 接口与 V20 基接口的 `Connect(Telegram)`）、`ManageDriveFunctions`（驱动对象类型、激活、Function in Use、调试、安全校验和、电机 / 编码器硬件投影与配置条目）、`ManageDriveSecurity`（UMAC / DDE）、`ManageTechnologyExtensions`（驱动对象的扩展与门户的安装包）、`ManageDriveHardwareModule`（V21）、`ManageDriveSafetyAcceptanceTest`（V21）、`ReadOnlineDriveParameters`（ONLINE）、`ManageOnlineDriveFunctions`（ONLINE-WRITE：恢复出厂 / RAM→ROM / 激活）；`ManageStartdriveParameter` 类型化改造（新增 `driveObjectIndex`——G120C 上 `DriveObjectNumber` 不可读——与 BICO 写入）；Startdrive 下载 / 上载提示类型化。
@@ -293,7 +293,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.38] - 2026-09-19
 
-引擎 2.7.38.0（V20/V21 均重建），工具 413 → 421，默认 lite 56 项不变。详见 [v2.7.38](docs/releases/v2.7.38.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-①：SiVArc 选件包——**SiVArc 功能类型缺口 33 / 198 归零**（发布时按形状检查；部署后发现虚拟机装有 SiVArc 并完成真机验证）。
+引擎 2.7.38.0（V20/V21 均重建），工具 413 → 421，默认 lite 56 项不变。详见 [v2.7.38](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.38.md)。"官方 Openness API 全量对齐"阶段 6 ⑥-①：SiVArc 选件包——**SiVArc 功能类型缺口 33 / 198 归零**（发布时按形状检查；部署后发现虚拟机装有 SiVArc 并完成真机验证）。
 
 - **新增**：`ReadSivarcRuleTree`（六个规则族的类型化文件夹 / 表 / 组 / 规则层次）、`ManageSivarcRuleContainer`（规则文件夹与规则表，含 `CreateFrom(*RuleTableTypeVersion)`）、`ManageSivarcRule`（规则与规则组的 create / createFromMasterCopy / update / delete，类型化属性、库对象与 PLC 块引用、PLC / HMI 设备列）、`ReadSivarcBlockDefinitions` / `ManageSivarcBlockDefinition`（`SivarcDataProvider` 的变量 / 文本定义与 V21 变量成员设置）、`ResolveSivarcExpression`（`ExpressionResolver`）、`ManageSivarcScreenLayout`（V21 `LayoutData`）、`UpgradeSivarcDefinitions`（`SivarcDefinitionsUpgrader`）。类型化改造：`GenerateSiVArc`（类型化 `Sivarc.Generate`、多设备重载、`SivarcGenerationResult` 与递归反馈消息）、`ReadSiVArcRules` / `ManageSiVArcRule` 锚点、`ReadLibraryType typeKind` 新增 `hmiFaceplate` / `hmiVbScript` / `hmiCScript` / `unifiedScriptModule` / `sivarc*` / `dccBlockType`。
 - **审计**：有专用引用 505 → 573，完全未触及 322 → 255，未封装功能类型 107 / 515 → 72 / 307（SiVArc 33 / 198 → 0 / 0；SafetyValidation 9 / 43 → 8 / 34 只是 `Condition` 记号的词法误判）。
@@ -301,7 +301,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.37] - 2026-09-19
 
-引擎 2.7.37.0（V20/V21 均重建），工具 409 → 413，默认 lite 56 项不变。详见 [v2.7.37](docs/releases/v2.7.37.md)。"官方 Openness API 全量对齐"阶段 5：经典 WinCC 文件夹层次——**经典 WinCC 与 WinCC.Extension 的功能类型缺口归零，核心程序集全部收口**。
+引擎 2.7.37.0（V20/V21 均重建），工具 409 → 413，默认 lite 56 项不变。详见 [v2.7.37](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.37.md)。"官方 Openness API 全量对齐"阶段 5：经典 WinCC 文件夹层次——**经典 WinCC 与 WinCC.Extension 的功能类型缺口归零，核心程序集全部收口**。
 
 - **新增**：`ReadClassicHmiScreenTree`（`ScreenSystemFolder` / `ScreenPopupSystemFolder` / `ScreenTemplateSystemFolder` / `ScreenSlideinSystemFolder` 及用户文件夹树、`ScreenOverview` / `ScreenGlobalElements`）、`ManageClassicHmiScreenObject`（`ScreenPopup` / `ScreenTemplate` / `ScreenSlidein` / `ScreenOverview` / `ScreenGlobalElements` 的读 / 导出 / 导入 / 删除）、`ManageClassicHmiFolder`（画面 / 弹出 / 模板 / 变量 / 脚本用户文件夹的读建删）、`ManageClassicHmiGraphic`（V21 `GraphicsProvider` 的 `MultiLingualGraphic`）。类型化改造：`ReadClassicHmiScripts` / `ManageClassicHmiScript`（`VBScriptSystemFolder` / `VBScriptUserFolder` / `VBScript`）、`ReadLibraryType typeKind`（四个经典 HMI 库类型子类）、`EngineeringScalarProperties.Json` 的引擎侧值渲染钩子（`ConstValue` / `NullableDateTime`）。
 - **审计**：有专用引用 469 → 505，完全未触及 357 → 322，未封装功能类型 133 / 585 → 107 / 515（经典 WinCC 24 / 59 → 0 / 0，WinCC.Extension 2 / 11 → 0 / 0；只剩选件包）。
@@ -309,34 +309,34 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.36] - 2026-09-19
 
-引擎 2.7.36.0（V20/V21 均重建），工具 408 → 409，默认 lite 56 项不变。详见 [v2.7.36](docs/releases/v2.7.36.md)。2.7.35 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-③：工艺对象映射——**`Siemens.Engineering.Step7.dll` 的功能类型缺口归零，阶段 4 收口**。
+引擎 2.7.36.0（V20/V21 均重建），工具 408 → 409，默认 lite 56 项不变。详见 [v2.7.36](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.36.md)。2.7.35 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-③：工艺对象映射——**`Siemens.Engineering.Step7.dll` 的功能类型缺口归零，阶段 4 收口**。
 
 - **修复（2.7.35 真机）**：`ManagePlcTableEntries createComment` 后从监控表重新导航计数（旧组合代理 `Count` 陈旧）。
 - **新增**：`ReadTechnologyObjectTree`（`TechnologicalInstanceDBGroup` 树 + `TechnologicalParameter` 行 + 类型化 Motion / Ident 视图）。类型化改造：`ReadMotionAxisConfiguration`（`typed` 视图）、`ManageMotionAxis`（`TechnologicalInstanceDBAssociation`、`TOMapping` / `DBMemberMapping`、`IdentTechnologicalObjectProvider`、`AxisEncoderHardwareConnectionInterface` / `TorqueHardwareConnectionInterface` / 测量输入 / 输出凸轮的 `Connect` / `Disconnect`，新增 `Connect(Channel)` 目标）、`ManageTechnologyObject`（`TechnologicalInstanceDBComposition.Create`、`TechnologicalParameterComposition.Find`）、`ConfigureMotionHardwareConnection`（类型化提供者）。
 - **审计**：有专用引用 451 → 469，完全未触及 370 → 357，未封装功能类型 139 / 637 → 133 / 585（**Step7 5 / 42 → 0 / 0**）。
-- **验证**：离线 1836 项（新增 11 项）；形状检查 V20 1879 / V21 2045（新增 95 / 116 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.36 真机结果](docs/releases/v2.7.36.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：临时建 `TO_SpeedAxis` V9.0 后，类型化树、42 个参数、执行器 / 扭矩接口行、`Connect(DeviceItem)` 到达原生门控（驱动无地址）、通道目标门控、`Disconnect`、删除，以及注释行计数修复全部通过。
+- **验证**：离线 1836 项（新增 11 项）；形状检查 V20 1879 / V21 2045（新增 95 / 116 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.36 真机结果](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.36.md)）：临时建 `TO_SpeedAxis` V9.0 后，类型化树、42 个参数、执行器 / 扭矩接口行、`Connect(DeviceItem)` 到达原生门控（驱动无地址）、通道目标门控、`Disconnect`、删除，以及注释行计数修复全部通过。
 
 ## [2.7.35] - 2026-09-19
 
-引擎 2.7.35.0（V20/V21 均重建），工具 402 → 408，默认 lite 56 项不变。详见 [v2.7.35](docs/releases/v2.7.35.md)。2.7.34 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-②：Step7 收尾。
+引擎 2.7.35.0（V20/V21 均重建），工具 402 → 408，默认 lite 56 项不变。详见 [v2.7.35](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.35.md)。2.7.34 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-②：Step7 收尾。
 
 - **修复（2.7.34 真机）**：`ManagePlcSoftwareUnit` 的关系 Create / Delete 回读改为从单元组重新导航（旧组合代理 `Find` 回 null / 抛 `EngineeringObjectDisposedException`）。
 - **新增**：`ManagePlcExternalSources`（`PlcExternalSource(Group/UserGroup/SystemGroup)`：文件 / 母本建源、删除、生成块到指定用户组、用户组建改删）、`ReadPlcSystemGroups`（`PlcSystemBlockGroup` 树 + `PlcSystemTypeGroup`）、`ReadPlcTagTableConstants`（`PlcConstant` 行）、`ExchangePlcAlarmTextListsXlsx`（`PlcAlarmTextListProvider` 导出 / 导入）、`ManagePlcTableEntries`（`PlcWatchTableEntry` / `PlcForceTableEntry` / `PlcTableCommentEntry`）、`ExportPlcProDiagInfo`（`CodeBlock.ExportProDIAGInfo`）。类型化改造：监控 / 强制表访问规则、OPC UA `OpcUaCommunicationGroup` / `NamespaceAccessRestriction`、报警类与监控设置结果消息、库类型子类 `typeKind`、`ManagePlcUserGroup` 新增 `watchTables` / `externalSources` 族与类型化组行。
 - **审计**：有专用引用 417 → 451，完全未触及 406 → 370，未封装功能类型 162 / 695 → 139 / 637（Step7 28 / 100 → 5 / 42，只剩工艺对象映射）。
-- **验证**：离线 1825 项（新增 71 项）；形状检查 V20 1784 / V21 1929（新增 114 / 119 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.35 真机结果](docs/releases/v2.7.35.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：关系回读修复、外部源全生命周期（SCL 文件 → 建源 → 生成 FC 到临时组 → 删）、系统组、79 个系统常量、文本列表 XLSX 的原生拒绝路径、监控表注释行、ProDiag 门控、类型化访问规则 / OPC UA 限制 / 报警类消息 / 库类型种类全部通过；一处缺陷记入 2.7.36（`createComment` 后旧组合代理 `Count` 陈旧）。
+- **验证**：离线 1825 项（新增 71 项）；形状检查 V20 1784 / V21 1929（新增 114 / 119 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.35 真机结果](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.35.md)）：关系回读修复、外部源全生命周期（SCL 文件 → 建源 → 生成 FC 到临时组 → 删）、系统组、79 个系统常量、文本列表 XLSX 的原生拒绝路径、监控表注释行、ProDiag 门控、类型化访问规则 / OPC UA 限制 / 报警类消息 / 库类型种类全部通过；一处缺陷记入 2.7.36（`createComment` 后旧组合代理 `Count` 陈旧）。
 
 ## [2.7.34] - 2026-09-19
 
-引擎 2.7.34.0（V20/V21 均重建），工具 396 → 402，默认 lite 56 项不变。详见 [v2.7.34](docs/releases/v2.7.34.md)。2.7.33 真机事务缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-①：Step7 软件单元与 `PlcSoftware` 小服务。
+引擎 2.7.34.0（V20/V21 均重建），工具 396 → 402，默认 lite 56 项不变。详见 [v2.7.34](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.34.md)。2.7.33 真机事务缺陷修复 + "官方 Openness API 全量对齐"阶段 4 子批次 ④-①：Step7 软件单元与 `PlcSoftware` 小服务。
 
 - **修复（2.7.33 真机）**：`RunToolsInTransaction` 内层调用不带 `dryRun` 时跑成预览却回报已提交——`ForceRealExecution` 无论键是否存在都写入 `dryRun=false`。
 - **新增**：`ReadPlcSoftwareUnits`（`PlcUnitSystemGroup` / `PlcUnitBase` / `PlcSafetyUnit` / `PlcUnitRelation` 类型化树）、`ManagePlcDocuments`（命名值类型文档与 UDT 的 list / read / export / import / createFromMasterCopy / createFromLibraryType：`PlcDocument` / `PlcDocumentComposition` / `DocumentImportResultForSplDocument` / `DocumentImportResultForTypes` / `DocumentResultMessage`）、`ReadPlcChecksums`（`PlcChecksumProvider`）、`ReadPlcObjectFingerprints`（`FingerprintProvider` / `Fingerprint` / `FingerprintId`）、`ManagePlcBlockWriteProtection`（V21 `PlcBlockWriteProtectionProvider` 状态机）、`ManageProjectCompilationSettings`（V20 `Project` 属性 / V21 `PlcSimulationSettingsProvider` + `VirtualPlcSettingsProvider`）。扩展：`ManagePlcSoftwareUnit` 的 `unitKind=safety` / `createFromMasterCopy` / `commentsJson`，`ReadDeviceItemChannels includeLinkedTags`（V21 `PlcTagProvider.GetLinkedTags`），`UpdateDeviceAddress` 在 V21 经 `ProcessImageProvider` 指派过程映像，`ImportFromDocuments` 的类型化 `DocumentImportResultForBlocks` 与原生消息。
 - **审计**：有专用引用 396 → 417，完全未触及 428 → 406，未封装功能类型 178 / 735 → 162 / 695（Step7 44 / 140 → 28 / 100）。
-- **验证**：离线 1754 项（新增 87 项）；形状检查 V20 1670 / V21 1810（新增 85 / 102 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.34 真机结果](docs/releases/v2.7.34.md#真机结果v21-automaticdipcoatingmachine2026-09-19两个-tia-进程同开)）：临时软件单元建 / 改 / 关系 / 删、UDT 文档导出与 Override 导入、校验和、指纹、块写保护整条状态机、编译设置读写、四种模块的通道关联变量、不带 `dryRun` 的事务提交与回滚全部通过；一处缺陷记入 2.7.35（单元关系 Create / Delete 后在同一组合代理上回读失效）。
+- **验证**：离线 1754 项（新增 87 项）；形状检查 V20 1670 / V21 1810（新增 85 / 102 项）；两版 EXE 回归见 `manifest/release-build.json`。真实工程（2026-09-19 重跑，[v2.7.34 真机结果](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.34.md)）：临时软件单元建 / 改 / 关系 / 删、UDT 文档导出与 Override 导入、校验和、指纹、块写保护整条状态机、编译设置读写、四种模块的通道关联变量、不带 `dryRun` 的事务提交与回滚全部通过；一处缺陷记入 2.7.35（单元关系 Create / Delete 后在同一组合代理上回读失效）。
 
 ## [2.7.33] - 2026-09-19
 
-引擎 2.7.33.0（V20/V21 均重建），工具 389 → 396，默认 lite 56 项不变。详见 [v2.7.33](docs/releases/v2.7.33.md)。2.7.32 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-④：Base 收尾——**`Siemens.Engineering.Base.dll` 的功能类型缺口归零，阶段 3 收口**。
+引擎 2.7.33.0（V20/V21 均重建），工具 389 → 396，默认 lite 56 项不变。详见 [v2.7.33](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.33.md)。2.7.32 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-④：Base 收尾——**`Siemens.Engineering.Base.dll` 的功能类型缺口归零，阶段 3 收口**。
 
 - **修复（2.7.32 真机）**：工程级 `SyslogServerComposition.Create` 让 TIA Portal V21 崩溃——`ManageSyslogServers scope=project create` 只留预览并说明替代路径；`ManagePlcCertificate template` 不再要求 `certificateId`；`RequireUmacDevice` 文案指向设备；`CheckLibraryUpdates` 的 `KeyValuePair` 部件扁平渲染为 `parts`；多 TIA 实例下的改绑守卫（记住显式绑定的工程名，自愈只回绑它，写前核对）。
 - **新增**：`ReadPortalInfo`（`TiaPortalProcess` / `TiaPortalSession` / `TiaPortalProduct`、`TextCategories`、`HwUtilities`）、`ReadTransferRoutes`（`Connection.*` 路由树、R/H 提供者）、`ManageHardwareUtilities`（`ModuleInformationProvider`、OPC UA XML 导出、PSC 卡片导出）、`ManageDeviceServiceObjects`（Web 应用、遥控数据点、动态证书管理与 `CertificateSupportedService`）、`ReadObjectIdentifier`（`ObjectIdentifierProvider.GetIdentifier / Find`）、`ShowObjectInEditor`（`IShowable`）、`RunToolsInTransaction`（`ExclusiveAccess.Transaction`，全部成功才 `CommitOnDispose`）。扩展：`OpenProject` 的 UMAC 凭据（`UmacDelegate` / `UmacCredentials`）、`GoOnline` 的 `userName` / `userType`（`OnlineAuthenticationConfiguration`）与 `rhTarget`、`DownloadToPlc` 的 `rhTarget`（`RHDownloadProvider`）、下载 / 上载提示与结果的官方基类、`SetAttributes(pairs, AttributeDelegate)` 批量属性写、`GetCrossReferences` 的类型化 `SourceObject` / `ReferenceObject` 字段、`CompareProjects` 的 `CompareResultElement`、`SearchHardwareCatalog` 的 `CatalogEntry`、多用户 / 版本控制 / 设置的类型化行、错误 meta 附 `ExceptionMessageData`。
@@ -345,7 +345,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.32] - 2026-09-18
 
-引擎 2.7.32.0（V20/V21 均重建），工具 386 → 389，默认 lite 56 项不变。详见 [v2.7.32](docs/releases/v2.7.32.md)。2.7.31 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-③：用户管理与安全。
+引擎 2.7.32.0（V20/V21 均重建），工具 386 → 389，默认 lite 56 项不变。详见 [v2.7.32](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.32.md)。2.7.31 真机缺陷修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-③：用户管理与安全。
 
 - **修复（2.7.31 真机）**：库名统一走 `LibraryRef`（`ProjectLibrary` 没有 `Name`，工程库固定标签 + 所属工程），`ReadLibraryOverview` / `CheckLibraryUpdates` / `SynchronizeLibrary` / `ManageLibraryType` / `CompareLibraries` 在工程库上不再抛 "Name is unavailable"；系统库为 null 的 `TypeFolder` / `MasterCopyFolder` 输出 null + 说明，选择集解析对 null 根给明确 `NotFound`；`CheckLibraryUpdates` 在调用 TIA 前拒绝没有类型文件夹的库（TIA 对系统库抛 `NonRecoverableException` 并会触发连接保护）；`ManageGlobalLibrary` 的 `close` / `save` / `saveAs` / `archive` 对系统库说明 "只在 UserGlobalLibrary 上存在"，`openInfo` 回报 `closableThroughApi`。
 - **新增（域 `Security`，3 个强类型工具）**：`ManageSyslogServers`（工程级 `SyslogServerProvider.Servers` 的 read / create / update / delete / assignModule / unassignModule，CPU `SysLogConfigurationManager` 的 read / update / createServer / deleteServer）、`ManagePasswordPolicy`（`PasswordPolicyConfigurator` 8 项、`PlcPasswordPolicyService`、`LegacyPlcPasswordPolicyService` 5 项，legacy 官方范围预核）、`ManageUmcUsers`（UMC 用户 / 组的 read / createOffline / importFromServer / rename / activate / deactivate / delete / assignRole / unassignRole；服务器 read / checkConsistency / synchronize；凭据经 `Authentication` 事件、SecureString 不回显）。扩展 `ManagePlcCertificate`（`template`、类型化模板字段 + `subjectAlternativeNamesJson`、`password` 导入、`EnableGlobalCertificatesStore`）与 `ManageProjectUserManagement`（`activateAnonymousUser` / `deactivateAnonymousUser`；设备功能权行带 identifier / group / comment）。
@@ -354,7 +354,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.31] - 2026-09-18
 
-引擎 2.7.31.0（V20/V21 均重建），工具 380 → 386，默认 lite 56 项不变。详见 [v2.7.31](docs/releases/v2.7.31.md)。2.7.30 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-②：库深层。
+引擎 2.7.31.0（V20/V21 均重建），工具 380 → 386，默认 lite 56 项不变。详见 [v2.7.31](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.31.md)。2.7.30 真机问题修复 + "官方 Openness API 全量对齐"阶段 3 子批次 ③-②：库深层。
 
 - **修复（2.7.30 真机）**：`ManageNetworkDomain` / `ManageTransferArea` / `ManageDeviceUsers` 的 Create/Delete 核对改为从 owner 重新导航取新组合（旧代理在变更后陈旧：创建后按名查不到、删除后枚举抛 `EngineeringObjectDisposedException`），`Create` 以返回的代理读 `Name`；该异常在预期位置就地捕获（`HmiReadSafety.DisposedObjectOnly`），HMI 快照的全局连接失败保护保持原样；`ReadDeviceItemChannels` 的 `attributeNames` 带 `accessMode`，`UpdateDeviceItemChannel` 写前拒绝只读属性。
 - **新增（域 `Library`，6 个强类型工具）**：`ReadLibraryOverview`（`GlobalLibrary` 头 / 历史 / 使用产品、类型文件夹树含一致性 `Status`、母版树含 `ContentDescriptions`）、`ReadLibraryType`（`FindType` / `FindVersion`，版本的 Dependencies / Dependents / MasterCopiesContainingInstances / OriginalLibrary）、`ManageLibraryType`（DoNotUse / SetForUpdate / Name、删除、`LibraryType.UpdateLibrary` / `UpdateProject` 四参重载）、`CheckLibraryUpdates`（`ILibrary.UpdateCheck` 消息树）、`SynchronizeLibrary`（`UpdateLibrary` / `UpdateProject` / `HarmonizeProject` / `CleanUpLibrary`，选择集 + 范围，需 `confirmChange`）、`CompareLibraryObjects`（类型 / 版本 / 母版的 `CompareTo` 详细属性行）。扩展 `ManageGlobalLibrary`（`infos` / `openInfo` / `archive`）与 `ImportLibraryTypeDocuments`（强类型 `TypeCreateTransferResults`、`typePath` + `createOptions` 版本导入、STEP 7 目标环境）。
@@ -363,7 +363,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.30] - 2026-09-18
 
-引擎 2.7.30.0（V20/V21 均重建），工具 367 → 380，默认 lite 56 项不变。详见 [v2.7.30](docs/releases/v2.7.30.md)。"官方 Openness API 全量对齐"阶段 3 子批次 ③-①：Base 硬件网络深层。
+引擎 2.7.30.0（V20/V21 均重建），工具 367 → 380，默认 lite 56 项不变。详见 [v2.7.30](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.30.md)。"官方 Openness API 全量对齐"阶段 3 子批次 ③-①：Base 硬件网络深层。
 
 - **新增（域 `Hardware`，13 个强类型工具）**：`ReadIoSystems` / `ManageIoSystem`（`IoController.CreateIoSystem`、`IoSystem.Delete`、`IoConnector.ConnectToIoSystem` / `DisconnectFromIoSystem`、官方动态属性）；`ReadNetworkDomains` / `ManageNetworkDomain`（`SyncDomainOwner` / `MrpDomainOwner` 的域创建、删除、属性、`DomainParticipants.Add`，`MrpInstances` 读出）；`ReadTransferAreas` / `ManageTransferArea`（`TransferAreaComposition.Create/Find`、映射规则、`MulticastableTransferAreaComposition.Create` 四个重载、CCDX 删除语义）；`ReadDeviceItemChannels` / `UpdateDeviceItemChannel`（`ChannelComposition.Find`、`ChannelAddress` / `ChannelWidth`）；`ReadDeviceAddressing` / `UpdateDeviceAddress`（`Address`、`HwIdentifier`、`AddressController` / `HwIdentifierController`，V20 独有的 `AssignProcessImageToOrganizationBlock`）；`ManageDeviceUserGroup`（`DeviceUserGroupComposition.Create`、`UngroupedDevicesGroup`）；`ManageDeviceUsers`（`WebserverUserManagement` / `SimpleWebserverUserManagement` / `OpcUaUserManagement`，密码转 `SecureString` 不回显，`WebserverUserPermissions` 无 `[Flags]` 故按位解码）；`ManagePortInterconnection`（`NetworkPort.ConnectToPort` / `DisconnectFromPort`）。写入默认预览、删除需确认、执行后按原生对象读回。
 - **审计**：有专用引用 238 → 269，完全未触及 556 → 535，未封装功能类型 267 / 1,067 → 253 / 1,006（Base 89 / 332 → 75 / 271）。
@@ -371,7 +371,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.29] - 2026-09-18
 
-引擎 2.7.29.0（V20/V21 均重建），工具 367、默认 lite 56 项不变。详见 [v2.7.29](docs/releases/v2.7.29.md)。WinCC Unified 阶段（路线图 §2.0 阶段 2）收口。
+引擎 2.7.29.0（V20/V21 均重建），工具 367、默认 lite 56 项不变。详见 [v2.7.29](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.29.md)。WinCC Unified 阶段（路线图 §2.0 阶段 2）收口。
 
 - **修复**：`ExchangeUnifiedTags export` 在真实工程上恒失败——`HmiTagComposition.Export(dir, name)` 回报的 `FileInfo` 是 `<dir>\<name>`（无扩展名），而 TIA 实际写出 `<name>.hmi.yml`。原生回报路径不存在时按已知扩展名（`.hmi.yml` / `.hmi.js` / `.yml` / `.js` / `.xlsx` / `.xml`）再按同名前缀解析到实际文件，记录里保留 `reportedPath`；两条导出工具都附 `directoryListing`（TIA 留下的全部文件，含 `NameData.yml` 等副文件）。
 - **登记**：剩余 Unified 类型全部进入动态覆盖登记表（系统变量、阈值、替代值、审计类、连接/驱动属性、OPC UA 报警类型、记录变量、文本/图形列表、`Cpm`、`Common` / `UIBase` / `IValidator` / `ImportResult`、画面组），`verified` 字段如实区分"真机验证"与"仅形状检查"。审计：完全未触及 599 → 556，动态覆盖 285 → 322，未封装功能类型 288 / 1,185 → 267 / 1,067（Unified 21 → 0）。
@@ -379,7 +379,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.28] - 2026-09-18
 
-引擎 2.7.28.0（V20/V21 均重建），工具 364 → 367，默认 lite 56 项不变。详见 [v2.7.28](docs/releases/v2.7.28.md)。WinCC Unified 阶段子批次 ⑤。
+引擎 2.7.28.0（V20/V21 均重建），工具 364 → 367，默认 lite 56 项不变。详见 [v2.7.28](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.28.md)。WinCC Unified 阶段子批次 ⑤。
 
 - **新工具 3 个**：`ExchangeUnifiedTags`（变量 WinCC ML `.hmi.yml` 导入导出，`HmiTagComposition.Export/Import`，根或任意组内变量表；此前 Unified 变量表导出走 SimaticML 路径报 unsupported）、`ExchangeUnifiedScriptModules`（全局脚本模块整体/单个导出与导入，`IChromDataExchangeExport`）、`ImportUnifiedOpcUaAlarms`（连接上的 `OpcUaAlarm` 服务：显示名、`GetNodeId`、xml 导入）。
 - **登记**：阈值（`ManageUnifiedObjectParts`）、替代值/范围（嵌套写入）、系统变量、驱动属性、审计类、文本/图形列表、记录变量、Cpm、`UIBase`/`HmiBase` 经既有工具到达。
@@ -388,7 +388,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.27] - 2026-09-18
 
-引擎 2.7.27.0（V20/V21 均重建），工具 364、默认 lite 56 项不变。详见 [v2.7.27](docs/releases/v2.7.27.md)。
+引擎 2.7.27.0（V20/V21 均重建），工具 364、默认 lite 56 项不变。详见 [v2.7.27](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.27.md)。
 
 - **2.7.26 真机重跑**（V21 `HMI_RT_1`）：目录 43 类型、schema、update（标量/颜色/部件/顶层多语言）、read、list、delete、隐藏 `EventHandlers` 修复均通过；发现三处缺陷。
 - **修复**：① `ManageUnifiedScreenItem create` 与 `ManageUnifiedScreenLayout create`（2.7.18 起）在真实 API 上恒报"not found exactly once"——`Create<T>` 与 `Find()` 返回不同代理，`ReferenceEquals` 恒假；改按名称查回 + 计数核对。② 部件内多语言文本（`Title.Text` 等）此前不被识别，现任意深度拆分并逐条读回。③ `UpdateUnifiedObjectProperties` 不支持颜色与嵌套部件（报警类状态颜色写入失败），现与 `ReadUnifiedObjectProperties` 一起改用 UI 模型嵌套读写。
@@ -396,7 +396,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.26] - 2026-09-18
 
-引擎 2.7.26.0（V20/V21 均重建），工具 362 → 364，默认 lite 56 项不变。详见 [v2.7.26](docs/releases/v2.7.26.md)。官方 API 全量对齐第二阶段（WinCC Unified）子批次 ①：画面对象族。
+引擎 2.7.26.0（V20/V21 均重建），工具 362 → 364，默认 lite 56 项不变。详见 [v2.7.26](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.26.md)。官方 API 全量对齐第二阶段（WinCC Unified）子批次 ①：画面对象族。
 
 - **新工具 2 个**：`DescribeUnifiedScreenItemType`（从加载的官方 API 反射出全部 43 个具体画面对象类型的目录与属性 schema：scalar/color/multilingual/part/collection 分类、枚举值、可写性、部件子属性、事件类型；不需要工程）、`ManageUnifiedScreenItem`（任意类型 `Create<T>(name[, containedType])` 创建、list/read/update/delete，嵌套部件与逐语言文本写入并读回）。覆盖 `UI.Shapes` 17 / `UI.Widgets` 16 / `UI.Controls` 13 / `UI.Base` 9 / `UI.Features` 13 / `HmiScreenWindow`。
 - **修复**：`HmiSlider` / `HmiToggleSwitch` / `HmiCircleSegment` / `HmiEllipseSegment` 隐藏基类 `EventHandlers` 导致 `Type.GetProperty` 歧义，`ReadUnifiedObjectEvents` / `ManageUnifiedObjectParts` / `ManageUnifiedDynamization` 在这四种对象上此前会失败；改为取最派生声明。
@@ -405,7 +405,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.25] - 2026-09-18
 
-引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](docs/development/roadmap.md#20-官方-api-全量对齐计划)）。
+引擎 2.7.25.0（V20/V21 均重建），工具 359 → 362，默认 lite 56 项不变。详见 [v2.7.25](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.25.md)。"官方 Openness API 全量对齐"计划的第一步（[路线图 §2.0](docs/development/roadmap.md#20-官方-api-全量对齐计划)）。
 
 - **`Siemens.Engineering.Safety` 全量封装**（12 类型 / 54 成员，按官方 "F-related Openness" 章节逐页对照）：`ManagePlcSafety` 由反射改为强类型，`read` 补齐 `AssignmentOfBlockNumbers`、`SafetySystemVersion` + 可用版本、`EnableConsistentUploadFromFCpu` / `EnableFCommunicationIdTag`、运行组 `FOBNumber` / `FOBCycleTime` / `FOBPhaseShift` / `FOBPriority`、**集体 / 软件 / 硬件 / 通信地址 F 签名**（旧实现从未真正读出）、工程级 `GlobalSettings` 与 CPU `Failsafe_FCapabilityActivated`；新增动作 `generateGlobalFIOStatusBlock` / `cleanSystemGeneratedObjects` / `generateBaseId` / `login` / `logoff` / `setPassword` / `revokePassword`，`createRuntimeGroup` 三种官方重载，`updateSettings` 支持嵌套块号段与精确版本。
 - **新工具 3 个**：`ManageSafetyGlobalSettings`（TIA Portal 级四项全局安全设置）、`ReadSafetyBlockSignatures`（逐块 F 签名，单块或整 PLC）、`ExportSafetyPrintout`（官方安全打印件 PDF/XPS）。下载提示 `SafetyProgram` 应答 `ConsistentDownload`。
@@ -413,7 +413,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.24] - 2026-09-18
 
-引擎 2.7.24.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.24](docs/releases/v2.7.24.md)。
+引擎 2.7.24.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.24](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.24.md)。
 
 - **真机重跑 2.7.20 的 `DescribeBlockLogic` 修复**（V21 `AutomaticDipCoatingMachine`）：LAD `UNIT_MANAGER_FC` NW5 调用框完整读出（7 个 Bool 输入触点链 + 9 个输出绑定）；SCL `CLOCK_GENERATOR_FB` 的调用与命名常量全部恢复，仅剩位切片 `.%X15` 与 `ENO` 左值两处丢失。
 - **按 `SW.PlcBlocks.Access_v5.xsd` 重写 SCL 的 Access / Symbol 渲染**：SCL 导出的 `Symbol` / `Instance` 内部是 Token 序列（`.`、`%X15`、`[`、`]`），现按序渲染，FlgNet 无 Token 时才合成分隔符与 `SliceAccessModifier`；`ENO` 为 `<PredefinedVariable>` 新增渲染；补齐 `Label` / `Statusword` / `DataType` / `Expression` / `Reference` 分支；`*Attribute` / `TemplateValue` 元数据不再泄漏进正文。
@@ -422,21 +422,21 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.23] - 2026-09-18
 
-交付 2.7.23，引擎沿用已验证的 2.7.20.0，应用界面与 2.7.22 相同。详见 [v2.7.23](docs/releases/v2.7.23.md)。
+交付 2.7.23，引擎沿用已验证的 2.7.20.0，应用界面与 2.7.22 相同。详见 [v2.7.23](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.23.md)。
 
 - **配置器截图裁切修复**：`CapturePage` 按面板尺寸建位图却在其外边距偏移处绘制，每张界面截图都少了右侧和底部各 18px，右上角状态胶囊被切掉一截。位图尺寸现在含两侧外边距。只影响界面检查用的 PNG，应用布局未变。
 - **验证**：配置器 88 项（新增 2 项）；引擎沿用 2.7.20 的离线 1287 项。
 
 ## [2.7.22] - 2026-09-18
 
-交付 2.7.22，引擎沿用已验证的 2.7.20.0。详见 [v2.7.22](docs/releases/v2.7.22.md)。
+交付 2.7.22，引擎沿用已验证的 2.7.20.0。详见 [v2.7.22](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.22.md)。
 
 - **配置器 AI 客户端栏改为卡内滚动**：11 张卡片此前把 B 栏撑高、A 栏被迫留出大片空白。现在卡片区限高三行并在卡内滚动（细滚动条与整体配色一致），A/B 两栏改为底部对齐，按钮行固定在卡片底部，两栏等高。两种模式同样适用。
 - **验证**：配置器 86 项（新增 2 项）；引擎沿用 2.7.20 的离线 1287 项。
 
 ## [2.7.21] - 2026-09-18
 
-交付 2.7.21，引擎沿用已验证的 2.7.20.0（运行文件与工具清单未变）。详见 [v2.7.21](docs/releases/v2.7.21.md)。
+交付 2.7.21，引擎沿用已验证的 2.7.20.0（运行文件与工具清单未变）。详见 [v2.7.21](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.21.md)。
 
 - **配置器改为单页双栏连接控制台**：深色编号侧栏 + 三页（虚拟机服务端 / AI 客户端 / 本机连接）改为一页两栏（A 服务端 / B AI 客户端），右上角分段开关切换 **虚拟机 ↔ 宿主机**（HTTP）与 **同一台电脑**（stdio）；stdio 模式自动隐藏地址、密钥和服务按钮。新增两栏之间的连线条（客户端 → `IP:端口` 或 `stdio · 无需网络` → 服务侧，状态 idle / running / local）和带条目计数的 `ACTIVITY LOG` 卡片；配色由蓝色改为米白底 + 墨绿强调。
 - **地址与密钥合并**：原两页各一份的地址/端口/密钥合并为一组字段加一条共用密钥条；新增“保存两端配置”，客户端侧连接信息总能保存，服务端配置仅在本机装有 TIA 与引擎时写入，宿主机上校验失败只记日志不再弹错。
@@ -445,7 +445,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.20] - 2026-09-17
 
-引擎 2.7.20.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.20](docs/releases/v2.7.20.md)。
+引擎 2.7.20.0（V20/V21 均重建），工具 359、默认 lite 56 项不变。详见 [v2.7.20](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.20.md)。
 
 - **`DescribeBlockLogic` 渲染丢失修复**（真实工程连机测试发现）：SCL 网络里的调用（`TIME_TCK()`、`TIME_TO_DINT(#a - #b)`、`LIMIT(MN := …)`、多重实例 `#inst⟨FB⟩(…)`）、`LocalConstant`/`GlobalConstant` 命名常量、`%I1.3` 绝对地址、数组下标此前整段丢失或被压成 `#a.b`，工具却照样报 `success`；LAD 网络里 `<Call>` 块调用不被识别，整段退化成孤立触点清单。现 SCL 递归渲染 `CallInfo`/`Parameter`/`Instance`/`Constant Name`/`Address`，LAD 收集 `<Call>` 为调用框并按 `Parameter Section` 判断引脚方向，输出 `CALL "FB"[inst](pin=操作数, pin=⟨触点链⟩)`；块 Bool 输出驱动线圈时内联为 `CALL "FB"[inst].pin`；新增 `Not` 元件；MOVE/定时器框的上游按 `in → IN → en` 回溯（原只查 `in`，EN 触点链丢失）。
 - **配置器：客户端卡片重排，加入国产模型与 Grok**：AI 客户端页按 CLI 在前、Claude Code 与 Codex 居首、IDE 在后排列；去掉 Windsurf、Cline、Claude Desktop · Chat（含 `mcp-remote` 桥接与 `tia-portal-vm-chat`）。新增 **通义千问**（写阿里 Qwen Code `%USERPROFILE%\.qwen\settings.json`，`httpUrl`）、**Kimi**（写 Kimi Code CLI `%KIMI_CODE_HOME%\mcp.json`，默认 `~\.kimi-code\mcp.json`）、**腾讯元宝**（写 CodeBuddy Code CLI `~\.codebuddy\.mcp.json`，`type: http`）、**DeepSeek / 智谱清言 / Grok**（写 OpenCode `~\.config\opencode\opencode.json` 的 `mcp` 节，`type: remote`；本机 `type: local` + 单数组 `command`；三张卡片共用一个文件只写一次）。这些模型的聊天 App 不支持 MCP，卡片按模型命名、在所写客户端里选模型即可。豆包（Trae）因全局配置位置未公开且远程仅 SSE 未加入。卡片 8 → 11。未在真实客户端上联调。
@@ -453,7 +453,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.19] - 2026-09-17
 
-引擎 2.7.19.0（V20/V21 均重建），工具 350 → 359，默认 lite 56 项不变。详见 [v2.7.19](docs/releases/v2.7.19.md)。
+引擎 2.7.19.0（V20/V21 均重建），工具 350 → 359，默认 lite 56 项不变。详见 [v2.7.19](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.19.md)。
 
 - **PLCSIM Advanced 通道**（路线图 #1 / S2）：`ReadPlcSimAdvancedInstances`、`ManagePlcSimAdvancedInstance`（register/powerOn/run/stop/powerOff/memoryReset/unregister）、`ReadPlcSimAdvancedTags`、`WritePlcSimAdvancedTags`、`RunPlcSimAdvancedTestScenario`（写输入 → 单步推进周期 → 断言输出的闭环场景）。官方 `Siemens.Simatic.Simulation.Runtime` API 在运行时定位（`apiPath` → `PLCSIMADV_API_PATH` → 安装目录最新版本）并经反射调用，与 Openness 同样不随包分发；未安装时明确返回 `ApiNotFound`。改变实例/写值/跑场景默认预览且需确认参数。新增分类域 `Simulation`（runtime 大类）。**本机无 PLCSIM Advanced，未做真实运行验证**。
 - **离线文档与预检**（S3 / #8 / #9）：`RenderPlcBlockDocument`（SimaticML/SCL → Markdown：接口表、SCL 网络由 StructuredText 令牌还原、LAD/FBD 网络给出部件清单 + Mermaid 流程图）、`GeneratePlcDocumentation`（导出目录 → 单文件手册：索引表、调用交叉引用、逐块渲染）、`LintPlcSclSource`（13 条启发式规则：块关键字配对、括号、`=`/`:=`、缺分号、GOTO、WHILE TRUE、嵌套深度、行长、空白、`;;`、未闭合注释、TODO 标记）。均不需要 TIA 会话；lint 结论不是编译判决。
@@ -466,7 +466,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## [2.7.18] - 2026-09-17
 
-引擎 2.7.18.0（V20/V21 均重建），工具 298 → 350，默认 lite 56 项。详见 [v2.7.18](docs/releases/v2.7.18.md)。
+引擎 2.7.18.0（V20/V21 均重建），工具 298 → 350，默认 lite 56 项。详见 [v2.7.18](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.18.md)。
 
 - **下载缺陷修复**：`DownloadToPlc` 此前把 `UserManagementDownload`、`AlarmTextLibrariesDownload`、`DownloadCertificate` 当复选框处理，而它们在 V20/V21 都是 `CurrentSelection` 选择型，等于从未应答；另有 27 种下载提示类型完全未处理。现在委托按提示的真实形态（枚举选择 / Checked / SetPassword）应答，调用方 `promptAnswersJson` 优先，内置默认其次（破坏性提示默认 NoAction/NoChange），密码类由专用参数提供，其余提示连同 TIA 提示文本记入 `Meta.promptsUnanswered`。新增 `userManagementMode`、`promptAnswersJson`、`moduleAccessPassword`、`blockBindingPassword`、`masterSecretPassword` 参数。
 - **新增 52 个官方 Openness 工具**（全部默认预览、精确名称、写入需确认参数、V20 缺失成员时明确 NotSupported）：设备传输（可达设备扫描、站上载、参数上载、下载到文件夹/存储卡镜像）；PLC 块服务（块保护、DB 快照/实际值、程序升级、指纹、报警实例文本导入、报警文本列表）；工程安全与协作（UMAC 用户/角色/权限读写、工程保护读取、多用户会话、库比较、离线工程比较、Portal 设置）；硬件服务（通信连接 CRUD、监视/强制表 Web 访问、系统诊断设置交换、OPC UA 访问控制、AML 导入、硬件特性探测）；Unified UI 对象模型（全部事件/属性事件枚举、部件 CRUD、完整动态化类型、画面布局/尺寸/删除、列表定位、报警外观与审计设置读取）；Motion/ProDiag/经典 HMI（轴配置与原生操作、ProDiag 对象、VB 脚本/周期/文本图形列表/全球化/面板）。
@@ -498,7 +498,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 - 重整文档、示例及脚本目录，合并重复指南和历史发布说明，删除过期脚本、临时清单及现场原始数据。
 - 中英文 README 统一为入口，更新所有迁移引用、skill、插件及蓝图，新增文档链接与入口校验。
 - 交付包仅保留 runtime/v20 与 runtime/v21，移除旧 bin 路径下的重复运行文件；旧配置可用 GUI 重新保存。
-- 保持引擎 2.7.15.0 与其原验证记录不变，独立验证配置器及完整包。详情见 [v2.7.17](docs/releases/v2.7.17.md)。
+- 保持引擎 2.7.15.0 与其原验证记录不变，独立验证配置器及完整包。详情见 [v2.7.17](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/releases/v2.7.17.md)。
 
 ## [2.7.16] - 2026-09-17
 
@@ -559,7 +559,7 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 - 新增 `ReadUnifiedGraphicSelection`：通过准确对象名称列表整体定位选择范围，分页读取原始坐标、尺寸、一层工程归属和可用的关系元数据；句柄失效后停止并阻止后续读取。
 - 新增离线 `CompareUnifiedGraphicSelections`：核对前后完整分页证据并报告各对象坐标变化，拒绝缺页、缺字段和范围混用。
 - 普通图形组合的真实成员、整体变换和坐标联动原因仍未验证，明确返回缺口，不将选择范围当作原生组合。见 [接口说明](docs/guides/hmi/graphic-selection.md)。
-- 完整 V20/V21 运行包包含上述功能，文件版本统一为 2.7.8.0；真实工程验收状态见 [本版说明](docs/archive/release-notes.md)。
+- 完整 V20/V21 运行包包含上述功能，文件版本统一为 2.7.8.0；真实工程验收状态见 [本版说明](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)。
 
 ## [2.7.7] - 2026-09-14
 
@@ -578,9 +578,9 @@ V20/V21 稳定性诊断、PLC 编辑和生态工具扩展，新增 22 个工具�
 
 ## 历史版本
 
-- [v2.7.5](docs/archive/release-notes.md#v275)
-- [v2.7.4](docs/archive/release-notes.md#v274)
-- [v2.7.3](docs/archive/release-notes.md#v273)
+- [v2.7.5](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)
+- [v2.7.4](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)
+- [v2.7.3](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/299f947d4b54a92873e9321a39f6b3dc39279e11/docs/archive/release-notes.md)
 - [此前完整更新日志（仓库既有提交，保持原文）](https://github.com/asckye/TIA_Portal_Openness_MCP/blob/6a7298cbc08dd59fd08864d56a728a4da3435ed8/CHANGELOG.md)
 
 [Unreleased]: https://github.com/asckye/TIA_Portal_Openness_MCP/compare/v2.9.2...HEAD

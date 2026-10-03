@@ -1,205 +1,41 @@
-# SCL 指令库（中性参考）
+# 编写、导入和编译 SCL
 
-本文件汇总在 S7-1200 / S7-1500 SCL 中常用的语法和指令模板，便于 `PlcBuildAndImport(kind=fc|fb)` 的 DSL 转换，或直接写入外部源 `.scl` 文件后通过 `ImportPlcExternalSource` + `GenerateBlocksFromExternalSource` 导入。
+V14 SP1–V21 均提供外部源导入、生成块和编译工具，但基础引擎与完整引擎的参数和执行流程不同。先让 AI 读取当前服务的 `GetToolUsage`，再调用对应工具。
 
-所有示例均为通用语法，**不绑定任何特定工艺或设备名**。复制到实际工程时按需修改变量名与数据范围。
+## 从完整示例开始
 
-## 1. 基本表达与控制流
+| 目标 | `GetToolUsage` 查询 | 文件 |
+|---|---|---|
+| 第一个加法 FC | `exampleId="scl-add"` | [FC_Add.scl](../../../reference/tool-examples/languages/FC_Add.scl) |
+| FB 状态和定时器 | `exampleId="scl-state-timer"` | [FB_DelayPulse.scl](../../../reference/tool-examples/languages/FB_DelayPulse.scl) |
+| 数组与控制流 | `exampleId="scl-control-flow"` | [FC_ArrayTotal.scl](../../../reference/tool-examples/languages/FC_ArrayTotal.scl) |
+| 查找其他程序模板 | `language="scl"` | [语言目录](../../../reference/tool-examples/languages/catalog.json) |
 
-```scl
-// 赋值与运算
-#Out := #A + #B - #C;
-#Pct := 100.0 * #Value / #Range;
+查询结果包括完整声明、实现、文件编码、适用版本及常见错误。按返回的 `releaseKeys` 选择例子；不要只复制函数体而漏掉接口声明、实例或返回值。
 
-// 条件
-IF #Enable AND NOT #Fault THEN
-    #Run := TRUE;
-ELSIF #Pause THEN
-    #Run := FALSE;
-ELSE
-    #Run := FALSE;
-END_IF;
+## 按所选引擎完成导入
 
-// 多分支
-CASE #Mode OF
-    0:  #SP := 0.0;
-    1:  #SP := #SP_Manual;
-    2:  #SP := #SP_Auto;
-ELSE
-    #SP := 0.0;
-END_CASE;
+| 引擎 | 调用序列 |
+|---|---|
+| V14 SP1–V19 基础引擎 | `GetToolUsage(exampleId="sequence/plc-scl-block-foundation")` |
+| V20/V21 完整引擎 | `GetToolUsage(exampleId="sequence/plc-scl-block")` |
 
-// 循环
-FOR #i := 0 TO 9 DO
-    #Sum := #Sum + #Array[#i];
-END_FOR;
+1. 读取实际工程和 PLC 路径。
+2. 把完整源文件放在运行 TIA/MCP 的电脑上。虚拟机服务读取的是虚拟机文件系统，不是 AI 宿主机的同名路径。
+3. 按当前示例导入外部源，检查实际返回的源名称。
+4. 将该名称交给生成工具，核对实际生成的块及接口。导入源文件本身不等于生成块。
+5. 在工程设备满足离线编译前提后编译，检查错误数、警告数和嵌套诊断，再读回目标块。
+6. 确认结果后保存项目。以上步骤不自动下载到 PLC。
 
-// 当条件成立
-WHILE #Counter < #Preset DO
-    #Counter := #Counter + 1;
-END_WHILE;
-```
+基础引擎当前执行路径接受 ASCII 源文件；中文等非 ASCII 源编码仍待原生验证。完整引擎的编码以具体文件示例为准，不能将 `.scl` 与 `.s7dcl` 的编码要求混为一谈。
 
-## 2. 类型转换与缩放
+V14 SP1 的生成 API 没有返回对象列表，因此需结合前后块清单和读回结果判断。其他版本返回生成对象也不能代替编译诊断。
 
-| 用途 | 指令 |
-|------|------|
-| Int ↔ Real | `INT_TO_REAL`、`REAL_TO_INT` |
-| DInt ↔ Real | `DINT_TO_REAL`、`REAL_TO_DINT` |
-| 标准化到 0~1 | `NORM_X(MIN, VALUE, MAX)` |
-| 反标准化到工程量 | `SCALE_X(MIN, NORM, MAX)` |
-| 限幅 | `LIMIT(MN, IN, MX)` |
-| 绝对值 | `ABS(...)` |
+## 修改示例时关注什么
 
-```scl
-// 模拟量缩放（0~27648 → 0~100.0）
-#Norm   := NORM_X(MIN := 0,    VALUE := #RawAI, MAX := 27648);
-#Engineering := SCALE_X(MIN := 0.0, VALUE := #Norm,  MAX := 100.0);
-#Limited := LIMIT(MN := 0.0, IN := #Engineering, MX := 100.0);
-```
+- 类型和返回值：局部变量按声明使用，数值转换与目标类型一致。
+- 跨周期状态：定时器、沿检测和累计状态需要持久实例，完整 FB 示例展示了声明位置。
+- 依赖：先导入被引用的 UDT、DB、FC/FB，再导入调用方。
+- 工程语义：编译通过只证明编译器接受程序；周期时间、范围和设备行为还需按实际工程验证。
 
-## 3. 沿检测
-
-```scl
-// 实例化 R_TRIG / F_TRIG（声明在 Static 区，便于实例保留）
-#RisingStart(CLK := #Cmd_Start);
-IF #RisingStart.Q THEN
-    #PulseCount := #PulseCount + 1;
-END_IF;
-```
-
-## 4. 定时器（IEC）
-
-```scl
-// TON 通电延时（实例在 FB 的 Static 或独立 DB 中）
-#Ton1(IN := #Cmd_Run, PT := T#3S);
-#Delayed := #Ton1.Q;
-
-// TOF 断电延时
-#Tof1(IN := #Cmd_Run, PT := T#1S);
-
-// TP 单脉冲
-#Tp1(IN := #Trigger, PT := T#500MS);
-```
-
-> 在 FC 内不能创建 IEC 定时器实例（特别是 F-CPU），把实例放在 **FB Static 段** 或 **全局 DB** 中。
-
-## 5. 计数器（IEC）
-
-```scl
-#Ctu1(CU := #Cmd_Inc, R := #Cmd_Clear, PV := #Preset);
-#Value := #Ctu1.CV;
-#Done  := #Ctu1.Q;
-```
-
-## 6. PID_Compact 调用模式（仅展示参数接口）
-
-```scl
-"PID_Compact_1"(
-    Setpoint  := #SP,
-    Input     := #PV,
-    Output    => #OUT,
-    ManualEnable := #Mode_Manual,
-    ManualValue  := #ManOut,
-    Reset     := #Cmd_Reset
-);
-```
-
-参数说明（节选）：
-- `Setpoint` / `Input` 必填，类型 `Real`；
-- `Output` 为运算输出；
-- `ManualEnable=TRUE` 时执行手动；
-- `Reset=TRUE` 切到「未激活」状态；
-- 其余参数（`Mode`、`PIDStatus`、`Error`）按需读取。
-
-## 7. 安全比较与死区
-
-```scl
-// 死区比较
-#Diff := ABS(#SP - #PV);
-IF #Diff <= #Deadband THEN
-    #Reached := TRUE;
-ELSE
-    #Reached := FALSE;
-END_IF;
-
-// 三态比较
-IF #PV > #HighLimit THEN
-    #Level := 2;
-ELSIF #PV >= #LowLimit THEN
-    #Level := 1;
-ELSE
-    #Level := 0;
-END_IF;
-```
-
-## 8. 斜坡 / 速度限幅（通用模板）
-
-```scl
-// 每周期最大变化量（受扫描时间影响）
-IF #Target > #Current + #RampUp THEN
-    #Current := #Current + #RampUp;
-ELSIF #Target < #Current - #RampDown THEN
-    #Current := #Current - #RampDown;
-ELSE
-    #Current := #Target;
-END_IF;
-```
-
-## 9. 数组与 FOR-EACH 风格
-
-```scl
-// 求和
-#Sum := 0.0;
-FOR #i := 0 TO 9 DO
-    #Sum := #Sum + #Buffer[#i];
-END_FOR;
-#Avg := #Sum / 10.0;
-
-// 最大值
-#Max := #Buffer[0];
-FOR #i := 1 TO 9 DO
-    IF #Buffer[#i] > #Max THEN
-        #Max := #Buffer[#i];
-    END_IF;
-END_FOR;
-```
-
-## 10. UDT 引用
-
-```scl
-// 假设 UDT_BasicStatus 中包含 Active/Error/Setpoint/Actual
-#Item.Active   := #Run;
-#Item.Error    := #Fault;
-#Item.Setpoint := #SP;
-#Item.Actual   := #PV;
-```
-
-## 11. 字符串拼接（仅 1500/部分 1200 支持）
-
-```scl
-#Msg := CONCAT(IN1 := 'STEP=', IN2 := DINT_TO_STRING(#Step));
-```
-
-## 12. 错误码与日志（建议模式）
-
-```scl
-IF #SensorErr THEN
-    #ErrorCode := 1001;
-    #Status    := 'Sensor lost';
-ELSIF #DriveErr THEN
-    #ErrorCode := 1002;
-    #Status    := 'Drive fault';
-ELSE
-    #ErrorCode := 0;
-    #Status    := 'OK';
-END_IF;
-```
-
-## 13. DSL 适配性（`PlcBuildAndImport(kind=fc|fb)`）
-
-DSL 直接支持 `assignment`、`if/elsif/else/endif`、`line`、`token`、`literal`。
-**不支持** 的语法（`FOR`/`WHILE`/`CASE`/`REPEAT`/`EXIT`/`CONTINUE`/`RETURN`）请用：
-
-- **外部 SCL 源**：将完整 `.scl` 写到磁盘（UTF-8 + BOM），通过 `ImportPlcExternalSource` 然后 `GenerateBlocksFromExternalSource`；
-- 或在 TIA 中编辑后 `ExportBlock`，再用 `ImportBlock` 入仓。
+`BuildStructuredTextXml` 的小型 JSON 操作集合不是完整 SCL 编译器。复杂表达式和控制流直接使用外部源；Builder 的版本范围见 [PLC XML builders](builders.md)。

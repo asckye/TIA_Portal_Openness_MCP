@@ -1,20 +1,13 @@
-# Project Blueprints
+# 工程蓝图
 
-本目录存放完整项目生成蓝图。
+这些 JSON 是完整引擎的工作流输入示例，不是八版本通用工程文件。
 
 | 文件 | 用途 |
 |---|---|
-| `full_plc_hmi_project.json` | 创建 PLC + WinCC Unified 项目的主配方，包含硬件、PLC、HMI、按钮动作、动态化和验收项。 |
-| `scaffold_spec_start_stop.json` | CLI 启停工程 spec，先用 `gen --dry-run` 校验。 |
-| `scaffold_spec_motor.json` | CLI 电机工程 spec，引用随包提供的 PLC 源与 HMI 模板。 |
+| `full_plc_hmi_project.json` | PLC + WinCC Unified 创建流程参考，包含硬件、PLC、HMI 和读回项。 |
+| `scaffold_spec_start_stop.json` | 完整引擎 CLI 的启停工程 spec，先按 CLI 文档预览。 |
+| `scaffold_spec_motor.json` | 电机工程 spec，引用随包 PLC 源和 HMI 模板。 |
 
-**自检：** 包根目录运行 `scripts\checks\Validate-Bundle.ps1`，确认 `requiredBundleFiles` 所列路径齐全且 JSON 可解析。
+使用前，通过当前引擎 `GetToolUsage` 核对流程、工具和输出版本；基础宿主没有完整引擎的全部 CLI、HMI 与蓝图入口。原生硬件标识、软件路径及设备参数应与目标版本和实际工程相符，不能直接采用示例名称。
 
-使用规则：
-
-1. 先读取根目录 `README.md`、`tools/tiaportal-mcp/skill/SKILL.md` 和本蓝图。
-2. MCP 第一工具为 `Bootstrap`。
-3. 所有项目路径、软件路径、设备路径都来自 TIA 读回。
-4. PLC 写入先 dryRun，再真实导入。
-5. HMI 先建连接和变量，再建画面，最后绑定动作和动态化。
-6. 项目保存前必须完成编译和关键对象读回。
+先核对输入依赖及支持的动作，再按实际工具合同预览/执行。HMI 的连接和变量先于画面绑定；编译结果和对象读回分别检查，工程保存需要明确操作。`Validate-Bundle.ps1` 验证包内文件和结构，不证明蓝图已在实际 TIA 工程执行成功。

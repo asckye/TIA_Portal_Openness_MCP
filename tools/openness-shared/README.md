@@ -14,7 +14,7 @@ Newtonsoft and System.Text.Json serialization remain local to their runtime. Do 
 copy of the tracking implementation when adding an adapter.
 
 Studio calls Openness through its native bridge. Sharing these utilities does not introduce an MCP
-dependency. Only V20/V21 remain runnable; compiling historical adapter projects does not enable them.
+dependency. V14 SP1–V19 use foundation runtimes; V20/V21 use full engines. The exact-version adapters and both profiles are built and checked by Build-MultiVersion.
 
 Build-Release and Package-Release include this directory in the compiler-input inventory.
 Build-Configurator records its two C# 5 inputs separately.

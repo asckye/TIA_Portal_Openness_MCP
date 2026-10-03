@@ -1,6 +1,6 @@
 # 原生调用的细粒度诊断覆盖
 
-本地 3.1.0 后续开发版本将诊断覆盖加入 V20/V21 的 **Release 构建**。范围是本项目编译进引擎的 Openness 调用边界，包括已接入的 OPC UA 建模源码；不修改或分发 Siemens PublicAPI，不注入 TIA 进程。它能定位最后执行到哪个调用，不能保证 TIA 不崩溃，也不能看到 Siemens SDK 或 TIA 服务进程内部的每一层调用。
+v3.2.0 的 V20/V21 **Release 构建**包含原生调用诊断覆盖。范围是本项目编译进引擎的 Openness 调用边界，包括已接入的 OPC UA 建模源码；不修改或分发 Siemens PublicAPI，不注入 TIA 进程。它能定位最后执行到哪个调用，不能保证 TIA 不崩溃，也不能看到 Siemens SDK 或 TIA 服务进程内部的每一层调用。
 
 ## 覆盖机制
 
@@ -56,3 +56,21 @@ Release 构建没有关闭覆盖的开关。普通 Debug 编译保留原调试�
 真实工程上的原生调用延迟、日志开销、长时间运行及故障归因仍需虚拟机验收。本次本地检查不会启动/连接 TIA，也没有解禁 PLC 原生交叉引用。
 
 依据：[项目内保存的 Siemens 崩溃诊断指南](../../reference/siemens-openness/skills/crash-diagnosis/SKILL.md)、[Mono.Cecil 官方说明](https://www.mono-project.com/docs/tools%2Blibraries/libraries/Mono.Cecil/)、[固定 NuGet 版本](https://www.nuget.org/packages/Mono.Cecil/0.11.6)。
+
+## 与工作进程隔离的关系
+
+V20/V21 的可选 `--isolate-openness` 把工程调用放入同 EXE 的独立 worker，
+宿主保留 MCP 传输、认证、分页和独立诊断。私有握手核对协议、版本、构建哈希与工具表，
+每个 worker 串行处理，最多 16 个在途/排队请求，使用 10–180 秒总期限。
+开启方法和恢复步骤见[工作进程指南](../guides/openness-worker-isolation.md)。
+
+超时、退出、管道断裂或错序使绑定和旧句柄失效；已发出的原生请求报告结果未知。
+宿主只停止自己的 worker，不结束 TIA，不自动重放、保存或换绑。
+精确工程身份包括版本、PID、OS 启动时间、规范化完整路径与绑定代次。
+同 Windows 用户的会话租约阻止本项目新版本 MCP 重复附加同一实例，
+不覆盖其他用户、旧版本或其他 Openness 客户端。
+
+这套身份机制属于完整引擎，不能直接套用到 Foundation 的 PID-only 契约。
+Foundation 的绑定快照接线尚未完成，见[版本框架](unified-version-framework.md)。
+工作进程与调用边界日志分别提供故障隔离和定位证据；都不能保证 TIA 服务端不崩溃。
+真实延迟、长期运行和故障恢复验收仍为 NOT RUN。

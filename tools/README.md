@@ -1,12 +1,16 @@
-# 源码与 AI skill
+# 源码与工具
 
-| 目录 | 内容 |
+| 目录 | 当前用途 |
 |---|---|
-| [tia-openness-studio](tia-openness-studio/README.md) | 中英双语 WPF 桌面；本地原生 Openness Bridge，独立于 MCP，八版本适配器共享源码 |
-| [mcp-configurator](mcp-configurator) | WPF XAML、交互逻辑、8 种客户端适配及隔离测试 |
-| [tiaportal-mcp/src/TiaMcpServer](tiaportal-mcp/src/TiaMcpServer) | V20/V21 共享引擎源码和两个工程文件。`ModelContextProtocol/Tools/` 是全部 `McpServer.*` 工具声明，`ModelContextProtocol/Builders/` 是离线构造器/分析器/校验套件，其余为 MCP 基础设施（响应、分类、指南、导出寄存）；`Siemens/Portal/` 是全部 `Portal.*` 实现，`Siemens/Hmi/` 是 Unified/经典 HMI 访问层，其余为 Openness 解析、反射与纯逻辑助手；`Runtime/` 是不经 Openness 的运行时通道；`Cli/` 与根目录 `Program*.cs` 是命令行入口 |
-| [tiaportal-mcp/tests](tiaportal-mcp/tests) | 离线回归及实际 EXE 的 HTTP / API 检查 |
-| [tiaportal-mcp/skill](tiaportal-mcp/skill/SKILL.md) | AI 工程操作规则与调用示例 |
-| [vci-watch](vci-watch/README.md) | 可选看门狗脚本：程序编译后自动经 VCI 导出、写 CHANGELOG 并提交 Git（见[版本控制指南](../docs/guides/version-control.md)） |
+| [mcp-configurator](mcp-configurator) | 中英双语 WPF 连接配置器，八版选择与客户端配置 |
+| [tia-openness-studio](tia-openness-studio/README.md) | 中英双语 WPF 桌面，通过八版原生适配器直接调用 Openness |
+| [tiaportal-mcp/src](tiaportal-mcp/src) | V20/V21 完整引擎、六版基础宿主、Worker、协议和类型化适配器 |
+| [tiaportal-mcp/tests](tiaportal-mcp/tests) | 功能、协议、API、诊断、离线和可选原生测试 |
+| [openness-shared](openness-shared/README.md) | 版本、环境、参数、诊断和工具示例等共享实现 |
+| [tiaportal-mcp/skill](tiaportal-mcp/skill/SKILL.md) | 引导 AI 使用当前版本的 GetToolUsage 示例 |
+| [third-party](third-party) | 已集成的上游源码、固定版本与许可证 |
+| [native-call-weaver](native-call-weaver) | 原生调用点诊断插桩 |
+| [ui-glass](ui-glass) | 两个桌面程序共用的视图资源和字体许可 |
+| [vci-watch](vci-watch/README.md) | 可选 V20/V21 工作区导出与本地 Git 提交脚本 |
 
-引擎源码/测试保持稳定目录，与已验证运行文件的哈希对照。运行入口在 `runtime/`，开发命令见 [验证说明](../docs/development/validation.md)。
+运行入口见 [runtime](../runtime/README.md)，开发检查见[构建验证](../docs/development/validation.md)。

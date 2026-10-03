@@ -1,0 +1,64 @@
+{
+  "release": "v3.2.0",
+  "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/tag/v3.2.0",
+  "sourceCommit": "299f947d4b54a92873e9321a39f6b3dc39279e11",
+  "publishedAtUtc": "2026-10-03T11:42:42Z",
+  "formalRelease": true,
+  "package": {
+    "name": "TIA_MCP_Delivery_v3.2.0_20261003.zip",
+    "bytes": 43742716,
+    "sha256": "6ec0d0fc535db18bb496b77d49ee0cf55bd36ab78b6ed15871ef463fd6323a91",
+    "files": 2492
+  },
+  "assets": [
+    {
+      "name": "TIA_MCP_Delivery_v3.2.0_20261003.sha256",
+      "bytes": 104,
+      "digest": "sha256:b0afc84f518d32e166af0e4728f6bc0973c46081f6cb9cf1709e551a4d8ba928",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.2.0/TIA_MCP_Delivery_v3.2.0_20261003.sha256"
+    },
+    {
+      "name": "TIA_MCP_Delivery_v3.2.0_20261003.zip",
+      "bytes": 43742716,
+      "digest": "sha256:6ec0d0fc535db18bb496b77d49ee0cf55bd36ab78b6ed15871ef463fd6323a91",
+      "state": "uploaded",
+      "downloadUrl": "https://github.com/asckye/TIA_Portal_Openness_MCP/releases/download/v3.2.0/TIA_MCP_Delivery_v3.2.0_20261003.zip"
+    }
+  ],
+  "workflows": [
+    {
+      "name": "validate-bundle",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37118911518",
+      "headSha": "299f947d4b54a92873e9321a39f6b3dc39279e11"
+    },
+    {
+      "name": "offline-checks",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37118911511",
+      "headSha": "299f947d4b54a92873e9321a39f6b3dc39279e11"
+    },
+    {
+      "name": "Verify v3.2.0",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/asckye/TIA_Portal_Openness_MCP/actions/runs/37120529472",
+      "headSha": "299f947d4b54a92873e9321a39f6b3dc39279e11"
+    }
+  ],
+  "releaseKeys": [
+    "14sp1",
+    "15.1",
+    "16",
+    "17",
+    "18",
+    "19",
+    "20",
+    "21"
+  ],
+  "nativeTiaExecuted": false,
+  "vmDeployed": false
+}

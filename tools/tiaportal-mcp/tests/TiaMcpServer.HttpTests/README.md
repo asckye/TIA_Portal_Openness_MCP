@@ -12,10 +12,11 @@ The test HTTP listener binds only to localhost with a temporary test key.
 dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/TiaMcpServer.HttpTests.csproj -c Release
 $tests = 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
 & $tests 'runtime/v21/TiaMcpServer.exe'
-& $tests 'runtime/v21/TiaMcpServer.exe' hmi-only 21 2.7.15.0
+$fileVersion = (Get-Content 'manifest/release-build.json' -Raw | ConvertFrom-Json).fileVersion
+& $tests 'runtime/v21/TiaMcpServer.exe' hmi-only 21 $fileVersion
 ```
 
-Use the V20 executable and `hmi-only 20 2.7.15.0` to check a V20 build (pass the engine file version recorded in `manifest/release-build.json`).
+Use the V20 executable and `hmi-only 20 $fileVersion` to check a V20 build. These reflection checks target the V20/V21 full engines; foundation protocol checks are run by `Build-MultiVersion.ps1`.
 No TIA process is started and no engineering project is modified by these tests.
 Actual project connection and nested HMI screen reads require separate TIA validation.
 

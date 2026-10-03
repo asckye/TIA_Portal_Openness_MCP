@@ -79,13 +79,13 @@ no replay, and the existing synchronous seam remaining unchanged.
 From the repository root (adjust SDK path as needed):
 
 ```sh
-export DOTNET_CLI_HOME=/workspace/shared/dotnet-home
+export DOTNET_CLI_HOME="$PWD/.dotnet-home"
 export DOTNET_GENERATE_ASPNET_CERTIFICATE=false
-/workspace/shared/dotnet/dotnet build \
+dotnet build \
   tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests \
   -c Release -p:TargetFrameworks=net8.0 -p:NuGetAudit=false \
   -m:1 --disable-build-servers
-/workspace/shared/dotnet/dotnet \
+dotnet \
   tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests/bin/Release/net8.0/TiaMcp.WorkerProtocol.AsyncPreview.Tests.dll
 ```
 

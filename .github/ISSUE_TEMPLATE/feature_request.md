@@ -14,5 +14,5 @@ The tool or behavior you'd like (name, inputs, outputs if you have them in mind)
 **Alternatives considered**
 
 **Scope**
-- TIA version(s): V20 / V21 / both
-- Area: Project / Hardware / PLC / WinCC Unified HMI / Online / other
+- Exact TIA release(s): V14 SP1 / V15.1 / V16 / V17 / V18 / V19 / V20 / V21
+- Area: MCP / Studio / Configurator; Project / Hardware / PLC / HMI / Online / other

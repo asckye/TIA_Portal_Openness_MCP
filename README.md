@@ -1,77 +1,48 @@
 # TIA Portal Openness MCP
 
-[Chinese](README.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
+[Chinese](README.zh-CN.md) · [Beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) · [Documentation](docs/README.md) · [Downloads](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Release](https://img.shields.io/github/v/release/asckye/TIA_Portal_Openness_MCP)](https://github.com/asckye/TIA_Portal_Openness_MCP/releases) [![validate-bundle](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml/badge.svg)](https://github.com/asckye/TIA_Portal_Openness_MCP/actions/workflows/validate.yml)
+Connect an AI client to Siemens TIA Portal through MCP, or use the bundled TIA Openness Studio desktop directly. Both desktop applications support Chinese and English.
 
-Connect AI clients to Siemens TIA Portal V14 SP1, V15.1 and V16–V21 through version-specific Openness adapters. V14 SP1–V19 expose the PLC foundation catalog; V20/V21 retain the full engine catalog. [Version matrix and API gaps](docs/reference/version-tools.md). Includes an MCP server, a standalone WPF configurator, a JSON/YAML command-line workflow and reusable PLC / WinCC Unified templates.
+![Architecture](docs/assets/architecture.svg)
 
-![TIA Portal MCP architecture](docs/assets/architecture.svg)
+## Get started
 
-The [v3.2.0 release](docs/releases/v3.2.0.md) includes all eight MCP runtimes and Studio. To rebuild the complete bundle, run `scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Test`. Install Siemens TIA Portal, Openness and licenses separately. Full engines require .NET Framework 4.8; foundation hosts also require .NET 8 and ASP.NET Core 8; Studio requires .NET 10 Desktop Runtime. Native TIA acceptance for the newly enabled targets remains pending.
+Download the complete **TIA_MCP_Delivery** ZIP from Releases and extract the entire archive to a short, permanent directory. GitHub's source archives contain no runtime binaries.
 
-## Start here
+- **AI client:** open `TiaMcpConfigurator.exe`, select the installed TIA release and choose Same computer or VM ↔ host. Select the actual MCP client, write its configuration, restart it and start a new conversation. Follow the [configuration guide](docs/getting-started/configuration.md).
+- **Studio:** open `runtime/studio/TiaOpenness.exe`, select the TIA release before connecting, select the intended PLC and use browse, export/import, compile and save. Studio calls Openness directly and does not require an MCP client.
+- **Studio demonstration:** run `runtime/studio/TiaOpenness.exe --mock --lang en` from the extracted package. Results are synthetic.
 
-Follow the [beginner guide (Chinese)](docs/getting-started/beginners.zh-CN.md) for installation, version selection, AI client setup, Studio operations and a first SCL import/compile exercise.
+The [beginner guide](docs/getting-started/beginners.zh-CN.md) explains installation, VM paths, PLC selection and a first SCL import/compile exercise.
 
-Download and extract the **TIA_MCP_Delivery** ZIP from [Releases](https://github.com/asckye/TIA_Portal_Openness_MCP/releases/latest). Open **TiaMcpConfigurator.exe** at its root. Later releases update in place from the configurator's **Update → Update engine** menu (the configurator supports Chinese and English; stop the engine first; the configurator closes itself, `scripts\operations\Update-Engine.ps1` downloads and verifies the latest release in its own window, backs up to `.previous\`, replaces the files with robocopy and reopens the configurator; the TIA machine needs access to github.com; `-Rollback` goes back). The same script can be run by hand; the engine's `CheckForUpdate` tool only reports versions.
+## Supported releases
 
-| Scenario | Configuration |
-|---|---|
-| TIA in a virtual machine | Keep the **VM ↔ host** mode. On the VM fill pane **A**: TIA version, installation root, IPv4, port and the shared key, then **Network permissions** and **Start service**. |
-| AI on the host | Copy the configurator EXE to the host, enter the same address, port and key, pick clients in pane **B**, then **Test connection** and **Write client config**. TIA is not required on the host. |
-| TIA and AI on one computer | Switch to **Same computer**. Pane A only needs version and path; clients launch the matching engine over stdio, so no address, port or key is used. |
+| TIA release | Registered tools | MCP profile |
+|---|---:|---|
+| V14 SP1 | 57 | PLC foundation |
+| V15.1 | 58 | PLC foundation |
+| V16 / V17 / V18 | 60 each | PLC foundation |
+| V19 | 62 | PLC foundation |
+| V20 | 477 | Full engine |
+| V21 | 488 | Full engine |
 
-The configurator and Studio both support Chinese and English, with Glass Layers light and dark themes.
+V20/V21 expose 63 tools in the default lite profile; use `FindTools` and `CallTool` for the rest, or configure `--profile full`. Foundation hosts expose their own complete subset and have different contracts. Read [version scope](docs/reference/version-tools.md) and the connected server's `tools/list`. Original V14/V15 are not aliases for V14 SP1/V15.1.
 
-Cards, CLIs first: Claude Code, Codex, Gemini CLI, Qwen (writes Qwen Code), Kimi (Kimi Code CLI), Yuanbao (CodeBuddy Code), DeepSeek / GLM / Grok (OpenCode, pick the provider there), then the Qwen Agent desktop app, then Cursor and VS Code / Copilot. Card names are English throughout. The model brands and Grok have no MCP client of their own, so their cards write the vendor CLI or OpenCode. For official Claude's **Code** page select **Claude Code**. Prerequisites and client-specific limits are in the [configuration guide](docs/getting-started/configuration.md).
+Before an unfamiliar operation, `GetToolUsage(toolName, operation)` supplies the current release's arguments, examples and result interpretation. Use `language` to list programming examples and `exampleId` to retrieve complete files or call sequences. Official API patterns and project-authored wrappers are identified separately.
 
-Keep the configurator open while it runs the VM service. Restart configured clients and open a new session.
+## Installation and validation
 
-## Command line
+Install the matching TIA Portal, Openness and licenses separately. The configurator and full engines require .NET Framework 4.8. Foundation hosts additionally require .NET 8 and ASP.NET Core 8. Studio requires .NET 10 Desktop Runtime. See [runtime paths](runtime/README.md).
 
-From the package root, use the runtime matching your installed TIA version:
+All eight runtimes and Studio are built locally against the supplied SDKs. Functional, protocol, API metadata and XML interface checks are recorded separately from real-project acceptance. New native TIA/project acceptance remains **NOT RUN**; a tool catalog or successful build does not establish every engineering operation. Current limits are in [capabilities](docs/reference/capabilities.md).
+
+## Development
+
+`master` is the maintained branch. Runtime binaries are release assets, not tracked Git files. With the documented SDK layout and companion Python environment:
 
 ```powershell
-.\runtime\v21\TiaMcpServer.exe doctor
-.\runtime\v21\TiaMcpServer.exe schema
-.\runtime\v21\TiaMcpServer.exe gen .\templates\project-blueprints\scaffold_spec_motor.json --dry-run
+pwsh -NoProfile -File scripts/build/Build-MultiVersion.ps1 -PublicApiRoot <SDK-root> -Python <python.exe> -Test
 ```
 
-The last command validates the specification offline. Remove `--dry-run` when ready to create the project. V20 uses `runtime/v20/TiaMcpServer.exe`. See the [CLI guide](docs/getting-started/cli.md).
-
-## Capabilities and limits
-
-The V21 full-engine static inventory contains **488 tools** (V20 exposes 477) in 7 categories (session, project, plc, plc-online, hardware, hmi, runtime); default **lite** advertises **63**, with the remainder available through `FindTools` / `CallTool` (`ListToolCategories` shows the taxonomy, `FindTools(category=…)` browses one area). The running server's `tools/list` is authoritative. Use `--profile full` for full exposure.
-
-Before an unfamiliar call, use `GetToolUsage(toolName)` for the selected version's MCP example/template, exact parameters, workflow and official source references.
-All eight profiles include this offline reference tool; [coverage and provenance](docs/development/official-tool-usage.md) distinguish official patterns from project templates and native acceptance.
-
-Version 3.1.0 offers opt-in [Openness worker isolation](docs/guides/openness-worker-isolation.md) with `--isolate-openness`. It keeps host diagnostics available after worker failure; real TIA acceptance and coordination between separate MCP services remain pending.
-
-`master` is the only maintained branch. The configurator selects all eight release keys; each legacy runtime contains one exact-release worker. Studio calls Openness directly through its matching adapter. Historical branch heads remain documented in [version history](docs/reference/version-branches.md). Availability, compiled API checks and native acceptance are separate states.
-
-Capabilities include project/session management, PLC blocks/types/tags, hardware/network engineering, WinCC Unified, file exchange, libraries, version control and read-only online monitoring. See the [tool matrix](docs/reference/tool-matrix.md) and [acceptance boundaries](docs/reference/capabilities.md). Tool availability does not imply full Siemens API coverage or real-project acceptance.
-
-Delivery and engine versions are independent. [Delivery metadata](manifest/delivery.json) binds the engine and configurator records; [validation documentation](docs/development/validation.md) separates offline, API and real TIA checks.
-
-## Repository map
-
-| Directory | Contents |
-|---|---|
-| [docs](docs/README.md) | Setup, guides, references, troubleshooting, development and history |
-| [runtime](runtime/README.md) | Eight version-specific MCP runtimes, Studio and dependencies |
-| [tools](tools/README.md) | Engine source/tests, AI skill and WPF source |
-| [scripts](scripts/README.md) | Build, checks, generators, diagnostics and operations |
-| [templates](templates/README.md) | PLC/HMI assets and project specifications |
-| [manifest](manifest/README.md) | Inventory, versions, build receipts and hashes |
-
-Root launch/configuration CMD/BAT files were replaced by the GUI. Delivery ZIPs no longer duplicate runtimes into legacy `bin/Release` paths; use `runtime/v20` or `runtime/v21`.
-
-Read [CONTRIBUTING](.github/CONTRIBUTING.md), [validation](docs/development/validation.md) and the [release workflow](docs/development/release-workflow.md). Changes target `master`. Questions: [SUPPORT](.github/SUPPORT.md); vulnerabilities: [SECURITY](.github/SECURITY.md) (private reporting, never a public issue). History: [CHANGELOG](CHANGELOG.md), per-version notes in [docs/releases](docs/releases/), [archived release notes](docs/archive/release-notes.md) for v2.7.2–v2.7.15.
-
-Independently maintained by asckye. Provenance and third-party notices remain in [NOTICE](NOTICE.md) and [LICENSE](LICENSE).
-
-### Integrated desktop (unreleased)
-
-[TIA Openness Studio](tools/tia-openness-studio/README.md) adds an English/Chinese WPF desktop and offline demo. Its live workflows select one of eight Openness adapters through a local native bridge, independently of MCP; the original Studio source and history are preserved. Studio is included in the release ZIP; new native acceptance remains pending.
+[Build and validation](docs/development/validation.md) · [Release workflow](docs/development/release-workflow.md) · [Current handoff](docs/development/handoff.md) · [Changelog](CHANGELOG.md) · [License notices](docs/licenses/THIRD-PARTY-NOTICES.md)
