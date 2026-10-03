@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 
-// Native members used by the 2.7.34 Step7 sub-batch 1 (Portal.SoftwareUnitDeep.cs: software / safety units, named value
+// Native members used by Siemens/Services/SoftwareUnitDeepService.cs (software / safety units, named value
 // type and UDT documents, checksums, fingerprints, block write protection, project compilation settings, channel linked
 // tags, V21 process image assignment), verified member by member against the installed V20 (Siemens.Engineering) or V21
 // (Siemens.Engineering.Base / Siemens.Engineering.Step7) PublicAPI.

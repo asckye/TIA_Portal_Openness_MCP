@@ -106,20 +106,5 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects).")] string valueJson="null",
             bool dryRun=true)
             => Portal.ManageTechnologyObject(softwarePath,objectPath,action,typeIdentifier,version,parameter,valueJson,dryRun);
-        [McpServerTool(Name="ManagePlcSoftwareUnit"), Description("[L2][PLC-Software][WRITE] Native software units (PlcUnitProvider.UnitGroup): list (standard and safety units), read (typed PlcUnitBase row with contents), create, createFromMasterCopy (libraryName empty = project library, masterCopyPath, copyMode ThrowIfExists/Rename/Replace), delete, update (propertiesJson Author / NamespacePreset; commentsJson {culture: text} writes Comment per active project language; Name refused), createRelation (relatedUnit + relationType SoftwareUnit/NonUnitDB/TODB) and deleteRelation. unitKind=safety addresses the system-generated PlcSafetyUnit (read / update / relations only; it can neither be created nor deleted). Every write is verified by readback. dryRun=true default; real writes require an Offline PLC. Delete includes contained objects. No save/compile/download or implicit publication of objects (SetPlcUnitObjectAccess).")]
-        public static ResponseMessage ManagePlcSoftwareUnit(
-            string softwarePath,
-            [Description("action: the operation to perform - list | read | create | createFromMasterCopy | delete | update | createRelation | deleteRelation.")] string action,
-            string name="",
-            [Description("relatedUnit: exact name of the related software unit.")] string relatedUnit="",
-            [Description("relationType: SoftwareUnit | NonUnitDB | TODB.")] string relationType="",
-            string propertiesJson="{}",
-            bool dryRun=true,
-            [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
-            [Description("commentsJson: JSON object language tag -> comment text.")] string commentsJson="{}",
-            string libraryName="",
-            string masterCopyPath="",
-            [Description("copyMode: what to do when the name exists - ThrowIfExists | Rename | Replace.")] string copyMode="")
-            => Portal.ManagePlcSoftwareUnit(softwarePath,action,name,relatedUnit,relationType,propertiesJson,dryRun,unitKind,commentsJson,libraryName,masterCopyPath,copyMode);
     }
 }

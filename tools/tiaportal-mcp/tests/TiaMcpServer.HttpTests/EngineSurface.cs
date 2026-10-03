@@ -14,7 +14,14 @@ internal sealed class EngineSurface
 
     // engine-decomposition.md: Portal remains the session; add the registered domain services here as they move.
     // Do not scan arbitrary Siemens helpers or SDK types as services.
-    private static readonly string[] serviceTypeNames = { "TiaMcpServer.Siemens.Services.CfcService" };
+    private static readonly string[] serviceTypeNames = {
+        "TiaMcpServer.Siemens.Services.CfcService",
+        "TiaMcpServer.Siemens.Services.TestSuiteService",
+        "TiaMcpServer.Siemens.Services.V20OptionsService",
+        "TiaMcpServer.Siemens.Services.OptionalEngineeringService",
+        "TiaMcpServer.Siemens.Services.SpecializedExchangeService",
+        "TiaMcpServer.Siemens.Services.SoftwareUnitDeepService"
+    };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;
     private readonly Type[] toolTypes;

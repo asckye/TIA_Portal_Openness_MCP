@@ -4,15 +4,19 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using TiaMcpServer.ModelContextProtocol;
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class SpecializedExchangeService
     {
+        private readonly IEngineeringSession _session;
+
+        public SpecializedExchangeService(IEngineeringSession session) => _session = session;
+
         public ResponseMessage ExchangePlcSupervisions(string softwarePath,string action,string filePath,string importOptions="None",bool dryRun=true)
-            =>RunHmiStepTool("ExchangePlcSupervisions",meta=>{
+            =>_session.RunHmiStepTool("ExchangePlcSupervisions",meta=>{
                 var method=action switch {"export"=>"ExportSupervisionsToXlsx","import"=>"ImportSupervisionsFromXlsx","importSettings"=>"ImportSupervisionSettingsFromXlsx",_=>throw new ArgumentException("action must be export/import/importSettings.")};
-                bool write=action!="export"; using var access=!dryRun&&write ? AcquireHmiEditAccess() : null;
-                var plc=ExactPlcForEngineering(softwarePath,!dryRun&&write);
+                bool write=action!="export"; using var access=!dryRun&&write ? _session.AcquireHmiEditAccess() : null;
+                var plc=_session.ExactPlcForEngineering(softwarePath,!dryRun&&write);
                 var service=OfficialServiceAccess.Require(plc,"Siemens.Engineering.SW.Supervision.SupervisionProvider","Siemens.Engineering.Step7");
                 var file=write ? new FileInfo(filePath) : NativeFileOutput.Plan(filePath);
                 if(write&&!file.Exists) throw new FileNotFoundException("Supervision input not found.");

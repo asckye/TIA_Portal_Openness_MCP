@@ -4,14 +4,6 @@ namespace TiaMcpServer.ModelContextProtocol
 {
     public static partial class McpServer
     {
-        [McpServerTool(Name="ExchangePlcSupervisions"), Description("[L2][PLC-Software][WRITE] ProDiag XLSX export/import/importSettings, explicit native options and diagnostic state. Import requires offline PLC; output is new and hashed. Default preview; no save/compile/download.")]
-        public static ResponseMessage ExchangePlcSupervisions(
-            string softwarePath,
-            [Description("action: the operation to perform - export | import | importSettings.")] string action,
-            string filePath,
-            string importOptions="None",
-            bool dryRun=true)
-            => Portal.ExchangePlcSupervisions(softwarePath,action,filePath,importOptions,dryRun);
         [McpServerTool(Name="ExchangeMotionCamData"), Description("[L2][PLC-TechnologyObjects][WRITE] Native cam text/binary/point-list export and text/binary import. Explicit native format/separator, new output file, default preview. Import requires Offline. No drive/motion command.")]
         public static ResponseMessage ExchangeMotionCamData(
             string softwarePath,
@@ -46,18 +38,6 @@ namespace TiaMcpServer.ModelContextProtocol
             string expectedToken="",
             bool dryRun=true)
             => Portal.ManageUnifiedEvent(softwarePath,objectPathJson,eventType,action,propertyName,scriptPropertiesJson,expectedToken,dryRun);
-        [McpServerTool(Name="ReadSiVArcRules"), Description("[L2][HMI][READ] Exact SiVArc rule category and property-only JSON path; live scalar pagination with schema, complex values excluded. No generation.")]
-        public static ResponseMessage ReadSiVArcRules(string category,string objectPathJson="[]",int offset=0,int limit=100)
-            => Portal.ReadSiVArcRules(category,objectPathJson,offset,limit);
-        [McpServerTool(Name="ManageSiVArcRule"), Description("[L2][HMI][WRITE] Native SiVArc rule/folder/table composition create/update/delete with exact collection path and name. Nonempty container deletion refused. Default preview; no generation/save/compile/download.")]
-        public static ResponseMessage ManageSiVArcRule(
-            string category,
-            [Description("collectionPathJson: JSON array path of the rule collection.")] string collectionPathJson,
-            string name,
-            [Description("create | update | delete. ")] string action,
-            string propertiesJson="{}",
-            bool dryRun=true)
-            => Portal.ManageSiVArcRule(category,collectionPathJson,name,action,propertiesJson,dryRun);
         [McpServerTool(Name="GenerateSiVArc"), Description("[L2][HMI][WRITE] Native SiVArc generation (typed Sivarc.Generate) for one exact HMI device plus optional additionalHmiDeviceNamesJson (multi-device overload) and explicit PLC paths. generationOptions are official GenerationOptions flags joined with | (AllTags|FullGeneration; None = project settings). Default preview; can create/replace HMI objects according to rules. plcSoftwarePathsJson names the PLC software; the native call is tried with the software names and then with the owning device names (SiVArc only knows PLCs connected to the HMI device - the 2.7.39 real project without an HMI connection answered 'PLC device not found' for both). Returns the typed SivarcGenerationResult with recursive feedback messages. No automatic save/compile/download.")]
         public static ResponseMessage GenerateSiVArc(
             [Description("hmiDeviceName: exact HMI device name to generate for.")] string hmiDeviceName,

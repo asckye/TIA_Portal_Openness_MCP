@@ -1,3 +1,4 @@
+using NativeTestSuiteService = Siemens.Engineering.TestSuite.TestSuiteService;
 using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
@@ -18,18 +19,22 @@ using Logic = TiaMcpServer.Siemens.TestSuiteLogic;
 using AppLoadOptions = Siemens.Engineering.TestSuite.ApplicationTest.TCLoadOptions;
 using SysLoadOptions = Siemens.Engineering.TestSuite.SystemTest.TCLoadOptions;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Typed TIA Portal Test Suite option package (Siemens.Engineering.TestSuite, identical on V20 / V21).
-    // Official entry: Project.GetService<TestSuiteService>() -> StyleGuideGroup.RuleSets,
+    // Official entry: Project.GetService<NativeTestSuiteService>() -> StyleGuideGroup.RuleSets,
     // ApplicationTestGroup.TestCases / ApplicationTestSets, SystemTestGroup.SystemTestCases; the executors are services of the three
     // system groups (RuleSetExecutor / TestCaseExecutor / SystemTestCaseExecutor) and answer TestResults with recursive messages.
-    public partial class Portal
+    internal sealed class TestSuiteService
     {
+        private readonly IEngineeringSession _session;
+
+        public TestSuiteService(IEngineeringSession session) => _session = session;
+
         // ---- resolution ----------------------------------------------------------------------------------------------------------
-        private TestSuiteService RequireTestSuite()
-            => _project!.GetService<TestSuiteService>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TestSuiteService is not provided by this project (TIA Portal Test Suite not installed or not licensed).");
-        private static object TestSuiteCollection(TestSuiteService service, string category, string kind) => category switch
+        private NativeTestSuiteService RequireTestSuite()
+            => _session.CurrentProject!.GetService<NativeTestSuiteService>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "TestSuiteService is not provided by this project (TIA Portal Test Suite not installed or not licensed).");
+        private static object TestSuiteCollection(NativeTestSuiteService service, string category, string kind) => category switch
         {
             "styleGuide" => service.StyleGuideGroup.RuleSets,
             "application" => kind == "testSet" ? (object)service.ApplicationTestGroup.ApplicationTestSets : service.ApplicationTestGroup.TestCases,
@@ -52,14 +57,14 @@ namespace TiaMcpServer.Siemens
             IEngineeringObject result;
             switch (entry.Kind)
             {
-                case "project": result = _project!; break;
-                case "deviceGroup": result = _project!.DeviceGroups.Find(entry.Name) ?? throw new PortalException(PortalErrorCode.NotFound, "Device group not found: " + entry.Name); break;
+                case "project": result = _session.CurrentProject!; break;
+                case "deviceGroup": result = _session.CurrentProject!.DeviceGroups.Find(entry.Name) ?? throw new PortalException(PortalErrorCode.NotFound, "Device group not found: " + entry.Name); break;
                 case "plc":
-                    var container = ResolveSoftwareContainerUncached(entry.SoftwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + entry.SoftwarePath);
+                    var container = _session.ResolveSoftwareContainerUncached(entry.SoftwarePath) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact PLC software not found: " + entry.SoftwarePath);
                     result = container.Parent as DeviceItem ?? throw new PortalException(PortalErrorCode.NotFound, "The software container of " + entry.SoftwarePath + " is not owned by a device item."); break;
                 default:
-                    var plc = ExactPlcForEngineering(entry.SoftwarePath, false);
-                    if (entry.Kind == "units") result = RequireUnitProvider(plc).UnitGroup;
+                    var plc = _session.ExactPlcForEngineering(entry.SoftwarePath, false);
+                    if (entry.Kind == "units") result = _session.RequireUnitProvider(plc).UnitGroup;
                     else
                     {
                         object root = entry.Kind == "blocks" ? plc.BlockGroup : entry.Kind == "tags" ? (object)plc.TagTableGroup : plc.TypeGroup;
@@ -111,7 +116,7 @@ namespace TiaMcpServer.Siemens
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadTestSuiteCases(string category, string name = "", int offset = 0, int limit = 100, string kind = "case")
-            => RunHmiStepTool("ReadTestSuiteCases", meta =>
+            => _session.RunHmiStepTool("ReadTestSuiteCases", meta =>
             {
                 var k = Logic.ValidateReadRequest(category, kind, offset, limit);
                 var service = RequireTestSuite();
@@ -130,10 +135,10 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ExchangeTestSuiteCase(string category, string action, string name, string filePath = "", string importOptions = "None", string loadOptions = "", bool dryRun = true, string kind = "case")
-            => RunHmiStepTool("ExchangeTestSuiteCase", meta =>
+            => _session.RunHmiStepTool("ExchangeTestSuiteCase", meta =>
             {
                 var r = Logic.ValidateExchangeRequest(category, action, name, filePath, importOptions, loadOptions, kind, dryRun);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, r.Kind);
                 meta["category"] = category; meta["kind"] = r.Kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false; meta["expectedName"] = name;
@@ -180,7 +185,7 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage RunTestSuiteCase(string category, string name = "", bool confirmExternalExecution = false, bool dryRun = true, string namesJson = "[]", bool runAll = false, string kind = "case")
-            => RunHmiStepTool("RunTestSuiteCase", meta =>
+            => _session.RunHmiStepTool("RunTestSuiteCase", meta =>
             {
                 var r = Logic.ValidateRunRequest(category, name, namesJson, runAll, kind, confirmExternalExecution, dryRun);
                 var service = RequireTestSuite();
@@ -227,10 +232,10 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageTestSuiteCase(string category, string name, string action = "read", string kind = "case", string newName = "", string softwarePath = "", string instanceName = "", string executionMode = "", string opcUaServerAddress = "", string serverInterfaceType = "", string interfaceFolderPath = "", string updateOptions = "", string scopeJson = "[]", string targetName = "", string masterCopyPath = "", string libraryName = "", bool dryRun = true)
-            => RunHmiStepTool("ManageTestSuiteCase", meta =>
+            => _session.RunHmiStepTool("ManageTestSuiteCase", meta =>
             {
                 var r = Logic.ValidateManageRequest(category, name, action, kind, newName, softwarePath, instanceName, executionMode, opcUaServerAddress, serverInterfaceType, interfaceFolderPath, updateOptions, scopeJson, targetName, masterCopyPath, dryRun);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var service = RequireTestSuite();
                 var collection = TestSuiteCollection(service, category, r.Kind);
                 meta["category"] = category; meta["kind"] = r.Kind; meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -238,10 +243,10 @@ namespace TiaMcpServer.Siemens
                 if (action == "createFromMasterCopy" && target != null) throw new PortalException(PortalErrorCode.InvalidState, Logic.CategoryLabel(category) + " already exists: " + name);
                 if (target != null) meta["before"] = TestSuiteRow(target);
                 if (action == "read") return "Test Suite " + Logic.CategoryLabel(category) + " read; nothing changed.";
-                MasterCopy? masterCopy = action == "createFromMasterCopy" ? ExactMasterCopy(libraryName, masterCopyPath) : null;
+                MasterCopy? masterCopy = action == "createFromMasterCopy" ? _session.ExactMasterCopy(libraryName, masterCopyPath) : null;
                 RuleSet? copyTarget = action == "copyScope" ? (RuleSet)ExactTestSuiteItem(collection, targetName, "rule set") : null;
                 if (copyTarget != null) meta["target"] = TestSuiteRow(copyTarget);
-                PlcSoftware? plc = action == "setScope" && category == "application" ? ExactPlcForEngineering(softwarePath, false) : null;
+                PlcSoftware? plc = action == "setScope" && category == "application" ? _session.ExactPlcForEngineering(softwarePath, false) : null;
                 var scopeObjects = new List<IEngineeringObject>(); var resolved = new JsonArray();
                 if (action == "setScope" && category == "styleGuide") { foreach (var entry in r.Scope) scopeObjects.Add(ResolveStyleGuideScopeObject(entry, resolved)); meta["scopeObjects"] = resolved; }
                 DirectoryInfo? folder = action == "setScope" && category == "system" && !string.IsNullOrEmpty(interfaceFolderPath) ? new DirectoryInfo(interfaceFolderPath) : null;

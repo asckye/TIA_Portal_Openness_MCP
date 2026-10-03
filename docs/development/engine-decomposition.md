@@ -148,14 +148,50 @@ CFC 是第一个样板：[CfcService](../../tools/tiaportal-mcp/src/TiaMcpServer
 迁移前先单独补吞异常原因并缩减基线，保存注释补丁，以去注释代码和 Release EXE 字节一致性验收。
 随后原样移动方法，将服务加入 HttpTests 的 `EngineSurface` 服务名单；`CfcShapeChecks` 和
 `EngineeringApiShapeTests` 保留原断言，并验证真实声明类型、共享会话、单例和工具到服务的 IL 调用。
-[Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 接收两份 `NativeCallWeaver verify`
-清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，以及六个迁移方法
-折入 lambda 后的有序调用点：保留 lambda 局部编号，各方法体按 IL offset 排序，忽略迁移造成的全局闭包编号。
+[Compare-NativeCallOrder.py](../../scripts/checks/Compare-NativeCallOrder.py) 接收两份 `NativeCallWeaver verify`
+清单（`--baseline before.json --current after.json`），比较全局 Siemens 成员多重集合，并按同名方法自动匹配
+从 `Portal` / `McpServer` 消失、在服务或工具类型中出现的方法族。折入 lambda、局部函数及其迭代器后的
+各方法体按 IL offset 排序，保留局部编号和重载签名，忽略迁移造成的全局闭包编号。
+未匹配方法报错；有意保留的例外须逐项传入 `--allow-unmatched TYPE::METHOD`，过期例外同样报错。
+没有织入点的方法不在清单中，另由源码比较和工具归属检查覆盖。
 它证明静态调用点顺序；方法体原样迁移的源码检查另保证参数、lambda 所在位置与线程调度不变，不能替代真机轨迹。
-[Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 用迁移前后各自的 HttpTests（`--baseline-harness` /
-`--host-harness`）和 EXE（`--baseline-exe` / `--exe`），在 full/lite、直接/桥接及隔离子进程中覆盖两个工具的
-八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
+[Test-DomainTools.py](../../scripts/checks/Test-DomainTools.py) 用迁移前后各自的 HttpTests（`--baseline-harness` /
+`--host-harness`）和 EXE（`--baseline-exe` / `--exe`），以可重复的 `--domain <name>` 选择领域，在
+full/lite、直接/桥接及隔离子进程中覆盖该领域的全部工具，并核对源码中的工具名单。
+`--domain Cfc` 覆盖两个工具的八种操作；均须到达未连接会话的工程前置检查，返回文本除 `meta.timestamp`（桥接为 `Meta.timestamp`）外
 逐字节相同。契约、响应快照、原生清单及全部离线门禁仍按本页验收要求运行。
+
+[Compare-CfcNativeCalls.py](../../scripts/checks/Compare-CfcNativeCalls.py) 和
+[Test-CfcTools.py](../../scripts/checks/Test-CfcTools.py) 保留为兼容入口。
+
+### 首批可选包领域
+
+| 领域 | 服务 / 工具类 | 工具数 |
+|---|---|---|
+| TestSuite | [TestSuiteService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/TestSuiteService.cs) / [TestSuiteTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) | 4 |
+| V20Options | [V20OptionsService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/V20OptionsService.cs) / [V20OptionsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) | 5 |
+| OptionalEngineering | [OptionalEngineeringService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OptionalEngineeringService.cs) / [OptionalEngineeringTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) | 2 |
+| SpecializedExchange | [SpecializedExchangeService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SpecializedExchangeService.cs) / [SpecializedExchangeTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) | 1 |
+| SoftwareUnitDeep | [SoftwareUnitDeepService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/SoftwareUnitDeepService.cs) / [SoftwareUnitDeepTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) | 7 |
+
+`McpServer.SpecializedEngineering.cs` 保留 Motion、HMI、库及 SiVArc 生成工具；
+`ManagePlcSoftwareUnit` 从 `McpServer.EngineeringManagement.cs` 并入 SoftwareUnitDeepTools。
+这 19 个工具无 CLI 静态调用点；服务只通过 `IEngineeringSession` 读取会话，不写会话字段。
+
+跨领域成员保持在内核，接口显式转发现有方法体：
+
+- `RequireHardwareUtility<T>` 读取当前工程的 `HwUtilities`，保留在 `Portal.BaseLeftovers.cs`，
+  由 V20Options 和原硬件工具共用。
+- `ExactSiVArcRoot` 保留在 `Portal.OptionalEngineering.cs`，继续复用 SiVArc 领域的 `Family` / `RequireSivarc`。
+- `RequireUnitProvider`、`ExactUnit`、`OptionalUnit`、`BlockRootOf`、`TypeRootOf`、`ExactObjectUnder`、
+  `DocumentMessages`、`DocumentExportRow`、`DocumentImportRow` 保留在 `Portal.SoftwareUnitDeep.cs`，
+  供软件单元管理、审计、STEP 7、SiVArc、块及 TestSuite 复用；`LinkedTagRows` 仍由硬件领域调用。
+- `ResolveSoftwareContainerUncached`、`ExactMasterCopy`、`ExactLibraryType`、`ExactTypeVersion`、`MultilingualJson`
+  原有实现不动，新增接口转发供服务调用。`RelationExists` 和 `UnitRow` 因调用内核而成为服务实例方法。
+
+V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工具并保留其不支持错误。
+通用领域测试也比较这些拒绝响应，不屏蔽 `meta.error` 中的异常堆栈。类迁移会改变这类堆栈的类型名及
+编译器闭包编号，因此常规契约/响应快照零差异不足以证明全部领域响应逐字节一致；此项须单独审查。
 
 ## G9：单 PLC 工程的模糊匹配
 

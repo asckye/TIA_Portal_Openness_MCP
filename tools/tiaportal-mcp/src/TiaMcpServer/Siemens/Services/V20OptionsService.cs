@@ -12,10 +12,14 @@ using Siemens.Engineering.Simotion;
 using Siemens.Engineering.SCADAExporter;
 #endif
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class V20OptionsService
     {
+        private readonly IEngineeringSession _session;
+
+        public V20OptionsService(IEngineeringSession session) => _session = session;
+
         private static FileInfo OptionFile(string path, string extension, bool input)
         {
             if (!Path.IsPathRooted(path) || !string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase))
@@ -34,18 +38,18 @@ namespace TiaMcpServer.Siemens
         }
         public ResponseMessage ManageSinumerikArchive(string action, string filePath, string devicePathJson = "[]", string itemPathJson = "[]",
             string modifiedDevicePathJson = "[]", string modifiedItemPathJson = "[]", string mode = "HardwareAndAllProgramBlocks", string comment = "", string author = "", string password = "", bool dryRun = true)
-            => RunHmiStepTool("ManageSinumerikArchive", meta => {
+            => _session.RunHmiStepTool("ManageSinumerikArchive", meta => {
 #if !TIA_V20
                 throw new NotSupportedException("SinumerikArchiveProvider is absent from the supplied V21 SDK; use the V20 engine with the appropriate SINUMERIK option.");
 #else
                 if (action != "archive" && action != "retrieve" && action != "fAddressArchive") throw new ArgumentException("action: archive/retrieve/fAddressArchive.");
                 var file = OptionFile(filePath, ".dsf", action == "retrieve");
                 var archiveMode = (SinumerikArchivationMode)EngineeringScalarProperties.ConvertValue(JsonValue.Create(mode), typeof(SinumerikArchivationMode))!;
-                using var access = !dryRun ? AcquireHmiEditAccess() : null;
-                var provider = RequireHardwareUtility<SinumerikArchiveProvider>("SinumerikArchiveProvider");
+                using var access = !dryRun ? _session.AcquireHmiEditAccess() : null;
+                var provider = _session.RequireHardwareUtility<SinumerikArchiveProvider>("SinumerikArchiveProvider");
                 DeviceItem? plc = null, modified = null;
-                if (action != "retrieve") plc = ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("itemPathJson must select the NCU PLC device item.");
-                if (action == "fAddressArchive") modified = ExactEngineeringHardware(modifiedDevicePathJson, modifiedItemPathJson) as DeviceItem ?? throw new ArgumentException("modifiedItemPathJson must select the modified PLC device item.");
+                if (action != "retrieve") plc = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("itemPathJson must select the NCU PLC device item.");
+                if (action == "fAddressArchive") modified = _session.ExactEngineeringHardware(modifiedDevicePathJson, modifiedItemPathJson) as DeviceItem ?? throw new ArgumentException("modifiedItemPathJson must select the modified PLC device item.");
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["filePath"] = file.FullName; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
                 if (dryRun) return "SINUMERIK archive operation preview; no native archive/retrieve call.";
                 using var secure = string.IsNullOrEmpty(password) ? null : PlcBlockServicesLogic.ToSecureString(password);
@@ -73,7 +77,7 @@ namespace TiaMcpServer.Siemens
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ImportSinumerikAlarmTexts(string devicePathJson, string filesJson, bool dryRun = true)
-            => RunHmiStepTool("ImportSinumerikAlarmTexts", meta => {
+            => _session.RunHmiStepTool("ImportSinumerikAlarmTexts", meta => {
 #if !TIA_V20
                 throw new NotSupportedException("SinumerikAlarmTextProvider is absent from the supplied V21 SDK.");
 #else
@@ -84,8 +88,8 @@ namespace TiaMcpServer.Siemens
                     if (extension != ".ts" && extension != ".csv") throw new ArgumentException("Alarm files must be TS or CSV.");
                     return OptionFile(p, extension, true);
                 }).ToArray();
-                using var access = !dryRun ? AcquireHmiEditAccess() : null;
-                var device = ExactEngineeringHardware(devicePathJson, "[]") as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
+                using var access = !dryRun ? _session.AcquireHmiEditAccess() : null;
+                var device = _session.ExactEngineeringHardware(devicePathJson, "[]") as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
                 var provider = InvocationJournal.Native("SinumerikAlarmText.GetService", () => device.GetService<SinumerikAlarmTextProvider>()) ?? throw new NotSupportedException("The selected device has no SinumerikAlarmTextProvider.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["inputCount"] = files.Length;
                 meta["replacementScope"] = "SINUMERIK DB2 alarm texts; native import can replace existing texts. Required languages must already be active.";
@@ -98,7 +102,7 @@ namespace TiaMcpServer.Siemens
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ManageSinumerikSafetyMode(string devicePathJson, string action = "read", string mode = "", bool dryRun = true, bool confirmSafetyChange = false)
-            => RunHmiStepTool("ManageSinumerikSafetyMode", meta => {
+            => _session.RunHmiStepTool("ManageSinumerikSafetyMode", meta => {
 #if !TIA_V20
                 throw new NotSupportedException("SafetyModeProvider is absent from the supplied V21 SDK.");
 #else
@@ -106,8 +110,8 @@ namespace TiaMcpServer.Siemens
                 bool writing = action == "set" && !dryRun;
                 if (writing && !confirmSafetyChange) throw new ArgumentException("Setting SINUMERIK safety mode requires confirmSafetyChange=true and dryRun=false.");
                 SafetyMode requested = action == "set" ? (SafetyMode)EngineeringScalarProperties.ConvertValue(JsonValue.Create(mode), typeof(SafetyMode))! : default;
-                using var access = writing ? AcquireHmiEditAccess() : null;
-                var device = ExactEngineeringHardware(devicePathJson, "[]") as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
+                using var access = writing ? _session.AcquireHmiEditAccess() : null;
+                var device = _session.ExactEngineeringHardware(devicePathJson, "[]") as Device ?? throw new ArgumentException("Select a SINUMERIK NCU device.");
                 var provider = InvocationJournal.Native("SinumerikSafety.GetService", () => device.GetService<SafetyModeProvider>()) ?? throw new NotSupportedException("The selected device has no SafetyModeProvider.");
                 meta["before"] = provider.CurrentMode.ToString(); meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["preconditions"] = "NCU PLC must be offline; the native API checks configuration eligibility. Switching affects safety/telegram configuration and requires engineering acceptance.";
@@ -123,11 +127,11 @@ namespace TiaMcpServer.Siemens
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage InitializeSimotionScripting(bool dryRun = true)
-            => RunHmiStepTool("InitializeSimotionScripting", meta => {
+            => _session.RunHmiStepTool("InitializeSimotionScripting", meta => {
 #if !TIA_V20
                 throw new NotSupportedException("SimotionProvider is absent from the supplied V21 SDK.");
 #else
-                var provider = InvocationJournal.Native("Simotion.GetService", () => _project!.GetService<SimotionProvider>()) ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
+                var provider = InvocationJournal.Native("Simotion.GetService", () => _session.CurrentProject!.GetService<SimotionProvider>()) ?? throw new NotSupportedException("Project does not provide SimotionProvider; SIMOTION SCOUT TIA must be installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 if (dryRun) return "SIMOTION scripting initialization preview; no Initialize call.";
                 var result = InvocationJournal.Native("Simotion.Initialize", () => provider.Initialize());
@@ -137,12 +141,12 @@ namespace TiaMcpServer.Siemens
             }, requiresProject: Engineering.TiaMajorVersion == 20);
 
         public ResponseMessage ExportScadaData(string filePath, string softwarePath = "", bool dryRun = true)
-            => RunHmiStepTool("ExportScadaData", meta => {
+            => _session.RunHmiStepTool("ExportScadaData", meta => {
 #if !TIA_V20
                 throw new NotSupportedException("ScadaExportProvider is absent from the supplied V21 SDK.");
 #else
                 var file = OptionFile(filePath, ".zip", false);
-                IEngineeringServiceProvider owner = string.IsNullOrEmpty(softwarePath) ? (IEngineeringServiceProvider)_project! : ExactPlcForEngineering(softwarePath, false);
+                IEngineeringServiceProvider owner = string.IsNullOrEmpty(softwarePath) ? (IEngineeringServiceProvider)_session.CurrentProject! : _session.ExactPlcForEngineering(softwarePath, false);
                 var provider = InvocationJournal.Native("ScadaExport.GetService", () => owner.GetService<ScadaExportProvider>()) ?? throw new NotSupportedException("ScadaExportProvider unavailable; install SIMATIC SCADA Export for TIA Portal and select a supported project/PLC.");
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false;
                 if (dryRun) return "SCADA PLC configuration export preview; no ZIP written.";

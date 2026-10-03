@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.42 phase 6 ⑥-③ Test Suite tools (Portal.TestSuite.cs), verified member by member against the
+// Native members used by the Test Suite tools (Siemens/Services/TestSuiteService.cs), verified member by member against the
 // installed V20 / V21 PublicAPI (Siemens.Engineering.TestSuite is a separate assembly on both versions; the surface is identical).
 internal static class TestSuiteShapeChecks
 {

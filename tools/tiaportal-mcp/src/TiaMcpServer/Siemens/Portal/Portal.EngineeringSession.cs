@@ -3,8 +3,13 @@ using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
 using Siemens.Engineering.HW.Features;
+using Siemens.Engineering.Library.MasterCopies;
+using Siemens.Engineering.Library.Types;
 using Siemens.Engineering.Multiuser;
 using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Types;
+using Siemens.Engineering.SW.Units;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
@@ -31,6 +36,24 @@ namespace TiaMcpServer.Siemens
             => ExactEngineeringHardware(devicePathJson, itemPathJson);
         object IEngineeringSession.ExactOpenEngineeringLibrary(string libraryName) => ExactOpenEngineeringLibrary(libraryName);
         object IEngineeringSession.ResolveHmiSoftwareOrThrow(string hmiSoftwarePath) => ResolveHmiSoftwareOrThrow(hmiSoftwarePath);
+
+        SoftwareContainer? IEngineeringSession.ResolveSoftwareContainerUncached(string softwarePath) => ResolveSoftwareContainerUncached(softwarePath);
+        T IEngineeringSession.RequireHardwareUtility<T>(string identifier) => RequireHardwareUtility<T>(identifier);
+        object IEngineeringSession.ExactSiVArcRoot(string category) => ExactSiVArcRoot(category);
+        MasterCopy IEngineeringSession.ExactMasterCopy(string libraryName, string path) => ExactMasterCopy(libraryName, path);
+        LibraryType IEngineeringSession.ExactLibraryType(object library, string typePath) => ExactLibraryType(library, typePath);
+        LibraryTypeVersion IEngineeringSession.ExactTypeVersion(LibraryType type, string version) => ExactTypeVersion(type, version);
+        JsonNode? IEngineeringSession.MultilingualJson(MultilingualText? text) => MultilingualJson(text);
+        PlcUnitProvider IEngineeringSession.RequireUnitProvider(PlcSoftware plc) => RequireUnitProvider(plc);
+        PlcUnitBase IEngineeringSession.ExactUnit(PlcUnitSystemGroup group, string unitKind, string name) => ExactUnit(group, unitKind, name);
+        PlcUnitBase? IEngineeringSession.OptionalUnit(PlcSoftware plc, string unitName, string unitKind) => OptionalUnit(plc, unitName, unitKind);
+        PlcBlockGroup IEngineeringSession.BlockRootOf(PlcSoftware plc, PlcUnitBase? unit) => BlockRootOf(plc, unit);
+        PlcTypeGroup IEngineeringSession.TypeRootOf(PlcSoftware plc, PlcUnitBase? unit) => TypeRootOf(plc, unit);
+        object IEngineeringSession.ExactObjectUnder(object root, string objectPath, string collection, string label)
+            => ExactObjectUnder(root, objectPath, collection, label);
+        JsonArray IEngineeringSession.DocumentMessages(DocumentResultMessageComposition? messages) => DocumentMessages(messages);
+        JsonObject IEngineeringSession.DocumentExportRow(DocumentExportResult result) => DocumentExportRow(result);
+        JsonObject IEngineeringSession.DocumentImportRow(DocumentImportResult result, JsonArray imported) => DocumentImportRow(result, imported);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();
