@@ -123,5 +123,46 @@ internal static class DomainShapeChecks
             "Disconnected VCI acquisition clears the cached owner and retained proxies");
         check(ReferenceEquals(contract.GetProperty("Logger")!.GetValue(session), portal.GetField("_logger", all)!.GetValue(session)),
             "Online/download keeps the existing Portal logger instance and category");
+
+        var hmiForwarders = new[] { "GetHmiScreens", "GetHmiTagTables", "GetHmiTags", "GetHmiConnections",
+            "ExportHmiTagTable", "ImportHmiScreen", "ImportHmiTagTable", "GetHmiProgramInfo",
+            "DescribeHmiTagTable", "DescribeHmiTag", "DescribeHmiScreenItem" };
+        var mcp = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        foreach (var domain in new[] { (Name: "HmiExchange", Count: 13), (Name: "HmiDescribe", Count: 7), (Name: "HmiTagDeletion", Count: 1) })
+        {
+            var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
+            var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
+            var target = provider.GetService(service)!;
+            var toolTarget = provider.GetService(tools)!;
+            foreach (var type in new[] { service, tools })
+                check(type.IsSealed && !typeof(IDisposable).IsAssignableFrom(type)
+                    && ReferenceEquals(provider.GetService(type), provider.GetService(type)), domain.Name + " singleton lifetime: " + type.Name);
+            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                && ReferenceEquals(tools.GetField("_service", all)!.GetValue(toolTarget), target), domain.Name + " shares the engineering session");
+            var methods = tools.GetMethods(all).Where(method => method.GetCustomAttribute<McpServerToolAttribute>() != null).ToArray();
+            check(methods.Length == domain.Count, domain.Name + " tool count");
+            foreach (var tool in methods)
+            {
+                var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                check(!tool.IsStatic && surface.Tool(name) == tool, domain.Name + " owns " + name);
+                var called = name == "CompileAndDiagnoseHmi" ? mcp.GetMethod("CompileAndDiagnoseHmiCore", all)!
+                    : service.GetMethod(name, all)!;
+                var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+                EngineSurface.CheckIl(check, Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                    (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == called.MetadataToken),
+                    name + " calls its service or shared compiler", tool, called);
+                var forwarder = mcp.GetMethod(name, all);
+                check(hmiForwarders.Contains(name) ? forwarder != null && forwarder.IsStatic
+                    && forwarder.GetCustomAttribute<McpServerToolAttribute>() == null : forwarder == null,
+                    name + " CLI forwarder matches actual callers");
+            }
+        }
+        foreach (var name in new[] { "TryGetHmiTagRoot", "TryGetHmiTagTablesCollection", "TryFindHmiTagTable",
+            "EnumerateHmiTagTablesRecursive", "FindExistingByName", "TryResolveChildGroupByPath",
+            "TryImportEngineeringObjectIntoCollection", "GetBindingIdentity" })
+            check(portal.GetMethods(all).Any(method => method.Name == name) && contract.GetMethod(name) != null,
+                name + " remains shared on the kernel through IEngineeringSession");
+        check(surface.Property("LastImportNotes").DeclaringType!.Name == "HmiExchangeService"
+            && portal.GetProperty("LastImportNotes", all) == null, "HMI import notes belong to the exchange service");
     }
 }

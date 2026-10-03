@@ -5,19 +5,23 @@ using Siemens.Engineering.HmiUnified;
 using Siemens.Engineering.HmiUnified.HmiTags;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class HmiTagDeletionService
     {
+        private readonly IEngineeringSession _session;
+
+        public HmiTagDeletionService(IEngineeringSession session) => _session = session;
+
         public ResponseMessage DeleteHmiTag(string softwarePath, string tagTablePath, string tagName, bool dryRun = true, bool confirmDelete = false)
-            => RunHmiStepTool("DeleteHmiTag", meta => {
+            => _session.RunHmiStepTool("DeleteHmiTag", meta => {
                 string[] parts = HmiTagDeletion.Validate(tagTablePath, tagName, dryRun, confirmDelete);
                 if (string.IsNullOrWhiteSpace(softwarePath)) throw new ArgumentException("softwarePath is required.");
-                using var access = dryRun ? null : AcquireHmiEditAccess();
+                using var access = dryRun ? null : _session.AcquireHmiEditAccess();
                 meta["softwarePath"] = softwarePath; meta["tagTablePath"] = tagTablePath; meta["tagName"] = tagName;
-                meta["binding"] = GetBindingIdentity();
+                meta["binding"] = _session.GetBindingIdentity();
                 string address = softwarePath + tagTablePath + "/" + tagName;
-                var sw = InvocationJournal.Native("DeleteHmiTag.ResolveSoftware", () => ResolveHmiSoftwareOrThrow(softwarePath), "HmiSoftware/HmiTarget", softwarePath);
+                var sw = InvocationJournal.Native("DeleteHmiTag.ResolveSoftware", () => _session.ResolveHmiSoftwareOrThrow(softwarePath), "HmiSoftware/HmiTarget", softwarePath);
                 if (sw is HmiTarget classic)
                 {
                     if (parts.Length == 0) throw new ArgumentException("Classic HMI requires an explicit /Folder/Table path, including its default table name.");

@@ -34,22 +34,26 @@ using System.Text.Json.Nodes;
 using System.Xml.Linq;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class HmiDescribeService
     {
+        private readonly IEngineeringSession _session;
+
+        public HmiDescribeService(IEngineeringSession session) => _session = session;
+
         #region software - HmiDescribe
 
         public (string? Name, string ProgramType, List<string> Screens)? GetHmiProgramInfo(string softwarePath)
         {
-            _logger?.LogInformation($"Getting HMI program info by path: {softwarePath}");
+            _session.Logger?.LogInformation($"Getting HMI program info by path: {softwarePath}");
 
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return null;
             }
 
-            var softwareContainer = GetSoftwareContainer(softwarePath);
+            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null)
             {
                 return null;
@@ -74,7 +78,7 @@ namespace TiaMcpServer.Siemens
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeHmiSoftware(string softwarePath, int maxMembers = 200)
         {
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
@@ -86,7 +90,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var softwareContainer = GetSoftwareContainer(softwarePath);
+            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -102,13 +106,13 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "Software",
                 ObjectPath = softwarePath,
                 TypeName = sw.GetType().FullName ?? sw.GetType().Name,
-                Members = DescribeMembers(sw, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(sw, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
             };
         }
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeHmiScreen(string softwarePath, string screenName, int maxMembers = 200)
         {
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
@@ -120,7 +124,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var softwareContainer = GetSoftwareContainer(softwarePath);
+            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -145,13 +149,13 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "HmiScreen",
                 ObjectPath = $"{softwarePath}:{screenName}",
                 TypeName = screen.GetType().FullName ?? screen.GetType().Name,
-                Members = DescribeMembers(screen, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(screen, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
             };
         }
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeHmiTagTable(string softwarePath, string tagTableName, int maxMembers = 200)
         {
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
@@ -163,7 +167,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var softwareContainer = GetSoftwareContainer(softwarePath);
+            var softwareContainer = _session.GetSoftwareContainer(softwarePath);
             if (softwareContainer?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -173,7 +177,7 @@ namespace TiaMcpServer.Siemens
             }
 
             var sw = softwareContainer.Software;
-            var table = TryFindHmiTagTable(sw, tagTableName);
+            var table = _session.TryFindHmiTagTable(sw, tagTableName);
             if (table == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -188,13 +192,13 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "HmiTagTable",
                 ObjectPath = $"{softwarePath}:{tagTableName}",
                 TypeName = table.GetType().FullName ?? table.GetType().Name,
-                Members = DescribeMembers(table, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(table, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
             };
         }
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeHmiTag(string softwarePath, string tagTableName, string tagName, int maxMembers = 200)
         {
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
@@ -206,7 +210,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var sc = GetSoftwareContainer(softwarePath);
+            var sc = _session.GetSoftwareContainer(softwarePath);
             if (sc?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -216,7 +220,7 @@ namespace TiaMcpServer.Siemens
             }
 
             var sw = sc.Software;
-            var table = TryFindHmiTagTable(sw, tagTableName);
+            var table = _session.TryFindHmiTagTable(sw, tagTableName);
             if (table == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -241,7 +245,7 @@ namespace TiaMcpServer.Siemens
                 {
                     foreach (var it in en)
                     {
-                        var n = TryGetName(it);
+                        var n = _session.TryGetName(it);
                         if (!string.IsNullOrWhiteSpace(n) && string.Equals(n!.Trim(), tagName, StringComparison.OrdinalIgnoreCase))
                         {
                             tagObj = it;
@@ -266,13 +270,13 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "HmiTag",
                 ObjectPath = $"{softwarePath}:{tagTableName}:{tagName}",
                 TypeName = tagObj.GetType().FullName ?? tagObj.GetType().Name,
-                Members = DescribeMembers(tagObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(tagObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
             };
         }
 
         public ModelContextProtocol.ResponseObjectDescribe DescribeHmiScreenItem(string softwarePath, string screenName, string itemName, int maxMembers = 200)
         {
-            if (IsProjectNull())
+            if (_session.IsProjectNull())
             {
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
@@ -284,7 +288,7 @@ namespace TiaMcpServer.Siemens
                 };
             }
 
-            var sc = GetSoftwareContainer(softwarePath);
+            var sc = _session.GetSoftwareContainer(softwarePath);
             if (sc?.Software == null)
             {
                 // 路径解析失败必须报错，不能返回表示空成员表的成功响应。
@@ -319,7 +323,7 @@ namespace TiaMcpServer.Siemens
                 {
                     foreach (var it in en)
                     {
-                        var n = TryGetName(it);
+                        var n = _session.TryGetName(it);
                         if (!string.IsNullOrWhiteSpace(n) && string.Equals(n!.Trim(), itemName, StringComparison.OrdinalIgnoreCase))
                         {
                             itemObj = it;
@@ -344,7 +348,7 @@ namespace TiaMcpServer.Siemens
                 ObjectKind = "HmiScreenItem",
                 ObjectPath = $"{softwarePath}:{screenName}:{itemName}",
                 TypeName = itemObj.GetType().FullName ?? itemObj.GetType().Name,
-                Members = DescribeMembers(itemObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
+                Members = _session.DescribeMembers(itemObj, Math.Max(10, Math.Min(2000, maxMembers))).ToList()
             };
         }
 

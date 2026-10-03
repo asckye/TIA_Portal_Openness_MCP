@@ -67,7 +67,10 @@ internal sealed class EngineSurface
         "TiaMcpServer.Siemens.Services.UnifiedEngineeringService",
         "TiaMcpServer.Siemens.Services.UnifiedExchangeService",
         "TiaMcpServer.Siemens.Services.UnifiedEventsService",
-        "TiaMcpServer.Siemens.Services.UnifiedHmiGroupsService"
+        "TiaMcpServer.Siemens.Services.UnifiedHmiGroupsService",
+        "TiaMcpServer.Siemens.Services.HmiExchangeService",
+        "TiaMcpServer.Siemens.Services.HmiDescribeService",
+        "TiaMcpServer.Siemens.Services.HmiTagDeletionService"
     };
     private static readonly string[] helperTypeNames = { "TiaMcpServer.Siemens.EngineeringSessionHelpers" };
     private readonly Assembly engine;

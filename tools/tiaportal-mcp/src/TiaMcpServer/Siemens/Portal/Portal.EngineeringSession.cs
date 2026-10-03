@@ -170,6 +170,10 @@ namespace TiaMcpServer.Siemens
         object? IEngineeringSession.TryFindHmiTagTable(object hmiSoftware, string tagTableName) => TryFindHmiTagTable(hmiSoftware, tagTableName);
 
         System.Reflection.Assembly IEngineeringSession.UnifiedAssembly => UnifiedAssembly;
+        IEnumerable<object> IEngineeringSession.EnumerateHmiTagTablesRecursive(object folder, int depth) => EnumerateHmiTagTablesRecursive(folder, depth);
+        object? IEngineeringSession.TryResolveChildGroupByPath(object rootGroup, string groupPath) => TryResolveChildGroupByPath(rootGroup, groupPath);
+        bool IEngineeringSession.TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error) => TryImportEngineeringObjectIntoCollection(collection, importPath, out importedName, out error);
+        JsonObject IEngineeringSession.GetBindingIdentity() => GetBindingIdentity();
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();
@@ -207,7 +211,6 @@ namespace TiaMcpServer.Siemens
         PlcBlockGroup? IEngineeringSession.GetPlcBlockGroupByPath(string softwarePath, string groupPath) => GetPlcBlockGroupByPath(softwarePath, groupPath);
         List<CrossReferenceEntry>? IEngineeringSession.GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried) => GetCrossReferences(softwarePath, objectPath, objectKind, filter, out reason, out queried);
         List<CrossReferenceEntry> IEngineeringSession.TryFlattenCrossReferenceResult(object crossReferenceResult, string sourcePathFallback) => TryFlattenCrossReferenceResult(crossReferenceResult, sourcePathFallback);
-        JsonObject IEngineeringSession.GetBindingIdentity() => GetBindingIdentity();
 
         object? IEngineeringSession.ResolvePlcTagTableGroup(object plc) => ResolvePlcTagTableGroup(plc);
         string? IEngineeringSession.CrossReferenceRefusal(string softwarePath) => CrossReferenceRefusal(softwarePath);

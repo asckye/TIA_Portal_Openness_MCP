@@ -122,6 +122,24 @@ def actions(tool, values, **arguments):
 PLC = 'DomainOfflineFixture'
 HARDWARE = {'devicePathJson': '["DomainOfflineFixture"]', 'itemPathJson': '["CPU"]'}
 CASES = {
+    'HmiExchange': [(name, 'disconnected', dict(softwarePath=PLC, **arguments)) for name, arguments in (
+        ('GetHmiScreens', {}), ('GetHmiTagTables', {}), ('GetHmiTags', {'tagTableName': 'Table'}),
+        ('GetHmiConnections', {}), ('ExportHmiScreen', {'screenName': 'Main', 'exportPath': 'C:/domain-offline.xml'}),
+        ('ExportHmiTagTable', {'tagTableName': 'Table', 'exportPath': 'C:/domain-offline.xml'}),
+        ('ExportHmiConnection', {'connectionName': 'Connection', 'exportPath': 'C:/domain-offline.xml'}),
+        ('ExportHmiProgram', {'exportDir': 'C:/domain-offline'}),
+        ('ImportHmiScreen', {'folderPath': '', 'importPath': 'C:/domain-offline.xml'}),
+        ('ImportHmiTagTable', {'folderPath': '', 'importPath': 'C:/domain-offline.xml'}),
+        ('ImportHmiConnection', {'importPath': 'C:/domain-offline.xml'}),
+        ('ImportHmiScreensFromDirectory', {'folderPath': '', 'dir': 'C:/domain-offline'}),
+        ('ImportHmiTagTablesFromDirectory', {'folderPath': '', 'dir': 'C:/domain-offline'}))],
+    'HmiDescribe': [(name, 'disconnected', dict(softwarePath=PLC, **arguments)) for name, arguments in (
+        ('GetHmiProgramInfo', {}), ('DescribeHmiSoftware', {}), ('DescribeHmiScreen', {'screenName': 'Main'}),
+        ('DescribeHmiTagTable', {'tagTableName': 'Table'}),
+        ('DescribeHmiTag', {'tagTableName': 'Table', 'tagName': 'Tag'}), ('CompileAndDiagnoseHmi', {}),
+        ('DescribeHmiScreenItem', {'screenName': 'Main', 'itemName': 'Item'}))],
+    'HmiTagDeletion': [('DeleteHmiTag', 'disconnected', {
+        'softwarePath': PLC, 'tagTablePath': '/Table', 'tagName': 'Tag'})],
     'HmiInspection': [
         ('ArchiveSavedProject', 'preview', {'archivePath': 'C:/domain-offline.zap21'}),
         ('ReadUnifiedHmiButtonEvent', 'read', {'softwarePath': 'HMI', 'screenPath': '/Main', 'buttonName': 'Button1', 'eventType': 'Tapped'}),
@@ -980,6 +998,45 @@ def unified_reply(reply, profile, name):
             resources.require(meta.get('tool') == expected and meta.get('status') == 'InvalidState'
                               and meta.get('operationSuccess') is False, raw)
     return raw
+def hmi_reply(reply, profile, name):
+    """Check each HMI error family before comparing its original response bytes."""
+    throwing = not (name.startswith('DescribeHmi') or name.endswith('FromDirectory') or name == 'DeleteHmiTag')
+    resources.require('result' in reply, f'{name}: missing result: {reply}')
+    result = reply['result']
+    resources.require(bool(result.get('isError')) is (profile == 'full' and throwing),
+                      f'{name}: unexpected error family: {reply}')
+    raw = result['content'][0]['text']
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
+                          f'{name}: unexpected bridge status: {raw}')
+        raw = bridge['message']
+    if throwing:
+        marker = ('HMI program not found' if name == 'GetHmiProgramInfo' else
+                  'HMI software not found' if name.startswith('GetHmi') or name == 'ExportHmiProgram' else
+                  'No project is open' if name.startswith('ImportHmi') else
+                  'Failed compiling software' if name == 'CompileAndDiagnoseHmi' else 'Project is null')
+        resources.require(marker in raw, f'{name}: missing disconnected refusal: {raw}')
+    else:
+        value = json.loads(raw)
+        get = lambda key: value.get(key, value.get(key[0].upper() + key[1:]))
+        meta = get('meta')
+        if name.startswith('DescribeHmi'):
+            resources.require(get('message') == 'Project is null' and get('members') == []
+                              and meta.get('success') is True and meta.get('memberCount') == 0, raw)
+        elif name.endswith('FromDirectory'):
+            failures = get('failed')
+            resources.require(get('imported') == [] and len(failures) == 1
+                              and failures[0].get('error', failures[0].get('Error')) == 'Project is null'
+                              and meta.get('success') is False, raw)
+        else:
+            resources.require(get('message') == 'Project is null' and meta.get('tool') == name
+                              and meta.get('status') == 'InvalidState' and meta.get('operationSuccess') is False, raw)
+    return raw
+
+
+
+
 
 
 def check_coverage(domains):
@@ -1029,6 +1086,11 @@ def capture(args, exe, harness, profile, isolated):
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
                     'name': 'CallTool', 'arguments': {'name': name.lower(), 'argumentsJson': json.dumps(arguments)}}
                 reply = rpc('tools/call', params=params)
+                if domain in ('HmiExchange', 'HmiDescribe', 'HmiTagDeletion'):
+                    raw = hmi_reply(reply, profile, name)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
                 if domain == 'PlcBlocks':
                     raw = plc_block_reply(reply, profile, name)
                     reached_child = True

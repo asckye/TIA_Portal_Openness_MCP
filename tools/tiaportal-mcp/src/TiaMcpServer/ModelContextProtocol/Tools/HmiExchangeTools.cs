@@ -1,3 +1,4 @@
+using TiaMcpServer.Siemens.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -20,17 +21,22 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class HmiExchangeTools
     {
+        private readonly HmiExchangeService _service;
+
+        public HmiExchangeTools(HmiExchangeService service) => _service = service;
+
         #region plc software - HmiExchange
 
         [McpServerTool(Name = "GetHmiScreens"), Description("[L2][HMI] List all screen names in an HMI (Classic or Unified), including all nested screen folders/groups. Returns screen names, not folder paths; screen operations resolve these names recursively. Requires: Connect + OpenProject. softwarePath from GetProjectTree. Use before EnsureUnifiedHmiScreen/ExportHmiScreen to confirm which screens exist.")]
-        public static ResponseStringList GetHmiScreens(
+        public ResponseStringList GetHmiScreens(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath)
         {
             try
             {
-                var items = Portal.GetHmiScreens(softwarePath);
+                var items = _service.GetHmiScreens(softwarePath);
                 if (items != null)
                 {
                     return new ResponseStringList
@@ -50,12 +56,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetHmiTagTables"), Description("[L2][HMI]List HMI tag table names (Classic/Unified, best-effort)")]
-        public static ResponseStringList GetHmiTagTables(
+        public ResponseStringList GetHmiTagTables(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath)
         {
             try
             {
-                var items = Portal.GetHmiTagTables(softwarePath);
+                var items = _service.GetHmiTagTables(softwarePath);
                 if (items != null)
                 {
                     return new ResponseStringList
@@ -75,13 +81,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetHmiTags"), Description("[L2][HMI]List HMI tag names (best-effort). If tagTableName empty, returns tags found at root collection if available.")]
-        public static ResponseStringList GetHmiTags(
+        public ResponseStringList GetHmiTags(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: optional tag table name to list tags from")] string tagTableName = "")
         {
             try
             {
-                var items = Portal.GetHmiTags(softwarePath, tagTableName);
+                var items = _service.GetHmiTags(softwarePath, tagTableName);
                 if (items != null)
                 {
                     return new ResponseStringList
@@ -101,12 +107,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetHmiConnections"), Description("[L2][HMI]List HMI connection names (Classic/Unified, best-effort)")]
-        public static ResponseStringList GetHmiConnections(
+        public ResponseStringList GetHmiConnections(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath)
         {
             try
             {
-                var items = Portal.GetHmiConnections(softwarePath);
+                var items = _service.GetHmiConnections(softwarePath);
                 if (items != null)
                 {
                     return new ResponseStringList
@@ -126,14 +132,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportHmiScreen"), Description("[L2][HMI]Export one HMI screen to a file (best-effort; requires Openness export support)")]
-        public static ResponseExportFile ExportHmiScreen(
+        public ResponseExportFile ExportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("screenName: the screen name to export")] string screenName,
             [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\screen.xml)")] string exportPath)
         {
             try
             {
-                var export = Portal.ExportHmiScreen(softwarePath, screenName, exportPath);
+                var export = _service.ExportHmiScreen(softwarePath, screenName, exportPath);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -152,14 +158,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportHmiTagTable"), Description("[L2][HMI]Export one HMI tag table to a file (best-effort; requires Openness export support)")]
-        public static ResponseExportFile ExportHmiTagTable(
+        public ResponseExportFile ExportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("tagTableName: the tag table name to export")] string tagTableName,
             [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\tagtable.xml)")] string exportPath)
         {
             try
             {
-                var export = Portal.ExportHmiTagTable(softwarePath, tagTableName, exportPath);
+                var export = _service.ExportHmiTagTable(softwarePath, tagTableName, exportPath);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -178,14 +184,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportHmiConnection"), Description("[L2][HMI]Export one HMI connection to a file (best-effort; Classic/Unified via reflection)")]
-        public static ResponseExportFile ExportHmiConnection(
+        public ResponseExportFile ExportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("connectionName: the HMI connection name to export")] string connectionName,
             [Description("exportPath: full file path to write to (e.g. C:\\\\temp\\\\connection.xml)")] string exportPath)
         {
             try
             {
-                var export = Portal.ExportHmiConnection(softwarePath, connectionName, exportPath);
+                var export = _service.ExportHmiConnection(softwarePath, connectionName, exportPath);
                 return new ResponseExportFile
                 {
                     Message = export["success"]!.GetValue<bool>() ? "Native export completed" : "Native export failed or unsupported",
@@ -204,7 +210,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportHmiProgram"), Description("[L2][HMI]Batch export HMI screens/tagtables into a directory (best-effort)")]
-        public static ResponseBatchExport ExportHmiProgram(
+        public ResponseBatchExport ExportHmiProgram(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("exportDir: directory to write exported files into")] string exportDir,
             [Description("exportScreens: default true")] bool exportScreens = true,
@@ -212,7 +218,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var res = Portal.ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables);
+                var res = _service.ExportHmiProgram(softwarePath, exportDir, exportScreens, exportTagTables);
                 if (res != null)
                 {
                     return new ResponseBatchExport
@@ -232,17 +238,17 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportHmiScreen"), Description("[L2][HMI]Import one HMI screen XML file into an HMI program (best-effort; Classic/Unified via reflection)")]
-        public static ResponseMessage ImportHmiScreen(
+        public ResponseMessage ImportHmiScreen(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
             [Description("importPath: full file path of exported screen XML")] string importPath)
         {
             try
             {
-                Portal.ImportHmiScreen(softwarePath, folderPath, importPath);
+                _service.ImportHmiScreen(softwarePath, folderPath, importPath);
                 return new ResponseMessage
                 {
-                    Message = $"HMI screen imported from '{importPath}'" + (Portal.LastImportNotes != null ? " - " + Portal.LastImportNotes : ""),
+                    Message = $"HMI screen imported from '{importPath}'" + (_service.LastImportNotes != null ? " - " + _service.LastImportNotes : ""),
                     Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
                 };
             }
@@ -257,14 +263,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportHmiTagTable"), Description("[L2][HMI]Import one HMI tag table XML file into an HMI program (best-effort; Classic/Unified via reflection)")]
-        public static ResponseMessage ImportHmiTagTable(
+        public ResponseMessage ImportHmiTagTable(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
             [Description("importPath: full file path of exported tag table XML")] string importPath)
         {
             try
             {
-                Portal.ImportHmiTagTable(softwarePath, folderPath, importPath);
+                _service.ImportHmiTagTable(softwarePath, folderPath, importPath);
                 return new ResponseMessage
                 {
                     Message = $"HMI tag table imported from '{importPath}'",
@@ -282,13 +288,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportHmiConnection"), Description("[L2][HMI]Import one HMI connection XML file into an HMI program (best-effort; Classic/Unified via reflection)")]
-        public static ResponseMessage ImportHmiConnection(
+        public ResponseMessage ImportHmiConnection(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("importPath: full file path of exported HMI connection XML")] string importPath)
         {
             try
             {
-                Portal.ImportHmiConnection(softwarePath, importPath);
+                _service.ImportHmiConnection(softwarePath, importPath);
                 return new ResponseMessage
                 {
                     Message = $"HMI connection imported from '{importPath}'",
@@ -306,7 +312,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportHmiScreensFromDirectory"), Description("[L2][HMI]Batch import HMI screen .xml files from a directory (best-effort)")]
-        public static ResponseImportBatch ImportHmiScreensFromDirectory(
+        public ResponseImportBatch ImportHmiScreensFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional screen group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported screen XML files")] string dir,
@@ -315,7 +321,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var result = Portal.ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
+                var result = _service.ImportHmiScreensFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
                 return new ResponseImportBatch
                 {
                     Message = $"Imported {result.Imported?.Count() ?? 0} HMI screens from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
@@ -331,7 +337,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportHmiTagTablesFromDirectory"), Description("[L2][HMI]Batch import HMI tag table .xml files from a directory (best-effort)")]
-        public static ResponseImportBatch ImportHmiTagTablesFromDirectory(
+        public ResponseImportBatch ImportHmiTagTablesFromDirectory(
             [Description("softwarePath: path in the project structure to the HMI software")] string softwarePath,
             [Description("folderPath: optional tag table group path inside HMI (use empty for root)")] string folderPath,
             [Description("dir: directory containing exported tag table XML files")] string dir,
@@ -340,7 +346,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var result = Portal.ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
+                var result = _service.ImportHmiTagTablesFromDirectory(softwarePath, folderPath, dir, regexName, overwrite);
                 return new ResponseImportBatch
                 {
                     Message = $"Imported {result.Imported?.Count() ?? 0} HMI tag tables from '{dir}'. Failed={result.Failed?.Count() ?? 0}",

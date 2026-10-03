@@ -199,6 +199,9 @@ namespace TiaMcpServer.Siemens
         object? TryFindHmiTagTable(object hmiSoftware, string tagTableName);
 
         System.Reflection.Assembly UnifiedAssembly { get; }
+        IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0);
+        object? TryResolveChildGroupByPath(object rootGroup, string groupPath);
+        bool TryImportEngineeringObjectIntoCollection(object collection, string importPath, out string? importedName, out string? error);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

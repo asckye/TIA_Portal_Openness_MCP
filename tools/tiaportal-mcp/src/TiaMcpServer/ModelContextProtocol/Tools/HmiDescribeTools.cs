@@ -1,3 +1,4 @@
+using TiaMcpServer.Siemens.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
@@ -20,17 +21,22 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class HmiDescribeTools
     {
+        private readonly HmiDescribeService _service;
+
+        public HmiDescribeTools(HmiDescribeService service) => _service = service;
+
         #region plc software - HmiDescribe
 
         [McpServerTool(Name = "GetHmiProgramInfo"), Description("[L2][HMI] Get HMI software type (Classic/Basic/Unified), version, and list of all screen names. Requires: Connect + OpenProject. softwarePath from GetProjectTree (e.g. 'HMI_RT_1'). Use to confirm HMI type before choosing Classic vs Unified tool variants.")]
-        public static ResponseHmiProgramInfo GetHmiProgramInfo(
+        public ResponseHmiProgramInfo GetHmiProgramInfo(
             [Description("softwarePath: path in the project structure to the HMI software (see GetProjectTree)")] string softwarePath)
         {
             try
             {
-                var info = Portal.GetHmiProgramInfo(softwarePath);
+                var info = _service.GetHmiProgramInfo(softwarePath);
                 if (info != null)
                 {
                     return new ResponseHmiProgramInfo
@@ -56,13 +62,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DescribeHmiSoftware"), Description("[L2][HMI]Describe the HMI software object (members/methods) via reflection. Useful to discover Export/Import/Create APIs.")]
-        public static ResponseObjectDescribe DescribeHmiSoftware(
+        public ResponseObjectDescribe DescribeHmiSoftware(
             [Description("softwarePath: path in the project structure to the HMI software (e.g. 'HMI_RT_1')")] string softwarePath,
             [Description("maxMembers: max member count")] int maxMembers = 200)
         {
             try
             {
-                var res = Portal.DescribeHmiSoftware(softwarePath, maxMembers);
+                var res = _service.DescribeHmiSoftware(softwarePath, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
@@ -85,14 +91,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DescribeHmiScreen"), Description("[L2][HMI]Describe one HMI screen object (members/methods) by name under an HMI software.")]
-        public static ResponseObjectDescribe DescribeHmiScreen(
+        public ResponseObjectDescribe DescribeHmiScreen(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("screenName: screen name, e.g. 'Main'")] string screenName,
             [Description("maxMembers: max member count")] int maxMembers = 200)
         {
             try
             {
-                var res = Portal.DescribeHmiScreen(softwarePath, screenName, maxMembers);
+                var res = _service.DescribeHmiScreen(softwarePath, screenName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
@@ -115,14 +121,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DescribeHmiTagTable"), Description("[L2][HMI]Describe one HMI tag table object (members/methods) by name under an HMI software.")]
-        public static ResponseObjectDescribe DescribeHmiTagTable(
+        public ResponseObjectDescribe DescribeHmiTagTable(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("tagTableName: tag table name")] string tagTableName,
             [Description("maxMembers: max member count")] int maxMembers = 200)
         {
             try
             {
-                var res = Portal.DescribeHmiTagTable(softwarePath, tagTableName, maxMembers);
+                var res = _service.DescribeHmiTagTable(softwarePath, tagTableName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
@@ -145,7 +151,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "DescribeHmiTag"), Description("[L2][HMI]Describe one HMI tag object (members/methods) by name under an HMI tag table.")]
-        public static ResponseObjectDescribe DescribeHmiTag(
+        public ResponseObjectDescribe DescribeHmiTag(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("tagTableName: tag table name")] string tagTableName,
             [Description("tagName: tag name")] string tagName,
@@ -153,7 +159,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var res = Portal.DescribeHmiTag(softwarePath, tagTableName, tagName, maxMembers);
+                var res = _service.DescribeHmiTag(softwarePath, tagTableName, tagName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
@@ -176,12 +182,12 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "CompileAndDiagnoseHmi"), Description("[L1][HMI] Compile an HMI and return structured errors/warnings, the HMI counterpart of CompileAndDiagnosePlc. Use it after generating screens/tags so you can read the diagnostics and fix them yourself instead of asking the engineer to compile in the TIA UI. WinCC Unified: HmiSoftware is not compilable on its own, so the owning device is compiled (same as the TIA UI does) and hardware diagnostics may appear alongside screen ones. Classic (Comfort/KTP): the HMI software itself is compiled. Requires: Connect + OpenProject. softwarePath from GetProjectTree, e.g. 'HMI_RT_1'.")]
-        public static ResponseCompileDiagnose CompileAndDiagnoseHmi(
+        public ResponseCompileDiagnose CompileAndDiagnoseHmi(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath)
-            => CompileAndDiagnoseCore(softwarePath, "");
+            => McpServer.CompileAndDiagnoseHmiCore(softwarePath, "");
 
         [McpServerTool(Name = "DescribeHmiScreenItem"), Description("[L2][HMI]Describe one HMI screen item (widget) by name under an HMI screen.")]
-        public static ResponseObjectDescribe DescribeHmiScreenItem(
+        public ResponseObjectDescribe DescribeHmiScreenItem(
             [Description("softwarePath: HMI software path, e.g. 'HMI_RT_1'")] string softwarePath,
             [Description("screenName: screen name, e.g. 'Main'")] string screenName,
             [Description("itemName: widget name, e.g. 'BTN_Start'")] string itemName,
@@ -189,7 +195,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var res = Portal.DescribeHmiScreenItem(softwarePath, screenName, itemName, maxMembers);
+                var res = _service.DescribeHmiScreenItem(softwarePath, screenName, itemName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {

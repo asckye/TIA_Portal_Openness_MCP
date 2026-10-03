@@ -3,27 +3,29 @@
 from pathlib import Path
 import os
 import subprocess
-import tempfile
+import shutil
+import uuid
 
 ROOT = Path(__file__).resolve().parents[2]
 PORTAL = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal'
-source = (PORTAL / 'Portal.Software.HmiExchange.cs').read_text()
-reflection = (PORTAL / 'Portal.Software.Reflection.cs').read_text()
+source = (PORTAL.parent / 'Services/HmiExchangeService.cs').read_text(encoding='utf-8').replace('_session.', '')
+reflection = (PORTAL / 'Portal.Software.Reflection.cs').read_text(encoding='utf-8')
+shared = (PORTAL.parent / 'EngineeringSessionHelpers.cs').read_text(encoding='utf-8')
 screen = source.split('        public void ImportHmiScreen(', 1)[1].split('        // Notes of the last ImportHmiScreen', 1)[0]
 screen = '        public void ImportHmiScreen(' + screen
 batch = source.split('        public ResponseImportBatch ImportHmiScreensFromDirectory(', 1)[1].split('        public ResponseImportBatch ImportHmiTagTablesFromDirectory(', 1)[0]
 batch = '        public ResponseImportBatch ImportHmiScreensFromDirectory(' + batch
 helper = reflection.split('        private static bool TryImportEngineeringObjectIntoCollection(', 1)[1].split('        // Technology imports require', 1)[0]
 helper = '        private static bool TryImportEngineeringObjectIntoCollection(' + helper
-name_reader = reflection.split('        private static string? BestEffortExtractFirstName(', 1)[1].split('        private static object? TryGetPropertyValue(', 1)[0]
+name_reader = shared.split('        internal static string? BestEffortExtractFirstName(', 1)[1].split('        internal static object? TryGetPropertyValue(', 1)[0]
 name_reader = '        private static string? BestEffortExtractFirstName(' + name_reader
 assert screen.count('TryImportEngineeringObjectIntoCollection(') == 1
 assert 'GuardClassicScreenSize(sw, importPath);' in screen
 assert 'document.Save(' not in screen and 'Regex.Match(' not in screen
 assert 'break;' in batch and 'later matching files were not attempted' in batch
 assert 'ImportOptions.Override' in helper  # Preserve this family's existing default.
-wrapper = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.HmiExchange.cs').read_text()
-wrapper = wrapper.split('public static ResponseImportBatch ImportHmiScreensFromDirectory(', 1)[1].split('[McpServerTool(Name = "ImportHmiTagTablesFromDirectory")', 1)[0]
+wrapper = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs').read_text(encoding='utf-8')
+wrapper = wrapper.split('public ResponseImportBatch ImportHmiScreensFromDirectory(', 1)[1].split('[McpServerTool(Name = "ImportHmiTagTablesFromDirectory")', 1)[0]
 assert 'Imported = result.Imported' in wrapper and 'Failed = result.Failed' in wrapper
 assert '["success"] = (result.Failed == null || !result.Failed.Any())' in wrapper
 
@@ -123,10 +125,18 @@ class Program {
     }
 }
 '''.replace('__SCREEN__', screen).replace('__BATCH__', batch).replace('__HELPER__', helper).replace('__NAME_READER__', name_reader)
-with tempfile.TemporaryDirectory(prefix='hmi-import-checks-') as directory:
-    work = Path(directory)
-    (work / 'Program.cs').write_text(program)
+# Inherit worktree permissions; private temporary-directory ACLs fail in restricted Windows sessions.
+parent = (ROOT / 'bin-build').resolve()
+work = parent / ('hmi-import-checks-' + uuid.uuid4().hex)
+work.mkdir(parents=True)
+try:
+    (work / 'Program.cs').write_text(program, encoding='utf-8')
     (work / 'Checks.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable></PropertyGroup></Project>')
-    env = dict(os.environ, DOTNET_CLI_HOME='/workspace/shared/dotnet-home', DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
-    subprocess.run(['/workspace/shared/dotnet/dotnet', 'run', '--project', str(work / 'Checks.csproj')], env=env, check=True)
+    env = dict(os.environ, DOTNET_GENERATE_ASPNET_CERTIFICATE='false', DOTNET_ADD_GLOBAL_TOOLS_TO_PATH='false', DOTNET_CLI_TELEMETRY_OPTOUT='1')
+    subprocess.run([shutil.which('dotnet') or '/workspace/shared/dotnet/dotnet', 'run', '--project',
+                    str(work / 'Checks.csproj'), '-p:RestoreSources=' + str(work), '-p:NuGetAudit=false'], env=env, check=True)
+finally:
+    if work.resolve().parent != parent:
+        raise ValueError('scratch directory escaped bin-build')
+    shutil.rmtree(work)
 print('HMI import source wiring guards passed; no HMI/Siemens/TIA runtime or project was loaded.')
