@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - UnifiedHmiHelpers
@@ -54,7 +53,7 @@ namespace TiaMcpServer.Siemens
                 p.SetValue(target, v);
                 return true;
             }
-            catch
+            catch /* swallow(native-fallback): Unsupported property conversion or assignment reports false to the existing caller fallback. */
             {
                 return false;
             }
@@ -215,8 +214,9 @@ namespace TiaMcpServer.Siemens
                    ?? (root == null ? null : EnumerateHmiTagTablesRecursive(root).FirstOrDefault(t => string.Equals(TryGetName(t)?.Trim(), tagTableName, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // 2.7.46: tag tables inside user folders (TagUserFolder.Folders, nested) - the root-only lookup answered "not found" for a
-        // table just imported into a folder on the real project (classic TP700, ImportHmiTagTable into MCP_TagFolder).
+        // Tag tables in nested user folders (TagUserFolder.Folders) must participate in lookup. A real classic TP700
+        // import into MCP_TagFolder was missed by root-only lookup; TIA version and test date were not recorded.
+        // Evidence index: docs/reference/real-machine-ledger.md.
         private static IEnumerable<object> EnumerateHmiTagTablesRecursive(object folder, int depth = 0)
         {
             if (depth > 32) yield break;
@@ -244,7 +244,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch { }
+            catch /* swallow(enumerate-optional): Unavailable collection enumeration preserves the missing-item fallback. */ { }
 
             return null;
         }
@@ -284,7 +284,7 @@ namespace TiaMcpServer.Siemens
                         var t = asm.GetType(name, throwOnError: false, ignoreCase: false);
                         if (t != null) return t;
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): The screen-item type may be available in another loaded assembly. */ { }
                 }
             }
 
@@ -316,7 +316,7 @@ namespace TiaMcpServer.Siemens
                 foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     Type? t = null;
-                    try { t = asm.GetType(name, throwOnError: false, ignoreCase: false); } catch { }
+                    try { t = asm.GetType(name, throwOnError: false, ignoreCase: false); } catch /* swallow(probe-optional): The dynamization type may be available in another loaded assembly. */ { }
                     if (t != null) yield return t;
                 }
             }
@@ -328,7 +328,7 @@ namespace TiaMcpServer.Siemens
                     Type[] types;
                     try { types = asm.GetTypes(); }
                     catch (ReflectionTypeLoadException ex) { types = ex.Types.Where(t => t != null).Cast<Type>().ToArray(); }
-                    catch { continue; }
+                    catch /* swallow(probe-optional): Assemblies whose types cannot load cannot supply dynamization candidates. */ { continue; }
 
                     foreach (var t in types)
                     {
@@ -364,7 +364,7 @@ namespace TiaMcpServer.Siemens
                             var created = m.Invoke(items, args);
                             if (created != null) return created;
                         }
-                        catch { }
+                        catch /* swallow(native-fallback): An unsupported screen-item creation overload leaves the remaining overloads available. */ { }
                     }
                 }
             }
@@ -392,7 +392,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch { }
+            catch /* swallow(enumerate-optional): Unavailable pressed-state tag enumeration preserves the missing-tag result. */ { }
 
             return null;
         }
@@ -436,7 +436,7 @@ namespace TiaMcpServer.Siemens
                             any = true;
                             break;
                         }
-                        catch { }
+                        catch /* swallow(native-fallback): An unsupported enum property write leaves the next candidate available. */ { }
                     }
                 }
 
@@ -454,7 +454,7 @@ namespace TiaMcpServer.Siemens
                                 break;
                             }
                         }
-                        catch { }
+                        catch /* swallow(native-fallback): An unsupported enum attribute write leaves the next candidate available. */ { }
                     }
                 }
             }
@@ -491,7 +491,7 @@ namespace TiaMcpServer.Siemens
                 var get = target.GetType().GetMethod("GetAttribute", new[] { typeof(string) });
                 return get?.Invoke(target, new object[] { attributeName });
             }
-            catch
+            catch /* swallow(probe-optional): An unavailable engineering attribute is represented by null for the existing fallback. */
             {
                 return null;
             }
@@ -513,7 +513,7 @@ namespace TiaMcpServer.Siemens
                         got = true;
                     }
                 }
-                catch { }
+                catch /* swallow(probe-optional): Unreadable scalar properties fall through to engineering attribute readback. */ { }
 
                 if (!got)
                 {
@@ -551,14 +551,14 @@ namespace TiaMcpServer.Siemens
                             if (!string.IsNullOrWhiteSpace(v)) return v!;
                         }
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): Unavailable tag properties fall through to attribute readback and other names. */ { }
 
                     try
                     {
                         var v = TryGetEngineeringAttribute(tag, name)?.ToString();
                         if (!string.IsNullOrWhiteSpace(v)) return v!;
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): Unavailable tag attributes leave the remaining binding names available. */ { }
                 }
 
                 return string.Empty;
@@ -663,7 +663,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(probe-optional): Unavailable software parent metadata preserves path-derived partner values and device lookup. */
             {
             }
 
@@ -674,7 +674,7 @@ namespace TiaMcpServer.Siemens
                     var root = GetDeviceItemByPath(info.DeviceName);
                     if (root != null) FillUnifiedHmiPartnerNetworkInfo(root, info);
                 }
-                catch
+                catch /* swallow(probe-optional): Unavailable device network metadata preserves the partner values already resolved. */
                 {
                 }
             }
@@ -755,7 +755,7 @@ namespace TiaMcpServer.Siemens
                     var tid = TryGetPropertyValue(di, "TypeIdentifier")?.ToString() ?? string.Empty;
                     var t = tid.ToUpperInvariant();
                     // Catalog MLFB often contains spaces (e.g. "OrderNumber:6ES7 211-1BE40-0XB0/...").
-                    // Old checks used "6ES721" which fails after "6ES7 " + "211" — driver fell back to S7-300/400.
+                    // Compact whitespace before matching the MLFB so S7-1200 devices keep their matching driver.
                     var tCompact = string.Concat(t.Where(ch => !char.IsWhiteSpace(ch)));
                     if (t.IndexOf("S7-1200", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("S71200", StringComparison.OrdinalIgnoreCase) >= 0
                         || tCompact.IndexOf("6ES721", StringComparison.OrdinalIgnoreCase) >= 0 || tCompact.IndexOf("6ES722", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -773,7 +773,7 @@ namespace TiaMcpServer.Siemens
                 var fromDevices = TryInferPlcFamilyFromProjectDevices(plcSoftwarePath);
                 if (!string.IsNullOrEmpty(fromDevices)) return fromDevices;
             }
-            catch
+            catch /* swallow(probe-optional): Unavailable hardware metadata preserves the UNKNOWN PLC-family result. */
             {
             }
 
@@ -823,7 +823,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(enumerate-optional): Unavailable project device traversal leaves the PLC-family fallback unresolved. */
             {
             }
 
@@ -888,7 +888,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(native-fallback): Optional driver-property writes retain the existing communication-driver fallbacks. */
             {
             }
         }
@@ -913,7 +913,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(native-fallback): An unsupported enum property write falls through to engineering attribute configuration. */
             {
             }
 
@@ -987,7 +987,7 @@ namespace TiaMcpServer.Siemens
                         if (!string.IsNullOrWhiteSpace(value)) return value!;
                     }
                 }
-                catch
+                catch /* swallow(probe-optional): Unreadable driver properties fall through to engineering attribute readback. */
                 {
                 }
 
@@ -1022,13 +1022,13 @@ namespace TiaMcpServer.Siemens
                         {
                             if (TrySetEngineeringAttribute(connection, n, driver)) return;
                         }
-                        catch
+                        catch /* swallow(native-fallback): An unsupported driver candidate leaves the remaining candidates available. */
                         {
                         }
                     }
                 }
             }
-            catch
+            catch /* swallow(probe-optional): Unavailable attribute metadata leaves driver validation to the existing caller. */
             {
             }
         }
@@ -1094,12 +1094,12 @@ namespace TiaMcpServer.Siemens
                 if (set == null) return false;
 
                 object? oldValue = null;
-                try { oldValue = get?.Invoke(target, new object[] { attributeName }); } catch { }
+                try { oldValue = get?.Invoke(target, new object[] { attributeName }); } catch /* swallow(probe-optional): An unreadable old attribute value leaves the supplied value uncoerced. */ { }
                 var typed = oldValue == null ? value : CoerceReflectionValue(value, oldValue.GetType());
                 set.Invoke(target, new[] { attributeName, typed });
                 return true;
             }
-            catch
+            catch /* swallow(native-fallback): Unsupported attribute conversion or assignment reports false to the existing caller fallback. */
             {
                 return false;
             }

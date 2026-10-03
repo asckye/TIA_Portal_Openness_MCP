@@ -36,7 +36,7 @@
       "kind": "product-version",
       "fingerprint": "2a979b6d32fa2e2a4ed154a10874017009be9061ae5d3c2d6efd74af790f11fa",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1300
+      "line": 762
     },
     {
       "kind": "product-version",
@@ -55,12 +55,6 @@
       "fingerprint": "3a72faf01aaf991b154ccc0b67c16d36f9b20d2198b678e421b61a04eeab91fc",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs",
       "line": 15
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "3c3aa45adccbf44ae18f6a78dad9ca2f2ff398bb2c74cf8dcc7393a632cb26d5",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 218
     },
     {
       "kind": "product-version",
@@ -190,12 +184,6 @@
     },
     {
       "kind": "product-version",
-      "fingerprint": "a59705cb867981051d8387634ebf4288fc838faea4d969e363d342fa06040dcc",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSoftware.UnifiedHmi.cs",
-      "line": 23
-    },
-    {
-      "kind": "product-version",
       "fingerprint": "a5c229c085a0a592aa3379ec9393ac2232927ee46648edcf289f2f85793c50fe",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs",
       "line": 105
@@ -252,18 +240,6 @@
       "kind": "product-version",
       "fingerprint": "b14c3ed31040c68a22e5a13ddc4e46ddc224f27c85a700a37fbaafbb726641d4",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
-      "line": 40
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "b14c3ed31040c68a22e5a13ddc4e46ddc224f27c85a700a37fbaafbb726641d4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 40
-    },
-    {
-      "kind": "product-version",
-      "fingerprint": "b14c3ed31040c68a22e5a13ddc4e46ddc224f27c85a700a37fbaafbb726641d4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
       "line": 40
     },
     {

@@ -33,24 +33,6 @@
       "line": 1386
     },
     {
-      "fingerprint": "111794ef95778ec06f6f04a5f195d9b35f2e1d234401dc8d7523254ea7f1f137",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 1320
-    },
-    {
-      "fingerprint": "111794ef95778ec06f6f04a5f195d9b35f2e1d234401dc8d7523254ea7f1f137",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 331
-    },
-    {
-      "fingerprint": "194acc98c8bdf031cfececa31b3acddaf800d408221744a1df0707e1e016dd76",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 776
-    },
-    {
       "fingerprint": "1a392ebde4157c64a56fb8761db460d8cbd8ada18159d07942e7df150edec5f9",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Doctor.cs",
@@ -105,22 +87,10 @@
       "line": 61
     },
     {
-      "fingerprint": "2ba321ffd9527e5d0f5c00283574bb7d51f10c43d4236ee6a72cac958be1a666",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 987
-    },
-    {
       "fingerprint": "328ce9109bf550cf3bd3dac3b65c3fa4e7b64288f2bfb51a9c251f89645c2a84",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.PlcSimAdvanced.cs",
       "line": 368
-    },
-    {
-      "fingerprint": "3366ee474e6655fdd3154ff45442d60f0b8da9c21ecd6abbd4eadf24158a1107",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 89
     },
     {
       "fingerprint": "33a4ddccfdacaadb1634d4d71aa4678816d2b909def031f07e74006075e81e0d",
@@ -132,19 +102,7 @@
       "fingerprint": "34242de43e7dc8f0f5b6e1f15677bb15d98d3f4b22b883bf87332565a625155c",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
-      "line": 1083
-    },
-    {
-      "fingerprint": "387209976e317796305ea471c73c4ad416267bcb6cc2f434a90be2ce554baafa",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 677
-    },
-    {
-      "fingerprint": "39a3e9075970921cb65f9e8eeceea436e8a2843c3df8ecd7c781ae7e6be3f6c1",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 554
+      "line": 147
     },
     {
       "fingerprint": "41869d5475875835fd4ef2ffe8f680467b523849dd5e5123d1ddc15d0e0900e8",
@@ -165,46 +123,16 @@
       "line": 298
     },
     {
-      "fingerprint": "4c4b33466bc8433355d57ff064ef73f98fd10d238239b9cc4fb42e4a027095d0",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 1102
-    },
-    {
       "fingerprint": "4ebbd3913c6826e22ec5fbce6f70eb8a12297c6a329f182e836520284ec4956d",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
       "line": 84
     },
     {
-      "fingerprint": "534d65d6ba752cbe1a93eb4b472290180ceeea2a6fb77664af58e17fc81ade4f",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 254
-    },
-    {
       "fingerprint": "535a73173b943fb6bff733b831fd3b4ec432f2b703074e1f31629f11f9d65a5a",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/Program.ReportBuilders.cs",
       "line": 2161
-    },
-    {
-      "fingerprint": "55f866c0dc6b75176f27dd1a85efb5d43531f06f1c5f6fd2e18ce7d97330587c",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 916
-    },
-    {
-      "fingerprint": "573ea2a63293a2d61186d618b0695e3cb76ac6d40663cf686bc44ce3ff09f9c0",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 319
-    },
-    {
-      "fingerprint": "5858d8098d9097485f693c32004fd062e90b73b9e9e574b7de388afd29f43503",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 1451
     },
     {
       "fingerprint": "5b0037ba1f8b3db233dc30d52077fd8cc020dc00f1a117d7bd07382f18d726c2",
@@ -222,7 +150,7 @@
       "fingerprint": "5c3c76ee95efd2bae22a42880c3e163ea3afd569b23901bdd28290f7a1d03492",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1396
+      "line": 858
     },
     {
       "fingerprint": "5e1ad2c6ee5ce394cdb95c0713456fc41bcaf335b3444d2535edfb928e04cded",
@@ -282,13 +210,7 @@
       "fingerprint": "66a8216456423ec36ebb661e389a2d9d914114920b42c6a60e3bbe2978c1272f",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1593
-    },
-    {
-      "fingerprint": "6872bd9af8ab5066eb8ba9940f61bd032cb36513a380a35c3da17321ffcbfe46",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 1097
+      "line": 928
     },
     {
       "fingerprint": "695da3b7560cb7091b88d67bddb2f1c9f031679e3ad578b13b297761da0ee549",
@@ -307,12 +229,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpHttpResponseRouter.cs",
       "line": 138
-    },
-    {
-      "fingerprint": "7337d6baea68223586ced4cb7862504d0da5965b3a6ebe2932680604df155f60",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 826
     },
     {
       "fingerprint": "755b71769fd1f0971787e00b9a9431799efcde34c65885c53edd3316d4d28b3e",
@@ -339,16 +255,10 @@
       "line": 315
     },
     {
-      "fingerprint": "7ee43db04f1913e29247d12c7bab9c7e546122448799edb276440e939ecd43ac",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 395
-    },
-    {
       "fingerprint": "814eb4c18923bcda1419c1aea99b5741e23af2df0016d321f3bc79ce35013710",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 888
+      "line": 540
     },
     {
       "fingerprint": "83703c5eeef95954d37734d7d609bdd9b31e0056f434e23f08abb1b7567c933a",
@@ -357,28 +267,10 @@
       "line": 52
     },
     {
-      "fingerprint": "86c0e854cb576815dbf7db558cd600bb7c383cba83b8ce0f6b6397aa63bf86c6",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 457
-    },
-    {
-      "fingerprint": "88e72e4b2b8ee27e02ef8c55f39a92f95c5fceeb2009310d793069386048ce82",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 891
-    },
-    {
       "fingerprint": "8ae4080314dcc1de47dd4931ccb4b2cf0da30614a092dc3afbf35afaa2a494ea",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineeringSessionHelpers.cs",
       "line": 46
-    },
-    {
-      "fingerprint": "8cf728d284ae43b19cdf0615e79d76e72fd20ff68c1502d271ccbd5556bf9cad",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 666
     },
     {
       "fingerprint": "922ce606b0e3b5dc80500560ad5a5e19e8342f6f5b48f5b629d18aad2f99418b",
@@ -390,7 +282,7 @@
       "fingerprint": "95a7f17395e351e13c78bacd0397e04ff2901556a5984d2500f3a28b23474522",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs",
-      "line": 79
+      "line": 68
     },
     {
       "fingerprint": "9af81b5d8d0019a99a280e5c1333f21c19d7fb77637d1faca5751bad2f3b07cb",
@@ -399,46 +291,16 @@
       "line": 32
     },
     {
-      "fingerprint": "9b58af502cb2369d2145f599dd2ba5d27012dd0925d2817c4fafe453353b1a4a",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 57
-    },
-    {
-      "fingerprint": "9ca800aeedeff14d6df503453fee42eda6fae6e927b1c15eef56c0f6a2089e91",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 1473
-    },
-    {
       "fingerprint": "9e95f1d91b158e0480edc7eeb90594b42f22ea01e56388df52ab3f00027a0b1a",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/NativeExportCapture.cs",
       "line": 38
     },
     {
-      "fingerprint": "9eb4994c210f54560878d4a8b7e2daaef034b2bef21a92424e2dca9e34baf966",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 247
-    },
-    {
-      "fingerprint": "9f595e7d9670e60f951ef57b7e8e809af92cf9650d9349c7ce17fac2d587f236",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 287
-    },
-    {
       "fingerprint": "a1195f001f80cfd3ef8f5a25ee1e932f29d86600132dc6855fc65a504d587f33",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs",
-      "line": 1038
-    },
-    {
-      "fingerprint": "a235b269fe9dea3fea05cb40494bd298ba14a3a37037ba560ef1b80385ca15af",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 994
+      "line": 102
     },
     {
       "fingerprint": "a7e138c21c7c636d53bd69a5ae0f4d1423ad155bc7cb96fafe35a941fa73e809",
@@ -447,40 +309,10 @@
       "line": 32
     },
     {
-      "fingerprint": "aa6afc79d96cfe671f465f7a03c82af4b3ffce0720b3c778ce0cafc4f1e7fc6a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 1025
-    },
-    {
       "fingerprint": "aa759d0e042052b16ae5d8582452c106282ff926e07d87d017139b33e8bf3a87",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ProjectOwnership.cs",
       "line": 11
-    },
-    {
-      "fingerprint": "aca5dd86c6948a7f124aafeb4ffb33bc86da25c3acb92c5cf18962f27c0e135f",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 957
-    },
-    {
-      "fingerprint": "ad33f16d27211edc65c4d4ee195d7a315bd2b457adcd12d81f86fb8c92a0ca27",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 561
-    },
-    {
-      "fingerprint": "af3d0484d7fda90c1970535ae557bff90878cf3fee1365f86ce48642e229ea48",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 494
-    },
-    {
-      "fingerprint": "b8936f7c655afe131cd35d900881e2d9bf03db4f164f845ecccebb3ccf146304",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 882
     },
     {
       "fingerprint": "b981970aeb110eceea15990be01a2481f43116a77296e4a788e51aa4c02cfab7",
@@ -525,28 +357,22 @@
       "line": 517
     },
     {
-      "fingerprint": "c051b45ccc80798cdeed76e91dd0e0c361cf6afffeb6aaf4b58fb92595fe5daa",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmi.cs",
-      "line": 829
-    },
-    {
       "fingerprint": "c0c7b980b2a59b436d9eec9aa4ea421859b2c48da9256301dd965335c835d904",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1565
+      "line": 900
     },
     {
       "fingerprint": "c24ac14018e23bc0ff6505eeabb98350ce1487cdeccd2864ace8d639210b6c59",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1244
+      "line": 706
     },
     {
       "fingerprint": "c2eb565e15f2c38fb04a2a35fd13a13c2d016578b53c530a2ca582eddfb9ab55",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 921
+      "line": 573
     },
     {
       "fingerprint": "c3a80e510e0fa4ef724f7fb465837fc4d6efb065bda77568d14f3d3c7892a15f",
@@ -615,16 +441,10 @@
       "line": 45
     },
     {
-      "fingerprint": "def19c85cd8412f42b4354c3457c0113a215739c273c1761dc0a2f5e4b4d0c9a",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 990
-    },
-    {
       "fingerprint": "df53d5d13a25b7273b26ae561b700c6557009ba601a72dda134e5e5428171846",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 216
+      "line": 173
     },
     {
       "fingerprint": "dff25acc28b1d89d599ad8ee6007baf58a9bd657093ddf30d78b5742ce912076",
@@ -633,28 +453,10 @@
       "line": 195
     },
     {
-      "fingerprint": "e4294d668560fab249d20018f270e99f4c62616335f21836753a20241a069ed9",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 1031
-    },
-    {
-      "fingerprint": "e828ef06095c5669773dccac0b485f2784f8aa95d849e24e0e683481dc11d047",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 367
-    },
-    {
       "fingerprint": "e9147fdea3287ff4528f2107b81fdd76655adc32f7c75ce46d5a60da7b3a394a",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineeringSessionHelpers.cs",
       "line": 61
-    },
-    {
-      "fingerprint": "ec5c557960d2ccf59cfb9497b8aa0a133e91164bb5be279eb94c9130801e0fc4",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 516
     },
     {
       "fingerprint": "ecb4af6df77fd66949bea4c938bfa48be67e1887e9cdac843fe29b762525d98a",
@@ -666,25 +468,19 @@
       "fingerprint": "edb2a0881d594a86259698abcec9e021c855fa5d0809348cd16112ef900c56c6",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 171
+      "line": 128
     },
     {
       "fingerprint": "f4f27282f993cbf9989fa7b2af510a35789b7a091fd03452db25226aff2808b2",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1343
-    },
-    {
-      "fingerprint": "f675aa909b49054b2adaa9d907d80c5eea8193ef17b803b1e5e9fd40aee17574",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.UnifiedHmiHelpers.cs",
-      "line": 439
+      "line": 805
     },
     {
       "fingerprint": "f8c456e8ac4e67deccb831c06f15cedd90ccc8fda39a0f148280b5c6219089bc",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Devices.cs",
-      "line": 1357
+      "line": 819
     },
     {
       "fingerprint": "f9c3a2aab821d5a9eb68aec605c0416ac7f79f472514f5c7aede7017863607d9",

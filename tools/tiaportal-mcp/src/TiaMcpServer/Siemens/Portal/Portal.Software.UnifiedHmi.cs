@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - UnifiedHmi
@@ -86,7 +85,7 @@ namespace TiaMcpServer.Siemens
                         }
                     }
                 }
-                catch { }
+                catch /* swallow(enumerate-optional): Unavailable collection enumeration preserves the missing-item fallback. */ { }
                 return null;
             }
 
@@ -251,7 +250,7 @@ namespace TiaMcpServer.Siemens
                                 var t = asm.GetType(fn, throwOnError: false, ignoreCase: false);
                                 if (t != null) return t;
                             }
-                            catch { }
+                            catch /* swallow(probe-optional): A type absent from this assembly is probed in the remaining assemblies. */ { }
                         }
                     }
                     return null;
@@ -826,7 +825,7 @@ namespace TiaMcpServer.Siemens
                         if (!string.IsNullOrWhiteSpace(value)) return value!;
                     }
                 }
-                catch
+                catch /* swallow(probe-optional): Unreadable address properties fall through to engineering attributes and other names. */
                 {
                 }
 
@@ -879,7 +878,7 @@ namespace TiaMcpServer.Siemens
                         return true;
                     }
                 }
-                catch
+                catch /* swallow(native-fallback): An unsupported tag access-mode write leaves the remaining enum candidates available. */
                 {
                 }
             }
@@ -954,7 +953,7 @@ namespace TiaMcpServer.Siemens
                         var cur = get.Invoke(connection, new object[] { "CommunicationDriver" });
                         if (cur != null && cur.GetType().IsEnum) enumType = cur.GetType();
                     }
-                    catch
+                    catch /* swallow(probe-optional): An unavailable driver attribute leaves the reflected property type as the candidate. */
                     {
                     }
                 }
@@ -984,14 +983,14 @@ namespace TiaMcpServer.Siemens
                     {
                         prop.SetValue(connection, ev);
                     }
-                    catch
+                    catch /* swallow(native-fallback): The engineering attribute has been set; an unsupported property mirror does not replace that result. */
                     {
                     }
                 }
 
                 return true;
             }
-            catch
+            catch /* swallow(native-fallback): Driver enum configuration reports false so the existing driver fallbacks can run. */
             {
                 return false;
             }
@@ -1317,7 +1316,7 @@ namespace TiaMcpServer.Siemens
                 {
                     types = ex.Types.Where(t => t != null).Cast<Type>().ToArray();
                 }
-                catch
+                catch /* swallow(probe-optional): Assemblies whose type lists cannot load are skipped during the API inventory. */
                 {
                     continue;
                 }
@@ -1448,7 +1447,7 @@ namespace TiaMcpServer.Siemens
                             }
                         }
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): Unavailable attribute metadata leaves the other script member descriptions intact. */ { }
                 }
                 else
                 {
@@ -1470,7 +1469,7 @@ namespace TiaMcpServer.Siemens
                             }
                         }
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): Unavailable invocation metadata leaves the other script member descriptions intact. */ { }
                 }
 
                 return new ModelContextProtocol.ResponseObjectDescribe
