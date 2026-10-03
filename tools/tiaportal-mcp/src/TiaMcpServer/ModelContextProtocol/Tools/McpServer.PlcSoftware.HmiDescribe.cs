@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - HmiDescribe
@@ -64,10 +63,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeHmiSoftware(softwarePath, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
@@ -97,10 +93,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeHmiScreen(softwarePath, screenName, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
@@ -130,10 +123,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeHmiTagTable(softwarePath, tagTableName, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
@@ -164,10 +154,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeHmiTag(softwarePath, tagTableName, tagName, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,
@@ -203,10 +190,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = Portal.DescribeHmiScreenItem(softwarePath, screenName, itemName, maxMembers);
-                // success 原来写的是「成员表非空」。那是把**空**当成了**失败**：
-                // 一个真实存在、但确实没有成员的对象会被报成 success=false，
-                // 调用方于是去"修"一个根本没坏的东西。走到这一行就说明对象已经解析到了
-                // （解析不到在 Portal 层就抛了），这就是成功；空不空看 memberCount。
+                // 成功表示对象已解析；成员数量另由 memberCount 表示。
                 res.Meta = new JsonObject
                 {
                     ["timestamp"] = DateTime.Now,

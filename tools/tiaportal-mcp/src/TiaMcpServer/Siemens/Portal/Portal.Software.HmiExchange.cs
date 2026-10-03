@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - HmiExchange
@@ -59,7 +58,7 @@ namespace TiaMcpServer.Siemens
             var tables = TryGetHmiTagTablesCollection(sw);
             if (tables == null) return new List<string>();
             var names = TryListNamesFromCollection(tables, Array.Empty<string>(), "TagTables");
-            // 2.7.46: tables inside user folders are listed too (name only; ManageClassicHmiFolder read shows the folder).
+            // Tables inside user folders are listed too (name only; ManageClassicHmiFolder read shows the folder).
             var root = TryGetHmiTagRoot(sw);
             if (root != null)
                 foreach (var table in EnumerateHmiTagTablesRecursive(root))
@@ -81,7 +80,7 @@ namespace TiaMcpServer.Siemens
             object? tagTable = string.IsNullOrWhiteSpace(tagTableName)
                 ? null
                 : TryFindHmiTagTable(sw, tagTableName);
-            // 2.7.46: an unknown table answered "0 tags, success" - that is a lookup failure, not an empty table.
+            // An unknown table is a lookup failure, not an empty table.
             if (!string.IsNullOrWhiteSpace(tagTableName) && tagTable == null)
                 throw new PortalException(PortalErrorCode.NotFound, "HMI tag table not found: " + tagTableName + " (tables: " + string.Join(", ", GetHmiTagTables(softwarePath) ?? new List<string>()) + ").");
 
@@ -139,7 +138,6 @@ namespace TiaMcpServer.Siemens
             var connections = TryGetPropertyValue(sw, "Connections");
             if (connections == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI Connections collection not found on '{softwarePath}'");
 
-            // 去掉 ?? TryFindByNameInCollection(connections, Array.Empty<string>(), ...)：空 hints 恒返回 null。
             var connection = FindExistingByName(connections, connectionName);
             if (connection == null) throw new PortalException(PortalErrorCode.NotFound, $"HMI connection not found: {connectionName}");
 
@@ -178,7 +176,6 @@ namespace TiaMcpServer.Siemens
                 ?? FindTypeBySuffix("Communication.Connection");
             sb.AppendLine("ConnectionType=" + (connectionType?.FullName ?? "<not found>"));
 
-            // 去掉 ?? TryFindByNameInCollection(connections, Array.Empty<string>(), ...)：空 hints 恒返回 null。
             var existing = FindExistingByName(connections, connectionName);
             if (existing != null)
             {
@@ -245,7 +242,6 @@ namespace TiaMcpServer.Siemens
                 }
             }
 
-            // 去掉 ?? TryFindByNameInCollection(connections, Array.Empty<string>(), ...)：空 hints 恒返回 null。
             created ??= FindExistingByName(connections, connectionName);
             if (created == null)
             {
@@ -283,7 +279,7 @@ namespace TiaMcpServer.Siemens
                     var safe = MakeSafeFileName(s);
                     var outPath = Path.Combine(exportDir, $"screen_{safe}.xml");
                     try { var result = ExportHmiScreen(softwarePath, s, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); }
-                    catch (PortalException) { failed.Add($"screen:{s}"); }
+                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"screen:{s}"); }
                 }
             }
 
@@ -295,7 +291,7 @@ namespace TiaMcpServer.Siemens
                     var safe = MakeSafeFileName(t);
                     var outPath = Path.Combine(exportDir, $"tagtable_{safe}.xml");
                     try { var result = ExportHmiTagTable(softwarePath, t, outPath); if (result["success"]!.GetValue<bool>()) exported.Add(outPath); else failed.Add(result.ToJsonString()); }
-                    catch (PortalException) { failed.Add($"tagtable:{t}"); }
+                    catch (PortalException) { /* swallow(native-fallback): batch export records the failed object and continues with remaining entries */ failed.Add($"tagtable:{t}"); }
                 }
             }
 
@@ -354,7 +350,8 @@ namespace TiaMcpServer.Siemens
         // Notes of the last ImportHmiScreen, retained for compatibility with the tool wrapper.
         public string? LastImportNotes { get; private set; }
 
-        // 2.7.48 (crash ⑩): importing a classic screen whose Width / Height differ from the panel's display made TIA Portal V21
+        // Native incident (TIA Portal V21; observation date not recorded; docs/reference/real-machine-ledger.md):
+        // importing a classic screen whose Width / Height differ from the panel's display made TIA Portal V21
         // exit with NonRecoverableException "The screen size does not match the device" (TP700 Comfort 800x480, builder default
         // 640x480). The size is compared with an existing screen of the device (or its display attributes) before Import.
         private void GuardClassicScreenSize(object hmiSoftware, string importPath)
@@ -369,7 +366,7 @@ namespace TiaMcpServer.Siemens
                 if (int.TryParse(attributes?.Element("Width")?.Value, out var w)) xmlWidth = w;
                 if (int.TryParse(attributes?.Element("Height")?.Value, out var h)) xmlHeight = h;
             }
-            catch (Exception) { return; }                                              // not a screen document we understand - TIA reports its own error
+            catch (Exception) { /* swallow(parse-fallback): unrecognized screen XML is left to the native importer for diagnosis */ return; }                                              // not a screen document we understand - TIA reports its own error
             if (xmlWidth == null || xmlHeight == null) return;
 
             int? deviceWidth = null, deviceHeight = null; string source = "";
@@ -383,13 +380,13 @@ namespace TiaMcpServer.Siemens
                     source = "existing screen '" + TryGetName(existing) + "'";
                 }
             }
-            catch (Exception) { deviceWidth = null; }
+            catch (Exception) { /* swallow(probe-optional): unavailable display dimensions fall back to the next panel resolution source */ deviceWidth = null; }
             if (deviceWidth == null && hmiSoftware is IEngineeringObject software)
             {
                 foreach (var pair in new[] { ("ScreenWidth", "ScreenHeight"), ("DisplayWidth", "DisplayHeight"), ("ResolutionWidth", "ResolutionHeight") })
                 {
                     try { deviceWidth = Convert.ToInt32(software.GetAttribute(pair.Item1)); deviceHeight = Convert.ToInt32(software.GetAttribute(pair.Item2)); source = "HMI attributes " + pair.Item1 + "/" + pair.Item2; break; }
-                    catch (Exception) { deviceWidth = null; }
+                    catch (Exception) { /* swallow(probe-optional): unavailable display dimensions fall back to the next panel resolution source */ deviceWidth = null; }
                 }
             }
             if (deviceWidth == null)
@@ -431,7 +428,7 @@ namespace TiaMcpServer.Siemens
                     if (match.Success) return (int.Parse(match.Groups[1].Value), int.Parse(match.Groups[2].Value));
                 }
             }
-            catch (Exception) { }
+            catch (Exception) { /* swallow(probe-optional): missing catalog resolution returns null so the screen-size guard refuses an unchecked import */ }
             return null;
         }
 
