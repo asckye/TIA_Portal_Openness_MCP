@@ -170,6 +170,7 @@ def main():
         studio + 'Directory.Build.props', studio + 'tests/Directory.Build.props',
         'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs',
         'tools/openness-shared/OpennessEnvironment.cs',
+        'tools/openness-shared/BundleLayout.cs',
         'tools/openness-shared/ProcessArguments.cs',
         'tools/openness-shared/LocalProcess.cs',
     }
@@ -181,6 +182,9 @@ def main():
         require(sha(data) == row['sha256'], f"Configurator source changed: {row['path']}")
     require(not any(n in files for n in ('tia.cmd', 'tia-v20.cmd', '配置MCP.bat', '配置MCP-v20.bat')), 'Replaced launchers must not be shipped')
     required = ('docs/README.md',
+                'tools/openness-shared/BundleLayout.cs',
+                'scripts/checks/Check-BundleLayout.py',
+                'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
                 'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
                 'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
                 'TiaMcpConfigurator.exe', 'scripts/build/Build-Configurator.ps1', 'docs/getting-started/configuration.md',

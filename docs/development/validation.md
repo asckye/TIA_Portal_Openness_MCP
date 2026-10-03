@@ -67,6 +67,8 @@ python scripts/checks/Check-McpText.py
 python scripts/checks/Inventory-ResponseEnvelopes.py --self-test
 python scripts/checks/Inventory-ResponseEnvelopes.py
 python scripts/checks/Check-TiaFeatures.py
+python scripts/checks/Check-BundleLayout.py --self-test
+python scripts/checks/Check-BundleLayout.py
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/checks/Validate-Bundle.ps1 -Strict
 python scripts/checks/Test-DotnetSuites.py --self-test
 python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
@@ -76,6 +78,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build/Build-Configur
 ```
 
 仓库检查验证链接、入口和统计；交付检查核对清单、版本、八版运行文件与构建哈希。
+`Check-Repository.py` 同时运行纯 Python 的 [BundleLayout 检查](../../scripts/checks/Check-BundleLayout.py)：
+读取资源代码表，用 `git ls-files` 验证文件或目录内文件受版本管理，并确认路径在 `Validate-Bundle.ps1`
+实际执行的资源清单中；不调用 dotnet，也不依赖 `runtime/` 构建产物。布局矩阵通过临时目录分别验证
+Logic（offline/offline-v20）与 Studio Core，覆盖安装、开发输出、worktree、CI、runtime-only、嵌套暂存
+和中文/空格/尾分隔符路径；缺失资源不能借用祖先仓库。GUI 只链接解析器，尚无调用方。
 `Check-Repository.py` 同时运行纯 Python 的吞异常门禁；offline-checks CI 还运行其自检，不依赖 dotnet。
 门禁扫描 `tools/tiaportal-mcp/src`、`tools/openness-shared`、`tools/tia-openness-studio/src`，
 排除 `bin`/`obj`（含 `-v20`）、`Generated` 目录、`.g.cs`/`.g.i.cs`/`.generated.cs`/`.designer.cs`

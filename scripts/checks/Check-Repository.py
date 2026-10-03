@@ -1,4 +1,4 @@
-"""Check local documentation links and repository entrypoints without TIA or Git."""
+"""Check local documentation links and repository entrypoints without TIA or dotnet."""
 import argparse
 import json
 from pathlib import Path
@@ -57,6 +57,9 @@ def check(root, no_binaries=False):
     required(package['cli']['exe'], 'CLI')
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj', 'adapter contracts')
     required('tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json', 'adapter contracts lock')
+    required('tools/openness-shared/BundleLayout.cs', 'bundle layout')
+    required('scripts/checks/Check-BundleLayout.py', 'bundle layout check')
+    required('tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs', 'bundle layout tests')
     for name in read('templates/project-blueprints/full_plc_hmi_project.json')['requiredBundleFiles']:
         required(name, 'blueprint')
     studio = 'tools/tia-openness-studio/src/'
@@ -89,6 +92,10 @@ def check(root, no_binaries=False):
         result = subprocess.run([sys.executable, str(checker), '--root', str(root)])
         if result.returncode:
             errors.append(f'{name} baseline check failed (see diagnostics above)')
+    layout = Path(__file__).with_name('Check-BundleLayout.py')
+    result = subprocess.run([sys.executable, str(layout), '--root', str(root)])
+    if result.returncode:
+        errors.append('Bundle-layout resource check failed (see diagnostics above)')
     return count, errors
 
 

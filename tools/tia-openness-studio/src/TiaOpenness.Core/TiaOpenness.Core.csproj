@@ -7,4 +7,8 @@
   <ItemGroup><Compile Include="../../../openness-shared/LocalProcess.cs" Link="Shared/LocalProcess.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/ProcessArguments.cs" Link="Shared/ProcessArguments.cs" /></ItemGroup>
   <ItemGroup><Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Shared/OpennessEnvironment.cs" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../../openness-shared/BundleLayout.cs" Link="Shared/BundleLayout.cs" />
+    <InternalsVisibleTo Include="TiaOpenness.Core.Tests" />
+  </ItemGroup>
 </Project>

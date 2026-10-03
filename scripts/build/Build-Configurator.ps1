@@ -8,6 +8,7 @@ $configurationTests = Join-Path $studio 'tests/TiaOpenness.Configuration.Tests/T
 $versionCatalog = Join-Path $root 'tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs'
 $processArguments = Join-Path $root 'tools/openness-shared/ProcessArguments.cs'
 $opennessEnvironment = Join-Path $root 'tools/openness-shared/OpennessEnvironment.cs'
+$bundleLayout = Join-Path $root 'tools/openness-shared/BundleLayout.cs'
 $wpf = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\WPF'
 $references = @('/r:System.Windows.Forms.dll', '/r:System.Web.Extensions.dll', '/r:System.Security.dll', '/r:System.Core.dll', '/r:System.Xaml.dll', "/r:$wpf\WindowsBase.dll", "/r:$wpf\PresentationFramework.dll", "/r:$wpf\PresentationCore.dll")
 $fonts = Join-Path $studio 'src/TiaOpenness.Gui/Fonts'
@@ -50,7 +51,7 @@ if ($Test) {
         Get-Item (Join-Path $studio 'Directory.Build.props')
         Get-Item (Join-Path $studio 'tests/Directory.Build.props')
         Get-Item (Join-Path $root 'tools/openness-shared/LocalProcess.cs')
-    ) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $fonts -Recurse -File)
+    ) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-Item $bundleLayout) + @(Get-ChildItem $fonts -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()

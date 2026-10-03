@@ -11,6 +11,7 @@
   <ItemGroup><ProjectReference Include="../TiaOpenness.Bridge/TiaOpenness.Bridge.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../../openness-shared/OpennessEnvironment.cs" Link="Configuration/OpennessEnvironment.cs" />
+    <Compile Include="../../../openness-shared/BundleLayout.cs" Link="Configuration/BundleLayout.cs" />
     <Resource Include="Fonts/*.ttf"/>
     <Content Include="Fonts/*OFL.txt" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>

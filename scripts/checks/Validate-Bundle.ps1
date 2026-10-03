@@ -58,7 +58,26 @@ Write-Host "Bundle root: $root"
 if ($SkipSourceHashes) { Write-Host "[INFO] Source hashes are verified at release time; recorded source-file checks skipped" -ForegroundColor Cyan }
 
 if ($NoBinaries) { Write-Host "[INFO] -NoBinaries: runtime\ and TiaMcpConfigurator.exe are build outputs, not checked here" -ForegroundColor Cyan }
+# Check-BundleLayout.py compares the code table with this enforced resource list.
+$bundleResourcePaths = @(
+    'manifest/package-manifest.json',
+    'manifest/delivery.json',
+    'reference/siemens-openness/skills',
+    'reference/siemens-openness/UPSTREAM.json',
+    'reference/v21-ecosystem.json',
+    'scripts/ecosystem/plc_tools_bridge.py',
+    'scripts/ecosystem/simaticml_decode_bridge.py',
+    'scripts/operations/Update-Engine.ps1',
+    'templates'
+)
+foreach ($resource in $bundleResourcePaths) {
+    if (Test-Path -LiteralPath (Join-Path $root $resource)) { Ok "Bundle resource present: $resource" }
+    else { Fail "Missing bundle resource: $resource" }
+}
 foreach ($guiFile in @(
+    'tools/openness-shared/BundleLayout.cs',
+    'scripts/checks/Check-BundleLayout.py',
+    'tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs',
     'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj',
     'tools/tiaportal-mcp/src/TiaMcp.Adapters.Contracts/packages.lock.json',
     'TiaMcpConfigurator.exe', 'docs/getting-started/configuration.md', 'scripts/build/Build-Configurator.ps1',
