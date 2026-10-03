@@ -44,13 +44,12 @@ internal static class SoftwareLookupRuntimeTests
         try { Resolve("+S1-K1", new object[] { group }, 1); }
         catch (TargetInvocationException ex) { limited = ex.InnerException?.GetType().GetProperty("Code")?.GetValue(ex.InnerException)?.ToString() == "OpennessError"; }
         check(limited, "actual EXE reports incomplete bounded scan as error");
-        var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
-        var listing = portal.GetMethod("ResolvePlcForListing", BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var portal = EngineSurface.For(server);
+        var listing = portal.Method("ResolvePlcForListing", BindingFlags.Instance | BindingFlags.NonPublic)!;
         // Required receives a compiler-generated delegate. Check the delegate target's IL too.
-        var targets = new List<MethodInfo>(portal.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
-        foreach (var nested in portal.GetNestedTypes(BindingFlags.NonPublic | BindingFlags.Public))
-            targets.AddRange(nested.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
-        int token = portal.GetMethod("GetPlcSoftware", new[] { typeof(string) })!.MetadataToken;
+        var targets = EngineSurface.MethodFamily(listing);
+        var resolver = portal.Method("GetPlcSoftware", new[] { typeof(string) });
+        int token = resolver.MetadataToken;
         bool shared = false;
         foreach (var method in targets)
         {
@@ -60,17 +59,17 @@ internal static class SoftwareLookupRuntimeTests
             for (int i = 0; i + 4 < il.Length; i++)
                 if ((il[i] == 0x28 || il[i] == 0x6f) && BitConverter.ToInt32(il, i + 1) == token) shared = true;
         }
-        check(shared, "EXE listing calls shared GetPlcSoftware resolver, including enumeration fallback");
+        EngineSurface.CheckIl(check, shared, "EXE listing calls shared GetPlcSoftware resolver, including enumeration fallback", listing, resolver);
         var match = Program.FindServerType(server, "TiaMcpServer.Siemens.Guard").GetMethod("MatchPlcName")!;
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1", "PLC_2" }, "+S1-K1" })! == "+S1-K1", "EXE enumeration fallback matches IEC name literally before single-PLC fallback");
         check((string)match.Invoke(null, new object[] { new[] { "+S1-K1" }, "ET 200SP station_1" })! == "+S1-K1", "EXE shared single-PLC fallback resolves station alias");
         var findBlock = server.GetType("TiaMcpServer.Siemens.PlcBlockLookup", true)!.GetMethod("Find", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(BlockGroup), typeof(string));
         var root = new BlockGroup();
         root.Groups.Add(new BlockGroup { Name = "03_OPMode", Blocks = new List<string> { "OPMODE01_FC" } });
-        var selectBlock = portal.GetMethod("ResolveSingleByName", BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(string));
-        var uninitialized = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(portal);
+        var selectBlock = portal.Method("ResolveSingleByName", BindingFlags.NonPublic | BindingFlags.Instance)!.MakeGenericMethod(typeof(string));
+        var uninitialized = System.Runtime.Serialization.FormatterServices.GetUninitializedObject(selectBlock.DeclaringType!);
         // Avoid constructing/connecting a Portal; initialize the pure name selector's only field.
-        portal.GetField("_regexChars", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(uninitialized,
+        portal.Field("_regexChars", BindingFlags.Instance | BindingFlags.NonPublic)!.SetValue(uninitialized,
             new[] { '.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|' });
         string? FindBlock(string path) => (string?)findBlock.Invoke(null, new object[] { root, path,
             new Func<BlockGroup,string>(g => g.Name), new Func<BlockGroup,IEnumerable<BlockGroup>>(g => g.Groups),
@@ -86,11 +85,13 @@ internal static class SoftwareLookupRuntimeTests
         check(duplicateBlock, "EXE rejects ambiguous bare block names");
         check(FindBlock("03_OPMode/OPMODE01_FC") == "OPMODE01_FC", "EXE qualified block remains unique with duplicate elsewhere");
         check(FindBlock("FB_Motor.V2") == "FB_Motor.V2", "EXE block dot retains literal name priority");
-        var getBlockIl = portal.GetMethod("GetBlock")!.GetMethodBody()!.GetILAsByteArray()!;
-        int rootToken = portal.GetMethod("GetBlockRootGroup")!.MetadataToken;
+        var getBlock = portal.Method("GetBlock");
+        var getBlockIl = getBlock.GetMethodBody()!.GetILAsByteArray()!;
+        var rootResolver = portal.Method("GetBlockRootGroup");
+        int rootToken = rootResolver.MetadataToken;
         bool sharedRoot = false;
         for (int i=0; i+4<getBlockIl.Length; i++) if ((getBlockIl[i]==0x28 || getBlockIl[i]==0x6f) && BitConverter.ToInt32(getBlockIl,i+1)==rootToken) sharedRoot=true;
-        check(sharedRoot, "EXE single-block entry uses same root resolver as listings");
+        EngineSurface.CheckIl(check, sharedRoot, "EXE single-block entry uses same root resolver as listings", getBlock, rootResolver);
         var exactMatch = server.GetType("TiaMcpServer.Siemens.ExactSoftwareMatch", true)!.GetMethod("Select", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(Node));
         var target = new Node { SoftwareName = "+S1-K1" };
         object? Select(IEnumerable<Node> nodes, string name) => exactMatch.Invoke(null, new object[] { nodes, name, new Func<Node,string>(n => n.SoftwareName) });
@@ -105,11 +106,13 @@ internal static class SoftwareLookupRuntimeTests
         bool scanStopped = false;
         try { Select(BrokenScan(), "+S1-K1"); } catch (TargetInvocationException ex) { scanStopped = ex.ToString().Contains("scan interrupted"); }
         check(scanStopped, "EXE write resolver never returns early before uniqueness scan completes");
-        var bareIl = portal.GetMethod("ResolveBareSoftwareContainer", BindingFlags.Instance | BindingFlags.NonPublic)!.GetMethodBody()!.GetILAsByteArray()!;
-        int enumerationToken = portal.GetMethod("EnumerateSoftwareContainersForExactLookup", BindingFlags.Instance | BindingFlags.NonPublic)!.MetadataToken;
+        var bareResolver = portal.Method("ResolveBareSoftwareContainer", BindingFlags.Instance | BindingFlags.NonPublic);
+        var bareIl = bareResolver.GetMethodBody()!.GetILAsByteArray()!;
+        var enumeration = portal.Method("EnumerateSoftwareContainersForExactLookup", BindingFlags.Instance | BindingFlags.NonPublic);
+        int enumerationToken = enumeration.MetadataToken;
         bool wiredFallback = false;
         for (int i=0;i+4<bareIl.Length;i++) if ((bareIl[i]==0x28 || bareIl[i]==0x6f) && BitConverter.ToInt32(bareIl,i+1)==enumerationToken) wiredFallback=true;
-        check(wiredFallback, "EXE shared container resolver includes typed group/device enumeration fallback");
+        EngineSurface.CheckIl(check, wiredFallback, "EXE shared container resolver includes typed group/device enumeration fallback", bareResolver, enumeration);
         var deletion=server.GetType("TiaMcpServer.Siemens.EmptyPlcGroupDeletion",true)!;
         var parse=deletion.GetMethod("Parse",BindingFlags.Static|BindingFlags.NonPublic)!;
         int invalid=0;
@@ -131,7 +134,7 @@ internal static class SoftwareLookupRuntimeTests
         online="Offline";var deletionResult=ExecuteDelete(false).ToString();check(deletes==1 && !exists && deletionResult.Contains("true"),"EXE empty offline deletion verifies target absence");
         exists=true;check(Refused(()=>ExecuteDelete(false,null,false)) && deletes==2,"EXE does not report success if deleted group remains");
         int reads=0;check(Refused(()=>ExecuteDelete(false,_=>++reads==1?0:1)) && deletes==2,"EXE rechecks emptiness immediately before deletion");
-        var deleteTool=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("DeleteEmptyPlcBlockGroup")!;
+        var deleteTool=EngineSurface.For(server).Tool("DeleteEmptyPlcBlockGroup")!;
         check((bool)deleteTool.GetParameters()[2].DefaultValue!,"EXE deletion tool defaults to dryRun=true");
         var rt = Program.FindServerType(server, "TiaMcpServer.Siemens.PlcListingRead");
         var reader = Activator.CreateInstance(rt, true)!;

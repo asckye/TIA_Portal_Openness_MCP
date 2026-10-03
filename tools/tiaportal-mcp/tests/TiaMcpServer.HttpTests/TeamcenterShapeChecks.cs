@@ -80,8 +80,8 @@ internal static class TeamcenterShapeChecks
         Property(tc,ns+"TcPropertyListOfValueInfo","LovUsageType","ListOfValuesUsageType",false); Property(tc,ns+"TcPropertyListOfValueInfo","LowerLimit","String",false); Property(tc,ns+"TcPropertyListOfValueInfo","UpperLimit","String",false); Property(tc,ns+"TcPropertyListOfValueInfo","Values","IEnumerable`1",false);
 
         // ---- server side ----
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
-        foreach(var tool in new[]{"ManageTeamcenterConnection","ManageTeamcenterDataset","ManageTeamcenterWorkflow"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
-        check(Equals(portal.GetMethod("ManageTeamcenterWorkflow")!.GetParameters().Single(p=>p.Name=="confirmSave").DefaultValue,false),"ManageTeamcenterWorkflow saves need confirmSave");
+        var portal=EngineSurface.For(server);
+        foreach(var tool in new[]{"ManageTeamcenterConnection","ManageTeamcenterDataset","ManageTeamcenterWorkflow"}) check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        check(Equals(portal.Method("ManageTeamcenterWorkflow")!.GetParameters().Single(p=>p.Name=="confirmSave").DefaultValue,false),"ManageTeamcenterWorkflow saves need confirmSave");
     }
 }

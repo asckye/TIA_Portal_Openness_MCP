@@ -14,7 +14,7 @@ internal static class BindingAndTagShapeChecks
             check(core.GetType(type, true)!.GetProperty(type.EndsWith("ProjectBase") ? "Path" : "ProjectPath")?.PropertyType == typeof(FileInfo), type + " exposes full file path");
         foreach (var pair in new[] { (classic, "Siemens.Engineering.Hmi.Tag.Tag"), (unified, "Siemens.Engineering.HmiUnified.HmiTags.HmiTag") })
             check(pair.Item1.GetType(pair.Item2, true)!.GetMethod("Delete", Type.EmptyTypes)?.ReturnType == typeof(void), pair.Item2 + ".Delete() available");
-        var tool = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod("DeleteHmiTag")!;
+        var tool = EngineSurface.For(server).Tool("DeleteHmiTag")!;
         check((bool)tool.GetParameters()[3].DefaultValue && !(bool)tool.GetParameters()[4].DefaultValue, "HMI tag deletion defaults to preview without confirmation");
     }
 }

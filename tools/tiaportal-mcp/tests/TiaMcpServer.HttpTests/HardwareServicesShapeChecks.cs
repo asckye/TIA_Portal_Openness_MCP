@@ -132,16 +132,16 @@ internal static class HardwareServicesShapeChecks
         check(Enum.IsDefined(T(core,"Siemens.Engineering.HW.DeviceItemClassifications"),"CPU"),"DeviceItemClassifications.CPU (CPU item lookup)");
 
         // Tool surface
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManageCommunicationConnection","ManageWatchForceTableWebAccess","ExchangeSystemDiagnosticsSettings","ManageOpcUaAccessControl","ImportDeviceAml","ManagePlcProtection"}) {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             var preview=method.GetParameters().Last();
             check(preview.Name=="dryRun" && Equals(preview.DefaultValue,true),name+" ends with dryRun=true");
         }
         foreach(var (name,confirm) in new[]{("ManageCommunicationConnection","confirmDelete"),("ManageWatchForceTableWebAccess","confirmChange"),("ExchangeSystemDiagnosticsSettings","confirmImport"),("ManageOpcUaAccessControl","confirmChange"),("ImportDeviceAml","confirmImport"),("ManagePlcProtection","confirmChange")})
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name==confirm).DefaultValue,false),name+" requires explicit "+confirm);
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==confirm).DefaultValue,false),name+" requires explicit "+confirm);
         foreach(var name in new[]{"ReadCommunicationConnections","ReadOpcUaAccessControl","ReadHardwareFeatures"}) {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(method.GetParameters().Any(p=>p.Name=="offset") && method.GetParameters().Any(p=>p.Name=="limit") && !method.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read without dryRun");
         }
     }

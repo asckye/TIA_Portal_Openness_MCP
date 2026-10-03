@@ -83,19 +83,19 @@ internal static class RuntimeChannelsShapeChecks
         var handlerType = httpClientType.Assembly.GetType("System.Net.Http.HttpClientHandler");
         check(handlerType?.GetProperty("ServerCertificateCustomValidationCallback") != null, "HttpClientHandler.ServerCertificateCustomValidationCallback (per-handler certificate policy, net48)");
 
-        var tools = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        var tools = EngineSurface.For(server);
         foreach (var name in new[] { "ReadPlcWebVars", "ReadPlcWebDiagnostics", "ReadUnifiedRuntimeTags", "ReadUnifiedRuntimeAlarms" })
-            check(tools.GetMethod(name) != null && tools.GetMethod(name)!.GetParameters().All(p => p.Name != "dryRun"), name + " exposed (read-only, no dryRun)");
+            check(tools.Tool(name) != null && tools.Tool(name)!.GetParameters().All(p => p.Name != "dryRun"), name + " exposed (read-only, no dryRun)");
         foreach (var name in new[] { "WritePlcWebVars", "WriteUnifiedRuntimeTags", "UnifiedOpenPipeRequest" })
         {
-            var method = tools.GetMethod(name)!;
+            var method = tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p => p.Name == "dryRun").DefaultValue, true), name + " defaults to preview");
             check(Equals(method.GetParameters().Single(p => p.Name == "confirmWrite").DefaultValue, false), name + " requires explicit confirmWrite");
         }
-        var modeTool = tools.GetMethod("SetPlcWebOperatingMode")!;
+        var modeTool = tools.Tool("SetPlcWebOperatingMode")!;
         check(Equals(modeTool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue, true), "SetPlcWebOperatingMode defaults to preview");
         check(Equals(modeTool.GetParameters().Single(p => p.Name == "confirmModeChange").DefaultValue, false), "SetPlcWebOperatingMode requires explicit confirmModeChange");
         foreach (var name in new[] { "ReadPlcWebVars", "WritePlcWebVars", "ReadPlcWebDiagnostics", "SetPlcWebOperatingMode" })
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p => p.Name == "ignoreCertificateErrors").DefaultValue, false), name + " validates certificates by default");
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p => p.Name == "ignoreCertificateErrors").DefaultValue, false), name + " validates certificates by default");
     }
 }

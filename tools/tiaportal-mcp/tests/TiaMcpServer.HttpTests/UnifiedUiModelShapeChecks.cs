@@ -108,15 +108,15 @@ internal static class UnifiedUiModelShapeChecks
         foreach(var field in new[]{"Backup","Segment","Settings"}) Property("Siemens.Engineering.HmiUnified.HmiLogging.HmiAuditTrail",field);
         Property("Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogSettings","LogTimePeriod"); Property("Siemens.Engineering.HmiUnified.HmiLogging.HmiLoggingCommon.LogSegment","SegmentTimePeriod");
         // Tool surface
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManageUnifiedObjectParts","ManageUnifiedDynamization","ManageUnifiedScreenLayout","ManageUnifiedListEntries"})
         {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),name+" delete requires explicit confirmation");
         }
         foreach(var name in new[]{"ReadUnifiedObjectEvents","ReadUnifiedAlarmCommon","ReadUnifiedAuditSettings"})
-            check(tools.GetMethod(name)!.GetParameters().Any(p=>p.Name=="limit") && !tools.GetMethod(name)!.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read");
+            check(tools.Tool(name)!.GetParameters().Any(p=>p.Name=="limit") && !tools.Tool(name)!.GetParameters().Any(p=>p.Name=="dryRun"),name+" is a paginated read");
         if(v20) Console.WriteLine("CAPABILITY V20: Unified UI model checked against merged Siemens.Engineering; properties exposed only as dynamic attributes are refused by the CLR-setter rule.");
     }
 }

@@ -81,9 +81,9 @@ internal static class UnifiedExchangeShapeChecks
         if(unified.GetType(ns+"TextGraphicList.HmiGraphicListComposition")==null && v20) Console.WriteLine("CAPABILITY V20 has no HmiGraphicLists; graphicLists tools return NotSupported.");
         else Method(unified,ns+"TextGraphicList.HmiGraphicListComposition","Import",new[]{dir,typeof(string)},"Boolean");
         // Tool surface
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ExchangeUnifiedTags","ExchangeUnifiedScriptModules","ImportUnifiedOpcUaAlarms"})
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
-        check(Equals(tools.GetMethod("ImportUnifiedOpcUaAlarms")!.GetParameters().Single(p=>p.Name=="action").DefaultValue,"read"),"ImportUnifiedOpcUaAlarms defaults to read");
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
+        check(Equals(tools.Tool("ImportUnifiedOpcUaAlarms")!.GetParameters().Single(p=>p.Name=="action").DefaultValue,"read"),"ImportUnifiedOpcUaAlarms defaults to read");
     }
 }

@@ -116,7 +116,7 @@ internal static class LibraryDeepShapeChecks
         Enum(types+"ConsistencyStatus","None","Consistent","DefaultVersionInconsistent","DuplicateVersionInconsistent","NonDefaultVersionInstantiation","MultipleVersionsInstantiationInSameDevice");
         Enum(types+"LibraryTypeVersionState","InWork","Committed"); Enum(compare+"DetailCompareStatus","NotCompared","ObjectsDifferent","ObjectsIdentical"); Enum(lib+"TransferResultState","Success","Warning");
         // Engine surface
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal")!;
+        var portal=EngineSurface.For(server);
         // Execute only our pure metadata guard against the real SDK Type, never a native setter.
         var guard=Program.FindServerType(server, "TiaMcpServer.Siemens.LibraryDeepLogic").GetMethod("GuardKnownTypeWrites",BindingFlags.Static|BindingFlags.NonPublic)!;
         var scriptModuleType=T("Siemens.Engineering.HmiUnified.Library.ScriptModuleType",unified);
@@ -127,8 +127,8 @@ internal static class LibraryDeepShapeChecks
         guard.Invoke(null,new object[]{20,scriptModuleType,new[]{"Name"}});
         guard.Invoke(null,new object[]{21,scriptModuleType,new[]{"DoNotUse"}});
         check(true,"rename incident guard preserves V20 and unrelated property scope (not a native safety claim)");
-        foreach(var tool in new[]{"ReadLibraryOverview","ReadLibraryType","ManageLibraryType","CheckLibraryUpdates","SynchronizeLibrary","CompareLibraryObjects"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" present");
-        check(portal.GetMethod("ManageGlobalLibrary")?.GetParameters().Any(p=>p.Name=="archiveMode")==true,"Portal.ManageGlobalLibrary carries archiveMode (infos/openInfo/archive actions)");
-        check(portal.GetMethod("ImportLibraryTypeDocuments")?.GetParameters().Any(p=>p.Name=="createOptions")==true,"Portal.ImportLibraryTypeDocuments carries createOptions (version import)");
+        foreach(var tool in new[]{"ReadLibraryOverview","ReadLibraryType","ManageLibraryType","CheckLibraryUpdates","SynchronizeLibrary","CompareLibraryObjects"}) check(portal.Method(tool)!=null,"Portal."+tool+" present");
+        check(portal.Method("ManageGlobalLibrary")?.GetParameters().Any(p=>p.Name=="archiveMode")==true,"Portal.ManageGlobalLibrary carries archiveMode (infos/openInfo/archive actions)");
+        check(portal.Method("ImportLibraryTypeDocuments")?.GetParameters().Any(p=>p.Name=="createOptions")==true,"Portal.ImportLibraryTypeDocuments carries createOptions (version import)");
     }
 }

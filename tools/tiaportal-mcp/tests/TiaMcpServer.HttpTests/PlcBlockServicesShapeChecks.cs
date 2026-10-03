@@ -76,10 +76,10 @@ internal static class PlcBlockServicesShapeChecks
         Method(step7,"Siemens.Engineering.SW.Alarm.TextLists.PlcAlarmUserTextlistComposition","CreateFrom",new[]{masterCopy,T(core,"Siemens.Engineering.Library.MasterCopies.MasterCopyMode")},"PlcAlarmUserTextlist");
         foreach(var value in new[]{"ThrowIfExists","Rename","Replace"}) check(Enum.GetNames(T(core,"Siemens.Engineering.Library.MasterCopies.MasterCopyMode")).Contains(value),"MasterCopyMode."+value);
         // Tool surface: every mutating tool previews by default and destructive ones need an explicit confirmation.
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManagePlcBlockProtection","ManagePlcDataBlockSnapshot","UpdatePlcProgram","ReadPlcBlockFingerprints","ImportPlcAlarmInstanceTexts","ManagePlcAlarmTextList"})
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         foreach(var (name,flag) in new[]{("ManagePlcBlockProtection","confirmProtectionChange"),("ManagePlcDataBlockSnapshot","confirmValueChange"),("UpdatePlcProgram","confirmUpdate"),("ManagePlcAlarmTextList","confirmDelete")})
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name==flag).DefaultValue,false),name+" requires explicit "+flag);
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name==flag).DefaultValue,false),name+" requires explicit "+flag);
     }
 }

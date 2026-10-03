@@ -82,24 +82,24 @@ internal static class EngineeringApiShapeTests
             Console.WriteLine("CAPABILITY "+property+" Create(string)="+(hmi.GetProperty(property)!.PropertyType.GetMethod("Create",new[]{typeof(string)})!=null));
         }
         }
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"CreatePlcTypeGroup","ManagePlcUserGroup","ManageUnifiedHmiGroup","ManageUnifiedEngineeringObject","ImportUnifiedEngineeringList","ManageTechnologyObject","ManagePlcSoftwareUnit","SetPlcUnitObjectAccess","ManageHardwareObject","ImportPlcWatchTableOffline","ManageLibraryTypeVersion","CreateLibraryMasterCopy","ManagePlcSafety","ManagePlcCertificate"})
         {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             var preview=method.GetParameters().Single(p=>p.Name=="dryRun");
             check(preview.HasDefaultValue && Equals(preview.DefaultValue,true),name+" defaults to preview");
         }
-        check(tools.GetMethod("ReadUnifiedEngineeringObjects")!=null,"Unified reader exposed");
+        check(tools.Tool("ReadUnifiedEngineeringObjects")!=null,"Unified reader exposed");
         foreach(var name in new[]{"ManageProjectLanguage","ManageUnifiedPlantNode","UpdateUnifiedPlantObject","UpdateUnifiedObjectProperties","UpdateUnifiedMultilingualProperty","ExportUnifiedEngineeringList","ManageUnifiedLoggingTag","SetUnifiedLogDuration","ManageUnifiedOpcUaAlarmType","CreatePlcInstanceDb","GeneratePlcSourceFromBlocks","GeneratePlcLoadableFile","RetrieveProjectArchive","ExportProjectTexts","ImportProjectTexts","ManageGlobalLibrary","ManageLibraryFolder","ManagePlcTagDefinition"}) {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         }
         foreach(var name in new[]{"ExchangePlcSupervisions","ExchangeCfcCharts","ExchangeTestSuiteCase","RunTestSuiteCase","ExchangeMotionCamData","ConfigureMotionHardwareConnection","ManageUnifiedEvent","ManageStartdriveParameter","ManageSiVArcRule","GenerateSiVArc","ManageLibraryMasterCopy","ImportLibraryTypeDocuments","ManageDccChart"}) {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
         }
-        check(Equals(tools.GetMethod("RunTestSuiteCase")!.GetParameters().Single(p=>p.Name=="confirmExternalExecution").DefaultValue,false),"External Test Suite execution requires explicit confirmation");
-        check(Equals(tools.GetMethod("ExchangeCfcCharts")!.GetParameters().Single(p=>p.Name=="deleteAtTarget").DefaultValue,false),"CFC import does not default to deletion");
+        check(Equals(tools.Tool("RunTestSuiteCase")!.GetParameters().Single(p=>p.Name=="confirmExternalExecution").DefaultValue,false),"External Test Suite execution requires explicit confirmation");
+        check(Equals(tools.Tool("ExchangeCfcCharts")!.GetParameters().Single(p=>p.Name=="deleteAtTarget").DefaultValue,false),"CFC import does not default to deletion");
         if(core.GetName().Version!.Major==21) {
             var cfc=Assembly.Load("Siemens.Engineering.CFC");
             Method(cfc,"Siemens.Engineering.SW.FunctionCharts.ChartProviderS7","CompleteExport",4);

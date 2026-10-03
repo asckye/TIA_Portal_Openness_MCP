@@ -25,8 +25,8 @@ internal static class GlobalScriptBridgeTests
 
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var portal = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
-        var invoke = portal.GetMethod("InvokeOnInstance", All)!;
+        var portal = EngineSurface.For(server);
+        var invoke = portal.Method("InvokeOnInstance", All)!;
         var jsonAssembly = invoke.GetParameters()[4].ParameterType.Assembly;
         var jsonNode = jsonAssembly.GetType("System.Text.Json.Nodes.JsonNode", true)!;
         var parse = jsonNode.GetMethods(All).Single(m => m.Name == "Parse" && m.GetParameters()[0].ParameterType == typeof(string));
@@ -53,7 +53,7 @@ internal static class GlobalScriptBridgeTests
         var scripts = resolve.Invoke(null, new object[] { resolver, "HMI_RT_2:Scripts", "", true });
         check(ReferenceEquals(scripts, hmi.Scripts), "actual EXE resolves Scripts composition for native import");
 
-        var tool = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod("UpdateUnifiedGlobalScript", All)!;
+        var tool = EngineSurface.For(server).Tool("UpdateUnifiedGlobalScript")!;
         check(tool.CustomAttributes.Any(a => a.AttributeType.Name == "McpServerToolAttribute")
             && (bool)tool.GetParameters().Single(p => p.Name == "dryRun").DefaultValue
             && tool.GetParameters().Single(p => p.Name == "expectedToken").DefaultValue?.ToString() == "",

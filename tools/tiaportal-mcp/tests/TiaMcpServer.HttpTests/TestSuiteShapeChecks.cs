@@ -93,9 +93,9 @@ internal static class TestSuiteShapeChecks
         check(typeof(IEnumerable<>).MakeGenericType(T(ts,ns+"TestResultsMessage")).IsAssignableFrom(T(ts,ns+"TestResultsMessageComposition")),"TestResultsMessageComposition enumerates TestResultsMessage (recursive walk)");
 
         // ---- server side ----
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
-        foreach(var tool in new[]{"ReadTestSuiteCases","ExchangeTestSuiteCase","RunTestSuiteCase","ManageTestSuiteCase"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
-        check(portal.GetMethod("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="namesJson") && portal.GetMethod("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="runAll") && portal.GetMethod("ReadTestSuiteCases")!.GetParameters().Any(p=>p.Name=="kind"),"Test Suite tools take namesJson / runAll / kind (2.7.42 typed retrofit)");
+        var portal=EngineSurface.For(server);
+        foreach(var tool in new[]{"ReadTestSuiteCases","ExchangeTestSuiteCase","RunTestSuiteCase","ManageTestSuiteCase"}) check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Method("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="namesJson") && portal.Method("RunTestSuiteCase")!.GetParameters().Any(p=>p.Name=="runAll") && portal.Method("ReadTestSuiteCases")!.GetParameters().Any(p=>p.Name=="kind"),"Test Suite tools take namesJson / runAll / kind (2.7.42 typed retrofit)");
         check(T(ts,at+"SupportSimulationNotEnabledException")!=null && T(core,"Siemens.Engineering.EngineeringTargetInvocationException")!=null,"empty-group Run failures are EngineeringTargetInvocationException (2.7.42 real project: application executor NRE, system executor 'No test case(s)') - runAll on an empty group is refused by the tool");
     }
 }

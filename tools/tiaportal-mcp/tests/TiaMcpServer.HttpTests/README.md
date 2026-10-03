@@ -20,6 +20,20 @@ Use the V20 executable and `hmi-only 20 $fileVersion` to check a V20 build. Thes
 No TIA process is started and no engineering project is modified by these tests.
 Actual project connection and nested HMI screen reads require separate TIA validation.
 
+Tool and session lookups go through `EngineSurface.cs`. `Tool` uses the MCP attribute
+name (or CLR name when unset), while `ToolMethod` finds CLR helpers and overloads.
+Session members are searched on Portal first, then the explicit registered-service
+list in that helper; extend that list as domain services move out of Portal.
+Returned reflection members retain their declaring types for IL checks. Instance
+tool invocation resolves the target through the loaded engine's `EngineServices`.
+The harness has no compile-time engine reference; its compile-only MCP SDK reference
+supplies the real attributes for test fixtures, with runtime dependencies loaded
+beside the selected EXE.
+
+`engineering-api-only <PublicAPI-directory>` also runs `EngineSurfaceChecks.cs`,
+including instance/static invocation, name collisions, overloads, session/service
+lookup and agreement with the woven engine's complete tool catalog.
+
 `hmi-snapshot-only` exercises the actual EXE's bounded snapshot against a net48
 transparent proxy that fails mid-read. It verifies partial evidence, failure
 status, exact path and absence of later proxy/enumerator calls. The release

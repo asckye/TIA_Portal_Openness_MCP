@@ -357,6 +357,7 @@ internal static partial class Program
                 };
                 if(args[1] == "engineering-api-only") {
                     Action<bool,string> shapeCheck = (ok, message) => { Check(ok, message); Passed++; Console.WriteLine("PASS " + message); };
+                    EngineSurfaceChecks.Run(Server, shapeCheck);
                     EngineeringApiShapeTests.Run(Server, shapeCheck);
                     BindingAndTagShapeChecks.Run(Server, shapeCheck);
                     DeviceTransferShapeChecks.Run(Server, shapeCheck);
@@ -451,7 +452,7 @@ internal static partial class Program
                 var requestedMajor = cli.GetProperty("TiaMajorVersion")!.GetValue(options);
                 if (requestedMajor == null) throw new ArgumentException("protocol-host requires --tia-major-version");
                 FindServerType(Server, "TiaMcpServer.Siemens.Engineering").GetProperty("TiaMajorVersion")!.SetValue(null, requestedMajor);
-                Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!.GetMethod("SetProfileOverride",All)!.Invoke(null,new[]{cli.GetProperty("Profile")!.GetValue(options)});
+                EngineSurface.For(Server).Invoke(EngineSurface.For(Server).ToolMethod("SetProfileOverride",All),new[]{cli.GetProperty("Profile")!.GetValue(options)});
                 var transport=(string?)cli.GetProperty("Transport")!.GetValue(options);
                 var program=Server.GetType("TiaMcpServer.Program",true)!;
                 var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;

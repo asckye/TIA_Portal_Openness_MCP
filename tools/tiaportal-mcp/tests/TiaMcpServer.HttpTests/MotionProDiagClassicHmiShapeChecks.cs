@@ -108,13 +108,13 @@ internal static class MotionProDiagClassicHmiShapeChecks
             check(libraryType.IsAssignableFrom(T(wincc,kind)),kind+" derives from LibraryType");
         Property(T(core,"Siemens.Engineering.Library.ProjectLibrary"),"TypeFolder");
         // Tool contract.
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManageMotionAxis","ManagePlcSupervision","ManageClassicHmiScript","ManageClassicHmiCycle","ManageClassicHmiTextGraphicList"}) {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Last().Name,"dryRun") && Equals(method.GetParameters().Last().DefaultValue,true),name+" defaults to preview with dryRun last");
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),name+" deletion requires explicit confirmation");
         }
         foreach(var name in new[]{"ReadMotionAxisConfiguration","ReadClassicHmiScripts","ReadClassicHmiGlobalization","ReadClassicHmiFaceplates"})
-            check(tools.GetMethod(name)!=null && tools.GetMethod(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is a read-only tool");
+            check(tools.Tool(name)!=null && tools.Tool(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is a read-only tool");
     }
 }

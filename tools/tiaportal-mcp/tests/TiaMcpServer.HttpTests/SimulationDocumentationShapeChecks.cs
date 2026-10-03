@@ -9,8 +9,8 @@ internal static class SimulationDocumentationShapeChecks
 {
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var tools = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
-        MethodInfo Tool(string name) { var m = tools.GetMethod(name); check(m != null, name + " exposed"); return m!; }
+        var tools = EngineSurface.For(server);
+        MethodInfo Tool(string name) { var m = tools.Tool(name); check(m != null, name + " exposed"); return m!; }
         object? Default(MethodInfo m, string p) => m.GetParameters().Single(x => x.Name == p).DefaultValue;
         string Description(MethodInfo m) => m.GetCustomAttributes().Select(a => a.GetType().GetProperty("Description")?.GetValue(a) as string).FirstOrDefault(d => d != null) ?? "";
 

@@ -69,9 +69,9 @@ internal static class UnifiedScreenItemShapeChecks
         check(((object[])Obj(window)["features"]).Cast<string>().Contains("IHmiScreenWindowFeature"),"HmiScreenWindow schema: IHmiScreenWindowFeature");
         if(v20) Console.WriteLine("CAPABILITY V20 Unified screen item catalog: "+typeList.Length+" types from the merged Siemens.Engineering assembly.");
         // Tool surface
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
-        check(Equals(tools.GetMethod("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),"ManageUnifiedScreenItem defaults to preview");
-        check(Equals(tools.GetMethod("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),"ManageUnifiedScreenItem requires explicit confirmDelete");
-        check(tools.GetMethod("DescribeUnifiedScreenItemType")!.GetParameters().All(p=>p.Name!="softwarePath"),"DescribeUnifiedScreenItemType needs no project");
+        var tools=EngineSurface.For(server);
+        check(Equals(tools.Tool("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),"ManageUnifiedScreenItem defaults to preview");
+        check(Equals(tools.Tool("ManageUnifiedScreenItem")!.GetParameters().Single(p=>p.Name=="confirmDelete").DefaultValue,false),"ManageUnifiedScreenItem requires explicit confirmDelete");
+        check(tools.Tool("DescribeUnifiedScreenItemType")!.GetParameters().All(p=>p.Name!="softwarePath"),"DescribeUnifiedScreenItemType needs no project");
     }
 }

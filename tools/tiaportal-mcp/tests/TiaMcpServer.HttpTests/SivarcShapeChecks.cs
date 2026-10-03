@@ -132,9 +132,9 @@ internal static class SivarcShapeChecks
         Property(sivarc,ns+"UpgradeDefinitionsResult","WarningCount","Int32",false); Property(sivarc,ns+"UpgradeDefinitionsResult","Messages","SivarcFeedbackMessageComposition",false);
 
         // ---- server side ----
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
+        var portal=EngineSurface.For(server);
         foreach(var tool in new[]{"ReadSivarcRuleTree","ManageSivarcRuleContainer","ManageSivarcTableRule","ReadSivarcBlockDefinitions","ManageSivarcBlockDefinition","ResolveSivarcExpression","ManageSivarcScreenLayout","UpgradeSivarcDefinitions","GenerateSiVArc"})
-            check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
-        check(portal.GetMethod("GenerateSiVArc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNamesJson"),"GenerateSiVArc takes additionalHmiDeviceNamesJson (multi-device overload)");
+            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Method("GenerateSiVArc")!.GetParameters().Any(p=>p.Name=="additionalHmiDeviceNamesJson"),"GenerateSiVArc takes additionalHmiDeviceNamesJson (multi-device overload)");
     }
 }

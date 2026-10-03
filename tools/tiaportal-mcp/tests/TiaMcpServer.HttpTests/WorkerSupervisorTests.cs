@@ -20,9 +20,9 @@ internal static partial class Program
     {
         string? fault=Environment.GetEnvironmentVariable("TIA_MCP_TEST_WORKER_FAULT");
         if(!string.IsNullOrEmpty(fault)) {
-            var mcp=Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
-            bool lite=(bool)mcp.GetMethod("IsLiteProfile",All)!.Invoke(null,null)!;
-            var roster=(IEnumerable)mcp.GetMethod(lite?"GetLiteTools":"GetAllTools",All)!.Invoke(null,null)!;
+            var mcp=EngineSurface.For(Server);
+            bool lite=(bool)mcp.Invoke(mcp.ToolMethod("IsLiteProfile",All),null)!;
+            var roster=(IEnumerable)mcp.Invoke(mcp.ToolMethod(lite?"GetLiteTools":"GetAllTools",All),null)!;
             var names=roster.Cast<object>().Select(t=>{var p=t.GetType().GetProperty("ProtocolTool")!.GetValue(t)!;return (string)p.GetType().GetProperty("Name")!.GetValue(p)!;}).ToArray();
             var isolated=Server.GetType("TiaMcpServer.Isolation.IsolatedWorkerHost",true)!;
             var hash=(string)isolated.GetMethod("Hash",All)!.Invoke(null,new object[]{exe})!;

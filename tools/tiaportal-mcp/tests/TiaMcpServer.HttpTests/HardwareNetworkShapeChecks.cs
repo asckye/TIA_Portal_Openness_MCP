@@ -137,8 +137,8 @@ internal static class HardwareNetworkShapeChecks
         Method(features+"NetworkPort","ConnectToPort",new[]{T(features+"NetworkPort")},"Void"); Method(features+"NetworkPort","DisconnectFromPort",new[]{T(features+"NetworkPort")},"Void");
         check(serviceProvider.IsAssignableFrom(T(hw+"DeviceItem")),"DeviceItem is a service provider (NetworkInterface/NetworkPort/MrpInstancesOwner/AddressController/user managements)");
         // Engine surface
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal")!;
+        var portal=EngineSurface.For(server);
         foreach(var tool in new[]{"ReadIoSystems","ManageIoSystem","ReadNetworkDomains","ManageNetworkDomain","ReadTransferAreas","ManageTransferArea","ReadDeviceItemChannels","UpdateDeviceItemChannel","ReadDeviceAddressing","UpdateDeviceAddress","ManageDeviceUserGroup","ManageDeviceUsers","ManagePortInterconnection"})
-            check(portal.GetMethod(tool)!=null,"Portal."+tool+" present");
+            check(portal.Method(tool)!=null,"Portal."+tool+" present");
     }
 }

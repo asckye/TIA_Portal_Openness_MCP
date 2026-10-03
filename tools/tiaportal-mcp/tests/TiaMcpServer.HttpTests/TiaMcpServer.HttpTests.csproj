@@ -9,5 +9,7 @@
     <RootNamespace>HttpTests</RootNamespace>
   </PropertyGroup>
   <ItemGroup><Reference Include="System.Web.Extensions" /></ItemGroup>
+  <!-- Only SDK attributes are compiled in; engine and runtime dependencies resolve beside the loaded EXE. -->
+  <ItemGroup><PackageReference Include="ModelContextProtocol.Core" Version="0.3.0-preview.4" IncludeAssets="compile" /></ItemGroup>
   <ItemGroup><Compile Include="../TiaMcpServer.Tests/HmiScreenTraversalTests.cs" Link="HmiScreenTraversalTests.cs" /></ItemGroup>
 </Project>

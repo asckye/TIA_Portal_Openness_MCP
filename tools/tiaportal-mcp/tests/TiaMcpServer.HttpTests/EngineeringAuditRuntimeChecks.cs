@@ -11,8 +11,7 @@ internal static class EngineeringAuditRuntimeChecks
 {
     internal static void Run(Assembly server, Action<bool, string> check)
     {
-        var portalType = server.GetType("TiaMcpServer.Siemens.Portal", true)!;
-        object portal = FormatterServices.GetUninitializedObject(portalType);
+        var portalType = EngineSurface.For(server);
         bool Refused(Action call)
         {
             try { call(); return false; }
@@ -20,22 +19,23 @@ internal static class EngineeringAuditRuntimeChecks
         }
         foreach (string suffix in new[] { "CrossReferenceService", "Siemens.Engineering.CrossReference.CrossReferenceService", "Service" })
         {
-            check(Refused(() => portalType.GetMethod("InvokeService")!.Invoke(portal, new object?[] { "Block", "does-not-exist", suffix, "GetCrossReferences", null, "", true })), "actual InvokeService rejects " + suffix + " before resolving an invalid native target");
-            check(Refused(() => portalType.GetMethod("DescribeService")!.Invoke(portal, new object?[] { "Block", "does-not-exist", suffix, "", 200 })), "actual DescribeService rejects " + suffix + " before native acquisition");
+            check(Refused(() => EngineSurface.InvokeUninitialized(portalType.Method("InvokeService"), new object?[] { "Block", "does-not-exist", suffix, "GetCrossReferences", null, "", true })), "actual InvokeService rejects " + suffix + " before resolving an invalid native target");
+            check(Refused(() => EngineSurface.InvokeUninitialized(portalType.Method("DescribeService"), new object?[] { "Block", "does-not-exist", suffix, "", 200 })), "actual DescribeService rejects " + suffix + " before native acquisition");
         }
-        check(Refused(() => portalType.GetMethod("InvokeObject")!.Invoke(portal, new object?[] { "Block", "does-not-exist", "GetCrossReferences", null, "", true })), "actual InvokeObject cannot bypass cross-reference policy with allowWrite");
-        var query = portalType.GetMethods().Single(m => m.Name == "GetCrossReferences" && m.GetParameters().Length == 8);
+        check(Refused(() => EngineSurface.InvokeUninitialized(portalType.Method("InvokeObject"), new object?[] { "Block", "does-not-exist", "GetCrossReferences", null, "", true })), "actual InvokeObject cannot bypass cross-reference policy with allowWrite");
+        var query = portalType.Method("GetCrossReferences", new[] { typeof(string), typeof(string), typeof(string), typeof(string),
+            typeof(string).MakeByRefType(), typeof(bool).MakeByRefType(), typeof(string), typeof(string) });
         string? previous = Environment.GetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES");
         try
         {
             Environment.SetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", null);
             object?[] args = { "invalid", "invalid", "Tag", "AllObjects", null, false, "", "unit" };
-            check(query.Invoke(portal, args) == null && args[4]!.ToString()!.Contains("No native query was made") && (bool)args[5]! == false,
+            check(EngineSurface.InvokeUninitialized(query, args) == null && args[4]!.ToString()!.Contains("No native query was made") && (bool)args[5]! == false,
                 "disabled tag query refuses before inspecting a project and never reports zero references");
         }
         finally { Environment.SetEnvironmentVariable("TIA_MCP_ENABLE_NATIVE_PLC_CROSS_REFERENCES", previous); }
 
-        var api = portalType.GetMethod("BuildCrossReferenceEntry", BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters()[0].ParameterType.Assembly;
+        var api = portalType.Method("BuildCrossReferenceEntry", BindingFlags.NonPublic | BindingFlags.Static)!.GetParameters()[0].ParameterType.Assembly;
         var read = server.GetType("TiaMcpServer.Siemens.CrossReferenceTreeReader", true)!.GetMethod("Read", BindingFlags.NonPublic | BindingFlags.Static)!.MakeGenericMethod(typeof(object), typeof(object), typeof(object), typeof(object));
         Func<object, System.Collections.Generic.IEnumerable<object>> noRows = _ => Array.Empty<object>();
         Func<object, object, object, object> entry = (s, r, l) => new object();
@@ -52,13 +52,13 @@ internal static class EngineeringAuditRuntimeChecks
         var core = api.GetType("Siemens.Engineering.NonRecoverableException")?.Assembly;
         if (core == null) core = Assembly.Load("Siemens.Engineering.Base");
         var fatal = (Exception)FormatterServices.GetUninitializedObject(core.GetType("Siemens.Engineering.NonRecoverableException", true)!);
-        var recoverable = portalType.GetMethod("RecoverableAuditError", BindingFlags.NonPublic | BindingFlags.Static)!;
+        var recoverable = portalType.Method("RecoverableAuditError", BindingFlags.NonPublic | BindingFlags.Static)!;
         check(!(bool)recoverable.Invoke(null, new object[] { new TargetInvocationException(fatal) })!, "wrapped native NonRecoverableException is never swallowed by the audit reader");
 
-        var mcp = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!;
+        var mcp = EngineSurface.For(server);
         foreach (var name in new[] { "ReadPlcBlockScopes", "ManagePlcBlockDocuments", "ReadOpennessCompatibility", "InspectSimaticSdCompatibility", "ReadNativeInvocationLog",
             "ManageSinumerikArchive", "ImportSinumerikAlarmTexts", "ManageSinumerikSafetyMode", "InitializeSimotionScripting", "ExportScadaData" })
-            check(mcp.GetMethod(name) != null && mcp.GetMethod(name)!.GetCustomAttributesData().Any(a => a.AttributeType.Name == "McpServerToolAttribute"), "new tool attributed in actual EXE: " + name);
+            check(mcp.Tool(name) != null && mcp.Tool(name)!.GetCustomAttributesData().Any(a => a.AttributeType.Name == "McpServerToolAttribute"), "new tool attributed in actual EXE: " + name);
 
         bool v20 = api.GetName().Version!.Major == 20;
         if (v20)
@@ -77,7 +77,7 @@ internal static class EngineeringAuditRuntimeChecks
         }
         else
         {
-            var result = portalType.GetMethod("InitializeSimotionScripting")!.Invoke(portal, new object[] { true })!;
+            var result = EngineSurface.InvokeUninitialized(portalType.Method("InitializeSimotionScripting"), new object[] { true })!;
             check(result.GetType().GetProperty("Meta")!.GetValue(result)!.ToString()!.Contains("absent from the supplied V21 SDK"), "V21 option refusal precedes project resolution");
         }
     }

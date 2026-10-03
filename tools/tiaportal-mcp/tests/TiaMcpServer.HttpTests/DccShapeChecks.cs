@@ -79,13 +79,13 @@ internal static class DccShapeChecks
         var exceptions=dcc.GetExportedTypes().Where(t=>t.Namespace==ns+"DccExceptions").ToArray();
         check(exceptions.Length==39 && exceptions.All(t=>t==dccException || t.IsSubclassOf(dccException)),"39 DCC exception classes, all derived from DccException ("+exceptions.Length+")");
         check(T(dcc,ex+"DccImportException").IsSubclassOf(dccException) && T(dcc,ex+"DccLicenseUnavailableException").IsSubclassOf(dccException) && T(dcc,ex+"DccExportException").IsSubclassOf(dccException),"DccImportException / DccLicenseUnavailableException / DccExportException families");
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
-        var known=(Type[])portal.GetField("KnownDccExceptions",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
+        var portal=EngineSurface.For(server);
+        var known=(Type[])portal.Field("KnownDccExceptions",BindingFlags.NonPublic|BindingFlags.Static)!.GetValue(null)!;
         check(known.Length==39 && exceptions.All(t=>known.Contains(t)),"Portal.KnownDccExceptions names all 39 DCC exception classes");
 
         // ---- server side ----
         foreach(var tool in new[]{"ReadDccCharts","ManageDccChart","ManageDccBlock","ManageDccPin","ManageDccChartInterface","ManageDccChartPartition","ManageDcbLibraries","ReadDccObject"})
-            check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
-        check(portal.GetMethod("ManageDccChart")!.GetParameters().Any(p=>p.Name=="confirmDelete") && portal.GetMethod("ManageDccChart")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageDccChart takes confirmDelete and driveObjectIndex");
+            check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Method("ManageDccChart")!.GetParameters().Any(p=>p.Name=="confirmDelete") && portal.Method("ManageDccChart")!.GetParameters().Any(p=>p.Name=="driveObjectIndex"),"ManageDccChart takes confirmDelete and driveObjectIndex");
     }
 }

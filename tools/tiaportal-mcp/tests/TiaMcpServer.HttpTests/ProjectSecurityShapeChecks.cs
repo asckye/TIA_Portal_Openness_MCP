@@ -94,18 +94,18 @@ internal static class ProjectSecurityShapeChecks
         check(typeof(Exception).IsAssignableFrom(T(core,"Siemens.Engineering.CustomIdentity.CustomIdentityNotFoundException")),"CustomIdentityNotFoundException is an exception");
 
         // Tool contract
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManageProjectUserManagement","ManageMultiuserSession"})
         {
-            var method=tools.GetMethod(name)!;
+            var method=tools.Tool(name)!;
             check(Equals(method.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
             check(Equals(method.GetParameters().Single(p=>p.Name=="confirmChange").DefaultValue,false),name+" requires explicit confirmChange");
             check(method.GetParameters().Last().Name=="dryRun",name+" has dryRun as last parameter");
         }
         foreach(var name in new[]{"ReadProjectUserManagement","ReadProjectProtection","CompareLibraries","CompareProjects","ReadProjectSettings"})
-            check(tools.GetMethod(name)!=null && tools.GetMethod(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is read-only (no dryRun)");
+            check(tools.Tool(name)!=null && tools.Tool(name)!.GetParameters().All(p=>p.Name!="dryRun"),name+" is read-only (no dryRun)");
         foreach(var name in new[]{"ReadProjectUserManagement","ManageMultiuserSession","CompareLibraries","CompareProjects","ReadProjectSettings"})
-            check(tools.GetMethod(name)!.GetParameters().Any(p=>p.Name=="offset") && tools.GetMethod(name)!.GetParameters().Any(p=>p.Name=="limit"),name+" paginates");
-        check(tools.GetMethod("ManageProjectUserManagement")!.GetParameters().Single(p=>p.Name=="password").ParameterType==typeof(string),"password accepted as plain parameter, converted to SecureString internally");
+            check(tools.Tool(name)!.GetParameters().Any(p=>p.Name=="offset") && tools.Tool(name)!.GetParameters().Any(p=>p.Name=="limit"),name+" paginates");
+        check(tools.Tool("ManageProjectUserManagement")!.GetParameters().Single(p=>p.Name=="password").ParameterType==typeof(string),"password accepted as plain parameter, converted to SecureString internally");
     }
 }

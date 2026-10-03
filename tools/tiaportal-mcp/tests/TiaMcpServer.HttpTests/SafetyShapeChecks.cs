@@ -94,11 +94,11 @@ internal static class SafetyShapeChecks
         Property(safety,ns+"Download.Configurations.SafetyProgram","CurrentSelection","SafetyProgramSelections");
         check(Enum.GetNames(T(safety,ns+"Download.Configurations.SafetyProgramSelections")).SequenceEqual(new[]{"ConsistentDownload"}),"SafetyProgramSelections has the single value ConsistentDownload");
         // Tool surface
-        var tools=server.GetType("TiaMcpServer.ModelContextProtocol.McpServer",true)!;
+        var tools=EngineSurface.For(server);
         foreach(var name in new[]{"ManagePlcSafety","ManageSafetyGlobalSettings","ExportSafetyPrintout"})
-            check(Equals(tools.GetMethod(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
-        check(Equals(tools.GetMethod("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="confirmSafetyChange").DefaultValue,false),"ManagePlcSafety requires explicit confirmSafetyChange");
-        check(tools.GetMethod("ReadSafetyBlockSignatures")!.GetParameters().All(p=>p.Name!="dryRun"),"ReadSafetyBlockSignatures is read-only (no dryRun)");
-        check(Equals(tools.GetMethod("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="password").DefaultValue,""),"ManagePlcSafety password is optional and empty by default");
+            check(Equals(tools.Tool(name)!.GetParameters().Single(p=>p.Name=="dryRun").DefaultValue,true),name+" defaults to preview");
+        check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="confirmSafetyChange").DefaultValue,false),"ManagePlcSafety requires explicit confirmSafetyChange");
+        check(tools.Tool("ReadSafetyBlockSignatures")!.GetParameters().All(p=>p.Name!="dryRun"),"ReadSafetyBlockSignatures is read-only (no dryRun)");
+        check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="password").DefaultValue,""),"ManagePlcSafety password is optional and empty by default");
     }
 }

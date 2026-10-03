@@ -37,10 +37,10 @@ internal static partial class Program
             File.SetLastWriteTimeUtc(prior, DateTime.UtcNow.AddMinutes(-1));
             File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl"), "{\"nativeCallId\":\"pair\",\"phase\":\"RETURNED\"}\n{partial");
             File.WriteAllText(Path.Combine(scratch, "calls-fixture.jsonl.unrelated"), "{\"phase\":\"unrelated\"}\n");
-            var read = Server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod("ReadNativeInvocationLog", All)!;
+            var read = EngineSurface.For(Server).Tool("ReadNativeInvocationLog")!;
             string Read(int take)
             {
-                object response = read.Invoke(null, new object[] { take })!;
+                object response = EngineSurface.For(Server).Invoke(read, new object[] { take })!;
                 return response.GetType().GetProperty("Meta")!.GetValue(response)!.ToString()!;
             }
             var meta = Parse(Read(100));

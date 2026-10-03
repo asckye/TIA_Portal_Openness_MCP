@@ -35,10 +35,10 @@ internal static class CfcShapeChecks
         Method(cfc,ns+"ChartProviderS7","ExportInstructionData",new[]{text},"Void");
 
         // ---- server side ----
-        var portal=server.GetType("TiaMcpServer.Siemens.Portal",true)!;
-        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(portal.GetMethod(tool)!=null,"Portal."+tool+" exists");
-        check(portal.GetMethod("ExchangeCfcCharts")!.GetParameters().Any(p=>p.Name=="chartNamesJson"),"ExchangeCfcCharts takes chartNamesJson (SelectiveExport, 2.7.42 typed retrofit)");
-        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(Equals(portal.GetMethod(tool)!.GetParameters().Single(p=>p.Name=="skipChartPreflight").DefaultValue,false),tool+" runs the CompleteExport preflight by default (2.7.43: TIA V21 crashed on a PLC without charts)");
+        var portal=EngineSurface.For(server);
+        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(portal.Method(tool)!=null,"Portal."+tool+" exists");
+        check(portal.Method("ExchangeCfcCharts")!.GetParameters().Any(p=>p.Name=="chartNamesJson"),"ExchangeCfcCharts takes chartNamesJson (SelectiveExport, 2.7.42 typed retrofit)");
+        foreach(var tool in new[]{"ExchangeCfcCharts","ManageCfcChartProtection"}) check(Equals(portal.Method(tool)!.GetParameters().Single(p=>p.Name=="skipChartPreflight").DefaultValue,false),tool+" runs the CompleteExport preflight by default (2.7.43: TIA V21 crashed on a PLC without charts)");
         check(Program.FindServerType(server, "TiaMcpServer.Siemens.CfcLogic").GetMethod("InspectExport",BindingFlags.NonPublic|BindingFlags.Static)!=null,"CfcLogic.InspectExport parses the exchange ZIP (chart inventory)");
     }
 }
