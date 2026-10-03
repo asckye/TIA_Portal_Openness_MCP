@@ -16,22 +16,32 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using TiaMcpServer.Siemens;
-
+using TiaMcpServer.Siemens.Services;
+using static TiaMcpServer.ModelContextProtocol.McpServer;
+using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class TypesTools
     {
-        #region types
+        private readonly IEngineeringSession _session;
+        private readonly TypesService _domain;
+
+        public TypesTools(TypesService domain, IEngineeringSession session)
+        {
+            _domain = domain;
+            _session = session;
+        }
 
         [McpServerTool(Name = "GetTypeInfo"), Description("[L2][PLC-Software]Get a type info from the plc software")]
-        public static ResponseTypeInfo GetTypeInfo(
+        public ResponseTypeInfo GetTypeInfo(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("typePath: defines the path in the project structure to the type")] string typePath)
         {
             try
             {
-                var type = Portal.GetType(softwarePath, typePath);
+                var type = _session.GetType(softwarePath, typePath);
                 if (type != null)
                 {
                     var attributes = Helper.GetAttributeList(type);
@@ -66,13 +76,13 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "GetTypes"), Description("[L2][PLC-Software]Get a list of types from the plc software")]
-        public static ResponseTypes GetTypes(
+        public ResponseTypes GetTypes(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("regexName: defines the name or regular expression to find the block. Use empty string (default) to find all")] string regexName = "")
         {
             try
             {
-                var list = Portal.GetTypes(softwarePath, regexName);
+                var list = _session.GetTypes(softwarePath, regexName);
 
                 // null = 根本没查成（没连接/没打开项目）；空列表 = 这个 PLC 里确实没有。
                 // 无连接或无项目必须走失败分支，不能返回空列表让离线调用被报告为「成功，0 个」。
@@ -111,7 +121,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportType"), Description("[L2][PLC-Software]Export a type from the plc software")]
-        public static ResponseExportType ExportType(
+        public ResponseExportType ExportType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("exportPath: defines the directory where to export the type; output file will be '<type name>.xml'")] string exportPath,
             [Description("typePath: defines the path in the project structure to the type")] string typePath,
@@ -119,12 +129,12 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var type = Portal.ExportType(softwarePath, typePath, exportPath, preservePath);
+                var type = _session.ExportType(softwarePath, typePath, exportPath, preservePath);
                 if (type != null)
                 {
                     return new ResponseExportType
                     {
-                        Message = $"Type exported from '{typePath}' to '{Portal.LastExportedFile ?? exportPath}'",
+                        Message = $"Type exported from '{typePath}' to '{_session.LastExportedFile ?? exportPath}'",
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -164,14 +174,14 @@ namespace TiaMcpServer.ModelContextProtocol
             }
         }
 
-        public static ResponseTempExport ExportTypeToTemp(
+        public ResponseTempExport ExportTypeToTemp(
             [Description("softwarePath: path to the PLC software")] string softwarePath,
             [Description("typePath: full type path inside PLC software")] string typePath,
             [Description("preservePath: keep hierarchy in temp dir")] bool preservePath = false)
         {
             try
             {
-                var res = Portal.ExportTypeToTemp(softwarePath, typePath, preservePath);
+                var res = _domain.ExportTypeToTemp(softwarePath, typePath, preservePath);
                 if (res != null)
                 {
                     return new ResponseTempExport
@@ -192,14 +202,14 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ImportType"), Description("[L1][PLC-Software]Import a type from file into the plc software")]
-        public static ResponseImportType ImportType(
+        public ResponseImportType ImportType(
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
             [Description("groupPath: defines the path in the project structure to the group, where to import the type")] string groupPath,
             [Description("importPath: defines the path of the xml file from where to import the type")] string importPath)
         {
             try
             {
-                Portal.ImportType(softwarePath, groupPath, importPath);
+                _session.ImportType(softwarePath, groupPath, importPath);
                 return new ResponseImportType
                 {
                     Message = $"Type imported from '{importPath}' to '{groupPath}'",
@@ -221,7 +231,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "SeedProjectFromReference"), Description("[L2][PLC-Software]Seed PLC blocks/types and HMI screens/tagtables from a reference directory (manifest.json + {{PLACEHOLDER}} replace)")]
-        public static ResponseSeed SeedProjectFromReference(
+        public ResponseSeed SeedProjectFromReference(
             [Description("plcSoftwarePath: path in the project structure to the PLC software")] string plcSoftwarePath,
             [Description("hmiSoftwarePath: path in the project structure to the HMI software")] string hmiSoftwarePath,
             [Description("referenceDir: directory containing manifest.json and subfolders (plc/blocks, plc/types, hmi/screens, hmi/tags)")] string referenceDir,
@@ -229,7 +239,7 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             try
             {
-                var res = Portal.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders);
+                var res = _domain.SeedProjectFromReference(plcSoftwarePath, hmiSoftwarePath, referenceDir, placeholders);
                 res.Meta ??= new JsonObject();
                 res.Meta["timestamp"] = DateTime.Now;
                 res.Meta["success"] = (res.Failed == null || !res.Failed.Any());
@@ -242,7 +252,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
 
         [McpServerTool(Name = "ExportTypes"), Description("[L2][PLC-Software]Export types from the plc software to path")]
-        public static async Task<ResponseExportTypes> ExportTypes(
+        public async Task<ResponseExportTypes> ExportTypes(
             IMcpServer server,
             RequestContext<CallToolRequestParams> context,
             [Description("softwarePath: defines the path in the project structure to the plc software")] string softwarePath,
@@ -252,13 +262,13 @@ namespace TiaMcpServer.ModelContextProtocol
         {
             var startTime = DateTime.Now;
             var progressToken = context?.Params?.ProgressToken;
-            
+
             try
             {
                 // First, get the list of types to determine total count
                 Logger?.LogInformation($"Starting export of types from '{softwarePath}' to '{exportPath}'");
-                
-                var allTypes = await Task.Run(() => Portal.GetTypes(softwarePath, regexName));
+
+                var allTypes = await Task.Run(() => _session.GetTypes(softwarePath, regexName));
                 var totalTypes = allTypes?.Count ?? 0;
 
                 if (totalTypes == 0)
@@ -273,7 +283,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             progressToken
                         });
                     }
-                    
+
                     return new ResponseExportTypes
                     {
                         Message = $"No types found with regex '{regexName}' in '{softwarePath}'",
@@ -302,7 +312,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 }
 
                 // Export types asynchronously
-                var exportedTypes = await Task.Run(() => Portal.ExportTypes(softwarePath, exportPath, regexName, preservePath));
+                var exportedTypes = await Task.Run(() => _domain.ExportTypes(softwarePath, exportPath, regexName, preservePath));
 
                 // Build list of inconsistent (skipped) types for reporting
                 var inconsistentTypeInfos = new List<ResponseTypeInfo>();
@@ -327,7 +337,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         }
                     }
                 }
-                
+
                 // Send progress update after export completion
                 if (exportedTypes != null && progressToken != null)
                 {
@@ -345,7 +355,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     var responseList = new List<ResponseTypeInfo>();
                     var processedCount = 0;
-                    
+
                     foreach (var type in exportedTypes)
                     {
                         if (type != null)
@@ -424,20 +434,20 @@ namespace TiaMcpServer.ModelContextProtocol
                         // Ignore notification errors during error handling
                     }
                 }
-                
+
                 Logger?.LogError(ex, $"Failed exporting types '{regexName}' from '{softwarePath}' to {exportPath}");
                 throw new McpException($"Unexpected error exporting types '{regexName}' from '{softwarePath}' to {exportPath}: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
 
-        public static ResponseTempExport ExportTypesToTemp(
+        public ResponseTempExport ExportTypesToTemp(
             [Description("softwarePath: path to the PLC software")] string softwarePath,
             [Description("regexName: optional regex filter")] string regexName = "",
             [Description("preservePath: keep hierarchy in temp dir")] bool preservePath = false)
         {
             try
             {
-                var res = Portal.ExportTypesToTemp(softwarePath, regexName, preservePath);
+                var res = _domain.ExportTypesToTemp(softwarePath, regexName, preservePath);
                 if (res != null)
                 {
                     return new ResponseTempExport
@@ -455,7 +465,5 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error exporting types to temp: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
-
-        #endregion
     }
 }

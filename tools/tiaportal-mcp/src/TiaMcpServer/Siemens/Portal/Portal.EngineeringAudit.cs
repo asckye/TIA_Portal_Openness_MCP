@@ -77,12 +77,6 @@ namespace TiaMcpServer.Siemens
             object collection = kind.Equals("Tag", StringComparison.OrdinalIgnoreCase) ? table.Tags : (object)table.SystemConstants;
             return (IEngineeringServiceProvider)(EngineeringGroupOperations.Find(collection, parts.Last()) ?? throw new PortalException(PortalErrorCode.NotFound, "Exact tag/constant not found: " + objectPath));
         }
-        public bool VerifyLastDocumentImport(string softwarePath, string groupPath)
-        {
-            var group = GetPlcBlockGroupByPath(softwarePath, groupPath) ?? throw new PortalException(PortalErrorCode.NotFound, "Import target group not found.");
-            return InvocationJournal.Native("ImportFromDocuments.exactReadback", () => EngineeringAuditLogic.ExactNamesPresent(LastImportedDocumentBlocks,
-                EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name)));
-        }
 
     }
 }

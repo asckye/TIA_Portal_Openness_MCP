@@ -3,10 +3,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.35 Step7 sub-batch 2 (Portal.Step7Leftovers.cs and the typed retrofits: external sources,
+// Native members used by PlcExternalSourcesService and the related typed domains: external sources,
 // system block / type groups, tag table constants, alarm text list XLSX, watch / force table entries, ProDiag CSV export,
 // typed access rules, OPC UA communication group / namespace restrictions, alarm class and supervision result messages,
-// STEP 7 library type subclasses, user group classes), verified member by member against the installed V20
+// STEP 7 library type subclasses, user group classes, verified member by member against the installed V20
 // (Siemens.Engineering) or V21 (Siemens.Engineering.Base / Siemens.Engineering.Step7) PublicAPI.
 internal static class Step7LeftoversShapeChecks
 {

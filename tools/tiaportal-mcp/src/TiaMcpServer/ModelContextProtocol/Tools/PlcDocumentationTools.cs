@@ -6,16 +6,21 @@ using System.Text;
 using System.Text.Json.Nodes;
 using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens;
+using TiaMcpServer.Siemens.Services;
+using static TiaMcpServer.ModelContextProtocol.McpServer;
+using static TiaMcpServer.ModelContextProtocol.McpServer.PlcSourceToolSupport;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Offline documentation family: Markdown/Mermaid rendering of exported blocks, a program handbook
-    // over an export directory and a heuristic SCL pre-check. Same contract as OfflineAnalysis: no
-    // project is changed, nothing is compiled or downloaded; the only writes are the optional output files.
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class PlcDocumentationTools
     {
+        private readonly IEngineeringSession _session;
+
+        public PlcDocumentationTools(IEngineeringSession session) => _session = session;
+
         [McpServerTool(Name = "RenderPlcBlockDocument"), Description("[L2][Validation][OFFLINE] Render ONE exported PLC block document as Markdown: header (type/number/language/title/comment), interface table, then one section per network — SCL networks as a ```scl listing reconstructed from the StructuredText tokens, LAD/FBD networks as a part listing plus a ```mermaid flowchart (power rail, parts with instance/template, operands, pin-labelled wires). Source is EITHER filePath (absolute; SimaticML .xml, .s7dcl with sibling .s7res, or .scl) OR softwarePath + blockPath (block exported to a temp directory that is deleted afterwards). mermaidDirection LR (default) or TD. Returns the Markdown in Meta.markdown (truncated to maxChars, default 60000, full length in Meta.markdownLength); outputPath (optional, NEW absolute .md file) writes the complete text and returns bytes+sha256. The Mermaid graph follows the wires in the export (branches/feedback are edges, not a ladder drawing); nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage RenderPlcBlockDocument(
+        public ResponseMessage RenderPlcBlockDocument(
             string filePath = "",
             string softwarePath = "",
             string blockPath = "",
@@ -42,7 +47,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     else
                     {
-                        var export = Portal.ExportBlockDocumentForAnalysis(softwarePath, blockPath);
+                        var export = _session.ExportBlockDocumentForAnalysis(softwarePath, blockPath);
                         temp = export.TempDir; path = export.XmlPath;
                         meta["source"] = new JsonObject { ["mode"] = "block", ["softwarePath"] = softwarePath, ["blockPath"] = blockPath, ["tempExportDeleted"] = true };
                     }
@@ -67,7 +72,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "GeneratePlcDocumentation"), Description("[L2][Validation][FILE] Generate ONE Markdown program handbook from a directory of exported PLC documents (absolute path; recursive by default; extensionsJson default [\".xml\",\".s7dcl\",\".scl\"]): an index table (block, type, number, language, networks, interface members, calls), a call cross-reference (called block → callers, flagged when the callee is not in the export), then every block rendered as by RenderPlcBlockDocument (interface table, SCL listings, Mermaid LAD/FBD graphs). outputPath must be a NEW absolute .md file (existing files are refused); returns bytes+sha256, block counts and per-file parse failures. Typical input: the folder written by ExportBlocksAsDocuments. No TIA Portal connection; nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage GeneratePlcDocumentation(
+        public ResponseMessage GeneratePlcDocumentation(
             string directory,
             string outputPath,
             [Description("title: document title.")] string title = "",
@@ -95,7 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
             });
 
         [McpServerTool(Name = "LintPlcSclSource"), Description("[L2][Validation][OFFLINE] Heuristic pre-check of SCL source BEFORE ImportBlocksFromDocuments / WritePlcSclSourceFile: block keyword pairing (IF/END_IF, CASE, FOR, WHILE, REPEAT, REGION, FUNCTION[_BLOCK], ORGANIZATION_BLOCK, DATA_BLOCK, TYPE, STRUCT, VAR*/END_VAR), unbalanced ( ) [ ], '=' at statement level instead of ':=', statement before ELSE/ELSIF/UNTIL/END_* without ';', GOTO, WHILE TRUE, nesting depth, line length, tabs/trailing whitespace, ';;', unterminated (* comment, TODO/FIXME markers. Input is EITHER sourceText OR filePath (absolute .scl/.txt; UTF-8). rulesJson optional, e.g. {\"disable\":[\"SCL007\",\"SCL008\"],\"maxLineLength\":120,\"maxNesting\":5,\"markers\":[\"TODO\"]}. Returns findings {rule, severity error|warning|info, line, message, text} sorted by line, counts per severity and the rule catalog. Heuristics only: 'ok' means no finding, NOT that TIA will compile the source; the TIA compiler (CompileSoftware) remains the verdict. Nothing is saved, compiled or downloaded.")]
-        public static ResponseMessage LintPlcSclSource(
+        public ResponseMessage LintPlcSclSource(
             [Description("sourceText: the SCL source text to lint.")] string sourceText = "",
             string filePath = "",
             [Description("rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults).")] string rulesJson = "",

@@ -521,3 +521,41 @@ G9 不引入 Foundation 的另一套路径语法，已有字面字符名称仍�
 `Exact PLC software not found: WrongPLC Available PLC paths: Line/ET 200SP station_1/CPU_1/PLC_1`。
 无候选时不追加空路径列表。工具 schema 与描述未改变。P0-06 的调用前拒绝快照不经过此解析器；
 它和模拟硬件树测试均不能代替真实 TIA 验收，真实 TIA 验收仍待维护者执行。
+
+### PLC 类型、文档与外部源
+
+步骤 13 的类型、文档交换、外部源及生成工具按以下归属注册为单例：
+
+| 工具类 | 领域服务 | 工具数 |
+|---|---|---|
+| `TypesTools` | `TypesService` | 6 |
+| `DocumentsTools` | `DocumentsService` | 4 |
+| `PlcExternalSourcesTools` | `PlcExternalSourcesService` | 8 |
+| `PlcDocumentationTools` | 复用离线逻辑与共享会话导出接口 | 3 |
+| `NativeExchangeTools` | `NativeExchangeService` | 8 |
+
+文档交换成员从 `Portal.Blocks.cs` 迁入 `Siemens/Services/DocumentsService.cs`，包括单次及批量导入、
+导出的诊断状态和 `VerifyLastDocumentImport`；`McpServer.Documents.cs` 保留反射工具。
+`Portal.Step7Leftovers.cs` / `McpServer.Step7Leftovers.cs` 中剩余的外部源、系统组成员迁入
+`PlcExternalSourcesService` / `PlcExternalSourcesTools`，这两个 Leftovers 文件删除。
+`Portal.PlcTagEditing.cs` 的标签定义操作与 `Portal.PlcNativeFiles.cs` 的生成操作合入 `NativeExchangeService`。
+服务不实现 `IDisposable`，通过 `IEngineeringSession` 访问同一个内核会话。
+
+共享成员仍留在内核：类型查找、清单、导入供删除、反射及程序批量导入使用；`ExportType` 和共享
+`LastExportedFile` 仍由内核维护，避免服务写共享导出状态；类型临时导出、批量导出及引用目录播种迁入类型服务。
+`GetCrossReferences` 的全部重载、拒绝策略及辅助函数仍供删除路径复用；`ExactNameList` 仍供多个服务使用。
+PLC 组解析、组路径、块清单、块和 HMI 批量导入，以及分析用块文档导出均保持内核归属。
+`Portal.ProjectExchange.cs` 的语言、归档取回和项目文本操作保留在内核，归档取回继续使用 `AdoptProject`；
+本步没有新增会话字段写入，也不改变 `ReleaseProject`。
+
+会话接口新增 18 个转发成员：`GetType`、`GetTypes`、`ExportType`、`ImportType`、只读 `LastExportedFile`、
+`GetBlocks`、`GetPlcBlockGroupByPath`、`GetPlcBlockGroupPath`、`GetPlcTypeGroupPath`、`ImportBlocksFromDirectory`、
+`ImportHmiScreensFromDirectory`、`ImportHmiTagTablesFromDirectory`、带查询状态及单元参数的 `GetCrossReferences`、
+`ExportBlockDocumentForAnalysis`、`ManageProjectLanguage`、`RetrieveProjectArchive`、`ExportProjectTexts`、`ImportProjectTexts`。
+CLI 通过 `McpServer.PlcSourceTools.cs` 保留无属性的 `ExportAsDocuments`、`ImportFromDocuments`、
+`ImportPlcExternalSource`、`GenerateBlocksFromExternalSource` 静态转发。
+
+`Test-DomainTools.py` 的五个对应领域覆盖所有 29 个工具的 full/lite、直接/隔离分派。
+`ExportTypes` 和 `ExportBlocksAsDocuments` 在断开时也返回可变耗时，故使用重复参数拒绝用例；文档导入使用
+无效选项拒绝用例。其方法体及原生调用顺序另由源码和织入清单核对，不增加耗时屏蔽规则。
+`ExportAsDocuments` 的旧式纯文本错误含堆栈，按 D1 仅屏蔽堆栈帧，保留首行、其他明细及 preflight 后缀。

@@ -5,10 +5,10 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer'
-PORTAL = (SRC / 'Siemens/Portal/Portal.Blocks.cs').read_text(encoding='utf-8')
+PORTAL = (SRC / 'Siemens/Services/DocumentsService.cs').read_text(encoding='utf-8')
 SINGLE = PORTAL.split('public bool ImportFromDocuments(', 1)[1].split('private static string DocumentImportedNamesSuffix', 1)[0]
 BATCH = PORTAL.split('public IEnumerable<PlcBlock>? ImportBlocksFromDocuments(', 1)[1]
-MCP = (SRC / 'ModelContextProtocol/Tools/McpServer.Documents.cs').read_text(encoding='utf-8').split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
+MCP = (SRC / 'ModelContextProtocol/Tools/DocumentsTools.cs').read_text(encoding='utf-8').split('[McpServerTool(Name = "ImportBlocksFromDocuments")', 1)[1]
 
 class DocumentImportSafetySources(unittest.TestCase):
     def test_worker_blocks_reads_and_previews_after_uncertain_document_batch(self):
@@ -59,7 +59,7 @@ class DocumentImportSafetySources(unittest.TestCase):
         self.assertLess(BATCH.index('var selected ='), BATCH.index('LastImportFromDocumentsAttempted++;'))
 
     def test_post_native_reporting_keeps_evidence(self):
-        self.assertLess(MCP.index('var failures = Portal.LastImportFromDocumentsFailures.ToList()'), MCP.index('Helper.GetAttributeList(block)'))
+        self.assertLess(MCP.index('var failures = _domain.LastImportFromDocumentsFailures.ToList()'), MCP.index('Helper.GetAttributeList(block)'))
         self.assertIn('Block metadata readback failed after import:', MCP)
         self.assertIn('Progress notification failed after import:', MCP)
         self.assertIn('["responseReportingFailed"] = responseReportingFailed', MCP)

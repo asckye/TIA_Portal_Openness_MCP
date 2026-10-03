@@ -14,7 +14,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--work-dir', type=Path, required=True)
     args = parser.parse_args()
-    source = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Software.ExternalSources.cs').read_text(encoding='utf-8-sig')
+    source = (ROOT / 'tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcExternalSourcesService.cs').read_text(encoding='utf-8-sig')
     methods = source.split('        public void ImportPlcExternalSource(', 1)[1].split('        private static IEnumerable<object?>? TryGetExternalSourcesCollection', 1)[0]
     methods = '        public void ImportPlcExternalSource(' + methods
     code = r'''
@@ -51,6 +51,7 @@ public sealed class PortalException : Exception { public PortalException(PortalE
 public sealed class Container { public PlcSoftware Software { get; } = new(); }
 public sealed class Portal {
     public Container Container { get; } = new();
+    private Portal _session => this;
     private bool IsProjectNull()=>false;
     private Container GetSoftwareContainer(string path)=>Container;
     private object TryGetExternalSourceGroupByPath(PlcSoftware plc,string path)=>path=="sub" ? plc.UserGroup : plc.ExternalSourceGroup;

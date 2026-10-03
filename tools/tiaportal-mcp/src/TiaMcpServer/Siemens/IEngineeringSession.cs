@@ -177,6 +177,16 @@ namespace TiaMcpServer.Siemens
         object? ResolvePlcTagTableGroup(object plc);
         string? CrossReferenceRefusal(string softwarePath);
 
+        PlcType? ExportType(string softwarePath, string typePath, string exportPath, bool preservePath = false);
+        ResponseImportBatch ImportHmiScreensFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true);
+        ResponseImportBatch ImportHmiTagTablesFromDirectory(string softwarePath, string folderPath, string dir, string regexName = "", bool overwrite = true);
+        List<CrossReferenceEntry>? GetCrossReferences(string softwarePath, string objectPath, string objectKind, string filter, out string? reason, out bool queried, string unitName, string unitKind);
+        (string TempDir, string XmlPath) ExportBlockDocumentForAnalysis(string softwarePath, string blockPath);
+        ResponseMessage ManageProjectLanguage(string action = "read", string culture = "", bool dryRun = true);
+        ResponseMessage RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade = false, bool dryRun = true);
+        ResponseMessage ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun = true);
+        ResponseMessage ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun = true);
+
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);
         // Release handles after native CloseAndCommit has already closed the local session.

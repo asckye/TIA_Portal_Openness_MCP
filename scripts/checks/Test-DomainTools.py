@@ -425,7 +425,39 @@ CASES = {
         ('ComposePlcLadFcBlockXml', 'ladFcBlockJson'))],
     'PlcBuild': [('PlcBuildAndImport', 'invalid-kind', {'softwarePath': PLC, 'kind': 'invalid', 'json': '{}'})],
     'SoftwareUnitManagement': [('SetPlcUnitObjectAccess', 'disconnected',
-        {'softwarePath': PLC, 'unitName': 'Unit1', 'objectKind': 'block', 'objectPath': 'FC1', 'access': 'Published'})]
+        {'softwarePath': PLC, 'unitName': 'Unit1', 'objectKind': 'block', 'objectPath': 'FC1', 'access': 'Published'})],
+    'Types': [('GetTypeInfo', 'read', {'softwarePath': PLC, 'typePath': 'Type1'}),
+        ('GetTypes', 'read', {'softwarePath': PLC}),
+        ('ExportType', 'export', {'softwarePath': PLC, 'typePath': 'Type1', 'exportPath': 'C:/domain-offline'}),
+        ('ImportType', 'import', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline.xml'}),
+        ('SeedProjectFromReference', 'seed', {'plcSoftwarePath': PLC, 'hmiSoftwarePath': 'HMI1', 'referenceDir': 'C:/domain-offline'}),
+        # These two batch exporters return a variable elapsed duration even without a project.
+        # Exercise their exact-name dispatch refusal without expanding the byte-mask allowlist.
+        ('ExportTypes', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'})],
+    'Documents': [('ExportAsDocuments', 'export', {'softwarePath': PLC, 'blockPath': 'Block1', 'exportPath': 'C:/domain-offline'}),
+        ('ExportBlocksAsDocuments', 'duplicate-argument', {'softwarePath': PLC, 'SoftwarePath': PLC, 'exportPath': 'C:/domain-offline'}),
+        ('ImportFromDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'fileNameWithoutExtension': 'Block1', 'importOption': 'invalid'}),
+        ('ImportBlocksFromDocuments', 'invalid-option', {'softwarePath': PLC, 'groupPath': '', 'importPath': 'C:/domain-offline', 'importOption': 'invalid'})],
+    'PlcExternalSources': [('GetCrossReferences', 'policy-refusal', {'softwarePath': PLC, 'objectPath': 'Block1'}),
+        ('GetPlcExternalSources', 'read', {'softwarePath': PLC}),
+        ('WritePlcSclSourceFile', 'empty-source', {'sclContent': ''}),
+        ('ImportPlcExternalSource', 'import', {'softwarePath': PLC, 'groupPath': '', 'filePath': 'C:/domain-offline.scl'}),
+        ('DeletePlcExternalSource', 'delete', {'softwarePath': PLC, 'externalSourceName': 'Source1'}),
+        ('GenerateBlocksFromExternalSource', 'generate', {'softwarePath': PLC, 'externalSourceName': 'Source1'})]
+        + actions('ManagePlcExternalSources', 'list read createGroup deleteGroup createFromFile createFromMasterCopy delete generateBlocks',
+                  softwarePath=PLC, name='Source1', filePath='C:/domain-offline.scl')
+        + [('ReadPlcSystemGroups', 'read', {'softwarePath': PLC})],
+    'PlcDocumentation': [('RenderPlcBlockDocument', 'missing-input', {}),
+        ('GeneratePlcDocumentation', 'missing-output', {'directory': '', 'outputPath': ''}),
+        ('LintPlcSclSource', 'lint', {'sourceText': 'FUNCTION Test : Void\nBEGIN\nEND_FUNCTION'})],
+    'NativeExchange': actions('ManageProjectLanguage', 'read activate deactivate setEditing setReference', culture='en-US')
+        + [('CreatePlcInstanceDb', 'preview', {'softwarePath': PLC, 'fbPath': 'FB1', 'name': 'DB1'}),
+           ('GeneratePlcSourceFromBlocks', 'preview', {'softwarePath': PLC, 'blockPathsJson': '["Block1"]', 'filePath': 'C:/domain-offline.scl'}),
+           ('GeneratePlcLoadableFile', 'preview', {'softwarePath': PLC, 'objectPathsJson': '["Block1"]', 'objectKind': 'blocks', 'targetOption': '', 'filePath': 'C:/domain-offline.bin'}),
+           ('RetrieveProjectArchive', 'preview', {'archivePath': 'C:/domain-offline.zap21', 'destinationDirectory': 'C:/domain-offline'}),
+           ('ExportProjectTexts', 'preview', {'filePath': 'C:/domain-offline.xlsx', 'sourceCulture': 'en-US', 'targetCulture': 'de-DE'}),
+           ('ImportProjectTexts', 'preview', {'filePath': 'C:/domain-offline.xlsx', 'updateSourceLanguage': False})]
+        + actions('ManagePlcTagDefinition', 'read create update delete', softwarePath=PLC, tablePath='Table1', name='Tag1', kind='tag')
 }
 
 
@@ -547,6 +579,49 @@ def software_reply(reply, profile, name):
     return raw
 
 
+
+SOURCE_TOOL_GUARDS = {
+    'GetTypeInfo': 'Type not found', 'GetTypes': 'No TIA project is open',
+    'ExportType': 'No project is open', 'ImportType': 'No project is open',
+    'SeedProjectFromReference': 'Project is null', 'ExportAsDocuments': 'No project is open',
+    'ImportFromDocuments': 'Invalid importOption', 'ImportBlocksFromDocuments': 'Invalid importOption',
+    'GetCrossReferences': 'notQueried', 'GetPlcExternalSources': 'PLC software not found',
+    'WritePlcSclSourceFile': 'sclContent is empty', 'ImportPlcExternalSource': 'project is null',
+    'DeletePlcExternalSource': 'project is null', 'GenerateBlocksFromExternalSource': 'project is null',
+    'RenderPlcBlockDocument': 'Exactly one of filePath or blockPath',
+    'GeneratePlcDocumentation': 'Absolute output file path required', 'LintPlcSclSource': 'findingCount',
+    'RetrieveProjectArchive': 'Connect to TIA first.'
+}
+
+
+def source_reply(reply, profile, name, case):
+    resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
+    result = reply.get('result', {})
+    raw = result.get('content', [{}])[0].get('text', json.dumps(reply.get('error', {})))
+    if case == 'duplicate-argument':
+        resources.require('duplicate' in raw.lower(), f'{name}: missing duplicate-argument refusal: {reply}')
+        return raw
+    throwing = name in {'GetTypeInfo', 'GetTypes', 'ExportType', 'ImportType', 'ExportAsDocuments',
+                       'ImportFromDocuments', 'ImportBlocksFromDocuments', 'GetPlcExternalSources',
+                       'WritePlcSclSourceFile', 'ImportPlcExternalSource', 'DeletePlcExternalSource',
+                       'GenerateBlocksFromExternalSource'}
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
+                          f'{name}: unexpected bridge status: {raw}')
+        raw = bridge['message']
+    else:
+        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
+    marker = SOURCE_TOOL_GUARDS.get(name, 'Project is null')
+    resources.require(marker in raw, f'{name}/{case}: missing expected offline outcome {marker!r}: {raw}')
+    if name == 'ExportAsDocuments':
+        # This legacy MCP exception embeds ex.ToString() in plain error text.
+        # Put it in the comparison envelope so the same D1 frame-only rule applies;
+        # the first line, non-frame details and preflight suffix remain contractual.
+        return json.dumps({'meta': {'error': raw}}, ensure_ascii=False)
+    return raw
+
+
 def table_reply(reply, profile, name):
     """Preserve each table tool's existing throw/POCO/plan family, without connecting."""
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
@@ -622,6 +697,11 @@ def capture(args, exe, harness, profile, isolated):
                 if domain == 'PlcBlocks':
                     raw = plc_block_reply(reply, profile, name)
                     reached_child = True
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
+                if domain in ('Types', 'Documents', 'PlcExternalSources', 'PlcDocumentation', 'NativeExchange'):
+                    raw = source_reply(reply, profile, name, case)
+                    reached_child |= case != 'duplicate-argument'
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
                     continue
                 if name in SOFTWARE_REPLY_MARKERS:
@@ -834,6 +914,23 @@ class SelfTests(unittest.TestCase):
         for domain, cases in CASES.items():
             self.assertTrue(cases, domain)
             self.assertEqual(len(cases), len({(name, case) for name, case, _ in cases}), domain)
+
+    def test_source_reply_preserves_error_family(self):
+        reply = {'result': {'isError': True, 'content': [{'text': 'Type not found'}]}}
+        self.assertEqual(source_reply(reply, 'full', 'GetTypeInfo', 'read'), 'Type not found')
+        reply['result']['isError'] = False
+        with self.assertRaises(AssertionError):
+            source_reply(reply, 'full', 'GetTypeInfo', 'read')
+
+    def test_document_plain_error_uses_only_d1_frame_mask(self):
+        def response(text):
+            reply = {'result': {'isError': True, 'content': [{'text': text}]}}
+            return mask_error_frames(source_reply(reply, 'full', 'ExportAsDocuments', 'export'))
+        before = 'No project is open\n   at Portal.Export()\npreflight: unchanged'
+        after = 'No project is open\n   at Service.Export()\npreflight: unchanged'
+        self.assertEqual(response(before), response(after))
+        self.assertNotEqual(response(before), response(after.replace('unchanged', 'changed')))
+        self.assertNotEqual(response(before), response(after.replace('open', 'open!')))
 
 
 def main():

@@ -269,8 +269,8 @@
     {
       "kind": "commented-code",
       "fingerprint": "af414b167f4e0314ec09dc6670f1b3133b90fd67c5c5106cd7f3f148e408b0e4",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Blocks.cs",
-      "line": 970
+      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DocumentsService.cs",
+      "line": 296
     },
     {
       "kind": "product-version",
@@ -377,12 +377,6 @@
     {
       "kind": "leftovers-file",
       "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Step7Leftovers.cs",
-      "line": 1
-    },
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/BaseLeftoversLogic.cs",
       "line": 1
     },
@@ -390,12 +384,6 @@
       "kind": "leftovers-file",
       "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.BaseLeftovers.cs",
-      "line": 1
-    },
-    {
-      "kind": "leftovers-file",
-      "fingerprint": "d5b9ad5f380234c624d0073f862c9bf3456ede28276297d30166aef15c10c3ca",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Step7Leftovers.cs",
       "line": 1
     },
     {
