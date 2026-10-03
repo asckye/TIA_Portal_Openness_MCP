@@ -92,7 +92,7 @@ def main():
         candidates = members - observed
         by_namespace = Counter(owner.rsplit('.', 1)[0] for _, owner, _ in candidates)
         row = {'releaseKey': key, 'mcpTools': len(catalogs[key]), 'xmlFiles': len(xml_files), 'domainSignatures': len(signatures), 'domainMemberNames': len(members),
-               'compiledDirectMemberNames': len(observed), 'withoutDirectMemberReference': len(candidates), 'topCandidateNamespaces': by_namespace.most_common(8),
+               'compiledDirectMemberNames': len(observed), 'withoutDirectMemberReference': len(candidates), 'topCandidateNamespaces': sorted(by_namespace.items(), key=lambda item: (-item[1], item[0]))[:8],
                'sdkXmlSha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in xml_files},
                'compiledCallInventorySha256': hashlib.sha256(coverage.read_bytes()).hexdigest()}
         statistics.append(row)
