@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="SelectedAdapterProject;SelectedAdapterDirectory;WorkerExpectedFramework">
   <!-- One PLC foundation worker per release. Full V20/V21 MCP engines remain separate. -->
   <PropertyGroup>
-    <WorkerExpectedFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</WorkerExpectedFramework>
-    <WorkerExpectedFramework Condition="'$(TiaReleaseKey)' == '17' or '$(TiaReleaseKey)' == '18' or '$(TiaReleaseKey)' == '19' or '$(TiaReleaseKey)' == '20' or '$(TiaReleaseKey)' == '21'">net48</WorkerExpectedFramework>
+    <WorkerExpectedFramework>net48</WorkerExpectedFramework>
     <TargetFramework>$(WorkerExpectedFramework)</TargetFramework>
     <OutputType>Exe</OutputType><AssemblyName>TiaMcp.PlcWorker.$(TiaReleaseKey)</AssemblyName>
     <PlatformTarget>x64</PlatformTarget><LangVersion>latest</LangVersion><Nullable>enable</Nullable>
@@ -25,7 +24,7 @@
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"
                       GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>NativeCallInstrumentation</_Parameter1><_Parameter2>adapter-weave-verify-required-production-blocked</_Parameter2></AssemblyAttribute>
   </ItemGroup>

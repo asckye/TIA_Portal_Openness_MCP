@@ -25,8 +25,10 @@ does not translate XML, upgrade a project, or make its unavailable tools runnabl
 | V20/V21 MCP | Full .NET Framework engines, full/lite catalogs and discovery bridge |
 | Studio, all eight releases | Desktop and bridge call the selected Openness adapter directly; no Studio MCP transport |
 
-The first three foundation workers target .NET Framework 4.6.1 and later workers
-target 4.8. A framework-4.8 installation satisfies the earlier framework target.
+All eight foundation workers and their adapters target .NET Framework 4.8.
+V14 SP1, V15.1 and V16 retain their exact original Siemens API identities;
+their net48 workers require the release-time checks in the
+[real-machine ledger](../reference/real-machine-ledger.md).
 The foundation worker serializes native calls on its owning STA; the full engine
 has its own threading and optional worker-isolation contract. Do not merge these
 by replacing one tool's name or threading primitive.

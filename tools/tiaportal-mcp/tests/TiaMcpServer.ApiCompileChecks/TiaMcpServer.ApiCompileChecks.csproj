@@ -7,7 +7,6 @@
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../../../openness-shared/TiaPublicApi.props" />
   <PropertyGroup>
-    <TargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</TargetFramework>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net48</TargetFramework>
     <OutputType>Library</OutputType>
     <Nullable>enable</Nullable>
@@ -23,7 +22,6 @@
     <ExpectedPublicKey>d29ec89bac048f84</ExpectedPublicKey>
     <ExpectedPublicKey Condition="'$(TiaReleaseKey)' == '21'">29bfe5fdf4ba5d3b</ExpectedPublicKey>
     <ExpectedTargetFramework>net48</ExpectedTargetFramework>
-    <ExpectedTargetFramework Condition="'$(TiaReleaseKey)' == '14sp1' or '$(TiaReleaseKey)' == '15.1' or '$(TiaReleaseKey)' == '16'">net461</ExpectedTargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ApiCompileChecks.cs" />
@@ -32,7 +30,7 @@
     <Compile Include="../../src/TiaMcp.Logic/Siemens/TiaVersionCatalog.cs" Link="TiaVersionCatalog.cs" />
     <Reference Include="$(CoreApiName)"><HintPath>$(SiemensEngineeringDirectory)/$(CoreApiName).dll</HintPath><Private>false</Private></Reference>
     <Reference Include="Siemens.Engineering.Step7" Condition="'$(TiaReleaseKey)' == '21'"><HintPath>$(SiemensEngineeringDirectory)/Siemens.Engineering.Step7.dll</HintPath><Private>false</Private></Reference>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
   </ItemGroup>
   <Target Name="ValidateSelectedApi" BeforeTargets="ResolveReferences">
     <Error Condition="'$(TargetFramework)' != '$(ExpectedTargetFramework)'" Text="Do not substitute a different target framework for this API compile check." />

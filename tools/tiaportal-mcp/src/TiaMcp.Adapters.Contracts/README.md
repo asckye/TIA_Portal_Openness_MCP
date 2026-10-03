@@ -1,6 +1,6 @@
 # Adapter contracts (steps B and D)
 
-Targets: net461, net48 and net8.0. No Siemens or JSON dependency. Existing declarations keep
+Targets: net48 and net8.0. No Siemens or JSON dependency. Existing declarations keep
 their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. Hardware, VCI
 and HMI facets remain markers and return null. The worker still calls the existing engine.
 

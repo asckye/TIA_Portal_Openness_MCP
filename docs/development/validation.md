@@ -20,7 +20,8 @@
 
 使用 Windows 和 .NET 10 SDK（支持 .slnx、Studio WPF 及 .NET Framework 目标）。
 带条件引用的 .NET Framework 工程默认设置 `UseReferenceAssemblyPackage=true`，通过 NuGet
-取得编译所需的引用程序集，与发布脚本和已提交的 `packages.lock.json` 保持一致，无需额外安装 4.6.1 targeting pack。
+取得编译所需的引用程序集，与发布脚本和已提交的 `packages.lock.json` 保持一致。八版适配器、PlcWorker 和
+API 编译检查均以 net48 为目标，无需额外安装 4.8 targeting pack；待删除的 WorkerProtocol 工程仍保留 net461。
 已安装对应 targeting pack 时仍可显式指定 `-p:UseReferenceAssemblyPackage=false`；这会改变还原依赖图，
 因此日常方案构建使用默认值，不应提交该覆盖产生的 lock 文件变化。
 
@@ -47,7 +48,7 @@ WorkerProtocol 系列及其他控制台测试（包括 `TiaOpenness.Configuratio
 
 完整方案保留尚未接线的 `TiaMcp.WorkerProtocol.*`，等待 P4-01 决定；
 排除 `reference/` 示例、`LibraryRenameProbe` 和没有合理默认版本的 `TiaMcpServer.PlcWorker`。
-worker 继续由 `Build-PlcAdapterWorkers.ps1` 逐个传入 `TiaReleaseKey` 构建；
+worker 继续由 `Build-PlcAdapterWorkers.ps1` 逐个传入 `TiaReleaseKey` 构建，产物统一位于 `bin/<key>/Release/net48/`；
 `ApiCompileChecks` 的独立/方案默认是 V21，现有脚本仍显式选择八版。
 V20/V21 引擎分别写入原有 `obj-v20`/`bin-v20` 和 `obj`/`bin`，适配器通过方案依赖先构建织入工具。
 解决方案构建只用于开发；下面的脚本验证、打包和发布门禁仍是发布路径，构建不执行原生 TIA 测试。

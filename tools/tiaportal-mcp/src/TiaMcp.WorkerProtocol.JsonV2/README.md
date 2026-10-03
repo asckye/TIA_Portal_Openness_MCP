@@ -78,8 +78,10 @@ unimplemented integration gates.
 
 Use a separately selected launch mode with an explicit v2 handshake only after
 both endpoints support it. Never trial-decode old traffic as this format, add
-optional identity to v1, or fall back after v2 rejection. Net461 production use
-needs a separately reviewed compatible JSON adapter. Existing net461 worker v1 remains unchanged and v2 is not wired there. This project explicitly rejects net461; no target uplift or obsolete JSON package is introduced. Existing host hotspots need coordinated
+optional identity to v1, or fall back after v2 rejection. Foundation workers now
+target net48 for all eight releases, but their Newtonsoft.Json/v1 protocol is
+unchanged and this preview v2 codec is not wired there. This project still rejects
+net461; the remaining WorkerProtocol net461 targets are pending deletion. Existing host hotspots need coordinated
 ownership review and independent native/runtime/legacy compatibility tests.
 
 ## Targets, dependencies and verification

@@ -30,12 +30,12 @@ or Siemens DLL was copied, and records hashes. It never launches a worker or TIA
 `-SourceRoot` can select a read-only snapshot; outputs stay in the candidate tree.
 
 The release is fixed by the project. An optional `TiaReleaseKey` must match it.
-V14 SP1, V15.1 and V16 target net461; V17 through V21 target net48. Missing
-targeting packs are a prerequisite failure, never a reason to substitute a TFM.
-For net461, `-p:UseReferenceAssemblyPackage=true` explicitly opts into Microsoft's
-`Microsoft.NETFramework.ReferenceAssemblies.net461` 1.0.3 package instead of an
-installed targeting pack. An existing authorized package cache can be selected
-with `RestoreSources`; this still uses actual net461 reference assemblies.
+All eight adapters and workers target net48. Missing 4.8 reference assemblies
+are a prerequisite failure, never a reason to substitute a TFM.
+`UseReferenceAssemblyPackage=true` is the default and selects Microsoft's
+`Microsoft.NETFramework.ReferenceAssemblies.net48` 1.0.3 package. Use
+`-p:UseReferenceAssemblyPackage=false` with an installed 4.8 targeting pack.
+An existing authorized package cache can be selected with `RestoreSources`.
 V21 checks Base, Step7 and Safety; other targets check the monolithic core.
 Every selected assembly must have the exact expected full strong-name identity.
 Siemens references are non-copy-local. No Siemens package, DLL or stub ships here.
@@ -56,7 +56,7 @@ tool build; the tool is an additional compile input so changes invalidate output
 `Diagnostics/` is one API-independent runtime source shared by all eight builds.
 It preserves the existing runtime's call bracketing, weak object lineage,
 enumeration adapters, exception redaction and best-effort flushed journal. Its
-serializer uses the already-used Newtonsoft.Json 13.0.4, which supports net461;
+serializer still uses Newtonsoft.Json 13.0.4 after the net48 migration;
 the original modern runtime and its System.Text.Json dependency are unchanged.
 The exact existing PortalFailureClassifier source is linked without Siemens
 references. This is a serializer variant to maintain in parallel until a later

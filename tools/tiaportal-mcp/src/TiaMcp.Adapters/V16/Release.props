@@ -2,8 +2,8 @@
   <PropertyGroup>
     <AdapterReleaseKey>16</AdapterReleaseKey>
     <TiaReleaseKey Condition="'$(TiaReleaseKey)' == ''">16</TiaReleaseKey>
-    <AdapterExpectedFramework>net461</AdapterExpectedFramework>
-    <TargetFramework>net461</TargetFramework>
+    <AdapterExpectedFramework>net48</AdapterExpectedFramework>
+    <TargetFramework>net48</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <AdapterApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering.dll"><ApiName>Siemens.Engineering</ApiName><ExpectedIdentity>Siemens.Engineering, Version=16.0.0.0, Culture=neutral, PublicKeyToken=d29ec89bac048f84</ExpectedIdentity></AdapterApi>

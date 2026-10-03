@@ -84,7 +84,7 @@
   {
     "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V14Sp1/Adapter.14sp1.csproj",
     "properties": {},
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TIA_ADAPTER_INTERNAL_VERSIONING",
@@ -94,7 +94,7 @@
   {
     "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V15_1/Adapter.15.1.csproj",
     "properties": {},
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "PLC_RH",
       "PLC_SOURCE_RESULTS",
@@ -107,7 +107,7 @@
   {
     "project": "tools/tiaportal-mcp/src/TiaMcp.Adapters/V16/Adapter.16.csproj",
     "properties": {},
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "PLC_RH",
       "PLC_SOURCE_RESULTS",
@@ -206,7 +206,7 @@
     "properties": {
       "TiaReleaseKey": "14sp1"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -217,7 +217,7 @@
     "properties": {
       "TiaReleaseKey": "15.1"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -228,7 +228,7 @@
     "properties": {
       "TiaReleaseKey": "16"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -313,7 +313,7 @@
     "properties": {
       "TiaReleaseKey": "14sp1"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -324,7 +324,7 @@
     "properties": {
       "TiaReleaseKey": "15.1"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -335,7 +335,7 @@
     "properties": {
       "TiaReleaseKey": "16"
     },
-    "targetFramework": "net461",
+    "targetFramework": "net48",
     "defineConstants": [
       "RELEASE",
       "TRACE"

@@ -27,7 +27,7 @@ foreach($key in @('14sp1','15.1','16','17','18','19','20','21')){
     & $Dotnet msbuild $worker -nologo -v:quiet -t:ValidateWorkerAdapter "-p:TiaReleaseKey=$key" -getItem:ProjectReference -getProperty:TargetFramework *> $log
     $code=$LASTEXITCODE
     $value=if($code -eq 0){Get-Content -LiteralPath $log -Raw|ConvertFrom-Json}else{$null}
-    $tfm=if($key -in @('14sp1','15.1','16')){'net461'}else{'net48'}
+    $tfm='net48'
     Record "selection-$key" ($code -eq 0 -and (HasSelectedReferences $value "/Adapter.$key.csproj") -and $value.Properties.TargetFramework -eq $tfm) $code
     $binary=Join-Path (Split-Path $worker) "bin/$key/Release/$tfm/TiaMcp.Adapter.$key.dll"
     & $Dotnet $weaver verify $binary (Join-Path $out "coverage-$key.json") *> (Join-Path $out "verify-$key.log")

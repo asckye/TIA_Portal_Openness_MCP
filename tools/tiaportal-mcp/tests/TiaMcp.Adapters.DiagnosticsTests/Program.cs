@@ -57,7 +57,7 @@ NativeCallDiagnostics.Returned(badPath,null);
 Check((long)InvocationJournal.Health()["failedWrites"]!>0,"journal failure observable without changing operation");
 
 foreach(string key in new[]{"14sp1","15.1","16","17","18","19","20","21"}){
-    string tfm=key is "14sp1" or "15.1" or "16" ? "net461":"net48";
+    string tfm="net48";
     string folder=Path.Combine(output,key,"Release",tfm);
     using var workerStream=File.OpenRead(Path.Combine(folder,$"TiaMcp.PlcWorker.{key}.exe"));
     using var workerPe=new PEReader(workerStream);

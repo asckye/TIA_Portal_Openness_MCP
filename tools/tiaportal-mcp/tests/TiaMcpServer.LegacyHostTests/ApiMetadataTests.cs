@@ -102,7 +102,7 @@ internal static class ApiMetadataTests
             CheckMembers(plc,"Siemens.Engineering.SW.Types.PlcType",new[]{"Name","IsConsistent","ModifiedDate","IsKnowHowProtected"},true,check);
             foreach(var apiType in new[]{"Siemens.Engineering.SW.Blocks.PlcBlock","Siemens.Engineering.SW.Types.PlcType","Siemens.Engineering.SW.Tags.PlcTagTable"}) CheckMembers(plc,apiType,new[]{"Export"},false,check);
             foreach(var apiType in new[]{"Siemens.Engineering.SW.Blocks.PlcBlockComposition","Siemens.Engineering.SW.Types.PlcTypeComposition","Siemens.Engineering.SW.Tags.PlcTagTableComposition"}) CheckMembers(plc,apiType,new[]{"Import"},false,check);
-            var framework=key is "14sp1" or "15.1" or "16" ? "net461":"net48";
+            var framework="net48";
             var adapterDirectory=key=="14sp1"?"V14Sp1":key=="15.1"?"V15_1":"V"+key;
             var facade=Path.Combine(adapterRoot,adapterDirectory,"bin",key,"Release",framework,$"TiaMcp.Adapter.{key}.dll");
             var workerDirectory=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(adapterRoot))!,"TiaMcpServer.PlcWorker","bin",key,"Release",framework);

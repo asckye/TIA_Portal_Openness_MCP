@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)../../../../Version.props" />
   <PropertyGroup>
-    <TargetFrameworks>net461;net48;net8.0</TargetFrameworks>
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
@@ -9,7 +9,6 @@
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net461" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net461' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
   </ItemGroup>
   <!-- Include resolved references so transitive JSON/native dependencies also fail the build. -->

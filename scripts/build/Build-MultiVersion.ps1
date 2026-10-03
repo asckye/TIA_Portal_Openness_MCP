@@ -37,7 +37,7 @@ foreach($key in @('14sp1','15.1','16','17','18','19')) {
     New-Item -ItemType Directory -Force $runtime,$worker | Out-Null
     Get-ChildItem -LiteralPath $publish -File | Where-Object {$_.Extension -in '.exe','.dll','.config','.json'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $runtime -Force}
     [IO.File]::WriteAllText((Join-Path $runtime 'release-key.txt'),$key,[Text.UTF8Encoding]::new($false))
-    $framework=if($key -in @('14sp1','15.1','16')){'net461'}else{'net48'}
+    $framework='net48'
     $workerBuild=Join-Path $repo "tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/bin/$key/Release/$framework"
     Get-ChildItem -LiteralPath $workerBuild -File | Where-Object {$_.Extension -in '.exe','.dll','.config'} | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $worker -Force}
     if(@(Get-ChildItem -LiteralPath $worker -Filter 'TiaMcp.Adapter.*.dll').Count -ne 1){throw "Exactly one matching adapter is required: $key"}

@@ -1,5 +1,5 @@
 // Portable serializer variant of the existing diagnostic runtime; shared by all eight adapters.
-// Newtonsoft.Json preserves the actual net461 target; no Siemens reference or SDK stub.
+// Newtonsoft.Json diagnostic serialization; no Siemens reference or SDK stub.
 using System;
 using System.Diagnostics;
 using System.IO;
