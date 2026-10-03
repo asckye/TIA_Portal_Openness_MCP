@@ -399,7 +399,7 @@ Test-DomainTools 覆盖以上所有工具的 full/lite、直接/隔离调用，�
 ### 硬件设备、AML、模块与地址
 
 P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留给 P3-11b。
-`McpServer.Devices.cs` / `Portal.Devices.cs` 中的网络成员保留原位；
+`McpServer.Devices.cs` 中的网络工具已并入 `HardwareNetworkTools`；共享网络解析成员仍留在 `Portal.Devices.cs`；
 `ImportDeviceAml` 从 HardwareServices 混合文件迁入 AML 领域，`ManageHardwareObject`
 从 EngineeringManagement 混合文件迁出。现存 BaseLeftovers / Step7Leftovers 中没有本次设备、AML、模块或地址成员；
 `ManageHardwareUtilities` 和 `ManageDeviceServiceObjects` 仍属于硬件服务。
@@ -446,7 +446,8 @@ P3-11a 将 22 个工具迁入五个单例领域；网络工具及硬件服务留
 `TelecontrolRow`、`CertificateServiceRow` 和 `CertificateConfigurationRow`。17 个工具均无 `Program*.cs` /
 `Cli/` 静态调用点，因此没有 `McpServer` 转发；服务和工具依照约定注册为共享同一会话的非 IDisposable 单例。
 
-`Portal.HardwareNetwork.cs` / `McpServer.HardwareNetwork.cs` 暂留 `ReadDeviceAddressing` 与 `UpdateDeviceAddress`；
+`ReadDeviceAddressing` 与 `UpdateDeviceAddress` 已并入 `AddressesService` / `AddressesTools`；
+`Portal.HardwareNetwork.cs` 仅保留共享辅助，原工具 partial 已删除；
 `ImportDeviceAml` 已由硬件设备任务迁入 `HardwareAmlService` / `HardwareAmlTools`。
 `ReadOpcUaAccessControl`、`ManageOpcUaAccessControl` 及其专用辅助由 `OpcUaService` / `OpcUaTools` 承接，
 不在硬件服务领域重复注册；`GetOpcUaServerInterfaceGroup` 是 `OpcUaService` 的私有辅助，不经内核接口转发。
@@ -471,7 +472,8 @@ HttpTests 保留全部既有断言，另检查两个领域的工具归属、共�
 原 `Portal.Online.cs`、`Portal.DeviceTransfer.cs` 与 `McpServer.DeviceTransfer.cs` 已删除；
 下载提示处理位于 [OnlineDownloadService](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs)，
 工具位于 [OnlineDownloadTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs)。
-`McpServer.PlcSoftware.Online.cs` 中的五个硬件工具仍归硬件领域；跨领域的 `IsOnlineModeError`、
+原 `McpServer.PlcSoftware.Online.cs` 的五个硬件工具已迁入 Addresses、Devices、HardwareNetwork、HardwareServices；
+跨领域的 `IsOnlineModeError`、
 `WithAutoOffline` 保持原入口，后者通过容器取得同一服务，保留下线后仅重试一次的行为。
 这 12 个工具没有 `Program*.cs` / `Cli/` 静态调用点，无需 CLI 转发。
 
@@ -585,3 +587,33 @@ CLI 通过 `McpServer.PlcSourceTools.cs` 保留无属性的 `ExportAsDocuments`�
 `ExportTypes` 和 `ExportBlocksAsDocuments` 在断开时也返回可变耗时，故使用重复参数拒绝用例；文档导入使用
 无效选项拒绝用例。其方法体及原生调用顺序另由源码和织入清单核对，不增加耗时屏蔽规则。
 `ExportAsDocuments` 的旧式纯文本错误含堆栈，按 D1 仅屏蔽堆栈帧，保留首行、其他明细及 preflight 后缀。
+
+### 硬件、Motion 与库的剩余工具
+
+P3-11c 将 25 个剩余工具并入六个现有服务/工具类，不新增领域；当前工具数为 HardwareNetwork 19、
+Addresses 5、Devices 15、HardwareServices 11、MotionProDiagClassicHmi 12、Library 18。
+网络计划与四个库/模板离线分析器的原工具方法体留在相应实例工具类，继续直接调用既有纯逻辑分析器。
+`Portal.PlcProtection.cs` 的全部成员迁入 `HardwareServicesService`，原文件删除；
+`Portal.MotionExchange.cs` 保留共享的 `ExactTechnology`，两个操作迁入 Motion 服务。
+`Portal.Software.LibrarySeed.cs` 保留 `SeedProjectFromReference` 及共享的 `MakeSafeFileName`、
+`TryListNamesFromCollection`、`TryFindByNameInCollection`，供 PLC 程序领域继续迁移；全局库探测、导入及其私有辅助迁入 Library 服务。
+
+本步新增以下 16 个 `IEngineeringSession` 成员，均显式转发现有实现；新增前已检查现有接口及 master：
+
+- `GetDeviceItemNetworkInfo`、`ProbeConnectDeviceNodesToSubnet`：分别仍由网络读回、CLI 探测使用。
+- `BuildDeviceNodesJson`、`NormalizeAttrName`、`TraverseDeviceItems`：由多个硬件领域共享。
+- `FindNetworkNodes`、`IsIndustrialEthernetNode`、`FormatNodeInfo`、`BuildHardwareHmiConnectionCandidates`、
+  `BuildDirectHardwareHmiConnectionCandidates`：仍供内核 CLI/HMI 探测使用；`NetworkNodeInfo` 仅改为 internal。
+- `TryReadInterestingAttributes`：供硬件暴露探测和库主副本导入使用。
+- `GetPutGetAccess`、`FindPutGetAttribute`、`AttrValueIsEnabled`：读取入口仍供运行时 S7 读取前置检查使用，设置入口迁入服务。
+- `GetBlock`、`FindExistingByName`：复用原 PLC 块解析和 Unified HMI 名称查找，不替换为语义不同的解析器。
+
+`McpServer.Devices.cs` 保留 `ProbeHardwareHmiConnectionOwnerCandidates`、
+`ProbeHardwareHmiConnectionWhitelistedServices` 的无属性静态转发；`McpServer.PlcSoftware.Library.cs` 保留
+`ProbeGlobalLibrary`、`ImportMasterCopyFromGlobalLibrary` 的无属性静态转发。其他迁移工具不保留静态入口。
+六个服务均已在 `EngineSurface` 名单和约定注册中，未重复添加；HttpTests 的领域名单覆盖新增工具、会话共享和 CLI 转发签名。
+
+原生调用顺序、参数与线程归属不变；方法体通过去注释 token 比较，工具属性、参数与默认值原样保留。
+同名工具和服务按声明类型分别输入原生调用顺序检查器，完整织入清单另比较全部类别的成员多重集合。
+`Test-DomainTools.py` 覆盖六个领域的全部工具，包括断开前置检查、离线分析以及 full/lite、直接/隔离路径；
+只屏蔽已列明的时间戳与 D1 允许变化的错误堆栈。真机验收未执行。

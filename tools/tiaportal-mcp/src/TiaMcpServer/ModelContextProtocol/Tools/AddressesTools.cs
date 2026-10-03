@@ -1,3 +1,14 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using ModelContextProtocol.Protocol;
+using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using System;
@@ -228,5 +239,51 @@ namespace TiaMcpServer.ModelContextProtocol
 
         #endregion
 
+
+        [McpServerTool(Name="ReadDeviceAddressing"), Description("[L2][Hardware][READ] Addressing of the exact device or device item: HwIdentifiers (Identifier, controller owner paths), DeviceItem.Addresses (StartAddress, Length, IoType, AddressControllers, dynamic Context/ProcessImage/IsochronousMode/InterruptObNumber) and, when the item is a controller, AddressController.RegisteredAddresses / HwIdentifierController.RegisteredHwIdentifiers with owner paths. Paginated, no modification.")]
+        public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson="[]", int offset=0, int limit=100)
+            => _service.ReadDeviceAddressing(devicePathJson,itemPathJson,offset,limit);
+
+        [McpServerTool(Name="UpdateDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]
+        public ResponseMessage UpdateDeviceAddress(
+            string devicePathJson,
+            string itemPathJson,
+            [Description("ioType: None | Input | Output | Substitute | Diagnosis.")] string ioType,
+            [Description("startAddress: new start address (byte).")] int startAddress,
+            string propertiesJson="{}",
+            string attributesJson="{}",
+            string softwarePath="",
+            [Description("processImageObName: exact name of the OB the process image partition is assigned to ('' = automatic).")] string processImageObName="",
+            bool dryRun=true)
+            => _service.UpdateDeviceAddress(devicePathJson,itemPathJson,ioType,startAddress,propertiesJson,attributesJson,softwarePath,processImageObName,dryRun);
+
+        [McpServerTool(Name = "GetDeviceIpAddress"), Description(
+            "[L1][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            " Read a device's configured IP address straight from the TIA project (Openness PROFINET node) —" +
+            " NOT by probing the CPU over S7 and NOT by exporting/parsing AML. Returns the primary IE IP plus all network nodes" +
+            " (address, subnet, type). This is the correct, fast way to discover a PLC's IP before GoOnline/ReadPlcLiveValuesS7.")]
+        public ResponseJsonReport GetDeviceIpAddress(
+            [Description("devicePath: device name from GetProjectTree, e.g. 'PLC_1'.")] string devicePath)
+        {
+            try
+            {
+                var data = _service.GetDeviceIpAddress(devicePath);
+                bool found = data["found"]?.GetValue<bool>() ?? false;
+                var ip = data["ipAddress"]?.ToString() ?? string.Empty;
+                return new ResponseJsonReport
+                {
+                    Ok = found,
+                    Message = found
+                        ? $"{devicePath} IP: {(string.IsNullOrEmpty(ip) ? "(no address configured on any node)" : ip)}"
+                        : (data["message"]?.ToString() ?? "Device not found."),
+                    Data = data,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = found }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"GetDeviceIpAddress failed for '{devicePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
     }
 }

@@ -10,7 +10,7 @@ namespace TiaMcpServer.Siemens
     // Official pages: "Access level setting" (PlcAccessLevelProvider: PlcProtectionAccessLevel
     // attribute, SetPassword(level, SecureString) / ResetPassword(level)) and "Managing PLC Master Secret in PLCs"
     // (PlcMasterSecretConfigurator: Protect / Unprotect / ChangePassword / ProtectAllPlcConfiguration[WithPassword] /
-    // UnprotectAllPlcConfiguration / Reset, MasterSecretConfiguration state). Pure gating here; the Openness calls are in Portal.PlcProtection.cs.
+    // UnprotectAllPlcConfiguration / Reset, MasterSecretConfiguration state). Pure gating here; the Openness calls are in HardwareServicesService.cs.
     internal static class PlcProtectionLogic
     {
         // PlcProtectionAccessLevel names the Openness user may set (None is "for enum initialization" only).

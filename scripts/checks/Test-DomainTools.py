@@ -487,9 +487,79 @@ CASES = {
 }
 
 
+CASES['HardwareNetwork'] += [
+    ('GetDeviceItemNetworkInfo', 'read', {'deviceItemPath': PLC}),
+    ('ConnectDeviceNodesToProfinetSubnet', 'disconnected', {'firstRootPath': PLC, 'secondRootPath': 'HmiOfflineFixture'}),
+    ('PlanHardwareNetworkConfiguration', 'invalid-plan', {'planJson': '{}'}),
+    ('EnsureSubnet', 'disconnected', {'anchorDeviceItemPath': PLC, 'subnetType': 'PROFINET', 'subnetName': 'PN_IE_1'}),
+    ('AttachDeviceNodeToSubnet', 'disconnected', {'deviceItemPath': PLC, 'interfaceIndex': 0, 'subnetName': 'PN_IE_1'}),
+    ('GetProjectTopology', 'read', {})]
+CASES['HardwareNetwork'] += [(name, 'deep' if deep else 'direct',
+    {'plcRootPath': PLC, 'hmiRootPath': 'HmiOfflineFixture', 'deepScan': deep})
+    for name in ('ProbeHardwareHmiConnectionOwnerCandidates', 'ProbeHardwareHmiConnectionWhitelistedServices')
+    for deep in (False, True)]
+CASES['Addresses'] += [('ReadDeviceAddressing', 'read', HARDWARE),
+    ('UpdateDeviceAddress', 'preview', dict(HARDWARE, ioType='Input', startAddress=0)),
+    ('GetDeviceIpAddress', 'read', {'devicePath': PLC})]
+CASES['Devices'] += [('DumpDeviceAttributes', 'read', {'devicePath': PLC})]
+CASES['HardwareServices'] += actions('ManagePlcProtection',
+    'read setAccessLevel setAccessPassword resetAccessPassword protectMasterSecret changeMasterSecret '
+    'unprotectMasterSecret resetMasterSecret protectAllConfiguration unprotectAllConfiguration',
+    **HARDWARE, accessLevel='FullAccess', password='offline', newPassword='offline')
+CASES['HardwareServices'] += [('CompileDevice', 'disconnected', HARDWARE),
+    ('GetPutGetAccess', 'read', {'devicePath': PLC}),
+    ('SetPutGetAccess', 'enable', {'devicePath': PLC, 'enable': True}),
+    ('SetPutGetAccess', 'disable', {'devicePath': PLC, 'enable': False})]
+CASES['HardwareServices'] += actions('ManageHardwareUtilities',
+    'list findModuleTypes findContainerTypes normalizeTypeIdentifier exportOpcUa exportCardReaderPsc',
+    **HARDWARE, typeIdentifier='OfflineFixture', filePath='C:/domain-offline.xml')
+CASES['MotionProDiagClassicHmi'] += actions('ExchangeMotionCamData',
+    'import importBinary export exportBinary exportPoints', softwarePath=PLC,
+    objectPath='Cam1', filePath='C:/domain-offline.cam', pointCount=1)
+CASES['MotionProDiagClassicHmi'] += [(tool, kind + '/' + case, arguments)
+    for kind in ('actor', 'sensor', 'torque') for tool, case, arguments in
+    actions('ConfigureMotionHardwareConnection', 'read connect disconnect',
+        softwarePath=PLC, objectPath='Axis1', interfaceKind=kind)]
+# Missing paths are deterministic offline fixtures; no user library/template tree is read.
+CASES['Library'] += [('ProbeGlobalLibrary', 'disconnected', {'libraryPath': ''}),
+    ('ImportMasterCopyFromGlobalLibrary', 'disconnected', {'libraryPath': '', 'masterCopyName': 'Copy1',
+        'hmiSoftwarePath': 'HmiOfflineFixture', 'screenName': 'Screen1'}),
+    ('AnalyzeGlobalLibraryPackage', 'missing-path', {'libraryPath': 'C:/domain-offline-missing/library.al21'}),
+    ('PlanGlobalLibraryTemplateReuse', 'missing-path', {'libraryPath': 'C:/domain-offline-missing/library.al21'}),
+    ('AnalyzeHmiTemplateReference', 'missing-path', {'templateDirectory': '',
+        'referenceProjectPath': '', 'referenceGlobalLibraryPath': ''}),
+    ('AnalyzeUnifiedHmiTemplateLayout', 'empty-directory', {'templateDirectory': ''})]
+
+snapshots.RAW_MASK_RULES += [
+    {'tool': name, 'path': [key, 'timestamp'], 'reason': 'Global library probe DateTime.Now.ToString("O")'}
+    for name in ('ProbeGlobalLibrary', 'ImportMasterCopyFromGlobalLibrary') for key in ('raw', 'Raw')]
+snapshots.RAW_MASK_RULES += [
+    {'tool': name, 'path': [key, 'timestamp'], 'reason': 'Offline template analysis DateTime.Now.ToString("O")'}
+    for name in ('AnalyzeGlobalLibraryPackage', 'AnalyzeHmiTemplateReference', 'AnalyzeUnifiedHmiTemplateLayout')
+    for key in ('data', 'Data')]
+
+
 # Older hardware tools mix thrown MCP errors, failure POCOs and empty inventories.
 # Require a tool-specific terminal marker before comparing every response byte.
 HARDWARE_TERMINALS = {
+    'GetDeviceItemNetworkInfo': 'Device item not found',
+    'ConnectDeviceNodesToProfinetSubnet': 'Project is null',
+    'PlanHardwareNetworkConfiguration': 'Hardware network plan has validation errors',
+    'EnsureSubnet': 'Project is null',
+    'AttachDeviceNodeToSubnet': 'Project is null',
+    'ProbeHardwareHmiConnectionOwnerCandidates': 'Project is null',
+    'ProbeHardwareHmiConnectionWhitelistedServices': 'Project is null',
+    'GetProjectTopology': 'No project open.',
+    'GetDeviceIpAddress': 'No project open.',
+    'DumpDeviceAttributes': 'No project open.',
+    'GetPutGetAccess': 'No project open.',
+    'SetPutGetAccess': 'No project open.',
+    'ProbeGlobalLibrary': 'TIA Portal is not connected. Call Connect first.',
+    'ImportMasterCopyFromGlobalLibrary': 'TIA Portal is not connected. Call Connect first.',
+    'AnalyzeGlobalLibraryPackage': 'Global library directory not found.',
+    'PlanGlobalLibraryTemplateReuse': 'Global library template reuse plan blocked because the library path was not found.',
+    'AnalyzeHmiTemplateReference': 'HMI template/reference offline analysis completed with findings',
+    'AnalyzeUnifiedHmiTemplateLayout': 'Unified HMI template layout offline QA completed',
     'GetProjectTree': 'Failed retrieving project tree',
     'GetDeviceInfo': 'Device not found',
     'GetDeviceItemInfo': 'Device item not found',
@@ -514,6 +584,7 @@ HARDWARE_TERMINALS = {
 
 
 HARDWARE_THROWS = {
+    'GetDeviceItemNetworkInfo',
     'GetProjectTree', 'GetDeviceInfo', 'GetDeviceItemInfo', 'GetDeviceItemTree',
     'AddDevice', 'SearchInstalledGsdDevices', 'SearchHardwareCatalog',
     'AddGsdDeviceWithProbe', 'AddHardwareCatalogDeviceWithProbe', 'ExportDeviceAml',
@@ -713,6 +784,7 @@ def capture(args, exe, harness, profile, isolated):
                     or (name == 'ManageDcbLibraries' and arguments['action'] == 'import')
                     or (name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
                     or (name == 'ManagePlcSafety' and arguments['action'] == 'generateBaseId')
+                    or (name == 'ManagePlcProtection' and arguments['action'] in ('protectAllConfiguration', 'unprotectAllConfiguration'))
                     or (name == 'ManageDeviceServiceObjects' and (arguments['family'] == 'webApplications'
                         or (arguments['family'] == 'telecontrolDataPoints' and arguments['action'] in ('read', 'update', 'delete')))))
                 if profile == 'full':

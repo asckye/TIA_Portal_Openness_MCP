@@ -1,3 +1,30 @@
+using Microsoft.Extensions.Logging;
+using Siemens.Engineering.Cax;
+using Siemens.Engineering.Compiler;
+using Siemens.Engineering.Connection;
+using Siemens.Engineering.Download;
+using Siemens.Engineering.Download.Configurations;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.Online;
+using Siemens.Engineering.Online.Configurations;
+using Siemens.Engineering.SW.Alarm;
+using Siemens.Engineering.SW.OpcUa;
+using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.Multiuser;
+using Siemens.Engineering.Safety;
+using Siemens.Engineering.SW;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Types;
+using System.Collections;
+using System.Drawing;
+using System.IO;
+using System.Net;
+using System.Security;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using System;
 using System.Collections.Generic;
@@ -619,5 +646,503 @@ namespace TiaMcpServer.Siemens.Services
                 if (count != before + (action == "connect" ? 1 : -1)) throw new InvalidOperationException("Native call returned but ConnectedPorts count did not change as expected.");
                 return "Port " + action + " completed and ConnectedPorts count verified. No save/compile/download.";
             });
+
+        // One-shot project topology: every device with its network nodes (IP / subnet / type).
+        public JsonObject GetProjectTopology()
+        {
+            if (_session.IsProjectNull()) return new JsonObject { ["message"] = "No project open." };
+            var devices = new JsonArray();
+            foreach (Device device in _session.CurrentProject!.Devices)
+            {
+                devices.Add(new JsonObject
+                {
+                    ["device"] = device.Name ?? string.Empty,
+                    ["nodes"] = _session.BuildDeviceNodesJson(device)
+                });
+            }
+            return new JsonObject
+            {
+                ["projectName"] = _session.CurrentProject!.Name ?? string.Empty,
+                ["deviceCount"] = devices.Count,
+                ["devices"] = devices,
+                ["note"] = "Devices placed inside device groups are not enumerated here (mirrors Project.Devices)."
+            };
+        }
+
+        public ResponseMessage EnsureSubnet(string anchorDeviceItemPath, string subnetType, string subnetName)
+        {
+            var meta = new JsonObject
+            {
+                ["timestamp"] = DateTime.Now,
+                ["success"] = false,
+                ["anchorDeviceItemPath"] = anchorDeviceItemPath,
+                ["subnetType"] = subnetType,
+                ["subnetName"] = subnetName
+            };
+
+            try
+            {
+                if (_session.IsProjectNull())
+                    return new ResponseMessage { Message = "Project is null", Meta = meta };
+
+                if (!IsSupportedProfinetSubnetType(subnetType))
+                {
+                    meta["error"] = "Only IndustrialEthernet/PROFINET subnet types are supported by this safe primitive.";
+                    return new ResponseMessage { Message = "Unsupported subnet type", Meta = meta };
+                }
+
+                var anchorRoot = _session.GetDeviceItemByPath(anchorDeviceItemPath);
+                if (anchorRoot == null)
+                {
+                    meta["error"] = "Anchor device item not found";
+                    return new ResponseMessage { Message = "Anchor device item not found", Meta = meta };
+                }
+
+                var existing = FindConnectedSubnetByName(subnetName);
+                if (existing != null)
+                {
+                    meta["success"] = true;
+                    meta["created"] = false;
+                    meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                    return new ResponseMessage { Message = "Subnet already exists and was read back", Meta = meta };
+                }
+
+                var node = _session.FindNetworkNodes(anchorRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
+                if (node.Node == null)
+                {
+                    meta["error"] = "No Industrial Ethernet/PROFINET network node found under anchor path.";
+                    meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                    return new ResponseMessage { Message = "No suitable network node found", Meta = meta };
+                }
+
+                object? subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
+                if (subnet == null)
+                {
+                    var create = node.Node.GetType().GetMethod("CreateAndConnectToSubnet", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(string) }, null);
+                    subnet = create?.Invoke(node.Node, new object[] { subnetName });
+                    meta["created"] = subnet != null;
+                }
+                else
+                {
+                    meta["created"] = false;
+                    meta["reusedExistingNodeSubnet"] = _session.TryGetName(subnet) ?? subnet.ToString();
+                }
+
+                meta["selectedNode"] = _session.FormatNodeInfo(node);
+                meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                var ok = subnet != null && SubnetReadbackContains(subnetName);
+                meta["success"] = ok;
+                return new ResponseMessage
+                {
+                    Message = ok ? "Subnet ensured and read back" : "Subnet ensure did not produce readback evidence",
+                    Meta = meta
+                };
+            }
+            catch (Exception ex)
+            {
+                meta["error"] = _session.FormatExceptionDetail(ex);
+                meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                return new ResponseMessage { Message = "Failed ensuring subnet", Meta = meta };
+            }
+        }
+
+        public ResponseMessage AttachDeviceNodeToSubnet(string deviceItemPath, int interfaceIndex, string subnetName, string anchorDeviceItemPath = "")
+        {
+            var meta = new JsonObject
+            {
+                ["timestamp"] = DateTime.Now,
+                ["success"] = false,
+                ["deviceItemPath"] = deviceItemPath,
+                ["interfaceIndex"] = interfaceIndex,
+                ["subnetName"] = subnetName,
+                ["anchorDeviceItemPath"] = anchorDeviceItemPath
+            };
+
+            try
+            {
+                if (_session.IsProjectNull())
+                    return new ResponseMessage { Message = "Project is null", Meta = meta };
+
+                var targetRoot = _session.GetDeviceItemByPath(deviceItemPath);
+                if (targetRoot == null)
+                {
+                    meta["error"] = "Device item not found";
+                    return new ResponseMessage { Message = "Device item not found", Meta = meta };
+                }
+
+                object? subnet = FindConnectedSubnetByName(subnetName);
+                if (subnet == null && !string.IsNullOrWhiteSpace(anchorDeviceItemPath))
+                {
+                    var ensure = EnsureSubnet(anchorDeviceItemPath, "PROFINET", subnetName);
+                    meta["ensureSubnet"] = ensure.Meta?.DeepClone();
+                    subnet = FindConnectedSubnetByName(subnetName);
+                }
+
+                if (subnet == null)
+                {
+                    meta["error"] = "Subnet was not found. Call EnsureSubnet with a valid anchor first or pass anchorDeviceItemPath.";
+                    meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                    return new ResponseMessage { Message = "Subnet not found", Meta = meta };
+                }
+
+                var nodes = _session.FindNetworkNodes(targetRoot)
+                    .Where(n => _session.IsIndustrialEthernetNode(n.Node))
+                    .ToList();
+                meta["candidateNodes"] = _session.ToJsonArray(nodes.Select(_session.FormatNodeInfo));
+                if (interfaceIndex < 0 || interfaceIndex >= nodes.Count)
+                {
+                    meta["error"] = $"interfaceIndex is out of range. Available Industrial Ethernet/PROFINET nodes: {nodes.Count}.";
+                    return new ResponseMessage { Message = "Interface index out of range", Meta = meta };
+                }
+
+                var selected = nodes[interfaceIndex];
+                var connected = TryGetPropertyValue(selected.Node, "ConnectedSubnet");
+                var connectedName = _session.TryGetName(connected);
+                if (!string.Equals(connectedName, subnetName, StringComparison.OrdinalIgnoreCase))
+                {
+                    var connect = selected.Node.GetType().GetMethod("ConnectToSubnet", BindingFlags.Public | BindingFlags.Instance);
+                    connect?.Invoke(selected.Node, new object[] { subnet });
+                }
+
+                meta["selectedNodeBefore"] = _session.FormatNodeInfo(selected);
+                meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                var ok = SubnetReadbackContains(subnetName) && BuildSubnetReadbackLines(subnetName).Any(x => x.IndexOf(deviceItemPath, StringComparison.OrdinalIgnoreCase) >= 0 || x.IndexOf(selected.Item.Name, StringComparison.OrdinalIgnoreCase) >= 0);
+                meta["success"] = ok;
+                return new ResponseMessage
+                {
+                    Message = ok ? "Device network node attached to subnet and read back" : "Device network node attach did not produce readback evidence",
+                    Meta = meta
+                };
+            }
+            catch (Exception ex)
+            {
+                meta["error"] = _session.FormatExceptionDetail(ex);
+                meta["readback"] = BuildSubnetReadbackJson(subnetName);
+                return new ResponseMessage { Message = "Failed attaching device node to subnet", Meta = meta };
+            }
+        }
+
+        public List<string> ProbeHardwareHmiConnectionOwnerCandidates(string plcRootPath, string hmiRootPath, bool deepScan = true)
+        {
+            var lines = new List<string>();
+            if (_session.IsProjectNull())
+            {
+                lines.Add("Project is null");
+                return lines;
+            }
+
+            var plcRoot = _session.GetDeviceItemByPath(plcRootPath);
+            var hmiRoot = _session.GetDeviceItemByPath(hmiRootPath);
+            lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
+            lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
+            if (plcRoot == null || hmiRoot == null) return lines;
+
+            var plcNode = _session.FindNetworkNodes(plcRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
+            var hmiNode = _session.FindNetworkNodes(hmiRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
+            lines.Add("Selected PLC node: " + (plcNode.Node == null ? "<none>" : _session.FormatNodeInfo(plcNode)));
+            lines.Add("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : _session.FormatNodeInfo(hmiNode)));
+            if (plcNode.Node == null || hmiNode.Node == null) return lines;
+
+            var candidates = deepScan
+                ? _session.BuildHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList()
+                : _session.BuildDirectHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList();
+            lines.Add("DeepScan: " + deepScan);
+            lines.Add("Candidate count: " + candidates.Count);
+
+            foreach (var c in candidates)
+            {
+                if (c.Target == null) continue;
+                lines.Add(c.Label
+                    + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name)
+                    + " | name=" + (_session.TryGetName(c.Target) ?? "<unnamed>"));
+            }
+
+            return lines;
+        }
+
+        public List<string> ProbeHardwareHmiConnectionWhitelistedServices(string plcRootPath, string hmiRootPath, bool deepScan = true)
+        {
+            var lines = new List<string>();
+            if (_session.IsProjectNull())
+            {
+                lines.Add("Project is null");
+                return lines;
+            }
+
+            var plcRoot = _session.GetDeviceItemByPath(plcRootPath);
+            var hmiRoot = _session.GetDeviceItemByPath(hmiRootPath);
+            lines.Add("PLC root: " + plcRootPath + " -> " + (plcRoot?.Name ?? "<not found>"));
+            lines.Add("HMI root: " + hmiRootPath + " -> " + (hmiRoot?.Name ?? "<not found>"));
+            if (plcRoot == null || hmiRoot == null) return lines;
+
+            var plcNode = _session.FindNetworkNodes(plcRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
+            var hmiNode = _session.FindNetworkNodes(hmiRoot).FirstOrDefault(n => _session.IsIndustrialEthernetNode(n.Node));
+            lines.Add("Selected PLC node: " + (plcNode.Node == null ? "<none>" : _session.FormatNodeInfo(plcNode)));
+            lines.Add("Selected HMI node: " + (hmiNode.Node == null ? "<none>" : _session.FormatNodeInfo(hmiNode)));
+            if (plcNode.Node == null || hmiNode.Node == null) return lines;
+
+            var candidates = deepScan
+                ? _session.BuildHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList()
+                : _session.BuildDirectHardwareHmiConnectionCandidates(plcNode, hmiNode).ToList();
+
+#if TIA_V20
+            var commConnT = Type.GetType("Siemens.Engineering.HW.CommunicationConnections.ConnectionComposition, Siemens.Engineering");
+            var serviceTypes = commConnT != null
+                ? new[] { commConnT, typeof(NetworkInterface), typeof(NetworkPort) }
+                : new[] { typeof(NetworkInterface), typeof(NetworkPort) };
+#else
+            var serviceTypes = new[]
+            {
+                typeof(global::Siemens.Engineering.HW.CommunicationConnections.ConnectionComposition),
+                typeof(NetworkInterface),
+                typeof(NetworkPort)
+            };
+#endif
+
+            lines.Add("DeepScan: " + deepScan);
+            lines.Add("Candidate count: " + candidates.Count);
+            lines.Add("Service whitelist: " + string.Join(", ", serviceTypes.Select(t => t.FullName)));
+
+            foreach (var c in candidates)
+            {
+                if (c.Target == null) continue;
+                if (!IsSafeHardwareHmiServiceProbeTarget(c.Target))
+                {
+                    lines.Add("Candidate: " + c.Label + " | type=" + c.Target.GetType().FullName + " | SKIP unsafe/high-level target");
+                    continue;
+                }
+
+                lines.Add("Candidate: " + c.Label + " | type=" + (c.Target.GetType().FullName ?? c.Target.GetType().Name) + " | name=" + (_session.TryGetName(c.Target) ?? "<unnamed>"));
+                foreach (var serviceType in serviceTypes)
+                {
+                    object? service = null;
+                    try
+                    {
+                        service = _session.TryGetService(c.Target, serviceType);
+                    }
+                    catch (Exception ex)
+                    {
+                        lines.Add("  " + serviceType.Name + ": ERROR " + _session.FormatExceptionDetail(ex));
+                        continue;
+                    }
+
+                    if (service == null)
+                    {
+                        lines.Add("  " + serviceType.Name + ": <none>");
+                        continue;
+                    }
+
+                    lines.Add("  " + serviceType.Name + ": " + service.GetType().FullName + " | " + SummarizeWhitelistedService(service));
+                }
+            }
+
+            return lines;
+        }
+
+        private static bool IsSafeHardwareHmiServiceProbeTarget(object target)
+        {
+            var typeName = target.GetType().FullName ?? target.GetType().Name;
+            if (typeName.Contains("Project", StringComparison.OrdinalIgnoreCase)) return false;
+            if (typeName.Contains("Composition", StringComparison.OrdinalIgnoreCase)) return false;
+            if (typeName.Contains("DeviceComposition", StringComparison.OrdinalIgnoreCase)) return false;
+            return typeName.Contains("DeviceItem", StringComparison.OrdinalIgnoreCase)
+                   || typeName.Contains("Node", StringComparison.OrdinalIgnoreCase)
+                   || typeName.Contains("NetworkInterface", StringComparison.OrdinalIgnoreCase)
+                   || typeName.Contains("NetworkPort", StringComparison.OrdinalIgnoreCase)
+                   || typeName.Contains("HardwareComponent", StringComparison.OrdinalIgnoreCase)
+                   || typeName.Contains("Device", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string SummarizeWhitelistedService(object service)
+        {
+            var parts = new List<string>();
+            try
+            {
+                var count = TryGetPropertyValue(service, "Count");
+                if (count != null) parts.Add("Count=" + count);
+            }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
+
+            try
+            {
+                var nodes = TryGetPropertyValue(service, "Nodes") as IEnumerable;
+                if (nodes != null && nodes is not string)
+                {
+                    var nodeInfos = new List<string>();
+                    foreach (var node in nodes)
+                    {
+                        if (node == null) continue;
+                        nodeInfos.Add((_session.TryGetName(node) ?? "<unnamed>") + ":" + (TryGetPropertyValue(node, "NodeType")?.ToString() ?? "") + ":" + (_session.TryGetName(TryGetPropertyValue(node, "ConnectedSubnet")) ?? "<none>"));
+                    }
+                    parts.Add("Nodes=[" + string.Join(", ", nodeInfos) + "]");
+                }
+            }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
+
+            try
+            {
+                var createMethods = service.GetType()
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(m => string.Equals(m.Name, "Create", StringComparison.OrdinalIgnoreCase))
+                    .Select(m => m.ToString())
+                    .Take(8)
+                    .ToList();
+                if (createMethods.Count > 0) parts.Add("CreateMethods=[" + string.Join(" | ", createMethods) + "]");
+            }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
+
+            try
+            {
+                var methods = service.GetType()
+                    .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(m =>
+                    {
+                        var n = m.Name ?? "";
+                        return n.IndexOf("Connect", StringComparison.OrdinalIgnoreCase) >= 0
+                               || n.IndexOf("Disconnect", StringComparison.OrdinalIgnoreCase) >= 0
+                               || n.IndexOf("Subnet", StringComparison.OrdinalIgnoreCase) >= 0;
+                    })
+                    .Select(m => m.ToString())
+                    .Take(8)
+                    .ToList();
+                if (methods.Count > 0) parts.Add("NetworkMethods=[" + string.Join(" | ", methods) + "]");
+            }
+            catch { /* swallow(probe-optional): An unavailable optional service summary field must not discard the other probe evidence. */ }
+
+            return parts.Count == 0 ? "<no summary>" : string.Join("; ", parts);
+        }
+
+        private static bool IsSupportedProfinetSubnetType(string subnetType)
+        {
+            var value = (subnetType ?? string.Empty).Trim();
+            return value.Length == 0
+                   || value.Equals("PROFINET", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("PN", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("IndustrialEthernet", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("Industrial Ethernet", StringComparison.OrdinalIgnoreCase)
+                   || value.Equals("PN/IE", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private object? FindConnectedSubnetByName(string subnetName)
+        {
+            if (_session.CurrentProject == null || string.IsNullOrWhiteSpace(subnetName))
+                return null;
+
+            foreach (var device in _session.CurrentProject.Devices)
+            {
+                foreach (var root in device.DeviceItems)
+                {
+                    foreach (var node in _session.FindNetworkNodes(root))
+                    {
+                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
+                        if (subnet == null) continue;
+
+                        var name = _session.TryGetName(subnet) ?? subnet.ToString() ?? string.Empty;
+                        if (string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
+                            return subnet;
+                    }
+                }
+            }
+
+            foreach (var group in _session.CurrentProject.DeviceGroups)
+            {
+                foreach (var subnet in FindConnectedSubnetByNameInGroup(group, subnetName))
+                    return subnet;
+            }
+
+            return null;
+        }
+
+        private IEnumerable<object> FindConnectedSubnetByNameInGroup(DeviceUserGroup group, string subnetName)
+        {
+            foreach (var device in group.Devices)
+            {
+                foreach (var root in device.DeviceItems)
+                {
+                    foreach (var node in _session.FindNetworkNodes(root))
+                    {
+                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
+                        if (subnet == null) continue;
+
+                        var name = _session.TryGetName(subnet) ?? subnet.ToString() ?? string.Empty;
+                        if (string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
+                            yield return subnet;
+                    }
+                }
+            }
+
+            foreach (var child in group.Groups)
+            {
+                foreach (var subnet in FindConnectedSubnetByNameInGroup(child, subnetName))
+                    yield return subnet;
+            }
+        }
+
+        private JsonArray BuildSubnetReadbackJson(string subnetName)
+        {
+            var arr = new JsonArray();
+            foreach (var line in BuildSubnetReadbackLines(subnetName))
+                arr.Add(line);
+            return arr;
+        }
+
+        private List<string> BuildSubnetReadbackLines(string subnetName)
+        {
+            var lines = new List<string>();
+            if (_session.CurrentProject == null) return lines;
+
+            void AddFromDevice(Device device)
+            {
+                foreach (var root in device.DeviceItems)
+                {
+                    foreach (var node in _session.FindNetworkNodes(root))
+                    {
+                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
+                        var name = _session.TryGetName(subnet) ?? subnet?.ToString() ?? "<none>";
+                        if (string.IsNullOrWhiteSpace(subnetName) || string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
+                            lines.Add(_session.FormatNodeInfo(node));
+                    }
+                }
+            }
+
+            foreach (var device in _session.CurrentProject.Devices)
+                AddFromDevice(device);
+            foreach (var group in _session.CurrentProject.DeviceGroups)
+                AddSubnetReadbackLinesFromGroup(group, subnetName, lines);
+
+            return lines;
+        }
+
+        private void AddSubnetReadbackLinesFromGroup(DeviceUserGroup group, string subnetName, List<string> lines)
+        {
+            foreach (var device in group.Devices)
+            {
+                foreach (var root in device.DeviceItems)
+                {
+                    foreach (var node in _session.FindNetworkNodes(root))
+                    {
+                        var subnet = TryGetPropertyValue(node.Node, "ConnectedSubnet");
+                        var name = _session.TryGetName(subnet) ?? subnet?.ToString() ?? "<none>";
+                        if (string.IsNullOrWhiteSpace(subnetName) || string.Equals(name, subnetName, StringComparison.OrdinalIgnoreCase))
+                            lines.Add(_session.FormatNodeInfo(node));
+                    }
+                }
+            }
+
+            foreach (var child in group.Groups)
+                AddSubnetReadbackLinesFromGroup(child, subnetName, lines);
+        }
+
+        private bool SubnetReadbackContains(string subnetName)
+        {
+            return BuildSubnetReadbackLines(subnetName)
+                .Any(x => x.IndexOf("connectedSubnet=" + subnetName, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        public List<ModelContextProtocol.NetworkAttribute>? GetDeviceItemNetworkInfo(string deviceItemPath)
+            => _session.GetDeviceItemNetworkInfo(deviceItemPath);
+
+        public string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName)
+            => _session.ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
     }
 }

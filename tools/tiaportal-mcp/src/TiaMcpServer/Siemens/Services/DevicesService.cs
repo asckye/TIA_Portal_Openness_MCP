@@ -979,5 +979,105 @@ namespace TiaMcpServer.Siemens.Services
         public string[] GetPlcSoftwareNamesForDesktop() => _session.GetPlcSoftwareNamesForDesktop();
         public ResponseMessage ValidateAutomationContext(string expectedPlcSoftwarePath = "PLC_1", string expectedHmiSoftwarePath = "HMI_RT_1")
             => _session.ValidateAutomationContext(expectedPlcSoftwarePath, expectedHmiSoftwarePath);
+
+        // Read-only inventory of every Openness attribute exposed on a device's DeviceItems (CPU, modules,
+        // interfaces, ports...). For each attribute: name, access mode (read-only vs read/write), current value,
+        // value type. Use this ONCE to learn what a given CPU/firmware actually exposes, then drive subsequent
+        // hardware reads/writes from that ground truth instead of guessing attribute names.
+        // NOTE: GetAttributeInfos() does not enumerate EVERY gettable attribute on all CPUs (e.g. the PUT/GET
+        // flag on some S7-1200), so absence here is "not enumerated", not a hard guarantee of "no interface".
+        public JsonObject DumpDeviceAttributes(string devicePath, string? nameFilter = null, int maxItems = 500)
+        {
+            if (_session.IsProjectNull()) return new JsonObject { ["found"] = false, ["message"] = "No project open." };
+            var device = _session.GetDevice(devicePath);
+            if (device == null) return new JsonObject { ["found"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
+
+            // Match alternatives separated by '|' or ',' independently instead of treating them as one substring.
+            var filters = (nameFilter ?? string.Empty).Split(new[] { '|', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(_session.NormalizeAttrName).Where(f => f.Length > 0).ToArray();
+            var hasFilter = filters.Length > 0;
+
+            var itemsArr = new JsonArray();
+            int itemCount = 0;
+            int totalAttrs = 0, writableAttrs = 0;
+
+            foreach (var root in device.DeviceItems)
+            {
+                foreach (var tup in _session.TraverseDeviceItems(root, root.Name))
+                {
+                    if (itemCount >= maxItems) break;
+                    var it = tup.Item1;
+
+                    System.Collections.Generic.IList<EngineeringAttributeInfo>? infos = null;
+                    try { infos = it.GetAttributeInfos(); } catch { /* swallow(probe-optional): Unavailable attributes retain the existing skipped item or read-error evidence in the inventory. */ }
+                    if (infos == null || infos.Count == 0) continue;
+
+                    var attrsArr = new JsonArray();
+                    foreach (var info in infos)
+                    {
+                        var name = info?.Name ?? string.Empty;
+                        if (string.IsNullOrEmpty(name)) continue;
+                        if (hasFilter && !filters.Any(f => _session.NormalizeAttrName(name).Contains(f))) continue;
+
+                        var access = TryGetAttributeInfoAccess(info!);
+                        object? val = null; bool readErr = false;
+                        try { val = it.GetAttribute(name); } catch { /* swallow(probe-optional): Unavailable attributes retain the existing skipped item or read-error evidence in the inventory. */ readErr = true; }
+
+                        var isWritable = access?.IndexOf("write", StringComparison.OrdinalIgnoreCase) >= 0
+                                         || access?.IndexOf("readwrite", StringComparison.OrdinalIgnoreCase) >= 0;
+                        if (isWritable) writableAttrs++;
+                        totalAttrs++;
+
+                        attrsArr.Add(new JsonObject
+                        {
+                            ["name"] = name,
+                            ["access"] = access ?? string.Empty,
+                            ["value"] = val?.ToString() ?? (readErr ? "<read-error>" : string.Empty),
+                            ["valueType"] = val?.GetType().Name ?? string.Empty
+                        });
+                    }
+
+                    if (attrsArr.Count == 0) continue;
+                    itemsArr.Add(new JsonObject
+                    {
+                        ["item"] = it.Name,
+                        ["path"] = tup.Item2,
+                        ["attributeCount"] = attrsArr.Count,
+                        ["attributes"] = attrsArr
+                    });
+                    itemCount++;
+                }
+            }
+
+            return new JsonObject
+            {
+                ["found"] = true,
+                ["device"] = device.Name,
+                ["nameFilter"] = nameFilter ?? string.Empty,
+                ["itemCount"] = itemsArr.Count,
+                ["totalAttributes"] = totalAttrs,
+                ["writableAttributes"] = writableAttrs,
+                ["items"] = itemsArr
+            };
+        }
+
+        // EngineeringAttributeInfo exposes its access mode under SDK-version-dependent property names;
+        // reflect defensively so we don't hard-depend on one.
+        private static string? TryGetAttributeInfoAccess(object info)
+        {
+            foreach (var pn in new[] { "AccessMode", "Access", "ReadOnly", "IsReadOnly" })
+            {
+                try
+                {
+                    var p = info.GetType().GetProperty(pn);
+                    if (p != null)
+                    {
+                        var v = p.GetValue(info);
+                        if (v != null) return pn + "=" + v;
+                    }
+                }
+                catch { /* swallow(probe-optional): Access metadata varies by SDK; continue with the next supported property name. */ }
+            }
+            return null;
+        }
     }
 }

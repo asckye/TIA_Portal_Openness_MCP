@@ -19,7 +19,7 @@ internal static class DomainShapeChecks
             (Name: "OptionalEngineering", Count: 2), (Name: "SpecializedExchange", Count: 1),
             (Name: "SoftwareUnitDeep", Count: 7),
             (Name: "Dcc", Count: 8), (Name: "Teamcenter", Count: 3), (Name: "Startdrive", Count: 11),
-            (Name: "Library", Count: 12), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
+            (Name: "Library", Count: 18), (Name: "VersionControl", Count: 5), (Name: "Sivarc", Count: 9), (Name: "OnlineDownload", Count: 12)
         };
         foreach (var domain in domains)
         {
@@ -33,6 +33,18 @@ internal static class DomainShapeChecks
             foreach (var tool in methods)
             {
                 var name = tool.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
+                if (domain.Name == "Library" && new[] { "AnalyzeGlobalLibraryPackage", "PlanGlobalLibraryTemplateReuse",
+                    "AnalyzeHmiTemplateReference", "AnalyzeUnifiedHmiTemplateLayout" }.Contains(name))
+                {
+                    var instance = surface.Target(tool);
+                    check(!tool.IsStatic && surface.Tool(name) == tool && ReferenceEquals(instance, surface.Target(tool)),
+                        "Offline library tool keeps its registered singleton: " + name);
+                    check(ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(instance), provider.GetService(service)),
+                        "Offline library tool shares the existing library service: " + name);
+                    check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
+                        name + " needs no static CLI forwarder");
+                    continue;
+                }
                 // Tool and service signatures may differ (casts in the tool); parameter types only separate overloads.
                 MethodInfo method;
                 try { method = surface.Method(name); }
@@ -49,8 +61,12 @@ internal static class DomainShapeChecks
                 bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                     (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
                 EngineSurface.CheckIl(check, callsService, domain.Name + " tool calls service: " + name, tool, method);
-                check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
-                    name + " needs no static CLI forwarder");
+                var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
+                bool needsForwarder = name == "ProbeGlobalLibrary" || name == "ImportMasterCopyFromGlobalLibrary";
+                check(needsForwarder ? forwarder != null && forwarder.IsStatic && !forwarder.GetCustomAttributes().Any()
+                    && forwarder.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))
+                        .SequenceEqual(tool.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))) : forwarder == null,
+                    name + " retains only its required attribute-less CLI forwarder");
             }
         }
         foreach (var name in new[] { "ResolveSoftwareContainerUncached", "RequireHardwareUtility", "ExactSiVArcRoot",

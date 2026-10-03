@@ -215,5 +215,20 @@ namespace TiaMcpServer.Siemens
         ResponseMessage IEngineeringSession.RetrieveProjectArchive(string archivePath, string destinationDirectory, bool upgrade, bool dryRun) => RetrieveProjectArchive(archivePath, destinationDirectory, upgrade, dryRun);
         ResponseMessage IEngineeringSession.ExportProjectTexts(string filePath, string sourceCulture, string targetCulture, bool dryRun) => ExportProjectTexts(filePath, sourceCulture, targetCulture, dryRun);
         ResponseMessage IEngineeringSession.ImportProjectTexts(string filePath, bool updateSourceLanguage, bool dryRun) => ImportProjectTexts(filePath, updateSourceLanguage, dryRun);
+        List<ModelContextProtocol.NetworkAttribute>? IEngineeringSession.GetDeviceItemNetworkInfo(string deviceItemPath) => GetDeviceItemNetworkInfo(deviceItemPath);
+        string IEngineeringSession.ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName) => ProbeConnectDeviceNodesToSubnet(plcRootPath, hmiRootPath, subnetName);
+        JsonArray IEngineeringSession.BuildDeviceNodesJson(Device device) => BuildDeviceNodesJson(device);
+        string IEngineeringSession.NormalizeAttrName(string? n) => NormalizeAttrName(n);
+        IEnumerable<(DeviceItem Item, string Path)> IEngineeringSession.TraverseDeviceItems(DeviceItem root, string path) => TraverseDeviceItems(root, path);
+        IEnumerable<Portal.NetworkNodeInfo> IEngineeringSession.FindNetworkNodes(DeviceItem root) => FindNetworkNodes(root);
+        bool IEngineeringSession.IsIndustrialEthernetNode(object? node) => IsIndustrialEthernetNode(node);
+        string IEngineeringSession.FormatNodeInfo(Portal.NetworkNodeInfo info) => FormatNodeInfo(info);
+        IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> IEngineeringSession.BuildHardwareHmiConnectionCandidates(Portal.NetworkNodeInfo plcNode, Portal.NetworkNodeInfo hmiNode) => BuildHardwareHmiConnectionCandidates(plcNode, hmiNode);
+        IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> IEngineeringSession.BuildDirectHardwareHmiConnectionCandidates(Portal.NetworkNodeInfo plcNode, Portal.NetworkNodeInfo hmiNode) => BuildDirectHardwareHmiConnectionCandidates(plcNode, hmiNode);
+        IEnumerable<string> IEngineeringSession.TryReadInterestingAttributes(object target) => TryReadInterestingAttributes(target);
+        JsonObject IEngineeringSession.GetPutGetAccess(string devicePath) => GetPutGetAccess(devicePath);
+        (DeviceItem? item, string? attrName) IEngineeringSession.FindPutGetAttribute(Device device) => FindPutGetAttribute(device);
+        bool IEngineeringSession.AttrValueIsEnabled(object? value) => AttrValueIsEnabled(value);
+        object? IEngineeringSession.FindExistingByName(object compositionOrEnumerable, string name) => FindExistingByName(compositionOrEnumerable, name);
     }
 }

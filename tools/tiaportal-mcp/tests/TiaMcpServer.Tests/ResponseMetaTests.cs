@@ -102,7 +102,7 @@ namespace TiaMcpServer.Tests
             var batch = ResponseMeta.LegacyBatch();
             Compare("LegacyBatch", new JsonObject { ["success"] = false, ["timestamp"] = ResponseClock.UtcNow }, batch, check);
             check(batch["timestamp"]!.GetValue<DateTime>().Kind == DateTimeKind.Utc && batch.First().Key == "success", "batch preserves UTC DateTime and success-first order");
-            // TiaMcpServer/Siemens/Portal/Portal.Software.LibrarySeed.cs:48.
+            // TiaMcpServer/Siemens/Services/LibraryService.cs: ProbeGlobalLibrary.
             string libraryPath = "C:/中文/library.al21";
             var roundTrip = ResponseMeta.RoundTripStamp();
             roundTrip["inputPath"] = libraryPath;

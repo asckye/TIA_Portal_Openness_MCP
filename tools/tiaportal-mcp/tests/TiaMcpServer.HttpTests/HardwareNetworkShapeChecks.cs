@@ -143,9 +143,15 @@ internal static class HardwareNetworkShapeChecks
 
         CheckDomain(server, check, "HardwareNetwork", new[] { "ReadIoSystems", "ManageIoSystem", "ReadNetworkDomains",
             "ManageNetworkDomain", "ReadTransferAreas", "ManageTransferArea", "ReadDeviceItemChannels",
-            "UpdateDeviceItemChannel", "ManageDeviceUserGroup", "ManageDeviceUsers", "ManagePortInterconnection" });
+            "UpdateDeviceItemChannel", "ManageDeviceUserGroup", "ManageDeviceUsers", "ManagePortInterconnection",
+            "GetDeviceItemNetworkInfo", "ConnectDeviceNodesToProfinetSubnet", "PlanHardwareNetworkConfiguration",
+            "EnsureSubnet", "AttachDeviceNodeToSubnet", "ProbeHardwareHmiConnectionOwnerCandidates",
+            "ProbeHardwareHmiConnectionWhitelistedServices", "GetProjectTopology" });
         CheckDomain(server, check, "HardwareServices", new[] { "ReadCommunicationConnections", "ManageCommunicationConnection",
-            "ManageWatchForceTableWebAccess", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects" });
+            "ManageWatchForceTableWebAccess", "ExchangeSystemDiagnosticsSettings", "ReadHardwareFeatures", "ManageDeviceServiceObjects",
+            "ManagePlcProtection", "CompileDevice", "GetPutGetAccess", "SetPutGetAccess", "ManageHardwareUtilities" });
+        CheckDomain(server, check, "Addresses", new[] { "ReadDeviceAddressing", "UpdateDeviceAddress", "GetDeviceIpAddress" });
+        CheckDomain(server, check, "Devices", new[] { "DumpDeviceAttributes" });
     }
 
     private static void CheckDomain(Assembly server, Action<bool,string> check, string domain, string[] names)
@@ -163,21 +169,34 @@ internal static class HardwareNetworkShapeChecks
                 type.FullName + " is a non-disposable singleton class");
         foreach (var name in names)
         {
-            var method = surface.Method(name);
+            if (name == "PlanHardwareNetworkConfiguration")
+            {
+                var offline = surface.Tool(name);
+                check(offline.DeclaringType == tools && !offline.IsStatic && ReferenceEquals(surface.Target(offline), provider.GetService(tools)),
+                    "Offline hardware plan uses the hardware-network tool singleton");
+                continue;
+            }
+            var method = name == "GetDeviceItemNetworkInfo" || name == "GetPutGetAccess" || name == "ConnectDeviceNodesToProfinetSubnet"
+                ? service.GetMethod(name == "ConnectDeviceNodesToProfinetSubnet" ? "ProbeConnectDeviceNodesToSubnet" : name, all)!
+                : surface.Method(name);
             var tool = surface.Tool(name);
             var target = surface.Target(method);
             check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
                 && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
                 domain + " resolves the service and tool singletons: " + name);
             check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
-                && ReferenceEquals(tools.GetField("_hardware", all)!.GetValue(surface.Target(tool)), target),
+                && ReferenceEquals(tools.GetFields(all).Single(field => field.FieldType == service).GetValue(surface.Target(tool)), target),
                 domain + " tool uses the service with the shared session: " + name);
             var il = tool.GetMethodBody()!.GetILAsByteArray()!;
             bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
                 (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
             EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
-            check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
-                domain + " tool needs no static CLI forwarder: " + name);
+            var forwarder = server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all);
+            bool needsForwarder = name == "ProbeHardwareHmiConnectionOwnerCandidates" || name == "ProbeHardwareHmiConnectionWhitelistedServices";
+            check(needsForwarder ? forwarder != null && forwarder.IsStatic && !forwarder.GetCustomAttributes().Any()
+                && forwarder.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))
+                    .SequenceEqual(tool.GetParameters().Select(p => (p.Name, p.ParameterType, p.DefaultValue))) : forwarder == null,
+                domain + " tool retains only its required attribute-less CLI forwarder: " + name);
         }
     }
 }

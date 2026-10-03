@@ -117,82 +117,12 @@ namespace TiaMcpServer.Siemens
             ["controllers"] = new JsonArray(EngineeringGroupOperations.Items(address.AddressControllers).Select(c => (JsonNode)HardwareOwnerPath(c)).ToArray()),
             ["attributes"] = DynamicAttributes(address, HardwareNetworkLogic.AddressAttributes)
         };
-        private static JsonObject HwIdentifierRow(HwIdentifier id) => new JsonObject
-        {
-            ["identifier"] = id.Identifier,
-            ["controllers"] = new JsonArray(EngineeringGroupOperations.Items(id.HwIdentifierControllers).Select(c => (JsonNode)HardwareOwnerPath(c)).ToArray())
-        };
+
 
         // ---- channels ----------------------------------------------------------------------------------------------------
         private static Channel ExactChannel(DeviceItem item, string channelType, string channelIoType, int channelNumber)
             => item.Channels.Find((ChannelType)Enum.Parse(typeof(ChannelType), channelType), (ChannelIoType)Enum.Parse(typeof(ChannelIoType), channelIoType), channelNumber)
                ?? throw new PortalException(PortalErrorCode.NotFound, "Channel not found: " + channelType + "/" + channelIoType + "/" + channelNumber);
 
-        // ---- addressing -------------------------------------------------------------------------------------------------
-        public ResponseMessage ReadDeviceAddressing(string devicePathJson, string itemPathJson = "[]", int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadDeviceAddressing", meta => {
-                HardwareServicesLogic.ValidatePagination(offset, limit);
-                var owner = ExactEngineeringHardware(devicePathJson, itemPathJson);
-                meta["ownerPath"] = HardwareOwnerPath(owner); meta["ownerType"] = owner.GetType().Name;
-                meta["hwIdentifiers"] = new JsonArray(EngineeringGroupOperations.Items(owner.HwIdentifiers).Cast<HwIdentifier>().Select(h => (JsonNode)HwIdentifierRow(h)).ToArray());
-                var rows = new List<JsonNode>();
-                if (owner is DeviceItem item)
-                {
-                    rows.AddRange(EngineeringGroupOperations.Items(item.Addresses).Cast<Address>().Select(a => (JsonNode)AddressRow(a)));
-                    var addressController = ServiceProvider(item).GetService<AddressController>(); var hwController = ServiceProvider(item).GetService<HwIdentifierController>();
-                    meta["isAddressController"] = addressController != null; meta["isHwIdentifierController"] = hwController != null;
-                    if (addressController != null)
-                        meta["registeredAddresses"] = new JsonArray(EngineeringGroupOperations.Items(addressController.RegisteredAddresses).Cast<Address>()
-                            .Select(a => { var r = AddressRow(a); r["ownerPath"] = HardwareOwnerPath(a); return (JsonNode)r; }).ToArray());
-                    if (hwController != null)
-                        meta["registeredHwIdentifiers"] = new JsonArray(EngineeringGroupOperations.Items(hwController.RegisteredHwIdentifiers).Cast<HwIdentifier>()
-                            .Select(h => { var r = HwIdentifierRow(h); r["ownerPath"] = HardwareOwnerPath(h); return (JsonNode)r; }).ToArray());
-                }
-                Page(rows.ToArray(), offset, limit, meta);
-                meta["apiCallSuccess"] = true; meta["dataComplete"] = false;
-                meta["scope"] = "Address StartAddress/Length/IoType, controller owner paths and official dynamic attributes; HwIdentifiers; AddressController/HwIdentifierController registrations when the item is a controller.";
-                return "Addressing of the hardware object read; no modification.";
-            });
-        public ResponseMessage UpdateDeviceAddress(string devicePathJson, string itemPathJson, string ioType, int startAddress, string propertiesJson = "{}", string attributesJson = "{}",
-            string softwarePath = "", string processImageObName = "", bool dryRun = true)
-            => RunHmiStepTool("UpdateDeviceAddress", meta => {
-                HardwareNetworkLogic.RequireOneOf(ioType, HardwareNetworkLogic.AddressIoTypes, "ioType");
-                if (startAddress < 0) throw new ArgumentException("startAddress identifies the existing address (>= 0).");
-                using var access = dryRun ? null : AcquireHmiEditAccess();
-                var item = RequireDeviceItem(ExactEngineeringHardware(devicePathJson, itemPathJson), "itemPathJson");
-                var wanted = (AddressIoType)Enum.Parse(typeof(AddressIoType), ioType);
-                var matches = EngineeringGroupOperations.Items(item.Addresses).Cast<Address>().Where(a => a.IoType == wanted && a.StartAddress == startAddress).Take(2).ToArray();
-                if (matches.Length != 1) throw new PortalException(PortalErrorCode.NotFound, matches.Length == 0 ? "No address with that IoType/StartAddress on the item." : "Ambiguous address identity.");
-                var address = matches[0];
-                meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["ownerPath"] = HardwareOwnerPath(item); meta["before"] = AddressRow(address);
-                meta["restrictions"] = "Changing StartAddress may move the opposite IoType of the same module and never rewires tags; packed addresses are unsupported.";
-                // Resolve (and on V21 refuse) the OB assignment before any property is written, so a refusal never leaves a partial edit.
-#if TIA_V20
-                OB? ob = null;
-                if (!string.IsNullOrEmpty(processImageObName))
-                {
-                    ob = GetBlock(HardwareNetworkLogic.RequireExactName(softwarePath, "softwarePath"), processImageObName) as OB ?? throw new PortalException(PortalErrorCode.NotFound, "OB not found in the PLC software: " + processImageObName);
-                    meta["processImageOb"] = ob.Name;
-                }
-#else
-                // V21 moved the assignment from Address to the ProcessImageProvider service of the address.
-                OB? ob = null; global::Siemens.Engineering.SW.ProcessImageProvider? processImage = null;
-                if (!string.IsNullOrEmpty(processImageObName))
-                {
-                    ob = GetBlock(HardwareNetworkLogic.RequireExactName(softwarePath, "softwarePath"), processImageObName) as OB ?? throw new PortalException(PortalErrorCode.NotFound, "OB not found in the PLC software: " + processImageObName);
-                    processImage = address.GetService<global::Siemens.Engineering.SW.ProcessImageProvider>() ?? throw new NotSupportedException("ProcessImageProvider unavailable on this address (V21 service replacing Address.AssignProcessImageToOrganizationBlock).");
-                    meta["processImageOb"] = ob.Name; meta["processImageAccess"] = "ProcessImageProvider.AssignProcessImageToOrganizationBlock";
-                }
-#endif
-                ApplyScalarsAndAttributes(address, propertiesJson, attributesJson, meta, !dryRun);
-#if TIA_V20
-                if (ob != null && !dryRun) { meta["mayHaveChanged"] = true; address.AssignProcessImageToOrganizationBlock(ob); meta["processImageAssigned"] = true; }
-#else
-                if (ob != null && !dryRun) { meta["mayHaveChanged"] = true; processImage!.AssignProcessImageToOrganizationBlock(ob); meta["processImageAssigned"] = true; }
-#endif
-                if (dryRun) return "Address update preview; nothing changed.";
-                meta["after"] = AddressRow(address);
-                return "Address properties/attributes written and read back. No save/compile/download.";
-            });
     }
 }

@@ -111,5 +111,30 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("unitKind: which unit collection unitName refers to - unit | safety.")] string unitKind="unit",
             bool dryRun=true)
             => _motionProDiagClassicHmi.ExportPlcProDiagInfo(softwarePath,blockPath,directoryPath,unitName,unitKind,dryRun);
+
+        [McpServerTool(Name="ExchangeMotionCamData"), Description("[L2][PLC-TechnologyObjects][WRITE] Native cam text/binary/point-list export and text/binary import. Explicit native format/separator, new output file, default preview. Import requires Offline. No drive/motion command.")]
+        public ResponseMessage ExchangeMotionCamData(
+            string softwarePath,
+            string objectPath,
+            [Description("export | import | exportBinary | importBinary | exportPoints. Text, native binary or point-list exchange.")] string action,
+            string filePath,
+            [Description("MCD | Scout | PointList. Native CamDataFormat for text export.")] string format="",
+            [Description("Comma | Tab. Native CamDataFormatSeparator name for text import/export and point lists; do not pass a literal separator character.")] string separator="",
+            [Description("pointCount: number of points to export.")] int pointCount=0,
+            bool dryRun=true)
+            => _motionProDiagClassicHmi.ExchangeMotionCamData(softwarePath,objectPath,action,filePath,format,separator,pointCount,dryRun);
+
+        [McpServerTool(Name="ConfigureMotionHardwareConnection"), Description("[L2][PLC-TechnologyObjects][WRITE] Offline axis actor/sensor/torque hardware mapping read/connect/disconnect. Addresses are BIT addresses. Explicit sensor index; default preview. Native readback, no live drive or motion command.")]
+        public ResponseMessage ConfigureMotionHardwareConnection(
+            string softwarePath,
+            string objectPath,
+            [Description("interfaceKind: actor | sensor | torque.")] string interfaceKind,
+            [Description("action: the operation to perform - read | connect | disconnect.")] string action,
+            [Description("Nonnegative integer input BIT address; e.g. byte 10 bit 0 is 80.")] int inputBitAddress=0,
+            [Description("Nonnegative integer output BIT address; e.g. byte 10 bit 0 is 80.")] int outputBitAddress=0,
+            [Description("connectOption: connect option name (Default or AllowAllModules).")] string connectOption="Default",
+            int sensorIndex=0,
+            bool dryRun=true)
+            => _motionProDiagClassicHmi.ConfigureMotionHardwareConnection(softwarePath,objectPath,interfaceKind,action,inputBitAddress,outputBitAddress,connectOption,sensorIndex,dryRun);
     }
 }

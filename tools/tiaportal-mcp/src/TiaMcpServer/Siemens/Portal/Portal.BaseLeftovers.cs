@@ -108,49 +108,6 @@ namespace TiaMcpServer.Siemens
             return utility;
         }
 
-        public ResponseMessage ManageHardwareUtilities(string action = "list", string typeIdentifier = "", string devicePathJson = "[]", string itemPathJson = "[]", string filePath = "", string password = "", bool dryRun = true)
-            => RunHmiStepTool("ManageHardwareUtilities", meta => {
-                BaseLeftoversLogic.ValidateHardwareUtilityRequest(action, typeIdentifier, devicePathJson, filePath, password, dryRun);
-                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                if (action == "list")
-                {
-                    meta["records"] = new JsonArray(EngineeringGroupOperations.Items(_project!.HwUtilities).Cast<HardwareUtility>().Select(u => (JsonNode)new JsonObject { ["identifier"] = u.Identifier, ["utilityClass"] = u.GetType().Name }).ToArray());
-                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "Hardware utilities listed (Project.HwUtilities); no modification.";
-                }
-                if (action == "findModuleTypes" || action == "findContainerTypes" || action == "normalizeTypeIdentifier")
-                {
-                    ModuleInformationProvider provider = RequireHardwareUtility<ModuleInformationProvider>(BaseLeftoversLogic.ModuleInformationProviderId);
-                    meta["typeIdentifier"] = typeIdentifier;
-                    switch (action)
-                    {
-                        case "findModuleTypes": meta["moduleTypes"] = new JsonArray(provider.FindModuleTypes(typeIdentifier).Select(x => (JsonNode)x).ToArray()); break;
-                        case "findContainerTypes": meta["containerTypes"] = new JsonArray(provider.FindContainerTypes(typeIdentifier).Select(x => (JsonNode)x).ToArray()); break;
-                        default: meta["normalizedTypeIdentifier"] = provider.GetTypeIdentifierNormalized(typeIdentifier); break;
-                    }
-                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "ModuleInformationProvider." + action + " answered; no modification.";
-                }
-                var file = new FileInfo(filePath); if (file.Exists) throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
-                var owner = ExactEngineeringHardware(devicePathJson, itemPathJson); meta["ownerPath"] = HardwareOwnerPath(owner); meta["filePath"] = file.FullName;
-                if (dryRun) return action + " preview; nothing written (" + (action == "exportOpcUa" ? "OpcUaExportProvider.Export(DeviceItem, FileInfo) writes the PLC data as OPC UA XML" : "CardReaderPscProvider.Export(Device, FileInfo[, SecureString]) creates a .psc card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+") + ").";
-                meta["mayHaveChanged"] = true;
-                if (action == "exportOpcUa")
-                {
-                    var item = owner as DeviceItem ?? throw new ArgumentException("exportOpcUa needs the PLC DeviceItem (non-empty itemPathJson).");
-                    OpcUaExportProvider provider = RequireHardwareUtility<OpcUaExportProvider>(BaseLeftoversLogic.OpcUaExportProviderId);
-                    provider.Export(item, file);
-                }
-                else
-                {
-                    var device = owner as Device ?? throw new ArgumentException("exportCardReaderPsc needs the Device (empty itemPathJson).");
-                    CardReaderPscProvider provider = RequireHardwareUtility<CardReaderPscProvider>(BaseLeftoversLogic.CardReaderPscProviderId);
-                    if (string.IsNullOrEmpty(password)) provider.Export(device, file);
-                    else using (var secure = PlcBlockServicesLogic.ToSecureString(password)) provider.Export(device, file, secure);
-                }
-                file.Refresh(); if (!file.Exists || file.Length == 0) throw new InvalidOperationException("Export returned but no file was written.");
-                meta["fileBytes"] = file.Length; meta["apiCallSuccess"] = true;
-                return action + " completed; file written. No save.";
-            });
-
         // ---- object identifiers and show-in-editor -------------------------------------------------------------------------------
         private IEngineeringObject ExactIdentifiableObject(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, JsonObject meta)
         {

@@ -478,5 +478,40 @@ namespace TiaMcpServer.ModelContextProtocol
                 throw new McpException($"Unexpected error adding hardware catalog device with probe: {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
             }
         }
+
+        [McpServerTool(Name = "DumpDeviceAttributes"), Description(
+            "[L2][Category:Hardware][PreCondition:Connect+OpenProject]" +
+            " Read-only inventory of EVERY Openness attribute exposed on a device's items (CPU, modules, interfaces, ports):" +
+            " name, access mode (read-only vs read/write), current value, value type." +
+            " Run this ONCE per CPU/firmware to learn what is actually exposed, then drive hardware reads/writes from that" +
+            " ground truth instead of guessing attribute names. Optional nameFilter narrows to attributes whose name contains" +
+            " a substring; several alternatives can be given separated by '|' or ',' (e.g. 'protection', 'putget|webserver', 'ip'). NOTE: GetAttributeInfos() does not enumerate every gettable" +
+            " attribute on all CPUs, so absence here means 'not enumerated', not a guaranteed 'no interface'.")]
+        public ResponseJsonReport DumpDeviceAttributes(
+            [Description("devicePath: device name, CPU/program name, or full name (e.g. 'S7-1200 station_3', '安全PLC', 'S7-1500/ET200MP station_1').")] string devicePath,
+            [Description("nameFilter: optional case-insensitive substring to narrow attribute names (e.g. 'protection'). Empty = all.")] string? nameFilter = null)
+        {
+            try
+            {
+                var data = _service.DumpDeviceAttributes(devicePath, nameFilter);
+                bool found = data["found"]?.GetValue<bool>() ?? false;
+                int items = data["itemCount"]?.GetValue<int>() ?? 0;
+                int attrs = data["totalAttributes"]?.GetValue<int>() ?? 0;
+                int writable = data["writableAttributes"]?.GetValue<int>() ?? 0;
+                return new ResponseJsonReport
+                {
+                    Ok = found,
+                    Message = found
+                        ? $"{devicePath}: {attrs} attribute(s) across {items} item(s) ({writable} writable)."
+                        : (data["message"]?.ToString() ?? "Not found."),
+                    Data = data,
+                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = found }
+                };
+            }
+            catch (Exception ex) when (ex is not McpException)
+            {
+                throw new McpException($"DumpDeviceAttributes failed for '{devicePath}': {ex.Message}{McpHints.Recovery(ex)}", ex, McpErrorCode.InternalError);
+            }
+        }
     }
 }

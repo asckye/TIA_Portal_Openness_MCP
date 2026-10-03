@@ -201,5 +201,20 @@ namespace TiaMcpServer.Siemens
         void ValidateUnitKind(string kind);
         IEnumerable<(string Name, string Kind, PlcUnitBase? Unit)> PlcScopes(PlcSoftware plc);
         IEnumerable<(string Path, object Value)> ScopedObjects(object group, string collection, string prefix = "", int depth = 0);
+        List<ModelContextProtocol.NetworkAttribute>? GetDeviceItemNetworkInfo(string deviceItemPath);
+        string ProbeConnectDeviceNodesToSubnet(string plcRootPath, string hmiRootPath, string subnetName);
+        JsonArray BuildDeviceNodesJson(Device device);
+        string NormalizeAttrName(string? n);
+        IEnumerable<(DeviceItem Item, string Path)> TraverseDeviceItems(DeviceItem root, string path);
+        IEnumerable<Portal.NetworkNodeInfo> FindNetworkNodes(DeviceItem root);
+        bool IsIndustrialEthernetNode(object? node);
+        string FormatNodeInfo(Portal.NetworkNodeInfo info);
+        IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> BuildHardwareHmiConnectionCandidates(Portal.NetworkNodeInfo plcNode, Portal.NetworkNodeInfo hmiNode);
+        IEnumerable<(string Label, object? Target, object LocalNode, DeviceItem PartnerTarget, object PartnerNode)> BuildDirectHardwareHmiConnectionCandidates(Portal.NetworkNodeInfo plcNode, Portal.NetworkNodeInfo hmiNode);
+        IEnumerable<string> TryReadInterestingAttributes(object target);
+        JsonObject GetPutGetAccess(string devicePath);
+        (DeviceItem? item, string? attrName) FindPutGetAttribute(Device device);
+        bool AttrValueIsEnabled(object? value);
+        object? FindExistingByName(object compositionOrEnumerable, string name);
     }
 }

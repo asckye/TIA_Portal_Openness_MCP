@@ -1,3 +1,31 @@
+using Siemens.Engineering.HW.Utilities;
+using Siemens.Engineering.SW.Tags;
+using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
+using Microsoft.Extensions.Logging;
+using Siemens.Engineering.Cax;
+using Siemens.Engineering.Compiler;
+using Siemens.Engineering.Connection;
+using Siemens.Engineering.Download;
+using Siemens.Engineering.Download.Configurations;
+using Siemens.Engineering.Hmi;
+using Siemens.Engineering.Online;
+using Siemens.Engineering.Online.Configurations;
+using Siemens.Engineering.SW.Alarm;
+using Siemens.Engineering.SW.OpcUa;
+using Siemens.Engineering.HmiUnified;
+using Siemens.Engineering.Multiuser;
+using Siemens.Engineering.Safety;
+using Siemens.Engineering.SW.Blocks;
+using Siemens.Engineering.SW.Types;
+using System.Collections;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Net;
+using System.Security;
+using System.Runtime.CompilerServices;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using System;
 using System.IO;
 using System.Linq;
@@ -406,5 +434,265 @@ namespace TiaMcpServer.Siemens.Services
                 }
             });
 
+
+
+
+
+
+
+
+        // Enable/disable remote PUT/GET access. NOTE: hardware-config change — a hardware DownloadToPlc is
+        // required for it to take effect on the live CPU.
+        public JsonObject SetPutGetAccess(string devicePath, bool enable)
+        {
+            if (_session.IsProjectNull()) return new JsonObject { ["ok"] = false, ["message"] = "No project open." };
+            var device = _session.GetDevice(devicePath);
+            if (device == null) return new JsonObject { ["ok"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
+
+            var (item, attrName) = _session.FindPutGetAttribute(device);
+            if (item == null || attrName == null)
+                return new JsonObject
+                {
+                    ["ok"] = false,
+                    ["device"] = device.Name,
+                    ["message"] = "PUT/GET access cannot be set via Openness on this CPU/firmware (not an exposed attribute; " +
+                                  "confirmed e.g. on S7-1200 1211C V4.6). Set it manually in TIA: " +
+                                  "CPU > Protection & Security > Connection mechanisms > 'Permit access with PUT/GET communication', then download hardware."
+                };
+
+            object? before = null; try { before = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
+            try { item.SetAttribute(attrName, enable); }
+            catch (Exception ex)
+            {
+                return new JsonObject { ["ok"] = false, ["device"] = device.Name, ["attributeName"] = attrName, ["message"] = $"SetAttribute failed: {ex.Message}" };
+            }
+            object? after = null; try { after = item.GetAttribute(attrName); } catch { /* swallow(probe-optional): Optional PUT/GET readback must not suppress the write attempt or its result. */ }
+
+            return new JsonObject
+            {
+                ["ok"] = _session.AttrValueIsEnabled(after) == enable,
+                ["device"] = device.Name,
+                ["deviceItem"] = item.Name,
+                ["attributeName"] = attrName,
+                ["before"] = before?.ToString() ?? string.Empty,
+                ["after"] = after?.ToString() ?? string.Empty,
+                ["note"] = "Hardware-config change — run DownloadToPlc (hardware) for it to take effect on the CPU."
+            };
+        }
+
+        // Native observation: TIA V21, original date not recorded; see docs/reference/real-machine-ledger.md.
+        // TIA refuses the first hardware download of an S7-1500 FW 2.9 CPU whose access level is above
+        // "Full access" without a full-access password, or whose confidential PLC configuration data has no password. The
+        // CPU protection API controls both. Official pages "Access level setting" and "Managing PLC Master Secret in PLCs": both live as
+        // HW features on the CPU DeviceItem (PlcAccessLevelProvider / PlcMasterSecretConfigurator). Passwords go in as SecureString and
+        // are never echoed; the readable state (access level enum, MasterSecretConfiguration enum) is read back after every change.
+        public ResponseMessage ManagePlcProtection(string devicePathJson, string itemPathJson = "[]", string action = "read", string accessLevel = "",
+            string password = "", string newPassword = "", bool confirmChange = false, bool dryRun = true)
+            => _session.RunHmiStepTool("ManagePlcProtection", meta => {
+                var (act, level) = PlcProtectionLogic.Validate(action, accessLevel, password, newPassword);
+                var cpu = ResolveCpuItem(devicePathJson, itemPathJson, meta);
+                meta["action"] = act; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                var accessProvider = cpu.GetService<PlcAccessLevelProvider>();
+                var secretProvider = cpu.GetService<PlcMasterSecretConfigurator>();
+                var accessControl = cpu.GetService<PlcAccessControlConfigurationProvider>();
+                meta["before"] = ReadProtectionState(accessProvider, secretProvider, accessControl);
+                if (act == "read") return "PLC protection read (access level, master secret state, access control); no modification.";
+
+                if (PlcProtectionLogic.LevelActions.Contains(act) && accessProvider == null)
+                    throw new NotSupportedException("PlcAccessLevelProvider is not available on this device item (not an S7-1200/1500 CPU?).");
+                if (PlcProtectionLogic.MasterSecretActions.Contains(act) && secretProvider == null)
+                    throw new NotSupportedException("PlcMasterSecretConfigurator is not available on this device item (needs an S7-1500 FW >= 2.9 / S7-1200 FW >= 4.5 CPU).");
+                if (act == "setAccessPassword" || act == "resetAccessPassword")
+                {
+                    var current = accessProvider!.PlcProtectionAccessLevel.ToString();
+                    var warning = PlcProtectionLogic.PasswordLevelWarning(current, level);
+                    if (warning != null) meta["warning"] = warning;
+                }
+                if (act == "setAccessLevel" && PlcProtectionLogic.NeedsFullAccessPassword(level))
+                    meta["note"] = "TIA's hardware compile requires the FullAccess password once the level is " + level + " - set it with action setAccessPassword accessLevel FullAccess.";
+                meta["plan"] = DescribeProtectionPlan(act, level);
+                if (dryRun) return "Preview: " + meta["plan"] + " Set dryRun=false and confirmChange=true to execute.";
+                HardwareServicesLogic.RequireConfirmation(confirmChange, "confirmChange", dryRun);
+
+                using var access = _session.AcquireHmiEditAccess();
+                meta["mayHaveChanged"] = true;
+                using var secure = string.IsNullOrEmpty(password) ? null : ProjectSecurityLogic.Secure(password);
+                using var secureNew = string.IsNullOrEmpty(newPassword) ? null : ProjectSecurityLogic.Secure(newPassword);
+                switch (act)
+                {
+                    case "setAccessLevel":
+                        accessProvider!.PlcProtectionAccessLevel = (PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level);
+                        break;
+                    case "setAccessPassword":
+                        accessProvider!.SetPassword((PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level), secure!);
+                        break;
+                    case "resetAccessPassword":
+                        accessProvider!.ResetPassword((PlcProtectionAccessLevel)Enum.Parse(typeof(PlcProtectionAccessLevel), level));
+                        break;
+                    case "protectMasterSecret":
+                        secretProvider!.Protect(secure!);
+                        break;
+                    case "changeMasterSecret":
+                        secretProvider!.ChangePassword(secure!, secureNew!);
+                        break;
+                    case "unprotectMasterSecret":
+                        if (secure != null) secretProvider!.Unprotect(secure); else secretProvider!.Unprotect();
+                        break;
+                    case "resetMasterSecret":
+                        secretProvider!.Reset();
+                        break;
+                    case "protectAllConfiguration":
+#if TIA_V20
+                        throw new NotSupportedException("ProtectAllPlcConfiguration / ProtectAllPlcConfigurationWithPassword exist in the V21 PublicAPI only.");
+#else
+                        if (secure != null) secretProvider!.ProtectAllPlcConfigurationWithPassword(secure); else secretProvider!.ProtectAllPlcConfiguration();
+                        break;
+#endif
+                    case "unprotectAllConfiguration":
+#if TIA_V20
+                        throw new NotSupportedException("UnprotectAllPlcConfiguration exists in the V21 PublicAPI only.");
+#else
+                        secretProvider!.UnprotectAllPlcConfiguration();
+                        break;
+#endif
+                }
+                meta["apiCallSuccess"] = true;
+                var after = ReadProtectionState(accessProvider, secretProvider, accessControl);
+                meta["after"] = after;
+                if (act == "setAccessLevel")
+                {
+                    var readback = after["accessLevel"]?.ToString() ?? "";
+                    meta["readbackVerified"] = string.Equals(readback, level, StringComparison.Ordinal);
+                    if (!meta["readbackVerified"]!.GetValue<bool>()) throw new InvalidOperationException("Access level readback is '" + readback + "', not '" + level + "'.");
+                }
+                else if (PlcProtectionLogic.MasterSecretActions.Contains(act) && act != "changeMasterSecret")
+                {
+                    var state = after["masterSecret"]?.ToString() ?? "";
+                    var expected = PlcProtectionLogic.ExpectedMasterSecretStates(act, !string.IsNullOrEmpty(password));
+                    meta["expectedMasterSecret"] = string.Join("|", expected);
+                    meta["readbackVerified"] = expected.Contains(state, StringComparer.Ordinal);
+                    if (!expected.Contains(state, StringComparer.Ordinal)) throw new InvalidOperationException("MasterSecretConfiguration read back as '" + state + "', expected " + string.Join(" / ", expected) + ".");
+                }
+                else meta["readbackVerified"] = "password actions have no readable state; TIA raised no exception";
+                return "PLC protection " + act + " executed on '" + cpu.Name + "'; state read back in meta.after. Hardware not compiled, project not saved.";
+            });
+
+        private DeviceItem ResolveCpuItem(string devicePathJson, string itemPathJson, JsonObject meta)
+        {
+            var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
+            if (owner is DeviceItem given && given.Classification == DeviceItemClassifications.CPU) { meta["cpu"] = given.Name; return given; }
+            // An empty item path (or the device / rail) resolves to the CPU item of the station, the same object the TIA UI edits.
+            var cpu = FindCpuItem(owner) ?? throw new InvalidOperationException("No CPU device item found under '" + owner.Name + "'; give the CPU item path (e.g. [\"导轨_0\",\"PLC_1\"]).");
+            meta["cpu"] = cpu.Name;
+            return cpu;
+        }
+
+        private static DeviceItem? FindCpuItem(HardwareObject owner)
+        {
+            foreach (var item in owner.DeviceItems)
+            {
+                if (item.Classification == DeviceItemClassifications.CPU) return item;
+                var nested = FindCpuItem(item);
+                if (nested != null) return nested;
+            }
+            return null;
+        }
+
+        private static JsonObject ReadProtectionState(PlcAccessLevelProvider? access, PlcMasterSecretConfigurator? secret, PlcAccessControlConfigurationProvider? control)
+        {
+            var state = new JsonObject();
+            state["accessLevel"] = access == null ? null : access.PlcProtectionAccessLevel.ToString();
+            state["accessLevelProviderPresent"] = access != null;
+            state["masterSecret"] = secret == null ? null : secret.MasterSecretConfiguration.ToString();
+            state["masterSecretConfiguratorPresent"] = secret != null;
+            if (control != null)
+            {
+                try { state["accessControl"] = control.PlcAccessControlConfiguration.ToString(); } catch (Exception ex) { state["accessControlError"] = ex.Message; }
+                try { state["umcServerAddress"] = control.UmcServerAddress; } catch (Exception) { /* swallow(probe-optional): The UMC server address is absent when access control is not configured. */ /* not configured */ }
+            }
+            state["accessControlProviderPresent"] = control != null;
+            state["meaning"] = "masterSecret: None = 'Protect confidential PLC configuration data' unchecked; WithoutPassword = checked without a password (TIA's hardware compile refuses the download); WithPassword / WithPasswordAllDataProtection = password configured.";
+            return state;
+        }
+
+        private static string DescribeProtectionPlan(string action, string level) => action switch
+        {
+            "setAccessLevel" => "set PlcAccessLevelProvider.PlcProtectionAccessLevel = " + level + ".",
+            "setAccessPassword" => "PlcAccessLevelProvider.SetPassword(" + level + ", <password>).",
+            "resetAccessPassword" => "PlcAccessLevelProvider.ResetPassword(" + level + ").",
+            "protectMasterSecret" => "PlcMasterSecretConfigurator.Protect(<password>) - configures the password for confidential PLC configuration data.",
+            "changeMasterSecret" => "PlcMasterSecretConfigurator.ChangePassword(<password>, <newPassword>).",
+            "unprotectMasterSecret" => "PlcMasterSecretConfigurator.Unprotect(<password when configured>) - unchecks the protection.",
+            "resetMasterSecret" => "PlcMasterSecretConfigurator.Reset() - removes the master secret; certificates encrypted with it are lost.",
+            "protectAllConfiguration" => "PlcMasterSecretConfigurator.ProtectAllPlcConfiguration[WithPassword] - 'protect all PLC configuration data'.",
+            "unprotectAllConfiguration" => "PlcMasterSecretConfigurator.UnprotectAllPlcConfiguration().",
+            _ => "read only."
+        };
+
+        // Hardware compilation runs before a download; CompileSoftware only compiles the program.
+        // ICompilable on the Device (or a given item) is what the TIA UI's "Compile > Hardware" does.
+        public ResponseMessage CompileDevice(string devicePathJson, string itemPathJson = "[]")
+            => _session.RunHmiStepTool("CompileDevice", meta => {
+                var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson);
+                meta["target"] = owner.Name; meta["targetType"] = owner.GetType().Name;
+                var compilable = _session.ServiceProvider(owner).GetService<ICompilable>()
+                    ?? throw new NotSupportedException("ICompilable is not available on '" + owner.Name + "'.");
+                var watch = System.Diagnostics.Stopwatch.StartNew();
+                CompilerResult result = compilable.Compile();
+                meta["compileElapsedMs"] = watch.ElapsedMilliseconds;
+                meta["apiCallSuccess"] = true;
+                var collected = McpServer.CollectCompilerMessages(result.Messages);
+                foreach (var kv in collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount)) meta[kv.Key] = kv.Value?.DeepClone();
+                meta["errors"] = new JsonArray(collected.Errors.Select(e => (JsonNode)JsonValue.Create(e)!).ToArray());
+                meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
+                meta["success"] = result.State != CompilerResultState.Error;
+                meta["operationSuccess"] = result.State != CompilerResultState.Error;
+                return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";
+            });
+
+        public ResponseMessage ManageHardwareUtilities(string action = "list", string typeIdentifier = "", string devicePathJson = "[]", string itemPathJson = "[]", string filePath = "", string password = "", bool dryRun = true)
+            => _session.RunHmiStepTool("ManageHardwareUtilities", meta => {
+                BaseLeftoversLogic.ValidateHardwareUtilityRequest(action, typeIdentifier, devicePathJson, filePath, password, dryRun);
+                meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
+                if (action == "list")
+                {
+                    meta["records"] = new JsonArray(EngineeringGroupOperations.Items(_session.CurrentProject!.HwUtilities).Cast<HardwareUtility>().Select(u => (JsonNode)new JsonObject { ["identifier"] = u.Identifier, ["utilityClass"] = u.GetType().Name }).ToArray());
+                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "Hardware utilities listed (Project.HwUtilities); no modification.";
+                }
+                if (action == "findModuleTypes" || action == "findContainerTypes" || action == "normalizeTypeIdentifier")
+                {
+                    ModuleInformationProvider provider = _session.RequireHardwareUtility<ModuleInformationProvider>(BaseLeftoversLogic.ModuleInformationProviderId);
+                    meta["typeIdentifier"] = typeIdentifier;
+                    switch (action)
+                    {
+                        case "findModuleTypes": meta["moduleTypes"] = new JsonArray(provider.FindModuleTypes(typeIdentifier).Select(x => (JsonNode)x).ToArray()); break;
+                        case "findContainerTypes": meta["containerTypes"] = new JsonArray(provider.FindContainerTypes(typeIdentifier).Select(x => (JsonNode)x).ToArray()); break;
+                        default: meta["normalizedTypeIdentifier"] = provider.GetTypeIdentifierNormalized(typeIdentifier); break;
+                    }
+                    meta["apiCallSuccess"] = true; meta["dataComplete"] = true; return "ModuleInformationProvider." + action + " answered; no modification.";
+                }
+                var file = new FileInfo(filePath); if (file.Exists) throw new IOException("Export refuses to overwrite an existing file: " + file.FullName);
+                var owner = _session.ExactEngineeringHardware(devicePathJson, itemPathJson); meta["ownerPath"] = _session.HardwareOwnerPath(owner); meta["filePath"] = file.FullName;
+                if (dryRun) return action + " preview; nothing written (" + (action == "exportOpcUa" ? "OpcUaExportProvider.Export(DeviceItem, FileInfo) writes the PLC data as OPC UA XML" : "CardReaderPscProvider.Export(Device, FileInfo[, SecureString]) creates a .psc card image; f-activated devices refuse on V18 and below, encryption needs CPU V40.0+") + ").";
+                meta["mayHaveChanged"] = true;
+                if (action == "exportOpcUa")
+                {
+                    var item = owner as DeviceItem ?? throw new ArgumentException("exportOpcUa needs the PLC DeviceItem (non-empty itemPathJson).");
+                    OpcUaExportProvider provider = _session.RequireHardwareUtility<OpcUaExportProvider>(BaseLeftoversLogic.OpcUaExportProviderId);
+                    provider.Export(item, file);
+                }
+                else
+                {
+                    var device = owner as Device ?? throw new ArgumentException("exportCardReaderPsc needs the Device (empty itemPathJson).");
+                    CardReaderPscProvider provider = _session.RequireHardwareUtility<CardReaderPscProvider>(BaseLeftoversLogic.CardReaderPscProviderId);
+                    if (string.IsNullOrEmpty(password)) provider.Export(device, file);
+                    else using (var secure = PlcBlockServicesLogic.ToSecureString(password)) provider.Export(device, file, secure);
+                }
+                file.Refresh(); if (!file.Exists || file.Length == 0) throw new InvalidOperationException("Export returned but no file was written.");
+                meta["fileBytes"] = file.Length; meta["apiCallSuccess"] = true;
+                return action + " completed; file written. No save.";
+            });
+
+        public JsonObject GetPutGetAccess(string devicePath) => _session.GetPutGetAccess(devicePath);
     }
 }

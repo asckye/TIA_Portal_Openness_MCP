@@ -126,7 +126,8 @@ internal static class MotionProDiagClassicHmiShapeChecks
             (Name: "MotionProDiagClassicHmi", Field: "_motionProDiagClassicHmi", Tools: new[] {
                 "ReadMotionAxisConfiguration", "ManageMotionAxis", "ManagePlcSupervision", "ReadClassicHmiScripts",
                 "ManageClassicHmiScript", "ManageClassicHmiCycle", "ManageClassicHmiTextGraphicList",
-                "ReadClassicHmiGlobalization", "ReadClassicHmiFaceplates", "ExportPlcProDiagInfo" }) })
+                "ReadClassicHmiGlobalization", "ReadClassicHmiFaceplates", "ExportPlcProDiagInfo",
+                "ExchangeMotionCamData", "ConfigureMotionHardwareConnection" }) })
         {
             var service = server.GetType("TiaMcpServer.Siemens.Services." + domain.Name + "Service", true)!;
             var toolType = server.GetType("TiaMcpServer.ModelContextProtocol." + domain.Name + "Tools", true)!;
