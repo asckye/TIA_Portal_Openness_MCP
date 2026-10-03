@@ -46,12 +46,7 @@ namespace TiaMcpServer.Siemens
         }
         private ResponseMessage RunHmiStepTool(string toolName, Func<JsonObject, string> action, bool requiresProject = true)
         {
-            var meta = new JsonObject
-            {
-                ["timestamp"] = DateTime.Now,
-                ["tool"] = toolName,
-                ["success"] = false
-            };
+            var meta = ResponseMeta.Step(toolName);
 
             try
             {
@@ -72,16 +67,14 @@ namespace TiaMcpServer.Siemens
                 }
 
                 var message = action(meta);
-                meta["success"] = meta["operationSuccess"]?.GetValue<bool>() ?? true;
-                meta["operationSuccess"] = meta["success"]?.DeepClone();
+                ResponseMeta.Complete(meta);
                 return new ResponseMessage { Message = message, Meta = meta };
             }
             catch (Exception ex)
             {
                 meta["error"] = ex.ToString();
                 AddExceptionMessageData(ex, meta);
-                meta["operationSuccess"] = false;
-                meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
+                ResponseMeta.Failed(meta);
                 meta["status"] = MigrationRead.Cause(ex) is PortalException pex ? pex.Code.ToString() : "ReadOrWriteFailed";
                 // Any lifetime/remoting-shaped failure blocks further remote reads until an explicit AttachToOpenProject
                 // (conservative by design: disposed handles preceded TIA process exits in the V21 HMI captures). Tools that

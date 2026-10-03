@@ -23,12 +23,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 Ok = false,
                 Message = message,
                 Data = data,
-                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                Meta = ResponseMeta.Basic(false)
             };
 
         private static JsonObject RuntimeMeta(bool ok, bool? dryRun = null, bool? mayHaveChanged = null, bool? passwordProvided = null)
         {
-            var m = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok };
+            var m = ResponseMeta.Basic(ok);
             if (dryRun != null) m["dryRun"] = dryRun;
             if (mayHaveChanged != null) m["mayHaveChanged"] = mayHaveChanged;
             if (passwordProvided != null) m["passwordProvided"] = passwordProvided;

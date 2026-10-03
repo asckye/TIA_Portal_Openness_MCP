@@ -13,6 +13,7 @@ namespace TiaMcpServer.Siemens
             lock (_runtimeSettingsGate)
                 return RunHmiStepTool(tool, meta =>
                 {
+                    // envelope: legacy-runtime-settings: append to the HMI envelope; Failed would add operationSuccess before the action.
                     meta["softwarePath"] = softwarePath; meta["expectedProject"] = expectedProject; meta["readOnly"] = !write;
                     meta["writeAttempted"] = false; meta["mayHaveChanged"] = false;
                     meta["apiCallSuccess"] = false; meta["dataComplete"] = false; meta["verificationSuccess"] = false;

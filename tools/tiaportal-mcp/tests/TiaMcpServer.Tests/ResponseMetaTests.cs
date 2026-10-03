@@ -11,6 +11,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using TiaMcpServer.ModelContextProtocol;
+using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.Tests
 {
@@ -44,6 +45,7 @@ namespace TiaMcpServer.Tests
                 check(ResponseClock.UtcNow.Kind == DateTimeKind.Utc && ResponseClock.UtcNow == Instant.UtcDateTime, "pinned UTC clock represents the same instant");
                 GoldenBytes(check);
                 Initializers(check);
+                ExecutorFactories(check);
                 Mutations(check);
                 BridgeCases(check);
                 Values(check);
@@ -119,6 +121,68 @@ namespace TiaMcpServer.Tests
             ["tool"] = toolName,
             ["success"] = false
         };
+
+        private static void ExecutorFactories(Action<bool, string> check)
+        {
+            foreach (bool ok in new[] { false, true })
+            {
+                // McpServer.PlcSoftware.XmlBuilders.cs: BuildOfflineXmlBuilderReport.
+                Compare("Basic/XmlBuilder/" + ok, new JsonObject
+                {
+                    ["timestamp"] = ResponseClock.Now, ["success"] = ok, ["offlineOnly"] = true
+                }, ResponseMeta.Basic(ok, ("offlineOnly", true)), check);
+
+                // McpServer.Deletion.cs: BuildDeletionReport retains the caller's array.
+                var nextActions = new JsonArray("中文 <>&", "CompileSoftware");
+                var deletion = ResponseMeta.Basic(ok, ("dryRun", !ok), ("deleted", ok),
+                    ("verifiedAbsent", ok), ("crossReferenceAvailable", false), ("nextActions", nextActions));
+                Compare("Basic/Deletion/" + ok, new JsonObject
+                {
+                    ["timestamp"] = ResponseClock.Now, ["success"] = ok, ["dryRun"] = !ok, ["deleted"] = ok,
+                    ["verifiedAbsent"] = ok, ["crossReferenceAvailable"] = false,
+                    ["nextActions"] = new JsonArray("中文 <>&", "CompileSoftware")
+                }, deletion, check);
+                check(ReferenceEquals(nextActions, deletion["nextActions"]), "deletion keeps nextActions ownership " + ok);
+
+                // McpServer.RuntimeChannels.cs: RuntimeMeta appends only supplied nullable flags.
+                foreach (bool? flag in new bool?[] { null, false, true })
+                {
+                    var old = new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = ok };
+                    var built = ResponseMeta.Basic(ok);
+                    if (flag != null)
+                    {
+                        old["dryRun"] = flag; old["mayHaveChanged"] = flag; old["passwordProvided"] = flag;
+                        built["dryRun"] = flag; built["mayHaveChanged"] = flag; built["passwordProvided"] = flag;
+                    }
+                    Compare("Basic/RuntimeMeta-flags/" + ok + "/" + flag, old, built, check);
+                }
+            }
+
+            // PlcListingRead.Metadata takes its stamp before evaluating the remaining fields.
+            var listing = new PlcListingRead();
+            foreach (bool failed in new[] { false, true })
+            {
+                var failures = new JsonArray();
+                if (failed)
+                {
+                    listing.Optional<int>("/PLC/中文", () => throw new ArgumentException("optional <>&"), -1);
+                    failures.Add(new JsonObject { ["path"] = "/PLC/中文", ["exceptionType"] = typeof(ArgumentException).FullName, ["message"] = "optional <>&" });
+                }
+                var old = new JsonObject
+                {
+                    ["timestamp"] = ResponseClock.Now, ["serverVersion"] = typeof(PlcListingRead).Assembly.GetName().Version?.ToString(),
+                    ["success"] = true, ["apiCallSuccess"] = true, ["dataComplete"] = !failed,
+                    ["traversalComplete"] = true, ["scope"] = "PLC/中文", ["failureCount"] = failed ? 1 : 0,
+                    ["failures"] = failures
+                };
+                var meta = listing.Metadata("PLC/中文");
+                Compare("Stamp/PlcListingRead/" + failed, old, meta, check);
+                check(((JsonValue)meta["failureCount"]!).TryGetValue<int>(out var count) && count == (failed ? 1 : 0), "listing failure count stays Int32 " + failed);
+                check(meta["timestamp"]!.GetValue<DateTime>().Kind == DateTimeKind.Local, "listing stamp stays Local " + failed);
+                meta["failures"]!.AsArray().Clear();
+                check(listing.Metadata("PLC/中文")["failures"]!.AsArray().Count == (failed ? 1 : 0), "listing clones its failures " + failed);
+            }
+        }
 
         private static void Mutations(Action<bool, string> check)
         {
@@ -199,6 +263,7 @@ namespace TiaMcpServer.Tests
                         ["operationStatus"] = !bridgeSuccess ? "notCompleted" : operationSuccess == true ? "succeeded" : operationSuccess == false ? "failed" : "unknown"
                     };
                     Compare("Bridge/" + index++, old, ResponseMeta.Bridge(bridgeSuccess, operationMeta), check);
+                    Compare("ToolBridgeStatus/" + index, old, ToolBridgeStatus.Create(bridgeSuccess, operationMeta), check);
                     check(operationMeta?.ToJsonString() == unchanged, "Bridge leaves operation Meta unchanged " + index);
                 }
         }

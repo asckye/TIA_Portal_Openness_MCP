@@ -46,6 +46,7 @@ namespace TiaMcpServer.Siemens
                     ["expectedCount"] = null, ["actualCount"] = 0, ["nextCursor"] = null,
                     ["failures"] = new JsonArray(MigrationRead.Failure(tool, "RequestFailed", ex)), ["records"] = new JsonArray() };
             }
+            // envelope: legacy-migration-page: no timestamp; copy the nullable API verdict without a bool conversion or default.
             result["success"] = result["apiCallSuccess"]?.DeepClone(); result["operationSuccess"] = result["apiCallSuccess"]?.DeepClone();
             return new ResponseMessage { Message = "Read-only collection. apiCallSuccess and dataComplete are separate; inspect failures and nextCursor.", Meta = result };
         }

@@ -257,16 +257,8 @@ namespace TiaMcpServer.ModelContextProtocol
                 Message = message,
                 Data = data,
                 Warnings = warnings.Count > 0 ? warnings.ToArray() : null,
-                Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = ok,
-                    ["dryRun"] = dryRun,
-                    ["deleted"] = deleted,
-                    ["verifiedAbsent"] = verifiedAbsent,
-                    ["crossReferenceAvailable"] = crossRefOk,
-                    ["nextActions"] = nextActions
-                }
+                Meta = ResponseMeta.Basic(ok, ("dryRun", dryRun), ("deleted", deleted),
+                    ("verifiedAbsent", verifiedAbsent), ("crossReferenceAvailable", crossRefOk), ("nextActions", nextActions))
             };
         }
 

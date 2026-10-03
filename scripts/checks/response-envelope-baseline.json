@@ -2,7 +2,7 @@
   "format": 1,
   "description": "Path-independent totals of hand-written assignments; timestamp includes DateTime.Now.ToString. The qualified ResponseMeta builder is counted in the inventory but excluded from this ratchet.",
   "counts": {
-    "timestamp_now_assignments": 245,
-    "success_assignments": 306
+    "timestamp_now_assignments": 236,
+    "success_assignments": 295
   }
 }

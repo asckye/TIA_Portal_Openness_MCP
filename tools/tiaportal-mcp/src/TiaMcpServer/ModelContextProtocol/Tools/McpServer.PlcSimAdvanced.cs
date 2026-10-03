@@ -36,6 +36,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var message = body(data, meta);
                 // 2.7.49: a body may downgrade the verdict itself (tags not written, scenario assertions failed) - keep it.
+                // envelope: legacy-plcsim-complete: Complete would replace the body's operationSuccess with the API verdict.
                 meta["success"] = true; meta["apiCallSuccess"] = true;
                 if (meta["operationSuccess"] == null) meta["operationSuccess"] = true;
                 return new ResponseJsonReport { Ok = meta["operationSuccess"]!.GetValue<bool>(), Message = message, Data = data, Meta = meta };
@@ -43,6 +44,7 @@ namespace TiaMcpServer.ModelContextProtocol
             catch (Exception ex)
             {
                 var cause = ex is System.Reflection.TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
+                // envelope: legacy-plcsim-failure: Failed would append dataComplete, which this executor does not set.
                 meta["success"] = false; meta["operationSuccess"] = false; meta["apiCallSuccess"] = false;
                 meta["status"] = cause is ArgumentException ? "InvalidParams" : cause is NotSupportedException ? "NotSupported" : cause is InvalidOperationException && cause.Message.StartsWith("PLCSIM Advanced API (", StringComparison.Ordinal) ? "ApiNotFound" : "ReadOrWriteFailed";
                 meta["error"] = cause.Message;

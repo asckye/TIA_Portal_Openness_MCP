@@ -319,12 +319,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 Xml = xml,
                 Errors = errorList,
                 Warnings = warningList,
-                Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = ok,
-                    ["offlineOnly"] = true
-                }
+                Meta = ResponseMeta.Basic(ok, ("offlineOnly", true))
             };
         }
 

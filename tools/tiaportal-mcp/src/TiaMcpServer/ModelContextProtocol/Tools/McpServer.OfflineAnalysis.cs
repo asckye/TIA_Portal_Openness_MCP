@@ -160,18 +160,18 @@ namespace TiaMcpServer.ModelContextProtocol
         // File-only tools never need a project; mirrors RunHmiStepTool's meta/status contract without touching Portal.
         private static ResponseMessage RunOfflineAnalysisTool(string toolName, Func<JsonObject, string> action)
         {
-            var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["tool"] = toolName, ["success"] = false, ["offlineOnly"] = true };
+            var meta = ResponseMeta.Step(toolName, ("offlineOnly", true));
             try
             {
                 var message = action(meta);
-                meta["success"] = true; meta["operationSuccess"] = true;
+                ResponseMeta.Complete(meta, true);
                 return new ResponseMessage { Message = message, Meta = meta };
             }
             catch (Exception ex)
             {
                 var cause = ex is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : ex;
                 meta["error"] = cause.ToString();
-                meta["operationSuccess"] = false; meta["apiCallSuccess"] = false; meta["dataComplete"] = false;
+                ResponseMeta.Failed(meta);
                 meta["status"] = cause is PortalException pex ? pex.Code.ToString()
                     : cause is ArgumentException || cause is FileNotFoundException || cause is DirectoryNotFoundException || cause is JsonException ? "InvalidParams"
                     : "ReadOrWriteFailed";

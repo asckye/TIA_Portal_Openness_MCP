@@ -834,7 +834,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
         private static JsonObject BridgeMeta(bool success)
         {
-            return success ? new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+            return success ? ResponseMeta.Basic(true)
                 : ToolBridgeStatus.Create(false);
         }
 

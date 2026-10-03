@@ -113,7 +113,7 @@ namespace TiaMcpServer.ModelContextProtocol
         }
         private static ResponseMessage BatchResult(Func<JsonObject, string> action)
         {
-            var meta = new JsonObject { ["success"] = false, ["timestamp"] = DateTime.UtcNow };
+            var meta = ResponseMeta.LegacyBatch();
             try { return new ResponseMessage { Message = action(meta), Meta = meta }; }
             catch (Exception ex) { meta["error"] = ex.Message; return new ResponseMessage { Message = "Batch refused/failed: " + ex.Message, Meta = meta }; }
         }

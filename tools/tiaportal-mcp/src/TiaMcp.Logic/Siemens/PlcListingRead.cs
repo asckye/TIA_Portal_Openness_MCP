@@ -1,5 +1,6 @@
 using System;
 using System.Text.Json.Nodes;
+using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
@@ -29,12 +30,14 @@ namespace TiaMcpServer.Siemens
                 return unavailable;
             }
         }
-        internal JsonObject Metadata(string scope) => new JsonObject
+        internal JsonObject Metadata(string scope)
         {
-            ["timestamp"] = DateTime.Now, ["serverVersion"] = typeof(PlcListingRead).Assembly.GetName().Version?.ToString(),
-            ["success"] = true, ["apiCallSuccess"] = true, ["dataComplete"] = failures.Count == 0,
-            ["traversalComplete"] = true, ["scope"] = scope, ["failureCount"] = failures.Count,
-            ["failures"] = failures.DeepClone()
-        };
+            var meta = ResponseMeta.Stamp();
+            meta["serverVersion"] = typeof(PlcListingRead).Assembly.GetName().Version?.ToString();
+            meta["success"] = true; meta["apiCallSuccess"] = true; meta["dataComplete"] = failures.Count == 0;
+            meta["traversalComplete"] = true; meta["scope"] = scope; meta["failureCount"] = failures.Count;
+            meta["failures"] = failures.DeepClone();
+            return meta;
+        }
     }
 }
