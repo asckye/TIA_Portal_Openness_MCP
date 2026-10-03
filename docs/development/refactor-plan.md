@@ -1,6 +1,6 @@
 # 重构计划
 
-[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md)
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md) · [引擎拆分设计](engine-decomposition.md) · [测试迁移设计](test-migration.md) · [适配器合并设计](adapter-merge.md)
 
 本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
 worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
@@ -109,7 +109,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除 | doing |
+| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D1–D7 待维护者决定 | done |
 | P4-02 | Foundation worker 迁移到共享适配器 | todo |
 | P4-03 | Studio 桥接进程迁移到共享适配器 | todo |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
