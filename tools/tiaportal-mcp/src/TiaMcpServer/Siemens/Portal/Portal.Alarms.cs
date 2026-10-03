@@ -36,12 +36,11 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: alarms. Extracted from Portal.cs (god-file split); behavior unchanged.
     public partial class Portal
     {
         #region alarms
 
-        // 2.7.35: typed AlarmClassExportImportResultMessage rows (Message + per-message State).
+        // Typed AlarmClassExportImportResultMessage rows (Message + per-message State).
         private static JsonArray AlarmClassMessages(AlarmClassExportImportResult? result)
         {
             var rows = new JsonArray();
@@ -64,7 +63,8 @@ namespace TiaMcpServer.Siemens
                 if (provider == null)
                     return new ResponseMessage { Message = "AlarmClassDataProvider not available for this PLC or project." };
 
-                // 2.7.46 real project: any other extension is refused by TIA with "invalid file extension" (official page: the format is .DAT).
+                // Native observation: other extensions are refused with "invalid file extension"; the official format is .DAT.
+                // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 if (!exportPath.EndsWith(".dat", StringComparison.OrdinalIgnoreCase))
                     return new ResponseMessage { Message = "exportPath must end in .DAT (official AlarmClassDataProvider format, e.g. D:\\AlarmClasses.DAT); got '" + exportPath + "'.", Meta = new JsonObject { ["success"] = false } };
                 Directory.CreateDirectory(Path.GetDirectoryName(exportPath) ?? ".");
@@ -120,8 +120,9 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // 2.7.46: typed PlcAlarmTextListProvider (the reflective ExportToXlsx / ImportFromXlsx lookup on PlcAlarmTextlistGroup never found the
-        // methods - they live on the provider service). Real project (fresh 1515F, no text lists): TIA throws TextListNotFoundException.
+        // ExportToXlsx / ImportFromXlsx belong to PlcAlarmTextListProvider, not PlcAlarmTextlistGroup.
+        // Native observation (fresh 1515F, no text lists): TIA throws TextListNotFoundException.
+        // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
         public ResponseMessage ExportAlarmTextLists(string softwarePath, string exportPath)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };
@@ -174,8 +175,7 @@ namespace TiaMcpServer.Siemens
             }
         }
 
-        // 2.7.46: typed ExportInstanceTextsToXlsx(file, languages, option) - the reflective call passed null languages and only reported
-        // the TargetInvocationException wrapper text; all active project languages are exported now.
+        // ExportInstanceTextsToXlsx(file, languages, option) receives all active project languages.
         public ResponseMessage ExportAlarmInstanceTexts(string softwarePath, string exportPath, bool includeInfoText = true, bool includeAdditionalTexts = true, bool includeAlarmClass = true)
         {
             if (IsProjectNull()) return new ResponseMessage { Message = "No project open." };

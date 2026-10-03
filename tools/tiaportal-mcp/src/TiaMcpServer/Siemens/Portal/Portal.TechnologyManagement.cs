@@ -26,14 +26,15 @@ namespace TiaMcpServer.Siemens
                 {
                     if (target != null) throw new InvalidOperationException("Technology object already exists.");
                     if (string.IsNullOrWhiteSpace(typeIdentifier)) throw new ArgumentException("Official technology type identifier required.");
-                    // 2.7.46: Version.Parse("") only said "版本字符串部分太短或太长" - say what is expected (real project 1515F FW V2.9: TO V6.0).
+                    // Validate the technology version before parsing. Native observation: 1515F FW V2.9 uses TO V6.0.
+                    // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                     if (!Version.TryParse(version, out var apiVersion) || apiVersion.Major < 1)
                         throw new ArgumentException("version must be the technology object version as 'major.minor', e.g. \"6.0\" (TIA V17 / FW 2.9), \"7.0\" (FW 3.0), \"8.0\" (FW 3.1); got '" + version + "'. TIA rejects a version the CPU firmware does not support.");
                     meta["typeIdentifier"] = typeIdentifier; meta["version"] = version;
                     if (writing)
                     {
                         meta["mayHaveChanged"] = true;
-                        // 2.7.36: typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
+                        // Typed TechnologicalInstanceDBComposition.Create(name, typeIdentifier, version) with Find readback.
                         if (collection is TechnologicalInstanceDBComposition typedCollection)
                         {
                             TechnologicalInstanceDB created = typedCollection.Create(parts.Last(), typeIdentifier, apiVersion);
@@ -75,7 +76,7 @@ namespace TiaMcpServer.Siemens
                         }
                         else
                         {
-                            // 2.7.36: typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
+                            // Typed TechnologicalParameterComposition.Find(name) with the reflective lookup as fallback.
                             var p = (typedParameters != null ? typedParameters.Find(parameter) : null) ?? EngineeringGroupOperations.Find(parameters, parameter) ?? throw new InvalidOperationException("Parameter not found: " + parameter);
                             meta["before"] = p is TechnologicalParameter typedBefore ? ParameterRow(typedBefore) : EngineeringScalarProperties.Read(p);
                             if (action == "setParameter")

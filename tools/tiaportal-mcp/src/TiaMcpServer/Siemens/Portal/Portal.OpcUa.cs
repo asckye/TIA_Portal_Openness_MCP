@@ -37,12 +37,11 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: opcua. Extracted from Portal.cs (god-file split); behavior unchanged.
     public partial class Portal
     {
         #region opcua
 
-        /// <summary>Returns the ServerInterfaceGroup node (OpcUaProvider.CommunicationGroup.ServerInterfaceGroup, typed since 2.7.35).</summary>
+        /// <summary>Returns the ServerInterfaceGroup node (OpcUaProvider.CommunicationGroup.ServerInterfaceGroup).</summary>
         private static object? GetOpcUaServerInterfaceGroup(PlcSoftware plc)
         {
             var provider = plc.GetService<OpcUaProvider>();
@@ -105,9 +104,10 @@ namespace TiaMcpServer.Siemens
             return arr;
         }
 
-        // 2.7.48: delete (or read) one OPC UA server interface / SIMATIC interface / reference namespace - there was no way to remove
-        // an interface (the 2.7.45 ImportOpcUaInterface bug left an empty server interface behind that made the whole PLC fail to
-        // compile: "The OPC UA server interface ... is empty or does not contain unique nodes").
+        // Read or delete one OPC UA server interface / SIMATIC interface / reference namespace.
+        // Native observation: an empty interface blocks PLC compilation with
+        // "The OPC UA server interface ... is empty or does not contain unique nodes".
+        // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
         public ResponseMessage ManageOpcUaInterface(string softwarePath, string interfaceName, string action = "read", string interfaceType = "ServerInterface", bool dryRun = true)
             => RunHmiStepTool("ManageOpcUaInterface", meta => {
                 if (action != "read" && action != "delete") throw new ArgumentException("action must be read/delete.");
@@ -227,9 +227,9 @@ namespace TiaMcpServer.Siemens
 
                 // ServerInterfaceComposition.Create(name) then Import(file)
                 // OR find existing and call Import
-                // 2.7.46 real project: a missing file still answered "created and imported" and left an EMPTY server interface behind,
-                // because the reflective Import swallowed its exception - the file is checked first and Import errors are propagated
-                // (a freshly created interface is removed again when its import fails).
+                // Check the file before creation, propagate Import failures and attempt to remove a newly created interface on failure.
+                // Native observation: importing a missing file left an empty server interface when the exception was discarded.
+                // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 var fi = new FileInfo(importPath);
                 if (!fi.Exists) return new ResponseMessage { Message = $"Import file not found: {importPath}", Meta = new JsonObject { ["success"] = false } };
                 var interfaceName = Path.GetFileNameWithoutExtension(importPath);
@@ -247,7 +247,7 @@ namespace TiaMcpServer.Siemens
                 try { import.Invoke(target, new object[] { fi }); }
                 catch (TargetInvocationException tie)
                 {
-                    if (createdNow) { try { target.GetType().GetMethod("Delete", Type.EmptyTypes)?.Invoke(target, null); } catch { } }
+                    if (createdNow) { try { target.GetType().GetMethod("Delete", Type.EmptyTypes)?.Invoke(target, null); } catch { /* swallow(cleanup): Failure to delete a newly created interface must not replace the original import failure. */ } }
                     return new ResponseMessage { Message = $"Import failed: {(tie.InnerException ?? tie).Message}" + (createdNow ? $" (the new {interfaceType} '{interfaceName}' was removed again)" : ""), Meta = new JsonObject { ["success"] = false } };
                 }
                 return new ResponseMessage { Message = createdNow

@@ -83,7 +83,7 @@ namespace TiaMcpServer.Siemens
                         result["imported"] = false;
                     }
                 }
-                finally { try { Directory.Delete(scratch, true); } catch { result["scratchCleanupFailed"] = scratch; } }
+                finally { try { Directory.Delete(scratch, true); } catch { /* swallow(cleanup): Scratch deletion failure is reported without replacing the generated result or original failure. */ result["scratchCleanupFailed"] = scratch; } }
             }
             return result;
         }

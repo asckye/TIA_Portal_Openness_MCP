@@ -20,7 +20,6 @@ using TiaMcpServer.Siemens;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Partial: plc software. Family file split out of McpServer.PlcSoftware.cs (2.8.0); behavior unchanged.
     public static partial class McpServer
     {
         #region plc software - TechnologyObjects
@@ -96,7 +95,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = Portal.ExportTechnologyObjectsToDirectory(softwarePath, exportDir, regexName);
-                // 2.7.48: the batch answered with an empty message on the real project; say what happened.
+                // Report the exported and failed counts even when the batch contains no objects.
                 var exportedCount = result.Imported?.Count() ?? 0; var failedCount = result.Failed?.Count() ?? 0;
                 result.Message = $"Exported {exportedCount} technology object(s) to '{exportDir}'. Failed={failedCount}" + (failedCount > 0 ? ": " + string.Join(" | ", result.Failed!.Take(5).Select(f => f.Path + " -> " + (f.Error ?? "").Split('\n')[0])) : "");
                 result.Meta ??= new JsonObject { ["timestamp"] = DateTime.Now };

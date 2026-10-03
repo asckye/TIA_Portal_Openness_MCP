@@ -37,7 +37,6 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
     public partial class Portal
     {
         #region software - TechnologyObjects
@@ -57,8 +56,9 @@ namespace TiaMcpServer.Siemens
 
             try
             {
-                // 2.7.48: typed - the reflective lookup asked for "TechnologyObjectGroup" (the property is TechnologicalObjectGroup) and
-                // always fell through to the PLC ("TechnologyObjects collection not found", real project).
+                // Use the typed TechnologicalObjectGroup property.
+                // Native observation: the misspelled reflective lookup fell through to the PLC with "TechnologyObjects collection not found".
+                // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
                 var group = (global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDBGroup)EngineeringGroupOperations.Group(plc.TechnologicalObjectGroup, folderPath ?? "");
                 var col = group.TechnologicalObjects;
                 if (TryImportEngineeringObjectIntoCollection(col, importPath, overwrite, importedNames, out var err)) return;
@@ -126,8 +126,8 @@ namespace TiaMcpServer.Siemens
 
         // ── Technology Objects (TO) ──────────────────────────────────────────
 
-        // 2.7.49 (real machine): TOs inside a user folder (TechnologicalInstanceDBUserGroup, e.g. imported with folderPath) were invisible
-        // to GetTechnologyObjects / ExportTechnologyObject / ExportTechnologyObjectsToDirectory, which only read the root composition.
+        // Native observation: root-only enumeration omitted TOs in TechnologicalInstanceDBUserGroup folders.
+        // TIA version/date were not recorded; see docs/reference/real-machine-ledger.md.
         // Typed walk: TechnologicalInstanceDBGroup.TechnologicalObjects + Groups (recursive); folder = "" for the root.
         private static List<(global::Siemens.Engineering.SW.TechnologicalObjects.TechnologicalInstanceDB To, string Folder)> EnumerateTechnologyObjectsRecursive(PlcSoftware plc)
         {
@@ -176,9 +176,7 @@ namespace TiaMcpServer.Siemens
         public List<JsonObject> GetTechnologyObjects(string softwarePath)
         {
             var result = new List<JsonObject>();
-            // 这三条原来都返回空列表，工具层于是报「在 'XXX' 里找到 0 个技术对象」——
-            // 「没连项目」「路径写错」「枚举炸了」全被说成了「这个 PLC 没有技术对象」。
-            // 空列表只有一个合法含义：**解析到了这个 PLC，它确实没有 TO**。
+            // 未连接工程、路径不存在或枚举失败必须报错；空列表只表示已解析的 PLC 确实没有 TO。
             if (IsProjectNull())
             {
                 throw new PortalException(PortalErrorCode.InvalidState,
@@ -213,8 +211,7 @@ namespace TiaMcpServer.Siemens
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "GetTechnologyObjects failed for {SoftwarePath}", softwarePath);
-                // 原来吞掉异常返回已收集的部分 —— 「少了几个 TO」比「一个都没有」更难发现，
-                // 因为它看起来完全正常。
+                // 枚举失败时不得返回看似完整的部分列表。
                 throw new PortalException(PortalErrorCode.OpennessError,
                     $"GetTechnologyObjects failed halfway through '{softwarePath}': {ex.Message}. "
                     + "The list would have been INCOMPLETE, so it is not returned.", null, ex);

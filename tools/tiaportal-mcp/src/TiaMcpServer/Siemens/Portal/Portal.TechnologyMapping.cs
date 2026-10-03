@@ -14,7 +14,7 @@ using Logic = TiaMcpServer.Siemens.MotionProDiagClassicHmiLogic;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 4 sub-batch 3 (2.7.36): typed technology-object layer used by ReadTechnologyObjectTree, ReadMotionAxisConfiguration,
+    // Typed technology-object layer used by ReadTechnologyObjectTree, ReadMotionAxisConfiguration,
     // ManageMotionAxis, ManageTechnologyObject and ConfigureMotionHardwareConnection. TechnologicalInstanceDBGroup /
     // TechnologicalInstanceDB / TechnologicalParameter, AxisHardwareConnectionProvider with its AxisEncoderHardwareConnectionInterface
     // (actor + sensors) and TorqueHardwareConnectionInterface, EncoderHardwareConnectionProvider, MeasuringInput / OutputCam

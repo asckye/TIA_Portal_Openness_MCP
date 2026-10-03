@@ -531,12 +531,6 @@
       "line": 703
     },
     {
-      "fingerprint": "710006d7c45b92c5f3971258dae23974c6c5e6cd05c5d1862372c823f4cb8479",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.OpcUaModelled.cs",
-      "line": 86
-    },
-    {
       "fingerprint": "717a908fccef080a490896ac46ae877c41fd1025a9c33fa0debc989d81eb7072",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/McpHttpResponseRouter.cs",
@@ -577,12 +571,6 @@
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessVersionControl.cs",
       "line": 606
-    },
-    {
-      "fingerprint": "77992288cad939339228625e243ae8b5ce367f78d3c7fb7d5654b3afebc0a647",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.OpcUa.cs",
-      "line": 250
     },
     {
       "fingerprint": "793e54989d60b59025972cebe3bf9285f84383d7065baa1ce4ae4d066665f6b6",

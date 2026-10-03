@@ -233,7 +233,7 @@ namespace TiaMcpServer.Siemens
             row["namespacePermissions"] = new JsonArray(EngineeringGroupOperations.Items(EngineeringGroupOperations.Get(role, "NamespacePermissions")).Select(p => (JsonNode)EngineeringScalarProperties.Read(p)).ToArray());
             return row;
         }
-        // 2.7.35: typed NamespaceAccessRestriction row (V21 only; the type does not exist in the V20 PublicAPI).
+        // Typed NamespaceAccessRestriction row (V21 only; the type does not exist in the V20 PublicAPI).
         private static JsonObject RestrictionRow(object restriction)
         {
 #if TIA_V20
