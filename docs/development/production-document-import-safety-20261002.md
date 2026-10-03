@@ -1,5 +1,16 @@
 # Production V20/V21 document-import safety patch
 
+## Compile evidence update (2026-10-03)
+
+For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,
+[2026-10-03 compile-only evidence](windows-compile-evidence-aaa9e0d-20261003.md) supersedes the earlier typed-SDK/build-pending
+statements below for compilation only. All eight exact Adapter/Worker targets and
+the full V20/V21 engines compiled with zero errors; actual Csc was verified.
+This was `DesignTimeBuild` compile-only validation, without weaving, artifact
+execution or native acceptance. Earlier batch-local results below remain history.
+Windows filesystem/runtime checks, release-build gates, per-version enablement
+and incomplete final batch-import review are not closed by this evidence.
+
 ## Source-only result
 
 The existing full-engine single/batch document import paths were narrowed in place. Public method signatures, response shapes and import-option defaults remain. No Siemens runtime, TIA project, PLC, native import, commit or push was used.

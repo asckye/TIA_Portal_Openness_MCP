@@ -1,5 +1,16 @@
 # Legacy PLC host source preview
 
+## Compile evidence update (2026-10-03)
+
+For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,
+[2026-10-03 compile-only evidence](windows-compile-evidence-aaa9e0d-20261003.md) supersedes the earlier typed-SDK/build-pending
+statements below for compilation only. All eight exact Adapter/Worker targets and
+the full V20/V21 engines compiled with zero errors; actual Csc was verified.
+This was `DesignTimeBuild` compile-only validation, without weaving, artifact
+execution or native acceptance. Earlier batch-local results below remain history.
+Windows filesystem/runtime checks, release-build gates, per-version enablement
+and incomplete final batch-import review are not closed by this evidence.
+
 This is an incomplete migration of the 62-tool V17 PLC profile. The production
 version catalog remains disabled for legacy releases. Compilation is not native
 acceptance and does not establish support for any release.
@@ -43,8 +54,8 @@ Engineering Offline is not CPU STOP; external UI changes can race state checks.
 ## Current implementation
 
 `TiaMcpServer.LegacyHost` is a .NET 8 stdio MCP host with no Siemens reference.
-It uses the actual MCP SDK. Of the original 62-profile names, 52 are source-implemented:
-12 scoped ordinary source/offline/manual closures and 40 partial candidates; 10 remain
+It uses the actual MCP SDK. Of the original 62-profile names, 55 are source-implemented:
+12 scoped ordinary source/offline/manual closures and 43 partial candidates; seven remain
 unimplemented. Exactly compatible migrations remain seven. Additional foundation tools
 include explicit tag/constant operations and the distinct read-only external-source import
 plan, which does not implement the original import route. The exact inventory is in
@@ -52,7 +63,7 @@ plan, which does not implement the original import route. The exact inventory is
 
 The latest partial candidates add [bounded catalog search](hardware-catalog-search-candidate.md)
 for V19–21 and [document export](legacy-document-export-candidate.md) for V20/V21 ordinary
-LAD/DB blocks. The [bounded batch document route](legacy-batch-document-export-candidate.md) publishes one new tree, retaining staged/failed/not-attempted outcomes on failure. The [external-source delete candidate](external-source-delete-candidate.md) adds separately confirmed exact-root single-source deletion without generation or save. All retain exact-release gates and current typed/native acceptance gaps.
+LAD/DB blocks. The [bounded batch document route](legacy-batch-document-export-candidate.md) publishes one new tree, retaining staged/failed/not-attempted outcomes on failure. The [external-source delete candidate](external-source-delete-candidate.md) adds separately confirmed exact-root single-source deletion without generation or save. All retain exact-release gates and native acceptance gaps. The dated compile evidence below is limited to its exact source commit.
 
 `TiaMcpServer.PlcWorker` supplies a separate framework worker for each exact
 release. It serializes calls on its owning STA thread and invokes only the typed
@@ -203,14 +214,14 @@ also deliberately changes existing version routing to fail closed.
 
 ## Remaining work
 
-Forty V17 profile entries are not exposed. They include readiness/state and
-disconnect flows, hardware operations, XML builders, external sources, watch
-tables, technology objects, batch imports/exports and project seeding. The four
-document tools require release-specific capability checks before exposure.
-The remaining entries need deliberate schema migration and behavioral
-parity review. Official API documentation must be reconciled before separately
-authorized native acceptance. HMI, downloads and online PLC writes are outside
-this foundation preview.
+Seven V17 profile entries remain unimplemented in the current ledger; the
+55 source implementations comprise 12 scoped closures and 43 partial candidates.
+Exactly compatible migrations remain seven. Source exposure is not full behavioral
+parity or production support. Remaining work includes exact-release semantics,
+Windows filesystem/runtime verification, the incomplete final batch-document-import
+wiring review (automated tool block), and separately authorized native acceptance.
+Document routes retain their release-specific capability gates. HMI, downloads and
+online PLC writes remain outside this foundation preview.
 
 ## Independent read closure and new source reader
 
@@ -222,7 +233,7 @@ GetPlcExternalSources is the 23rd implemented profile entry, typed root source-n
 
 Eight exact Adapter/Worker targets rebuild against supplied API assemblies and pass mandatory weave/verify on each copied Adapter. Coverage sites: 14sp1=543; 15.1/16=548; 17-21=575. API-independent runtime and PE checks pass 124 assertions; worker selection/publication/coverage checks pass 36, including 40 deliberate coverage corruptions rejected across eight releases. Main host/policy/metadata suite: 1543 passed, zero failed/skipped. Native NOT RUN.
 
-IPC request correlation, binding snapshot and process-loss observer are still unwired; Publish/Pack remains blocked. Adapter builds report the two known catalog CS8625 warnings plus two CS0649 warnings for unwired hooks. The original full V20/V21 engines are unchanged by this increment.
+IPC request correlation, binding snapshot and process-loss observer are still unwired; Publish/Pack remains blocked. Adapter builds report the two known catalog CS8625 warnings plus two CS0649 warnings for unwired hooks. That diagnostics increment did not change the full V20/V21 engines. The cumulative WIP does include full-engine source changes (including import safety and prompt registration); both full engines were recompiled for `aaa9e0d` in the 2026-10-03 compile-only validation. The earlier weave counts above are historical and are not evidence of weaving the current candidate.
 
 ## Declaration read contracts
 

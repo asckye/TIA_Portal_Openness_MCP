@@ -1,7 +1,21 @@
 {
-  "scope": "52 source-implemented V17-profile tools: 12 scoped manual closures and 40 partial implementations (11 earlier manual-partial implementations and 29 cloud partial candidates)",
+  "compileEvidence": {
+    "sourceCommit": "aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa",
+    "date": "2026-10-03",
+    "report": "windows-compile-evidence-aaa9e0d-20261003.md",
+    "scope": "DesignTimeBuild compile-only; actual Csc verified; eight exact Adapter/Worker targets plus full V20/V21 engines; zero errors",
+    "provenance": "Completed Windows compile-only validation on 2026-10-03; detailed RESULT-aaa9e0d.txt remains machine-local, not uploaded to cloud",
+    "supersedes": "Earlier typed-build/SDK-compile pending labels retained in feature status, releaseState and narrative strings are historical for this exact commit only; they do not override this compilation evidence. No feature status or release eligibility is promoted.",
+    "previousTypedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "weaving": "NOT RUN",
+    "artifactExecution": "NOT RUN",
+    "nativeAcceptance": "NOT RUN",
+    "buildRelease": "NOT RUN by this validation",
+    "remaining": "Windows filesystem/runtime groups, native acceptance, release-build gates and final independent batch-import wiring review (automated tool block) remain open"
+  },
+  "scope": "55 source-implemented V17-profile tools: 12 scoped manual closures and 43 partial implementations (11 earlier manual-partial implementations and 32 cloud partial candidates)",
   "reviewDate": "2026-10-02",
-  "completion": "12 scoped ordinary source/offline/manual closures; exactly compatible migration count remains seven. 40 partial implementations (11 earlier manual-partial and 29 cloud partial candidates); 10 unimplemented. Native NOT RUN; current candidate typed builds and Windows/native groups pending. Disconnect is terminal non-owning-only partial candidate. LAD FC-call candidates generate explicit V21 output only; schema/import/program validation false. Catalog V19–21 and document V20/V21 routes are new scoped partial candidates; additional external-source plan does not close its original import route.",
+  "completion": "12 scoped ordinary source/offline/manual closures; exactly compatible migration count remains seven. 40 partial implementations (11 earlier manual-partial and 29 cloud partial candidates); 7 unimplemented. Native NOT RUN; exact-commit typed compilation passed as recorded in compileEvidence; Windows/native groups remain pending. Disconnect is terminal non-owning-only partial candidate. LAD FC-call candidates generate explicit V21 output only; schema/import/program validation false. Catalog V19–21 and document V20/V21 routes are new scoped partial candidates; additional external-source plan does not close its original import route.",
   "sources": {
     "CONNECT": {
       "title": "Connecting to the TIA Portal",
@@ -1542,7 +1556,7 @@
     ],
     "evidence": "legacy-runtime-query-candidate.md",
     "manualStatus": "scoped-evidence-not-closed",
-    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
     "nativeAcceptance": "NOT RUN"
   },
   "offlineCompositionCandidate": {
@@ -1566,7 +1580,7 @@
     "officialManualRead": "V17 Openness system manual 05/2021, 6.4.1.13, printed pp. 998-1005; existing EXPORT_BLOCK/EXPORT_TYPE group/composition evidence reused. Native single-item Export(FileInfo, ExportOptions.None); no invented native batch API.",
     "sourceScope": "Exact ordinary standard PLC/group; complete bounded deterministic inventory, dry-run first, exact project/confirm/inventory hash, original native XML unchanged and per-item partial outcomes. No LocalSession, R/H or software-unit expansion; compile gate unchanged.",
     "verification": "2046 managed aggregate passed, 0 failed, 2 skipped; LegacyHost build passed; independent 112 discovery-only stdio assertions across eight host keys. No native execution.",
-    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
     "windowsFilesystemPublication": "NOT RUN on Linux; both single-item and batch Windows-only groups skipped",
     "nativeAcceptance": "NOT RUN",
     "complete": false
@@ -1585,7 +1599,7 @@
     "evidence": "legacy-batch-document-export-candidate.md",
     "manualStatus": "scoped-evidence-recorded-not-closed",
     "sourceScope": "Exact V20/V21 ordinary LAD/DB group inventory; complete bound, explicit preview/hash/project confirmation, one new non-overwrite output tree, retained staged/failed/not-attempted outcomes and no replay.",
-    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
     "windowsFilesystemPublication": "NOT RUN; test mover injection only",
     "nativeAcceptance": "NOT RUN",
     "complete": false
@@ -1606,7 +1620,7 @@
     "evidence": "legacy-single-document-import-candidate.md",
     "manualStatus": "scoped-evidence-recorded-not-closed",
     "sourceScope": "Exact V20/V21 primitive-scalar global DB only; single declared identity and complete admitted grammar; native None; held unchanged input bytes; complete bounded ordinary inventory; exact project/target/input/inventory/plan confirmation. Uncertain attempted outcomes poison and never retry.",
-    "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
     "windowsFilesystemLocking": "NOT RUN on Linux; stream lifecycle/fault injections only",
     "nativeAcceptance": "NOT RUN",
     "complete": false

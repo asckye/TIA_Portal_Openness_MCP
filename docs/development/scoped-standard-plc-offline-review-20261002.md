@@ -1,5 +1,16 @@
 # Scoped standard-provider PLC offline precondition
 
+## Compile evidence update (2026-10-03)
+
+For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,
+[2026-10-03 compile-only evidence](windows-compile-evidence-aaa9e0d-20261003.md) supersedes the earlier typed-SDK/build-pending
+statements below for compilation only. All eight exact Adapter/Worker targets and
+the full V20/V21 engines compiled with zero errors; actual Csc was verified.
+This was `DesignTimeBuild` compile-only validation, without weaving, artifact
+execution or native acceptance. Earlier batch-local results below remain history.
+Windows filesystem/runtime checks, release-build gates, per-version enablement
+and incomplete final batch-import review are not closed by this evidence.
+
 ## Result and limits
 
 This change removes the unconditional hardware-taxonomy block from the **selected-target** offline guard used by block/type XML exchange. It does not declare complete XML workflow support, native acceptance, R/H support, or all-device inventory coverage. The separate project-wide compile review gate remains unconditionally blocked. All existing schema, format, ownership, session, mutation and publication guards remain applicable.

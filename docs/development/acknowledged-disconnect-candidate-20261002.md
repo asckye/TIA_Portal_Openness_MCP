@@ -1,5 +1,16 @@
 # Explicit acknowledged Disconnect candidate
 
+## Compile evidence update (2026-10-03)
+
+For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,
+[2026-10-03 compile-only evidence](windows-compile-evidence-aaa9e0d-20261003.md) supersedes the earlier typed-SDK/build-pending
+statements below for compilation only. All eight exact Adapter/Worker targets and
+the full V20/V21 engines compiled with zero errors; actual Csc was verified.
+This was `DesignTimeBuild` compile-only validation, without weaving, artifact
+execution or native acceptance. Earlier batch-local results below remain history.
+Windows filesystem/runtime checks, release-build gates, per-version enablement
+and incomplete final batch-import review are not closed by this evidence.
+
 2026-10-02. Source and pure offline tests only. Native acceptance: **NOT RUN** for every release. Current typed candidate rebuild remains pending. This is a partial migration, not upstream response parity or production enablement.
 
 ## Contract

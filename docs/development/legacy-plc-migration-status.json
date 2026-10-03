@@ -1,4 +1,18 @@
 {
+  "compileEvidence": {
+    "sourceCommit": "aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa",
+    "date": "2026-10-03",
+    "report": "windows-compile-evidence-aaa9e0d-20261003.md",
+    "scope": "DesignTimeBuild compile-only; actual Csc verified; eight exact Adapter/Worker targets plus full V20/V21 engines; zero errors",
+    "provenance": "Completed Windows compile-only validation on 2026-10-03; detailed RESULT-aaa9e0d.txt remains machine-local, not uploaded to cloud",
+    "supersedes": "Earlier typed-build/SDK-compile pending labels retained in feature status, releaseState and narrative strings are historical for this exact commit only; they do not override this compilation evidence. No feature status or release eligibility is promoted.",
+    "previousTypedApiCompilation": "pending-current-source-eight-release-rebuild",
+    "weaving": "NOT RUN",
+    "artifactExecution": "NOT RUN",
+    "nativeAcceptance": "NOT RUN",
+    "buildRelease": "NOT RUN by this validation",
+    "remaining": "Windows filesystem/runtime groups, native acceptance, release-build gates and final independent batch-import wiring review (automated tool block) remain open"
+  },
   "sourceCommit": "70758f2b7359021fefb674c099c1c8eddbba44e1",
   "sourceProfile": "PlcSoftwareV17McpTools",
   "sourceCount": 62,
@@ -460,7 +474,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-runtime-query-candidate.md",
       "scope": "Detached diagnostic metadata; SnapshotAcquisitionTime is not process start; separate OS UTC observation may be unknown and is never a binding token."
     },
@@ -549,7 +563,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-runtime-query-candidate.md",
       "scope": "Explicit processId; never auto-select, enumerate windows, attach, start or open. Found process remains readiness unknown and permission not-probed."
     },
@@ -611,7 +625,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-runtime-query-candidate.md",
       "scope": "Cached lifecycle only; IsAttached is not connection liveness; PID remains unverified."
     },
@@ -1233,7 +1247,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "V19\u201321 installed catalog read only; bounded client traversal, not bounded native Find duration or materialization."
     },
     {
@@ -1334,7 +1348,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "V19\u201321 exact installed catalog, two documented standard PLC articles only; no fallback probes"
     },
     {
@@ -2744,7 +2758,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "Root/user-group escaped watch-table paths, no force tables or values."
     },
     {
@@ -2816,7 +2830,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "Watch root/user groups; no force tables."
     },
     {
@@ -2940,7 +2954,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild"
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only"
     },
     {
       "tool": "GenerateBlocksFromExternalSource",
@@ -3787,7 +3801,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-bounded-batch-import-candidate.md",
       "offlineEvidence": "2251 managed aggregate assertions passed, 0 failed, 3 platform/native groups explicitly skipped; independent reviewer reproduced. LegacyHost build passed, no Siemens assembly or worker process loaded. Fake native callbacks only; Windows file locking and SDK/native behavior NOT RUN.",
       "scope": "Exact ordinary standard PLC and existing groups, one root per native XML file, same producer release only. Blocks tool top-directory scan; program tool recursive bounded scan. Safety/system/software-unit/technology scope refused; V14 SP1 SCL interface-only input refused. Native Parent ownership verification is source-reviewed only."
@@ -3967,7 +3981,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-bounded-batch-import-candidate.md",
       "offlineEvidence": "2251 managed aggregate assertions passed, 0 failed, 3 platform/native groups explicitly skipped; independent reviewer reproduced. LegacyHost build passed, no Siemens assembly or worker process loaded. Fake native callbacks only; Windows file locking and SDK/native behavior NOT RUN.",
       "scope": "Exact ordinary standard PLC and existing groups, one root per native XML file, same producer release only. Blocks tool top-directory scan; program tool recursive bounded scan. Safety/system/software-unit/technology scope refused; V14 SP1 SCL interface-only input refused. Native Parent ownership verification is source-reviewed only."
@@ -4051,7 +4065,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-bounded-batch-export-candidate.md",
       "offlineEvidence": "2046 managed aggregate passed, 0 failed, 2 Windows publication groups skipped; LegacyHost build passed. Independent 112 stdio assertions across eight discovery hosts; no Siemens/worker native session.",
       "scope": "Ordinary project; exact standard PLC owner with positive OnlineProvider/Offline proof. LocalSession, R/H and software units excluded. Original XML numbers/symbols unmodified; V14 SP1 SCL remains interface-only. Compile project gate unchanged."
@@ -4472,7 +4486,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "manualEvidence": "legacy-bounded-batch-export-candidate.md",
       "offlineEvidence": "2046 managed aggregate passed, 0 failed, 2 Windows publication groups skipped; LegacyHost build passed. Independent 112 stdio assertions across eight discovery hosts; no Siemens/worker native session.",
       "scope": "Ordinary project; exact standard PLC owner with positive OnlineProvider/Offline proof. LocalSession, R/H and software units excluded. Original XML numbers/symbols unmodified; V14 SP1 SCL remains interface-only. Compile project gate unchanged."
@@ -4546,7 +4560,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "Root ordinary PLC technology metadata through V18; root/user groups V19\u2013V21; no online values."
     },
     {
@@ -4614,7 +4628,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "TO root before V19, root/user groups V19 onward; no protected/sub-level TOs or software units."
     },
     {
@@ -4832,7 +4846,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "V20/V21 ordinary LAD/DB blocks only; no full-format, version-conversion or restore claim."
     },
     {
@@ -4910,7 +4924,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "V20/V21 ordinary unprotected LAD/DB blocks; root/user groups only; no regex selection, hierarchy preservation, PLC types or full-format claim."
     },
     {
@@ -4990,7 +5004,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "V20/V21 primitive Bool/integer global DB single document; ordinary root/user groups only; no software units, instance DBs, protection, SCL/LAD/FBD/OB/TYPE, manual block numbers or unknown pragmas."
     },
     {
@@ -5074,7 +5088,7 @@
       "sourceComplete": false,
       "implementationOfflineVerified": false,
       "manualReconciliation": "scoped-evidence-recorded-not-closed",
-      "typedApiCompilation": "pending-current-source-eight-release-rebuild",
+      "typedApiCompilation": "passed-at-aaa9e0d-design-time-compile-only",
       "scope": "Only primitive Bool/integer ordinary GlobalDB document grammar; exact root/user group; no general SD or pinned-wrapper compatibility.",
       "offlineEvidence": "Implementer aggregate 3655 passed, 0 failed, 4 skips; host build 0 errors, 2 existing warnings. Partial independent review reproduced 42 checks and fixes for both findings; final wiring review blocked by automated classification and incomplete. Windows locks/current exact typed rebuild/native acceptance NOT RUN."
     },
@@ -5180,5 +5194,5 @@
   "manualPending": 11,
   "sourceImplementedCandidates": 32,
   "sourceImplemented": 55,
-  "implementationSummary": "55 source implementations: 12 scoped source/offline/manual closures (7 ordinary PLC reads and 5 ordinary lifecycle safe contracts), 43 partial implementations (11 earlier manual-partial implementations and 32 cloud partial candidates); 7 unimplemented. Exactly compatible migrations remain7; native NOT RUN; current candidate typed rebuild and Windows/native groups remain pending. ExportAsDocuments adds a V20/V21 LAD/DB single-block staged publication candidate, not full-format support. SearchHardwareCatalog adds a bounded V19\u201321 catalog read candidate; V18 signature known but semantics gated, V14SP1\u201317 API absent. The separate PlanPlcExternalSourceImport is an additional read-only tool and does not implement the original ImportPlcExternalSource. Existing special-object exports, terminal non-owning Disconnect, passive host diagnostics and V21-output LAD builders remain scoped partial candidates. DeletePlcExternalSource adds a separately confirmed exact-root single-source candidate; no generation/save and native deletion NOT RUN. ExportBlocksAsDocuments adds a bounded exact-group V20/V21 LAD/DB document-tree candidate with retained partial staging, not full-wrapper parity. ImportFromDocuments adds one bounded V20/V21 ordinary global DB declaration candidate. AddDeviceWithFallback adds a V19\u201321 two-model exact-catalog single-attempt creation candidate, not automatic fallback compatibility. ImportBlocksFromDocuments adds an ordered batch of admitted GlobalDB document sets with full-manifest locks and fail-stop evidence; independent final wiring review remains incomplete."
+  "implementationSummary": "55 source implementations: 12 scoped source/offline/manual closures (7 ordinary PLC reads and 5 ordinary lifecycle safe contracts), 43 partial implementations (11 earlier manual-partial implementations and 32 cloud partial candidates); 7 unimplemented. Exactly compatible migrations remain seven; native NOT RUN; exact-commit typed compilation passed as recorded in compileEvidence; Windows/native groups remain pending. ExportAsDocuments adds a V20/V21 LAD/DB single-block staged publication candidate, not full-format support. SearchHardwareCatalog adds a bounded V19\u201321 catalog read candidate; V18 signature known but semantics gated, V14SP1\u201317 API absent. The separate PlanPlcExternalSourceImport is an additional read-only tool and does not implement the original ImportPlcExternalSource. Existing special-object exports, terminal non-owning Disconnect, passive host diagnostics and V21-output LAD builders remain scoped partial candidates. DeletePlcExternalSource adds a separately confirmed exact-root single-source candidate; no generation/save and native deletion NOT RUN. ExportBlocksAsDocuments adds a bounded exact-group V20/V21 LAD/DB document-tree candidate with retained partial staging, not full-wrapper parity. ImportFromDocuments adds one bounded V20/V21 ordinary global DB declaration candidate. AddDeviceWithFallback adds a V19\u201321 two-model exact-catalog single-attempt creation candidate, not automatic fallback compatibility. ImportBlocksFromDocuments adds an ordered batch of admitted GlobalDB document sets with full-manifest locks and fail-stop evidence; independent final wiring review remains incomplete."
 }

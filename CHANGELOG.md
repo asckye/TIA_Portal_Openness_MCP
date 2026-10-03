@@ -4,6 +4,8 @@
 
 ## [Unreleased]
 
+- Record [per-commit Windows compile-only evidence](docs/development/windows-compile-evidence-aaa9e0d-20261003.md) for `aaa9e0d`: all eight exact Adapter/Worker targets and full V20/V21 engines compiled with zero errors. This does not establish weaving, native acceptance, release-build completion or production enablement; detailed logs remain on the validation machine.
+
 - Register all 30 MCP prompts explicitly so optional unavailable assemblies do not prevent prompt registration; source and fixture checks passed, with native acceptance pending.
 
 - Stop automatic HMI screen import replay and stop screen directory batches at the first failure; retain the original error and warn that the project may already have changed. Offline fake-import checks only; native acceptance remains pending.

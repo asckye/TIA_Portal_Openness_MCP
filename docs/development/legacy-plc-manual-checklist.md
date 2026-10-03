@@ -1,6 +1,17 @@
 # PLC migration manual checklist
 
-52 source-implemented tools: **12 scoped ordinary source/offline/manual closures** (seven PLC reads and five lifecycle safe contracts), and **40 partial implementations** (11 earlier manual-partial implementations and 29 cloud partial candidates); **10 of the 62-tool profile unimplemented**. Exactly compatible migrations remain seven. Current candidate typed builds, Windows batch publication groups and native acceptance NOT RUN. [LAD FC-call candidates](legacy-offline-ladder-candidate.md) generate explicit V21 output only; schema/import/program validation remains false.
+## Compile evidence update (2026-10-03)
+
+For published source commit `aaa9e0d7891d6b7a74a1153d2f1c9a0ed4d4f2fa`,
+[2026-10-03 compile-only evidence](windows-compile-evidence-aaa9e0d-20261003.md) supersedes the earlier typed-SDK/build-pending
+statements below for compilation only. All eight exact Adapter/Worker targets and
+the full V20/V21 engines compiled with zero errors; actual Csc was verified.
+This was `DesignTimeBuild` compile-only validation, without weaving, artifact
+execution or native acceptance. Earlier batch-local results below remain history.
+Windows filesystem/runtime checks, release-build gates, per-version enablement
+and incomplete final batch-import review are not closed by this evidence.
+
+55 source-implemented tools: **12 scoped ordinary source/offline/manual closures** (seven PLC reads and five lifecycle safe contracts), and **43 partial implementations** (11 earlier manual-partial implementations and 32 cloud partial candidates); **seven of the 62-tool profile unimplemented**. Exactly compatible migrations remain seven. Exact-commit typed compilation is recorded below; Windows batch publication groups and native acceptance remain NOT RUN. [LAD FC-call candidates](legacy-offline-ladder-candidate.md) generate explicit V21 output only; schema/import/program validation remains false.
 
 The five lifecycle closures are Connect, OpenProject, CreateProject, SaveProject and CloseProject, for the bounded ordinary-project paths only. See [exact-release lifecycle review](ordinary-project-lifecycle-review-20261002.md). PID-only attachment, writable-project Save, owned/unmodified Close and blocked LocalSession execution remain explicit limits. [Disconnect is a separate partial acknowledged terminal-session candidate](acknowledged-disconnect-candidate-20261002.md), restricted to proven non-owning attachments; it is not counted among the five closed lifecycle contracts. Native acceptance NOT RUN.
 
