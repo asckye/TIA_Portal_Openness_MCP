@@ -93,7 +93,7 @@ T0–T3 应在阶段 3 第 5 步之前完成（第 4 步的内核接口已保留
 
 ### 现状
 
-三个源码根目录共 1,425 个 `catch`，其中空 `catch` 218 个（175 个没有任何注释）；去掉 WorkerProtocol 后 205 个。另有约 171 个
+三个源码根目录共 1,425 个 `catch`，其中空 `catch` 218 个（175 个没有任何注释）；去掉现已删除的预览协议后 205 个。另有约 171 个
 非空但丢弃异常的宽泛 `catch`。最集中的文件：`P.Devices.cs` 24、`P.Software.UnifiedHmiHelpers.cs` 20、`P.Software.UnifiedHmi.cs` 8。
 
 | 类别 | 说明 | 处理 |
@@ -119,7 +119,7 @@ T0–T3 应在阶段 3 第 5 步之前完成（第 4 步的内核接口已保留
 - 每个保留的 `catch` 在同一行标注 `/* swallow(<类别>): <原因> */`，类别取自封闭清单：cleanup / teardown / logging-failure /
   probe-optional / enumerate-optional / native-fallback / parse-fallback / env-probe / ui / fail-open-guard / privacy。
 - `scripts/checks/Check-SwallowedExceptions.py` 检查标注，基线 `scripts/checks/swallowed-exceptions-baseline.json` 只许减少，
-  指纹与路径无关（阶段 3 搬文件无需改基线），接入仓库检查和离线流程；WorkerProtocol 豁免（阶段 4 删除）。
+  指纹与路径无关（阶段 3 搬文件无需改基线），接入仓库检查和离线流程；第 A 步已删除预览协议及其豁免。
 
 ### 任务
 
@@ -137,5 +137,5 @@ T0–T3 应在阶段 3 第 5 步之前完成（第 4 步的内核接口已保留
 - **D1 `meta.error` 中的堆栈帧是否属于兼容契约**：维护者已决定（2026-10-03）：不属于。只有首行“类型: 消息”是兼容契约，
   堆栈中的方法帧允许随阶段 3 的迁移变化；E3 比较执行器表征时只比较首行。
 - **D2–D7 采用建议值**：P0-06 增加原始文本哈希（D2）；P2-01 先做构造器、执行器与只减不增检查，内联调用点只在领域迁移前且能证明
-  等价时转换（D3）；吞异常默认不输出，引擎仅 Debug 级别（D4）；L5 之前原生路径不改为上抛（D5）；WorkerProtocol 豁免（D6）；
+  等价时转换（D3）；吞异常默认不输出，引擎仅 Debug 级别（D4）；L5 之前原生路径不改为上抛（D5）；预览协议原豁免随第 A 步删除（D6）；
   维持按族的抛/返规则（D7）。

@@ -66,8 +66,7 @@ def source_files(root, errors, include_project=lambda project: True):
             errors.append(f'missing source root: {relative}')
             continue
         for parent, dirs, names in os.walk(directory, onerror=lambda exc: errors.append(str(exc))):
-            dirs[:] = sorted(name for name in dirs if name.lower() not in lexer.SKIP_DIRS
-                             and not name.startswith('TiaMcp.WorkerProtocol'))
+            dirs[:] = sorted(name for name in dirs if name.lower() not in lexer.SKIP_DIRS)
             for name in sorted(names):
                 if not name.lower().endswith('.cs') or name.lower().endswith(lexer.GENERATED_SUFFIXES):
                     continue
@@ -330,7 +329,7 @@ class SelfTests(unittest.TestCase):
             base = root / lexer.SOURCE_ROOTS[0]
             for name in ('P/A.cs', 'P/bin/A.cs', 'P/obj/A.cs', 'P/bin-v20/A.cs', 'P/obj-v20/A.cs',
                          'P/Generated/A.cs', 'P/A.g.cs', 'P/A.g.i.cs', 'P/A.generated.cs',
-                         'P/A.designer.cs', 'TiaMcp.WorkerProtocol.Core/A.cs'):
+                         'P/A.designer.cs'):
                 path = base / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text('// 2.0: old', encoding='utf-8')

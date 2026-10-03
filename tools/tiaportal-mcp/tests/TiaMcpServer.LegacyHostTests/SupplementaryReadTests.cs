@@ -98,11 +98,9 @@ internal static class SupplementaryReadTests
             Exception safeError;
             try { PlcSupplementaryReadPolicy.ReadSnapshot<int>(()=>throw new InvalidOperationException(secret)); throw new Exception("Sanitization not invoked"); }
             catch(InvalidOperationException ex) {check(!ex.ToString().Contains(secret),"Native error and inner exception suppressed");safeError=ex;}
-            Exception decodedError;
-            try { WorkerProtocol.Decode(Newtonsoft.Json.JsonConvert.SerializeObject(new {id=1,error=new {message=safeError.Message,code=-32603,outcome="read-failed"}}),1);throw new Exception("Worker error not decoded"); }
-            catch(WorkerOperationException ex) {decodedError=ex;}
+            var decodedError=new WorkerOperationException(safeError.Message,-32603,"read-failed");
             try {await new FoundationTool(def,new FakeReader(null,decodedError)).InvokeAsync(request);throw new Exception("MCP read failure not propagated");}
-            catch(McpException ex) {check(!ex.ToString().Contains(secret) && ex.ErrorCode==McpErrorCode.InternalError,"Sanitized failure through actual worker decode and MCP boundary");}
+            catch(McpException ex) {check(!ex.ToString().Contains(secret) && ex.ErrorCode==McpErrorCode.InternalError,"Sanitized failure through worker exception and MCP boundary");}
             var empty=SupplementaryReadContract.Wrap(pair.Item1,Payload(new JsonArray()),McpJsonUtilities.DefaultOptions);
             check(empty[Wire("Items")]!.AsArray().Count==0,"True empty composition supported");
         }

@@ -82,7 +82,7 @@
 | 握手 | hello（协议 1、引擎 SHA、pid）+ 目录比对 | hello：版本、worker/adapter SHA-256、PID、nonce、初始纪元 | 无 | hello：版本、哈希、令牌、绑定纪元 |
 | 失败模型 | nativeOutcomeUnknown、代次 | `error.data` 的 outcome + 证据、失效后不重放 | 代码 + 堆栈 | ReadFailed / 失效 |
 | JSON 库 | STJ | 信封 STJ；DTO worker Newtonsoft / 宿主 STJ | Newtonsoft | 两套编解码 |
-| 状态 | 已发布（可选） | P4-E2 已实现，真机验收前不发布 | 已发布 | 未接入 |
+| 状态 | 已发布（可选） | P4-E2 已实现，真机验收前不发布 | 已发布 | 第 A 步已删除 |
 
 **协议 2（P4-E2 实现）**：
 
@@ -107,13 +107,55 @@ Foundation 的具体信封如下（每行一个 UTF-8 JSON 对象，无 BOM）�
 
 信封统一使用宿主已有的 `System.Text.Json 10.0.0-preview.4.25258.110`；worker 的 Newtonsoft DTO 结果和错误证据通过 `WriteRawValue` 原样嵌入，宿主的 DTO codec 仍是 STJ，P2-04 再统一 DTO codec。worker 部署包含 WorkerChannel、STJ 及 net48 的传递依赖；构建脚本既有的 DLL 复制规则会一起部署，三份发布文件清单分别校验它们。
 
-[worker-channel 回归套件及预览规则映射](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；无 `Server` 前缀的预览夹具和项目在第 A 步之前保留。
+[worker-channel 回归套件及预览规则映射](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)覆盖双方状态机和独立进程管道故障。`TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的夹具；第 A 步删除了无 `Server` 前缀的两个预览夹具及其项目。
 
-**删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录（约 1,430 行）、7 个测试项目（约 6,600 个断言）以及
+**第 A 步删除 `TiaMcp.WorkerProtocol.*`**：8 个源码目录、7 个测试项目（实测 6,676 个断言）以及
 `TiaMcp.TransportFixture`/`TiaMcp.EndpointFixture`。理由：生产中没有使用；长度前缀分帧只在 Linux 上验证过；维护两套并行编解码，
-与 P2-04 的单一序列化边界相矛盾；JsonV2 不支持 net461，无法服务 14sp1–16 的 worker。删除前把它的规则改写为协议 2 的要求，
+与 P2-04 的单一序列化边界相矛盾；JsonV2 不支持 net461，无法服务 14sp1–16 的 worker。删除前已把适用规则改写为协议 2 的要求，
 并在 `TiaMcpServer.TransportFixture` 上测试：启动 nonce 身份、每次调用前后核对绑定纪元、拒绝重放、只读失败类别、迟到进度
 导致失效。
+
+## 第 A 步最终规则核对
+
+删除前重新逐项阅读了七套预览测试的 `Program.cs`、Endpoint 的 `EndpointUnitCases.cs`、
+JsonLegacy 的 `DifferentialCodec.cs` 和两个夹具。原套件实测断言数：Core 105、JsonV2 343、
+JsonLegacy 5,462、HostPreview 78、AsyncPreview 203、HostTransport 102、Endpoint 383（含进程测试 302），
+共 **6,676**。删除 70 个版本化文件、10,572 行（其中 C# 25 个文件、3,156 行）。循环、差分语料和进程断言均按原计数器统计，不等同于 xunit 用例数。
+下表按断言规则归组；`P` = `ProtocolTests`，`S` = `ServerTests`，`X` = `ProcessTests`，
+`A` = 新增的 `PreviewRuleTests`，均在 [worker-channel 测试目录](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests)。
+
+| 预览断言组（包含循环变体） | 协议 2 测试或不移植原因 |
+|---|---|
+| 无 Siemens 依赖、八版身份往返、必填哈希/会话身份；版本协商、hello 前请求、非初始绑定、重复 hello | A.`ExactReleaseHelloRoundTrip` / `LaunchIdentityRequiresCompleteFields`；P.`FreshUnboundHelloRequired` / `BadHelloPoisonsSession` / `DuplicateHelloTerminal`；S.`NoHelloTerminal` / `NonfreshHello`；X.`HandshakeFailedBeforeWrites`。精确版本允许清单仍由 Foundation 版本策略负责，通道匹配宿主给定值，不另设版本清单 |
+| 缺失、重复、大小写混淆、未知信封/嵌套字段；非整数/越界 id、错误版本、错误结果/错误形状、进度数值 | A.`StrictEnvelopeRejectedBeforeDispatchOrResult` 穷举 hello/request/reply/error/progress 字段；P/S.`BadFramingPoisonsBeforeValidation`；P.`InvalidProgressTerminal` |
+| 帧大小上下界、截断、UTF-8/BOM、分片读取、发送上限、精确上限 | P.`OversizedLinePoisonsBeforeParsing` / `ExactFrameCapAccepted`；S.`RequestByteCapAndFramingBeforeDispatch` / `EmitFailureTerminal`；A.`FragmentedUtf8RequestAndExactByteCap`；X.`TerminalAmbiguityNoReplay` |
+| 一次分派、重复/过期请求、错误响应 id、无回复/重复回复/迟到 hello、失败后无额外发送 | S.`DuplicatePoisonsWorker` / `OwningThreadAndRawDtoArePreserved`；P.`UnknownReplyIdOrBindingEpochPoisons` / `LateProgressAndTrailingFramesPoison`；X.`TerminalAmbiguityNoReplay` / `TrailingFramesPoisonIdlePeer` |
+| 绑定/关闭递增、调用前后纪元匹配、已知失败不得改变绑定、写入不能声称 ReadFailed | P.`CloseAdvancesBindingEpoch` / `UnknownReplyIdOrBindingEpochPoisons` / `ReadFailureOutcomePreserved`；S.`BadFramingPoisonsBeforeValidation`；A.`KnownFailureCannotChangeBindingEpoch` |
+| 读取失败/操作前拒绝可继续，Unknown 失效，code/message/evidence、DTO/null、独立结果与进度可复用 | P/X.`ReadFailureOutcomePreserved`；P.`ProgressAcceptedAndDtoBytesPreserved`；S.`OwningThreadAndRawDtoArePreserved`；A.`ExplicitNullAndReadErrorCodePreserved` / `ProgressCapAndPerRequestSequence`；Foundation 既有 DTO/业务结果测试继续保留 |
+| 发送前取消、发送后取消/超时/管道错误、不合作 I/O、迟到完成、整个调用一个预算 | P.`CancelBeforeDispatchHasNoSendOrPoison` / `UnknownResultPoisonsHostNoReplay` / `BudgetNeverResetsOnProgressOrCleanup`；X.`UnsentCancellationStaysUsable` / `TerminalAmbiguityNoReplay`；A.`UncooperativeWriteIsBoundedAndNeverReplayed` |
+| 并发、回调/观察器/回复写入重入；非法/迟到/跨线程/过量进度；吞掉进度写出异常 | P/X.`ConcurrentEndpointPoisoned`；S.`SwallowedInvalidProgressAndReentryTerminal` / `LateProgressTerminal` / `ObserverTerminal` / `EmitFailureTerminal`；A.`SwallowedReentryAndProgressEmissionFailureAreTerminal` / `ProgressCapAndPerRequestSequence` |
+| 不同进程管道所有权、释放不影响另一个会话 | X.`ProgressAcceptedAndDistinctOwnedHandles`；预览的强制杀进程、回收确认不移植，生产通道仅关闭自有管道 |
+| 长度前缀/二进制终止符、帧枚举单次消费及其复制/Dispose/Abort/Reset、可配 FrameLimits、交换总字节预算 | 专属于删除的 IV2Exchange/帧 API；协议 2 改用持续行读取、固定字节/进度上限和单一调用预算，不保留枚举结束后的提交边界 |
+| String worker_N id、重复的引擎/会话/操作身份、相关 id、RequestLogContext 允许字段/异步作用域/日志脱敏 | 预览专属信封与日志 API 删除；协议 2 使用启动身份及递增数字 id，不记录 payload；适配器日志未改变 |
+| 项目哈希、进程启动时间、完整 BindingSnapshot、操作绑定前提、未知操作的通道准入 | 不向共享通道迁入尚未接线的原生观察/业务策略；Foundation 的 WorkerOperations、路径/身份与准入测试保留，外部改绑检测仍待后续任务 |
+| 固定脱敏错误文本、null 拒绝、opaque payload 重名/大小写/代理项校验、32 层深度、codec 规范化、Unicode/fuzz 差分、全局 Newtonsoft 配置隔离 | 这些是预览 codec 合同；协议 2 保留原有 DTO codec、原始结果字节、null 和错误文本。严格检查信封与 UTF-8，但不声称复制两套 codec 的 5,462 个差分断言；DTO 黄金测试/响应快照继续守护生产边界 |
+| 注入时钟倒退、2 小时上限、编码期间耗时/取消消耗 id、参数编码失败后可继续、校验回调结束才提交 | 预览 TimeProvider/验证回调 API 不存在于协议 2；使用实际单调计时预算，取消发送前不消耗 id；编码错误终止通道。业务校验仍在 LegacyHost，验证失败使 WorkerOutcomeState 失效 |
+| AsyncPreview 并发拒绝但在途调用成功 | 不移植其相反策略；按 D7/P4-E2 使用 Endpoint 的并发即失效规则；LegacyHost 原有串行队列保留 |
+
+LegacyHost 旧 `WorkerProtocol.Decode` 无生产调用方，已删除。逐处处理如下：
+
+| 原调用处 | 处理 |
+|---|---|
+| `WorkerClientTests`：null + 5 个坏响应 | 删除 6 个重复断言；由 A.`ExplicitNullAndReadErrorCodePreserved`、A.`StrictEnvelopeRejectedBeforeDispatchOrResult` 与 P 的 id 检查覆盖 |
+| `PathAndIdentityTests`：三种 outcome | 删除 3 个旧解码 code 断言；协议 2 的错误码由 P/A 的错误测试覆盖；以宿主异常继续验证 3 个会话重置策略断言 |
+| `ExchangeContractTests`：unknown + evidence | 删除 1 个重复断言；P.`ReadFailureOutcomePreserved` 验证证据与失效，原有 Foundation 工具错误映射测试保留 |
+| `AdditionalMutationResultTests` | 用宿主 `WorkerOperationException` 输入保留 KnownNoMutation、poison 与禁止重放断言；协议 2 分类在 P/X 验证 |
+| `RuntimeQueryTests`、`SoftwareReadDispatchTests` | 直接把 worker 的 Newtonsoft DTO 文本传入 JsonNode，与现行 WorkerClient 的结果边界相同；保留全部业务/日期/nullable 断言 |
+| `SupplementaryReadTests` | 以宿主异常连接脱敏策略和 MCP 边界，保留全部断言；不再声称调用旧解码器 |
+
+foundation / foundation-api 的最低数量各减少上述 **10** 项；offline / offline-v20 不变。
+`Check-TiaFeatures.py` 的动态工程 glob 与 expectation、三份必需文件/发布清单、Build 脚本及 test-suites
+均没有预览工程显式条目，无需改写。三个源码门禁的预览豁免已删除，原基线不含预览条目。
 
 ## JSON（P2-04 的输入）
 

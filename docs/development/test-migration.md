@@ -14,7 +14,7 @@
 | 已恢复并原地迁移到 xunit | PromptRegistration（含两个夹具，134 项）、SoftwareRead（39）、SpecialExportShape（11）、DeviceAdd（124）、HardwareCatalog（56）、DiagnosticMembership（4） | CI 的 Windows foundation-transport 作业与 `Build-MultiVersion.ps1 -Test` 使用各自 TRX 门禁 |
 | 保留控制台 | `tests/TiaMcp.Adapters.DiagnosticsTests` | 仅手动运行 |
 | 测试框架，保持控制台 | `TiaMcpServer.HttpTests`（加载织入后的 V20/V21 程序，13 种模式由构建脚本解析 `COMPLETE: N`）、`NativeTests`、`DiagnosticsTests`+`FakeApi`、`ApiCompileChecks`、三个传输/端点夹具 | 构建脚本与检查脚本 |
-| 留待 P4-01 | `TiaMcp.WorkerProtocol.*` 及其测试 | CI 只跑 JsonLegacy/JsonV2 |
+| 第 A 步已删除 | 未接线的预览协议及其测试 | 适用规则由 `worker-channel` 套件覆盖，见[最终规则核对](adapter-merge.md#第-a-步最终规则核对) |
 
 ## 决定
 
@@ -29,8 +29,8 @@
   `release-build.json` 字段不变。门禁切换后，`Program.Main` 只保留子进程夹具入口，普通 `dotnet run` 以非零退出。
 - **控制台测试框架加保护**：`Harness.props` 设 `IsTestProject=false`，直接对其运行 `dotnet test` 时报错；仓库检查
   要求 `tests` 下每个工程都已分类，每个 xunit 工程都在最低数量表中。
-- **两个 TransportFixture 不合并、不改名**：`TiaMcpServer.TransportFixture` 是基础版 worker 的行 JSON 替身
-  （CI 与 `Build-MultiVersion` 使用）；`TiaMcp.TransportFixture` 是预览帧协议夹具（P4-01 决定去留）。
+- **保留 `TiaMcpServer.TransportFixture`**：它是 Foundation 协议 2 的行 JSON 替身，由 CI 与
+  `Build-MultiVersion` 使用；第 A 步删除了无生产调用方的两个预览夹具。
 - **适配器诊断测试位于 `tests/TiaMcp.Adapters.DiagnosticsTests/`**，保留程序集名 `Diagnostics.Tests` 以沿用 `InternalsVisibleTo`。
 - **名称必须与西门子类型一致的测试替身保留**（生产代码按完整类型名识别），集中到一个文件并加允许名单检查。
 

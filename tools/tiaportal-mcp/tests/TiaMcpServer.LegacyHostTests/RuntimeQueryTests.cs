@@ -17,7 +17,7 @@ internal static class RuntimeQueryTests
             "ReadPortalConnectReadiness"=>PlcRuntimeQueryPolicy.Diagnose(new PlcProcessQuery {ReleaseKey="17",Processes=new[]{Row()}},123),
             _=>throw new Exception("Unknown query")
         };
-        return WorkerProtocol.Decode(Newtonsoft.Json.JsonConvert.SerializeObject(new {id=1,result=value}),1)!;
+        return JsonNode.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(value))!;
     }
     private static PlcProcessSnapshot Row()=>new(){ProcessId=123,SnapshotAcquisitionTime="2026-10-02T10:20:30.0000000",ProjectPath=@"C:\Projects\Example.ap17"};
     private sealed class Reader(JsonNode? payload,Exception? failure=null):IFoundationWorker

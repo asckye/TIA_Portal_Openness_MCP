@@ -33,7 +33,7 @@
   },
   "foundation": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 6604,
+    "minimumPassed": 6594,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -42,7 +42,7 @@
   },
   "foundation-api": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 7670,
+    "minimumPassed": 7660,
     "maximumSkipped": 1,
     "arguments": []
   },
@@ -90,7 +90,7 @@
   },
   "worker-channel": {
     "project": "tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj",
-    "minimumPassed": 98,
+    "minimumPassed": 253,
     "maximumSkipped": 0,
     "arguments": []
   }

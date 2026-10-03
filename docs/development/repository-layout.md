@@ -4,8 +4,8 @@
 
 | 路径 | 用途 |
 |---|---|
-| `TiaPortalOpenness.slnx` | 69 个开发工程，按 Engine、PlcAdapters、WorkerProtocol、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
-| `TiaPortalOpenness.Offline.slnx` | 48 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
+| `TiaPortalOpenness.slnx` | 51 个开发工程，按 Engine、PlcAdapters、Studio、Tools、Tests 分组；不包含 reference 示例、LibraryRenameProbe 和必须逐版本构建的 PlcWorker |
+| `TiaPortalOpenness.Offline.slnx` | 30 个不需要 Siemens 程序集的工程，包含 CI 离线套件和 Studio 客户端；完整构建需要 Windows/.NET 10 SDK |
 | `tools/openness-shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由发布脚本收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
@@ -43,16 +43,10 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 `InternalsVisibleTo`。运行时需要 worker bin 根目录和一个尚不存在的日志目录；命令见
 [适配器说明](../../tools/tiaportal-mcp/src/TiaMcp.Adapters/README.md#input-regression-checks)。
 
-以下夹具均位于 `tools/tiaportal-mcp/tests/`，不连接 TIA；两个 TransportFixture 的协议不同，保留名称，
-不合并：
-
-| 工程目录 | 协议与用途 |
-|---|---|
-| `TiaMcpServer.TransportFixture` | 生产 Foundation worker 的行 JSON 替身，由 `scripts/checks/Test-FoundationTransport.py` 使用，并由 `.github/workflows/offline-checks.yml` 和 `scripts/build/Build-MultiVersion.ps1` 构建、调用检查 |
-| `TiaMcp.TransportFixture` | `TiaMcp.WorkerProtocol.*` 的预览帧协议传输夹具，用于测试带长度前缀的帧及传输故障 |
-| `TiaMcp.EndpointFixture` | 同一预览帧协议的端点夹具，用于测试端点状态、请求分派与绑定检查 |
-
-`TiaMcp.WorkerProtocol.*` 尚未接入生产 worker；是否采用或删除由[重构计划](refactor-plan.md) P4-01 决定。
+`tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture` 是 Foundation 协议 2 的行 JSON 替身，
+由 `worker-channel`、`scripts/checks/Test-FoundationTransport.py` 使用，并由 CI 与
+`scripts/build/Build-MultiVersion.ps1` 构建。夹具不连接 TIA；第 A 步删除了无生产调用方的预览协议
+与两个预览夹具，规则映射见[适配器设计](adapter-merge.md#第-a-步最终规则核对)。
 
 ## 文档入口
 

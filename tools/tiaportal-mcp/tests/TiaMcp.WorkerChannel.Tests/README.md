@@ -1,14 +1,15 @@
 # Foundation protocol 2 regression
 
 Run `python scripts/checks/Test-DotnetSuites.py --suite worker-channel` from the
-repository root (minimum 98 passed, zero skipped). The tests exercise the actual
+repository root (minimum 253 passed, zero skipped). The tests exercise the actual
 shared channel, including the synthetic `TiaMcpServer.TransportFixture` child
 process. No Siemens reference, TIA process, PLC or network service is used.
 The separate `Test-FoundationTransport.py` check exercises the real MCP host over
 STDIO and a locally created HTTP fixture service.
 
 The names below correspond to assertion texts found with `git grep` in the
-preview tests. The preview projects remain until migration step A is reviewed.
+preview tests. The preview projects were deleted in step A; the final audit and LegacyHost
+assertion disposition are recorded in [adapter-merge.md](../../../../docs/development/adapter-merge.md#第-a-步最终规则核对).
 `ProtocolTests` uses controlled byte streams; `ServerTests` observes dispatch
 counts and thread ownership; `ProcessTests` exercises real OS pipes.
 
@@ -68,5 +69,10 @@ the exact built executable and adapter, then calls ReadState and idle Disconnect
   to poison, so the Endpoint preview rule is used. The existing LegacyHost
   serialization gate still queues MCP calls before they enter the channel.
 
-These exclusions must remain visible when reviewing step A; the new suite does
+These exclusions remain part of the step A deletion record; the suite does
 not claim to reproduce all preview assertions or provide real TIA acceptance.
+
+`PreviewRuleTests` adds the deletion audit's missing strict-envelope field/token
+cases, launch identity coverage, exact/fragmented request cap, per-request progress
+sequence/cap, known-failure epochs, uncooperative writes, and swallowed observer/
+emission reentry. Production channel code and native dispatch are unchanged.

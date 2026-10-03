@@ -27,10 +27,6 @@ jobs:
         run: python scripts/checks/Test-DotnetSuites.py --self-test
       - name: Offline regression and MCP SDK version policy
         run: python scripts/checks/Test-DotnetSuites.py --suite offline --suite offline-v20 --suite version-policy
-      - name: Shared legacy and modern JSON protocol regression
-        run: |
-          dotnet run --project tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests.csproj -c Release --nologo
-          dotnet run --project tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonV2.Tests/TiaMcp.WorkerProtocol.JsonV2.Tests.csproj -c Release --nologo
 
   dead-tool-references:
     # 工具描述里点名的工具必须真的注册过。踩过的形状：某个能力被刻意下线了，

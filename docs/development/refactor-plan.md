@@ -18,7 +18,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | G7 | 运行时与仓库布局解耦 | 引擎通过探测 `scripts/ecosystem/plc_tools_bridge.py` 定位仓库根，运行时读取 `reference/`、`templates/` |
 | G8 | 职责分离 | `Runtime/`（Sharp7、OPC UA、PLCSIM Advanced、Web API）编译进 Openness 引擎；`Program` partial 承载报告和模板逻辑 |
 | G9 | 会话绑定安全 | 其他客户端改绑工程后，`Guard.MatchPlcName` 的“单 PLC 工程匹配任意名称”规则会把请求静默解析到错误 PLC |
-| G10 | 清除噪音 | 3 套 worker 协议（`TiaMcp.WorkerProtocol.*` 未接线）、3 套 JSON 库、`#if COMMERCIAL` 死代码、166 条 `// 2.x.y:` 历史注释、`*Leftovers` 文件、注释中过时的工具数 |
+| G10 | 清除噪音 | 3 套 worker 协议（未接线的预览协议已在 P4-A 删除）、3 套 JSON 库、`#if COMMERCIAL` 死代码、166 条 `// 2.x.y:` 历史注释、`*Leftovers` 文件、注释中过时的工具数 |
 
 ## 约束
 
@@ -69,7 +69,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（维护者决定暂不进行真机实测） | deferred |
 | P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | done |
 | P0-06 | 离线返回结构快照：离线可执行工具的规范化返回，加上全部工具在直接调用与 CallTool 桥接两条路径上的调用前拒绝（`manifest/contracts/responses`） | done |
-| P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | done |
+| P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；未接线的预览协议随后在 P4-A 删除 | done |
 
 ### 阶段 1：构建与验证
 
@@ -80,7 +80,7 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 | P1-03 | 版本号单一来源（根 `Version.props`，显式导入，不影响第三方工程），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | done |
 | P1-04 | 抽出纯逻辑库 `TiaMcp.Logic`（net48;net8.0，`InternalsVisibleTo`，命名空间不变、纯重命名）；测试与 LegacyHost 改为项目引用。原生调用织入只覆盖 `TiaMcpServer.exe`，凡可能反射/枚举 Openness 对象的文件留在引擎，引擎插桩点不得减少。`openness-shared` 仍为链接源码目录（csc 启动器与 net461 适配器无法使用工程引用）。分三步：S1 构建器与 MCP 逻辑；S2 `Siemens/*Logic.cs`；S3 版本目录与引导（`TiaVersionCatalog` 等）。LegacyHostTests 改造并入 P4-01 | done |
 | P1-05 | 测试迁移到 xunit 并改为按最低数量表的 trx 门禁；恢复 10 个从未运行的测试工程；逐步去掉 `partial class` 注入。见[测试迁移设计](test-migration.md)；HttpTests 保持加载织入程序，字符串反射并入引擎拆分步骤 3 | done |
-| P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；两个 TransportFixture 协议不同，不合并、不改名，文档说明区别 | done |
+| P1-06 | 适配器诊断测试从 `src` 移到 `tests/TiaMcp.Adapters.DiagnosticsTests`；当时两个 TransportFixture 协议不同，未合并或改名；预览夹具随后在 P4-A 删除 | done |
 | P1-07 | 目录整理第一批：设计验收页归入 `docs/development/design-qa.md`；启动器归入 `tools/tia-openness-studio/src/TiaOpenness.Launcher`；Glass 资源归入 `tools/tia-openness-studio/src/TiaOpenness.Gui`；`manifest` 中带日期的历史证据移到 `manifest/history/`。整体目录重组在阶段 4 之后、G7 解耦之后进行 | done |
 
 ### 阶段 2：公共层（兼容）
@@ -114,10 +114,11 @@ worktree 中实现；维护者负责决策点、真机授权和发布。机器�
 
 | ID | 任务 | 状态 |
 |---|---|---|
-| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D4（worker 改 net48）、D7（删除 WorkerProtocol，先移植规则）已决定，其余随对应步骤决定 | done |
+| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定未接线的预览协议采用或删除。设计见[按版本的类型化适配器设计](adapter-merge.md)（契约、协议 2、A–J 迁移步骤）；D4（worker 改 net48）、D7（删除 WorkerProtocol，先移植规则）已决定，其余随对应步骤决定 | done |
+| P4-A | 第 A 步：删除未接线的预览协议、七套测试与两个夹具；移除旧 Decode 和门禁豁免，补齐协议 2 测试并保存最终规则映射 | review |
 | P4-B | 第 B 步：`TiaMcp.Adapters.Contracts`（原样迁移 DTO、错误类型、黄金 JSON 测试；适配器内 `TiaVersionCatalog` 改为 internal）；48 个类型原样迁移，`adapter-contracts` 套件 232 项 | done |
 | P4-C | 第 C 步：版本特性集中到一张表，证明各项目 DefineConstants 与织入清单不变；`tools/openness-shared/TiaFeatures.props` + `Check-TiaFeatures.py`（validate 流程） | done |
-| P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48（P4-E1 完成，三个旧版本冒烟通过，真机验收已登记）与协议 2（P4-E2 完成：`TiaMcp.WorkerChannel`、握手与不重放规则、`worker-channel` 套件 98 项，预览规则逐条映射；下一步 P4-A 删除预览协议）） | doing |
+| P4-02 | Foundation worker 迁移到共享适配器（第 D 步完成：46 个源码原样移入 `TiaMcp.Adapters/Native`、`Policy`，`OpennessAdapter` 以委托实现会话、程序、数据接口；第 E 步：worker 改 net48（P4-E1 完成，三个旧版本冒烟通过，真机验收已登记）与协议 2（P4-E2 完成：`TiaMcp.WorkerChannel`、握手与不重放规则、`worker-channel` 套件 98 项，预览规则逐条映射；P4-A 完成：删除 `TiaMcp.WorkerProtocol.*`（约 10,700 行、6,676 个断言），删除前补 155 项规则测试，`worker-channel` 253 项）） | doing |
 | P4-03 | Studio 桥接进程迁移到共享适配器（第 F 步：桥接改用 `TiaMcp.WorkerChannel`，进行中；第 G 步：基于共享适配器重写会话，构建开关后） | doing |
 | P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
 

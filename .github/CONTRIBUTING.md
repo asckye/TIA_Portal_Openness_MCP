@@ -55,7 +55,6 @@ line numbers. Comments and code whitespace do not affect hashes; literal content
 file therefore needs no new allowance, while copying or changing an unmarked catch fails. Run
 `python scripts/checks/Check-SwallowedExceptions.py --update-baseline` after resolving catches to
 remove old entries; routine updates must not use `--allow-growth` (reserved for reviewed initialization).
-The pending phase-4 `TiaMcp.WorkerProtocol*` sources are exempt.
 
 The [P2-03 logging policy](../docs/development/response-and-errors.md#日志与检查) specifies the planned
 `SwallowedExceptions.Note(string site, Exception ex)` helper: record only the site, exception type's

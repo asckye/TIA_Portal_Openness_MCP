@@ -79,28 +79,8 @@
     <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj" />
     <Project Path="tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/TiaOpenness.Gui.Tests.csproj" />
   </Folder>
-  <Folder Name="/Tests/WorkerProtocol/">
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.EndpointFixture/TiaMcp.EndpointFixture.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.TransportFixture/TiaMcp.TransportFixture.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests/TiaMcp.WorkerProtocol.AsyncPreview.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.Endpoint.Tests/TiaMcp.WorkerProtocol.Endpoint.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.HostPreview.Tests/TiaMcp.WorkerProtocol.HostPreview.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.HostTransport.Tests/TiaMcp.WorkerProtocol.HostTransport.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests/TiaMcp.WorkerProtocol.JsonLegacy.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.JsonV2.Tests/TiaMcp.WorkerProtocol.JsonV2.Tests.csproj" />
-    <Project Path="tools/tiaportal-mcp/tests/TiaMcp.WorkerProtocol.Tests/TiaMcp.WorkerProtocol.Tests.csproj" />
-  </Folder>
   <Folder Name="/Tools/">
     <Project Path="tools/native-call-weaver/NativeCallWeaver.csproj" />
     <Project Path="tools/third-party/TiaGitAddIn.Core/TiaGitAddIn.Core.csproj" />
-  </Folder>
-  <Folder Name="/WorkerProtocol/">
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.AsyncPreview/TiaMcp.WorkerProtocol.AsyncPreview.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.Endpoint/TiaMcp.WorkerProtocol.Endpoint.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.HostPreview/TiaMcp.WorkerProtocol.HostPreview.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.HostTransport/TiaMcp.WorkerProtocol.HostTransport.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonLegacy/TiaMcp.WorkerProtocol.JsonLegacy.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol.JsonV2/TiaMcp.WorkerProtocol.JsonV2.csproj" />
-    <Project Path="tools/tiaportal-mcp/src/TiaMcp.WorkerProtocol/TiaMcp.WorkerProtocol.csproj" />
   </Folder>
 </Solution>

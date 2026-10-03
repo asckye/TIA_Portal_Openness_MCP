@@ -66,9 +66,8 @@ internal static class PathAndIdentityTests
         foreach(var invalidKey in new[]{"14","15","V17","22"}) Reject(()=>Gate(false,true,@"C:\Projects\New\New.ap17","CreateProject",invalidKey,directory:@"C:\Projects",name:"New"),"Original/unknown release refused");
         foreach(var outcome in new[]{"rejected-before-operation","read-failed","unknown"})
         {
-            var wire="{\"id\":1,\"error\":{\"message\":\"test\",\"code\":-32602,\"outcome\":\""+outcome+"\"}}";
-            try { WorkerProtocol.Decode(wire,1); throw new Exception("Error returned as success"); }
-            catch(WorkerOperationException error) { check(error.Code==-32602,"Worker error code preserved"); check(WorkerProtocol.RequiresSessionReset(true,error)==(outcome=="unknown"),"Only unknown outcome poisons session"); }
+            var error=new WorkerOperationException("test",-32602,outcome);
+            check(WorkerProtocol.RequiresSessionReset(true,error)==(outcome=="unknown"),"Only unknown outcome poisons session");
         }
         check(WorkerProtocol.RequiresSessionReset(true,new OperationCanceledException()),"Sent cancellation remains unknown");
         check(!WorkerProtocol.RequiresSessionReset(false,new OperationCanceledException()),"Unsent cancellation is safe");

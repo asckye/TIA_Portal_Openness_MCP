@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace TiaMcp.LegacyHost;
@@ -78,30 +77,5 @@ internal static class WorkerProtocol
             }
         }
         if(operation=="CompileSoftware") V17CompileEnvelope.Validate(data,dryRun);
-    }
-    internal static JsonNode? Decode(string response,long expectedId)
-    {
-        using var document=JsonDocument.Parse(response);
-        var root=document.RootElement;
-        if(root.ValueKind!=JsonValueKind.Object) throw new IOException("Malformed worker response.");
-        var names=new HashSet<string>(StringComparer.Ordinal);
-        foreach(var field in root.EnumerateObject())
-            if(!names.Add(field.Name) || field.Name is not ("id" or "result" or "error")) throw new IOException("Duplicate or unknown worker response field.");
-        if(!root.TryGetProperty("id",out var id) || !id.TryGetInt64(out var actualId) || actualId!=expectedId) throw new IOException("Worker response ID mismatch.");
-        bool hasResult=root.TryGetProperty("result",out var result);
-        bool hasError=root.TryGetProperty("error",out var error);
-        if(hasResult==hasError) throw new IOException("Worker response must contain exactly one result or error.");
-        if(hasError)
-        {
-            if(error.ValueKind!=JsonValueKind.Object || !error.TryGetProperty("message",out var message) || message.ValueKind!=JsonValueKind.String)
-                throw new IOException("Malformed worker error.");
-            if(!error.TryGetProperty("code",out var code) || !code.TryGetInt32(out var number) || number is not (-32602 or -32603) ||
-                !error.TryGetProperty("outcome",out var outcome) || outcome.ValueKind!=JsonValueKind.String || outcome.GetString() is not ("rejected-before-operation" or "read-failed" or "unknown"))
-                throw new IOException("Malformed worker failure classification.");
-            var detail=message.GetString()!;
-            if(error.TryGetProperty("evidence",out var evidence) && evidence.ValueKind==JsonValueKind.Object) detail+="; failure evidence: "+evidence.GetRawText();
-            throw new WorkerOperationException(detail,number,outcome.GetString()!);
-        }
-        return JsonNode.Parse(result.GetRawText()); // Explicit null is a valid void result.
     }
 }

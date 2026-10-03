@@ -48,20 +48,13 @@ internal static class AdditionalMutationResultTests
             var missingOutcome = Result(); missingOutcome.Remove("Executed");
             Reject(operation, "missing execution marker", missingOutcome);
 
-            // The actual wire protocol spells an unknown native result as error.outcome="unknown".
-            // There is no invented UnknownResult enum/type in the production interface.
-            Exception? unknownFailure = null;
-            try { WorkerProtocol.Decode("{\"id\":7,\"error\":{\"message\":\"native result unknown\",\"code\":-32603,\"outcome\":\"unknown\"}}", 7); }
-            catch (Exception ex) { unknownFailure = ex; }
-            check(unknownFailure is WorkerOperationException { KnownNoMutation: false }, operation + ": unknown outcome preserved");
-            if (unknownFailure != null)
-            {
-                var state = new WorkerOutcomeState(); state.Failed(true, unknownFailure);
-                check(state.Poisoned, operation + ": unknown native outcome poisons session");
-                bool blocked = false;
-                try { state.RequireUsable(); } catch (InvalidOperationException) { blocked = true; }
-                check(blocked, operation + ": unknown native outcome cannot be replayed");
-            }
+            var unknownFailure = new WorkerOperationException("native result unknown", -32603, "unknown");
+            check(!unknownFailure.KnownNoMutation, operation + ": unknown outcome preserved");
+            var state = new WorkerOutcomeState(); state.Failed(true, unknownFailure);
+            check(state.Poisoned, operation + ": unknown native outcome poisons session");
+            bool blocked = false;
+            try { state.RequireUsable(); } catch (InvalidOperationException) { blocked = true; }
+            check(blocked, operation + ": unknown native outcome cannot be replayed");
         }
     }
 }

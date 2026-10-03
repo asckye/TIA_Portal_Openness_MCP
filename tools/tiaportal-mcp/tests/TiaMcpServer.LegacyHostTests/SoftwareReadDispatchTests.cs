@@ -24,11 +24,11 @@ internal static class SoftwareReadDispatchTests
             var date=DateTime.SpecifyKind(new DateTime(2026,1,2,3,4,5),dateKind);
             var values=new object?[]{date,123,true,1.25m,DayOfWeek.Friday,null,"literal"};
             var dto=new { Name="PLC",Attributes=values.Select((v,i)=>new {Name="A"+i,Value=v,AccessMode="Read"}).ToArray(),Description="PLC",Meta=new {softwarePath="devices/D/CPU",scope="ordinary PLC"} };
-            var wireJson=Newtonsoft.Json.JsonConvert.SerializeObject(new { id=7,result=dto });
-            var decoded=WorkerProtocol.Decode(wireJson,7)!;
+            var wireJson=Newtonsoft.Json.JsonConvert.SerializeObject(dto);
+            var decoded=JsonNode.Parse(wireJson)!;
             var wrapped=SoftwareReadContract.Wrap("GetSoftwareInfo",decoded,McpJsonUtilities.DefaultOptions);
             for(int i=0;i<values.Length;i++)
-                check(JsonNode.DeepEquals(wrapped[Wire("Attributes")]![i]![Wire("Value")],decoded["Attributes"]![i]!["Value"]),"Actual Newtonsoft/Decode/software-envelope preserves "+dateKind+" value "+i);
+                check(JsonNode.DeepEquals(wrapped[Wire("Attributes")]![i]![Wire("Value")],decoded["Attributes"]![i]!["Value"]),"Actual Newtonsoft/JsonNode/software-envelope preserves "+dateKind+" value "+i);
         }
         var candidates=new[]{new {Path="G%2F1/B%25"}};
         var objectPath=TiaMcp.PlcFoundation.PlcExchangePolicy.ObjectPath("G%2F1/B%25");

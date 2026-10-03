@@ -67,8 +67,6 @@ internal static class ExchangeContractTests
             catch(IOException ex) { check(WorkerProtocol.RequiresSessionReset(true,ex),"Mismatched result poisons session before releasing worker lock"); }
             payload.Remove("ProjectFile");
             try { V17MutationEnvelope.Wrap("ImportBlock","Mutation",payload,false); throw new Exception("Missing identity accepted"); } catch(InvalidDataException) { check(true,"Missing result project identity rejected"); }
-            try { WorkerProtocol.Decode("{\"id\":1,\"error\":{\"message\":\"import failed\",\"code\":-32603,\"outcome\":\"unknown\",\"evidence\":{\"inputSha256\":\"abc\"}}}",1); throw new Exception("Error accepted"); }
-            catch(WorkerOperationException ex) { check(ex.Message.Contains("inputSha256") && WorkerProtocol.RequiresSessionReset(true,ex),"Failure evidence retained and unknown write stops session"); }
         }
         finally
         {
