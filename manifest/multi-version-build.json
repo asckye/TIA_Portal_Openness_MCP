@@ -85,7 +85,7 @@
       "path": "scripts/checks/Test-ExternalSourceDispatch.py"
     },
     {
-      "sha256": "36a9e68f35eb37f96841c1e5a2587545c73411ee2ad9d69cfd42ebc0b2fc338c",
+      "sha256": "e18716d3ff81672c1d7243ccd07065c7b4970124c29fb701656981cf1260d4e4",
       "path": "scripts/checks/Test-FoundationTransport.py"
     },
     {
@@ -5335,7 +5335,26 @@
   "validation": {
     "foundationTransportExecuted": true,
     "studioFunctionalTestsExecuted": true,
-    "nativeTiaExecuted": false
+    "nativeTiaExecuted": false,
+    "foundationTransportRecheck": {
+      "at": "2026-10-03T06:50:08.449313+00:00",
+      "reason": "Compare Windows PublicAPI path directory identity after host canonicalization; exact release and argument count retained.",
+      "result": {
+        "stdioToolCounts": {
+          "14sp1": 54,
+          "15.1": 55,
+          "16": 57,
+          "17": 57,
+          "18": 57,
+          "19": 59
+        },
+        "httpSessions": 2,
+        "unicodeRoundTrip": true,
+        "workerArguments": "exact release keys",
+        "nativeTiaExecuted": false
+      },
+      "runtimeRebuilt": false
+    }
   },
   "createdAt": "2026-10-03T06:41:33.9182968+00:00",
   "studioReleaseKeys": [

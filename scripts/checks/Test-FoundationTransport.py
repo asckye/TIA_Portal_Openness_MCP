@@ -129,7 +129,11 @@ def main():
                     if client.p.poll() is None:
                         client.p.terminate(); client.p.wait(10)
             records = [json.loads(line) for line in logfile.read_text('utf-8').splitlines()]
-            assert records[0]['args'] == ['--native-session', key, str(temp)]
+            worker_args = records[0]['args']
+            assert len(worker_args) == 3 and worker_args[:2] == ['--native-session', key], worker_args
+            # Windows can expand a runner's short TEMP name in Path.GetFullPath.
+            # Verify the directory identity while keeping the release/argument checks exact.
+            assert Path(worker_args[2]).samefile(temp), worker_args
             assert [r['operation'] for r in records if r['stage'] == 'call'] == ['Attach', 'ReadProjectTree', 'Disconnect']
         with socket.socket() as port:
             port.bind(('127.0.0.1', 0)); number = port.getsockname()[1]

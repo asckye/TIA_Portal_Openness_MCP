@@ -36,3 +36,10 @@ The local user handoff, SDKs, design assets and upstream licenses are preserved.
 
 This is a development build, not a new public release. New native acceptance remains
 pending per release, especially import/export/compile roundtrips and both VCI API families.
+
+The first GitHub transport run exposed a raw Windows path-string assertion after
+successful worker calls. The check now verifies the same directory after host
+path canonicalization, while preserving the exact release and argument count.
+All six STDIO releases and both isolated HTTP sessions passed the local rerun;
+the supplementary result is recorded in the multi-version manifest. Runtime
+sources and binaries were unchanged by this test-only correction.
