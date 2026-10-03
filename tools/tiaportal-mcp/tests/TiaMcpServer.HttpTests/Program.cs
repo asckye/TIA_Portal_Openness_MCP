@@ -314,6 +314,9 @@ internal static partial class Program
 
     private static async Task<int> Main(string[] args)
     {
+        // Mirror the engine's startup (Program.cs): .NET Framework writes child stdin with Console.InputEncoding,
+        // which emits a UTF-8 BOM when the console code page is 65001 and the engine has not replaced it.
+        try { Console.InputEncoding = new System.Text.UTF8Encoding(false); } catch (IOException) { }
         try {
             if(args.Length > 0 && args[0] == "worker-fixture") return RunWorkerFixture(args);
             string exe=Path.GetFullPath(args[0]); string dir=Path.GetDirectoryName(exe)!;
