@@ -11,7 +11,9 @@ import importlib.util
 import json
 from pathlib import Path
 import re
+import shutil
 import unittest
+import uuid
 
 
 def load(name, filename):
@@ -51,7 +53,7 @@ STACK_FRAME = re.compile(r'^(?:[^\S\r\n]+(?:at |在 )|[^\S\r\n]*--- End of)')
 STRING_UNIT = re.compile(r'\\u[0-9a-fA-F]{4}|\\["\\/bfnrt]|[^\\]')
 
 
-def error_tokens(text):
+def error_tokens(text, paths=ERROR_PATHS):
     # Walk literal JSON tokens so replacing error spans cannot reformat the
     # surrounding response. Escaped property names are deliberately not masked.
     try:
@@ -77,7 +79,7 @@ def error_tokens(text):
                     item = next(tokens)  # comma or closing bracket
                     if item.group() != ']':
                         item = next(tokens)
-            elif path in ERROR_PATHS and raw.startswith('"'):
+            elif path in paths and raw.startswith('"'):
                 yield path, token
 
         return list(value(next(tokens), ()))
@@ -887,6 +889,154 @@ CASES['PlcBlocks'] = [
   + actions('ManagePlcUserGroup', 'create rename deleteEmpty', softwarePath=PLC, family='blocks', groupPath='Group')
 
 
+# Connection/group tools use duplicate-argument rejection before their bodies;
+# no case may attach, start TIA, or change Windows group membership.
+CASES['Session'] = [
+    (name, 'duplicate-argument', {'probe': True, 'PROBE': False})
+    for name in ('Connect', 'ConnectIsolated', 'ListPortalProcessProjects', 'EnsureOpennessUserGroup')
+] + [
+    ('GetState', 'disconnected', {}),
+    ('Disconnect', 'disconnected', {}),
+    ('Bootstrap', 'offline', {}),
+    ('ConnectToProject', 'invalid-identity', {'processId': -1, 'processStartUtc': 'invalid', 'projectPath': ''}),
+    ('ReadPortalInfo', 'disconnected', {'includeProcesses': False, 'includeSessions': False, 'includeProducts': False}),
+]
+CASES['ProjectSession'] = [
+    ('GetProject', 'disconnected', {}),
+    ('OpenProject', 'invalid-extension', {'path': 'offline.invalid'}),
+    ('AttachToOpenProject', 'empty-name', {'projectName': ''}),
+    ('CreateProject', 'disconnected', {'directoryPath': 'C:/domain-offline', 'projectName': 'Offline'}),
+    ('ScaffoldProject', 'preview', {'spec': '{"projectName":"Offline","directoryPath":"C:/domain-offline"}', 'dryRun': True}),
+    ('SaveProject', 'disconnected', {}),
+    ('SaveAsProject', 'disconnected', {'newProjectPath': 'C:/domain-offline.ap21'}),
+    ('CloseProject', 'disconnected', {}),
+    ('ReadObjectIdentifier', 'disconnected', {}),
+    ('ShowObjectInEditor', 'preview', {'dryRun': True}),
+    ('RunToolsInTransaction', 'preview', {'callsJson': '[{"name":"CreatePlcTypeGroup","arguments":{"softwarePath":"PLC_1","groupPath":"Offline"}}]', 'text': 'Offline preview', 'dryRun': True}),
+]
+# Both optional native probes stay disabled, including in the acceptance report.
+CASES['Diagnostics'] = [
+    ('RunCapabilitySelfTest', 'offline', {'connectIfNeeded': False, 'includeProjectTree': True, 'inspectPortalProcesses': False}),
+    ('RunOnlineMonitoringSafetySelfTest', 'offline', {}),
+    ('GenerateAcceptanceReport', 'offline-report', {'connectIfNeeded': False, 'includeProjectTree': True,
+        'inspectPortalProcesses': False, 'title': 'Domain offline acceptance', 'outputDirectory': '<report-directory>'}),
+    ('GenerateErrorReport', 'offline-report', {'errorCode': 'NotConnected', 'summary': 'Offline domain report',
+        'detail': 'Literal clock-like data 2026-10-03T12:34:56+00:00 and 20261003_123456 must be preserved.',
+        'outputDirectory': '<report-directory>'}),
+]
+# These fields are DateTime.Now in GenerateAcceptanceReport and its two self-tests.
+snapshots.RAW_MASK_RULES += [
+    {'tool': 'GenerateAcceptanceReport', 'path': [parent, meta, 'timestamp'],
+     'reason': 'Nested diagnostic response DateTime.Now'}
+    for parent, meta in (('selfTest', 'meta'), ('safetySelfTest', 'meta'), ('SelfTest', 'Meta'), ('SafetySelfTest', 'Meta'))
+]
+REPORT_TOOLS = {'GenerateAcceptanceReport', 'GenerateErrorReport'}
+REPORT_CLOCK_PATHS = {(json.dumps(key),) for key in (
+    'operationId', 'OperationId', 'markdownPath', 'MarkdownPath', 'jsonPath', 'JsonPath', 'GeneratedAt')}
+
+
+def mask_report_json(raw, name):
+    raw = snapshots.mask_raw_text(raw, name)
+    if name not in REPORT_TOOLS:
+        return raw
+    # OperationId is DateTime.Now.ToString("yyyyMMdd_HHmmss"), not a random ID.
+    # Only that clock value and its derived filename suffix are masked. Directory,
+    # filename prefix/extension, payload timestamps and all other bytes are retained.
+    for path, token in reversed(error_tokens(raw, REPORT_CLOCK_PATHS)):
+        value = token.group()
+        if path[0] in ('"operationId"', '"OperationId"'):
+            value = re.sub(r'^"\d{8}_\d{6}"$', '"<clock:operationId>"', value)
+        elif path[0] == '"GeneratedAt"':
+            value = snapshots.RAW_TIMESTAMP.sub('<string:timestamp>', value)
+        else:
+            value = re.sub(r'_\d{8}_\d{6}(?=\.(?:md|json)"$)', '_<clock:operationId>', value)
+        raw = raw[:token.start()] + value + raw[token.end():]
+    return raw
+
+
+def mask_report_markdown(raw):
+    lines = raw.splitlines(keepends=True)
+    resources.require(len(lines) > 3, 'Report Markdown header missing')
+    # Only the two generated header rows; clock-like user details are never masked.
+    lines[2], count = re.subn(r'^- OperationId: `\d{8}_\d{6}`', '- OperationId: `<clock:operationId>`', lines[2])
+    resources.require(count == 1, 'Report OperationId header changed')
+    lines[3], count = re.subn(r'^- GeneratedAt: `\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)`',
+                            '- GeneratedAt: `<string:timestamp>`', lines[3])
+    resources.require(count == 1, 'Report GeneratedAt header changed')
+    return ''.join(lines)
+
+
+def diagnostics_reply(reply, profile, name, arguments):
+    result = reply.get('result', {})
+    resources.require('content' in result and not result.get('isError'), f'{name}: unexpected dispatch error: {reply}')
+    raw = result['content'][0]['text']
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge['meta']['bridgeSuccess'] is True, f'{name}: diagnostic bridge failed: {raw}')
+        raw = bridge['message']
+    value = json.loads(raw)
+    get = lambda obj, key: obj.get(key[0].lower() + key[1:], obj.get(key))
+    if name in ('RunCapabilitySelfTest', 'GenerateAcceptanceReport'):
+        selftest = value if name == 'RunCapabilitySelfTest' else get(value, 'SelfTest')
+        items = {get(item, 'Id'): item for item in get(selftest, 'Items')}
+        resources.require(get(items['tia.processes'], 'Status') == 'skip'
+                          and get(items['tia.connection'], 'Status') == 'warn'
+                          and get(selftest, 'ProjectTree') is None,
+                          f'{name}: disconnected/native-probe guards changed: {raw}')
+    artifacts = {}
+    if name in REPORT_TOOLS:
+        operation = get(value, 'OperationId')
+        resources.require(re.fullmatch(r'\d{8}_\d{6}', operation) is not None, 'Report operation ID is not the expected clock')
+        directory = Path(arguments['outputDirectory']).resolve()
+        resources.require(Path(get(value, 'OutputDirectory')).resolve() == directory, 'Report output directory changed')
+        prefix = 'tia_mcp_acceptance_' if name == 'GenerateAcceptanceReport' else 'tia_mcp_error_NotConnected_'
+        for key, suffix in (('MarkdownPath', '.md'), ('JsonPath', '.json')):
+            path = Path(get(value, key)).resolve()
+            resources.require(path.parent == directory and path.name == prefix + operation + suffix,
+                              f'{name}: report filename is not derived from its operation clock: {path}')
+            content = path.read_bytes().decode('utf-8')
+            artifacts[key] = (mask_report_markdown(content) if suffix == '.md' else mask_report_json(content, name)).encode('utf-8')
+    return mask_report_json(raw, name), artifacts
+
+
+SESSION_TERMINALS = {
+    'GetState': 'TIA-Portal MCP server state retrieved', 'Disconnect': 'Disconnected from TIA-Portal',
+    'Bootstrap': 'RecommendedNextTool', 'ConnectToProject': "An error occurred invoking 'ConnectToProject'.",
+    'ReadPortalInfo': 'Portal diagnostics read; no modification.', 'GetProject': 'Open projects and sessions retrieved',
+    'OpenProject': 'Invalid project file extension', 'AttachToOpenProject': 'projectName is required',
+    'CreateProject': 'Failed to create project', 'ScaffoldProject': "ScaffoldProject dryRun 'Offline': 0 ok, 0 failed",
+    'SaveProject': 'Failed to save project', 'SaveAsProject': 'Failed saving local project',
+    'CloseProject': 'Failed closing project', 'ReadObjectIdentifier': 'Project is null',
+    'ShowObjectInEditor': 'Project is null', 'RunToolsInTransaction': 'Transaction preview: 1 call(s) validated',
+}
+SESSION_THROWS = {'ConnectToProject', 'OpenProject', 'AttachToOpenProject', 'CreateProject',
+                  'SaveProject', 'SaveAsProject', 'CloseProject'}
+
+
+def session_reply(reply, profile, name, case):
+    resources.require('result' in reply, f'{name}: missing tool result: {reply}')
+    result = reply['result']
+    raw = result['content'][0]['text']
+    if case == 'duplicate-argument':
+        resources.require('duplicate' in raw.lower(), f'{name}: missing pre-body refusal: {raw}')
+        return raw
+    throwing = name in SESSION_THROWS
+    if profile == 'lite':
+        bridge = json.loads(raw)
+        resources.require(bridge.get('meta', {}).get('bridgeSuccess') is (not throwing),
+                          f'{name}: unexpected bridge outcome: {raw}')
+        raw = bridge['message']
+    else:
+        resources.require(bool(result.get('isError')) is throwing, f'{name}: unexpected error family: {raw}')
+    try:
+        decoded = json.dumps(json.loads(raw), ensure_ascii=False)
+    except ValueError:
+        decoded = raw
+    marker = 'processStartUtc must be the ISO timestamp' if name == 'ConnectToProject' and profile == 'lite' else SESSION_TERMINALS[name]
+    resources.require(marker in decoded, f'{name}/{case}: wrong offline terminal: {raw}')
+    return raw
+
+
 def plc_block_reply(reply, profile, name):
     resources.require('result' in reply, f'{name}: missing tools/call result: {reply}')
     raw = reply['result']['content'][0]['text']
@@ -1126,6 +1276,8 @@ def capture(args, exe, harness, profile, isolated):
         reached_child = False
         for domain in args.domain:
             for name, case, arguments in CASES[domain]:
+                if domain == 'Diagnostics' and name in REPORT_TOOLS:
+                    arguments = dict(arguments, outputDirectory=str(args.report_directory / name))
                 hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest',
                                                         'ManageSivarcScreenLayout',
                                                         'ManageClassicHmiGraphic',
@@ -1153,6 +1305,30 @@ def capture(args, exe, harness, profile, isolated):
                     raw = hmi_reply(reply, profile, name)
                     reached_child = True
                     responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    continue
+                if domain == 'Diagnostics':
+                    raw, artifacts = diagnostics_reply(reply, profile, name, arguments)
+                    reached_child = True
+                    responses[domain + '/' + name + '/' + case] = raw.encode('utf-8')
+                    for artifact, content in artifacts.items():
+                        responses[domain + '/' + name + '/' + artifact] = content
+                    continue
+                if domain in ('Session', 'ProjectSession'):
+                    raw = session_reply(reply, profile, name, case)
+                    reached_child |= case != 'duplicate-argument'
+                    responses[domain + '/' + name + '/' + case] = snapshots.mask_raw_text(raw, name).encode('utf-8')
+                    preflight = {'name': name, 'argumentsJson': '{"probe":true,"PROBE":false}'}
+                    params = {'name': 'PreflightToolCall', 'arguments': preflight} if profile == 'full' else {
+                        'name': 'CallTool', 'arguments': {'name': 'PreflightToolCall', 'argumentsJson': json.dumps(preflight)}}
+                    result = rpc('tools/call', params=params)['result']
+                    resources.require(not result.get('isError'), f'{name}: preflight dispatch failed: {result}')
+                    raw = result['content'][0]['text']
+                    if profile == 'lite':
+                        bridge = json.loads(raw)
+                        resources.require(bridge['meta']['bridgeSuccess'] is True, f'{name}: preflight bridge failed: {raw}')
+                        raw = bridge['message']
+                    resources.require('duplicate' in raw.lower(), f'{name}: preflight did not resolve the moved tool: {raw}')
+                    responses[domain + '/' + name + '/preflight'] = snapshots.mask_raw_text(raw, 'PreflightToolCall').encode('utf-8')
                     continue
                 if domain == 'PlcBlocks':
                     raw = plc_block_reply(reply, profile, name)
@@ -1321,6 +1497,37 @@ def capture(args, exe, harness, profile, isolated):
 
 
 class SelfTests(unittest.TestCase):
+    def test_report_mask_preserves_payload_and_filename_identity(self):
+        raw = '{ "OperationId": "20261003_123456", "MarkdownPath": "C:/same/tia_mcp_error_NotConnected_20261003_123456.md", "Summary": "20261003_123456", "Detail": "2026-10-03T12:34:56+00:00", "GeneratedAt": "2026-10-03T12:34:56+00:00" }'
+        expected = raw.replace('"OperationId": "20261003_123456"', '"OperationId": "<clock:operationId>"').replace(
+            '_20261003_123456.md', '_<clock:operationId>.md').replace(
+            '"GeneratedAt": "2026-10-03T12:34:56+00:00"', '"GeneratedAt": "<string:timestamp>"')
+        self.assertEqual(mask_report_json(raw, 'GenerateErrorReport'), expected)
+        self.assertEqual(mask_report_json(raw, 'GetState'), raw)
+        for before, after in [('C:/same/', 'D:/changed/'), ('NotConnected', 'Changed'), ('.md', '.txt'), ('Summary', 'Detail2')]:
+            self.assertNotEqual(mask_report_json(raw.replace(before, after), 'GenerateErrorReport'), expected)
+
+    def test_report_mask_does_not_hide_nested_or_non_clock_ids(self):
+        for raw in ('{"OperationId":"random-id"}', '{"OperationId":"20261003_123456-changed"}',
+                    '{"data":{"OperationId":"20261003_123456"}}', '{"GeneratedAt":"not-a-clock"}',
+                    r'{"Operation\u0049d":"20261003_123456"}'):
+            self.assertEqual(mask_report_json(raw, 'GenerateAcceptanceReport'), raw)
+
+    def test_acceptance_nested_clocks_are_narrow(self):
+        for parent, meta in (('selfTest', 'meta'), ('safetySelfTest', 'meta'), ('SelfTest', 'Meta'), ('SafetySelfTest', 'Meta')):
+            raw = '{"' + parent + '":{"' + meta + '":{"timestamp":"2026-10-03T12:34:56+00:00","detail":"2026-10-03T12:34:56+00:00"}}}'
+            expected = raw.replace('"timestamp":"2026-10-03T12:34:56+00:00"', '"timestamp":"<string:timestamp>"')
+            self.assertEqual(mask_report_json(raw, 'GenerateAcceptanceReport'), expected)
+            self.assertEqual(mask_report_json(raw, 'GenerateErrorReport'), raw)
+
+    def test_report_markdown_masks_only_generated_header_rows(self):
+        raw = '# Report\r\n\r\n- OperationId: `20261003_123456`\r\n- GeneratedAt: `2026-10-03T12:34:56+00:00`\r\nDetail\r\n- GeneratedAt: `2026-10-03T12:34:56+00:00`\r\n'
+        expected = raw.replace('20261003_123456', '<clock:operationId>', 1).replace('2026-10-03T12:34:56+00:00', '<string:timestamp>', 1)
+        self.assertEqual(mask_report_markdown(raw), expected)
+        self.assertNotEqual(mask_report_markdown(raw.replace('Detail', 'Changed')), expected)
+        with self.assertRaises(AssertionError):
+            mask_report_markdown(raw.replace('- OperationId:', '- Other:'))
+
     @staticmethod
     def response(error, key='meta'):
         return json.dumps({key: {'error': error}}, ensure_ascii=False)
@@ -1458,6 +1665,21 @@ def main():
         parser.error('--domain, both EXEs/harnesses, --public-api and --major are required')
     args.domain = list(dict.fromkeys(args.domain))
     check_coverage(args.domain)
+    if 'Diagnostics' in args.domain:
+        scratch = (Path(__file__).resolve().parents[2] / 'bin-build').resolve()
+        # Inherit worktree permissions, as in the other Windows check fixtures;
+        # TemporaryDirectory's private ACL cannot be reopened in restricted sessions.
+        args.report_directory = scratch / ('domain-diagnostics-' + uuid.uuid4().hex)
+        args.report_directory.mkdir(parents=True)
+        try:
+            return compare_domains(args)
+        finally:
+            resources.require(args.report_directory.resolve().parent == scratch, 'Report directory escaped bin-build')
+            shutil.rmtree(args.report_directory)
+    return compare_domains(args)
+
+
+def compare_domains(args):
     passed = failed = 0
     for isolated in (False, True):
         for profile in ('full', 'lite'):

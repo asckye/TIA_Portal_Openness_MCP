@@ -7,6 +7,7 @@ internal static class EngineeringApiShapeTests
     internal static void Run(Assembly server, Action<bool,string> check)
     {
         DomainShapeChecks.Run(server, check);
+        SessionToolChecks.Run(server, check);
         Assembly Api(string split,string legacy) { try { return Assembly.Load(split); } catch(System.IO.FileNotFoundException) { return Assembly.Load(legacy); } }
         var step7=Api("Siemens.Engineering.Step7","Siemens.Engineering");
         var core=Api("Siemens.Engineering.Base","Siemens.Engineering");

@@ -103,7 +103,7 @@ J 表示需要设计判断，M 表示可按说明机械执行。
 12. **J** 在线与下载。
 13. **J** PLC 程序（工具最多，含 IL 检查与 CLI）。
 14. **J** Unified HMI（先完成 P1-05 对 partial `Portal` 测试夹具的改写）。
-15. **J** 会话工具迁入 `SessionTools`，`McpServer` 只剩基础设施与转发。
+15. **J** 会话、工程和诊断工具迁入 `SessionTools`、`ProjectSessionTools`、`DiagnosticsTools`；领域迁移合并后的 `McpServer` 只保留基础设施工具与静态转发（运行时通道按第 16 步迁出）。基础设施工具名单及并行迁移期间的余项见下文“步骤 15 的静态工具边界”。
 16. **J** `Program` 拆为 CLI 宿主，`Runtime/` 拆为独立程序集，删除 `_portal`、`_services` 与转发。
 17. **J** G9。
 
@@ -693,3 +693,68 @@ Package-Release、Validate-Bundle、Check-Repository 的必需文件清单同步
 Test-DomainTools 的三个运行时领域覆盖全部 20 个工具、full/lite 与普通/隔离路径。
 空地址、空节点、空 host、空变量及无效请求在打开通道前拒绝；CPU 探测/状态、离线追踪和 PLCSIM 使用既有重复参数准入拒绝，
 避免打开协议连接、探测本机模拟实例或扩大耗时屏蔽规则。HttpTests 另外核对实例单例、会话依赖与程序集归属。
+### 会话与工程工具
+
+[SessionTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs)
+承载 9 个会话工具；
+[ProjectSessionTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)
+承载 11 个工程工具；
+[DiagnosticsTools](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs)
+承载 `RunCapabilitySelfTest`、`RunOnlineMonitoringSafetySelfTest`、`GenerateAcceptanceReport`、`GenerateErrorReport`。
+三者直接接收 `IEngineeringSession`，由 `EngineRegistration` 按工具类型约定注册为
+非 `IDisposable` 单例，不增加领域服务，也不接收具体 `Portal`。`Portal` 继续管理连接、工程句柄和事务状态，
+工具不写内核字段；`IsolatedWorkerHost` 继续把这些工具代理到子进程，未增加本地控制入口。
+
+`IEngineeringSession` 新增 29 个成员，`Portal.EngineeringSession.cs` 全部显式转发现有实现：
+
+- 连接与状态：`ConnectPortal()`、`ConnectPortal(string?, bool, JsonObject?)`、`ConnectIsolatedPortal`、`ListPortalProcessProjects`、`DisconnectPortal`、
+  `IsConnected`、`GetState`、`GetHmiReadHealth`、`GetPortalProcessHealth`、`ConnectToProject`、`LastConnectError`。
+- 工程：`GetProjects`、`GetSessions`、`ForeignOpenProjectName`、`ProjectIsValid`、`IsLocalSession`、`OpenProject`、
+  `OpenSession`、`AttachToOpenProject`、`CreateProject`、`SaveSession`、`SaveProject`、`SaveAsProject`、`CloseSession`、`CloseProject`。
+- 诊断与事务：`ReadPortalInfo`、`ReadObjectIdentifier`、`ShowObjectInEditor`、`BeginTransaction`；后者返回已有
+  `IEngineeringTransaction` 契约，具体事务及 ambient exclusive access 仍在内核。
+
+`McpServer` 保留以下无属性静态转发，供 CLI 和现有工具编排继续使用：`Connect`、`ConnectIsolated`、
+`ListPortalProcessProjects`、`EnsureOpennessUserGroup`、`Disconnect`、`GetState`、`Bootstrap`、`ConnectToProject`、
+`ReadPortalInfo`、`GetProjects`（MCP 名称仍为 `GetProject`）、`OpenProject`、`AttachToOpenProject`、`CreateProject`、
+`ScaffoldProject`、`SaveProject`、`SaveAsProject`、`CloseProject`、`ReadObjectIdentifier`、`ShowObjectInEditor`、`RunToolsInTransaction`。
+`McpServer.ScaffoldOperations.cs` 的三个辅助方法同时供 `ApplyProjectPatch` 使用，保留在原处；
+`SessionToolSupport` 仅转发它们及工具名枚举，`PilotToolSupport` 继续提供共享工具目录访问。
+
+`EngineSurface` 已自动发现实例工具；本步没有新服务需要加入它的服务名单。
+`SessionToolChecks` 验证实例归属、共享内核、静态转发、隔离代理分类、ToolBridge 和 batch 解析。
+`Test-DomainTools.py --domain Session --domain ProjectSession` 覆盖全部 20 个工具的 full/lite、普通/隔离路径。
+`Connect`、`ConnectIsolated`、进程枚举及用户组修复只验证工具体执行前的重复参数拒绝；其余使用断开状态、
+无效输入或离线预览，不连接 TIA。`ReadToolBatch` 无 dry-run 参数，验证其离线读取；`ApplyToolBatch` 仅接受预览令牌，
+验证无效令牌拒绝，并通过 `ValidateBatch` 验证迁移工具的写预览解析及强制 `dryRun=true`。未执行真实写批次。
+
+诊断工具保留上述四个同名、无属性的 `McpServer` 静态转发，供 CLI 自检、报告命令和离线验证套件使用。
+诊断迁移仅额外增加无参 `ConnectPortal()` 接口转发；`GetState`、进程列表、`ValidateAutomationContext` 和
+`GetProjectTree` 复用已有接口。安全自检中的 `typeof(Portal)` 只用于检查原有类型和反射防护方法，原样保留，
+不读取或写入会话实例；不因其他领域先前的迁移改变自检结果。共享安全策略仍供 PLC 监视工具使用，留在
+`McpServer`，经 `SessionToolSupport` 转发；七个诊断私有辅助方法随工具迁移。
+
+`Test-DomainTools.py --domain Diagnostics` 对自检与验收报告固定 `connectIfNeeded=false`、
+`inspectPortalProcesses=false`，报告写入工作树下临时目录并比较返回文本和 Markdown/JSON 文件字节。
+只屏蔽明确的时钟值：响应 `Meta/meta.timestamp`、验收报告中 `SelfTest/selfTest` 和
+`SafetySelfTest/safetySelfTest` 的时间戳、`DateTime.Now` 生成的 `OperationId/operationId`、
+由该值组成的报告文件名末尾、Markdown 前部 `GeneratedAt` 行及错误报告 JSON 的 `GeneratedAt`。
+目录、文件名前缀与扩展名、自检内容、错误正文中的日期或数字均不屏蔽；自检覆盖这些屏蔽边界。
+
+### 步骤 15 的静态工具边界
+
+会话、工程和诊断入口迁移后，`McpServer.cs` 不再声明 MCP 工具，仅保留共享辅助及兼容静态转发。
+其他领域迁移合并后的静态基础设施工具为以下 12 个：
+
+| 归属 | 工具 |
+|---|---|
+| ToolBridge | `ListToolCategories`、`FindTools`、`CallTool`、`PreflightToolCall`、`GetRecipe` |
+| Batch | `ReadToolBatch`、`PreviewToolBatch`、`ApplyToolBatch` |
+| Worker | `ReadOpennessWorkerStatus`、`RestartOpennessWorker` |
+| Doctor | `Doctor` |
+| Maintenance | `CheckForUpdate` |
+
+这个边界是领域迁移完成后的目标，不表示单独应用本步就删除尚未合并的其他领域实现。
+并行迁移中的硬件和 Unified HMI 工具仍由各自任务负责；`McpServer.Runtime.cs`、
+`McpServer.RuntimeChannels.cs` 和 `McpServer.PlcSimAdvanced.cs` 的运行时工具按第 16 步迁出。
+不得为了提前达到静态工具数量目标而在会话任务中删除这些入口或改动其行为。

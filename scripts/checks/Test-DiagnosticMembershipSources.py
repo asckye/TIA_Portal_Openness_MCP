@@ -5,19 +5,20 @@ import re
 
 ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "tools/tiaportal-mcp/src/TiaMcpServer"
-source = (SRC / "ModelContextProtocol/Tools/McpServer.cs").read_text(encoding="utf-8")
-bootstrap = source.split("public static async Task<ResponseBootstrap> Bootstrap()", 1)[1].split("#endregion", 1)[0]
-selftest = source.split("public static async Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(", 1)[1].split('[McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest")', 1)[0]
+source = (SRC / "ModelContextProtocol/Tools/DiagnosticsTools.cs").read_text(encoding="utf-8")
+session = (SRC / "ModelContextProtocol/Tools/SessionTools.cs").read_text(encoding="utf-8")
+bootstrap = session.split("public async Task<ResponseBootstrap> Bootstrap()", 1)[1].split('[McpServerTool(', 1)[0]
+selftest = source.split("public async Task<ResponseCapabilitySelfTest> RunCapabilitySelfTest(", 1)[1].split('[McpServerTool(Name = "RunOnlineMonitoringSafetySelfTest")', 1)[0]
 for name, body in (("Bootstrap", bootstrap), ("RunCapabilitySelfTest", selftest)):
     assert body.count("Siemens.Openness.IsUserInGroupNoFix()") == 1, name
     assert not re.search(r"(?:IsUserInGroup|AddUserToGroupAsync|EnsureOpennessUserGroup)\s*\(", body), name
-assert "catch { env.OpennessGroupOk = false; }" in bootstrap
+assert re.search(r"catch\s*(?:/\*.*?\*/\s*)?\{ env.OpennessGroupOk = false; \}", bootstrap)
 assert 'nextTool = "EnsureOpennessUserGroup";' in bootstrap  # recommendation only
 assert 'catch (Exception ex)' in selftest and '"fail", ex.Message' in selftest
 assert 'bool connectIfNeeded = false' in selftest
 assert 'if (!isConnected && connectIfNeeded)' in selftest
-assert 'isConnected = Portal.ConnectPortal();' in selftest
-ensure = source.split("public static async Task<ResponseMessage> EnsureOpennessUserGroup()", 1)[1].split('[McpServerTool(Name = "Disconnect")', 1)[0]
+assert 'isConnected = _session.ConnectPortal();' in selftest
+ensure = session.split("public async Task<ResponseMessage> EnsureOpennessUserGroup()", 1)[1].split('[McpServerTool(Name = "Disconnect")', 1)[0]
 assert "await Siemens.Openness.IsUserInGroup()" in ensure
 openness = (SRC / "Siemens/Openness.cs").read_text(encoding="utf-8")
 pure = openness.split("public static bool IsUserInGroupNoFix()", 1)[1].split("public static async", 1)[0]

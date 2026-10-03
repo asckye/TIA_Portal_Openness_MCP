@@ -249,5 +249,35 @@ namespace TiaMcpServer.Siemens
             => TraceTagCause(softwarePath, tag, blockScope);
         ResponseJsonReport IEngineeringSession.TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains)
             => TraceTagCauseLive(softwarePath, tag, ip, rack, slot, blockScope, expectModuleContains);
+
+        bool IEngineeringSession.ConnectPortal(string? projectName, bool allowStart, JsonObject? info) => ConnectPortal(projectName, allowStart, info);
+        bool IEngineeringSession.ConnectIsolatedPortal() => ConnectIsolatedPortal();
+        List<string> IEngineeringSession.ListPortalProcessProjects() => ListPortalProcessProjects();
+        bool IEngineeringSession.DisconnectPortal() => DisconnectPortal();
+        bool IEngineeringSession.IsConnected() => IsConnected();
+        State IEngineeringSession.GetState() => GetState();
+        JsonObject IEngineeringSession.GetHmiReadHealth() => GetHmiReadHealth();
+        JsonObject IEngineeringSession.GetPortalProcessHealth() => GetPortalProcessHealth();
+        bool IEngineeringSession.ConnectToProject(int processId, string processStartUtc, string projectPath) => ConnectToProject(processId, processStartUtc, projectPath);
+        List<ProjectBase> IEngineeringSession.GetProjects() => GetProjects();
+        List<ProjectBase> IEngineeringSession.GetSessions() => GetSessions();
+        string? IEngineeringSession.ForeignOpenProjectName() => ForeignOpenProjectName();
+        bool IEngineeringSession.OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType) => OpenProject(projectPath, closeForeignProject, umacUserName, umacPassword, umacUserType);
+        bool IEngineeringSession.OpenSession(string localSessionPath) => OpenSession(localSessionPath);
+        bool IEngineeringSession.AttachToOpenProject(string projectName) => AttachToOpenProject(projectName);
+        bool IEngineeringSession.CreateProject(string directoryPath, string projectName, bool closeForeignProject) => CreateProject(directoryPath, projectName, closeForeignProject);
+        bool IEngineeringSession.SaveSession() => SaveSession();
+        bool IEngineeringSession.SaveProject() => SaveProject();
+        bool IEngineeringSession.SaveAsProject(string path) => SaveAsProject(path);
+        bool IEngineeringSession.CloseSession() => CloseSession();
+        bool IEngineeringSession.CloseProject() => CloseProject();
+        ResponseMessage IEngineeringSession.ReadPortalInfo(bool includeProcesses, bool includeSessions, bool includeProducts) => ReadPortalInfo(includeProcesses, includeSessions, includeProducts);
+        ResponseMessage IEngineeringSession.ReadObjectIdentifier(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, string identifier) => ReadObjectIdentifier(kind, devicePathJson, itemPathJson, softwarePath, objectPath, identifier);
+        ResponseMessage IEngineeringSession.ShowObjectInEditor(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, bool dryRun) => ShowObjectInEditor(kind, devicePathJson, itemPathJson, softwarePath, objectPath, dryRun);
+        IEngineeringTransaction IEngineeringSession.BeginTransaction(string text) => BeginTransaction(text);
+        string? IEngineeringSession.LastConnectError => LastConnectError;
+        bool IEngineeringSession.ProjectIsValid => ProjectIsValid;
+        bool IEngineeringSession.IsLocalSession => IsLocalSession;
+        bool IEngineeringSession.ConnectPortal() => ConnectPortal();
     }
 }

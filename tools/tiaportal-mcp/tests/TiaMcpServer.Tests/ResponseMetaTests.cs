@@ -67,9 +67,9 @@ namespace TiaMcpServer.Tests
         // copied clock expressions is DateTime -> ResponseClock, under the same pin.
         private static void Initializers(Action<bool, string> check)
         {
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs:70 (Connect).
+            // TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs: Connect.
             Compare("Stamp/Connect", new JsonObject { ["timestamp"] = ResponseClock.Now }, ResponseMeta.Stamp(), check);
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs:338 (Bootstrap).
+            // TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs: Bootstrap.
             Compare("Basic/Bootstrap", new JsonObject
             {
                 ["timestamp"] = ResponseClock.Now,
@@ -82,7 +82,7 @@ namespace TiaMcpServer.Tests
             string lang = "中文 <>& '\" / \\ \n 😀";
             Compare("Basic/after", new JsonObject { ["timestamp"] = ResponseClock.Now, ["success"] = true, ["language"] = lang },
                 ResponseMeta.Basic(true, ("language", lang)), check);
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs:74.
+            // TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs: RunToolsInTransaction.
             bool dryRun = true;
             Compare("StampThen/success-in-middle", new JsonObject { ["timestamp"] = ResponseClock.Now, ["tool"] = "RunToolsInTransaction", ["success"] = false, ["dryRun"] = dryRun, ["mayHaveChanged"] = false },
                 ResponseMeta.StampThen(("tool", "RunToolsInTransaction"), ("success", false), ("dryRun", dryRun), ("mayHaveChanged", false)), check);
@@ -206,7 +206,7 @@ namespace TiaMcpServer.Tests
             offlineOld["success"] = true; offlineOld["operationSuccess"] = true;
             ResponseMeta.Complete(offline, true);
             Compare("Complete/Offline-unconditional", offlineOld, offline, check);
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.BaseLeftovers.cs:103.
+            // TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs: RunToolsInTransaction.
             offlineOld["success"] = false; offlineOld["operationSuccess"] = false;
             ResponseMeta.Complete(offline, false);
             Compare("Complete/explicit-false", offlineOld, offline, check);
@@ -226,7 +226,7 @@ namespace TiaMcpServer.Tests
                 check(built["success"]!.GetValue<bool>() == success, "Failed does not invent a success assignment " + success);
             }
 
-            // TiaMcpServer/ModelContextProtocol/Tools/McpServer.cs:70-72, with synthetic native output.
+            // TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs: Connect, with synthetic native output.
             var connectOld = new JsonObject { ["timestamp"] = ResponseClock.Now };
             var connect = ResponseMeta.Stamp();
             using (ResponseClock.Pin(Instant.AddHours(1)))

@@ -232,5 +232,35 @@ namespace TiaMcpServer.Siemens
         bool AttrValueIsEnabled(object? value);
         ResponseJsonReport TraceTagCause(string softwarePath, string tag, string blockScope);
         ResponseJsonReport TraceTagCauseLive(string softwarePath, string tag, string ip, int rack, int slot, string blockScope, string expectModuleContains);
+
+        bool ConnectPortal(string? projectName, bool allowStart, JsonObject? info);
+        bool ConnectIsolatedPortal();
+        List<string> ListPortalProcessProjects();
+        bool DisconnectPortal();
+        bool IsConnected();
+        State GetState();
+        JsonObject GetHmiReadHealth();
+        JsonObject GetPortalProcessHealth();
+        bool ConnectToProject(int processId, string processStartUtc, string projectPath);
+        List<ProjectBase> GetProjects();
+        List<ProjectBase> GetSessions();
+        string? ForeignOpenProjectName();
+        bool OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType);
+        bool OpenSession(string localSessionPath);
+        bool AttachToOpenProject(string projectName);
+        bool CreateProject(string directoryPath, string projectName, bool closeForeignProject);
+        bool SaveSession();
+        bool SaveProject();
+        bool SaveAsProject(string path);
+        bool CloseSession();
+        bool CloseProject();
+        ResponseMessage ReadPortalInfo(bool includeProcesses, bool includeSessions, bool includeProducts);
+        ResponseMessage ReadObjectIdentifier(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, string identifier);
+        ResponseMessage ShowObjectInEditor(string kind, string devicePathJson, string itemPathJson, string softwarePath, string objectPath, bool dryRun);
+        IEngineeringTransaction BeginTransaction(string text);
+        string? LastConnectError { get; }
+        bool ProjectIsValid { get; }
+        bool IsLocalSession { get; }
+        bool ConnectPortal();
     }
 }
