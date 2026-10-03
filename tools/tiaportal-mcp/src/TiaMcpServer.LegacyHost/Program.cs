@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,7 +58,7 @@ if (options.Transport == "http")
         await next(context);
     });
     app.MapMcp("/mcp");
-    app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = "3.1.0", releaseKey = options.ReleaseKey, profile = "plc-foundation" });
+    app.MapGet("/mcp/health", () => new { status = "ok", fileVersion = typeof(HostOptions).Assembly.GetCustomAttributes<System.Reflection.AssemblyMetadataAttribute>().Single(attribute => attribute.Key == "TiaMcpRelease").Value, releaseKey = options.ReleaseKey, profile = "plc-foundation" });
     app.MapGet("/mcp/ready", () => new { mcpHostReady = true, releaseKey = options.ReleaseKey, nativeAcceptance = "NOT RUN" });
     await app.RunAsync();
 }

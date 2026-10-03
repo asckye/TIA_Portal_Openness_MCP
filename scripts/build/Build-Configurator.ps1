@@ -31,7 +31,14 @@ $viewResources = @("/resource:$glass\Glass.xaml,Glass.xaml", "/resource:$root\to
 foreach ($language in @('en', 'zh')) { $viewResources += "/resource:$root\tools\mcp-configurator\Glass.Strings.$language.xaml,Glass.Strings.$language.xaml" }
 $resource = "/resource:$root\tools\mcp-configurator\MainWindow.xaml,MainWindow.xaml"
 $metadata = Join-Path $resourceOutput 'DesktopVersion.cs'
+[xml]$versionXml = Get-Content (Join-Path $root 'Version.props') -Raw
+$release = [string]$versionXml.Project.PropertyGroup.TiaMcpRelease
+if ($release -notmatch '^\d+\.\d+\.\d+$') { throw 'Release version must be X.Y.Z' }
 $attributes = [regex]::Matches([IO.File]::ReadAllText((Join-Path $root 'tools/mcp-configurator/Configurator.cs')), '(?m)^\[assembly:.*\]$') | ForEach-Object { $_.Value }
+$attributes += '[assembly: AssemblyVersion("' + $release + '")]'
+$attributes += '[assembly: AssemblyFileVersion("' + $release + '.0")]'
+$attributes += '[assembly: AssemblyInformationalVersion("' + $release + '")]'
+$attributes += '[assembly: AssemblyMetadata("TiaMcpRelease", "' + $release + '")]'
 [IO.File]::WriteAllText($metadata, "using System.Reflection;`n" + ($attributes -join "`n"), [Text.UTF8Encoding]::new($false))
 & $compiler /nologo /target:winexe /optimize+ /utf8output "/out:$root\TiaMcpConfigurator.exe" @references (Join-Path $root 'tools/mcp-configurator/Launcher.cs') $processArguments $metadata
 if ($LASTEXITCODE -ne 0) { throw 'Configurator build failed.' }
@@ -45,7 +52,7 @@ if ($Test) {
     if ($LASTEXITCODE -ne 0) { throw 'Configurator tests failed.' }
     $match = [regex]::Match(($results -join "`n"), '(?m)^Passed: (\d+)\s*$')
     if (!$match.Success) { throw 'Missing configurator test result.' }
-    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $glass -Recurse -File)
+    $inputs = @(Get-ChildItem (Join-Path $root 'tools/mcp-configurator') -File | Where-Object { $_.Extension -in '.cs','.xaml' }) + @(Get-Item $PSCommandPath) + @(Get-Item (Join-Path $root 'Version.props')) + @(Get-Item $versionCatalog) + @(Get-Item $processArguments) + @(Get-Item $opennessEnvironment) + @(Get-ChildItem $glass -Recurse -File)
     $sourceFiles = @($inputs | Sort-Object FullName | ForEach-Object {
         $bytes = if ($_.Extension -eq ".ttf") { [IO.File]::ReadAllBytes($_.FullName) } else { [Text.Encoding]::UTF8.GetBytes([IO.File]::ReadAllText($_.FullName).Replace("`r`n", "`n")) }
         $algorithm = [Security.Cryptography.SHA256]::Create()

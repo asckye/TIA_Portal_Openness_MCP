@@ -1,9 +1,9 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)../../Version.props" />
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <Version>3.2.0</Version>
     <NuGetAudit>true</NuGetAudit>
   </PropertyGroup>
 </Project>

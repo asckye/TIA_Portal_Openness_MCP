@@ -11,8 +11,8 @@
   Steps (each one stops the run when it fails):
     1. Preconditions: repo on master, PublicAPI folders found, Python/Git found, no stray TiaMcpServer.exe process,
        CHANGELOG entry + release note present.
-    2. Version bump in the mechanical places: .claude-plugin/plugin.json, tools/mcp-configurator/Configurator.cs,
-       both csproj, docs/README.md current-release link, docs/reference/capabilities.md intro, docs/development/roadmap.md title.
+    2. Version bump in Version.props and .claude-plugin/plugin.json,
+       docs/README.md current-release link and docs/development/roadmap.md title.
     3. scripts/build/Build-Release.ps1 (both engines, offline suite, shape checks, configurator, manifests, tool matrix).
     4. Local gates: Check-Repository.py, Check-DeadToolReferences.py, Validate-Bundle.ps1 -Strict.
     5. One commit "Release X.Y.Z: <summary>" (source + docs + manifest/* + tool-matrix.md). The binaries (runtime/v20,
@@ -175,27 +175,16 @@ if ($Resume) {
 }
 if (-not $resumed) {
 # ---------------------------------------------------------------- 2. version bump (mechanical places)
-$csproj21 = Join-Path $repo 'tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.V21.csproj'
-$previous = [regex]::Match((ReadText $csproj21), '<InformationalVersion>(\d+\.\d+\.\d+)</InformationalVersion>').Groups[1].Value
-if (-not $previous) { Fail 'cannot read InformationalVersion from the V21 csproj' }
-if ($previous -eq $Version) { Say ('version already ' + $Version + ' in the csproj; bump skipped') }
+$versionProps = Join-Path $repo 'Version.props'
+$previous = [regex]::Match((ReadText $versionProps), '<TiaMcpRelease>(\d+\.\d+\.\d+)</TiaMcpRelease>').Groups[1].Value
+if (-not $previous) { Fail 'cannot read TiaMcpRelease from Version.props' }
+if ($previous -eq $Version) { Say ('version already ' + $Version + ' in Version.props; bump skipped') }
 else {
     Say ("bumping " + $previous + " -> " + $Version)
     ReplaceOnce (Join-Path $repo '.claude-plugin\plugin.json') ('"version": "' + $previous + '"') ('"version": "' + $Version + '"') 'plugin.json'
-    $cfg = Join-Path $repo 'tools\mcp-configurator\Configurator.cs'
-    ReplaceOnce $cfg ('[assembly: AssemblyVersion("' + $previous + '.0")]') ('[assembly: AssemblyVersion("' + $Version + '.0")]') 'Configurator AssemblyVersion'
-    ReplaceOnce $cfg ('[assembly: AssemblyFileVersion("' + $previous + '.0")]') ('[assembly: AssemblyFileVersion("' + $Version + '.0")]') 'Configurator AssemblyFileVersion'
-    foreach ($proj in @('TiaMcpServer.V20.csproj', 'TiaMcpServer.V21.csproj')) {
-        $p = Join-Path $repo ('tools\tiaportal-mcp\src\TiaMcpServer\' + $proj)
-        ReplaceOnce $p ('<AssemblyVersion>' + $previous + '</AssemblyVersion>') ('<AssemblyVersion>' + $Version + '</AssemblyVersion>') ($proj + ' AssemblyVersion')
-        ReplaceOnce $p ('<FileVersion>' + $previous + '.0</FileVersion>') ('<FileVersion>' + $Version + '.0</FileVersion>') ($proj + ' FileVersion')
-        ReplaceOnce $p ('<InformationalVersion>' + $previous + '</InformationalVersion>') ('<InformationalVersion>' + $Version + '</InformationalVersion>') ($proj + ' InformationalVersion')
-    }
+    ReplaceOnce $versionProps ('<TiaMcpRelease>' + $previous + '</TiaMcpRelease>') ('<TiaMcpRelease>' + $Version + '</TiaMcpRelease>') 'Version.props'
     ReplaceOnce (Join-Path $repo 'docs\README.md') ('[当前发布说明](releases/v' + $previous + '.md)') ('[当前发布说明](releases/v' + $Version + '.md)') 'docs/README.md current release link'
     # Capability prose is maintained with the release note; do not rewrite historical entries.
-    $studioProps = Join-Path $repo 'tools\tia-openness-studio\Directory.Build.props'
-    $studioVersion = [regex]::Match((ReadText $studioProps), '<Version>([^<]+)</Version>').Groups[1].Value
-    ReplaceOnce $studioProps ('<Version>' + $studioVersion + '</Version>') ('<Version>' + $Version + '</Version>') 'Studio version'
     $roadmap = Join-Path $repo 'docs\development\roadmap.md'
     $rm = ReadText $roadmap
     $title = [regex]::Match($rm, '(?m)^# 路线图与待办（[^）]*，' + [regex]::Escape($previous) + ' 更新）')

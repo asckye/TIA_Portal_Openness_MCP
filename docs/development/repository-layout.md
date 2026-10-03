@@ -4,6 +4,7 @@
 
 | 路径 | 用途 |
 |---|---|
+| `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
 | `tools/mcp-configurator` | 嵌入工作台的 WPF 配置模块、兼容入口与配置功能测试 |
 | `tools/tia-openness-studio` | 直接调用 Openness 的 Studio、桥接进程和八个适配器 |

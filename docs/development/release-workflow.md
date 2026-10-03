@@ -18,7 +18,7 @@ PowerShell 7 不在 PATH 时用 -PowerShell7 指定完整路径。多版本工�
 
 脚本依次执行：
 
-1. 检查 master、上游、SDK、进程和发布说明；更新完整引擎、配置器、插件和 Studio 版本。
+1. 检查 master、上游、SDK、进程和发布说明；更新 `Version.props` 中的 `TiaMcpRelease` 和 `.claude-plugin/plugin.json` 版本，以及文档当前发布链接与路线图标题。完整引擎、基础宿主、配置器和 Studio 从 `Version.props` 派生版本。
 2. Build-Release.ps1 构建两个完整引擎与配置器，执行功能、协议和稳定性测试。
 3. Build-MultiVersion.ps1 -SkipFullEngines -Test 构建八版 Worker/Adapter、六个基础引擎运行包和 Studio，执行八版 SDK 元数据、XSD、基础工具、传输和全部工具示例校验，写入八版本交付记录。
 4. 检查仓库链接、失效工具引用和严格包验证，提交明确变更路径，生成一次 Release X.Y.Z: <summary> 提交。

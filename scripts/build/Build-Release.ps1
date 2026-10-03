@@ -47,9 +47,9 @@ function Assert-MatchedCheckCount([string]$Key,[System.Text.RegularExpressions.M
 
 $repo=Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $source=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer'
-[xml]$projectXml=Get-Content (Join-Path $source 'TiaMcpServer.V21.csproj') -Raw
-$version=[string]$projectXml.Project.PropertyGroup.FileVersion
-$release=[string]$projectXml.Project.PropertyGroup.InformationalVersion
+[xml]$versionXml=Get-Content (Join-Path $repo 'Version.props') -Raw
+$release=[string]$versionXml.Project.PropertyGroup.TiaMcpRelease
+$version=$release + '.0'
 if($release -notmatch '^\d+\.\d+\.\d+$'){throw 'Public release version must be X.Y.Z without fork or feature suffixes'}
 $null=[DateTime]::ParseExact($ReleaseDate,'yyyyMMdd',[Globalization.CultureInfo]::InvariantCulture)
 $package="TIA_MCP_Delivery_v${release}_$ReleaseDate"
@@ -125,8 +125,6 @@ $checks=[ordered]@{}
 foreach($major in @(20,21)) {
     $api=(Resolve-Path -LiteralPath $(if($major -eq 20){$V20ReferenceRoot}else{$V21ReferenceRoot})).Path
     $project=Join-Path $source $(if($major -eq 20){'TiaMcpServer.V20.csproj'}else{'TiaMcpServer.V21.csproj'})
-    [xml]$xml=Get-Content $project -Raw
-    if($xml.Project.PropertyGroup.FileVersion -ne $version -or $xml.Project.PropertyGroup.InformationalVersion -ne $release){throw 'V20/V21 source versions differ'}
     $obj=Join-Path $source $(if($major -eq 20){'obj-v20/'}else{'obj/'})
     $properties=@("-p:SiemensEngineeringDirectory=$api")
     $nativeProject=Join-Path $repo "tools/tiaportal-mcp/tests/TiaMcpServer.NativeTests/V$major/NativeTests.V$major.csproj"
@@ -280,7 +278,7 @@ $runtimeFiles=@(Get-ChildItem (Join-Path $repo 'runtime/v20'),(Join-Path $repo '
     [ordered]@{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');length=$_.Length;sha256=(Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
 })
 # Bind the local validation results to these exact compiler/test inputs.
-$sourceFiles=@(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/openness-shared'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'} | Sort-Object FullName | ForEach-Object {
+$sourceFiles=@(@(Get-Item (Join-Path $repo 'Version.props')) + @(Get-ChildItem (Join-Path $repo 'tools/tiaportal-mcp/src'),(Join-Path $repo 'tools/tiaportal-mcp/tests'),(Join-Path $repo 'tools/native-call-weaver'),(Join-Path $repo 'tools/openness-shared'),(Join-Path $repo 'tools/third-party/TiaGitAddIn.Core'),(Join-Path $repo 'tools/third-party/SiemensOpcUaModelled') -File -Recurse | Where-Object {$_.Extension -in '.cs','.csproj','.props','.targets','.xml','.json' -and $_.FullName -notmatch '[\\/](obj|obj-v20|bin|bin-v20)[\\/]'}) | Sort-Object FullName | ForEach-Object {
     $text=[IO.File]::ReadAllText($_.FullName).Replace("`r`n","`n")
     $sha=[Security.Cryptography.SHA256]::Create()
     try{$digest=[BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($text))).Replace('-','').ToLowerInvariant()}finally{$sha.Dispose()}

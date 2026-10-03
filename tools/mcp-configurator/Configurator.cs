@@ -21,8 +21,6 @@ using TiaMcp.Versioning;
 #if !UNIFIED_DESKTOP
 [assembly: AssemblyTitle("TIA Portal Workbench")]
 [assembly: AssemblyDescription("Unified TIA Portal engineering, MCP service and AI client desktop")]
-[assembly: AssemblyVersion("3.2.0.0")]
-[assembly: AssemblyFileVersion("3.2.0.0")]
 #endif
 
 namespace TiaMcpConfigurator

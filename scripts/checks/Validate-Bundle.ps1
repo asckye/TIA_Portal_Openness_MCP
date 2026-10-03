@@ -196,12 +196,18 @@ if (Test-Path -LiteralPath $hmiDir) {
 # The release version used to live in four places that nobody diffed against each
 # other, so they drifted: csproj said 2.5.0, the manifest said 2.5.1, and the
 # 2.5.1 fix reached the v21 branch but never master, a tag, or a release. The
-# CHANGELOG's newest entry is the source of truth; everything else must match it.
+# Version.props is the product version source; release records must match it.
 $changelog = Join-Path $root "CHANGELOG.md"
-$csproj    = Join-Path $root "tools\tiaportal-mcp\src\TiaMcpServer\TiaMcpServer.V21.csproj"
+$versionProps = Join-Path $root "Version.props"
+[xml]$versionXml = Get-Content -LiteralPath $versionProps -Raw -Encoding UTF8
+$sourceRelease = [string]$versionXml.Project.PropertyGroup.TiaMcpRelease
+if ($sourceRelease -notmatch '^\d+\.\d+\.\d+$') { Fail 'Version.props: release must be X.Y.Z' }
+$plugin = Get-Content (Join-Path $root '.claude-plugin/plugin.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($plugin.version -ne $sourceRelease) { Fail 'Plugin version differs from Version.props' }
+else { Ok 'Plugin version matches Version.props' }
 $manifest  = Join-Path $root "manifest\package-manifest.json"
 
-if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -and (Test-Path -LiteralPath $manifest)) {
+if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $versionProps) -and (Test-Path -LiteralPath $manifest)) {
     $clText = Get-Content -LiteralPath $changelog -Raw -Encoding UTF8
     $clMatch = [regex]::Match($clText, '(?m)^##\s*\[(?<v>\d+\.\d+\.\d+)\]')
     if (-not $clMatch.Success) {
@@ -217,13 +223,8 @@ if ((Test-Path -LiteralPath $changelog) -and (Test-Path -LiteralPath $csproj) -a
             Fail 'Delivery version differs from CHANGELOG or engine build record'
         }
 
-        $csText = Get-Content -LiteralPath $csproj -Raw -Encoding UTF8
-        $csMatch = [regex]::Match($csText, '<AssemblyVersion>(?<v>[^<]+)</AssemblyVersion>')
-        if (-not $csMatch.Success) {
-            Fail "TiaMcpServer.V21.csproj: no <AssemblyVersion> element"
-        }
-        elseif ($csMatch.Groups['v'].Value -ne $engineVersion) {
-            Fail ("Engine version mismatch: validated build says {0}, source says {1}" -f $engineVersion, $csMatch.Groups['v'].Value)
+        if ($sourceRelease -ne $engineVersion -or ($sourceRelease + '.0') -ne $build.fileVersion) {
+            Fail 'Engine build version differs from Version.props'
         }
 
         $mf = Get-Content -LiteralPath $manifest -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -297,9 +298,7 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
         }
     }
     foreach ($major in @(20,21)) {
-        $projectName = if ($major -eq 20) { 'TiaMcpServer.V20.csproj' } else { 'TiaMcpServer.V21.csproj' }
-        [xml]$projectXml = Get-Content -LiteralPath (Join-Path $root "tools/tiaportal-mcp/src/TiaMcpServer/$projectName") -Raw
-        if ($projectXml.Project.PropertyGroup.FileVersion -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
+        if (($sourceRelease + '.0') -ne $build.fileVersion) { Fail "V$major source/runtime version differs" }
         if ($NoBinaries) { continue }
         $engine = Join-Path $root "runtime/v$major/TiaMcpServer.exe"
         if (!(Test-Path -LiteralPath $engine)) { Fail "V$major runtime missing"; continue }
