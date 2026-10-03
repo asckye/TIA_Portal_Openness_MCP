@@ -1,0 +1,137 @@
+# 重构计划
+
+[当前交接](handoff.md) · [路线图](roadmap.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
+
+本页是重构的唯一计划和任务清单。Claude 负责架构决策、任务说明、验收与合并；Codex 按任务说明在独立
+worktree 中实现；维护者负责决策点、真机授权和发布。机器路径、会话 ID 和执行日志不写入本页。
+
+## 目标
+
+| # | 目标 | 现状依据 |
+|---|---|---|
+| G1 | 降低维护成本 | `McpServer` 静态类 93 个文件/488 个工具；`Portal` 87 个 partial、约 3.1 万行；`Program` 5 个 partial、8.8 千行；全引擎仅 1 个接口 |
+| G2 | 合并三套 Openness 实现 | V20/V21 `Siemens/Portal`、V14 SP1–V19 `PlcFoundation`、Studio `TiaOpenness.Openness` 各自实现连接、导入导出、编译与 VCI |
+| G3 | 简化构建与验证 | 1,056 个源文件哈希在每次 push 时严格校验；门禁匹配精确测试数；无解决方案文件；30 个控制台测试工程链接 216 个源文件 |
+| G4 | 整理桌面端 | 配置器靠运行时改写 XAML 嵌入；两套主题引擎；两套本地化；`MainViewModel` 1,017 行并直接弹对话框 |
+| G5 | 契约与错误模型 | 292 个 `string …Json` 参数；1,353 处手拼 `JsonObject`；抛 `McpException` 与返回 `success=false` 并存；206 个空 `catch` |
+| G6 | 版本号单一来源 | 发布时在约 8 个文件中替换字符串；LegacyHost 健康检查硬编码 `3.1.0` |
+| G7 | 运行时与仓库布局解耦 | 引擎通过探测 `scripts/ecosystem/plc_tools_bridge.py` 定位仓库根，运行时读取 `reference/`、`templates/` |
+| G8 | 职责分离 | `Runtime/`（Sharp7、OPC UA、PLCSIM Advanced、Web API）编译进 Openness 引擎；`Program` partial 承载报告和模板逻辑 |
+| G9 | 会话绑定安全 | 其他客户端改绑工程后，`Guard.MatchPlcName` 的“单 PLC 工程匹配任意名称”规则会把请求静默解析到错误 PLC |
+| G10 | 清除噪音 | 3 套 worker 协议（`TiaMcp.WorkerProtocol.*` 未接线）、3 套 JSON 库、`#if COMMERCIAL` 死代码、166 条 `// 2.x.y:` 历史注释、`*Leftovers` 文件、注释中过时的工具数 |
+
+## 约束
+
+1. **兼容先行。** 阶段 0–5 保持 MCP 对外接口完全兼容：工具名称、参数名与类型、返回结构、错误文本语义不变，
+   由兼容快照（P0-02）守护。破坏性变更集中在阶段 6，作为 4.0 发布并提供迁移表。
+2. **哈希只在发布时校验。** 日常 push 的 CI 不再严格比对源码哈希；`Release.ps1`、`Package-Release.py`
+   和发布后验包保持完整校验。manifest 只由构建生成，任何时候都不手改。
+3. **原生语义不变。** 改动西门子调用路径的任务必须在报告中列出改动前后的调用序列；
+   涉及原生路径的阶段在完成时用真机基线（P0-03）回放。编译、模拟对象和传输测试不证明原生语义。
+4. **仅维护 master。** 每个任务在临时分支/worktree 中完成，验收后合并回 master，合并后删除分支。
+   每次合并后 master 必须能构建、离线测试通过、兼容快照无差异。
+5. 仓库其他规则见 [CLAUDE.md](../../CLAUDE.md)：显式 `git add` 路径、英文提交信息、不加 AI 署名、
+   C# 无 BOM UTF-8 与 LF、运行二进制和 SDK 不进 Git。
+
+## 任务流程
+
+1. Claude 写任务说明：范围（允许修改的路径）、目标结构、不变量、验收命令、预期结果。
+2. 从当前 master 建 worktree 和 `refactor/<任务 ID>` 分支，Codex 以 `workspace-write` 沙箱执行，
+   在分支上提交，不推送、不合并。
+3. Claude 在 worktree 中复跑验收命令、审查 diff；不合格则带具体问题退回同一 Codex 会话。
+4. 验收通过后变基到 master、快进合并，更新本页任务状态。
+5. 阶段结束时跑完整八版本构建（L3）；涉及原生路径的阶段再做真机回放（L5）。
+
+### 验收层级
+
+| 层 | 内容 | 何时 |
+|---|---|---|
+| L0 | `Check-Repository.py --no-binaries`、`Check-DeadToolReferences.py` | 每个任务 |
+| L1 | 离线控制台套件（`dotnet run`，迁移后为 `dotnet test`）及受影响工程的测试 | 每个任务 |
+| L2 | 用 V20/V21 PublicAPI 编译完整引擎；受影响的 Foundation/Studio 适配器编译 | 改动 C# 的任务 |
+| L3 | `Build-MultiVersion.ps1 -Test` 完整八版本构建 | 阶段结束、发布前 |
+| L4 | 兼容快照对比：工具清单、输入 schema、离线可执行示例的返回结构 | 阶段 0–5 每个改动 C# 的任务 |
+| L5 | VM 真机基线回放（只读工具 + 测试工程上的读写往返） | 阶段 3、4 结束 |
+
+## 阶段与任务
+
+状态：`todo` / `doing` / `review` / `done` / `blocked`。
+
+### 阶段 0：基线
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P0-01 | 提交现有统一工作台改动，作为重构起点 | done |
+| P0-02 | 兼容快照：从编译产物导出 V20/V21 全部工具及八版 Foundation 目录的名称、参数、类型与输入 schema；加入对比脚本 | todo |
+| P0-03 | 真机行为基线：在 VM 测试工程上录制只读工具响应（剔除时间戳等易变字段）及少量读写往返（需维护者授权） | blocked |
+| P0-04 | 新增 `.slnx` 解决方案，覆盖全部可构建工程；不改任何工程文件 | todo |
+| P0-05 | 删除确认无引用的死代码：`#if COMMERCIAL` 分支、`TiaMcpServer.PlcFoundation` 并行构建路径（其宏定义与正式路径不一致）；`TiaMcp.WorkerProtocol.*` 留待 P4-01 决定 | todo |
+
+### 阶段 1：构建与验证
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P1-01 | CI 改为只校验 manifest 结构与版本一致性，不再严格比对源码哈希；发布流程不变 | todo |
+| P1-02 | 构建门禁从精确测试数改为“0 失败 + 数量下限”（3126/2840、45、31、8/9 等） | todo |
+| P1-03 | 版本号单一来源（根 `Directory.Build.props`），`Release.ps1` 只改一处；修正 LegacyHost 硬编码版本 | todo |
+| P1-04 | 抽出无 Siemens 依赖的纯逻辑库（`Siemens/*Logic.cs`、`Builders`、`openness-shared`），多目标 net461/net48/net8.0；测试改为项目引用，删除逐文件链接 | todo |
+| P1-05 | 测试迁移到 xunit；去掉测试中的 `partial class` 注入和伪造 Siemens 命名空间；HttpTests 字符串反射改为编译期引用 | todo |
+| P1-06 | 合并两个相似的 TransportFixture；把 `src` 下的测试工程移到 `tests` | todo |
+
+### 阶段 2：公共层（兼容）
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P2-01 | 统一响应信封构造器替代手写 `["success"]`/`["timestamp"]`；明确抛异常与返回失败的规则；返回结构逐字节兼容 | todo |
+| P2-02 | 合并重复辅助函数：`RequireOneOf`（15 处）、`ParseObject`（9 处）、SHA-256 `Hash`（13 处）、两份 `InvocationJournal`/`NativeCallDiagnostics` | todo |
+| P2-03 | 审计空 `catch`：保留的写明原因，其余改为记录或上抛 | todo |
+| P2-04 | 确定 JSON 库策略（考虑 net461 worker）：引擎、宿主与 Studio 客户端统一一套，协议层只保留一个序列化边界 | todo |
+| P2-05 | 清除历史注释、`*Leftovers` 文件与过时注释；确定用户可见文案的语言策略 | todo |
+
+### 阶段 3：拆分完整引擎（兼容）
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P3-01 | 设计：`Portal` 按领域拆为服务接口（会话/工程、程序块、设备与网络、PLC 表、HMI、库、VCI、编译）；工具改为非静态类型并通过依赖注入取服务；写入设计文档后再执行 | todo |
+| P3-02… | 按领域逐个迁移，每个领域一个任务，每次兼容快照无差异 | todo |
+| P3-xx | 会话层去掉静态服务定位器；G9 修复（行为变更，需维护者确认是否在兼容阶段做） | blocked |
+| P3-xx | `Program` 中的报告、探针、HMI 模板逻辑移出；`Runtime/` 通道拆为独立程序集 | todo |
+| P3-xx | 运行时资源改由安装布局定位，不再探测仓库结构 | todo |
+
+### 阶段 4：合并三套实现（兼容，需要真机）
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P4-01 | 设计按版本的类型化适配器契约和唯一 worker 协议；以现有“同一源码按精确 SDK 编译 8 次”的 Studio/Foundation 适配器为基础；决定 `TiaMcp.WorkerProtocol.*` 采用或删除 | todo |
+| P4-02 | Foundation worker 迁移到共享适配器 | todo |
+| P4-03 | Studio 桥接进程迁移到共享适配器 | todo |
+| P4-04 | V20/V21 引擎的 PLC 路径迁移到共享适配器；HMI、设备等 V20+ 专有能力保留在 V20/V21 专属适配器 | todo |
+
+### 阶段 5：桌面端
+
+| ID | 任务 | 状态 |
+|---|---|---|
+| P5-01 | 配置器改为真正的 UserControl + ViewModel，去掉运行时 XAML 改写；决定是否保留独立 net48 配置器构建 | todo |
+| P5-02 | 单一主题引擎与单一本地化方案 | todo |
+| P5-03 | 拆分 `MainViewModel`（会话、工程操作、VCI 子 ViewModel），对话框改为服务接口 | todo |
+
+### 阶段 6：破坏性变更（4.0）
+
+工具合并与改名、`string …Json` 参数改为强类型、统一返回格式、lite 工具集改为数据驱动、三个同名
+`TiaMcpServer` 程序改名。开始前单独评审，并为每项变更提供迁移表。
+
+## 待维护者决定
+
+1. P0-03：VM 上安装了哪些 TIA 版本、使用哪个测试工程、授权范围。
+2. 重构期间是否暂停新功能和发版。
+3. 验收通过后 Claude 是否可以推送 master（本地提交已获准）。
+4. G9 是否在兼容阶段修复（会把“静默解析到唯一 PLC”改为明确拒绝）。
+
+## 风险
+
+| 风险 | 应对 |
+|---|---|
+| 原生语义静默回归 | 兼容快照只守接口；原生语义靠 P0-03 基线在阶段 3、4 结束时回放 |
+| Codex 沙箱限制：无网络、PowerShell 受限语言模式、离线套件中 2 个临时目录文件替换用例在沙箱内失败（沙箱外全部通过） | 构建脚本和最终验收由 Claude 在沙箱外执行；Codex 只负责修改代码并运行 `dotnet build/test`，报告中区分已知沙箱失败 |
+| 并行任务冲突 | 同一时刻只并行改动路径不重叠的任务；阶段 3 按领域分文件 |
+| 阶段中途需要发版 | 按 [发布流程](release-workflow.md) 完整重建 manifest；不在阶段中间留半迁移状态 |

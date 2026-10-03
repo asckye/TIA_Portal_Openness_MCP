@@ -1,6 +1,6 @@
 # 路线图与待办（v3.2.0）
 
-[当前交接](handoff.md) · [功能缺口](../reference/openness-coverage.md) · [版本工具矩阵](../reference/version-tools.md)
+[当前交接](handoff.md) · [功能缺口](../reference/openness-coverage.md) · [版本工具矩阵](../reference/version-tools.md) · [重构计划](refactor-plan.md)
 
 八个版本的 MCP、配置器与直接调用 Openness 的 Studio 已完成当前构建与离线功能检查。
 后续工作按实际工程流程和精确版本推进，不再用历史工具数量或 API 词法引用率表示完成度。
