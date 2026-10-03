@@ -217,6 +217,25 @@ V20Options 的原生实现仅在 `TIA_V20` 分支编译；V21 仍注册五个工
 通用领域测试的 `Dcc`、`Teamcenter`、`Startdrive` 用例覆盖全部 22 个工具及 V20 的工具/操作拒绝。
 原 `ConnectionRow` 的两个重载分别迁入 DCC 和 Teamcenter；原生清单比对须显式列出这三个同名方法族的
 `--allow-unmatched` 例外，并另按重载及其 lambda 核对全部调用点，不能只检查全局成员多重集合。
+### Safety 与安全领域
+
+SafetyManagement、SafetyValidation、SecurityDeep、CertificateManagement、ProjectSecurity 各自迁入
+`Siemens/Services/<Domain>Service.cs` 与 `ModelContextProtocol/Tools/<Domain>Tools.cs`，合计 20 个工具。
+SafetyManagement 的四个工具和 ManagePlcCertificate 来自 `McpServer.EngineeringManagement.cs`；
+其余工具来自同名 partial。没有 CLI 静态调用点；服务和工具沿用约定注册的非 IDisposable 单例。
+
+`Portal.ProjectSecurity.cs` 保留两个安全服务共用的 RequireUmac、FindOrdinal、ExactUmacRole、UmacRow。
+新增的 IEngineeringSession 成员全部显式转发原内核实现：这四项，以及 ExactMasterCopyPlcSource、
+GetBlocksRecursive、HardwareOwnerPath、RequireHardwareService、DynamicAttributes、SetDynamicAttributes、
+FindOnFresh、CountOnFresh、LibraryRef、EnumerateGroupDevices。原硬件、库与 PLC 调用方保持不变。
+调用这些接口的领域辅助方法随之成为实例方法；Safety 登录/注销、UMC 认证事件订阅与凭据设置的顺序保持不变。
+ManageMultiuserSession 仍在 CloseAndCommit 后调用 ReleaseProject，由内核清理会话字段。
+Portal.cs 中调用 BaseLeftoversLogic.ValidateUmacCredentials 的工程打开路径保留在会话内核，本步不新增其接口转发。
+
+BaseLeftovers 中的 ManageDeviceServiceObjects 同时处理 Web 应用、遥控点与动态证书配置，连同其
+CertificateServiceRow / CertificateConfigurationRow 保留在硬件领域；本步不拆分该工具的方法体。
+Test-DomainTools 覆盖以上所有工具的 full/lite、直接/隔离调用，并保留 V20 generateBaseId 的版本拒绝；
+门户级工具比较未连接门户的错误首行，其他工具比较未绑定工程的原有拒绝响应。
 
 ## G9：单 PLC 工程的模糊匹配
 

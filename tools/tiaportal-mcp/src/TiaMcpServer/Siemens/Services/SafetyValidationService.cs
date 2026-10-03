@@ -13,31 +13,35 @@ using Logic = TiaMcpServer.Siemens.SafetyValidationLogic;
 using Siemens.Engineering.SafetyValidation;
 #endif
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Typed Safety Validation Assistant option package (V21 Siemens.Engineering.SafetyValidation.dll; the
     // namespace does not exist on V20, so every tool answers NotSupportedOnVersion there). Official entry: Project.GetService<
     // SafetyValidationAssistant>() -> ActivationTests / ActivationTestGroups (nested user groups) and the DeviceQuery service listing
     // the evaluation devices; ActivationTest -> SafetyFunctions -> Conditions / TraceConfiguration; TestValidity.CheckValidity() and
     // ActivationTestPrintout.Generate(.xlsx) are services of the respective objects.
-    public partial class Portal
+    internal sealed class SafetyValidationService
     {
+        private readonly IEngineeringSession _session;
+
+        public SafetyValidationService(IEngineeringSession session) => _session = session;
+
 #if TIA_V20
         private static PortalException SafetyValidationUnavailable() => new PortalException(PortalErrorCode.NotSupportedOnVersion, "Siemens.Engineering.SafetyValidation (Safety Validation Assistant) is a V21 addition; absent on V20.");
         public ResponseMessage ReadSafetyActivationTests(string groupPathJson = "[]", string name = "", bool includeSafetyFunctions = false, bool includeConditions = false, int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadSafetyActivationTests", meta => { Logic.ParseGroupPath(groupPathJson); HardwareServicesLogic.ValidatePagination(offset, limit); throw SafetyValidationUnavailable(); });
+            => _session.RunHmiStepTool("ReadSafetyActivationTests", meta => { Logic.ParseGroupPath(groupPathJson); HardwareServicesLogic.ValidatePagination(offset, limit); throw SafetyValidationUnavailable(); });
         public ResponseMessage ManageSafetyActivationTest(string name, string action = "read", string groupPathJson = "[]", string evaluationDeviceName = "", string sourceName = "", string masterCopyPath = "", string libraryName = "", string newValue = "", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyActivationTest", meta => { Logic.ValidateActivationTestRequest(action, name, evaluationDeviceName, sourceName, masterCopyPath, newValue, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
+            => _session.RunHmiStepTool("ManageSafetyActivationTest", meta => { Logic.ValidateActivationTestRequest(action, name, evaluationDeviceName, sourceName, masterCopyPath, newValue, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
         public ResponseMessage ManageSafetyActivationTestGroup(string action = "read", string groupPathJson = "[]", string name = "", string masterCopyPath = "", string libraryName = "", string newName = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyActivationTestGroup", meta => { Logic.ValidateGroupRequest(action, name, masterCopyPath, newName, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
+            => _session.RunHmiStepTool("ManageSafetyActivationTestGroup", meta => { Logic.ValidateGroupRequest(action, name, masterCopyPath, newName, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
         public ResponseMessage ManageSafetyFunction(string activationTest, string action = "read", string groupPathJson = "[]", string name = "", string sourceName = "", string propertiesJson = "{}", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyFunction", meta => { Logic.ValidateSafetyFunctionRequest(action, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
+            => _session.RunHmiStepTool("ManageSafetyFunction", meta => { Logic.ValidateSafetyFunctionRequest(action, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun); throw SafetyValidationUnavailable(); });
         public ResponseMessage ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action = "read", string groupPathJson = "[]", int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson = "{}", bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyFunctionCondition", meta => { Logic.ValidateConditionRequest(action, index, deviceName, signalUsage, signalName, propertiesJson, dryRun); throw SafetyValidationUnavailable(); });
+            => _session.RunHmiStepTool("ManageSafetyFunctionCondition", meta => { Logic.ValidateConditionRequest(action, index, deviceName, signalUsage, signalName, propertiesJson, dryRun); throw SafetyValidationUnavailable(); });
 #else
         // ---- resolution ----------------------------------------------------------------------------------------------------------
         private SafetyValidationAssistant RequireSafetyValidationAssistant()
-            => _project!.GetService<SafetyValidationAssistant>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyValidationAssistant is not provided by this project (Safety Validation Assistant not installed / licensed, or no F-CPU).");
+            => _session.CurrentProject!.GetService<SafetyValidationAssistant>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyValidationAssistant is not provided by this project (Safety Validation Assistant not installed / licensed, or no F-CPU).");
         // groupPathJson walks ActivationTestGroups -> ActivationTestUserGroup.Groups; an empty path is the assistant root.
         private static (ActivationTestComposition Tests, ActivationTestUserGroupComposition Groups, ActivationTestUserGroup? Group) ExactActivationTestScope(SafetyValidationAssistant sva, string[] groupPath)
         {
@@ -68,7 +72,7 @@ namespace TiaMcpServer.Siemens
         }
 
         // ---- rows ----------------------------------------------------------------------------------------------------------------
-        private static JsonObject DeviceItemRef(DeviceItem item) => new JsonObject { ["name"] = item.Name, ["ownerPath"] = HardwareOwnerPath(item) };
+        private JsonObject DeviceItemRef(DeviceItem item) => new JsonObject { ["name"] = item.Name, ["ownerPath"] = _session.HardwareOwnerPath(item) };
         private static JsonObject ValidationRow(TestValidationResult result)
         {
             var row = new JsonObject();
@@ -129,7 +133,7 @@ namespace TiaMcpServer.Siemens
 
         // ---- tools ---------------------------------------------------------------------------------------------------------------
         public ResponseMessage ReadSafetyActivationTests(string groupPathJson = "[]", string name = "", bool includeSafetyFunctions = false, bool includeConditions = false, int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadSafetyActivationTests", meta =>
+            => _session.RunHmiStepTool("ReadSafetyActivationTests", meta =>
             {
                 var path = Logic.ParseGroupPath(groupPathJson); HardwareServicesLogic.ValidatePagination(offset, limit);
                 var sva = RequireSafetyValidationAssistant();
@@ -152,11 +156,11 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageSafetyActivationTest(string name, string action = "read", string groupPathJson = "[]", string evaluationDeviceName = "", string sourceName = "", string masterCopyPath = "", string libraryName = "", string newValue = "", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyActivationTest", meta =>
+            => _session.RunHmiStepTool("ManageSafetyActivationTest", meta =>
             {
                 var r = Logic.ValidateActivationTestRequest(action, name, evaluationDeviceName, sourceName, masterCopyPath, newValue, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun);
                 var path = Logic.ParseGroupPath(groupPathJson);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var scope = ExactActivationTestScope(sva, path);
                 meta["groupPath"] = new JsonArray(path.Select(p => (JsonNode)p).ToArray()); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["mayHaveWrittenFiles"] = false;
@@ -171,7 +175,7 @@ namespace TiaMcpServer.Siemens
                 if (action == "changeEvaluationDevice") device = ExactEvaluationDevice(sva.GetService<DeviceQuery>()?.EvaluationDevices() ?? new List<DeviceItem>(), evaluationDeviceName, "evaluationDeviceName");   // TIA Portal V21 real-project evidence (recorded 2026-09-20): a drive from AvailableDevices is refused natively ("not a valid evaluation device"); see docs/reference/real-machine-ledger.md.
                 if (device != null) meta["evaluationDevice"] = DeviceItemRef(device);
                 ActivationTest? source = action == "createFromTest" ? ExactActivationTest(scope.Tests, sourceName) : null;
-                MasterCopy? masterCopy = action == "createFromMasterCopy" ? ExactMasterCopy(libraryName, masterCopyPath) : null;
+                MasterCopy? masterCopy = action == "createFromMasterCopy" ? _session.ExactMasterCopy(libraryName, masterCopyPath) : null;
                 FileInfo? file = null;
                 if (action == "import") file = HardwareServicesLogic.RequireExistingInputFile(filePath, "filePath");
                 if (action == "export" || action == "generateReport") file = NativeFileOutput.Plan(filePath);
@@ -200,11 +204,11 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageSafetyActivationTestGroup(string action = "read", string groupPathJson = "[]", string name = "", string masterCopyPath = "", string libraryName = "", string newName = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyActivationTestGroup", meta =>
+            => _session.RunHmiStepTool("ManageSafetyActivationTestGroup", meta =>
             {
                 var r = Logic.ValidateGroupRequest(action, name, masterCopyPath, newName, confirmDelete, dryRun);
                 var path = Logic.ParseGroupPath(groupPathJson);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var scope = ExactActivationTestScope(sva, path);
                 meta["groupPath"] = new JsonArray(path.Select(p => (JsonNode)p).ToArray()); meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -215,7 +219,7 @@ namespace TiaMcpServer.Siemens
                 if (existing != null) meta["before"] = GroupRow(existing);
                 if (action == "read") { Safe(meta, "activationTests", () => new JsonArray(EngineeringGroupOperations.Items(existing!.ActivationTests).Cast<ActivationTest>().Select(t => (JsonNode)ActivationTestRow(t, false, false)).ToArray())); return "Activation test group read; nothing changed."; }
                 if (action == "delete" && existing != null && (existing.ActivationTests.Count > 0 || existing.Groups.Count > 0)) throw new PortalException(PortalErrorCode.InvalidState, "Group '" + name + "' still holds " + existing.ActivationTests.Count + " activation test(s) and " + existing.Groups.Count + " subgroup(s); delete or move them first (nonempty group deletion refused).");
-                MasterCopy? masterCopy = action == "createFromMasterCopy" ? ExactMasterCopy(libraryName, masterCopyPath) : null;
+                MasterCopy? masterCopy = action == "createFromMasterCopy" ? _session.ExactMasterCopy(libraryName, masterCopyPath) : null;
                 if (dryRun) return "Activation test group " + action + " preview; nothing changed.";
                 meta["mayHaveChanged"] = true;
                 switch (action)
@@ -231,11 +235,11 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageSafetyFunction(string activationTest, string action = "read", string groupPathJson = "[]", string name = "", string sourceName = "", string propertiesJson = "{}", string filePath = "", string exportOptions = "", string documentInfoOptions = "", string importOptions = "", bool confirmDelete = false, bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyFunction", meta =>
+            => _session.RunHmiStepTool("ManageSafetyFunction", meta =>
             {
                 var r = Logic.ValidateSafetyFunctionRequest(action, name, sourceName, propertiesJson, filePath, exportOptions, documentInfoOptions, importOptions, confirmDelete, dryRun);
                 var path = Logic.ParseGroupPath(groupPathJson);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var test = ExactActivationTest(ExactActivationTestScope(sva, path).Tests, activationTest);
                 SafetyFunctionComposition functions = test.SafetyFunctions;
@@ -284,11 +288,11 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ManageSafetyFunctionCondition(string activationTest, string safetyFunction, string action = "read", string groupPathJson = "[]", int index = -1, string deviceName = "", string signalUsage = "", string signalName = "", string propertiesJson = "{}", bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyFunctionCondition", meta =>
+            => _session.RunHmiStepTool("ManageSafetyFunctionCondition", meta =>
             {
                 var r = Logic.ValidateConditionRequest(action, index, deviceName, signalUsage, signalName, propertiesJson, dryRun);
                 var path = Logic.ParseGroupPath(groupPathJson);
-                using var access = r.Writes ? AcquireHmiEditAccess() : null;
+                using var access = r.Writes ? _session.AcquireHmiEditAccess() : null;
                 var sva = RequireSafetyValidationAssistant();
                 var test = ExactActivationTest(ExactActivationTestScope(sva, path).Tests, activationTest);
                 var function = ExactSafetyFunction(test, safetyFunction);

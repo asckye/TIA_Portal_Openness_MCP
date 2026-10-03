@@ -9,24 +9,28 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
     // Siemens.Engineering.Safety: SafetyAdministration (settings, runtime groups, program signatures, password state),
     // GlobalSettings (portal-wide), SafetySignatureProvider (per block), SafetyPrintout and SafetyBaseIdProvider
     // (PLC device item). F-compile is not part of the PublicAPI; nothing here replaces the safety acceptance test.
-    public partial class Portal
+    internal sealed class SafetyManagementService
     {
+        private readonly IEngineeringSession _session;
+
+        public SafetyManagementService(IEngineeringSession session) => _session = session;
+
         // Program-modifying actions need the F-program login when a password is set; the login itself and the
         // password administration are exempt so a caller can get in (or out) without a second tool.
         private static readonly string[] SafetyProgramEditingActions =
             { "createRuntimeGroup", "deleteRuntimeGroup", "updateRuntimeGroup", "updateSettings", "generateGlobalFIOStatusBlock", "cleanSystemGeneratedObjects", "generateBaseId" };
 
         private DeviceItem SafetyCpuItem(string softwarePath)
-            => GetSoftwareContainer(softwarePath)?.Parent as DeviceItem
+            => _session.GetSoftwareContainer(softwarePath)?.Parent as DeviceItem
                ?? throw new PortalException(PortalErrorCode.NotFound, "PLC device item not found for " + softwarePath);
 
         private SafetyAdministration RequireSafetyAdministration(string softwarePath, PlcSoftware plc)
-            => ResolvePlcService<SafetyAdministration>(softwarePath, plc)
+            => _session.ResolvePlcService<SafetyAdministration>(softwarePath, plc)
                ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyAdministration unavailable: not an S7-1200/1500 F-CPU or Safety option not installed.");
 
         // Documented dynamic attributes are read one by one; a missing value is reported as null with its native reason.
@@ -87,7 +91,7 @@ namespace TiaMcpServer.Siemens
 
         private JsonObject ReadSafetyGlobalSettings()
         {
-            var settings = _portal?.GetService<GlobalSettings>();
+            var settings = _session.CurrentPortal?.GetService<GlobalSettings>();
             if (settings == null) return new JsonObject { ["available"] = false, ["reason"] = "GlobalSettings service unavailable on this TIA Portal (Safety option not installed?)." };
             var result = new JsonObject { ["available"] = true };
             var failures = new JsonObject();
@@ -142,12 +146,12 @@ namespace TiaMcpServer.Siemens
 
         public ResponseMessage ManagePlcSafety(string softwarePath, string action = "read", string runtimeGroup = "", string propertiesJson = "{}", bool dryRun = true,
             string password = "", bool confirmSafetyChange = false, string mainSafetyBlockPath = "", string mainSafetyInstanceDbPath = "")
-            => RunHmiStepTool("ManagePlcSafety", meta => {
+            => _session.RunHmiStepTool("ManagePlcSafety", meta => {
                 bool writing = SafetyLogic.ValidateRequest(action, runtimeGroup, password, confirmSafetyChange, dryRun);
                 bool editsProgram = SafetyProgramEditingActions.Contains(action);
-                using var access = writing ? AcquireHmiEditAccess() : null;
+                using var access = writing ? _session.AcquireHmiEditAccess() : null;
                 // Login/logoff/password administration do not change the F-program, so Offline is only demanded for program edits.
-                var plc = ExactPlcForEngineering(softwarePath, writing && editsProgram);
+                var plc = _session.ExactPlcForEngineering(softwarePath, writing && editsProgram);
                 var administration = RequireSafetyAdministration(softwarePath, plc);
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false; meta["passwordProvided"] = !string.IsNullOrEmpty(password);
                 meta["administration"] = new JsonObject
@@ -183,11 +187,11 @@ namespace TiaMcpServer.Siemens
                     case "createRuntimeGroup":
                     {
                         PlcBlock? mainBlock = null, instanceDb = null;
-                        if (!string.IsNullOrWhiteSpace(mainSafetyBlockPath)) mainBlock = ExactMasterCopyPlcSource(softwarePath, mainSafetyBlockPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyBlockPath must identify a block.");
+                        if (!string.IsNullOrWhiteSpace(mainSafetyBlockPath)) mainBlock = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyBlockPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyBlockPath must identify a block.");
                         if (!string.IsNullOrWhiteSpace(mainSafetyInstanceDbPath))
                         {
                             if (mainBlock == null) throw new ArgumentException("mainSafetyInstanceDbPath requires mainSafetyBlockPath (main safety FB).");
-                            instanceDb = ExactMasterCopyPlcSource(softwarePath, mainSafetyInstanceDbPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyInstanceDbPath must identify a block.");
+                            instanceDb = _session.ExactMasterCopyPlcSource(softwarePath, mainSafetyInstanceDbPath, true) as PlcBlock ?? throw new ArgumentException("mainSafetyInstanceDbPath must identify a block.");
                         }
                         meta["overload"] = mainBlock == null ? "Create(name): TIA generates main safety FB + IDB" : instanceDb == null ? "Create(name, mainSafetyFC)" : "Create(name, mainSafetyFB, mainSafetyIDB)";
                         if (!writing) return "Runtime group creation preview; no modification.";
@@ -340,15 +344,15 @@ namespace TiaMcpServer.Siemens
         }
 
         public ResponseMessage ManageSafetyGlobalSettings(string action = "read", string propertiesJson = "{}", bool dryRun = true)
-            => RunHmiStepTool("ManageSafetyGlobalSettings", meta => {
+            => _session.RunHmiStepTool("ManageSafetyGlobalSettings", meta => {
                 if (action != "read" && action != "update") throw new ArgumentException("action must be read or update.");
-                if (_portal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
+                if (_session.CurrentPortal == null) throw new PortalException(PortalErrorCode.InvalidState, "Connect to TIA first.");
                 bool writing = action == "update" && !dryRun;
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
                 meta["before"] = ReadSafetyGlobalSettings();
                 if (action == "read") { meta["apiCallSuccess"] = true; return "Safety GlobalSettings read (TIA Portal scope, not project scope)."; }
                 var changes = SafetyLogic.ParseGlobalSettingChanges(propertiesJson);
-                var settings = _portal.GetService<GlobalSettings>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "GlobalSettings service unavailable on this TIA Portal.");
+                var settings = _session.CurrentPortal.GetService<GlobalSettings>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "GlobalSettings service unavailable on this TIA Portal.");
                 meta["requested"] = new JsonObject(changes.Select(c => new KeyValuePair<string, JsonNode?>(c.Key, EngineeringScalarProperties.Json(c.Value))));
                 if (!writing) return "Safety GlobalSettings update preview; no modification.";
                 var applied = new JsonArray(); meta["applied"] = applied;
@@ -372,10 +376,10 @@ namespace TiaMcpServer.Siemens
             }, requiresProject: false);
 
         public ResponseMessage ReadSafetyBlockSignatures(string softwarePath, string blockPath = "", bool includeProgramSignatures = true, int offset = 0, int limit = 100)
-            => RunHmiStepTool("ReadSafetyBlockSignatures", meta => {
-                var plc = ExactPlcForEngineering(softwarePath, false);
+            => _session.RunHmiStepTool("ReadSafetyBlockSignatures", meta => {
+                var plc = _session.ExactPlcForEngineering(softwarePath, false);
                 meta["softwarePath"] = softwarePath; meta["blockPath"] = blockPath;
-                var administration = ResolvePlcService<SafetyAdministration>(softwarePath, plc);
+                var administration = _session.ResolvePlcService<SafetyAdministration>(softwarePath, plc);
                 meta["fCpu"] = administration != null;
                 if (includeProgramSignatures)
                 {
@@ -385,8 +389,8 @@ namespace TiaMcpServer.Siemens
                 }
                 var blocks = new List<PlcBlock>();
                 if (!string.IsNullOrWhiteSpace(blockPath))
-                    blocks.Add(ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock ?? throw new ArgumentException("blockPath must identify a block."));
-                else GetBlocksRecursive(plc.BlockGroup, blocks);
+                    blocks.Add(_session.ExactMasterCopyPlcSource(softwarePath, blockPath, true) as PlcBlock ?? throw new ArgumentException("blockPath must identify a block."));
+                else _session.GetBlocksRecursive(plc.BlockGroup, blocks);
                 var rows = new List<JsonNode>(); int scanned = 0, withoutProvider = 0;
                 foreach (var block in blocks)
                 {
@@ -411,10 +415,10 @@ namespace TiaMcpServer.Siemens
             });
 
         public ResponseMessage ExportSafetyPrintout(string softwarePath, string filePath, string printer = "MicrosoftPrintToPdf", string option = "All", string documentLayout = "", bool dryRun = true)
-            => RunHmiStepTool("ExportSafetyPrintout", meta => {
+            => _session.RunHmiStepTool("ExportSafetyPrintout", meta => {
                 var request = SafetyLogic.ValidatePrintoutRequest(filePath, printer, option, documentLayout);
                 var file = NativeFileOutput.Plan(filePath);
-                ExactPlcForEngineering(softwarePath, false);
+                _session.ExactPlcForEngineering(softwarePath, false);
                 var cpu = SafetyCpuItem(softwarePath);
                 var service = cpu.GetService<SafetyPrintout>() ?? throw new PortalException(PortalErrorCode.NotSupportedOnVersion, "SafetyPrintout unavailable on " + cpu.Name + ": not an S7-1200/1500 F-CPU or Safety option not installed.");
                 meta["dryRun"] = dryRun; meta["mayHaveWrittenFiles"] = false; meta["filePath"] = file.FullName;

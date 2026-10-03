@@ -169,7 +169,46 @@ CASES = {
                   devicePathJson='[]', itemPathJson='[]')
         + [('ReadOnlineDriveParameters', 'read', {'devicePathJson': '[]', 'itemPathJson': '[]'})]
         + actions('ManageOnlineDriveFunctions', 'read performFactoryReset performRamToRomCopy changeActivationState',
-                  devicePathJson='[]', itemPathJson='[]')
+                  devicePathJson='[]', itemPathJson='[]'),
+    'SafetyManagement': actions('ManagePlcSafety',
+        'read createRuntimeGroup deleteRuntimeGroup updateRuntimeGroup updateSettings generateGlobalFIOStatusBlock '
+        'cleanSystemGeneratedObjects generateBaseId login logoff setPassword revokePassword', softwarePath=PLC)
+        + actions('ManageSafetyGlobalSettings', 'read update')
+        + [('ReadSafetyBlockSignatures', 'read', {'softwarePath': PLC}),
+           ('ExportSafetyPrintout', 'export', {'softwarePath': PLC, 'filePath': 'C:/domain-offline.pdf'})],
+    'SafetyValidation': [('ReadSafetyActivationTests', 'read', {})]
+        + actions('ManageSafetyActivationTest',
+                  'read create createFromTest createFromMasterCopy rename setAuthor changeEvaluationDevice '
+                  'checkValidity generateReport export import delete', name='Test1')
+        + actions('ManageSafetyActivationTestGroup', 'read create createFromMasterCopy rename delete')
+        + actions('ManageSafetyFunction', 'read create createFrom update resetTestResult checkValidity setTrace checkTraceValidity export import delete',
+                  activationTest='Test1')
+        + actions('ManageSafetyFunctionCondition', 'read create update checkValidity delete', activationTest='Test1', safetyFunction='Function1'),
+    'CertificateManagement': actions('ManagePlcCertificate', 'list read template create import export delete assign unassign',
+                                   devicePathJson='["Device1"]', itemPathJson='["CPU1"]'),
+    'SecurityDeep': actions('ManageSyslogServers', 'read create update delete assignModule unassignModule')
+        + [('ManageSyslogServers', 'plc/' + action, dict(scope='plc', action=action))
+           for action in ('read', 'update', 'createServer', 'deleteServer')]
+        + actions('ManagePasswordPolicy', 'read update')
+        + [('ManageUmcUsers', kind + '/' + action, dict(kind=kind, action=action))
+           for kind in ('user', 'group') for action in
+           ('read', 'createOffline', 'importFromServer', 'rename', 'activate', 'deactivate', 'delete', 'assignRole', 'unassignRole')]
+        + [('ManageUmcUsers', 'server/' + action, dict(kind='server', action=action))
+           for action in ('read', 'checkConsistency', 'synchronize')],
+    'ProjectSecurity': [('ReadProjectUserManagement', category, {'category': category}) for category in
+        ('users', 'anonymousUser', 'systemRoles', 'customRoles', 'engineeringRights', 'customDeviceRights',
+         'umcUsers', 'umcUserGroups', 'passwordPolicy', 'deviceRights', 'roleDeviceRights')]
+        + actions('ManageProjectUserManagement',
+                  'createUser deleteUser setUserPassword activateUser deactivateUser assignRole unassignRole '
+                  'createRole deleteRole assignEngineeringRight unassignEngineeringRight assignDeviceRight unassignDeviceRight '
+                  'createDeviceRight deleteDeviceRight activateAnonymousUser deactivateAnonymousUser', name='User1')
+        + [('ReadProjectProtection', 'read', {})]
+        + actions('ManageMultiuserSession', 'read listServerProjects readLockState listLocalSessions connectServer disconnectServer commit',
+                  serverName='Server1', projectName='Project1', host='offline.invalid', port=443, commitComment='Offline preview')
+        + [('CompareLibraries', 'read', {'leftLibraryName': 'Library1', 'rightLibraryName': 'Library2'}),
+           ('ReadProjectSettings', 'read', {})]
+        + [('CompareProjects', kind, {'kind': kind, 'softwarePath': PLC})
+           for kind in ('software', 'softwareToLibrary', 'hardware')]
 }
 
 
@@ -193,11 +232,13 @@ def capture(args, exe, harness, profile, isolated):
         reached_child = False
         for domain in args.domain:
             for name, case, arguments in CASES[domain]:
-                hidden = args.major == 20 and name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest')
+                hidden = args.major == 20 and (name in ('ManagePlcBlockWriteProtection', 'ManageDriveSafetyAcceptanceTest')
+                                               or domain == 'SafetyValidation')
                 version_action = args.major == 20 and (
-                    name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType')
-                    or name == 'ManageDcbLibraries' and arguments['action'] == 'import'
-                    or name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
+                    (name == 'ManagePlcDocuments' and arguments['action'] in ('createFromMasterCopy', 'createFromLibraryType'))
+                    or (name == 'ManageDcbLibraries' and arguments['action'] == 'import')
+                    or (name == 'ManageDriveHardwareModule' and arguments['action'] in ('changeType', 'setPositionNumber'))
+                    or (name == 'ManagePlcSafety' and arguments['action'] == 'generateBaseId'))
                 if profile == 'full':
                     resources.require((name in names) != hidden, f'{name}: unexpected version registration')
                 params = {'name': name, 'arguments': arguments} if profile == 'full' else {
@@ -225,6 +266,14 @@ def capture(args, exe, harness, profile, isolated):
                         resources.require(meta.get('tool') == name and meta.get('operationSuccess') is False
                                           and 'absent from the supplied V21 SDK' in raw,
                                           f'{name}: missing V21 unsupported response: {raw}')
+                        reached_child = True
+                    elif name in ('ManageSafetyGlobalSettings', 'ManageMultiuserSession', 'CompareLibraries', 'ReadProjectSettings'):
+                        resources.require(value.get('message', value.get('Message')) == name + ' failed'
+                            and meta.get('tool') == name and meta.get('status') == 'InvalidState'
+                            and meta.get('operationSuccess') is False
+                            and re.split(r'\r\n|\r|\n', meta.get('error', ''), maxsplit=1)[0]
+                                == 'TiaMcpServer.Siemens.PortalException: Connect to TIA first.',
+                            f'{name}/{case} did not reach the disconnected portal guard: {raw}')
                         reached_child = True
                     else:
                         resources.require(value.get('message', value.get('Message')) == 'Project is null'

@@ -13,53 +13,6 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("Published | Unpublished. Native software-unit object publication state.")] string access,
             bool dryRun=true)
             => Portal.SetPlcUnitObjectAccess(softwarePath,unitName,objectKind,objectPath,access,dryRun);
-        [McpServerTool(Name="ManagePlcSafety"), Description("[L2][Safety][WRITE] Official Siemens.Engineering.Safety administration of one exact F-PLC. read: password/login state, SafetySettings incl. AssignmentOfBlockNumbers (ManagementMode, From/To FB/FC/DB), SafetySystemVersion + applicable versions, EnableConsistentUploadFromFCpu/EnableFCommunicationIdTag attributes, runtime groups incl. FOBNumber/FOBCycleTime/FOBPhaseShift/FOBPriority, collective/software/hardware/communication-address F-signatures (V21), portal GlobalSettings and CPU Failsafe_FCapabilityActivated. Writes: createRuntimeGroup (optional mainSafetyBlockPath FC, or FB + mainSafetyInstanceDbPath), deleteRuntimeGroup, updateRuntimeGroup/updateSettings (propertiesJson: scalar properties, AssignmentOfBlockNumbers.*, SafetySystemVersion exact string, documented attributes), generateGlobalFIOStatusBlock, cleanSystemGeneratedObjects, generateBaseId (V21, F-BaseID CPUs), login/logoff/setPassword/revokePassword (password passed straight to TIA, never stored or logged). dryRun=true default; program edits require Offline and F-login when protected; delete/generate/clean/password actions and SafetyModeCanBeDisabled require confirmSafetyChange=true. No F-compile, save or download; API access is not functional safety acceptance.")]
-        public static ResponseMessage ManagePlcSafety(
-            string softwarePath,
-            [Description("read | createRuntimeGroup | deleteRuntimeGroup | updateRuntimeGroup | updateSettings | generateGlobalFIOStatusBlock | cleanSystemGeneratedObjects | generateBaseId | login | logoff | setPassword | revokePassword. ")] string action="read",
-            [Description("runtimeGroup: exact name of the F-runtime group.")] string runtimeGroup="",
-            string propertiesJson="{}",
-            bool dryRun=true,
-            string password="",
-            [Description("confirmSafetyChange: must be true together with dryRun=false to change safety settings.")] bool confirmSafetyChange=false,
-            [Description("mainSafetyBlockPath: path of the main safety block ('Group/Name').")] string mainSafetyBlockPath="",
-            [Description("mainSafetyInstanceDbPath: path of the main safety instance DB.")] string mainSafetyInstanceDbPath="")
-            => Portal.ManagePlcSafety(softwarePath,action,runtimeGroup,propertiesJson,dryRun,password,confirmSafetyChange,mainSafetyBlockPath,mainSafetyInstanceDbPath);
-        [McpServerTool(Name="ManageSafetyGlobalSettings"), Description("[L2][Safety][WRITE] Official Safety GlobalSettings service of the connected TIA Portal (portal-wide, no project needed): read/update SafetyModificationsPossible, GenerationOfDefaultFailsafeProgram, ManagementOfFailsafeInSoftwareUnitsEnvironment, UsernameForFChangeHistory (<=256 chars; empty resets). propertiesJson holds only those four names. dryRun=true default; update reads every value back. SafetyModificationsPossible=false locks all F-program changes in TIA regardless of login.")]
-        public static ResponseMessage ManageSafetyGlobalSettings([Description("read | update. ")] string action="read",string propertiesJson="{}",bool dryRun=true)
-            => Portal.ManageSafetyGlobalSettings(action,propertiesJson,dryRun);
-        [McpServerTool(Name="ReadSafetyBlockSignatures"), Description("[L2][Safety][READ] Per-block F-signatures via native PlcBlock.GetService<SafetySignatureProvider>() for one exact blockPath or every block of the PLC (recursive), plus the PLC collective/software/hardware/communication-address signatures (V21 ProgramSignatures) when includeProgramSignatures=true. Blocks without the service (non-F blocks, non-F-CPU) are counted, not listed. Value 0 = no valid signature (changed since the last F-compile). Offline project values, never read from the CPU. Paginated offset/limit<=500. No change.")]
-        public static ResponseMessage ReadSafetyBlockSignatures(
-            string softwarePath,
-            string blockPath="",
-            [Description("includeProgramSignatures: true also returns the F-program signatures (V21).")] bool includeProgramSignatures=true,
-            int offset=0,
-            int limit=100)
-            => Portal.ReadSafetyBlockSignatures(softwarePath,blockPath,includeProgramSignatures,offset,limit);
-        [McpServerTool(Name="ExportSafetyPrintout"), Description("[L2][Safety][FILE] Official STEP 7 Safety printout of one exact F-PLC via native SafetyPrintout.Print on the CPU device item: printer MicrosoftPrintToPdf (.pdf) or MicrosoftXpsDocumentWriter (.xps/.oxps), option All or Compact, documentLayout default DocuInfo_ISO_A4_Portrait. filePath is absolute on the MCP server, must not exist (native Print would overwrite) and its parent must exist; the Windows printer driver must be enabled on the TIA machine. dryRun=true default; execution returns the native bool, byte size and SHA-256. No project change.")]
-        public static ResponseMessage ExportSafetyPrintout(
-            string softwarePath,
-            string filePath,
-            [Description("printer: printer name ('' = the default printer).")] string printer="MicrosoftPrintToPdf",
-            [Description("option: Openness print / export option name ('' = default).")] string option="All",
-            [Description("documentLayout: document layout name ('' = default).")] string documentLayout="",
-            bool dryRun=true)
-            => Portal.ExportSafetyPrintout(softwarePath,filePath,printer,option,documentLayout,dryRun);
-        [McpServerTool(Name="ManagePlcCertificate"), Description("[L2][Security][WRITE] Offline engineering certificates of the exact PLC DeviceItem (LocalCertificateManager.LocalCertificateStore): list, read, template (default CertificateTemplate for usage Tls/WebServer/OpcUaServer/OpcUaClient/OpcUaClientServer: Signature, SubjectCommonName, Usage, ValidFrom, ValidUntil, SubjectAlternativeNames), create (usage + template propertiesJson Signature Sha1RSA/Sha256RSA, SubjectCommonName, ValidFrom/ValidUntil ISO dates + subjectAlternativeNamesJson [{type Dns/Email/IP/Uri, value}] via SubjectAlternativeNameComposition.Create), import (filePath; optional password for protected files via Import(file, SecureString), never echoed), export (new file), delete (by exact certificateId), assign/unassign (WebserverCertificate/OpcUaServerCertificate dynamic attribute on the selected owner). dryRun=true default; no download/save; export refuses overwrite; private keys are never exported.")]
-        public static ResponseMessage ManagePlcCertificate(
-            string devicePathJson,
-            string itemPathJson,
-            [Description("list | read | template | create | import | export | delete | assign | unassign. ")] string action,
-            [Description("certificateId: certificate id from the read action.")] string certificateId="",
-            string filePath="",
-            [Description("usage: Tls | WebServer | OpcUaServer | OpcUaClient | OpcUaClientServer.")] string usage="",
-            string propertiesJson="{}",
-            [Description("assignment: assignment kind as the read action lists it.")] string assignment="",
-            bool dryRun=true,
-            [Description("assignmentItemPathJson: JSON array of device-item names the certificate is assigned to.")] string assignmentItemPathJson="",
-            [Description("subjectAlternativeNamesJson: JSON array of subject alternative names for the certificate.")] string subjectAlternativeNamesJson="[]",
-            string password="")
-            => Portal.ManagePlcCertificate(devicePathJson,itemPathJson,action,certificateId,filePath,usage,propertiesJson,assignment,dryRun,assignmentItemPathJson,subjectAlternativeNamesJson,password);
         [McpServerTool(Name="ManageLibraryTypeVersion"), Description("[L2][Library][WRITE] Exact library type/version read/edit/release/setDefault/deleteVersion/updateInstances/discard/findInstances. Empty libraryName selects project library; otherwise unique already-open global library. typePath relative to TypeFolder. Release requires newVersion and official dependenciesMode. findInstances is read-only and requires exact targetSoftwarePath; discard removes the selected editable version. updateInstances requires exact targetSoftwarePath; native type update chooses its applicable versions, not necessarily version argument. dryRun=true default. No export, save, close or compile. Semantic validity/dependency impact determined by native TIA.")]
         public static ResponseMessage ManageLibraryTypeVersion(
             string typePath,

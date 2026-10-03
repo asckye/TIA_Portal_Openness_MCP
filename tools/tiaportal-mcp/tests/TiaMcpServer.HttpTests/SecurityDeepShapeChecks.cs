@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 
-// Native members used by the 2.7.32 security / UMC family (Portal.SecurityDeep.cs, the certificate-template extension of
+// Native members used by the 2.7.32 security / UMC family (SecurityDeepService.cs, the certificate-template extension of
 // ManagePlcCertificate and the anonymous-user actions of ManageProjectUserManagement), verified member by member against
 // the installed V20 (Siemens.Engineering) or V21 (Siemens.Engineering.Base) PublicAPI.
 internal static class SecurityDeepShapeChecks
@@ -89,5 +89,8 @@ internal static class SecurityDeepShapeChecks
         Enum(sec+"CertificateUsage","None","Tls","WebServer","OpcUaServer","OpcUaClient","OpcUaClientServer"); Enum(sec+"SignatureAlgorithm","None","Sha1RSA","Sha256RSA"); Enum(sec+"SubjectAlternativeNameType","None","Dns","Email","IP","Uri");
         Method(sec+"CertificateComposition","Create",new[]{T(sec+"CertificateTemplate")},"Certificate"); Method(sec+"CertificateComposition","Import",new[]{typeof(FileInfo)},"Certificate"); Method(sec+"CertificateComposition","Import",new[]{typeof(FileInfo),typeof(SecureString)},"Certificate");
         Property(sec+"Certificate","HasPrivateKey","Boolean",false); Property(sec+"Certificate","Id","UInt32",false);
+        SafetyShapeChecks.CheckDomain(server, check, "SecurityDeep", new[] { "ManageSyslogServers", "ManagePasswordPolicy", "ManageUmcUsers" });
+        SafetyShapeChecks.CheckDomain(server, check, "CertificateManagement", new[] { "ManagePlcCertificate" });
+        SafetyShapeChecks.CheckDomain(server, check, "ProjectSecurity", new[] { "ReadProjectUserManagement", "ManageProjectUserManagement", "ReadProjectProtection", "ManageMultiuserSession", "CompareLibraries", "CompareProjects", "ReadProjectSettings" });
     }
 }

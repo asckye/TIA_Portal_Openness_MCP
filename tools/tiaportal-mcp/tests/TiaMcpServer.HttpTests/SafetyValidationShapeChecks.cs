@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the 2.7.42 phase 6 ⑥-③ Safety Validation Assistant tools (Portal.SafetyValidation.cs), verified member by
+// Native members used by the 2.7.42 phase 6 ⑥-③ Safety Validation Assistant tools (SafetyValidationService.cs), verified member by
 // member against the installed V21 PublicAPI (Siemens.Engineering.SafetyValidation). The namespace does not exist on V20, where the
 // tools answer NotSupportedOnVersion; the V20 run only pins that absence.
 internal static class SafetyValidationShapeChecks

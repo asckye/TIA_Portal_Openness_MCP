@@ -1,14 +1,20 @@
 using System.ComponentModel;
 using ModelContextProtocol.Server;
+using TiaMcpServer.Siemens.Services;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    public static partial class McpServer
+    [McpServerToolType]
+    internal sealed class ProjectSecurityTools
     {
+        private readonly ProjectSecurityService _service;
+
+        public ProjectSecurityTools(ProjectSecurityService service) => _service = service;
+
         [McpServerTool(Name="ReadProjectUserManagement"), Description("[L2][Security][READ] Paginated UMAC listing of the bound project: category users/anonymousUser/systemRoles/customRoles/engineeringRights/customDeviceRights/umcUsers/umcUserGroups/passwordPolicy/deviceRights/roleDeviceRights. Optional exact name filter; deviceRights/roleDeviceRights need devicePathJson (+itemPathJson) JSON arrays of exact names. Requires the native UmacConfigurator service (protected project); passwords never readable. Nothing modified.")]
-        public static ResponseMessage ReadProjectUserManagement(string category="users", string name="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100)
-            => Portal.ReadProjectUserManagement(category,name,devicePathJson,itemPathJson,offset,limit);
+        public ResponseMessage ReadProjectUserManagement(string category="users", string name="", string devicePathJson="[]", string itemPathJson="[]", int offset=0, int limit=100)
+            => _service.ReadProjectUserManagement(category,name,devicePathJson,itemPathJson,offset,limit);
         [McpServerTool(Name="ManageProjectUserManagement"), Description("[L2][Security][WRITE] UMAC mutation by exact names: createUser/deleteUser/setUserPassword/activateUser/deactivateUser/assignRole/unassignRole (name=user, roleName), createRole/deleteRole/assignEngineeringRight/unassignEngineeringRight/assignDeviceRight/unassignDeviceRight (name=custom role, rightName, devicePathJson), createDeviceRight/deleteDeviceRight (name, group, comment), activateAnonymousUser/deactivateAnonymousUser (no name; UmacConfigurator.ActivateAnonymousUser/DeactivateAnonymousUser, single anonymous user per protected project - roles are assigned with assignRole name=Anonymous). Default preview; real execution needs dryRun=false AND confirmChange=true. Password goes to the API as SecureString and is never logged. Readback verified; no save/compile/download; system roles and project protection itself are never changed.")]
-        public static ResponseMessage ManageProjectUserManagement(
+        public ResponseMessage ManageProjectUserManagement(
             [Description("createUser | deleteUser | setUserPassword | activateUser | deactivateUser | assignRole | unassignRole | createRole | deleteRole | assignEngineeringRight | unassignEngineeringRight | assignDeviceRight | unassignDeviceRight | createDeviceRight | deleteDeviceRight | activateAnonymousUser | deactivateAnonymousUser. ")] string action,
             string name,
             string password="",
@@ -20,12 +26,12 @@ namespace TiaMcpServer.ModelContextProtocol
             string itemPathJson="[]",
             bool confirmChange=false,
             bool dryRun=true)
-            => Portal.ManageProjectUserManagement(action,name,password,roleName,rightName,comment,group,devicePathJson,itemPathJson,confirmChange,dryRun);
+            => _service.ManageProjectUserManagement(action,name,password,roleName,rightName,comment,group,devicePathJson,itemPathJson,confirmChange,dryRun);
         [McpServerTool(Name="ReadProjectProtection"), Description("[L2][Security][READ] Read project protection indicators of the bound project: UMAC service availability (the only native indicator, no IsProtected scalar exists), UMAC object counts, anonymous user, password policy, UMC server configurator and advanced protection provider scalars. Never enables/disables protection.")]
-        public static ResponseMessage ReadProjectProtection()
-            => Portal.ReadProjectProtection();
+        public ResponseMessage ReadProjectProtection()
+            => _service.ReadProjectProtection();
         [McpServerTool(Name="ManageMultiuserSession"), Description("[L2][Project][WRITE] Multiuser/project-server access by exact alias: read (servers, open local sessions, bound session up-to-date flag and markings), listServerProjects, readLockState, listLocalSessions (serverName + projectName), connectServer (serverName, protocol Https/Http, host, port), disconnectServer, commit (CloseAndCommit with commitComment; closes the bound session). Mutations default to preview and need dryRun=false AND confirmChange=true. Never opens/creates local sessions or saves implicitly.")]
-        public static ResponseMessage ManageMultiuserSession(
+        public ResponseMessage ManageMultiuserSession(
             [Description("read | listServerProjects | readLockState | listLocalSessions | connectServer | disconnectServer | commit. ")] string action="read",
             [Description("serverName: multiuser server name.")] string serverName="",
             [Description("projectName: exact project name.")] string projectName="",
@@ -37,18 +43,18 @@ namespace TiaMcpServer.ModelContextProtocol
             int limit=100,
             bool confirmChange=false,
             bool dryRun=true)
-            => Portal.ManageMultiuserSession(action,serverName,projectName,protocol,host,port,commitComment,offset,limit,confirmChange,dryRun);
+            => _service.ManageMultiuserSession(action,serverName,projectName,protocol,host,port,commitComment,offset,limit,confirmChange,dryRun);
         [McpServerTool(Name="CompareLibraries"), Description("[L2][Library][READ] Native CompareToLibrary between two libraries: empty name = project library, otherwise exact open global library name. Result tree flattened (path/depth/state), summary counts all states, records exclude identical elements unless includeIdentical=true; paginated. Read-only, no library opened or modified.")]
-        public static ResponseMessage CompareLibraries(
+        public ResponseMessage CompareLibraries(
             [Description("leftLibraryName: global library on the left side of the comparison ('' = the project library).")] string leftLibraryName="",
             [Description("rightLibraryName: global library on the right side of the comparison ('' = the project library).")] string rightLibraryName="",
             bool includeIdentical=false,
             int maxDepth=8,
             int offset=0,
             int limit=100)
-            => Portal.CompareLibraries(leftLibraryName,rightLibraryName,includeIdentical,maxDepth,offset,limit);
+            => _service.CompareLibraries(leftLibraryName,rightLibraryName,includeIdentical,maxDepth,offset,limit);
         [McpServerTool(Name="CompareProjects"), Description("[L2][Project][READ] Native OFFLINE comparison: kind=software (exact softwarePath vs targetSoftwarePath in the bound project, or vs the CPU at targetDevicePathJson/targetItemPathJson in another open project targetProjectName), softwareToLibrary (softwarePath vs project library or exact targetLibraryName), hardware (devicePathJson/itemPathJson vs target device, same or other open project). Flattened result tree, summary of all states, non-identical records paginated. No online access; nothing modified.")]
-        public static ResponseMessage CompareProjects(
+        public ResponseMessage CompareProjects(
             string kind,
             string softwarePath="",
             string devicePathJson="[]",
@@ -62,13 +68,13 @@ namespace TiaMcpServer.ModelContextProtocol
             int maxDepth=8,
             int offset=0,
             int limit=100)
-            => Portal.CompareProjects(kind,softwarePath,devicePathJson,itemPathJson,targetProjectName,targetSoftwarePath,targetDevicePathJson,targetItemPathJson,targetLibraryName,includeIdentical,maxDepth,offset,limit);
+            => _service.CompareProjects(kind,softwarePath,devicePathJson,itemPathJson,targetProjectName,targetSoftwarePath,targetDevicePathJson,targetItemPathJson,targetLibraryName,includeIdentical,maxDepth,offset,limit);
         [McpServerTool(Name="ReadProjectSettings"), Description("[L2][Project][READ] Read TIA Portal settings folders (exact slash-separated folderPath; empty lists root folders) with scalar setting values, paginated; optional customIdentityKey reads the project-root CustomIdentityProvider value. Read-only; nothing modified.")]
-        public static ResponseMessage ReadProjectSettings(
+        public ResponseMessage ReadProjectSettings(
             string folderPath="",
             [Description("customIdentityKey: key of the custom identity to read ('' = all).")] string customIdentityKey="",
             int offset=0,
             int limit=100)
-            => Portal.ReadProjectSettings(folderPath,customIdentityKey,offset,limit);
+            => _service.ReadProjectSettings(folderPath,customIdentityKey,offset,limit);
     }
 }

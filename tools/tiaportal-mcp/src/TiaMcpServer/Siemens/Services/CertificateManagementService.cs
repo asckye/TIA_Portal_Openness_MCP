@@ -6,10 +6,14 @@ using Siemens.Engineering.HW;
 using Siemens.Engineering.Security;
 using TiaMcpServer.ModelContextProtocol;
 
-namespace TiaMcpServer.Siemens
+namespace TiaMcpServer.Siemens.Services
 {
-    public partial class Portal
+    internal sealed class CertificateManagementService
     {
+        private readonly IEngineeringSession _session;
+
+        public CertificateManagementService(IEngineeringSession session) => _session = session;
+
         // CertificateTemplate is read typed (Signature / SubjectCommonName / Usage / ValidFrom / ValidUntil + SubjectAlternativeNames).
         private static JsonObject TemplateRow(CertificateTemplate template)
         {
@@ -22,7 +26,7 @@ namespace TiaMcpServer.Siemens
         public ResponseMessage ManagePlcCertificate(string devicePathJson, string itemPathJson, string action, string certificateId = "",
             string filePath = "", string usage = "", string propertiesJson = "{}", string assignment = "", bool dryRun = true, string assignmentItemPathJson = "",
             string subjectAlternativeNamesJson = "[]", string password = "")
-            => RunHmiStepTool("ManagePlcCertificate", meta => {
+            => _session.RunHmiStepTool("ManagePlcCertificate", meta => {
                 if (!new[] { "list", "read", "template", "create", "import", "export", "delete", "assign", "unassign" }.Contains(action)) throw new ArgumentException("Unsupported certificate action.");
                 var subjectAlternativeNames = SecurityDeepLogic.ParseSubjectAlternativeNames(subjectAlternativeNamesJson);
                 if (subjectAlternativeNames.Length > 0 && action != "create") throw new ArgumentException("subjectAlternativeNamesJson applies to action=create only.");
@@ -30,8 +34,8 @@ namespace TiaMcpServer.Siemens
                 if ((action == "create" || action == "template") && string.IsNullOrWhiteSpace(usage)) throw new ArgumentException("usage (" + string.Join("/", SecurityDeepLogic.CertificateUsages) + ") is required for template/create.");
                 bool writing = action != "list" && action != "read" && action != "template" && !dryRun;
                 meta["passwordProvided"] = !string.IsNullOrEmpty(password);
-                using var access = writing ? AcquireHmiEditAccess() : null;
-                var item = ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("Exact PLC DeviceItem path required.");
+                using var access = writing ? _session.AcquireHmiEditAccess() : null;
+                var item = _session.ExactEngineeringHardware(devicePathJson, itemPathJson) as DeviceItem ?? throw new ArgumentException("Exact PLC DeviceItem path required.");
                 var manager = item.GetService<LocalCertificateManager>() ?? throw new NotSupportedException("LocalCertificateManager unavailable at this DeviceItem.");
                 var store = manager.LocalCertificateStore;
                 meta["action"] = action; meta["dryRun"] = dryRun; meta["mayHaveChanged"] = false;
@@ -104,7 +108,7 @@ namespace TiaMcpServer.Siemens
                 {
                     if (assignment != "WebserverCertificate" && assignment != "OpcUaServerCertificate") throw new ArgumentException("assignment must be WebserverCertificate or OpcUaServerCertificate on the selected DeviceItem.");
                     // Read first: do not write a guessed dynamic attribute on the wrong owner.
-                    var assignmentOwner = string.IsNullOrEmpty(assignmentItemPathJson) ? item : ExactEngineeringHardware(devicePathJson, assignmentItemPathJson) as DeviceItem
+                    var assignmentOwner = string.IsNullOrEmpty(assignmentItemPathJson) ? item : _session.ExactEngineeringHardware(devicePathJson, assignmentItemPathJson) as DeviceItem
                         ?? throw new ArgumentException("Assignment owner must be a DeviceItem.");
                     var old = assignmentOwner.GetAttribute(assignment);
                     meta["previousCertificateId"] = (old as Certificate)?.Id.ToString();

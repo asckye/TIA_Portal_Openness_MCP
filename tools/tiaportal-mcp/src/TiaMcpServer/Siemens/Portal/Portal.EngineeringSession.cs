@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
@@ -12,6 +13,7 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.SW.Units;
+using Siemens.Engineering.Umac;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
@@ -65,6 +67,20 @@ namespace TiaMcpServer.Siemens
         JsonObject IEngineeringSession.AddressRow(Address address) => AddressRow(address);
         object IEngineeringSession.ExactTechnology(string softwarePath, string objectPath, bool writing) => ExactTechnology(softwarePath, objectPath, writing);
         JsonObject IEngineeringSession.InterfaceRow(object iface) => InterfaceRow(iface);
+        object IEngineeringSession.ExactMasterCopyPlcSource(string softwarePath, string sourcePath, bool block) => ExactMasterCopyPlcSource(softwarePath, sourcePath, block);
+        void IEngineeringSession.GetBlocksRecursive(PlcBlockGroup group, List<PlcBlock> list, string regexName) => GetBlocksRecursive(group, list, regexName);
+        JsonArray IEngineeringSession.HardwareOwnerPath(object? start) => HardwareOwnerPath(start);
+        T IEngineeringSession.RequireHardwareService<T>(HardwareObject owner, string parameter) where T : class => RequireHardwareService<T>(owner, parameter);
+        JsonObject IEngineeringSession.DynamicAttributes(IEngineeringObject target, string[] names) => DynamicAttributes(target, names);
+        void IEngineeringSession.SetDynamicAttributes(IEngineeringObject target, JsonObject attributes, JsonObject meta) => SetDynamicAttributes(target, attributes, meta);
+        object? IEngineeringSession.FindOnFresh(Func<object> composition, string name, JsonObject meta, string phase) => FindOnFresh(composition, name, meta, phase);
+        int? IEngineeringSession.CountOnFresh(Func<object> composition, JsonObject meta, string key) => CountOnFresh(composition, meta, key);
+        UmacConfigurator IEngineeringSession.RequireUmac() => RequireUmac();
+        object? IEngineeringSession.FindOrdinal(object collection, string name, string kind) => FindOrdinal(collection, name, kind);
+        Role IEngineeringSession.ExactUmacRole(UmacConfigurator umac, string name) => ExactUmacRole(umac, name);
+        JsonObject IEngineeringSession.UmacRow(object item) => UmacRow(item);
+        JsonObject IEngineeringSession.LibraryRef(object library) => LibraryRef(library);
+        IEnumerable<Device> IEngineeringSession.EnumerateGroupDevices(DeviceUserGroupComposition? groups) => EnumerateGroupDevices(groups);
 
         void IEngineeringSession.AdoptProject(ProjectBase? project, string missingProjectMessage) => AdoptProject(project, missingProjectMessage);
         void IEngineeringSession.ReleaseProject() => ReleaseProject();

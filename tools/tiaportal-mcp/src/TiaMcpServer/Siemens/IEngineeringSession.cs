@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Siemens.Engineering;
 using Siemens.Engineering.HW;
@@ -13,6 +14,7 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Types;
 using Siemens.Engineering.SW.Units;
+using Siemens.Engineering.Umac;
 using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
@@ -64,6 +66,20 @@ namespace TiaMcpServer.Siemens
         JsonObject AddressRow(Address address);
         object ExactTechnology(string softwarePath, string objectPath, bool writing);
         JsonObject InterfaceRow(object iface);
+        object ExactMasterCopyPlcSource(string softwarePath, string sourcePath, bool block);
+        void GetBlocksRecursive(PlcBlockGroup group, List<PlcBlock> list, string regexName = "");
+        JsonArray HardwareOwnerPath(object? start);
+        T RequireHardwareService<T>(HardwareObject owner, string parameter) where T : class, IEngineeringService;
+        JsonObject DynamicAttributes(IEngineeringObject target, string[] names);
+        void SetDynamicAttributes(IEngineeringObject target, JsonObject attributes, JsonObject meta);
+        object? FindOnFresh(Func<object> composition, string name, JsonObject meta, string phase);
+        int? CountOnFresh(Func<object> composition, JsonObject meta, string key);
+        UmacConfigurator RequireUmac();
+        object? FindOrdinal(object collection, string name, string kind);
+        Role ExactUmacRole(UmacConfigurator umac, string name);
+        JsonObject UmacRow(object item);
+        JsonObject LibraryRef(object library);
+        IEnumerable<Device> EnumerateGroupDevices(DeviceUserGroupComposition? groups);
 
         // Adopt a retrieved project; preserve the caller's null-result diagnostic before binding it.
         void AdoptProject(ProjectBase? project, string missingProjectMessage);

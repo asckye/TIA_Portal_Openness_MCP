@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-// Native members used by the Safety family (Portal.SafetyManagement.cs), verified against the installed API.
+// Native members used by the Safety family (SafetyManagementService.cs), verified against the installed API.
 // V20 keeps Siemens.Engineering.Safety inside Siemens.Engineering.dll and lacks ProgramSignatures / SafetyBaseIdProvider.
 internal static class SafetyShapeChecks
 {
@@ -100,5 +100,40 @@ internal static class SafetyShapeChecks
         check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="confirmSafetyChange").DefaultValue,false),"ManagePlcSafety requires explicit confirmSafetyChange");
         check(tools.Tool("ReadSafetyBlockSignatures")!.GetParameters().All(p=>p.Name!="dryRun"),"ReadSafetyBlockSignatures is read-only (no dryRun)");
         check(Equals(tools.Tool("ManagePlcSafety")!.GetParameters().Single(p=>p.Name=="password").DefaultValue,""),"ManagePlcSafety password is optional and empty by default");
+        CheckDomain(server, check, "SafetyManagement", new[] { "ManagePlcSafety", "ManageSafetyGlobalSettings", "ReadSafetyBlockSignatures", "ExportSafetyPrintout" });
+        CheckDomain(server, check, "SafetyValidation", new[] { "ReadSafetyActivationTests", "ManageSafetyActivationTest", "ManageSafetyActivationTestGroup", "ManageSafetyFunction", "ManageSafetyFunctionCondition" });
+    }
+
+    internal static void CheckDomain(Assembly server, Action<bool, string> check, string domain, string[] names)
+    {
+        const BindingFlags all = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+        var surface = EngineSurface.For(server);
+        var service = server.GetType("TiaMcpServer.Siemens.Services." + domain + "Service", true)!;
+        var tools = server.GetType("TiaMcpServer.ModelContextProtocol." + domain + "Tools", true)!;
+        foreach (var type in new[] { service, tools })
+            check(type.IsSealed && !type.GetInterfaces().Any(item => item.Name == "IDisposable" || item.Name == "IAsyncDisposable"),
+                type.FullName + " is a non-disposable singleton class");
+        var provider = (IServiceProvider)server.GetType("TiaMcpServer.EngineServices", true)!.GetProperty("Provider", all)!.GetValue(null)!;
+        var session = provider.GetService(server.GetType("TiaMcpServer.Siemens.IEngineeringSession", true)!);
+        check(session != null && ReferenceEquals(session, provider.GetService(server.GetType("TiaMcpServer.Siemens.Portal", true)!)),
+            domain + " resolves the registered Portal singleton");
+        foreach (var name in names)
+        {
+            var method = surface.Method(name);
+            var tool = surface.Tool(name);
+            var target = surface.Target(method);
+            check(method.DeclaringType == service && tool.DeclaringType == tools && !tool.IsStatic
+                && ReferenceEquals(target, surface.Target(method)) && ReferenceEquals(surface.Target(tool), surface.Target(tool)),
+                domain + " surface resolves the service and tool singletons: " + name);
+            check(ReferenceEquals(service.GetField("_session", all)!.GetValue(target), session)
+                && ReferenceEquals(tools.GetField("_service", all)!.GetValue(surface.Target(tool)), target),
+                domain + " tool uses the service with the shared session: " + name);
+            var il = tool.GetMethodBody()!.GetILAsByteArray()!;
+            bool callsService = Enumerable.Range(0, Math.Max(0, il.Length - 4)).Any(index =>
+                (il[index] == 0x28 || il[index] == 0x6f) && BitConverter.ToInt32(il, index + 1) == method.MetadataToken);
+            EngineSurface.CheckIl(check, callsService, domain + " tool calls its service: " + name, tool, method);
+            check(server.GetType("TiaMcpServer.ModelContextProtocol.McpServer", true)!.GetMethod(name, all) == null,
+                domain + " tool needs no static CLI forwarder: " + name);
+        }
     }
 }
