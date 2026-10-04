@@ -51,11 +51,7 @@ namespace TiaMcpServer.Siemens.Services
             string plcName = "PLC_1",
             string connectionName = "HMI_Connection_1")
         {
-            var meta = new JsonObject
-            {
-                ["timestamp"] = DateTime.Now,
-                ["success"] = false
-            };
+            var meta = ResponseMeta.Basic(DateTime.Now, false);
 
             var steps = new JsonArray();
             meta["steps"] = steps;
@@ -635,6 +631,7 @@ namespace TiaMcpServer.Siemens.Services
                     Step("dyn:LAMP_Run", false, ex.InnerException?.Message ?? ex.Message);
                 }
 
+                // envelope: legacy-single-verdict
                 meta["success"] = true;
                 return new ResponseMessage
                 {
@@ -1169,6 +1166,7 @@ namespace TiaMcpServer.Siemens.Services
                     }
 
                     var failuresBeforeItem = failed.Count;
+                    // envelope: legacy-verdict-last
                     var itemStatus = new JsonObject { ["name"] = name, ["created"] = false, ["mayHaveChanged"] = false, ["success"] = false };
                     itemResults.Add(itemStatus);
                     try
@@ -1478,7 +1476,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "OK",
-                    Meta = new JsonObject { ["success"] = true, ["operationSuccess"] = true, ["exists"] = true },
+                    Meta = ResponseMeta.Unstamped(true, ("operationSuccess", true), ("exists", true)),
                     ObjectKind = "HmiButtonEventScript",
                     ObjectPath = $"{hmiSoftwarePath}:{screenName}:{buttonName}:{eventType}.Script",
                     TypeName = script == null ? scriptProp?.PropertyType.FullName : script.GetType().FullName,
@@ -1490,6 +1488,7 @@ namespace TiaMcpServer.Siemens.Services
                 return new ModelContextProtocol.ResponseObjectDescribe
                 {
                     Message = "Event script read failed",
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject { ["success"] = false, ["operationSuccess"] = false,
                         ["status"] = ex is PortalException pex ? pex.Code.ToString() : "ReadFailed",
                         ["error"] = (ex.InnerException ?? ex).Message },

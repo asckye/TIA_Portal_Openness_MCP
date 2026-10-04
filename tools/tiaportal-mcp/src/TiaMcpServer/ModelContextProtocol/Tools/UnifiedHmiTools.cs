@@ -109,7 +109,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = _service.EnsureUnifiedHmiConnection(hmiSoftwarePath, connectionName, plcName);
-                res.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true);
                 return res;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -179,7 +179,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = true,
                     Message = "Unified HMI theme design JSON built offline",
                     Data = design,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["offlineOnly"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -202,7 +202,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = true,
                     Message = "Unified HMI layout design JSON built offline",
                     Data = design,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["offlineOnly"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -274,7 +274,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = $"Unified HMI API types listed (filter='{nameContains}')",
                     Items = items,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -311,7 +311,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var res = _service.DescribeUnifiedHmiButtonEventScript(hmiSoftwarePath, screenName, buttonName, eventType, maxMembers);
-                res.Meta ??= new JsonObject { ["success"] = false, ["operationSuccess"] = false };
+                res.Meta ??= ResponseMeta.Unstamped(false, ("operationSuccess", false));
                 res.Meta["timestamp"] = DateTime.Now;
                 res.Meta["memberCount"] = res.Members?.Count() ?? 0;
                 return res;
@@ -389,12 +389,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? "HMI action script recipe safety self-test passed" : "HMI action script recipe safety self-test failed",
                     Data = data,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

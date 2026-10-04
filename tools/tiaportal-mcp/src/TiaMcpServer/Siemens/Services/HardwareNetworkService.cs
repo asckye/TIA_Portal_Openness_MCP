@@ -671,6 +671,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage EnsureSubnet(string anchorDeviceItemPath, string subnetType, string subnetName)
         {
+            // envelope: legacy-multiple-dynamic-fields
             var meta = new JsonObject
             {
                 ["timestamp"] = DateTime.Now,
@@ -701,6 +702,7 @@ namespace TiaMcpServer.Siemens.Services
                 var existing = FindConnectedSubnetByName(subnetName);
                 if (existing != null)
                 {
+                    // envelope: legacy-single-verdict
                     meta["success"] = true;
                     meta["created"] = false;
                     meta["readback"] = BuildSubnetReadbackJson(subnetName);

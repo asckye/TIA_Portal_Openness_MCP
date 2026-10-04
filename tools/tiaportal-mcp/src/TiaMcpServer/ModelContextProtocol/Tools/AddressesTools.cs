@@ -83,6 +83,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = msg,
+                    // envelope: legacy-stamp-without-verdict
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
@@ -277,7 +278,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"{devicePath} IP: {(string.IsNullOrEmpty(ip) ? "(no address configured on any node)" : ip)}"
                         : (data["message"]?.ToString() ?? "Device not found."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = found }
+                    Meta = ResponseMeta.Basic(DateTime.Now, found)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

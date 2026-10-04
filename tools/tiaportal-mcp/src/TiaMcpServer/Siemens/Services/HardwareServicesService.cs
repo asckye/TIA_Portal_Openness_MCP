@@ -445,6 +445,7 @@ namespace TiaMcpServer.Siemens.Services
         // required for it to take effect on the live CPU.
         public JsonObject SetPutGetAccess(string devicePath, bool enable)
         {
+            // envelope: legacy-ok-only
             if (_session.IsProjectNull()) return new JsonObject { ["ok"] = false, ["message"] = "No project open." };
             var device = _session.GetDevice(devicePath);
             if (device == null) return new JsonObject { ["ok"] = false, ["device"] = devicePath, ["message"] = $"Device not found: '{devicePath}'." };
@@ -645,6 +646,7 @@ namespace TiaMcpServer.Siemens.Services
                 foreach (var kv in collected.Summary(result.State.ToString(), result.ErrorCount, result.WarningCount)) meta[kv.Key] = kv.Value?.DeepClone();
                 meta["errors"] = new JsonArray(collected.Errors.Select(e => (JsonNode)JsonValue.Create(e)!).ToArray());
                 meta["warnings"] = new JsonArray(collected.Warnings.Select(w => (JsonNode)JsonValue.Create(w)!).ToArray());
+                // envelope: legacy-independent-verdicts
                 meta["success"] = result.State != CompilerResultState.Error;
                 meta["operationSuccess"] = result.State != CompilerResultState.Error;
                 return "Hardware compile of '" + owner.Name + "' finished: " + result.State + " (errors " + result.ErrorCount + ", warnings " + result.WarningCount + "). Project not saved.";

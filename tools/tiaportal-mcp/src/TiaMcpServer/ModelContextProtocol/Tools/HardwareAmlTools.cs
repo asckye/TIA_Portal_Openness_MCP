@@ -38,7 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ErrorCount = result.ErrorCount,
                     WarningCount = result.WarningCount,
                     Messages = result.Messages,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)

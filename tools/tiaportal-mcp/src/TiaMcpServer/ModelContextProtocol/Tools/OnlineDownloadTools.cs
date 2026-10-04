@@ -132,7 +132,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = all,
                     Message = data["message"]?.ToString() ?? "GoOfflineAll completed.",
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = all }
+                    Meta = ResponseMeta.Basic(DateTime.Now, all)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

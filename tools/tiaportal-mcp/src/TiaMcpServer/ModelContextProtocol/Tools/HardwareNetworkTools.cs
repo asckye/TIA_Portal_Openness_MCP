@@ -156,7 +156,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = $"Network info retrieved from '{deviceItemPath}'",
                         DeviceItemName = deviceItemPath.Split('/').LastOrDefault(),
                         Attributes = attrs,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -187,6 +187,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = success
                         ? "Device nodes connected to PROFINET subnet"
                         : "Device node PROFINET subnet connection did not complete",
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
@@ -218,12 +219,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = report["ok"]?.GetValue<bool>() == true
                         ? "Hardware network plan is valid"
                         : "Hardware network plan has validation errors",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = report["ok"]?.GetValue<bool>() == true,
-                        ["offlineOnly"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, report["ok"]?.GetValue<bool>() == true, ("offlineOnly", true))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -278,11 +274,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = "Hardware HMI connection owner candidates enumerated",
                     Items = items,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -304,11 +296,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = "Hardware HMI connection whitelisted services scanned",
                     Items = items,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -332,7 +320,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = count > 0,
                     Message = $"Project topology: {count} device(s).",
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = count > 0 }
+                    Meta = ResponseMeta.Basic(DateTime.Now, count > 0)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

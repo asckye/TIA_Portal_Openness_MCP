@@ -45,11 +45,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Name = info.Value.Name,
                         ProgramType = info.Value.ProgramType,
                         Screens = info.Value.Screens,
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -70,12 +66,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiSoftware(softwarePath, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)
@@ -100,12 +91,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiScreen(softwarePath, screenName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)
@@ -130,12 +116,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiTagTable(softwarePath, tagTableName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)
@@ -161,12 +142,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiTag(softwarePath, tagTableName, tagName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)
@@ -197,12 +173,7 @@ namespace TiaMcpServer.ModelContextProtocol
             {
                 var res = _service.DescribeHmiScreenItem(softwarePath, screenName, itemName, maxMembers);
                 // 成功表示对象已解析；成员数量另由 memberCount 表示。
-                res.Meta = new JsonObject
-                {
-                    ["timestamp"] = DateTime.Now,
-                    ["success"] = true,
-                    ["memberCount"] = res.Members?.Count() ?? 0
-                };
+                res.Meta = ResponseMeta.Basic(DateTime.Now, true, ("memberCount", res.Members?.Count() ?? 0));
                 return res;
             }
             catch (PortalException pex)

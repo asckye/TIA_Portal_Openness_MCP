@@ -43,7 +43,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"HMI screens listed for '{softwarePath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -68,7 +68,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"HMI tag tables listed for '{softwarePath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -94,7 +94,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"HMI tags listed for '{softwarePath}' (table='{tagTableName}')",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -119,7 +119,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"HMI connections listed for '{softwarePath}'",
                         Items = items,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -226,7 +226,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Message = $"HMI program export finished; see Failed list. Destination: '{exportDir}'",
                         Exported = res.Value.Exported,
                         Failed = res.Value.Failed,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = res.Value.Failed.Count == 0, ["operationSuccess"] = res.Value.Failed.Count == 0 }
+                        Meta = ResponseMeta.Basic(DateTime.Now, res.Value.Failed.Count == 0, ("operationSuccess", res.Value.Failed.Count == 0))
                     };
                 }
                 throw new McpException($"HMI software not found at '{softwarePath}'", McpErrorCode.InternalError);
@@ -249,7 +249,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"HMI screen imported from '{importPath}'" + (_service.LastImportNotes != null ? " - " + _service.LastImportNotes : ""),
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -274,7 +274,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"HMI tag table imported from '{importPath}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -298,7 +298,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"HMI connection imported from '{importPath}'",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (PortalException pex)
@@ -327,7 +327,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Imported {result.Imported?.Count() ?? 0} HMI screens from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -352,7 +352,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Message = $"Imported {result.Imported?.Count() ?? 0} HMI tag tables from '{dir}'. Failed={result.Failed?.Count() ?? 0}",
                     Imported = result.Imported,
                     Failed = result.Failed,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = (result.Failed == null || !result.Failed.Any()) }
+                    Meta = ResponseMeta.Basic(DateTime.Now, (result.Failed == null || !result.Failed.Any()))
                 };
             }
             catch (Exception ex) when (ex is not McpException)

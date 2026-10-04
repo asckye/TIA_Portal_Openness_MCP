@@ -805,6 +805,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage SetDeviceItemAttribute(string deviceItemPath, string attributeName, string value)
         {
+            // envelope: legacy-multiple-dynamic-fields
             var meta = new JsonObject
             {
                 ["timestamp"] = DateTime.Now,
@@ -848,6 +849,7 @@ namespace TiaMcpServer.Siemens.Services
                 object? newValue = null;
                 try { newValue = di.GetAttribute(info.Name); } catch /* swallow(probe-optional): Attribute readback is best effort; preserve the write result when this value cannot be read. */ { }
                 meta["newValue"] = newValue?.ToString() ?? string.Empty;
+                // envelope: legacy-single-verdict
                 meta["success"] = true;
                 return new ResponseMessage { Message = $"Device item attribute '{attributeName}' set", Meta = meta };
             }
@@ -860,12 +862,7 @@ namespace TiaMcpServer.Siemens.Services
 
         public ResponseMessage SetCpuCommonSettings(string cpuPath, string settingsJson)
         {
-            var meta = new JsonObject
-            {
-                ["timestamp"] = DateTime.Now,
-                ["success"] = false,
-                ["cpuPath"] = cpuPath
-            };
+            var meta = ResponseMeta.Basic(DateTime.Now, false, ("cpuPath", cpuPath));
 
             try
             {

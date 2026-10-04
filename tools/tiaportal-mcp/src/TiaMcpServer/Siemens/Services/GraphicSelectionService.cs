@@ -66,9 +66,7 @@ namespace TiaMcpServer.Siemens.Services
             try { return new ResponseMessage { Message = "Offline comparison of raw geometry; no TIA call or coordinate write.", Meta = UnifiedGraphicSelection.Compare(beforePagesJson, afterPagesJson) }; }
             catch (Exception ex)
             {
-                return new ResponseMessage { Message = "Comparison refused; supply complete compatible selection pages.", Meta = new JsonObject {
-                    ["success"] = false, ["operationSuccess"] = false, ["apiCallSuccess"] = false, ["dataComplete"] = false,
-                    ["readOnly"] = true, ["offline"] = true, ["failureCount"] = 1, ["failures"] = new JsonArray(MigrationRead.Failure("comparison", "InvalidSnapshot", ex)) } };
+                return new ResponseMessage { Message = "Comparison refused; supply complete compatible selection pages.", Meta = ResponseMeta.Unstamped(false, ("operationSuccess", false), ("apiCallSuccess", false), ("dataComplete", false), ("readOnly", true), ("offline", true), ("failureCount", 1), ("failures", new JsonArray(MigrationRead.Failure("comparison", "InvalidSnapshot", ex)))) };
             }
         }
     }

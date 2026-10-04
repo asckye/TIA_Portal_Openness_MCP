@@ -42,11 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = "Project tree retrieved",
                         Tree = "```\n" + tree + "\n```",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -78,11 +74,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Name = device.Name,
                         Attributes = attributes,
                         Description = device.ToString(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -114,11 +106,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Name = deviceItem.Name,
                         Attributes = attributes,
                         Description = deviceItem.ToString(),
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -146,7 +134,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = $"Device item tree retrieved from '{deviceItemPath}'",
                         Tree = "```\n" + tree + "\n```",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -235,6 +223,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     {
                         Message = "Devices retrieved",
                         Items = responseList,
+                        // envelope: legacy-verdict-last
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -266,12 +255,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"Device '{deviceName}' added",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["name"] = dev.Name
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("name", dev.Name))
                 };
             }
             catch (PortalException pex)
@@ -304,7 +288,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Family = family,
                         Attempts = res.Attempts,
                         Error = res.Error,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                        Meta = ResponseMeta.Basic(DateTime.Now, false)
                     };
                 }
 
@@ -317,7 +301,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     MlfbUsed = res.MlfbUsed,
                     VersionUsed = res.VersionUsed,
                     Attempts = res.Attempts,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["name"] = res.Device.Name }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("name", res.Device.Name))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -340,11 +324,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Keyword = keyword,
                     Count = items.Count,
                     Items = items,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -369,11 +349,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Count = items.Count,
                     Items = items,
                     Error = success ? null : $"No matching hardware catalog candidates for '{keyword}'",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = success
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, success)
                 };
             }
             catch (PortalException pex)
@@ -407,7 +383,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Candidates = res.Candidates,
                         Attempts = res.Attempts,
                         Error = res.Error,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                        Meta = ResponseMeta.Basic(DateTime.Now, false)
                     };
                 }
 
@@ -421,12 +397,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     CandidateUsed = res.Candidate,
                     Candidates = res.Candidates,
                     Attempts = res.Attempts,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                        ["name"] = res.Device.Name
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("name", res.Device.Name))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -456,7 +427,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         Candidates = res.Candidates,
                         Attempts = res.Attempts,
                         Error = res.Error,
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                        Meta = ResponseMeta.Basic(DateTime.Now, false)
                     };
                 }
 
@@ -470,7 +441,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     CandidateUsed = res.Candidate,
                     Candidates = res.Candidates,
                     Attempts = res.Attempts,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true, ["name"] = res.Device.Name }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true, ("name", res.Device.Name))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -505,7 +476,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"{devicePath}: {attrs} attribute(s) across {items} item(s) ({writable} writable)."
                         : (data["message"]?.ToString() ?? "Not found."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = found }
+                    Meta = ResponseMeta.Basic(DateTime.Now, found)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

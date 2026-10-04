@@ -77,6 +77,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = msg,
+                    // envelope: legacy-stamp-without-verdict
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,

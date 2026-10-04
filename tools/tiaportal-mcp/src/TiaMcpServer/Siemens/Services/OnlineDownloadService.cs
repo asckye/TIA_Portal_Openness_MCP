@@ -155,6 +155,7 @@ namespace TiaMcpServer.Siemens.Services
                         : (rhTarget == "primary" ? rh.GoOnlineToPrimary(rhAddress) : rh.GoOnlineToBackup(rhAddress));
 #endif
                     var rhName = rhState.ToString();
+                    // envelope: legacy-single-verdict
                     meta["success"] = rhName == "Online";
                     return new ResponseOnlineState { State = rhName, IsOnline = rhName == "Online", IsReachable = rhName == "Online" || rhName == "Protected",
                         Message = BuildOnlineStateMessage(rhName, softwarePath) + $" (R/H {rhTarget}; primary={rh.PrimaryState}, backup={rh.BackupState})", Meta = meta };

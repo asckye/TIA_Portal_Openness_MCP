@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"PUT/GET access on {devicePath}: {(enabled ? "ENABLED" : "DISABLED")} (attribute '{data["attributeName"]}')."
                         : (data["message"]?.ToString() ?? "Not found."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = found }
+                    Meta = ResponseMeta.Basic(DateTime.Now, found)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -153,7 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"PUT/GET access on {devicePath} set to {enable}. Download hardware config to apply."
                         : (data["message"]?.ToString() ?? "SetPutGetAccess failed."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
