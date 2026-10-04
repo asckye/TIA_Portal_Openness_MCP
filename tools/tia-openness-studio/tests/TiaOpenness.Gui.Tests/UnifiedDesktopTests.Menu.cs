@@ -64,7 +64,9 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Null(window.FindName("EngineeringTab"));
                 Assert.Null(window.FindName("ConfigurationTab"));
                 Assert.Empty(DesktopCapture.Descendants<RadioButton>(caption));
-                Assert.Equal(3, DesktopCapture.Descendants<Button>(caption).Count());
+                Assert.Equal(4, DesktopCapture.Descendants<Button>(caption).Count());
+                Assert.Equal("MCP · " + Loc.Current["Config.Idle"], ((TextBlock)window.FindName("McpStatusText")).Text);
+                Assert.Same(WorkbenchCommands.Configuration, ((Button)window.FindName("McpStatus")).Command);
                 Assert.Same(window.FindName("ReleasePicker"), Assert.Single(DesktopCapture.Descendants<ComboBox>(caption)));
                 foreach (var configuration in new[] { false, true, false })
                 {
@@ -120,11 +122,11 @@ public sealed partial class UnifiedDesktopTests
                 window.Show(); window.Activate(); FlushMenu();
                 var root = (FrameworkElement)window.Content;
                 var menu = Assert.Single(DesktopCapture.Descendants<Menu>(root));
-                Assert.Equal(new[] { "Project", "View", "Tools", "Help" }.Select(key => Loc.Current["Menu." + key]), menu.Items.OfType<MenuItem>().Select(item => item.Header));
+                Assert.Equal(new[] { "Project", "View", "Plc", "Mcp", "Tools", "Help" }.Select(key => Loc.Current["Menu." + key]), menu.Items.OfType<MenuItem>().Select(item => item.Header));
                 Assert.True(WindowChrome.GetIsHitTestVisibleInChrome(menu));
                 Assert.False(WindowChrome.GetIsHitTestVisibleInChrome(root));
                 Assert.True(menu.IsMainMenu);
-                Assert.Equal(new[] { 'P', 'V', 'T', 'H' }, DesktopCapture.Descendants<AccessText>(menu).Select(text => char.ToUpperInvariant(text.AccessKey)));
+                Assert.Equal(new[] { 'P', 'V', 'L', 'M', 'T', 'H' }, DesktopCapture.Descendants<AccessText>(menu).Select(text => char.ToUpperInvariant(text.AccessKey)));
                 Assert.All(MenuItems(menu), item => Assert.False(string.IsNullOrWhiteSpace(item.Header?.ToString())));
                 Assert.All(MenuItems(menu).Where(item => BindingOperations.IsDataBound(item, MenuItem.CommandProperty)), item => Assert.NotNull(item.Command));
                 var model = (MainViewModel)window.DataContext;
@@ -140,7 +142,29 @@ public sealed partial class UnifiedDesktopTests
                 Assert.False(Item("SaveMenu").IsEnabled);
                 model.Engineering.SelectedDevice = selectedDevice; FlushMenu();
                 Assert.True(Item("SaveMenu").IsEnabled);
-                Assert.Equal(new[] { Key.S, Key.D1, Key.D2 }, window.InputBindings.OfType<KeyBinding>().Select(binding => binding.Key));
+                Assert.Equal(new[] { Key.O, Key.S, Key.B, Key.D1, Key.D2 }, window.InputBindings.OfType<KeyBinding>().Select(binding => binding.Key));
+                Assert.Same(model.Engineering.Compile, window.InputBindings.OfType<KeyBinding>().Single(binding => binding.Key == Key.B).Command);
+                Assert.Same(model.Engineering.Compile, Item("CompileMenu").Command);
+                // Project lifecycle, PLC program operations and preferences each live in one menu (Windows / TIA Portal convention).
+                string[] Headers(string name) => Item(name).Items.OfType<MenuItem>().Select(item => (string)item.Header).ToArray();
+                Assert.Equal(new[] { "Menu.Open", "Menu.Save", "Menu.Exit" }.Select(key => Loc.Current[key]), Headers("ProjectMenu"));
+                Assert.Equal(new[] { "Menu.Software", "Menu.Compile", "Menu.Inspect", "Menu.Transfer" }.Select(key => Loc.Current[key]), Headers("PlcMenu"));
+                Assert.Equal(new[] { "Menu.Workspace", "Menu.Language", "Menu.Theme" }.Select(key => Loc.Current[key]), Headers("ToolsMenu"));
+                Assert.Equal(new[] { "Menu.McpStart", "Menu.McpStop", "Menu.McpNetwork", "Menu.McpTest", "Menu.McpWrite", "Menu.McpPage" }.Select(key => Loc.Current[key]), Headers("McpMenu"));
+                Assert.Same(WorkbenchCommands.Configuration, Item("McpPageItem").Command);
+                Assert.Equal(5, Headers("ViewMenu").Length);
+                foreach (var name in new[] { "ProjectMenu", "PlcMenu", "ToolsMenu" })
+                {
+                    OpenMenu(Item(name));
+                    DesktopCapture.Save(root, $"menu-{name}-{language}-{theme}", PopupChild(Item(name)));
+                    CloseMenu(Item(name));
+                }
+                var open = window.InputBindings.OfType<KeyBinding>().Single(binding => binding.Key == Key.O);
+                Assert.Same(WorkbenchCommands.Open, open.Command);
+                WorkbenchCommands.Open.Execute(null, window); FlushMenu();
+                Assert.True(((FrameworkElement)window.FindName("OptionsOverlay")).IsVisible);
+                Assert.True(((FrameworkElement)window.FindName("ProjectOptions")).IsVisible);
+                typeof(MainWindow).GetMethod("OnCloseOptions", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, new object[] { window, new RoutedEventArgs() });
                 Assert.All(window.InputBindings.OfType<KeyBinding>(), binding => Assert.Equal(ModifierKeys.Control, binding.Modifiers));
                 AssertPage(window, false);
                 Assert.Null(window.Configuration);
@@ -156,6 +180,24 @@ public sealed partial class UnifiedDesktopTests
                 Assert.Equal(6, Item("UpdateMenu").Items.Count);
                 DesktopCapture.Save(root, $"menu-update-{language}-{theme}", PopupChild(Item("HelpMenu")), PopupChild(Item("UpdateMenu")));
                 CloseMenu(Item("UpdateMenu")); CloseMenu(Item("HelpMenu"));
+                // The MCP menu runs the configuration page actions and offers each one exactly when its button does.
+                void AssertServiceMenu(bool http)
+                {
+                    OpenMenu(Item("McpMenu"));
+                    Assert.Equal(http && ((Button)page.FindName("StartServer")).IsEnabled, Item("McpStartItem").IsEnabled);
+                    Assert.False(Item("McpStopItem").IsEnabled);
+                    Assert.Equal(http, Item("McpNetworkItem").IsEnabled);
+                    Assert.Equal(http, Item("McpTestItem").IsEnabled);
+                    Assert.True(Item("McpWriteItem").IsEnabled);
+                    Assert.Equal("MCP · " + Loc.Current[http ? "Config.Idle" : "Config.Local"], ((TextBlock)window.FindName("McpStatusText")).Text);
+                    DesktopCapture.Save(root, $"menu-McpMenu-{(http ? "http" : "stdio")}-{language}-{theme}", PopupChild(Item("McpMenu")));
+                    CloseMenu(Item("McpMenu"));
+                }
+                AssertServiceMenu(true);
+                ((RadioButton)page.FindName("LocalNav")).IsChecked = true; FlushMenu();
+                AssertServiceMenu(false);
+                ((RadioButton)page.FindName("RemoteNav")).IsChecked = true; FlushMenu();
+                AssertServiceMenu(true);
                 OpenMenu(Item("ViewMenu"));
                 Assert.True(Item("EngineeringMenu").IsChecked);
                 Assert.Equal(language == AppLanguage.Chinese ? "工程操作(_E)" : "_Engineering", Item("EngineeringMenu").Header);
@@ -214,6 +256,7 @@ public sealed partial class UnifiedDesktopTests
                 ClickMenu(Item("LightThemeMenu")); Assert.True(Item("LightThemeMenu").IsChecked);
                 ClickMenu(Item("AutoThemeMenu")); Assert.Equal(AppTheme.Auto, ThemeManager.Current.Theme);
                 ClickMenu(Item("ChineseMenu")); Assert.Equal(AppLanguage.Chinese, Loc.Current.Language);
+                Assert.Equal("MCP · " + Loc.Current["Config.Idle"], ((TextBlock)window.FindName("McpStatusText")).Text);
                 AssertPage(window, false);
                 ClickMenu(Item("ChineseMenu")); Assert.True(Item("ChineseMenu").IsChecked);
                 ClickMenu(Item("EnglishMenu")); Assert.Equal(AppLanguage.English, Loc.Current.Language);

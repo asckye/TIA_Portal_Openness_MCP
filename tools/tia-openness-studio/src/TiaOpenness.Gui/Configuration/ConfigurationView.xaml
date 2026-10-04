@@ -362,7 +362,8 @@
               <RowDefinition Height="14"/>
               <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
-            <Border x:Name="SummaryCard" Background="{DynamicResource Ui.SummaryBackground}" CornerRadius="16" Padding="22" TextElement.Foreground="{DynamicResource Ui.SummaryText}">
+            <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
+            <Border x:Name="SummaryCard" Style="{StaticResource Glass.Card}" Padding="22">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="30"/>
@@ -372,19 +373,19 @@
                   <RowDefinition Height="28"/>
                   <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="{l:Tr Config.Summary}" FontWeight="Bold" FontSize="13"/>
-                <Border Background="{DynamicResource Ui.ChipBackground}" CornerRadius="12" HorizontalAlignment="Right" VerticalAlignment="Top" Padding="9,4">
+                <TextBlock Text="{l:Tr Config.Summary}" Style="{StaticResource Glass.Heading}"/>
+                <Border Style="{StaticResource Glass.Chip}" HorizontalAlignment="Right" VerticalAlignment="Top">
                   <TextBlock x:Name="LinkState" Text="{l:Tr Config.Idle}" FontFamily="{DynamicResource Ui.FontMono}" FontSize="10"/>
                 </Border>
-                <TextBlock x:Name="LinkLeftLabel" Grid.Row="1" Text="{l:Tr Config.Clients}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+                <TextBlock x:Name="LinkLeftLabel" Grid.Row="1" Text="{l:Tr Config.Clients}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
                 <TextBlock x:Name="LinkClient" Grid.Row="1" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <TextBlock x:Name="LinkRightLabel" Grid.Row="2" Text="{l:Tr Config.Service}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+                <TextBlock x:Name="LinkRightLabel" Grid.Row="2" Text="{l:Tr Config.Service}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
                 <TextBlock x:Name="LinkServer" Grid.Row="2" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <TextBlock Grid.Row="3" Text="{l:Tr Config.Address}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+                <TextBlock Grid.Row="3" Text="{l:Tr Config.Address}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
                 <TextBlock x:Name="LinkEndpoint" Grid.Row="3" HorizontalAlignment="Right" FontFamily="{DynamicResource Ui.FontMono}" FontSize="11"/>
-                <TextBlock Grid.Row="4" Text="{l:Tr Config.Transport}" Foreground="{DynamicResource Ui.SummaryMuted}"/>
+                <TextBlock Grid.Row="4" Text="{l:Tr Config.Transport}" Foreground="{DynamicResource Ui.SecondaryLabel}"/>
                 <TextBlock x:Name="Transport" Grid.Row="4" HorizontalAlignment="Right" FontWeight="Bold"/>
-                <Border Grid.Row="5" Background="{DynamicResource Ui.AccentSoft}" BorderBrush="{DynamicResource Ui.AccentSoftBorder}" BorderThickness="1" CornerRadius="10" Padding="13,9" Margin="0,10,0,0">
+                <Border Grid.Row="5" Background="{DynamicResource Ui.PanelBackground}" CornerRadius="10" Padding="13,9" Margin="0,10,0,0">
                   <TextBlock x:Name="LastTest" Text="{l:Tr Config.InitialTest}" FontSize="11" TextWrapping="Wrap" LineHeight="17"/>
                 </Border>
               </Grid>

@@ -11,7 +11,6 @@
  <SolidColorBrush x:Key="Ui.SidebarBackground" Color="#8CFFFFFF"/>
  <SolidColorBrush x:Key="Ui.CardBackground" Color="#F7F9FB"/>
  <SolidColorBrush x:Key="Ui.PanelBackground" Color="#FFFFFFFF"/>
- <SolidColorBrush x:Key="Ui.CodeBackground" Color="#DEE6ED"/>
  <SolidColorBrush x:Key="Ui.RowAlternate" Color="#08FFFFFF"/>
  <SolidColorBrush x:Key="Ui.Label" Color="#15202B"/>
  <SolidColorBrush x:Key="Ui.SecondaryLabel" Color="#4C5D6D"/>
@@ -41,9 +40,6 @@
  <SolidColorBrush x:Key="Ui.StatusIdle" Color="#8A98A6"/>
  <SolidColorBrush x:Key="Ui.ScrollThumb" Color="#448A98A6"/>
  <SolidColorBrush x:Key="Ui.ScrollThumbHover" Color="#888A98A6"/>
- <SolidColorBrush x:Key="Ui.SummaryBackground" Color="#DCECF0"/>
- <SolidColorBrush x:Key="Ui.SummaryText" Color="#15202B"/>
- <SolidColorBrush x:Key="Ui.SummaryMuted" Color="#4C5D6D"/>
  <SolidColorBrush x:Key="Ui.StrongFill" Color="#15202B"/>
  <SolidColorBrush x:Key="Ui.StrongText" Color="#FFFFFF"/>
  <SolidColorBrush x:Key="Ui.LogText" Color="#3D5062"/>
@@ -55,7 +51,6 @@
  <BlurEffect x:Key="Glass.CardShadow" Radius="15" RenderingBias="Quality"/>
  <DropShadowEffect x:Key="Glass.AccentShadow" Color="#0B7A99" BlurRadius="16" ShadowDepth="6" Direction="270" Opacity="0.22"/>
 <SolidColorBrush x:Key="Ui.CardShadowFill" Color="#1415202B"/>
- <SolidColorBrush x:Key="Ui.GitBackground" Color="#E1E8EE"/>
  <SolidColorBrush x:Key="Ui.ChipBackground" Color="#CCD8E1"/>
  <SolidColorBrush x:Key="Ui.InsetBackground" Color="#D6E0E8"/>
  <DropShadowEffect x:Key="Glass.PopupShadow" Color="#15202B" BlurRadius="16" ShadowDepth="4" Opacity="0.22"/>

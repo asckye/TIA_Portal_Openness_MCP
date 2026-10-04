@@ -77,7 +77,29 @@ public partial class MainWindow
             TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
-    private void OnServiceStateChanged(object? sender, EventArgs e) => _model.ServiceOwnsRelease = Configuration?.LocksRelease == true;
+    private void OnMcpOpened(object sender, RoutedEventArgs e)
+    {
+        if (e.OriginalSource != McpMenu) return;
+        try { EnsureConfiguration(); Configuration!.SyncServiceMenu(); }
+        catch (Exception ex)
+        {
+            TiaOpenness.Gui.Controls.GlassMessageBox.Show(this, ex.Message, Loc.Current["Dialog.Error.Caption"], MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+    private void OnServiceStateChanged(object? sender, EventArgs e)
+    {
+        _model.ServiceOwnsRelease = Configuration?.LocksRelease == true;
+        UpdateMcpStatus();
+    }
+    private void OnMcpLanguageChanged(object? sender, EventArgs e) => UpdateMcpStatus();
+    /// <summary>The MCP service state stays visible on both pages, the way a service host shows its engine state.</summary>
+    private void UpdateMcpStatus()
+    {
+        var state = Configuration?.ServiceStateKey ?? "Config.Idle";
+        McpStatusText.Text = "MCP · " + Loc.Current[state];
+        McpStatusDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty, state == "Config.Running" ? "Ui.Accent" : "Ui.StatusIdle");
+        McpStatus.ToolTip = Loc.Current.T("Caption.McpTip", Configuration?.ServiceEndpoint ?? Loc.Current["Config.NoAddress"]);
+    }
     private void OnDesktopModelChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (Configuration == null) return;

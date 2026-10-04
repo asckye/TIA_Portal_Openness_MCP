@@ -19,6 +19,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = _model;
         Root.Tag = new Controls.GlassResults(_model);
+        UpdateMcpStatus();
+        Localization.Loc.Current.LanguageChanged += OnMcpLanguageChanged;
         ToWorkspace.Checked += OnSyncDirection;
         ToProject.Checked += OnSyncDirection;
         SyncStrip.SizeChanged += (_, _) => {
@@ -30,7 +32,7 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(MainViewModel.IsVcTab)) DetailColumn.Width = new GridLength(_model.IsVcTab ? 340 : 320);
         };
         Closing += (_, e) => { if (_model.Busy) e.Cancel = true; };
-        Closed += (_, _) => { DisposeConfiguration(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
+        Closed += (_, _) => { Localization.Loc.Current.LanguageChanged -= OnMcpLanguageChanged; DisposeConfiguration(); ((Controls.GlassResults)Root.Tag).Dispose(); _model.Dispose(); };
         Loaded += async (_, _) => {
             await _model.ApplyStartupAsync(System.Environment.GetCommandLineArgs());
             if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "--mcp") >= 0) ShowConfiguration();
@@ -57,6 +59,7 @@ public partial class MainWindow : Window
         OptionsOverlay.Visibility = Visibility.Visible;
     }
     private void OnProjectOptions(object sender, RoutedEventArgs e) => ShowOptions(ProjectOptions, "Project.Label");
+    private void OnOpenExecuted(object sender, System.Windows.Input.ExecutedRoutedEventArgs e) => OnProjectOptions(sender, e);
     private void OnExportOptions(object sender, RoutedEventArgs e) => ShowOptions(ExportOptions, "Glass.Transfer");
     private void OnInspectOptions(object sender, RoutedEventArgs e) => ShowOptions(InspectOptions, "Toolbar.Inspect");
     private void OnWorkspaceOptions(object sender, RoutedEventArgs e) => ShowOptions(WorkspaceOptions, "Glass.NewWorkspace");

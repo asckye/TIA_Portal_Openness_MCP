@@ -4,11 +4,14 @@
   </shell:WindowChrome.WindowChrome>
 
   <Window.InputBindings>
+    <KeyBinding Key="O" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Open}"/>
     <KeyBinding Key="S" Modifiers="Control" Command="{Binding Engineering.Save}"/>
+    <KeyBinding Key="B" Modifiers="Control" Command="{Binding Engineering.Compile}"/>
     <KeyBinding Key="D1" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Engineering}"/>
     <KeyBinding Key="D2" Modifiers="Control" Command="{x:Static ux:WorkbenchCommands.Configuration}"/>
   </Window.InputBindings>
   <Window.CommandBindings>
+    <CommandBinding Command="{x:Static ux:WorkbenchCommands.Open}" Executed="OnOpenExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Engineering}" Executed="OnPageExecuted"/>
     <CommandBinding Command="{x:Static ux:WorkbenchCommands.Configuration}" Executed="OnPageExecuted"/>
   </Window.CommandBindings>
@@ -44,14 +47,10 @@
           </TextBlock>
           <Menu x:Name="MenuBar" Style="{StaticResource Glass.MenuBar}" Margin="18,0,0,0" shell:WindowChrome.IsHitTestVisibleInChrome="True">
             <MenuItem x:Name="ProjectMenu" Header="{l:Tr Menu.Project}">
-              <MenuItem Header="{l:Tr Menu.Open}" Click="OnProjectOptions"/>
+              <MenuItem x:Name="OpenMenu" Header="{l:Tr Menu.Open}" Command="{x:Static ux:WorkbenchCommands.Open}" InputGestureText="Ctrl+O"/>
               <MenuItem x:Name="SaveMenu" IsEnabled="{Binding IsEnabled,ElementName=SaveButton}" Header="{l:Tr Menu.Save}" Command="{Binding Engineering.Save}" InputGestureText="Ctrl+S"/>
-              <MenuItem Header="{l:Tr Menu.Compile}" IsEnabled="{Binding IsEnabled,ElementName=CompileButton}" Command="{Binding Engineering.Compile}"/>
               <Separator Style="{StaticResource Glass.MenuSeparator}"/>
-              <MenuItem Header="{l:Tr Menu.Transfer}" Click="OnExportOptions"/>
-              <MenuItem Header="{l:Tr Menu.Inspect}" Click="OnInspectOptions"/>
-              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
-              <MenuItem Header="{l:Tr Menu.Exit}" Click="OnClose"/>
+              <MenuItem Header="{l:Tr Menu.Exit}" Click="OnClose" InputGestureText="Alt+F4"/>
             </MenuItem>
             <MenuItem x:Name="ViewMenu" Header="{l:Tr Menu.View}">
               <MenuItem x:Name="EngineeringMenu" Header="{l:Tr Menu.Engineering}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsEngineeringPage,Mode=OneWay}" Command="{x:Static ux:WorkbenchCommands.Engineering}" InputGestureText="Ctrl+1"/>
@@ -60,6 +59,27 @@
               <MenuItem x:Name="BlocksMenu" Header="{l:Tr Menu.Blocks}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsBlocksTab}" Click="OnEngineeringView"/>
               <MenuItem x:Name="VciMenu" Header="{l:Tr Menu.Vci}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsVcTab}" Click="OnEngineeringView"/>
               <MenuItem x:Name="LogMenu" Header="{l:Tr Menu.Log}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsLogTab}" Click="OnEngineeringView"/>
+            </MenuItem>
+            <MenuItem x:Name="PlcMenu" Header="{l:Tr Menu.Plc}">
+              <MenuItem x:Name="SoftwareMenu" Header="{l:Tr Menu.Software}" Click="OnSoftware"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem x:Name="CompileMenu" Header="{l:Tr Menu.Compile}" IsEnabled="{Binding IsEnabled,ElementName=CompileButton}" Command="{Binding Engineering.Compile}" InputGestureText="Ctrl+B"/>
+              <MenuItem Header="{l:Tr Menu.Inspect}" Click="OnInspectOptions"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem Header="{l:Tr Menu.Transfer}" Click="OnExportOptions"/>
+            </MenuItem>
+            <MenuItem x:Name="McpMenu" Header="{l:Tr Menu.Mcp}" SubmenuOpened="OnMcpOpened">
+              <MenuItem x:Name="McpStartItem" Header="{l:Tr Menu.McpStart}"/>
+              <MenuItem x:Name="McpStopItem" Header="{l:Tr Menu.McpStop}" IsEnabled="False"/>
+              <MenuItem x:Name="McpNetworkItem" Header="{l:Tr Menu.McpNetwork}"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem x:Name="McpTestItem" Header="{l:Tr Menu.McpTest}"/>
+              <MenuItem x:Name="McpWriteItem" Header="{l:Tr Menu.McpWrite}"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
+              <MenuItem x:Name="McpPageItem" Header="{l:Tr Menu.McpPage}" Command="{x:Static ux:WorkbenchCommands.Configuration}" InputGestureText="Ctrl+2"/>
+            </MenuItem>
+            <MenuItem x:Name="ToolsMenu" Header="{l:Tr Menu.Tools}">
+              <MenuItem Header="{l:Tr Menu.Workspace}" Click="OnWorkspaceOptions"/>
               <Separator Style="{StaticResource Glass.MenuSeparator}"/>
               <MenuItem Header="{l:Tr Menu.Language}" ToolTip="{l:Tr Lang.Switch}">
                 <MenuItem x:Name="EnglishMenu" Header="{l:Tr Menu.English}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsEnglish,Source={x:Static l:Loc.Current}}" Click="OnRadioMenuClick"/>
@@ -71,11 +91,6 @@
                 <MenuItem x:Name="DarkThemeMenu" Header="{l:Tr Menu.Dark}" IsCheckable="True" Tag="Radio" IsChecked="{Binding IsDark,Source={x:Static themes:ThemeManager.Current}}" Click="OnRadioMenuClick"/>
               </MenuItem>
             </MenuItem>
-            <MenuItem x:Name="ToolsMenu" Header="{l:Tr Menu.Tools}">
-              <MenuItem Header="{l:Tr Menu.Software}" Click="OnSoftware"/>
-              <MenuItem Header="{l:Tr Menu.Git}" Click="OnGit"/>
-              <MenuItem Header="{l:Tr Menu.Workspace}" Click="OnWorkspaceOptions"/>
-            </MenuItem>
             <MenuItem x:Name="HelpMenu" Header="{l:Tr Menu.Help}" SubmenuOpened="OnHelpOpened">
               <MenuItem x:Name="UpdateMenu" Header="{l:Tr Config.Update}">
                 <MenuItem x:Name="UpdateInstalledItem" Header="{l:Tr Config.UnknownEngine}" IsEnabled="False"/>
@@ -85,13 +100,21 @@
                 <MenuItem x:Name="RunUpdate" Header="{l:Tr Config.RunUpdate}" IsEnabled="False"/>
                 <MenuItem x:Name="OpenReleases" Header="{l:Tr Config.Releases}"/>
               </MenuItem>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
               <MenuItem x:Name="ShowClientHelp" Header="{l:Tr Config.ClientHelp}"/>
               <MenuItem x:Name="OpenProjectPage" Header="{l:Tr Config.ProjectPage}"/>
+              <Separator Style="{StaticResource Glass.MenuSeparator}"/>
               <MenuItem x:Name="AboutItem" Header="{l:Tr Config.About}"/>
             </MenuItem>
           </Menu>
         </StackPanel>
         <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+          <Button x:Name="McpStatus" Style="{StaticResource Glass.Button}" Height="28" Padding="11,0" FontSize="11" Command="{x:Static ux:WorkbenchCommands.Configuration}">
+            <StackPanel Orientation="Horizontal">
+              <Ellipse x:Name="McpStatusDot" Width="7" Height="7" Fill="{DynamicResource Ui.StatusIdle}" VerticalAlignment="Center"/>
+              <TextBlock x:Name="McpStatusText" Margin="7,0,0,0" VerticalAlignment="Center"/>
+            </StackPanel>
+          </Button>
           <ComboBox x:Name="ReleasePicker" Width="92" ItemsSource="{Binding Releases}" DisplayMemberPath="DisplayName" SelectedValuePath="Key"
                           SelectedValue="{Binding SelectedReleaseKey}" IsEnabled="{Binding CanSelectRelease}" Style="{StaticResource Glass.Combo}" Margin="8,0,0,0" ToolTip="{l:Tr Connection.OpennessVersion}"/>
           <Button Content="" Style="{StaticResource Glass.CaptionButton}" Click="OnMinimize"/>
@@ -389,7 +412,7 @@
           </Grid>
           <Grid Grid.Row="4">
             <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-            <Border x:Name="BlocksLogCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}" BorderThickness="0">
+            <Border x:Name="BlocksLogCard" Style="{StaticResource Glass.Card}">
               <Grid>
                 <Grid.RowDefinitions>
                   <RowDefinition Height="28"/>
@@ -595,7 +618,7 @@
         </Grid>
         <Grid Grid.Column="4" Visibility="{Binding IsVcTab, Converter={StaticResource BoolToVisibility}}">
           <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-          <Border x:Name="DiffCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.GitBackground}" TextElement.Foreground="{DynamicResource Ui.Label}">
+          <Border x:Name="DiffCard" Style="{StaticResource Glass.Card}" TextElement.Foreground="{DynamicResource Ui.Label}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="30"/>
@@ -667,7 +690,7 @@
         </Grid>
         <Grid Grid.Column="2" Grid.ColumnSpan="3" Visibility="{Binding IsLogTab, Converter={StaticResource BoolToVisibility}}">
           <Border CornerRadius="16" Background="{DynamicResource Ui.CardShadowFill}" Effect="{DynamicResource Glass.CardShadow}" IsHitTestVisible="False" Margin="0,8,0,-8"/>
-          <Border x:Name="LogCard" Style="{StaticResource Glass.Card}" Background="{DynamicResource Ui.CodeBackground}">
+          <Border x:Name="LogCard" Style="{StaticResource Glass.Card}">
             <Grid>
               <Grid.RowDefinitions>
                 <RowDefinition Height="28"/>

@@ -27,6 +27,25 @@ namespace TiaMcpConfigurator
         public event EventHandler ServiceStateChanged;
         public bool HasRunningServer { get { return server != null && !server.HasExited; } }
         public bool LocksRelease { get { return busy || HasRunningServer; } }
+        public string ServiceStateKey { get { return !Remote ? "Config.Local" : HasRunningServer ? "Config.Running" : "Config.Idle"; } }
+        public string ServiceEndpoint
+        {
+            get
+            {
+                string address = Text("ServerAddress");
+                return !Remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
+            }
+        }
+        // The MCP menu runs the page actions, so each item is available exactly when its button is.
+        public void SyncServiceMenu()
+        {
+            bool http = Find<Grid>("ServerActions").Visibility == Visibility.Visible;
+            Find<MenuItem>("McpStartItem").IsEnabled = http && Find<Button>("StartServer").IsEnabled;
+            Find<MenuItem>("McpStopItem").IsEnabled = http && Find<Button>("StopServer").IsEnabled;
+            Find<MenuItem>("McpNetworkItem").IsEnabled = http && Find<Button>("Network").IsEnabled;
+            Find<MenuItem>("McpTestItem").IsEnabled = Find<Button>("TestClient").Visibility == Visibility.Visible && Find<Button>("TestClient").IsEnabled;
+            Find<MenuItem>("McpWriteItem").IsEnabled = Find<Button>("SaveClient").IsEnabled;
+        }
         public string SelectedReleaseKey
         {
             get { return SelectedVersion; }
@@ -101,6 +120,11 @@ namespace TiaMcpConfigurator
             Click("Network", async delegate { await OnNetwork(); });
             Click("TestClient", async delegate { await OnTestClient(); });
             Click("SaveClient", delegate { SaveClients(Remote); });
+            MenuClick("McpStartItem", OnStartServer);
+            MenuClick("McpStopItem", OnStopServer);
+            MenuClick("McpNetworkItem", async delegate { await OnNetwork(); });
+            MenuClick("McpTestItem", async delegate { await OnTestClient(); });
+            MenuClick("McpWriteItem", delegate { SaveClients(Remote); });
             MenuClick("CheckUpdate", async delegate { await OnCheckUpdate(true); });
             MenuClick("RunUpdate", OnRunUpdate);
             MenuClick("OpenReleases", delegate { Process.Start(new ProcessStartInfo(latest != null && latest.ReleaseUrl != null ? latest.ReleaseUrl : UpdateCheck.ReleasePageUrl(UpdateCheck.Repository)) { UseShellExecute = true }); });
@@ -201,6 +225,7 @@ namespace TiaMcpConfigurator
             string address = Text("ServerAddress");
             Find<TextBlock>("LinkEndpoint").Text = !remote ? Loc.Current["Config.LocalAddress"] : address.Length == 0 ? Loc.Current["Config.NoAddress"] : address + ":" + Text("ServerPort");
             Find<TextBlock>("LinkState").Text = Loc.Current[!remote ? "Config.Local" : running ? "Config.Running" : "Config.Idle"];
+            if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
         private void UpdateInstructions()
         {

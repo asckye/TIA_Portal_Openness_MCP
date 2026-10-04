@@ -40,11 +40,9 @@ public sealed class ThemeSurfaceTests(WpfContext wpf)
                 double contrast = (Math.Max(first, second) + 0.05) / (Math.Min(first, second) + 0.05);
                 Assert.True(contrast >= minimum, $"{theme}: {text} on {surface} = {contrast:F2}, expected {minimum}");
             }
-            foreach (string surface in new[] { "WindowBackground", "CardBackground", "CodeBackground", "GitBackground", "SummaryBackground", "InsetBackground", "FieldBackground" })
+            foreach (string surface in new[] { "WindowBackground", "CardBackground", "InsetBackground", "FieldBackground" })
                 foreach (string text in new[] { "Label", "SecondaryLabel", "TertiaryLabel", "Green", "Red", "Orange" }) Check(text, surface);
-            foreach (string surface in new[] { "CodeBackground", "GitBackground", "InsetBackground" }) Check("LogText", surface);
-            Check("SummaryText", "SummaryBackground");
-            Check("SummaryMuted", "SummaryBackground");
+            foreach (string surface in new[] { "CardBackground", "InsetBackground" }) Check("LogText", surface);
             Check("Label", "ChipBackground");
             Check("AccentText", "AccentSoft", 3);
             Check("Orange", "WarningSoft");
