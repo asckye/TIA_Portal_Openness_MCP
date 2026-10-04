@@ -8,7 +8,8 @@ whose two continuations are equivalent disappear; branch direction is retained
 where it affects a native boundary. This is static evidence, not a live trace.
 """
 import argparse
-from collections import Counter
+from collections import Counter, deque
+from functools import lru_cache
 import hashlib
 import json
 from pathlib import Path
@@ -127,6 +128,19 @@ def method_name(signature):
     return signature.split('::')[-1].split('(')[0]
 
 
+def parameter_types(signature):
+    result, start, depth = [], signature.find('(') + 1, 0
+    for index in range(start, len(signature)):
+        char = signature[index]
+        depth += char in '<['
+        depth -= char in '>]'
+        if depth == 0 and char in ',)':
+            if index > start:
+                result.append(signature[start:index])
+            start = index + 1
+    return result
+
+
 def matches_entry(method, entry):
     return method['owner'] == entry['type'] and method_name(method['name']) == entry['method'] \
         and ('signature' not in entry or method['name'] == entry['signature'])
@@ -195,7 +209,7 @@ def outside(sites, prefixes=(), scope=lambda row: False):
 
 
 def native_counts(sites):
-    return Counter(row['member'] for row in sites if row['category'] == 'direct')
+    return Counter((row['opcode'], row['member']) for row in sites if row['category'] == 'direct')
 
 
 def member_counts(sites):
@@ -242,7 +256,7 @@ def expanded_engine_inventory(document, sites, domain, scope=None):
     if domain.method_scopes:
         paths = Paths([document])
         for key in scope.entries:
-            paths.build(key)
+            paths.build(key, canonical=False)
         reached = paths.reached
     for key, method in methods.items():
         if owned(method, domain.local_primitives) or (key not in reached if reached is not None else not owned(method, domain.engine)):
@@ -290,6 +304,32 @@ def compare_default_inventory(before, after, domain, scopes=None):
     return errors, report
 
 
+def compare_shared_inventory(old_engine, new_engine, old_adapter, new_adapter, domain,
+                             engine_scope=lambda row: False, host_scope=lambda row: False, deduplicate=True):
+    engine_before, engine_after = native_counts(old_engine), native_counts(new_engine)
+    adapter_before, adapter_after = native_counts(old_adapter), native_counts(new_adapter)
+    errors = []
+    if deduplicate:
+        primitives = native_counts([s for s in new_adapter if owned(s, domain.primitives)])
+        domain_counts = native_counts([s for s in new_adapter if host_scope(s) or owned(s, domain.primitives)])
+        errors += ['Duplicated shared primitive member: ' + opcode + ' ' + member
+                   for opcode, member in primitives if domain_counts[(opcode, member)] != 1]
+    allowed_gains = native_counts([s for s in old_engine if engine_scope(s)])
+    errors += ['Unexplained adapter native gain: ' + opcode + ' ' + member
+               for (opcode, member), count in (adapter_after - adapter_before).items()
+               if (opcode, member) not in allowed_gains or count > allowed_gains[(opcode, member)]]
+    members = sorted(engine_before.keys() | engine_after.keys() | adapter_before.keys() | adapter_after.keys(),
+                     key=lambda key: (key[1], key[0]))
+    report = dict(expectedNativeDelta=[dict(opcode=opcode, member=member,
+        engine=engine_after[key]-engine_before[key], adapter=adapter_after[key]-adapter_before[key],
+        union=engine_after[key]+adapter_after[key]-engine_before[key]-adapter_before[key])
+        for key in members for opcode, member in [key]
+        if engine_before[key] != engine_after[key] or adapter_before[key] != adapter_after[key]],
+        nativeCounts=dict(engineBefore=sum(engine_before.values()), engineAfter=sum(engine_after.values()),
+                          adapterBefore=sum(adapter_before.values()), adapterAfter=sum(adapter_after.values())))
+    return errors, report
+
+
 class Graph:
     def __init__(self):
         self.nodes = {0: ('return', {})}
@@ -314,34 +354,54 @@ class Graph:
         # Repeated bisimulation refinement also removes branch/merge scaffolding
         # introduced by a transparent primitive's argument and return handling.
         while True:
+            skip = lru_cache(None)(self.skip)
             reachable = set()
-            pending = [self.skip(root)]
+            pending = [skip(root)]
             while pending:
-                item = self.skip(pending.pop())
+                item = skip(pending.pop())
                 if item in reachable:
                     continue
                 reachable.add(item)
                 pending.extend(self.nodes[item][1].values())
-            colors = {n: self.nodes[n][0] for n in reachable}
-            while True:
-                signatures = {n: (self.nodes[n][0], tuple((key, colors[self.skip(value)])
-                    for key, value in sorted(self.nodes[n][1].items()))) for n in reachable}
-                palette = {signature: str(index) for index, signature in enumerate(sorted(set(signatures.values())))}
-                new = {n: palette[signature] for n, signature in signatures.items()}
-                old_to_new, new_to_old = {}, {}
-                stable = True
-                for n in reachable:
-                    if old_to_new.setdefault(colors[n], new[n]) != new[n] or new_to_old.setdefault(new[n], colors[n]) != colors[n]:
-                        stable = False
-                        break
-                if stable:
-                    colors = new
-                    break
-                colors = new
+            # Work-list bisimulation refinement keeps large expanded callback
+            # graphs practical; the quotient and its edge-order serialization
+            # are identical to repeated whole-graph color refinement.
+            initial, predecessors = {}, {}
+            for n in reachable:
+                label, edges = self.nodes[n]
+                initial.setdefault((label, tuple(sorted(edges))), set()).add(n)
+                for edge, target in edges.items():
+                    predecessors.setdefault(skip(target), {}).setdefault(edge, set()).add(n)
+            blocks = list(initial.values())
+            colors = {n: index for index, block in enumerate(blocks) for n in block}
+            queue, queued = deque(range(len(blocks))), set(range(len(blocks)))
+            while queue:
+                splitter = queue.popleft()
+                queued.remove(splitter)
+                incoming = {}
+                for n in blocks[splitter]:
+                    for edge, sources in predecessors.get(n, {}).items():
+                        incoming.setdefault(edge, set()).update(sources)
+                for sources in incoming.values():
+                    touched = {}
+                    for n in sources:
+                        touched.setdefault(colors[n], set()).add(n)
+                    for index, part in touched.items():
+                        if len(part) == len(blocks[index]):
+                            continue
+                        blocks[index] -= part
+                        new_index = len(blocks)
+                        blocks.append(part)
+                        for n in part:
+                            colors[n] = new_index
+                        add = new_index if index in queued or len(part) <= len(blocks[index]) else index
+                        if add not in queued:
+                            queue.append(add)
+                            queued.add(add)
             collapsed = False
             for n in reachable:
                 label, edges = self.nodes[n]
-                if label.startswith('branch:') and len({colors[self.skip(v)] for v in edges.values()}) == 1:
+                if label.startswith('branch:') and len({colors[skip(v)] for v in edges.values()}) == 1:
                     self.nodes[n] = ('epsilon', {'next': next(iter(edges.values()))})
                     collapsed = True
             if not collapsed:
@@ -372,6 +432,8 @@ class Paths:
             for method in document['methods']:
                 if method.get('il') is not None and '__TiaMcpNativeCall' not in method['owner']:
                     key = normalize(method['name'])
+                    if method.get('expansionOnly'):
+                        key += '@' + document['assembly']
                     if key in self.methods:
                         # Empty closure constructors are identical apart from their
                         # compiler-wide class ordinal. Never merge different bodies.
@@ -381,6 +443,309 @@ class Paths:
                     self.methods[key] = method
         self.reached = set()
         self.boundaries = {}
+        self.guards = {}
+
+    def access(self, operand):
+        native = operand.get('native')
+        reached = []
+        target = normalize(operand.get('definition') or '')
+        if not native and target in self.methods:
+            method = self.methods[target]
+            body = [row for row in method['il'] if row['op'] != 'nop']
+            if not method.get('handlers') and len(body) == 3 and body[0]['op'] == 'ldarg.0' and body[-1]['op'] == 'ret':
+                native = body[1]['operand'].get('native')
+                reached.append(target)
+        return native, reached
+
+    def guard(self, key, active=()):
+        """Recognise only a receiver guard around one zero-argument access.
+
+        Both arms return directly (possibly via a local). No arbitrary pure
+        call is assumed pure: only Nullable construction is transparent.
+        """
+        if key in self.guards:
+            return self.guards[key]
+        if key in active:
+            return None
+        method = self.methods[key]
+        il = [row for row in method['il'] if row['op'] != 'nop']
+        result = None
+        if not method.get('handlers') and len(il) <= 32:
+            branches = [i for i, row in enumerate(il) if row['flow'] == 'Cond_Branch']
+            if len(branches) == 1 and branches[0] == 1 and self.slot(il[0], 'ldarg') is not None \
+                    and il[1]['op'].startswith(('brtrue', 'brfalse')):
+                receiver = self.slot(il[0], 'ldarg')
+                positions = {row['offset']: i for i, row in enumerate(il)}
+                jump = positions[il[1]['operand']['target']]
+                yes, no = (jump, 2) if il[1]['op'].startswith('brtrue') else (2, jump)
+                def arm(start):
+                    stack, locals_, access, visited = [], {}, None, set()
+                    index = start
+                    while index < len(il) and index not in visited:
+                        visited.add(index)
+                        row = il[index]
+                        op, operand = row['op'], row['operand']
+                        arg, loc = self.slot(row, 'ldarg'), self.slot(row, 'ldloc')
+                        addr, store = self.slot(row, 'ldloca'), self.slot(row, 'stloc')
+                        if arg is not None:
+                            stack.append(('arg', arg))
+                        elif loc is not None:
+                            stack.append(locals_.get(loc))
+                        elif addr is not None:
+                            stack.append(('local-address', addr))
+                        elif store is not None and stack:
+                            locals_[store] = stack.pop()
+                        elif op == 'ldnull':
+                            stack.append(('default', 'null'))
+                        elif op == 'ldc.i4.0':
+                            stack.append(('default', 'zero'))
+                        elif op == 'initobj' and stack and stack[-1][0] == 'local-address':
+                            locals_[stack.pop()[1]] = ('default', operand['name'])
+                        elif row['flow'] == 'Call':
+                            if op == 'newobj' and operand.get('owner', '').startswith('System.Nullable`1<') and stack == [('access',)]:
+                                stack = [('nullable-access',)]
+                            else:
+                                native, reached = self.access(operand)
+                                if not native or native['category'] != 'direct' or access or stack != [('arg', receiver)] \
+                                        or operand.get('parameters', 1) != 1:
+                                    return None
+                                access = (native, reached)
+                                stack = [('access',)]
+                        elif row['flow'] == 'Branch':
+                            index = positions[operand['target']]
+                            continue
+                        elif op == 'ret':
+                            return (stack[0], access) if len(stack) == 1 else None
+                        else:
+                            return None
+                        index += 1
+                    return None
+                live, empty = arm(yes), arm(no)
+                if live and empty and live[0] in (('access',), ('nullable-access',)) and live[1] \
+                        and empty[0] and empty[0][0] == 'default' and empty[1] is None:
+                    result = dict(receiver=receiver, native=live[1][0], reached=[key] + live[1][1],
+                                  nullable=live[0][0] == 'nullable-access', default=empty[0][1])
+        self.guards[key] = result
+        return result
+
+    def lifted_guards(self, method, calls, conditions):
+        lifted, branches = {}, {}
+        il = method['il']
+        for i, row in enumerate(il):
+            key = normalize(row['operand'].get('definition') or '')
+            guard = self.guard(key) if row['flow'] == 'Call' and key in self.methods else None
+            args = calls.get(row['offset'], ())
+            if not guard or len(args) != 1 or args[0] is None:
+                continue
+            # Only absent receivers/results can share the next null check.
+            if guard['default'] != 'null' and not (guard['nullable'] and guard['default'].startswith('System.Nullable`1<')):
+                continue
+            expected = ('has-value', ('address', ('call', row['offset']))) if guard['nullable'] else args[0]
+            for following in il[i+1:]:
+                op = following['op']
+                if following['flow'] == 'Cond_Branch':
+                    if op.startswith(('brtrue', 'brfalse')) and conditions.get(following['offset']) == expected:
+                        # A handler boundary between the access and guard would
+                        # change exception routing; never move across it.
+                        regions = lambda at: [(h['kind'], h['target']) for h in method.get('handlers', []) if h['start'] <= at < h['end']]
+                        incoming = [target for source in il for target in source['operand'].get('targets', [source['operand'].get('target')])
+                                    if target is not None and row['offset'] < target <= following['offset']]
+                        if not incoming and regions(row['offset']) == regions(following['offset']):
+                            lifted[row['offset']] = guard
+                            branches[following['offset']] = guard
+                    break
+                if op in ('nop', 'dup') or any(self.slot(following, stem) is not None for stem in ('ldloc', 'ldloca', 'stloc', 'ldarg')):
+                    continue
+                if guard['nullable'] and following['flow'] == 'Call' and 'System.Nullable`1<' in following['operand'].get('name', '') \
+                        and '::get_HasValue()' in following['operand']['name']:
+                    continue
+                break
+        return lifted, branches
+
+    def guard_checks(self, method, calls, conditions, guard_branches):
+        # Keep defaults and otherwise invisible effects strict in the small
+        # receiver-guard methods eligible for movement. Existing null defaults
+        # need no new graph node; non-default constants always remain visible.
+        il = [row for row in method['il'] if row['op'] != 'nop']
+        result = {}
+        positions = {row['offset']: i for i, row in enumerate(il)}
+        for offset in guard_branches:
+            branch = il[positions[offset]]
+            index = positions[branch['operand']['target']] if branch['op'].startswith('brfalse') else positions[offset] + 1
+            for row in il[index:]:
+                if row['op'] == 'ldstr' or (row['op'].startswith('ldc.') and row['op'] != 'ldc.i4.0'):
+                    result[row['offset']] = 'guard-default:' + json.dumps([row['op'], row['operand'].get('value')])
+                if row['flow'] in ('Return', 'Branch', 'Cond_Branch'):
+                    break
+        if len(il) < 2 or self.slot(il[0], 'ldarg') is None \
+                or not il[1]['op'].startswith(('brtrue', 'brfalse')):
+            return result
+        arg = self.slot(il[0], 'ldarg') - int(method.get('HasThis', False))
+        arguments = method.get('arguments', [])
+        if not 0 <= arg < len(arguments) or arguments[arg]['type'] in ('System.Boolean', 'System.Int32'):
+            return result
+        empty_index = positions[il[1]['operand']['target']] if il[1]['op'].startswith('brfalse') else 2
+        for row in il[empty_index:]:
+            if row['op'] == 'newobj' and row['operand'].get('owner', '').startswith('System.Nullable`1<'):
+                result[row['offset']] = 'guard-default:present-nullable'
+            if row['flow'] in ('Return', 'Branch', 'Cond_Branch'):
+                break
+        accesses = {row['offset']: self.access(row['operand'])[0] for row in il if row['flow'] == 'Call'}
+        access_count = sum(bool(native and native['category'] == 'direct') for native in accesses.values())
+        if access_count != 1:
+            return result
+        for row in il:
+            op, operand = row['op'], row['operand']
+            if op == 'ldstr' or (op.startswith('ldc.') and op != 'ldc.i4.0'):
+                result[row['offset']] = 'guard-default:' + json.dumps([op, operand.get('value')])
+            native = accesses.get(row['offset'])
+            if row['flow'] == 'Call' and not native and not operand.get('owner', '').startswith('System.Nullable`1<'):
+                result[row['offset']] = 'guard-effect:' + operand.get('name', '')
+            if native and native['category'] == 'direct' \
+                    and (calls.get(row['offset']) or (None,))[0] != conditions.get(il[1]['offset']):
+                result[row['offset']] = 'guard-receiver-mismatch'
+            if op.startswith(('stfld', 'stsfld', 'stind', 'stelem')) or op in ('cpblk', 'initblk', 'stobj', 'cpobj', 'newarr', 'localloc') \
+                    or op == 'initobj' and (positions[row['offset']] == 0 or self.slot(il[positions[row['offset']]-1], 'ldloca') is None):
+                result[row['offset']] = 'guard-effect:' + op + ':' + str(operand)
+        return result
+
+    @staticmethod
+    def slot(row, stem):
+        op = row['op']
+        if op in (stem, stem + '.s'):
+            return row['operand'].get('index')
+        if re.fullmatch(re.escape(stem) + r'\.\d', op):
+            return int(op[-1])
+        return None
+
+    def values(self, method, bindings=None):
+        """Small, conservative IL stack analysis; joins never guess a delegate.
+
+        Values are used only to bind callbacks and recognise the closed null
+        guard shapes below. Unknown instructions kill the stack, not a proof.
+        """
+        il = method['il']
+        if not il:
+            return {}, {}
+        cached = {}
+        for i, row in enumerate(il):
+            position = i - 3 if row['op'] == 'stsfld' else i - 4
+            if row['op'] in ('stsfld', 'stfld') and position >= 0 \
+                    and il[position]['op'] in ('ldftn', 'ldvirtftn') and il[position+1]['op'] == 'newobj' \
+                    and il[position+2]['op'] == 'dup' and (row['op'] == 'stsfld' or self.slot(il[i-1], 'stloc') is not None) \
+                    and any(marker in row['operand']['name'] for marker in ('::<>9__', '/<>O::')):
+                value = ('delegate', normalize(il[position]['operand'].get('definition') or ''), il[position]['operand'].get('name', ''))
+                field = row['operand']['name']
+                cached[field] = value if cached.get(field, value) == value else ('ambiguous-delegate',)
+        positions = {row['offset']: i for i, row in enumerate(il)}
+        arguments = {('arg', i): (bindings or {}).get(i, ('arg', i))
+                     for i in range(len(method.get('arguments', [])) + int(method.get('HasThis', False)))}
+        states, calls, conditions = {0: ((), arguments)}, {}, {}
+        pending = [0]
+        for handler in method.get('handlers', []):
+            index = positions[handler['target']]
+            states[index] = ((None,) if handler['kind'] == 'Catch' else (), {})
+            pending.append(index)
+        while pending:
+            i = pending.pop()
+            stack, locals_ = states[i]
+            stack, locals_ = list(stack), dict(locals_)
+            row = il[i]
+            op, operand = row['op'], row['operand']
+            def pop():
+                return stack.pop() if stack else None
+            arg = self.slot(row, 'ldarg')
+            store_arg = self.slot(row, 'starg')
+            local = self.slot(row, 'ldloc')
+            address = self.slot(row, 'ldloca')
+            store = self.slot(row, 'stloc')
+            if arg is not None:
+                if operand.get('kind') == 'parameter':
+                    arg += int(method.get('HasThis', False))
+                stack.append(locals_.get(('arg', arg), (bindings or {}).get(arg, ('arg', arg))))
+            elif store_arg is not None:
+                locals_[('arg', store_arg + int(method.get('HasThis', False)))] = pop()
+            elif local is not None:
+                stack.append(locals_.get(local, ('local', local)))
+            elif address is not None:
+                stack.append(('address', locals_.get(address, ('local', address))))
+            elif store is not None:
+                locals_[store] = pop()
+            elif op == 'dup':
+                stack.append(stack[-1] if stack else None)
+            elif op == 'pop':
+                pop()
+            elif op in ('ldftn', 'ldvirtftn'):
+                if op == 'ldvirtftn':
+                    pop()
+                stack.append(('delegate', normalize(operand.get('definition') or ''), operand.get('name', '')))
+            elif op in ('ldfld', 'ldsfld'):
+                receiver = pop() if op == 'ldfld' else None
+                stack.append(cached.get(operand['name'], ('field', normalize(operand['name']), receiver)))
+            elif op in ('stfld', 'stsfld'):
+                pop()
+                if op == 'stfld':
+                    pop()
+            elif op == 'ldnull':
+                stack.append(('null',))
+            elif op.startswith('ldc.') or op == 'ldstr':
+                stack.append(('constant', op, operand.get('value')))
+            elif row['flow'] == 'Call' and operand.get('kind') == 'method':
+                count = operand.get('parameters', 0) + int(operand.get('HasThis', False) and op != 'newobj')
+                args = tuple(reversed([pop() for _ in range(count)]))
+                calls[row['offset']] = args
+                name = operand.get('name', '')
+                if op == 'newobj' and ('System.Func' in name or 'System.Action' in name):
+                    stack.append(args[-1] if args else pop())
+                elif operand.get('returns') != 'System.Void' or op == 'newobj':
+                    if 'System.Nullable`1' in name and '::get_HasValue()' in name:
+                        value = args[0] if args else None
+                        stack.append(('has-value', value))
+                    else:
+                        stack.append(('call', row['offset']))
+            elif row['flow'] == 'Cond_Branch':
+                value = pop()
+                if not op.startswith(('brtrue', 'brfalse')) and op != 'switch':
+                    pop()
+                    value = None
+                conditions[row['offset']] = value
+            elif op in ('nop', 'constrained.', 'readonly.', 'tail.') or row['flow'] in ('Branch', 'Return', 'Throw'):
+                pass
+            elif op in ('castclass', 'isinst', 'box', 'unbox.any'):
+                value = pop()
+                stack.append(('cast', operand.get('name'), value))
+            else:
+                stack.clear()
+            successors = []
+            if row['flow'] not in ('Return', 'Throw'):
+                if row['flow'] in ('Branch', 'Cond_Branch'):
+                    successors += [positions[x] for x in operand.get('targets', [operand.get('target')]) if x in positions]
+                if row['flow'] != 'Branch' and i + 1 < len(il):
+                    successors.append(i+1)
+                if op.startswith(('brtrue', 'brfalse')) and conditions.get(row['offset']) == ('null',):
+                    successors = [i+1] if op.startswith('brtrue') else [positions[operand['target']]]
+            for target in successors:
+                incoming = (tuple(stack), locals_)
+                if target in states:
+                    previous_stack, previous_locals = states[target]
+                    # CLR joins have equal stack depths. On unsupported shapes,
+                    # preserve only facts common to both incoming paths.
+                    def merge(a, b):
+                        if a == b:
+                            return a
+                        for value, other in ((a, b), (b, a)):
+                            if value and value[0] in ('delegate', 'optional-delegate') and (other == ('null',) or
+                                    other and other[0] in ('delegate', 'optional-delegate') and value[1:] == other[1:]):
+                                return ('optional-delegate', *value[1:])
+                        return ('ambiguous-delegate',) if any(v and v[0] in ('delegate', 'optional-delegate', 'ambiguous-delegate') for v in (a, b)) else None
+                    merged_stack = tuple(merge(a, b) for a, b in zip(previous_stack, stack))
+                    merged_locals = {key: merge(value, locals_.get(key))
+                                     for key, value in previous_locals.items()}
+                    incoming = (merged_stack, merged_locals)
+                if states.get(target) != incoming:
+                    states[target] = incoming
+                    pending.append(target)
+        return calls, conditions
 
     def has_boundary(self, key, active=()):
         if key in self.boundaries:
@@ -395,33 +760,69 @@ class Paths:
         self.boundaries[key] = result
         return result
 
-    def callbacks(self, method):
+    def callbacks(self, method, calls, conditions):
         result = {}
         targets = []
+        def guarded(offset, value):
+            il = method['il']
+            positions = {row['offset']: i for i, row in enumerate(il)}
+            pending, seen = [0] + [positions[h['target']] for h in method.get('handlers', [])], set()
+            while pending:
+                i = pending.pop()
+                if i in seen:
+                    continue
+                seen.add(i)
+                row = il[i]
+                if row['offset'] == offset:
+                    return False
+                if row['flow'] in ('Return', 'Throw'):
+                    continue
+                fallthrough = i+1 if i+1 < len(il) else None
+                jump = positions.get(row['operand'].get('target'))
+                if row['op'].startswith(('brtrue', 'brfalse')) and conditions.get(row['offset']) == value:
+                    pending += [fallthrough if row['op'].startswith('brtrue') else jump]
+                else:
+                    pending += [positions[t] for t in row['operand'].get('targets', [])]
+                    if jump is not None:
+                        pending.append(jump)
+                    if row['flow'] != 'Branch' and fallthrough is not None:
+                        pending.append(fallthrough)
+                pending = [index for index in pending if index is not None]
+            return True
         for instruction in method['il']:
             operand = instruction['operand']
             if instruction['op'] in ('ldftn', 'ldvirtftn'):
                 target = operand.get('definition')
-                if target:
-                    targets.append(normalize(target))
+                targets.append(normalize(target or ''))
             if instruction['flow'] == 'Call' and operand.get('kind') == 'method':
                 native = operand.get('native')
                 name = native['member'] if native else operand['name']
                 # Bind at the consuming LINQ call, including cached noncapturing
                 # delegates. Select's body remains attached to its deferred operator.
                 linq = 'System.Linq.Enumerable::' in name and ('System.Func' in name or 'System.Action' in name)
-                bound_invoke = '::Invoke(' in name and ('System.Func' in name or 'System.Action' in name) and targets
+                values = calls.get(instruction['offset'], ())
+                bound_invoke = '::Invoke(' in name and ('System.Func' in name or 'System.Action' in name) \
+                    and (('parameters' not in operand and targets) or
+                         any(value and value[0] in ('delegate', 'optional-delegate', 'ambiguous-delegate') for value in values))
                 if linq or bound_invoke:
-                    if not targets:
-                        raise ValueError('Unresolved LINQ delegate: ' + method['name'] + ' -> ' + name)
-                    result[instruction['offset']] = [targets[-1]]
+                    indexes = [0] if bound_invoke else [i for i, kind in enumerate(parameter_types(operand['name']))
+                        if kind.startswith(('System.Func', 'System.Action'))]
+                    delegates = [values[i][1] if i < len(values) and values[i] and (values[i][0] == 'delegate' or
+                        values[i][0] == 'optional-delegate' and guarded(instruction['offset'], values[i])) else '' for i in indexes]
+                    # Old synthetic fixtures lack stack/signature metadata.
+                    if 'parameters' not in operand and targets:
+                        delegates = [targets[-1]]
+                    if not delegates or any(target not in self.methods for target in delegates):
+                        kind = 'LINQ' if linq else 'Invoke'
+                        raise ValueError(f'Unresolved {kind} delegate: {method["name"]} IL_{instruction["offset"]:04x} -> {name}')
+                    result[instruction['offset']] = delegates
         return result
 
-    def build(self, name):
+    def build(self, name, canonical=True):
         graph = Graph()
         active = {}
 
-        def expand(key, continuation, outer_handlers=()):
+        def expand(key, continuation, outer_handlers=(), bindings=None):
             key = normalize(key)
             method = self.methods[key]
             self.reached.add(key)
@@ -434,7 +835,10 @@ class Paths:
             active[key] = entry
             il = method['il']
             slots = {row['offset']: graph.node('epsilon') for row in il}
-            callbacks = self.callbacks(method)
+            calls, conditions = self.values(method, bindings)
+            callbacks = self.callbacks(method, calls, conditions)
+            lifted, guard_branches = self.lifted_guards(method, calls, conditions)
+            guard_checks = self.guard_checks(method, calls, conditions, guard_branches)
             handlers = method.get('handlers', [])
             for index in range(len(il)-1, -1, -1):
                 instruction = il[index]
@@ -450,7 +854,9 @@ class Paths:
                 for kind, target in catches:
                     exceptional.setdefault('exception:' + kind, target)
                 op, flow = instruction['op'], instruction['flow']
-                if flow == 'Return' or op == 'endfinally':
+                if offset in guard_checks:
+                    graph.nodes[here] = (guard_checks[offset], {'next': after, **exceptional})
+                elif flow == 'Return' or op == 'endfinally':
                     graph.nodes[here] = ('epsilon', {'next': continuation})
                 elif flow == 'Throw':
                     graph.nodes[here] = ('branch:throw', exceptional or {'unhandled': 0})
@@ -482,17 +888,32 @@ class Paths:
                         if argument is not None and 0 <= argument < len(arguments) and arguments[argument]['type'] == 'System.Boolean':
                             label += ':option=' + arguments[argument]['name']
                     graph.nodes[here] = ('branch:' + label, edges)
+                    if offset in guard_branches:
+                        guard = guard_branches[offset]
+                        native = guard['native']
+                        event = json.dumps([native['category'], native['opcode'], native['member']], separators=(',', ':'))
+                        edges['true'] = graph.node(event, {'next': edges['true'], **exceptional})
                 elif flow == 'Call' and operand['kind'] == 'method':
+                    if (operand.get('definition') or '').startswith('!unresolved-dispatch:'):
+                        raise ValueError(f'Unresolved callback dispatch: {method["name"]} IL_{offset:04x} -> {operand["name"]}')
                     next_node = after
                     for callback in reversed(callbacks.get(offset, [])):
                         next_node = expand(callback, next_node, catches)
                     native = operand.get('native')
                     target = normalize(operand.get('definition') or '')
-                    if native:
+                    if offset in lifted:
+                        self.reached.update(lifted[offset]['reached'])
+                        graph.nodes[here] = ('epsilon', {'next': next_node})
+                    elif native:
                         label = json.dumps([native['category'], native['opcode'], native['member']], separators=(',', ':'))
                         graph.nodes[here] = (label, {'next': next_node, **exceptional})
-                    elif target in self.methods and self.has_boundary(target):
-                        graph.nodes[here] = ('epsilon', {'next': expand(target, next_node, catches)})
+                    elif target in self.methods and (self.has_boundary(target) or any(
+                            value and value[0] in ('delegate', 'optional-delegate', 'ambiguous-delegate') for value in calls.get(offset, ()))):
+                        graph.nodes[here] = ('epsilon', {'next': expand(target, next_node, catches,
+                            dict(enumerate(calls.get(offset, ()))) )})
+                    elif op != 'newobj' and offset not in callbacks and any(
+                            value and value[0] in ('delegate', 'optional-delegate', 'ambiguous-delegate') for value in calls.get(offset, ())):
+                        raise ValueError(f'Unresolved callback consumer: {method["name"]} IL_{offset:04x} -> {operand["name"]}')
                     else:
                         graph.nodes[here] = ('epsilon', {'next': next_node})
                 else:
@@ -510,7 +931,7 @@ class Paths:
             return entry
 
         root = expand(name, 0)
-        return graph.canonical(root)
+        return graph.canonical(root) if canonical else None
 
 
 def compare_paths(before, after, prefix, entries=None):
@@ -521,7 +942,12 @@ def compare_paths(before, after, prefix, entries=None):
         if key not in after.methods:
             errors.append('Missing original method: ' + key)
             continue
-        old, new = before.build(key), after.build(key)
+        try:
+            old, new = before.build(key), after.build(key)
+        except ValueError as error:
+            errors.append(str(error))
+            evidence.append(dict(method=key, equal=False, unresolved=str(error)))
+            continue
         equal = old == new
         evidence.append(dict(method=key, equal=equal, beforeNodes=len(old), afterNodes=len(new),
                              expandedGraphSha256=hashlib.sha256(json.dumps(new, separators=(',', ':')).encode()).hexdigest()))
@@ -641,6 +1067,25 @@ class SelfTests(unittest.TestCase):
         self.assertNotEqual(old, new)
         self.assertTrue(any('Siemens::Read' in row[0] for row in old))
 
+    def test_callback_expansion_keeps_assembly_identity(self):
+        callback = 'Internal::Read()'
+        documents = []
+        for assembly, event in (('A', 'First'), ('B', 'Second')):
+            method = self.method(callback, [self.call('Siemens::' + event + '()', True), self.ret()])
+            method['expansionOnly'] = True
+            host = self.method(assembly + '::Run()', [dict(op='ldftn', flow='Next',
+                operand=dict(kind='method', definition=callback + '@' + assembly)),
+                self.call('System.Action::Invoke()'), self.ret()])
+            documents.append(dict(assembly=assembly, methods=[method, host]))
+        paths = Paths(documents)
+        self.assertIn('Siemens::First', str(paths.build('A::Run()')))
+        self.assertIn('Siemens::Second', str(paths.build('B::Run()')))
+        self.assertNotIn('Siemens::First', str(paths.build('B::Run()')))
+        for document in documents:
+            document['methods'][0]['expansionOnly'] = False
+        with self.assertRaisesRegex(ValueError, 'Ambiguous method'):
+            Paths(documents)
+
     def test_state_machine_and_catch_expansion(self):
         outer = self.method('Host::Run()', [self.ret()], states=['State'])
         state = self.method('State::MoveNext()', [self.call('Siemens::Read()', True), self.ret(),
@@ -667,6 +1112,30 @@ class SelfTests(unittest.TestCase):
         old = dict(methods=[dict(name='Other::Write()', owner='Other', raw='before')])
         new = dict(methods=[dict(name='Other::Write()', owner='Other', raw='after')])
         self.assertEqual(['Other::Write()'], all_methods(old, new, raw=True)[0])
+
+    def test_shared_dispatch_sites_deduplicate_independently(self):
+        site = dict(caller=self.domain.engine[0] + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
+        direct = dict(site, opcode='call')
+        after = [dict(row, caller=self.domain.primitives[0] + '::Read()') for row in (site, direct)]
+        before = [site, site, direct, direct]
+        errors, report = compare_shared_inventory(before, [], [], after, self.domain, lambda row: True)
+        self.assertEqual([], errors)
+        self.assertEqual([('call', -2, 1), ('callvirt', -2, 1)],
+                         [(row['opcode'], row['engine'], row['adapter']) for row in report['expectedNativeDelta']])
+        self.assertEqual([], compare_default_inventory(before,
+            [dict(row, caller=self.domain.local_primitives[0] + '::Read()') for row in after], self.domain)[0])
+        errors, _ = compare_shared_inventory(before, [], [], after + [after[0]], self.domain, lambda row: True)
+        self.assertIn('Duplicated shared primitive member: callvirt Siemens::Read()', errors)
+
+    def test_dispatch_gain_cannot_cancel_another_opcode(self):
+        site = dict(caller=self.domain.primitives[0] + '::Read()', category='direct', opcode='call', member='Siemens::Read()')
+        changed = dict(site, opcode='callvirt')
+        errors, report = compare_shared_inventory([], [], [site], [changed], self.domain)
+        self.assertIn('Unexplained adapter native gain: callvirt Siemens::Read()', errors)
+        self.assertEqual([('call', -1), ('callvirt', 1)],
+                         [(row['opcode'], row['adapter']) for row in report['expectedNativeDelta']])
+        # A call-only engine cannot authorise a callvirt adapter gain either.
+        self.assertTrue(compare_shared_inventory([site], [], [site], [changed], self.domain, lambda row: True)[0])
 
     def test_metadata_relocation_does_not_hide_instruction_changes(self):
         old = dict(methods=[dict(name='Other::Write()', owner='Other', raw='old token', semantic='same IL')])
@@ -823,7 +1292,7 @@ class SelfTests(unittest.TestCase):
             # Shared totals also cannot conceal a loss in a different domain.
             foreign = dict(new_sites[0], caller='first.Primitives::Read()')
             write(path / 'baseline_adapter-inventory.json', dict(sites=[foreign]))
-            self.assertEqual(0, (native_counts(new_sites) - native_counts([foreign]))[foreign['member']])
+            self.assertEqual(0, (native_counts(new_sites) - native_counts([foreign]))[(foreign['opcode'], foreign['member'])])
             result = subprocess.run(compare, capture_output=True, text=True)
             self.assertNotEqual(0, result.returncode)
             self.assertIn('Non-domain adapter inventory changed', read(path / 'proof-v20.json')['errors'])
@@ -835,6 +1304,12 @@ class SelfTests(unittest.TestCase):
             result = subprocess.run(publish + ['--include-failed'], capture_output=True, text=True)
             self.assertNotEqual(0, result.returncode)
             self.assertFalse(read(path / 'failed.json')['accepted'])
+            legacy = dict(proof)
+            del legacy['formatVersion']
+            write(path / 'proof-v20.json', legacy)
+            result = subprocess.run(publish, capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn('Rerun proof with the dispatch-keyed format', result.stderr)
             del proof['baselines']['default']
             write(path / 'proof-v20.json', proof)
             result = subprocess.run(publish + ['--include-failed'], capture_output=True, text=True)
@@ -1007,7 +1482,7 @@ class SelfTests(unittest.TestCase):
         for release in ('19', '20'):
             with self.subTest(release=release):
                 proof, _, _ = self.scoped_proof('host-direct', host_scope=True, release=release)
-                self.assertIn('Duplicated shared primitive member: Siemens::Read()', proof['errors'])
+                self.assertIn('Duplicated shared primitive member: callvirt Siemens::Read()', proof['errors'])
 
     def test_host_method_scope_validates_types_and_signatures(self):
         for scopes in ({'Foreign': []}, {'sample.Foundation': []},
@@ -1207,6 +1682,9 @@ def main():
                     raise ValueError('Missing variant baseline identity for V' + release + ': ' + variant)
             if proof.get('acceptanceRule') != domain.acceptance_rule:
                 raise ValueError('Rerun proof with the current acceptance rule for V' + release)
+            if proof.get('formatVersion') != 2 or any(row.get('opcode') not in ('call', 'callvirt', 'newobj')
+                    for row in proof.get('expectedNativeDelta', [])):
+                raise ValueError('Rerun proof with the dispatch-keyed format for V' + release)
             if proof.get('errors') != [] and not args.include_failed:
                 raise ValueError('Cannot publish failing proof for V' + release)
             if release in domain.engine_releases and (not proof.get('defaultEnginePaths') or not proof.get('enginePaths')):
@@ -1218,7 +1696,7 @@ def main():
                 raise ValueError('Default exact dedup delta was not verified for V' + release)
             releases[release] = proof
         failures = sum(bool(proof['errors']) for proof in releases.values())
-        write(args.output, dict(generator='scripts/checks/Compare-SharedNativePaths.py --evidence-from',
+        write(args.output, dict(generator='scripts/checks/Compare-SharedNativePaths.py --evidence-from', formatVersion=2,
             scope='Static woven IL; labelled native paths, default bodies and exact physical native deltas. No live execution.',
             acceptanceRule=domain.acceptance_rule, accepted=failures == 0, releases=releases))
         print(f'COMPLETE: evidence generated for {len(releases)} releases; {failures} failed')
@@ -1257,7 +1735,7 @@ def main():
                 inventorySha256=hashlib.sha256(inventory.read_bytes()).hexdigest())
         return result
     baselines = dict(shared=baseline_identity('shared', adapter=(args.baseline_adapter, args.baseline_adapter_inventory)))
-    report, errors = dict(acceptanceRule=domain.acceptance_rule, baselines=baselines), []
+    report, errors = dict(formatVersion=2, acceptanceRule=domain.acceptance_rule, baselines=baselines), []
     if args.baseline_engine:
         old_engine, default_engine, new_engine = map(read, (args.baseline_engine, args.default_engine, args.shared_engine))
         old_default_engine, old_default_adapter, default_adapter = map(read,
@@ -1283,7 +1761,11 @@ def main():
         report.update(inventory_report)
         if any(default_scope(s) and s['category'] == 'direct' for s in default_inv['sites']):
             errors.append('Direct Siemens domain sites remain in the default engine')
-        report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain, default_scope)
+        try:
+            report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain, default_scope)
+        except ValueError as error:
+            report['defaultExpandedFullInventoryEqual'] = False
+            errors.append('Default expanded inventory: ' + str(error))
         if not report['defaultExpandedFullInventoryEqual']:
             errors.append('Default expanded full-category weave member multiset changed')
     old, new = Paths(old_docs), Paths(new_docs)
@@ -1347,27 +1829,13 @@ def main():
         errors += ['Non-domain engine body changed: ' + method for method in differences]
         if any(new_scope(s) and s['category'] == 'direct' for s in new_engine_sites):
             errors.append('Direct Siemens domain sites remain in the engine')
-        engine_before, engine_after = native_counts(old_engine_sites), native_counts(new_engine_sites)
     else:
-        engine_before = engine_after = Counter()
-    if args.baseline_engine or any(scopes[0].method_scopes for scopes in host_scopes):
-        # A member moved into a primitive may not retain another physical copy
-        # in a selected host method. Unscoped and host-only sites stay outside
-        # this rule; whole-type adapter-only proofs retain their existing rules.
-        primitives = native_counts([s for s in new_sites if owned(s, domain.primitives)])
-        domain_counts = native_counts([s for s in new_sites if new_host_scope(s) or owned(s, domain.primitives)])
-        errors += ['Duplicated shared primitive member: ' + member for member in primitives if domain_counts[member] != 1]
-    adapter_before, adapter_after = native_counts(old_sites), native_counts(new_sites)
-    allowed_gains = native_counts([s for s in old_engine_sites if old_scope(s)]) if args.baseline_engine else Counter()
-    errors += ['Unexplained adapter native gain: ' + member for member, count in (adapter_after - adapter_before).items()
-               if member not in allowed_gains or count > allowed_gains[member]]
-    members = sorted(engine_before.keys() | engine_after.keys() | adapter_before.keys() | adapter_after.keys())
-    report['expectedNativeDelta'] = [dict(member=member,
-        engine=engine_after[member]-engine_before[member], adapter=adapter_after[member]-adapter_before[member],
-        union=engine_after[member]+adapter_after[member]-engine_before[member]-adapter_before[member])
-        for member in members if engine_before[member] != engine_after[member] or adapter_before[member] != adapter_after[member]]
-    report['nativeCounts'] = dict(engineBefore=sum(engine_before.values()), engineAfter=sum(engine_after.values()),
-        adapterBefore=sum(adapter_before.values()), adapterAfter=sum(adapter_after.values()))
+        old_engine_sites, new_engine_sites = [], []
+    failures, delta = compare_shared_inventory(old_engine_sites, new_engine_sites, old_sites, new_sites, domain,
+        old_scope if args.baseline_engine else lambda row: False, new_host_scope,
+        bool(args.baseline_engine or any(scopes[0].method_scopes for scopes in host_scopes)))
+    errors += failures
+    report.update(delta)
     report['errors'] = errors
     write(args.output, report)
     for error in errors:

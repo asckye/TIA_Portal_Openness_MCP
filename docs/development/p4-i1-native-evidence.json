@@ -1,5 +1,6 @@
 {
   "generator": "scripts/checks/Compare-SharedNativePaths.py --evidence-from",
+  "formatVersion": 2,
   "scope": "Static woven IL; labelled native paths, default bodies and exact physical native deltas. No live execution.",
   "acceptanceRule": {
     "id": "expanded-native-paths-exact-dedup-v1",
@@ -11,6 +12,7 @@
   "accepted": true,
   "releases": {
     "14sp1": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -23,8 +25,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "152dceea6a3334e30488cc833f2ddae311d258ea8db5937e6c2ad2d0a2050d32",
-            "inventorySha256": "3bd197bfb281a548991e2e59f2af75f1b15c863d722b01d42e6bc632de5b4841"
+            "ilSha256": "23dbceae6ceabae3abd9d0106b8dbb3c14d61ccca6335ae9fbaf0f8246e89f84",
+            "inventorySha256": "cef473382d672a700b9b2a1d0afaf0e796b8a5b03f3d097995a57f73e56c3ad2"
           }
         }
       },
@@ -39,6 +41,7 @@
       "errors": []
     },
     "15.1": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -51,8 +54,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "bea6f6d1ff4a91842ba41f190e5b2a0397bd22932dbfea5338b710733188d8c4",
-            "inventorySha256": "63161fbfe3cef5112c91ba5c312c3b8354ed8cecf2f71c31411c803dcecc22f6"
+            "ilSha256": "d87c82d65022ca24421cc6345c3c42c89f6e09e2373d0f75769b994d7c42a7fc",
+            "inventorySha256": "faf22a11bb792e41db2ab78d101f4076939a7fdf69486d8a6a92396f58805a46"
           }
         }
       },
@@ -67,6 +70,7 @@
       "errors": []
     },
     "16": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -79,8 +83,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "194bda1dbc7b84ba4612cae66554a847877becd39fdec74ad335fb5bafe39286",
-            "inventorySha256": "e93576b69e7e6fc7e7012c819ce09ae3cad4805a0b9c0cb22d5583114dc75d03"
+            "ilSha256": "cc50e5362f64e738371331da2f9d9037c56b2a1182ac405ef545921046abc7e1",
+            "inventorySha256": "977d903084730286809949081f7941b4d7ca5a180d94e6aca63bff6ed2d343d2"
           }
         }
       },
@@ -389,24 +393,28 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": 0,
           "adapter": -1,
@@ -422,6 +430,7 @@
       "errors": []
     },
     "17": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -434,8 +443,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "6677e888959cbfe8f8ffcd8b9126ac02c6f02539fd8fddb074ac670ac48f4efd",
-            "inventorySha256": "ed094089ff27d93c81634b1d5fa8c458205614d00bae1950e8deb28e7b347a8f"
+            "ilSha256": "3725c186114596154c708e9b8b63b867986e9b7ef50d8f072b3ce2a549d0ac1d",
+            "inventorySha256": "9e17068cdfaf7dbea9bfa8a24b9afa1d4cd467254ed1763ac5f36c41bb3c63c3"
           }
         }
       },
@@ -744,24 +753,28 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": 0,
           "adapter": -1,
@@ -777,6 +790,7 @@
       "errors": []
     },
     "18": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -789,8 +803,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "c29a57f5f0a3685c5337c77e1ac504f7f237ff1ba176fe8b9e129e2f700f3db5",
-            "inventorySha256": "6ae4fb1578b9a082854841b79b5385045dd3ee8ef3a3793f4a184ad5e091ef7b"
+            "ilSha256": "1c7ea6f1e22b126dd832c68303c8cf73a9909469755b76328b3f7724ada78a99",
+            "inventorySha256": "6a24c89168524a90cc94f05ef95213ac715e13ee1a38acc9093b186d489b7a03"
           }
         }
       },
@@ -1099,24 +1113,28 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": 0,
           "adapter": -1,
@@ -1132,6 +1150,7 @@
       "errors": []
     },
     "19": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -1144,8 +1163,8 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "b35ff8e77eebfd48435e13ec1fe995a285b3a23f8d784f5b2b2f894deb15c097",
-            "inventorySha256": "d707d54ab8ec4dd03200da00728274e988adb948d14b37d001503517c1b0fb54"
+            "ilSha256": "b1407a6f870c7428a8f3cda50595a3c85ffa4ef84e36cb79cd2c01811726e958",
+            "inventorySha256": "9da95ec244ffd26689cce769b2d80cdde3cd38f27c9e21726ea8dc0c52990728"
           }
         }
       },
@@ -1454,24 +1473,28 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": 0,
           "adapter": -1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": 0,
           "adapter": -1,
@@ -1487,6 +1510,7 @@
       "errors": []
     },
     "20": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -1499,24 +1523,24 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "4f9ab7b31241f60e522943ff9f822101e602a491694dd373f2a5f290231a8a8e",
-            "inventorySha256": "ca552a96eb7f413c39b81b1bca855938afc94ca1532d3399cdfd2c5c1ff1c934"
+            "ilSha256": "8d357bef95e37241fb461c1fb94bd4d46efe2e21b58518a1845454049db94920",
+            "inventorySha256": "5c521058953a0944930d1a6c91b3197ba8aad82175f3d233d2bb0431bc4a59d7"
           },
           "engine": {
-            "ilSha256": "d7c88636cb48f04580b86702f5e62a364d30b5e17991a5f1a57fae5c3eee5dc3",
-            "inventorySha256": "7924f0070135203e9a248b95af5518fca753e8af84e314d03261521affad43d6"
+            "ilSha256": "52fba8faf7c86d06c3d8064bdef5ef27c569ca8a2aec2911b2badd04e6ff074e",
+            "inventorySha256": "ba8937eb092d853a0e91790049a65173c2a0ce6875301b0d020f160d0d5f9962"
           }
         },
         "default": {
           "variant": "default",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "engine": {
-            "ilSha256": "d7c88636cb48f04580b86702f5e62a364d30b5e17991a5f1a57fae5c3eee5dc3",
-            "inventorySha256": "7924f0070135203e9a248b95af5518fca753e8af84e314d03261521affad43d6"
+            "ilSha256": "52fba8faf7c86d06c3d8064bdef5ef27c569ca8a2aec2911b2badd04e6ff074e",
+            "inventorySha256": "ba8937eb092d853a0e91790049a65173c2a0ce6875301b0d020f160d0d5f9962"
           },
           "adapter": {
-            "ilSha256": "4f9ab7b31241f60e522943ff9f822101e602a491694dd373f2a5f290231a8a8e",
-            "inventorySha256": "ca552a96eb7f413c39b81b1bca855938afc94ca1532d3399cdfd2c5c1ff1c934"
+            "ilSha256": "8d357bef95e37241fb461c1fb94bd4d46efe2e21b58518a1845454049db94920",
+            "inventorySha256": "5c521058953a0944930d1a6c91b3197ba8aad82175f3d233d2bb0431bc4a59d7"
           }
         }
       },
@@ -3285,288 +3309,336 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.HW.DeviceItem::GetService<Siemens.Engineering.HW.Features.SoftwareContainer>()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": -1,
           "adapter": -1,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.HW.DeviceGroup::get_Devices()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceItemComposition Siemens.Engineering.HW.HardwareObject::get_DeviceItems()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceUserGroupComposition Siemens.Engineering.HW.DeviceUserGroup::get_Groups()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceUserGroupComposition Siemens.Engineering.ProjectBase::get_DeviceGroups()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "call",
           "member": "Siemens.Engineering.HW.Software Siemens.Engineering.HW.Features.SoftwareContainer::get_Software()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockComposition Siemens.Engineering.SW.Blocks.PlcBlockGroup::get_Blocks()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockSystemGroup Siemens.Engineering.SW.PlcSoftware::get_BlockGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockUserGroupComposition Siemens.Engineering.SW.Blocks.PlcBlockGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableComposition Siemens.Engineering.SW.Tags.PlcTagTableGroup::get_TagTables()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableSystemGroup Siemens.Engineering.SW.PlcSoftware::get_TagTableGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableUserGroupComposition Siemens.Engineering.SW.Tags.PlcTagTableGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeComposition Siemens.Engineering.SW.Types.PlcTypeGroup::get_Types()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeSystemGroup Siemens.Engineering.SW.PlcSoftware::get_TypeGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeUserGroupComposition Siemens.Engineering.SW.Types.PlcTypeGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.CompareState Siemens.Engineering.VersionControl.IndividualObjectCompareResult::get_CompareState()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.IndividualObjectCompareResult Siemens.Engineering.VersionControl.MappedObject::GetStatus()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObject Siemens.Engineering.VersionControl.MappedObjectComposition::Find(Siemens.Engineering.IEngineeringObject)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObject Siemens.Engineering.VersionControl.Workspace::ExportObject(Siemens.Engineering.IEngineeringObject,System.IO.DirectoryInfo,System.String,System.String)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObjectComposition Siemens.Engineering.VersionControl.Workspace::get_MappedObjects()",
           "engine": -4,
           "adapter": -1,
           "union": -5
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.Workspace Siemens.Engineering.VersionControl.WorkspaceComposition::Create(System.String,System.IO.DirectoryInfo)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceUserGroupComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerable`1<System.String> Siemens.Engineering.VersionControl.Workspace::GetSupportedFileFormats(Siemens.Engineering.IEngineeringObject)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.Device> Siemens.Engineering.HW.DeviceComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.DeviceItem> Siemens.Engineering.HW.DeviceItemComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.DeviceUserGroup> Siemens.Engineering.HW.DeviceUserGroupComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Blocks.PlcBlock> Siemens.Engineering.SW.Blocks.PlcBlockComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Blocks.PlcBlockUserGroup> Siemens.Engineering.SW.Blocks.PlcBlockUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Tags.PlcTagTable> Siemens.Engineering.SW.Tags.PlcTagTableComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Tags.PlcTagTableUserGroup> Siemens.Engineering.SW.Tags.PlcTagTableUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Types.PlcType> Siemens.Engineering.SW.Types.PlcTypeComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Types.PlcTypeUserGroup> Siemens.Engineering.SW.Types.PlcTypeUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.MappedObject> Siemens.Engineering.VersionControl.MappedObjectComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.Workspace> Siemens.Engineering.VersionControl.WorkspaceComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.WorkspaceUserGroup> Siemens.Engineering.VersionControl.WorkspaceUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Globalization.CultureInfo Siemens.Engineering.VersionControl.Workspace::get_WorkspaceLanguage()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.MappedObject::get_DirectoryPath()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "System.Int32 Siemens.Engineering.VersionControl.MappedObjectComposition::get_Count()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Object Siemens.Engineering.IEngineeringObject::GetAttribute(System.String)",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.MappedObject::get_FileFormat()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.MappedObject::get_FileNameWithoutExtension()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.Workspace::get_Name()",
           "engine": -15,
           "adapter": 0,
           "union": -15
         },
         {
+          "opcode": "callvirt",
           "member": "System.Void Siemens.Engineering.VersionControl.MappedObject::Synchronize(Siemens.Engineering.VersionControl.SynchronizationMode)",
           "engine": -1,
           "adapter": 0,
@@ -3582,6 +3654,7 @@
       "errors": []
     },
     "21": {
+      "formatVersion": 2,
       "acceptanceRule": {
         "id": "expanded-native-paths-exact-dedup-v1",
         "paths": "Default and switched per-tool expanded native call graphs must equal the baseline.",
@@ -3594,24 +3667,24 @@
           "variant": "shared",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "adapter": {
-            "ilSha256": "216b576a6fb6a0298d6df1962160ae2edd23211cb4ed4ac6fdfa81bf4c201975",
-            "inventorySha256": "1e5473c0c5a27754073d79d3b4e77fdb887b7f351a5831c3e27be1fde6140b37"
+            "ilSha256": "9d79c2116efb5332f69c39ca104e15d04e64861b7133fbc6da0378553c497fe6",
+            "inventorySha256": "9bbaa9353abc9b7509ee0567023bb7bfed26f8049009f44b6d2e34bf005f3b28"
           },
           "engine": {
-            "ilSha256": "21ba2df97331bc265ffc8629b3797fdda22a7b8832e538ed993257a8659d7e68",
-            "inventorySha256": "679b8ebc3e34ee94e81e86399445943a81ffa5063fd1aa35cacf3da22322a269"
+            "ilSha256": "7895ebda57e6fdffb62c11cb472fcd53918902b1f2d81291da008ee7f5f2dba4",
+            "inventorySha256": "aa9e7439d859b961ae82061fed17f15b2ad6c41511a1ce60a6fc0ed21bb72a40"
           }
         },
         "default": {
           "variant": "default",
           "revision": "f94a14747afd4fc86a41471d76b72b6bdf5face2",
           "engine": {
-            "ilSha256": "21ba2df97331bc265ffc8629b3797fdda22a7b8832e538ed993257a8659d7e68",
-            "inventorySha256": "679b8ebc3e34ee94e81e86399445943a81ffa5063fd1aa35cacf3da22322a269"
+            "ilSha256": "7895ebda57e6fdffb62c11cb472fcd53918902b1f2d81291da008ee7f5f2dba4",
+            "inventorySha256": "aa9e7439d859b961ae82061fed17f15b2ad6c41511a1ce60a6fc0ed21bb72a40"
           },
           "adapter": {
-            "ilSha256": "216b576a6fb6a0298d6df1962160ae2edd23211cb4ed4ac6fdfa81bf4c201975",
-            "inventorySha256": "1e5473c0c5a27754073d79d3b4e77fdb887b7f351a5831c3e27be1fde6140b37"
+            "ilSha256": "9d79c2116efb5332f69c39ca104e15d04e64861b7133fbc6da0378553c497fe6",
+            "inventorySha256": "9bbaa9353abc9b7509ee0567023bb7bfed26f8049009f44b6d2e34bf005f3b28"
           }
         }
       },
@@ -5380,288 +5453,336 @@
       ],
       "expectedNativeDelta": [
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.HW.HardwareObject::GetService<Siemens.Engineering.HW.Features.SoftwareContainer>()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "!!0 Siemens.Engineering.IEngineeringServiceProvider::GetService<Siemens.Engineering.VersionControl.VersionControlInterface>()",
           "engine": -1,
           "adapter": -1,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.HW.DeviceGroup::get_Devices()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceComposition Siemens.Engineering.ProjectBase::get_Devices()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceItemComposition Siemens.Engineering.HW.HardwareObject::get_DeviceItems()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceUserGroupComposition Siemens.Engineering.HW.DeviceUserGroup::get_Groups()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.HW.DeviceUserGroupComposition Siemens.Engineering.ProjectBase::get_DeviceGroups()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "call",
           "member": "Siemens.Engineering.HW.Software Siemens.Engineering.HW.Features.SoftwareContainer::get_Software()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockComposition Siemens.Engineering.SW.Blocks.PlcBlockGroup::get_Blocks()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockSystemGroup Siemens.Engineering.SW.PlcSoftware::get_BlockGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Blocks.PlcBlockUserGroupComposition Siemens.Engineering.SW.Blocks.PlcBlockGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableComposition Siemens.Engineering.SW.Tags.PlcTagTableGroup::get_TagTables()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableSystemGroup Siemens.Engineering.SW.PlcSoftware::get_TagTableGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Tags.PlcTagTableUserGroupComposition Siemens.Engineering.SW.Tags.PlcTagTableGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeComposition Siemens.Engineering.SW.Types.PlcTypeGroup::get_Types()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeSystemGroup Siemens.Engineering.SW.PlcSoftware::get_TypeGroup()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.SW.Types.PlcTypeUserGroupComposition Siemens.Engineering.SW.Types.PlcTypeGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.CompareState Siemens.Engineering.VersionControl.IndividualObjectCompareResult::get_CompareState()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.IndividualObjectCompareResult Siemens.Engineering.VersionControl.MappedObject::GetStatus()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObject Siemens.Engineering.VersionControl.MappedObjectComposition::Find(Siemens.Engineering.IEngineeringObject)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObject Siemens.Engineering.VersionControl.Workspace::ExportObject(Siemens.Engineering.IEngineeringObject,System.IO.DirectoryInfo,System.String,System.String)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.MappedObjectComposition Siemens.Engineering.VersionControl.Workspace::get_MappedObjects()",
           "engine": -4,
           "adapter": -1,
           "union": -5
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.Workspace Siemens.Engineering.VersionControl.WorkspaceComposition::Create(System.String,System.IO.DirectoryInfo)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Workspaces()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceSystemGroup Siemens.Engineering.VersionControl.VersionControlInterface::get_WorkspaceGroup()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "Siemens.Engineering.VersionControl.WorkspaceUserGroupComposition Siemens.Engineering.VersionControl.WorkspaceGroup::get_Groups()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerable`1<System.String> Siemens.Engineering.VersionControl.Workspace::GetSupportedFileFormats(Siemens.Engineering.IEngineeringObject)",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.Device> Siemens.Engineering.HW.DeviceComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.DeviceItem> Siemens.Engineering.HW.DeviceItemComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.HW.DeviceUserGroup> Siemens.Engineering.HW.DeviceUserGroupComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Blocks.PlcBlock> Siemens.Engineering.SW.Blocks.PlcBlockComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Blocks.PlcBlockUserGroup> Siemens.Engineering.SW.Blocks.PlcBlockUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Tags.PlcTagTable> Siemens.Engineering.SW.Tags.PlcTagTableComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Tags.PlcTagTableUserGroup> Siemens.Engineering.SW.Tags.PlcTagTableUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Types.PlcType> Siemens.Engineering.SW.Types.PlcTypeComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.SW.Types.PlcTypeUserGroup> Siemens.Engineering.SW.Types.PlcTypeUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.MappedObject> Siemens.Engineering.VersionControl.MappedObjectComposition::GetEnumerator()",
           "engine": -2,
           "adapter": 1,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.Workspace> Siemens.Engineering.VersionControl.WorkspaceComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Collections.Generic.IEnumerator`1<Siemens.Engineering.VersionControl.WorkspaceUserGroup> Siemens.Engineering.VersionControl.WorkspaceUserGroupComposition::GetEnumerator()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Globalization.CultureInfo Siemens.Engineering.VersionControl.Workspace::get_WorkspaceLanguage()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.MappedObject::get_DirectoryPath()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.IO.DirectoryInfo Siemens.Engineering.VersionControl.Workspace::get_RootPath()",
           "engine": -2,
           "adapter": 0,
           "union": -2
         },
         {
+          "opcode": "callvirt",
           "member": "System.Int32 Siemens.Engineering.VersionControl.MappedObjectComposition::get_Count()",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.Object Siemens.Engineering.IEngineeringObject::GetAttribute(System.String)",
           "engine": -1,
           "adapter": 1,
           "union": 0
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.MappedObject::get_FileFormat()",
           "engine": -1,
           "adapter": 0,
           "union": -1
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.MappedObject::get_FileNameWithoutExtension()",
           "engine": -2,
           "adapter": -1,
           "union": -3
         },
         {
+          "opcode": "callvirt",
           "member": "System.String Siemens.Engineering.VersionControl.Workspace::get_Name()",
           "engine": -15,
           "adapter": 0,
           "union": -15
         },
         {
+          "opcode": "callvirt",
           "member": "System.Void Siemens.Engineering.VersionControl.MappedObject::Synchronize(Siemens.Engineering.VersionControl.SynchronizationMode)",
           "engine": -1,
           "adapter": 0,

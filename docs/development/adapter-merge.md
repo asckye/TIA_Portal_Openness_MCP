@@ -316,6 +316,17 @@ VCI 的默认与共享变体均以“展开后的逐工具调用图相等 + 完�
 
 两种变体的五个工具逐分支展开本地或跨程序集调用、局部函数、可静态定位的委托和迭代器/异步状态机；
 比较有方向、循环和异常边的调用图，核对成员身份、分派类别和调用次数，循环体保留一次。
+委托按 IL 栈中的实际参数绑定，覆盖接口/虚方法组、lambda 中的成员调用、编译器委托缓存及传给宿主辅助方法的回调；
+不会把前一个调用的委托借给后一个调用。读取器只解析元数据：内部接口的唯一实现、final 成员或已知 sealed 接收者的
+虚分派可以展开；多实现、可扩展虚槽、无法确定的回调消费者均报告方法签名与 `IL_` 调用位置，证明失败。
+可空回调只有在调用路径经过同一个值的非空检查时才绑定；合流后的不同目标不任取一个。
+新增展开的方法保留程序集身份，同名内部辅助类不会混用；展开不会扩大 `methodScopes` 或领域外方法体、清单的豁免范围。
+
+空值守卫只归一化封闭形状：同一接收者为空时返回 null/default，否则执行一次无额外参数的直接原生成员读取，
+两臂没有其他副作用；允许透明原语转发和 `Nullable<T>` 包装。原语后的同接收者检查或可空结果的 `HasValue`
+检查可以与这次读取合并，但两者之间只能有参数/局部变量装载、保存及复制，不能跨异常区域或其他分支入口。
+删除守卫、改接收者、改变默认值（含把空 Nullable 改为有值的零）、增加副作用均不适用该归一化，继续严格比较。
+这不允许任意布尔条件、其他返回值数据流或宿主业务分支重排。
 Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14sp1/15.1 明确记录未编译该扩展面。
 静态图不能代替真机回放，也不能证明所有原生异常和并发情形。
 
@@ -324,12 +335,16 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 [VCI 原生迁移证据](p4-i1-native-evidence.json)，不得手填或按实际差异扩大允许范围。
 该 JSON 的 `acceptanceRule` 记录上述规则；默认精确去重差量、展开图及其他检查全部通过时才令 `accepted` 为 `true`。
 每版 `errors` 保留实际失败；`--include-failed` 只允许输出失败证据，仍返回非零退出码。
+证据格式 2 的 `expectedNativeDelta` 增加 `opcode`：直接成员的计数、去重及允许增量均以成员与分派操作码为键，
+`call` 与 `callvirt` 分别保留一个原语点，不能互相抵消。完整类别清单仍同时包含 category、opcode、member 和原声明方法。
+汇总证据拒绝缺少格式 2 或分派键的旧证明，必须重新运行逐版本比较。
 
 新领域的驱动器默认从 `master` 的固定提交导出源码到当前 worktree 的输出目录，再构建基线和候选。
 以下 VCI 历史证明显式使用其迁移前提交：
 
 ```powershell
 python scripts/checks/Compare-SharedNativePaths.py --self-test
+python scripts/checks/Test-SharedNativeIlReader.py
 pwsh -File scripts/checks/Test-SharedNativeMigration.ps1 -Config scripts/checks/shared-native/vci.json -PublicApiRoot <本机SDK父目录> -BaselineDirectory bin-build/vci-baseline -BaselineRef '89401efa^' -OutputDirectory bin-build/vci-proof
 python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/shared-native/vci.json --evidence-from bin-build/vci-proof
 ```
@@ -351,6 +366,9 @@ python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/share
 自测保留 P4-I1 的 18 项，并覆盖第二个合成领域的多服务、多原语、Foundation 宿主、不同工具入口、
 未编译版本与证据生成，以及跨领域差量抵消和类型前缀混淆。另覆盖 master 已切换一个领域后再迁移第二个领域、
 错用基线的拒绝，以及宿主方法范围、未选中方法 IL 改动/新增和选中方法残留直接调用的拒绝。
+驱动器先运行比较器自测和 [IL 读取器自测](../../scripts/checks/Test-SharedNativeIlReader.py)；后者离线编译合成 C#，
+通过真实读取器验证委托与空值守卫的正反例，不加载或执行 Siemens 类型。直接运行读取器自测前需构建 NativeCallWeaver，
+其 Mono.Cecil 仅用于元数据解析。所有生成的测试文件和日志留在当前 worktree 的 `bin-build`。
 随后跑离线 TRX 数量门禁、全部 HttpTests 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
 两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
 真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；

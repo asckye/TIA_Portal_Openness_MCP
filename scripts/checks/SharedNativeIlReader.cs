@@ -10,6 +10,7 @@ using TypeDefinition = Mono.Cecil.TypeDefinition;
 using TypeReference = Mono.Cecil.TypeReference;
 using ParameterDefinition = Mono.Cecil.ParameterDefinition;
 using ModuleDefinition = Mono.Cecil.ModuleDefinition;
+using MethodDefinition = Mono.Cecil.MethodDefinition;
 
 internal static class SharedNativeIlReader
 {
@@ -66,12 +67,120 @@ internal static class SharedNativeIlReader
         using var resolver = new DefaultAssemblyResolver();
         resolver.AddSearchDirectory(Path.GetDirectoryName(Path.GetFullPath(args[0]))!);
         using var module = ModuleDefinition.ReadModule(args[0], new ReaderParameters { AssemblyResolver = resolver });
+        var localTypes = module.Types.SelectMany(Descend).ToArray();
+        var localMethods = localTypes.SelectMany(type => type.Methods).ToArray();
+        MethodDefinition? Resolve(MethodReference target)
+        {
+            // External framework/SDK references are boundaries, never loaded.
+            try { return target.Resolve(); }
+            catch (AssemblyResolutionException) { return null; }
+        }
+        MethodDefinition? Dispatch(MethodReference target, TypeReference? receiver = null)
+        {
+            var declaration = Resolve(target);
+            if (declaration == null || declaration.Module != module) return null;
+            if (!declaration.IsVirtual || declaration.IsFinal || declaration.DeclaringType.IsSealed)
+                return declaration.HasBody ? declaration : null;
+            bool SameSignature(MethodDefinition candidate) => candidate.Name == declaration.Name &&
+                candidate.ReturnType.FullName == declaration.ReturnType.FullName &&
+                candidate.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(declaration.Parameters.Select(p => p.ParameterType.FullName));
+            bool OverridesSlot(MethodDefinition candidate)
+            {
+                if (candidate.FullName == declaration.FullName || candidate.Overrides.Any(o => o.FullName == declaration.FullName)) return true;
+                if (!candidate.IsVirtual || candidate.IsNewSlot) return false;
+                for (var parent = candidate.DeclaringType.BaseType?.Resolve(); parent != null; parent = parent.BaseType?.Resolve())
+                    if (parent.Methods.FirstOrDefault(m => m.IsVirtual && SameSignature(m)) is { } inherited)
+                        return OverridesSlot(inherited);
+                return false;
+            }
+            if (receiver?.Resolve() is { IsSealed: true } concrete)
+            {
+                for (var current = concrete; current != null; current = current.BaseType?.Resolve())
+                {
+                    var implementation = current.Methods.FirstOrDefault(m =>
+                        m.Overrides.Any(o => o.FullName == declaration.FullName) ||
+                        (SameSignature(m) && (declaration.DeclaringType.IsInterface ? m.IsPublic : OverridesSlot(m))));
+                    if (implementation != null) return implementation.HasBody ? implementation : null;
+                }
+            }
+            var type = declaration.DeclaringType;
+            // An internal interface has a closed implementation set in this
+            // assembly. A public extensible slot requires a concrete receiver.
+            if (!type.IsInterface || type.IsPublic || type.IsNestedPublic) return null;
+            bool Implements(TypeDefinition candidate) => candidate.Interfaces.Any(i =>
+                i.InterfaceType.FullName == type.FullName ||
+                ResolveInterface(i.InterfaceType));
+            bool ResolveInterface(TypeReference reference)
+            {
+                try { return reference.Resolve() is { } parent && Implements(parent); }
+                catch (AssemblyResolutionException) { return false; }
+            }
+            var candidates = localTypes.Where(Implements).SelectMany(candidate =>
+                {
+                    var explicitMethods = candidate.Methods.Where(m => m.Overrides.Any(o => o.FullName == declaration.FullName)).ToArray();
+                    return explicitMethods.Length != 0 ? explicitMethods : candidate.Methods.Where(m =>
+                        m.IsPublic && m.Name == declaration.Name && m.ReturnType.FullName == declaration.ReturnType.FullName &&
+                        m.Parameters.Select(p => p.ParameterType.FullName).SequenceEqual(declaration.Parameters.Select(p => p.ParameterType.FullName)));
+                })
+                .Distinct().ToArray();
+            return candidates.Length == 1 && candidates[0].HasBody &&
+                (!candidates[0].IsVirtual || candidates[0].IsFinal || candidates[0].DeclaringType.IsSealed)
+                ? candidates[0] : null;
+        }
+        TypeReference? ReceiverType(MethodDefinition method, Instruction instruction)
+        {
+            var producer = instruction.Previous;
+            if (producer?.OpCode.Code == Code.Dup) producer = producer.Previous;
+            if (producer == null) return null;
+            if (producer.Operand is FieldReference field && producer.OpCode.Code == Code.Ldfld) return field.FieldType;
+            if (producer.Operand is VariableDefinition variable && producer.OpCode.Code is Code.Ldloc or Code.Ldloc_S) return variable.VariableType;
+            if (producer.Operand is ParameterDefinition parameter && producer.OpCode.Code is Code.Ldarg or Code.Ldarg_S) return parameter.ParameterType;
+            int arg = producer.OpCode.Code switch { Code.Ldarg_0 => 0, Code.Ldarg_1 => 1, Code.Ldarg_2 => 2, Code.Ldarg_3 => 3, _ => -1 };
+            if (arg >= 0) return method.HasThis && arg == 0 ? method.DeclaringType : method.Parameters[arg - (method.HasThis ? 1 : 0)].ParameterType;
+            int local = producer.OpCode.Code switch { Code.Ldloc_0 => 0, Code.Ldloc_1 => 1, Code.Ldloc_2 => 2, Code.Ldloc_3 => 3, _ => -1 };
+            return local >= 0 ? method.Body.Variables[local].VariableType : null;
+        }
+        bool ConsumesDelegate(MethodReference target) => target.Name != ".ctor" && target.Parameters.Any(p =>
+            p.ParameterType.FullName.StartsWith("System.Func`", StringComparison.Ordinal) ||
+            p.ParameterType.FullName.StartsWith("System.Action", StringComparison.Ordinal));
+        // Follow the implementation of a method group, including its local
+        // callees, without widening the configured ownership/dedup scope.
+        var delegateMethods = new HashSet<MethodDefinition>();
+        var pending = new Queue<MethodDefinition>();
+        foreach (var method in localMethods.Where(m => m.HasBody && Scope(m.DeclaringType.FullName)))
+            foreach (var instruction in method.Body.Instructions)
+                if (instruction.Operand is MethodReference reference &&
+                    (instruction.OpCode.Code is Code.Ldftn or Code.Ldvirtftn || ConsumesDelegate(reference)))
+                {
+                    var target = instruction.OpCode.Code is Code.Ldvirtftn or Code.Callvirt
+                        ? Dispatch(reference, instruction.OpCode.Code == Code.Ldvirtftn ? ReceiverType(method, instruction) : null)
+                        : Resolve(reference);
+                    if (target?.Module == module && target.HasBody) pending.Enqueue(target);
+                }
+        while (pending.Count != 0)
+        {
+            var method = pending.Dequeue();
+            if (!delegateMethods.Add(method)) continue;
+            foreach (var attribute in method.CustomAttributes.Where(attribute => attribute.AttributeType.FullName is
+                "System.Runtime.CompilerServices.IteratorStateMachineAttribute" or "System.Runtime.CompilerServices.AsyncStateMachineAttribute"))
+                foreach (var move in ((TypeReference)attribute.ConstructorArguments[0].Value).Resolve().Methods.Where(m => m.Name == "MoveNext" && m.HasBody))
+                    pending.Enqueue(move);
+            foreach (var instruction in method.Body.Instructions)
+                if (instruction.Operand is MethodReference reference && !sites.ContainsKey(reference.Name))
+                {
+                    var target = instruction.OpCode.Code is Code.Callvirt or Code.Ldvirtftn
+                        ? Dispatch(reference, instruction.OpCode.Code == Code.Ldvirtftn || reference.Parameters.Count == 0 ? ReceiverType(method, instruction) : null)
+                        : Resolve(reference);
+                    if (target?.Module == module && target.HasBody) pending.Enqueue(target);
+                }
+        }
         using var stream = File.OpenRead(args[0]);
         using var pe = new PEReader(stream);
         var methods = new List<object>();
-        foreach (var method in module.Types.SelectMany(Descend).SelectMany(type => type.Methods).Where(method => method.HasBody))
+        foreach (var method in localMethods.Where(method => method.HasBody))
         {
             var body = method.Body;
+            bool include = Scope(method.DeclaringType.FullName) || delegateMethods.Contains(method);
             object Operand(Instruction instruction)
             {
                 var operand = instruction.Operand;
@@ -82,6 +191,18 @@ internal static class SharedNativeIlReader
                     string? definition = null;
                     if (Scope(target.DeclaringType.FullName))
                         definition = target.Resolve()?.FullName;
+                    if (instruction.OpCode.Code is Code.Ldftn or Code.Ldvirtftn || delegateMethods.Contains(method) || ConsumesDelegate(target))
+                    {
+                        var resolved = instruction.OpCode.Code is Code.Ldvirtftn or Code.Callvirt
+                            ? Dispatch(target, instruction.OpCode.Code == Code.Ldvirtftn || target.Parameters.Count == 0 ? ReceiverType(method, instruction) : null)
+                            : Resolve(target);
+                        if (resolved != null && delegateMethods.Contains(resolved))
+                            definition = resolved.FullName + (Scope(resolved.DeclaringType.FullName) ? "" : "@" + module.Assembly.Name.Name);
+                        else if (instruction.OpCode.Code is Code.Ldvirtftn ||
+                            (instruction.OpCode.Code == Code.Callvirt && Resolve(target) is { } declared &&
+                             declared.Module == module && declared.IsVirtual && !sites.ContainsKey(target.Name)))
+                            definition = "!unresolved-dispatch:" + target.FullName;
+                    }
                     return new { kind = "method", name = target.FullName, definition, owner = target.DeclaringType.FullName,
                         target.HasThis, parameters = target.Parameters.Count, returns = target.ReturnType.FullName,
                         native = sites.TryGetValue(target.Name, out var site) ? (object)site : null };
@@ -111,12 +232,13 @@ internal static class SharedNativeIlReader
                     .Append(':').Append(handler.HandlerOffset).Append(':').Append(handler.HandlerLength)
                     .Append(':').Append(handler.FilterOffset).Append(':').Append(handler.CatchType.GetHashCode());
             methods.Add(new { name = method.FullName, owner = method.DeclaringType.FullName,
+                expansionOnly = include && !Scope(method.DeclaringType.FullName),
                 method.HasThis, arguments = method.Parameters.Select(parameter => new { name = parameter.Name, type = parameter.ParameterType.FullName }).ToArray(),
                 raw = Hash(Encoding.UTF8.GetBytes(raw.ToString())), semantic = Hash(Encoding.UTF8.GetBytes(normalized.ToString())),
-                il = Scope(method.DeclaringType.FullName) ? body.Instructions.Select(instruction => new {
+                il = include ? body.Instructions.Select(instruction => new {
                     offset = instruction.Offset, op = instruction.OpCode.Name, flow = instruction.OpCode.FlowControl.ToString(),
                     operand = Operand(instruction) }).ToArray() : null,
-                handlers = Scope(method.DeclaringType.FullName) ? body.ExceptionHandlers.Select(handler => new {
+                handlers = include ? body.ExceptionHandlers.Select(handler => new {
                     kind = handler.HandlerType.ToString(), type = handler.CatchType?.FullName,
                     start = handler.TryStart.Offset, end = handler.TryEnd?.Offset ?? int.MaxValue,
                     target = handler.FilterStart?.Offset ?? handler.HandlerStart.Offset,

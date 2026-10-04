@@ -94,6 +94,8 @@ try {
     }
     Run 'dotnet' @('build','tools/native-call-weaver/NativeCallWeaver.csproj','-c','Release',
         "-p:RestoreSources=$(Join-Path $out 'empty-feed')",'-p:NuGetAudit=false','-m:1','-nr:false') (Join-Path $out 'weaver-build.log')
+    Run 'python' @($checker,'--self-test') (Join-Path $out 'checker-self-test.log')
+    Run 'python' @((Join-Path $repo 'scripts/checks/Test-SharedNativeIlReader.py')) (Join-Path $out 'reader-self-test.log')
     foreach ($key in $Releases) {
         $folder = switch ($key) { '14sp1' {'V14Sp1'} '15.1' {'V15_1'} default {"V$key"} }
         $api = switch ($key) {
