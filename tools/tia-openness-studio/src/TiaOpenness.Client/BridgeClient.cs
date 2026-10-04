@@ -6,8 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Rpc;
 using TiaMcp.WorkerChannel;
@@ -34,7 +33,6 @@ namespace TiaOpenness.Client
     /// </summary>
     public sealed class BridgeClient : IDisposable
     {
-        private readonly JsonSerializerSettings _json = BridgeJson.Settings;
         private Process _process;
         private ChannelClient _channel;
         private volatile bool _disposed;
@@ -135,7 +133,7 @@ namespace TiaOpenness.Client
                     new ChannelIdentity(release.Key, bridgeHash, adapterHash, _process.Id, nonce), ChannelProfile.Studio,
                     payload => Progress?.Invoke(this, new ProgressEventArgs
                     {
-                        Progress = JObject.Parse(payload).ToObject<ProgressPayload>(JsonSerializer.Create(_json)),
+                        Progress = BridgeJson.DeserializeClient<ProgressPayload>(BridgeJson.Deserialize<JsonElement>(payload)),
                     }));
                 _channel.ConnectAsync(DefaultTimeout).GetAwaiter().GetResult();
             }
@@ -199,8 +197,8 @@ namespace TiaOpenness.Client
         {
             var response = await CallRawAsync(method, parameters, cancellation).ConfigureAwait(false);
             if (response.Error != null) throw new BridgeRpcException(method, response.Error);
-            if (response.Result == null || response.Result.Type == JTokenType.Null) return default;
-            return response.Result.ToObject<T>(JsonSerializer.Create(_json));
+            if (response.Result == null || response.Result.Value.ValueKind == JsonValueKind.Null) return default;
+            return BridgeJson.DeserializeClient<T>(response.Result.Value);
         }
 
         public async Task<RpcResponse> CallRawAsync(string method, object parameters = null,
@@ -210,21 +208,21 @@ namespace TiaOpenness.Client
             if (_faulted) throw new InvalidOperationException("The previous native call has no reliable outcome. Restart Studio and inspect the project before retrying.");
             if (!IsRunning) throw new InvalidOperationException("The bridge is not running. Call Start first.");
 
-            var payload = parameters == null ? new JObject() : JObject.FromObject(parameters, JsonSerializer.Create(_json));
+            var payload = BridgeJson.ToElement(parameters ?? new { });
             var id = checked(_channel.LastRequestId + 1).ToString(CultureInfo.InvariantCulture);
             try
             {
-                var json = await _channel.CallAsync(method, JsonConvert.SerializeObject(payload, _json),
+                var json = await _channel.CallAsync(method, payload.GetRawText(),
                     BridgeChannel.BindingChangeFor(method), BridgeChannel.IsReadOnly(method), DefaultTimeout, cancellation).ConfigureAwait(false);
                 return RpcResponse.Ok(id,
-                    JToken.Parse(json));
+                    BridgeJson.Deserialize<JsonElement>(json));
             }
             catch (ChannelFailure ex)
             {
                 return new RpcResponse
                 {
                     Id = id,
-                    Error = JObject.Parse(ex.RpcErrorJson).ToObject<RpcError>(JsonSerializer.Create(_json)),
+                    Error = BridgeJson.DeserializeClient<RpcError>(BridgeJson.Deserialize<JsonElement>(ex.RpcErrorJson)),
                 };
             }
             catch (ChannelFault ex)
@@ -278,7 +276,7 @@ namespace TiaOpenness.Client
         {
             Method = method;
             Code = error.Code;
-            Data2 = error.Data?.ToString();
+            Data2 = BridgeJson.DiagnosticText(error.Data);
         }
 
         public string Method { get; }

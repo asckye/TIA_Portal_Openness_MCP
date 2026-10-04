@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Contracts.Models;
 using TiaOpenness.Core.Abstractions;
 
@@ -323,7 +324,7 @@ namespace TiaOpenness.Core.Mock
             {
                 if (!File.Exists(_statePath)) return;
                 var json = File.ReadAllText(_statePath);
-                var loaded = JsonConvert.DeserializeObject<MockVcState>(json);
+                var loaded = BridgeJson.Deserialize<MockVcState>(json);
                 if (loaded != null) _state = loaded;
             }
             catch (Exception) /* swallow(parse-fallback): an unreadable or corrupt mock JSON sidecar starts the mock session with empty state */
@@ -338,7 +339,7 @@ namespace TiaOpenness.Core.Mock
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_statePath));
-                File.WriteAllText(_statePath, JsonConvert.SerializeObject(_state, Formatting.Indented),
+                File.WriteAllText(_statePath, BridgeJson.Serialize(_state, indented: true),
                     new UTF8Encoding(false));
             }
             catch (Exception) /* swallow(fail-open-guard): failure to persist the mock sidecar must not invalidate the completed in-memory mock operation */
@@ -502,6 +503,7 @@ namespace TiaOpenness.Core.Mock
         {
             public string Name;
             public string RootPath;
+            [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
             public Dictionary<string, MockMapping> Mappings =
                 new Dictionary<string, MockMapping>(StringComparer.OrdinalIgnoreCase);
         }
@@ -518,6 +520,7 @@ namespace TiaOpenness.Core.Mock
         private sealed class MockVcState
         {
             public List<MockWorkspace> Workspaces = new List<MockWorkspace>();
+            [JsonObjectCreationHandling(JsonObjectCreationHandling.Populate)]
             public Dictionary<string, RestoredContent> Restored =
                 new Dictionary<string, RestoredContent>(StringComparer.OrdinalIgnoreCase);
         }

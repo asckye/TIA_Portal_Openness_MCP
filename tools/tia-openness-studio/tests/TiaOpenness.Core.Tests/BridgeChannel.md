@@ -13,8 +13,11 @@ and return its existing method-not-found error.
 Framework `TiaOpenness.Core.dll`，不会替代已存在的原生适配器。版本在启动前确定：未指定时选最新已安装版本，
 无安装时诊断/mock 使用 `21`。
 
-参数和结果 DTO 两端仍用 Newtonsoft 与 `BridgeJson.Settings`，JSON 原样嵌入 STJ 信封。
-客户端保留先 `JObject.Parse`、再转换 DTO 的日期处理，包括原有 DateTime token 类型。
+参数和结果 DTO 两端使用 Contracts 中的 [BridgeJson](../../src/TiaOpenness.Contracts/Rpc/BridgeJson.cs)，
+只有一处 STJ options 工厂；已序列化的结果和进度 JSON 原样嵌入通道信封。
+DTO 属性仍为 PascalCase，RPC 和进度属性保留原有小写名称；枚举写名称，null、默认值和只读计算属性仍保留。
+`RpcResponse` 区分未出现的 result 与显式 `result:null`，错误响应省略 result，成功响应省略 error。
+客户端保留旧 `JObject.Parse` 的日期转换语义，具体兼容边界见下文。
 通道 id 为严格递增的正整数，`CallRawAsync` 仍返回字符串 id；未发送的取消不消耗 id。
 
 `error.data` 保留 `outcome`、`evidence` 和完整的 `rpc = {code, message, data}`。
@@ -95,3 +98,51 @@ The smoke verifies exact hello identity, `session.state`, `ping`, `doctor.run`,
 and clean EOF shutdown for 14sp1, 16 and 21 (15 checks). `--public-api` selects
 local SDK copies for that bridge process only; no registry/install changes,
 TIA session, PLC, VM, network service, or live test is involved.
+
+## DTO codec compatibility (P2-04a)
+
+[BridgeJsonGolden.json](BridgeJsonGolden.json) pins populated examples for all 29 Contracts DTOs.
+[BridgeJsonGoldenTests](BridgeJsonGoldenTests.cs) also checks each DTO's defaults and null root,
+all enum names, DateTime kinds, nullable dates, fractional seconds, nonzero DateTimeOffset offsets,
+TimeSpan, nested collections, computed properties and explicit null success/error payloads.
+Both codecs deserialize both writers' output. The inventory test fails when a DTO has no golden.
+[LegacyJsonRpc](LegacyJsonRpc.cs) and [LegacyRpcDispatcher](LegacyRpcDispatcher.cs) are frozen
+test-only copies of the previous RPC types, dispatcher and `BridgeJson.Settings`; model DTOs
+remain unchanged. Production projects do not reference Newtonsoft.
+
+The method theory enumerates all 24 `RpcMethods` constants. It compares old/new requests,
+responses, backend argument/call order and progress against deterministic managed sessions.
+Doctor's clock is normalized only for that method comparison; its complete DTO has a fixed
+golden. Parameter cases retain defaults, coercions and error codes/messages, including the old
+errors for malformed lists and date tokens. A fixed-stack exception proves `type`, `stack`
+and `inner` survive unchanged; actual runtime stacks still describe the actual throwing call.
+Existing process tests exercise mock workflows through the Framework bridge and desktop client.
+
+DateTime serialization retains UTC `Z`, local offsets and the suffix-free Unspecified kind;
+direct DateTimeOffset DTO reads retain the original offset and all ticks. The old desktop first
+parsed results with `JObject.Parse` using DateTime tokens, then converted those tokens to DTOs.
+That extra step converts explicit offsets to the desktop's local timezone (while `Z` stays UTC).
+`DeserializeClient` preserves this existing behavior, including date-like strings displayed as
+invariant DateTime text. Direct codec round trips preserve the original DTO; client round trips
+equal the old client's decoded object. Raw RPC payloads now use owned `JsonElement` values;
+they do not expose Newtonsoft token classes. Error `data:null` still yields empty `Data2`, while
+an absent data field yields null; the exception message remains `<method> failed (<code>): <message>`.
+
+The permitted byte differences are JSON string escaping: STJ uses uppercase hex escapes
+(`\u001B` versus `\u001b`), escapes supplementary characters such as emoji as UTF-16 surrogate
+pairs, and escapes characters in its encoder block list (for example NBSP as `\u00A0`).
+Chinese text, PascalCase, enum names, null/default values and ISO date/time values retain their
+meaning and ordinary spelling. Tests pin those byte differences and prove both libraries decode
+them to the same strings. Both ends ship in the same Studio bundle; the channel framing and
+envelope are unchanged. Indented error diagnostics use platform newlines as before.
+
+The mock VCI sidecar also uses this codec. [MockJsonPersistenceTests](MockJsonPersistenceTests.cs)
+reads files written by the old default Newtonsoft serializer, saves them using STJ, then reopens
+them, checking workspace mappings, restored content and case-insensitive dictionary comparers.
+The shared options include fields for these private persistence types; existing sidecars remain readable.
+
+Studio's desktop and bridge bundles contain no Newtonsoft DLL. Copy targets remove the stale
+bridge copy on an incremental rebuild, and `Build-Studio.ps1` rejects any remaining copy in its
+output. The Core test host alone references Newtonsoft 13.0.3 for the frozen baseline; its bridge
+subdirectory does not. Elsewhere in the repository `TiaGitAddIn.Core`, `TiaMcpServer.PlcWorker`
+and their tests still require Newtonsoft; this task does not change those projects or their bundles.

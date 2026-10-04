@@ -18,5 +18,6 @@
   <Target Name="CopyNativeBridge" AfterTargets="Build">
     <ItemGroup><BridgePayload Include="../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.exe;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.dll;../TiaOpenness.Bridge/bin/$(Configuration)/net48/*.config" /></ItemGroup>
     <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
+    <Delete Files="$(TargetDir)bridge/Newtonsoft.Json.dll" Condition="!Exists('../TiaOpenness.Bridge/bin/$(Configuration)/net48/Newtonsoft.Json.dll')" />
   </Target>
 </Project>

@@ -24,6 +24,7 @@ function RunDotnet([string[]]$Arguments,[string]$Log) {
 }
 RunDotnet @('build',(Join-Path $studio 'src/TiaOpenness.Gui/TiaOpenness.Gui.csproj'),'-c','Release','--nologo') 'gui.log'
 $app=Join-Path $studio 'src/TiaOpenness.Gui/bin/Release/net10.0-windows'
+if(Get-ChildItem -LiteralPath $app -Recurse -File -Filter 'Newtonsoft.Json.dll'){throw 'Studio payload must use only System.Text.Json; remove stale Newtonsoft output before packaging'}
 if (!(Test-Path -LiteralPath (Join-Path $app 'TiaMcp.WorkerChannel.dll'))) { throw 'Studio client worker channel is missing' }
 foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Text.Encodings.Web.dll','System.IO.Pipelines.dll','Microsoft.Bcl.AsyncInterfaces.dll','System.Buffers.dll','System.Memory.dll','System.Numerics.Vectors.dll','System.Runtime.CompilerServices.Unsafe.dll','System.Threading.Tasks.Extensions.dll')) {
     if (!(Test-Path -LiteralPath (Join-Path $app "bridge/$name"))) { throw "Studio bridge channel dependency is missing: $name" }

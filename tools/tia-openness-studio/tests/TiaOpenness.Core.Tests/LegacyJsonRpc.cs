@@ -1,7 +1,8 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+// Frozen pre-migration RPC contracts; production uses System.Text.Json.
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
-namespace TiaOpenness.Contracts.Rpc
+namespace TiaOpenness.Core.Tests.Legacy
 {
     /// <summary>Well-known JSON-RPC error codes plus the bridge's own range.</summary>
     public static class RpcErrorCodes
@@ -27,34 +28,34 @@ namespace TiaOpenness.Contracts.Rpc
     /// <summary>A JSON-RPC 2.0 request, newline-delimited on the bridge's stdin.</summary>
     public class RpcRequest
     {
-        [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
-        [JsonPropertyName("id")] public string Id { get; set; }
-        [JsonPropertyName("method")] public string Method { get; set; }
-        [JsonPropertyName("params")] public JsonElement? Params { get; set; }
+        [JsonProperty("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
+        [JsonProperty("id")] public string Id { get; set; }
+        [JsonProperty("method")] public string Method { get; set; }
+        [JsonProperty("params")] public JObject Params { get; set; }
     }
 
     /// <summary>A JSON-RPC 2.0 error payload.</summary>
     public class RpcError
     {
-        [JsonPropertyName("code")] public int Code { get; set; }
-        [JsonPropertyName("message")] public string Message { get; set; }
-        [JsonPropertyName("data"), JsonConverter(typeof(BridgeJson.PresentJsonElementConverter))] public JsonElement? Data { get; set; }
+        [JsonProperty("code")] public int Code { get; set; }
+        [JsonProperty("message")] public string Message { get; set; }
+        [JsonProperty("data")] public JToken Data { get; set; }
     }
 
     /// <summary>A JSON-RPC 2.0 response, newline-delimited on the bridge's stdout.</summary>
     public class RpcResponse
     {
-        [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
-        [JsonPropertyName("id")] public string Id { get; set; }
-        [JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull), JsonConverter(typeof(BridgeJson.PresentJsonElementConverter))] public JsonElement? Result { get; set; }
-        [JsonPropertyName("error"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] public RpcError Error { get; set; }
+        [JsonProperty("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
+        [JsonProperty("id")] public string Id { get; set; }
+        [JsonProperty("result", NullValueHandling = NullValueHandling.Ignore)] public JToken Result { get; set; }
+        [JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)] public RpcError Error { get; set; }
 
-        public static RpcResponse Ok(string id, JsonElement? result)
+        public static RpcResponse Ok(string id, JToken result)
         {
-            return new RpcResponse { Id = id, Result = result ?? BridgeJson.ToElement(null) };
+            return new RpcResponse { Id = id, Result = result ?? JValue.CreateNull() };
         }
 
-        public static RpcResponse Fail(string id, int code, string message, JsonElement? data = null)
+        public static RpcResponse Fail(string id, int code, string message, JToken data = null)
         {
             return new RpcResponse { Id = id, Error = new RpcError { Code = code, Message = message, Data = data } };
         }
@@ -66,18 +67,18 @@ namespace TiaOpenness.Contracts.Rpc
     /// </summary>
     public class RpcNotification
     {
-        [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
-        [JsonPropertyName("method")] public string Method { get; set; }
-        [JsonPropertyName("params")] public JsonElement? Params { get; set; }
+        [JsonProperty("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
+        [JsonProperty("method")] public string Method { get; set; }
+        [JsonProperty("params")] public JObject Params { get; set; }
     }
 
     /// <summary>Payload of the <c>progress</c> notification.</summary>
     public class ProgressPayload
     {
-        [JsonPropertyName("operation")] public string Operation { get; set; }
-        [JsonPropertyName("current")] public int Current { get; set; }
-        [JsonPropertyName("total")] public int Total { get; set; }
-        [JsonPropertyName("message")] public string Message { get; set; }
+        [JsonProperty("operation")] public string Operation { get; set; }
+        [JsonProperty("current")] public int Current { get; set; }
+        [JsonProperty("total")] public int Total { get; set; }
+        [JsonProperty("message")] public string Message { get; set; }
     }
 
     /// <summary>Every method name the bridge understands, in one place.</summary>

@@ -1,15 +1,16 @@
+// Frozen pre-migration dispatcher and Newtonsoft settings for wire compatibility tests.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Globalization;
-using System.Text.Json;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using TiaOpenness.Contracts.Models;
-using TiaOpenness.Contracts.Rpc;
+using TiaOpenness.Core.Rpc;
 using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Environment;
 using TiaOpenness.Core.Inspection;
 
-namespace TiaOpenness.Core.Rpc
+namespace TiaOpenness.Core.Tests.Legacy
 {
     /// <summary>Turns one JSON-RPC request into one response, against the live session.</summary>
     public sealed class RpcDispatcher : IDisposable
@@ -17,6 +18,7 @@ namespace TiaOpenness.Core.Rpc
         private readonly Func<ITiaSessionFactory> _resolveFactory;
         private ITiaSessionFactory _factory;
         private readonly Action<RpcNotification> _notify;
+        private readonly JsonSerializer _serializer;
         private ITiaSession _session;
         internal bool BackendEntered { get; private set; }
 
@@ -27,6 +29,7 @@ namespace TiaOpenness.Core.Rpc
         {
             _resolveFactory = resolveFactory;
             _notify = notify;
+            _serializer = JsonSerializer.Create(BridgeJson.Settings);
         }
 
         private ITiaSessionFactory Factory()
@@ -40,9 +43,9 @@ namespace TiaOpenness.Core.Rpc
             BackendEntered = false;
             try
             {
-                var result = Invoke(request.Method, request.Params ?? BridgeJson.ToElement(new { }),
+                var result = Invoke(request.Method, request.Params ?? new JObject(),
                     (operation, current, total, message) => Progress(notify ?? _notify, operation, current, total, message));
-                return RpcResponse.Ok(request.Id, BridgeJson.ToElement(result));
+                return RpcResponse.Ok(request.Id, result == null ? JValue.CreateNull() : JToken.FromObject(result, _serializer));
             }
             catch (OpennessNotInstalledException ex)
             {
@@ -75,17 +78,17 @@ namespace TiaOpenness.Core.Rpc
             }
             catch (Exception ex)
             {
-                var data = new Dictionary<string, string>
+                var data = new JObject
                 {
                     ["type"] = ex.GetType().FullName,
                     ["stack"] = ex.StackTrace,
                 };
                 if (ex.InnerException != null) data["inner"] = ex.InnerException.Message;
-                return RpcResponse.Fail(request.Id, RpcErrorCodes.OpennessFailure, ex.Message, BridgeJson.ToElement(data));
+                return RpcResponse.Fail(request.Id, RpcErrorCodes.OpennessFailure, ex.Message, data);
             }
         }
 
-        private object Invoke(string method, JsonElement p, ProgressCallback progress)
+        private object Invoke(string method, JObject p, ProgressCallback progress)
         {
             switch (method)
             {
@@ -206,13 +209,13 @@ namespace TiaOpenness.Core.Rpc
             notify(new RpcNotification
             {
                 Method = "progress",
-                Params = BridgeJson.ToElement(new ProgressPayload
+                Params = JObject.FromObject(new ProgressPayload
                 {
                     Operation = operation,
                     Current = current,
                     Total = total,
                     Message = message,
-                }),
+                }, JsonSerializer.Create(BridgeJson.Settings)),
             });
         }
 
@@ -280,14 +283,14 @@ namespace TiaOpenness.Core.Rpc
 
         // ---- parameter helpers ---------------------------------------------
 
-        private static string Required(JsonElement p, string name)
+        private static string Required(JObject p, string name)
         {
-            var token = p.TryGetProperty(name, out var valueToken) ? valueToken : default;
-            if (token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null)
+            var token = p[name];
+            if (token == null || token.Type == JTokenType.Null)
             {
                 throw new ArgumentException("Missing required parameter '" + name + "'.");
             }
-            var value = StringValue(token);
+            var value = token.Value<string>();
             if (string.IsNullOrWhiteSpace(value))
             {
                 throw new ArgumentException("Parameter '" + name + "' must not be empty.");
@@ -295,54 +298,27 @@ namespace TiaOpenness.Core.Rpc
             return value;
         }
 
-        private static string Str(JsonElement p, string name, string fallback)
+        private static string Str(JObject p, string name, string fallback)
         {
-            var token = p.TryGetProperty(name, out var valueToken) ? valueToken : default;
-            return token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null ? fallback : StringValue(token);
+            var token = p[name];
+            return token == null || token.Type == JTokenType.Null ? fallback : token.Value<string>();
         }
 
-        private static bool Bool(JsonElement p, string name, bool fallback)
+        private static bool Bool(JObject p, string name, bool fallback)
         {
-            var token = p.TryGetProperty(name, out var valueToken) ? valueToken : default;
-            return token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null ? fallback : (bool)Convert.ChangeType(ScalarValue(token), typeof(bool), CultureInfo.InvariantCulture);
+            var token = p[name];
+            return token == null || token.Type == JTokenType.Null ? fallback : token.Value<bool>();
         }
 
-        private static IReadOnlyList<string> StrList(JsonElement p, string name)
+        private static IReadOnlyList<string> StrList(JObject p, string name)
         {
-            var token = p.TryGetProperty(name, out var valueToken) ? valueToken : default;
-            if (token.ValueKind == JsonValueKind.Undefined || token.ValueKind == JsonValueKind.Null) return new string[0];
-            if (token.ValueKind == JsonValueKind.String && !BridgeJson.IsDateToken(token)) return new[] { StringValue(token) };
-            if (token.ValueKind == JsonValueKind.Array)
-                return token.EnumerateArray().Select(StringValue).Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
-            if (token.ValueKind == JsonValueKind.Object)
-            {
-                if (!token.EnumerateObject().Any()) return new string[0];
-                throw new InvalidCastException("Cannot cast Newtonsoft.Json.Linq.JProperty to Newtonsoft.Json.Linq.JToken.");
-            }
-            throw new InvalidOperationException("Cannot access child value on Newtonsoft.Json.Linq.JValue.");
+            var token = p[name];
+            if (token == null || token.Type == JTokenType.Null) return new string[0];
+            if (token.Type == JTokenType.String) return new[] { token.Value<string>() };
+            return token.Values<string>().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
         }
 
-        private static object ScalarValue(JsonElement token)
-        {
-            switch (token.ValueKind)
-            {
-                case JsonValueKind.Null: return null;
-                case JsonValueKind.String:
-                    return BridgeJson.IsDateToken(token) ? (object)token.GetDateTimeOffset() : token.GetString();
-                case JsonValueKind.True: return true;
-                case JsonValueKind.False: return false;
-                case JsonValueKind.Number:
-                    return token.TryGetInt64(out var integer) ? (object)integer : token.GetDouble();
-                default: throw new InvalidCastException("Cannot cast " +
-                    (token.ValueKind == JsonValueKind.Array ? "Newtonsoft.Json.Linq.JArray" : "Newtonsoft.Json.Linq.JObject") +
-                    " to Newtonsoft.Json.Linq.JToken.");
-            }
-        }
-
-        private static string StringValue(JsonElement token)
-            => (string)Convert.ChangeType(ScalarValue(token), typeof(string), CultureInfo.InvariantCulture);
-
-        private static T Enum<T>(JsonElement p, string name, T fallback) where T : struct
+        private static T Enum<T>(JObject p, string name, T fallback) where T : struct
         {
             var raw = Str(p, name, null);
             if (string.IsNullOrWhiteSpace(raw)) return fallback;
@@ -361,4 +337,15 @@ namespace TiaOpenness.Core.Rpc
         }
     }
 
+    /// <summary>Serializer settings shared by the bridge and its clients.</summary>
+    public static class BridgeJson
+    {
+        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Include,
+            DateParseHandling = DateParseHandling.DateTimeOffset,
+            Converters = { new Newtonsoft.Json.Converters.StringEnumConverter() },
+            Formatting = Formatting.None,
+        };
+    }
 }

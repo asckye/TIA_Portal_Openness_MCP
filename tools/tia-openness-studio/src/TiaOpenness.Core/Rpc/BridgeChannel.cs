@@ -2,15 +2,14 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using TiaMcp.WorkerChannel;
 using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Abstractions;
 
 namespace TiaOpenness.Core.Rpc
 {
-    /// <summary>Studio payloads stay on their existing Newtonsoft boundary.</summary>
+    /// <summary>Adapts Studio DTO payloads to the shared process channel.</summary>
     public static class BridgeChannel
     {
         public static string Hash(string path)
@@ -87,24 +86,24 @@ namespace TiaOpenness.Core.Rpc
             {
                 Id = request.Id.ToString(CultureInfo.InvariantCulture),
                 Method = request.Method,
-                Params = JsonConvert.DeserializeObject<JObject>(request.ArgumentsJson, BridgeJson.Settings),
+                Params = BridgeJson.Deserialize<JsonElement>(request.ArgumentsJson),
             }, notification =>
             {
-                var payload = notification.Params.ToObject<ProgressPayload>(JsonSerializer.Create(BridgeJson.Settings));
+                var payload = BridgeJson.Deserialize<ProgressPayload>(notification.Params.Value);
                 var percent = payload.Total <= 0 ? 0 : (int)Math.Max(0, Math.Min(100, (long)payload.Current * 100 / payload.Total));
-                request.ReportProgress(percent, JsonConvert.SerializeObject(notification.Params, BridgeJson.Settings));
+                request.ReportProgress(percent, notification.Params.Value.GetRawText());
             });
             if (response.Error != null)
             {
                 var outcome = !dispatcher.BackendEntered ? ChannelOutcome.RejectedBeforeNative :
                     BridgeChannel.IsReadOnly(request.Method) ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown;
                 return ChannelResponse.Error(new ChannelFailure(response.Error.Message, -32603, outcome,
-                    rpcErrorJson: JsonConvert.SerializeObject(response.Error, BridgeJson.Settings)));
+                    rpcErrorJson: BridgeJson.Serialize(response.Error)));
             }
             if (BridgeChannel.BindingChangeFor(request.Method) == BindingChange.Advance) epoch = checked(epoch + 1);
             if (request.Method == RpcMethods.SessionConnect) bound = true;
             if (request.Method == RpcMethods.SessionDisconnect) bound = false;
-            return ChannelResponse.Success(JsonConvert.SerializeObject(response.Result, BridgeJson.Settings));
+            return ChannelResponse.Success(response.Result?.GetRawText() ?? "null");
         }
 
         public void Dispose() => dispatcher.Dispose();

@@ -16,6 +16,7 @@ using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Mock;
 using TiaOpenness.Core.Rpc;
 using Xunit;
+using Legacy = TiaOpenness.Core.Tests.Legacy;
 
 namespace TiaOpenness.Core.Tests;
 
@@ -77,25 +78,25 @@ public sealed class BridgeChannelTests
         // of installed TIA versions. It never attempts to attach or start TIA.
         using var bridge = new BridgeClient(new[] { "--public-api", Path.Combine(AppContext.BaseDirectory, "absent-sdk") });
         bridge.Start(BridgeExe, forceMock: code != -32003, opennessVersion: "21");
-        using var old = new RpcDispatcher(() => code == -32003
+        using var old = new Legacy.RpcDispatcher(() => code == -32003
             ? (ITiaSessionFactory)new UnavailableSessionFactory("No supported V14 SP1, V15.1 or V16-V21 Openness installation was found. Run Doctor.")
             : new MockTiaSessionFactory(), null);
         if (code != -32000 && code != -32003)
         {
             await bridge.CallAsync<object>("session.connect");
-            old.Handle(new RpcRequest { Method = "session.connect" });
+            old.Handle(new Legacy.RpcRequest { Method = "session.connect" });
         }
         if (code == -32002)
         {
             await bridge.CallAsync<object>("project.open", new { path = "Synthetic.ap21" });
-            old.Handle(new RpcRequest { Method = "project.open", Params = new JObject { ["path"] = "Synthetic.ap21" } });
+            old.Handle(new Legacy.RpcRequest { Method = "project.open", Params = new JObject { ["path"] = "Synthetic.ap21" } });
         }
         var parameters = new JObject { ["deviceId"] = "missing-device" };
-        var previous = old.Handle(new RpcRequest { Method = method, Params = parameters });
-        var previousWire = JObject.Parse(JsonConvert.SerializeObject(previous, BridgeJson.Settings))
-            .ToObject<RpcResponse>(JsonSerializer.Create(BridgeJson.Settings))!;
-        var expected = new BridgeRpcException(method, previousWire.Error);
-        var actual = await Assert.ThrowsAsync<BridgeRpcException>(() => bridge.CallAsync<object>(method, parameters));
+        var previous = old.Handle(new Legacy.RpcRequest { Method = method, Params = parameters });
+        var previousWire = JObject.Parse(JsonConvert.SerializeObject(previous, Legacy.BridgeJson.Settings))
+            .ToObject<Legacy.RpcResponse>(JsonSerializer.Create(Legacy.BridgeJson.Settings))!;
+        var expected = new BridgeRpcException(method, BridgeJson.Deserialize<RpcError>(JsonConvert.SerializeObject(previousWire.Error, Legacy.BridgeJson.Settings)));
+        var actual = await Assert.ThrowsAsync<BridgeRpcException>(() => bridge.CallAsync<object>(method, BridgeJson.Deserialize<System.Text.Json.JsonElement>(parameters.ToString())));
         Assert.Equal(code, actual.Code);
         Assert.Equal(expected.Message, actual.Message);
         Assert.Equal(expected.Method, actual.Method);
@@ -125,30 +126,31 @@ public sealed class BridgeChannelTests
         Assert.False(Channel(bridge).Poisoned);
         var state = await bridge.CallRawAsync("session.state");
         Assert.Equal("1", state.Id);
-        Assert.False(state.Result.Value<bool>("Connected"));
+        Assert.False(state.Result!.Value.GetProperty("Connected").GetBoolean());
     }
 
     [Fact]
-    public async Task Mock_result_keeps_the_previous_Newtonsoft_date_tokens_and_DTO_codec()
+    public async Task Mock_result_keeps_the_previous_client_date_conversion()
     {
         using var bridge = new BridgeClient(Array.Empty<string>());
         bridge.Start(BridgeExe, forceMock: true);
-        using var old = new RpcDispatcher(() => new MockTiaSessionFactory(), null);
+        using var old = new Legacy.RpcDispatcher(() => new MockTiaSessionFactory(), null);
         await bridge.CallAsync<object>("session.connect");
-        old.Handle(new RpcRequest { Method = "session.connect" });
+        old.Handle(new Legacy.RpcRequest { Method = "session.connect" });
         var parameters = new JObject { ["path"] = "Synthetic.ap21" };
-        var previous = old.Handle(new RpcRequest { Method = "project.open", Params = parameters });
-        var expected = JObject.Parse(JsonConvert.SerializeObject(previous, BridgeJson.Settings))
-            .ToObject<RpcResponse>(JsonSerializer.Create(BridgeJson.Settings))!;
-        var actual = await bridge.CallRawAsync("project.open", parameters);
+        var previous = old.Handle(new Legacy.RpcRequest { Method = "project.open", Params = parameters });
+        var expected = JObject.Parse(JsonConvert.SerializeObject(previous, Legacy.BridgeJson.Settings))
+            .ToObject<Legacy.RpcResponse>(JsonSerializer.Create(Legacy.BridgeJson.Settings))!;
+        var actual = await bridge.CallRawAsync("project.open", new { path = "Synthetic.ap21" });
         // Each mock samples its own modification time; the fixture's creation date
-        // and all other fields are deterministic and must retain their old token types.
-        expected.Result["LastModified"] = actual.Result["LastModified"];
-        Assert.True(JToken.DeepEquals(expected.Result, actual.Result));
-        Assert.IsType<DateTime>(((JValue)actual.Result["CreationTime"]!).Value);
-        var serializer = JsonSerializer.Create(BridgeJson.Settings);
+        // and all other fields are deterministic and must retain their decoded values.
+        var actualToken = JToken.Parse(actual.Result!.Value.GetRawText());
+        expected.Result["LastModified"] = actualToken["LastModified"];
+        Assert.True(JToken.DeepEquals(expected.Result, actualToken));
+        Assert.Equal(System.Text.Json.JsonValueKind.String, actual.Result.Value.GetProperty("CreationTime").ValueKind);
+        var serializer = JsonSerializer.Create(Legacy.BridgeJson.Settings);
         var oldDto = expected.Result.ToObject<TiaOpenness.Contracts.Models.ProjectInfo>(serializer)!;
-        var newDto = actual.Result.ToObject<TiaOpenness.Contracts.Models.ProjectInfo>(serializer)!;
+        var newDto = BridgeJson.DeserializeClient<TiaOpenness.Contracts.Models.ProjectInfo>(actual.Result.Value)!;
         Assert.Equal(oldDto.CreationTime!.Value.ToString("O"), newDto.CreationTime!.Value.ToString("O"));
     }
 

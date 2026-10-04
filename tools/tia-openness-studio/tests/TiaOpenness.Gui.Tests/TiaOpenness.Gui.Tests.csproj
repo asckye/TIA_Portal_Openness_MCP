@@ -8,5 +8,6 @@
   <Target Name="CopyBridgeForFunctionalTests" AfterTargets="Build">
     <ItemGroup><BridgePayload Include="../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.exe;../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.dll;../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/*.config" /></ItemGroup>
     <Copy SourceFiles="@(BridgePayload)" DestinationFolder="$(TargetDir)bridge" SkipUnchangedFiles="true" />
+    <Delete Files="$(TargetDir)bridge/Newtonsoft.Json.dll" Condition="!Exists('../../src/TiaOpenness.Bridge/bin/$(Configuration)/net48/Newtonsoft.Json.dll')" />
   </Target>
 </Project>

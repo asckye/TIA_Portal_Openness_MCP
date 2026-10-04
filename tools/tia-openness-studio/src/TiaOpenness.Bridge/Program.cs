@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using TiaMcp.WorkerChannel;
+using TiaOpenness.Contracts.Rpc;
 using TiaOpenness.Core.Abstractions;
 using TiaOpenness.Core.Environment;
 using TiaOpenness.Core.Rpc;
@@ -44,8 +45,8 @@ namespace TiaOpenness.Bridge
                             var response = dispatcher.Handle(request);
                             if (response.Failure != null)
                             {
-                                var error = Newtonsoft.Json.JsonConvert.DeserializeObject<TiaOpenness.Contracts.Rpc.RpcError>(
-                                    response.Failure.RpcErrorJson, BridgeJson.Settings);
+                                var error = BridgeJson.Deserialize<RpcError>(
+                                    response.Failure.RpcErrorJson);
                                 Console.Error.WriteLine("[bridge] " + request.Method + " -> " + error.Code + " " + error.Message);
                                 Console.Error.Flush();
                             }
