@@ -65,7 +65,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 // 3) Connection + project state
                 bool connected = false; string? projectName = null;
                 try { var st = Portal.GetState(); connected = st?.IsConnected ?? false; projectName = st?.Project; }
-                catch { }
+                catch { /* swallow(probe-optional): unavailable session state keeps the disconnected diagnostic */ }
                 bool hasProject = !string.IsNullOrWhiteSpace(projectName) && projectName != "-";
                 checks.Add(new DoctorCheck
                 {

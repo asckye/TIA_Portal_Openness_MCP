@@ -164,9 +164,9 @@ namespace TiaMcpServer.Cli
             while (!stop.IsSet)
             {
                 stop.Wait(60000);
-                if (!stop.IsSet) { try { _ = McpServer.GetState(); } catch { } } // heartbeat
+                if (!stop.IsSet) { try { _ = McpServer.GetState(); } catch { /* swallow(probe-optional): a failed heartbeat must keep the prewarm loop alive */ } } // heartbeat
             }
-            try { McpServer.Disconnect(); } catch { }
+            try { McpServer.Disconnect(); } catch { /* swallow(teardown): prewarm shutdown remains best-effort */ }
             Console.WriteLine("prewarm: stopped.");
             return 0;
         }

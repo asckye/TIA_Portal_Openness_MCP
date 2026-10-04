@@ -64,7 +64,7 @@ namespace TiaMcpServer.ModelContextProtocol
             foreach (var c in candidates)
             {
                 if (string.IsNullOrWhiteSpace(c)) continue;
-                try { GetHmiProgramInfo(c); hmiPath = c; break; } catch { }
+                try { GetHmiProgramInfo(c); hmiPath = c; break; } catch { /* swallow(probe-optional): a missing HMI candidate permits the next exact candidate */ }
             }
 
             if (string.IsNullOrWhiteSpace(hmiPath))

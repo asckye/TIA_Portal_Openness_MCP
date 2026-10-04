@@ -24,7 +24,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 connected = state?.IsConnected;
                 project = state?.Project;
             }
-            catch
+            catch /* swallow(probe-optional): unavailable session state preserves unknown preflight prerequisites */
             {
                 connected = null; project = null;
             }

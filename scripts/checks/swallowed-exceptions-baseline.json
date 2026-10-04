@@ -69,18 +69,6 @@
       "line": 147
     },
     {
-      "fingerprint": "41869d5475875835fd4ef2ffe8f680467b523849dd5e5123d1ddc15d0e0900e8",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs",
-      "line": 167
-    },
-    {
-      "fingerprint": "4867b2e8bfb085245c4c7539a49c0a4e16611aad4203534d0a6a6efa9e7b0812",
-      "kind": "discarding",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs",
-      "line": 27
-    },
-    {
       "fingerprint": "4ebbd3913c6826e22ec5fbce6f70eb8a12297c6a329f182e836520284ec4956d",
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/HttpMcpServer.cs",
@@ -177,12 +165,6 @@
       "line": 138
     },
     {
-      "fingerprint": "755b71769fd1f0971787e00b9a9431799efcde34c65885c53edd3316d4d28b3e",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Doctor.cs",
-      "line": 68
-    },
-    {
       "fingerprint": "77063907e37135c56fb2c9d48b7975928c91af3f341d22eead9416c0e6e06dbd",
       "kind": "discarding",
       "path": "tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessVersionControl.cs",
@@ -267,12 +249,6 @@
       "line": 601
     },
     {
-      "fingerprint": "bf801a0cb35fda8b9f891505371d38a14891356eb98cdf83020423e33a124fdf",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ScaffoldOperations.cs",
-      "line": 67
-    },
-    {
       "fingerprint": "c0334d412d3c288d1e5d130fa732fba4e544ce7785e1514f756ad402bea3c2f8",
       "kind": "empty",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/Portal.Helpers.cs",
@@ -301,12 +277,6 @@
       "kind": "discarding",
       "path": "tools/tiaportal-mcp/src/TiaMcpServer/Isolation/WorkerConnection.cs",
       "line": 134
-    },
-    {
-      "fingerprint": "cf0688a8a6feade3e09a9eb3ce137a830a85d50c388accce3432582dd91f1420",
-      "kind": "empty",
-      "path": "tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliCommands.cs",
-      "line": 169
     },
     {
       "fingerprint": "d2c8035f46b3a8cdf4d8e559fc674cf33990ba881863fdc6d79160b30beb211e",
