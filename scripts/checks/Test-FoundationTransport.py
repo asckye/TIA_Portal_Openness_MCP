@@ -159,14 +159,18 @@ def main():
             p = subprocess.Popen(command, env=env, stderr=stderr, stdout=stderr)
             try:
                 first, second = Http(url), Http(url)
-                deadline = time.monotonic() + 15
+                # Hosted runners can start the host slowly; an early exit fails at once with the host log.
+                deadline = time.monotonic() + 60
                 while True:
                     try:
                         with first.request('/mcp/health', auth=False) as response:
                             assert json.load(response)['releaseKey'] == '19'
                         break
                     except urllib.error.URLError:
-                        if time.monotonic() >= deadline: raise
+                        if p.poll() is not None or time.monotonic() >= deadline:
+                            stderr.flush()
+                            log = (args.output / 'http.log').read_text('utf-8', errors='replace')[-4000:]
+                            raise AssertionError(f'HTTP host not listening (exit={p.poll()}): {log}')
                         time.sleep(.1)
                 try:
                     first.request('/mcp/ready', auth=False)
