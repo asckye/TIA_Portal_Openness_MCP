@@ -6,7 +6,7 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 6 ⑥-② (2.7.39): pure logic (no Siemens dependency) for the Startdrive option package - drive objects, offline / online
+    // Pure validation for the Startdrive option package - drive objects, offline / online
     // drive parameters (incl. BICO sources), telegrams, the drive function interface (object type, activation, function in use,
     // commissioning, hardware projection of motors / encoders, safety checksums), drive security (UMAC / DDE), technology
     // extensions, hardware modules, safety acceptance tests and the online drive domain functions.
@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens
 
         // ---- drive object selection ----------------------------------------------------------------------------------------------
         // A drive object is addressed by its official DriveObjectNumber or by its position in DriveObjectContainer.DriveObjects.
-        // 2.7.38 real project: DriveObject.DriveObjectNumber throws on a G120C ("Drive object number could not be retrieved"), so the
+        // TIA V21 evidence, 2026-09-19 (docs/reference/real-machine-ledger.md): DriveObject.DriveObjectNumber throws on a G120C ("Drive object number could not be retrieved"), so the
         // index is the reliable selector there; neither given means the first (and on G120 the only) drive object.
         internal sealed class DriveSelector
         {

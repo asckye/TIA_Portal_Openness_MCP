@@ -35,7 +35,7 @@ namespace TiaMcpConfigurator
         public void SetReleaseEnabled(bool enabled) { Find<ComboBox>("Version").IsEnabled = false; }
         public Func<bool> CanUpdate { get; set; }
         private Process server;
-        private UpdateInfo latest;   // 2.8.0: last successful update check
+        private UpdateInfo latest;   // last successful update check
         private string runningKey;
         private int logEntries;
         private bool tiaDetected;
@@ -314,7 +314,7 @@ namespace TiaMcpConfigurator
             if (ServiceStateChanged != null) ServiceStateChanged(this, EventArgs.Empty);
         }
 
-        // ---- 2.8.0 menu "更新": check against GitHub, then hand over to Update-Engine.ps1 with this window closed.
+        // ---- menu "更新": check against GitHub, then hand over to Update-Engine.ps1 with this window closed.
         private void ShowInstalledVersion()
         {
             string installed = UpdateCheck.Installed(root);

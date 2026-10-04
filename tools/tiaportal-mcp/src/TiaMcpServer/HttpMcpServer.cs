@@ -81,7 +81,7 @@ namespace TiaMcpServer
                 {
                     HttpListenerContext ctx;
                     try { ctx = await listener.GetContextAsync().ConfigureAwait(false); }
-                    catch (HttpListenerException) { break; }
+                    catch (HttpListenerException) /* swallow(teardown): a failed listener accept ends the HTTP loop */ { break; }
                     catch (ObjectDisposedException) /* swallow(teardown): disposing the listener ends the pending accept and stops the loop */ { break; }
 
                     var handler = Task.Run(async () =>

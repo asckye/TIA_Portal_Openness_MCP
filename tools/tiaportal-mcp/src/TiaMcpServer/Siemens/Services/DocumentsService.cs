@@ -293,7 +293,7 @@ namespace TiaMcpServer.Siemens.Services
             {
                 _session.Logger?.LogWarning($"ExportBlocksAsDocuments completed with {failures.Count} failures out of {list.Count()}. First failure: {failures[0]}");
                 // Optional verbose list:
-                // _logger?.LogDebug("All failures: {Failures}", string.Join("; ", failures));
+
             }
             else
             {

@@ -17,7 +17,7 @@ namespace TiaMcpServer.Siemens
             var row = new JsonObject { ["boundProcessId"] = _boundProcessId };
             if (_boundProcessId == null) { row["processAlive"] = null; row["note"] = "no TIA Portal process bound"; return row; }
             try { using var process = System.Diagnostics.Process.GetProcessById(_boundProcessId.Value); row["processAlive"] = !process.HasExited && (_processStartTicks == 0 || process.StartTime.ToUniversalTime().Ticks == _processStartTicks); row["processName"] = process.ProcessName; }
-            catch (ArgumentException) { row["processAlive"] = false; row["note"] = "TIA Portal process " + _boundProcessId + " is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject."; }
+            catch (ArgumentException) /* swallow(env-probe): a missing process is reported as no longer alive */ { row["processAlive"] = false; row["note"] = "TIA Portal process " + _boundProcessId + " is no longer running (crashed or closed): restart TIA Portal, reopen the project, then AttachToOpenProject."; }
             catch (Exception ex) { row["processAlive"] = null; row["note"] = ex.GetBaseException().Message; }
             return row;
         }

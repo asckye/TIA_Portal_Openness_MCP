@@ -28,7 +28,7 @@ namespace TiaMcpServer.ModelContextProtocol
 
             foreach (var item in Arr("sclSourceFiles"))
             {
-                string p; try { p = item?.GetValue<string>() ?? ""; } catch { p = ""; }
+                string p; try { p = item?.GetValue<string>() ?? ""; } catch /* swallow(parse-fallback): a non-string source path is treated as empty and skipped */ { p = ""; }
                 if (string.IsNullOrWhiteSpace(p)) continue;
                 var srcName = Path.GetFileName(p);
                 try { EngineServices.Get<PlcExternalSourcesTools>().ImportPlcExternalSource(plcName, "", p); EngineServices.Get<PlcExternalSourcesTools>().GenerateBlocksFromExternalSource(plcName, srcName); Step("scl", "ok", srcName); }
@@ -57,8 +57,8 @@ namespace TiaMcpServer.ModelContextProtocol
             void Step(string name, string status, string? detail = null)
                 => resp.Steps.Add(new ScaffoldStep { Step = name, Status = status, Detail = detail });
             JsonArray Arr(string key) => root[key] as JsonArray ?? new JsonArray();
-            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch { return def; } }
-            uint IU(JsonNode? n, string key) { try { return (uint)(n?[key]?.GetValue<int>() ?? 0); } catch { return 0; } }
+            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): a non-string item field uses its existing default */ { return def; } }
+            uint IU(JsonNode? n, string key) { try { return (uint)(n?[key]?.GetValue<int>() ?? 0); } catch /* swallow(parse-fallback): an unreadable numeric item field retains the zero default */ { return 0; } }
             string hmiPath = "";
             var candidates = new List<string> { hmiSoftwarePathSpec, "HMI_RT_1", hmiName + ".HMI_RT_1", hmiName + "_RT_1", hmiName };
             foreach (var c in candidates)

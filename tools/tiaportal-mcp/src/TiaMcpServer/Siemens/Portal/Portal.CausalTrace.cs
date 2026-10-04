@@ -87,7 +87,7 @@ namespace TiaMcpServer.Siemens
             }
             finally
             {
-                try { Directory.Delete(tmpDir, true); } catch { }
+                try { Directory.Delete(tmpDir, true); } catch /* swallow(cleanup): temporary export cleanup must not replace causal-trace results */ { }
             }
 
             data["writeSites"] = writeSites;

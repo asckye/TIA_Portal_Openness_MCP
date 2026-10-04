@@ -49,7 +49,7 @@ namespace TiaMcpServer
             {
                 _current = _chunks.Take();
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException) /* swallow(teardown): a completed chunk collection ends the blocking stream */
             {
                 // Collection was completed
                 _completed = true;

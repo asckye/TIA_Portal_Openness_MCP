@@ -35,8 +35,8 @@ namespace TiaMcpServer.Siemens
             // No script text or connection key is logged. Logging cannot fail a read.
             var text = string.Format("[native-export] utc={0:O} operation={1} phase={2} outcome={3}{4}",
                 DateTime.UtcNow, OperationId, Phase, outcome, error == null ? "" : Environment.NewLine + error);
-            try { Console.Error.WriteLine(text); } catch { }
-            try { lock (LogGate) { File.AppendAllText(DiagnosticLog, text + Environment.NewLine); } } catch { }
+            try { Console.Error.WriteLine(text); } catch /* swallow(logging-failure): closed stderr must not fail the native export read */ { }
+            try { lock (LogGate) { File.AppendAllText(DiagnosticLog, text + Environment.NewLine); } } catch /* swallow(logging-failure): diagnostic file IO must not replace the native export result */ { }
         }
 
         internal static NativeExportCapture Read(object target, string scope, bool libraryVersion, DirectoryInfo directory)

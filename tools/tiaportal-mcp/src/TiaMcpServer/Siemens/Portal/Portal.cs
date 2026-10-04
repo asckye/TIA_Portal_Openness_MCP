@@ -42,7 +42,7 @@ namespace TiaMcpServer.Siemens
         private readonly char[] _regexChars = ['.', '^', '$', '*', '+', '?', '(', '[', '{', '\\', '|'];
 
         private TiaPortal? _portal;
-        // 2.7.40: the OS process behind _portal. Startdrive calls on a G120C can take TIA Portal V21 down with it (real project:
+        // Track the OS process: Startdrive calls on a G120C can terminate TIA V21 (2026-09-20; docs/reference/real-machine-ledger.md):
         // r2139, unwired BICO sinks, CanInsertMainTelegram); the next call then only sees EngineeringObjectDisposedException, so the
         // fault record and GetState say whether the process is still alive instead of leaving the operator to guess.
         private void RememberBoundProcess(int? processId = null)
@@ -102,7 +102,7 @@ namespace TiaMcpServer.Siemens
             PortalFailureClassifier.ProcessLostObserved += reason => {
                 if (_portal != null) _bindingFault = "Native channel fault: " + reason + "; explicit recovery required.";
             };
-            EngineeringScalarProperties.ValueRenderer ??= HmiValueJson;   // 2.7.37: WinCC.Extension value types (V21)
+            EngineeringScalarProperties.ValueRenderer ??= HmiValueJson;   // WinCC.Extension value types (V21)
         }
 
         #endregion
@@ -312,7 +312,7 @@ namespace TiaMcpServer.Siemens
             // Diagnostics do not inspect collections or silently adopt another project.
             bool alive = _portal != null;
             if (alive && _boundProcessId != null)
-            { try { alive = ProcessStart(_boundProcessId.Value) == _processStartTicks; } catch { alive = false; } }
+            { try { alive = ProcessStart(_boundProcessId.Value) == _processStartTicks; } catch /* swallow(env-probe): an unreadable bound process identity is reported as disconnected */ { alive = false; } }
             return new State { IsConnected = alive && _bindingFault == null,
                 Project = _binding?.ProjectName ?? "-", Session = _session != null ? _binding?.ProjectName ?? "-" : "-" };
         }
@@ -368,12 +368,12 @@ namespace TiaMcpServer.Siemens
         {
             if (!HasForeignProject) return null;
             try { return _project?.Name ?? "(unnamed)"; }
-            catch { return "(unnamed)"; }
+            catch /* swallow(probe-optional): an unreadable foreign project name keeps the protective unnamed placeholder */ { return "(unnamed)"; }
         }
 
         public bool OpenProject(string projectPath, bool closeForeignProject = false) => OpenProject(projectPath, closeForeignProject, "", "", "");
 
-        // 2.7.33: protected projects open through the UmacDelegate overloads (Projects.OpenWithUpgrade(file, umacDelegate)); the
+        // protected projects open through the UmacDelegate overloads (Projects.OpenWithUpgrade(file, umacDelegate)); the
         // credentials go in as UmacCredentials.Name / Type / SetPassword(SecureString) and are never logged.
         public bool OpenProject(string projectPath, bool closeForeignProject, string umacUserName, string umacPassword, string umacUserType)
         {
@@ -758,17 +758,17 @@ namespace TiaMcpServer.Siemens
 
         #endregion
 
-        // #region devices — moved to Portal.Devices.cs
-
-        // #region software — moved to Portal.Software.cs
 
 
 
 
 
-        // #region blocks/types — moved to Portal.Blocks.cs
 
-        // #region private helper — moved to Portal.Helpers.cs
+
+
+
+
+
 
 
     }

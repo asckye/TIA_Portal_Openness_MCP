@@ -10,13 +10,13 @@ using Logic = TiaMcpServer.Siemens.CfcLogic;
 
 namespace TiaMcpServer.Siemens.Services
 {
-    // Phase 6 ⑥-③ (2.7.42): typed CFC option package (Siemens.Engineering.CFC, identical on V20 / V21; replaces the reflective 2.7.x
-    // ExchangeCfcCharts). Official entry: PlcSoftware.GetService<ChartProviderS7>() (null when CFC is not installed); ChartProvider
+    // Typed CFC option package (Siemens.Engineering.CFC, identical on V20 / V21).
+    // Official entry: PlcSoftware.GetService<ChartProviderS7>() (null when CFC is not installed); ChartProvider
     // carries CompleteExport / SelectiveExport / Import (XML packed as ZIP) and the chart password functions, ChartProviderS7 adds
     // ExportInstructionData. Requirements per manual: PLC offline, protected charts are skipped by the export.
-    // 2.7.42 real project (+S1-K1, CPU 1510SP F, CFC installed but no chart folder on the PLC): the provider was provided and CompleteExport
+    // TIA V21 evidence, 2026-09-20 (docs/reference/real-machine-ledger.md): on CPU 1510SP F with CFC installed but no chart folder, CompleteExport
     // wrote an empty 484-byte ZIP, yet GetChartProtection("MCP_NONE") and ExportInstructionData(path) each took TIA Portal V21 down
-    // (NonRecoverableException, process gone). The provider has no chart enumeration, so since 2.7.43 every name-bound or PLC-bound
+    // (NonRecoverableException, process gone). The provider has no chart enumeration, so every name-bound or PLC-bound
     // action first takes the chart inventory from a CompleteExport preflight into a temporary ZIP and refuses when it is empty or the
     // chart is missing.
     internal sealed class CfcService

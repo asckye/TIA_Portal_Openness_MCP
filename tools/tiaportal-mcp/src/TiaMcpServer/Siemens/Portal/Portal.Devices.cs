@@ -216,7 +216,7 @@ namespace TiaMcpServer.Siemens
 
                     object vObj;
                     try { vObj = di.GetAttribute(info.Name); }
-                    catch { continue; }
+                    catch /* swallow(probe-optional): an unreadable device attribute is omitted from address diagnostics */ { continue; }
 
                     var v = vObj?.ToString();
                     if (string.IsNullOrWhiteSpace(v)) continue;
@@ -230,7 +230,7 @@ namespace TiaMcpServer.Siemens
                     });
                 }
             }
-            catch
+            catch /* swallow(enumerate-optional): unavailable attribute metadata leaves the collected address diagnostics intact */
             {
                 // best-effort
             }
@@ -537,7 +537,7 @@ namespace TiaMcpServer.Siemens
                 {
                     sb.AppendLine("  Before count=" + (TryGetPropertyValue(composition, "Count")?.ToString() ?? ""));
                 }
-                catch { }
+                catch /* swallow(probe-optional): the optional pre-action collection count must not prevent the action */ { }
 
                 try
                 {
@@ -570,7 +570,7 @@ namespace TiaMcpServer.Siemens
                     {
                         sb.AppendLine("  After count=" + (TryGetPropertyValue(composition, "Count")?.ToString() ?? ""));
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): the optional post-action collection count must not replace the action result */ { }
 
                     break;
                 }
@@ -703,7 +703,7 @@ namespace TiaMcpServer.Siemens
             foreach (var item in TraverseDeviceItemsAndHardware(root, root.Name))
             {
                 object? networkInterface = null;
-                try { networkInterface = TryGetNetworkInterfaceService(item.Object) ?? TryGetNetworkInterfaceFromNetworkPort(item.Object); } catch { }
+                try { networkInterface = TryGetNetworkInterfaceService(item.Object) ?? TryGetNetworkInterfaceFromNetworkPort(item.Object); } catch /* swallow(probe-optional): device items without a network service are skipped */ { }
                 if (networkInterface == null) continue;
 
                 var nodes = TryGetPropertyValue(networkInterface, "Nodes");
@@ -759,7 +759,7 @@ namespace TiaMcpServer.Siemens
         private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root, string path)
             => TraverseDeviceItemsAndHardware(root, path, new HashSet<DeviceItem>());
 
-        // 2.7.46: hardware components that are DeviceItems of their own (Comfort panel: the head item lists MCP_TP700.IE_CP_1 only
+        // hardware components that are DeviceItems of their own (Comfort panel: the head item lists MCP_TP700.IE_CP_1 only
         // in Items, and the PROFINET interface sits two levels below it) are walked as well, so the panel's Ethernet node is found
         // (real project: ConnectDeviceNodesToProfinetSubnet "Selected HMI node: <none>" on a TP700 Comfort V17).
         private static IEnumerable<(object Object, DeviceItem DeviceItem, string Path, string Kind)> TraverseDeviceItemsAndHardware(DeviceItem root, string path, HashSet<DeviceItem> visited)
@@ -802,7 +802,7 @@ namespace TiaMcpServer.Siemens
                 if (mi == null) return null;
                 return mi.MakeGenericMethod(typeof(NetworkInterface)).Invoke(target, null);
             }
-            catch
+            catch /* swallow(probe-optional): unsupported NetworkInterface service lookup returns no service */
             {
                 return null;
             }
@@ -816,7 +816,7 @@ namespace TiaMcpServer.Siemens
                 if (port == null) return null;
                 return TryGetPropertyValue(port, "Interface");
             }
-            catch
+            catch /* swallow(probe-optional): an unavailable port interface returns no network service */
             {
                 return null;
             }
@@ -855,7 +855,7 @@ namespace TiaMcpServer.Siemens
                     var value = getAttr.Invoke(target, new object[] { name });
                     result.Add($"{name}={value ?? ""}");
                 }
-                catch { }
+                catch /* swallow(probe-optional): unreadable attributes are omitted from the diagnostic summary */ { }
             }
 
             return result;
@@ -897,7 +897,7 @@ namespace TiaMcpServer.Siemens
             foreach (var suffix in serviceSuffixes)
             {
                 object? svc = null;
-                try { svc = TryGetServiceByTypeSuffix(target, suffix); } catch { }
+                try { svc = TryGetServiceByTypeSuffix(target, suffix); } catch /* swallow(probe-optional): unsupported optional services are omitted from device diagnostics */ { }
                 if (svc == null) continue;
 
                 var details = new List<string>
@@ -925,7 +925,7 @@ namespace TiaMcpServer.Siemens
                         if (value != null)
                             details.Add(propName + "=" + value);
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): unavailable service properties are omitted from device diagnostics */ { }
                 }
 
                 var memberSummaries = DescribeMembers(svc, 80)

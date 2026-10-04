@@ -3,7 +3,7 @@ using ModelContextProtocol.Server;
 using TiaMcpServer.Siemens.Services;
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // Phase 6 ⑥-③ (2.7.42): typed CFC option package (PlcSoftware.GetService<ChartProviderS7>; identical on V20 / V21).
+    // Typed CFC option package (PlcSoftware.GetService<ChartProviderS7>; identical on V20 / V21).
     [McpServerToolType]
     internal sealed class CfcTools
     {

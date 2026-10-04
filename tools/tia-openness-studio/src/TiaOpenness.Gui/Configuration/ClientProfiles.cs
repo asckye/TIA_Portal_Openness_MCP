@@ -23,7 +23,7 @@ namespace TiaMcpConfigurator
         // write another product's file, so several profiles may map onto one Client.
         public string Client { get; set; }
         public string Kind { get; set; }      // CLI / Desktop / IDE
-        // 2.7.61: whether this machine shows traces of the client (config folder, executable on PATH, install folder,
+        // whether this machine shows traces of the client (config folder, executable on PATH, install folder,
         // uninstall registry entry) and what was found - so a user on any computer sees which cards apply here.
         public bool Detected { get; set; }
         private string evidence = "";
@@ -102,7 +102,7 @@ namespace TiaMcpConfigurator
             return profiles;
         }
 
-        // ---- 2.7.61: where is the client on THIS machine? ------------------------------------------------------------
+        // ---- where is the client on THIS machine? ------------------------------------------------------------
         // Evidence, in order: the config folder / file the card writes, the executable on PATH (npm shims are .cmd), a known install
         // folder, an uninstall entry in the registry. Nothing here needs the client to be running; nothing is written.
         public static void Detect(ClientProfile profile)

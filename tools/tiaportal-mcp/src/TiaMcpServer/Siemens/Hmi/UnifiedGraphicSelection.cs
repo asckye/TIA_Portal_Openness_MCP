@@ -192,7 +192,7 @@ namespace TiaMcpServer.Siemens
                 var left = rectangles.Min(r => r[0]); var top = rectangles.Min(r => r[1]);
                 return new JsonObject { ["left"] = left, ["top"] = top, ["width"] = checked(rectangles.Max(r => r[2]) - left), ["height"] = checked(rectangles.Max(r => r[3]) - top), ["nativeGroupBounds"] = false };
             }
-            catch (OverflowException) { return null; }
+            catch (OverflowException) /* swallow(parse-fallback): overflowed persisted coordinates cannot provide approximate selection bounds */ { return null; }
         }
         // Offline comparison accepts the full array of persisted page Meta objects.
         // Require a contiguous, completed collection so missing pages cannot look unchanged.

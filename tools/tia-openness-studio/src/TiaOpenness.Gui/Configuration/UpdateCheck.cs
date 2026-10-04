@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace TiaMcpConfigurator
 {
-    // 2.8.0: the update band of the configurator. Everything that can be tested without network or UI lives here;
+    // the update band of the configurator. Everything that can be tested without network or UI lives here;
     // the update itself stays in scripts\operations\Update-Engine.ps1 (stop, download + verify, back up, replace),
     // which the configurator launches in its own PowerShell window after closing itself - the updater refuses while
     // TiaMcpConfigurator.exe runs because it replaces that file too.

@@ -34,7 +34,7 @@ namespace TiaMcpServer.Siemens
             new UserManagementRequest { Action = "unassignDeviceRight", Target = "role", NeedsRight = true, NeedsDevice = true },
             new UserManagementRequest { Action = "createDeviceRight", Target = "deviceRight", NeedsGroup = true, Creates = true },
             new UserManagementRequest { Action = "deleteDeviceRight", Target = "deviceRight", Deletes = true },
-            // 2.7.32: UmacConfigurator.ActivateAnonymousUser / DeactivateAnonymousUser (single anonymous user per protected project; no name).
+            // UmacConfigurator.ActivateAnonymousUser / DeactivateAnonymousUser (single anonymous user per protected project; no name).
             new UserManagementRequest { Action = "activateAnonymousUser", Target = "anonymousUser", NoName = true },
             new UserManagementRequest { Action = "deactivateAnonymousUser", Target = "anonymousUser", NoName = true },
         }.ToDictionary(x => x.Action, StringComparer.Ordinal);

@@ -131,7 +131,7 @@ namespace TiaMcpServer.Isolation
                 }
                 Fail("WorkerExited");
             }
-            catch (Exception) { Fail("WorkerProtocolOrPipeFailure"); }
+            catch (Exception) /* swallow(privacy): fail pending calls with the fixed protocol error without exposing worker payloads */ { Fail("WorkerProtocolOrPipeFailure"); }
         }
 
         private void Fail(string reason)

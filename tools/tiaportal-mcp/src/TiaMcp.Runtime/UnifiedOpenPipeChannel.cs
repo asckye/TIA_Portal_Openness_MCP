@@ -64,7 +64,7 @@ namespace TiaMcpServer.Runtime
             {
                 await pipe.ConnectAsync(budget);
             }
-            catch (TimeoutException)
+            catch (TimeoutException) /* swallow(teardown): a pipe connect timeout is returned as the existing channel error */
             {
                 ex.Error = $"Open Pipe '{name}' is not available (connect timed out after {budget} ms). Is WinCC Unified Runtime running on this machine with a loaded project?";
                 return;

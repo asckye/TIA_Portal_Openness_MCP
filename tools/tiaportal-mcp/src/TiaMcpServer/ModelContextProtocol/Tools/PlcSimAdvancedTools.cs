@@ -150,7 +150,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                     meta["mayHaveChanged"] = true;
                     data["executed"] = true;
-                    data["api"] = PlcSimAdvancedChannel.Describe(api);   // 2.7.52: networkMode after the action, not the call-start snapshot
+                    data["api"] = PlcSimAdvancedChannel.Describe(api);   // networkMode after the action, not the call-start snapshot
                     if (instance != null) data["stateAfter"] = PlcSimAdvancedChannel.InstanceState(instance);
                     data["registeredAfter"] = PlcSimAdvancedChannel.RegisteredInstances(api).Any(r => r.name.Equals(name, StringComparison.OrdinalIgnoreCase));
                     var stateNow = instance == null ? "" : Convert.ToString(data["stateAfter"]?["operatingState"]) ?? "";
@@ -264,7 +264,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     data["items"] = items; data["executed"] = execute;
                     meta["mayHaveChanged"] = execute && failures < values.Count;
                     meta["dataComplete"] = failures == 0;
-                    meta["operationSuccess"] = failures == 0;   // 2.7.49: "Wrote 0/1" was reported as success (real machine)
+                    meta["operationSuccess"] = failures == 0;   // A failed write must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
                     return (execute ? "Wrote " : "Preview: would write ") + (values.Count - failures) + "/" + values.Count + " tag(s) on PLCSIM Advanced instance '" + name + "'" + (execute ? "." : ". Set dryRun=false and confirmWrite=true to write.");
                 }
                 catch (Exception) { PlcSimAdvancedChannel.Forget(name); throw; }
@@ -303,7 +303,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (scenario.Mode == "singleStep")
                     {
                         originalMode = Convert.ToString(data["stateBefore"]?["operatingMode"]);
-                        data["operatingModeApplied"] = PlcSimAdvancedChannel.SetOperatingMode(api, instance, "singleStep");   // 2.7.54: SingleStep_CP on API 4+
+                        data["operatingModeApplied"] = PlcSimAdvancedChannel.SetOperatingMode(api, instance, "singleStep");   // SingleStep_CP on API 4+
                     }
                     foreach (var step in scenario.Steps)
                     {
@@ -371,7 +371,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 data["steps"] = results; data["executed"] = true;
                 data["executedSteps"] = executedSteps; data["assertionsPassed"] = passed; data["failedSteps"] = failed;
                 data["verdict"] = failed == 0 ? "passed" : "failed";
-                meta["operationSuccess"] = failed == 0;   // 2.7.49: a FAILED scenario was reported as success (real machine)
+                meta["operationSuccess"] = failed == 0;   // A failed scenario must fail the operation (TIA V21 / PLCSIM Advanced, 2026-09-21; docs/reference/real-machine-ledger.md).
                 meta["mayHaveChanged"] = true;
                 meta["dataComplete"] = executedSteps == scenario.Steps.Count;
                 return "Scenario " + (failed == 0 ? "PASSED" : "FAILED") + ": " + executedSteps + "/" + scenario.Steps.Count + " step(s) executed, " + passed + " assertion(s) passed, " + failed + " failed on PLCSIM Advanced instance '" + scenario.Instance + "'.";

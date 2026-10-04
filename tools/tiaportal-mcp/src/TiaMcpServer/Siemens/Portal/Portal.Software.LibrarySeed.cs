@@ -37,7 +37,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Partial: software. Family file split out of Portal.Software.cs (2.8.0); behavior unchanged.
+    // Library seed lookup and import support.
     public partial class Portal
     {
         #region software - LibrarySeed
@@ -99,7 +99,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(enumerate-optional): unavailable library collections leave the collected name hints intact */
             {
                 // best-effort only
             }
@@ -144,7 +144,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch
+            catch /* swallow(enumerate-optional): an unavailable candidate collection yields no matching library object */
             {
                 // ignore
             }

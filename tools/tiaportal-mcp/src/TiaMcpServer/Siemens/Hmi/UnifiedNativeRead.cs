@@ -174,7 +174,7 @@ namespace TiaMcpServer.Siemens
             finally
             {
                 // Only the unique directory created above, never a caller-provided path.
-                try { directory.Delete(true); } catch { /* File cleanup cannot imply complete project data. */ }
+                try { directory.Delete(true); } catch /* swallow(cleanup): temporary export cleanup must not replace the read result */ { /* File cleanup cannot imply complete project data. */ }
             }
         }
         private static bool Failed(JsonObject row) => row["status"]?.ToString() == "failed" || row["status"]?.ToString() == "unsupported";

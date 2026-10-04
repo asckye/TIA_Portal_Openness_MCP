@@ -25,10 +25,10 @@ namespace TiaMcpServer.ModelContextProtocol
             try { root = JsonNode.Parse(spec) ?? throw new Exception("spec parsed to null"); }
             catch (Exception ex) { throw new McpException($"PatchProject: invalid spec JSON: {ex.Message}", McpErrorCode.InvalidParams); }
 
-            string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch { return def; } }
-            bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch { return def; } }
+            string S(string key, string def = "") { try { return root[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): a non-string spec field uses its existing default */ { return def; } }
+            bool B(string key, bool def) { try { return root[key] is JsonNode n ? n.GetValue<bool>() : def; } catch /* swallow(parse-fallback): a non-boolean spec field uses its existing default */ { return def; } }
             JsonArray Arr(string key) => root[key] as JsonArray ?? new JsonArray();
-            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch { return def; } }
+            string IS(JsonNode? n, string key, string def = "") { try { return n?[key]?.GetValue<string>() ?? def; } catch /* swallow(parse-fallback): a non-string item field uses its existing default */ { return def; } }
 
             var projectPath = S("projectPath");
             if (string.IsNullOrWhiteSpace(projectPath))
@@ -55,7 +55,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     }
                 foreach (var item in Arr("sclSourceFiles"))
                 {
-                    string p; try { p = item?.GetValue<string>() ?? ""; } catch { p = ""; }
+                    string p; try { p = item?.GetValue<string>() ?? ""; } catch /* swallow(parse-fallback): a non-string source path is treated as empty and skipped */ { p = ""; }
                     if (string.IsNullOrWhiteSpace(p)) continue;
                     bool ex = File.Exists(p);
                     Step("scl", ex ? "ok" : "failed", (ex ? "exists: " : "MISSING: ") + p); if (!ex) resp.Ok = false;

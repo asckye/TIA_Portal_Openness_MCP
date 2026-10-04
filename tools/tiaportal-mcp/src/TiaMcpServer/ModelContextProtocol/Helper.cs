@@ -42,7 +42,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return value;
             // Anything else (CultureInfo, Siemens engineering objects, etc.) → string form
             try { return value.ToString(); }
-            catch { return $"<{t.Name}>"; }
+            catch /* swallow(probe-optional): an engineering value that cannot render falls back to its type name */ { return $"<{t.Name}>"; }
         }
 
         internal static ResponseBlockInfo ReadBlockInfo(PlcBlock block, PlcListingRead read, string groupPath = "")

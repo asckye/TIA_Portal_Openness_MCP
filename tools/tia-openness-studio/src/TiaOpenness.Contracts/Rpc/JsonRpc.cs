@@ -24,7 +24,7 @@ namespace TiaOpenness.Contracts.Rpc
         public const int VersionControlUnsupported = -32004;
     }
 
-    /// <summary>A JSON-RPC 2.0 request, newline-delimited on the bridge's stdin.</summary>
+    /// <summary>A JSON-RPC request, newline-delimited on the bridge's stdin.</summary>
     public class RpcRequest
     {
         [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";
@@ -33,7 +33,7 @@ namespace TiaOpenness.Contracts.Rpc
         [JsonPropertyName("params")] public JsonElement? Params { get; set; }
     }
 
-    /// <summary>A JSON-RPC 2.0 error payload.</summary>
+    /// <summary>A JSON-RPC error payload.</summary>
     public class RpcError
     {
         [JsonPropertyName("code")] public int Code { get; set; }
@@ -41,7 +41,7 @@ namespace TiaOpenness.Contracts.Rpc
         [JsonPropertyName("data"), JsonConverter(typeof(BridgeJson.PresentJsonElementConverter))] public JsonElement? Data { get; set; }
     }
 
-    /// <summary>A JSON-RPC 2.0 response, newline-delimited on the bridge's stdout.</summary>
+    /// <summary>A JSON-RPC response, newline-delimited on the bridge's stdout.</summary>
     public class RpcResponse
     {
         [JsonPropertyName("jsonrpc")] public string JsonRpc { get; set; } = "2.0";

@@ -19,7 +19,7 @@ using TiaMcpServer.ModelContextProtocol;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 3 sub-batch 4 (2.7.33): Base leftovers. Official pages: "Diagnostic interfaces on TIA Portal" (TiaPortalProcess /
+    // Session diagnostics and transactions. Official pages: "Diagnostic interfaces on TIA Portal" (TiaPortalProcess /
     // TiaPortalSession / TiaPortalProduct), "Transaction handling", "Identifying cross session object" (ObjectIdentifierProvider),
     // "Accessing normalized type identifiers" / "Export of data in OPC UA XML format" / "Creating and exporting psc file"
     // (HwUtilities), "Managing dynamic certificate settings" (CertificateManagementConfiguration / CertificateSupportedService),
@@ -45,7 +45,7 @@ namespace TiaMcpServer.Siemens
                 meta["messageData"] = new JsonObject { ["text"] = data.Text, ["detailText"] = data.DetailText };
                 meta["detailMessageData"] = new JsonArray(engineering.DetailMessageData.Select(d => (JsonNode)new JsonObject { ["text"] = d.Text, ["detailText"] = d.DetailText }).ToArray());
             }
-            catch { }
+            catch /* swallow(probe-optional): unavailable engineering detail metadata must not replace the original exception */ { }
         }
 
         // ---- portal / session diagnostics -------------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ namespace TiaMcpServer.Siemens
         private static JsonObject IdentifiedObjectRow(IEngineeringObject target)
         {
             var row = new JsonObject { ["objectClass"] = target.GetType().Name };
-            try { row["name"] = target.GetType().GetProperty("Name")?.GetValue(target)?.ToString(); } catch { }
+            try { row["name"] = target.GetType().GetProperty("Name")?.GetValue(target)?.ToString(); } catch /* swallow(probe-optional): objects without a readable Name retain their class identity */ { }
             if (target is ISystemObject systemObject) { try { row["isSystemObject"] = systemObject.IsSystemObject; } catch (Exception ex) { row["isSystemObjectError"] = ex.GetBaseException().Message; } }
             return row;
         }
@@ -170,7 +170,7 @@ namespace TiaMcpServer.Siemens
             internal TransactionScope(Portal portal, ExclusiveAccess access, Transaction transaction) { _portal = portal; _access = access; _transaction = transaction; }
             public bool CanCommit => _transaction.CanCommit;
             public bool CommitRequested => _transaction.CommitRequested;
-            public bool IsCancellationRequested { get { try { return _access.IsCancellationRequested; } catch { return true; } } }
+            public bool IsCancellationRequested { get { try { return _access.IsCancellationRequested; } catch /* swallow(native-fallback): unavailable cancellation status conservatively cancels the transaction */ { return true; } } }
             public void Commit() => _transaction.CommitOnDispose();
             public void Dispose()
             {

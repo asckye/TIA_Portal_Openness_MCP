@@ -54,7 +54,7 @@ namespace TiaMcpServer.Siemens
 
         // Native Export results are FileInfo sequences; every file must be inside the export directory and nonempty.
         // HmiTagComposition.Export(dir, name) reports "<dir>\<name>" without the ".hmi.yml" extension TIA actually writes
-        // (real project, 2.7.28), so a reported path that does not exist is resolved to the file TIA created from it.
+        // (TIA V21, 2026-09-18; docs/reference/real-machine-ledger.md), so a reported path that does not exist is resolved to the file TIA created from it.
         internal static readonly string[] NativeExtensions = { ".hmi.yml", ".hmi.js", ".yml", ".js", ".xlsx", ".xml" };
         internal static JsonArray VerifyNativeFiles(object nativeResult, DirectoryInfo dir)
         {

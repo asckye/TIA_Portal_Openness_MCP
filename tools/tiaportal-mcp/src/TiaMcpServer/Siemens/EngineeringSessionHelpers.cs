@@ -43,7 +43,7 @@ namespace TiaMcpServer.Siemens
                     }
                 }
             }
-            catch { }
+            catch /* swallow(enumerate-optional): an unavailable import result leaves the optional first-name hint unset */ { }
             return null;
         }
 
@@ -58,7 +58,7 @@ namespace TiaMcpServer.Siemens
                     var v = p.GetValue(obj);
                     if (v != null) return v;
                 }
-                catch { }
+                catch /* swallow(probe-optional): an unavailable property lets the next candidate property be tried */ { }
             }
             return null;
         }
@@ -125,7 +125,7 @@ namespace TiaMcpServer.Siemens
                             parts.Add($"{propertyName}={propValue}");
                         }
                     }
-                    catch { }
+                    catch /* swallow(probe-optional): an unreadable property is omitted from the diagnostic member summary */ { }
                 }
                 lines.Add(string.Join(" | ", parts));
             }

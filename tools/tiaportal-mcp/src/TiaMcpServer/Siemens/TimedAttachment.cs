@@ -29,7 +29,7 @@ namespace TiaMcpServer.Siemens
                         return;
                     }
                 }
-                if (acquired != null) { try { release(acquired); } catch { } }
+                if (acquired != null) { try { release(acquired); } catch /* swallow(teardown): late attachment release cannot change the timeout already returned to the caller */ { } }
             }) { IsBackground = true, Name = "TIA Openness attach" };
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 worker.SetApartmentState(ApartmentState.MTA);

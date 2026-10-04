@@ -105,7 +105,7 @@ namespace TiaMcpServer.Siemens
             public string DbMemberPath = "", PlcTagPath = "", ConnectOption = "Default";
             public bool HasConnectOption;
             public int InputBitAddress = -1, OutputBitAddress = -1, Address = -1, ChannelIndex = -1;
-            // 2.7.36: Connect(Channel) target - the exact channel (ChannelComposition.Find(type, ioType, number)) of the device item.
+            // Connect(Channel) target - the exact channel (ChannelComposition.Find(type, ioType, number)) of the device item.
             public string ChannelType = "", ChannelIoType = ""; public int ChannelNumber = -1;
         }
         internal static ConnectionTarget ParseConnectionTarget(string json)

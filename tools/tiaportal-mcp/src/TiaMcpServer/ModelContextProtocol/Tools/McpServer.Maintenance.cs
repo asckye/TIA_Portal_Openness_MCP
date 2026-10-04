@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace TiaMcpServer.ModelContextProtocol
 {
-    // 2.7.57: engine maintenance - the session state PreflightToolCall reads, and CheckForUpdate.
+    // engine maintenance - the session state PreflightToolCall reads, and CheckForUpdate.
     // The offline suite links this file only to exercise root lookup; session and HTTP operations are not invoked.
     public static partial class McpServer
     {

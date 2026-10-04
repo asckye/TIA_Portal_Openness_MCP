@@ -180,7 +180,7 @@ namespace TiaOpenness.Core.Inspection
                 // Only diff --no-index uses exit 1 as the normal "different" result.
                 return result.DataComplete && (result.ExitCode == 0 || allowDifferenceExit && result.ExitCode == 1);
             }
-            catch (Exception) { return false; }
+            catch (Exception) /* swallow(env-probe): an unavailable Git diff is reported as incomplete output */ { return false; }
         }
     }
 }

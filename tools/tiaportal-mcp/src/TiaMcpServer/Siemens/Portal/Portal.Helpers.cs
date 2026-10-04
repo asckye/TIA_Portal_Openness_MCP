@@ -514,7 +514,7 @@ namespace TiaMcpServer.Siemens
                             var sc = it.GetService<SoftwareContainer>();
                             if (sc != null) return sc;
                         }
-                        catch { }
+                        catch /* swallow(probe-optional): an item without a readable SoftwareContainer lets the search continue */ { }
                     }
 
                     try
@@ -547,7 +547,7 @@ namespace TiaMcpServer.Siemens
         private static string? TryGetDeviceItemName(DeviceItem item)
         {
             try { return item.Name; }
-            catch { return null; }
+            catch /* swallow(probe-optional): a stale device proxy must not replace the original lookup error */ { return null; }
         }
 
         private static string SoftwareLookupGroupName(DeviceUserGroup group) => group.Name;
@@ -952,7 +952,7 @@ namespace TiaMcpServer.Siemens
             {
                 try
                 {
-                    //group = (PlcBlockGroup) group.Parent;
+
                     if (group is PlcBlockSystemGroup systemGroup)
                     {
                         // do not get parent for system group
@@ -961,7 +961,7 @@ namespace TiaMcpServer.Siemens
 
                     nullableGroup = nullableGroup.Parent as PlcBlockGroup;
                 }
-                catch (Exception)
+                catch (Exception) /* swallow(enumerate-optional): an unavailable block-group parent ends the best-effort path walk */
                 {
                     // Handle any exceptions that may occur while accessing the parent
                     break;
@@ -990,7 +990,7 @@ namespace TiaMcpServer.Siemens
             {
                 try
                 {
-                    //group = (PlcTypeGroup) group.Parent;
+
                     if (group is PlcTypeSystemGroup systemGroup)
                     {
                         // do not get parent for system group
@@ -999,7 +999,7 @@ namespace TiaMcpServer.Siemens
 
                     nullableGroup = nullableGroup.Parent as PlcTypeGroup;
                 }
-                catch (Exception)
+                catch (Exception) /* swallow(enumerate-optional): an unavailable type-group parent ends the best-effort path walk */
                 {
                     // Handle any exceptions that may occur while accessing the parent
                     break;
@@ -1033,7 +1033,7 @@ namespace TiaMcpServer.Siemens
                             continue; // Skip this device if it doesn't match the pattern
                         }
                     }
-                    catch (Exception)
+                    catch (Exception) /* swallow(parse-fallback): an invalid regex or unreadable device name skips this candidate */
                     {
                         // Invalid regex pattern, skip this device
                         continue;
@@ -1333,7 +1333,7 @@ namespace TiaMcpServer.Siemens
                 var v = p?.GetValue(o);
                 return v?.ToString();
             }
-            catch
+            catch /* swallow(probe-optional): objects without a readable Name yield no name hint */
             {
                 return null;
             }
@@ -1383,7 +1383,7 @@ namespace TiaMcpServer.Siemens
             {
                 Type[] types;
                 try { types = asm.GetTypes(); }
-                catch { continue; }
+                catch /* swallow(probe-optional): assemblies with unloadable types cannot supply the optional service type */ { continue; }
 
                 foreach (var t in types)
                 {
@@ -1408,7 +1408,7 @@ namespace TiaMcpServer.Siemens
                 var g = mi.MakeGenericMethod(serviceType);
                 return g.Invoke(target, null);
             }
-            catch
+            catch /* swallow(probe-optional): unsupported reflective GetService lookup returns no service */
             {
                 return null;
             }

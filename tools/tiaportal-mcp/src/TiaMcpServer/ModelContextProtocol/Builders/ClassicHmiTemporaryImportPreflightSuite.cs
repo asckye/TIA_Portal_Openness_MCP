@@ -101,12 +101,12 @@ namespace TiaMcpServer.ModelContextProtocol
                     .Select(g =>
                     {
                         try { return g.Translate(typeof(NTAccount)).Value; }
-                        catch { return g.Value; }
+                        catch /* swallow(env-probe): an unresolved account name falls back to its SID */ { return g.Value; }
                     })
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .ToArray() ?? Array.Empty<string>();
             }
-            catch
+            catch /* swallow(env-probe): unavailable identity groups leave the preflight membership list empty */
             {
                 groupNames = Array.Empty<string>();
             }

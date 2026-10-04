@@ -47,12 +47,12 @@ namespace TiaMcpServer.ModelContextProtocol
                 if (fix)
                 {
                     try { groupOk = await Siemens.Openness.IsUserInGroup(); }
-                    catch { groupOk = false; }
+                    catch /* swallow(env-probe): a failed membership check or repair is reported as groupOk=false */ { groupOk = false; }
                 }
                 else
                 {
                     try { groupOk = Siemens.Openness.IsUserInGroupNoFix(); }
-                    catch { groupOk = false; }
+                    catch /* swallow(env-probe): unavailable membership information is reported as groupOk=false */ { groupOk = false; }
                 }
                 checks.Add(new DoctorCheck
                 {

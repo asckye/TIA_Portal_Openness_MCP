@@ -608,12 +608,12 @@ namespace TiaOpenness.Openness
 
         private static string SafeName(Workspace workspace)
         {
-            try { return workspace.Name; } catch (Exception) { return "?"; }
+            try { return workspace.Name; } catch (Exception) /* swallow(probe-optional): a stale workspace name uses the diagnostic placeholder */ { return "?"; }
         }
 
         private static string SafeRoot(Workspace workspace)
         {
-            try { return workspace.RootPath?.FullName ?? "?"; } catch (Exception) { return "?"; }
+            try { return workspace.RootPath?.FullName ?? "?"; } catch (Exception) /* swallow(probe-optional): an unavailable workspace root uses the diagnostic placeholder */ { return "?"; }
         }
 
         private static string SafeLanguage(Workspace workspace)

@@ -92,7 +92,7 @@ namespace TiaMcpServer.Siemens
             if (names.Length > 64 || names.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("Invalid item path.");
             foreach (var name in names)
             {
-                // 2.7.46: fall back to the hardware-component association (Items) - a Comfort panel's head item reaches its
+                // fall back to the hardware-component association (Items) - a Comfort panel's head item reaches its
                 // IE_CP_1 only that way, an S7-1500 rail reaches its plugged modules only that way (real project).
                 var next = EngineeringGroupOperations.Find(current.DeviceItems, name)
                     ?? current.Items.Cast<object?>().FirstOrDefault(i => i is DeviceItem d && string.Equals(d.Name, name, StringComparison.Ordinal))

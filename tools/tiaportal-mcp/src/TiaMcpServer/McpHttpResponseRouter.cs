@@ -135,7 +135,7 @@ namespace TiaMcpServer
                         if (response == null || response["method"] != null) continue;
                         wireId = response["id"]?.GetValue<string>();
                     }
-                    catch { continue; }
+                    catch /* swallow(parse-fallback): malformed response frames cannot be matched to a pending request */ { continue; }
                     if (wireId == null) continue;
 
                     lock (_stateLock)

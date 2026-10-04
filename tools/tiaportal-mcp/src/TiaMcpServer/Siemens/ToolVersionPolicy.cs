@@ -29,7 +29,7 @@ namespace TiaMcpServer.Siemens
         {
             TiaVersionDescriptor version;
             try { version = TiaVersionCatalog.Get(versionKey); }
-            catch (ArgumentException) { return "Unknown TIA release identity: " + versionKey + "."; }
+            catch (ArgumentException) /* swallow(parse-fallback): an unknown release key returns the existing policy rejection */ { return "Unknown TIA release identity: " + versionKey + "."; }
             if (!version.IsFullEngine) return version.DisplayName + " uses the separate PLC foundation catalog; full-engine tools are unavailable.";
             if (string.IsNullOrWhiteSpace(name)) return "A registered tool name is required.";
             if (version.Key == "20" && V21Only.TryGetValue(name, out var api))

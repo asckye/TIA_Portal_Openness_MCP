@@ -8,7 +8,7 @@ namespace TiaMcpServer.Siemens
         {
             if (openedProject == null || currentProject == null) return false;
             try { return ReferenceEquals(openedProject, currentProject) || openedProject.Equals(currentProject); }
-            catch { return false; } // A stale proxy never grants permission to close another project.
+            catch /* swallow(native-fallback): a stale proxy never grants permission to close another project */ { return false; } // A stale proxy never grants permission to close another project.
         }
 
         internal static void Release(bool ownsProject, Action close, Action detach, Action<Exception> report)

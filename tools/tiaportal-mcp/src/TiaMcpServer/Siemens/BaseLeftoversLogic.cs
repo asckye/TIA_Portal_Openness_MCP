@@ -5,8 +5,8 @@ using System.Text.Json.Nodes;
 
 namespace TiaMcpServer.Siemens
 {
-    // Phase 3 sub-batch 4 (2.7.33): pure logic (no Siemens dependency) for the Base leftovers - portal / session
-    // diagnostics, transfer routes and R/H targets, hardware utilities (module information, OPC UA and PSC export),
+    // Validation for portal / session diagnostics, object identity, transactions and credentials.
+    // Native object access stays in the engine so it remains covered by weaving.
     // device service objects (web applications, telecontrol data points, dynamic certificate management), object
     // identifiers, show-in-editor, transactions and credential-bearing open / online requests.
     internal static class BaseLeftoversLogic
@@ -124,7 +124,7 @@ namespace TiaMcpServer.Siemens
             if (calls.Length == 0) throw new ArgumentException("At least one tool call is required.");
             HardwareServicesLogic.RequireConfirmation(confirmChange, "confirmChange", dryRun);
         }
-        // Inside a real transaction every call must run for real or the transaction is pointless. 2.7.33 real project: only an
+        // Every transaction call must execute: TIA V21 evidence, 2026-09-19 (docs/reference/real-machine-ledger.md): only an
         // existing dryRun key was flipped, so calls without one ran as previews (tool default true) while the transaction still
         // reported committed=true; the key is now written unconditionally (CallTool ignores it on tools without a dryRun parameter).
         internal static string ForceRealExecution(string argumentsJson)
@@ -151,7 +151,7 @@ namespace TiaMcpServer.Siemens
             if (!string.IsNullOrEmpty(userName) && string.IsNullOrEmpty(password)) throw new ArgumentException("userName needs a password (online authentication for UMAC-protected PLCs).");
             if (!string.IsNullOrEmpty(userType)) { RequireOneOf(userType, OnlineUserTypes, "userType"); if (string.IsNullOrEmpty(userName) && userType != "None" && userType != "AnonymousUser" && userType != "PasswordOnly") throw new ArgumentException("userType " + userType + " needs a userName."); }
         }
-        // 2.7.52 (real machine, PLCSIM Advanced MCP_SIM via Softbus): every first online contact with an S7-1500 FW >= 2.9 raises
+        // TIA V21 / PLCSIM Advanced via Softbus, 2026-09-21 (docs/reference/real-machine-ledger.md): first contact with an S7-1500 FW >= 2.9 raises
         // TlsVerificationConfiguration on ConnectionConfiguration.OnlineLegitimation ("The device is not trusted. Please check the
         // certificate." when nobody answers). The official answer is CurrentSelection = Trusted; the decision is the caller's
         // (trustDeviceCertificate) and the selection TIA reported before it is kept for the record.
