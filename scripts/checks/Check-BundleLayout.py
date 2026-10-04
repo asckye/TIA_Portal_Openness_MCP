@@ -79,9 +79,11 @@ def check(root, tracked):
         target = root / path
         if not target.exists():
             errors.append('Missing resource: ' + path)
-        in_tree = path in tracked if not target.is_dir() else any(p.startswith(path + '/') for p in tracked)
-        if not in_tree:
-            errors.append('Resource is not in the Git file set: ' + path)
+        # An extracted or staged bundle has no Git work tree; existence and validation still apply there.
+        if tracked is not None:
+            in_tree = path in tracked if not target.is_dir() else any(p.startswith(path + '/') for p in tracked)
+            if not in_tree:
+                errors.append('Resource is not in the Git file set: ' + path)
         if path not in validated:
             errors.append('Resource is not checked by Validate-Bundle: ' + path)
     return len(paths), errors
@@ -148,12 +150,26 @@ class LayoutChecks(unittest.TestCase):
             self.assertIn('Missing resource: manifest/delivery.json', check(root, tracked)[1])
             tracked.remove('templates/fixture.md')
             self.assertIn('Resource is not in the Git file set: templates', check(root, tracked)[1])
+            bundle_errors = check(root, None)[1]
+            self.assertFalse(any('Git file set' in error for error in bundle_errors))
+            self.assertIn('Missing resource: manifest/delivery.json', bundle_errors)
             validator = root / VALIDATOR
             validator.write_text(validator.read_text(encoding='utf-8').replace("    'templates'", "    'unrelated'"), encoding='utf-8')
             self.assertIn('Resource is not checked by Validate-Bundle: templates', check(root, tracked)[1])
         finally:
             self.assertEqual(root.resolve().parent, parent.resolve())
             shutil.rmtree(root)
+
+
+def git_tracked(root):
+    """Tracked files when root is the top of a Git work tree; None for an extracted or staged bundle."""
+    try:
+        top = subprocess.run(['git', '-C', str(root), 'rev-parse', '--show-toplevel'], capture_output=True, text=True)
+    except OSError:
+        return None
+    if top.returncode != 0 or Path(top.stdout.strip()).resolve() != Path(root).resolve():
+        return None
+    return set(subprocess.check_output(['git', '-C', str(root), 'ls-files', '-z']).decode('utf-8').split('\0'))
 
 
 def main():
@@ -165,7 +181,7 @@ def main():
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(LayoutChecks))
         return int(not result.wasSuccessful())
     try:
-        tracked = set(subprocess.check_output(['git', '-C', str(args.root), 'ls-files', '-z']).decode('utf-8').split('\0'))
+        tracked = git_tracked(args.root)
         count, errors = check(args.root, tracked)
         for error in errors:
             print('FAIL: ' + error)
