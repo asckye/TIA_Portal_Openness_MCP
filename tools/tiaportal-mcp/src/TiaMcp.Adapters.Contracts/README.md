@@ -1,8 +1,13 @@
-# Adapter contracts (steps B and D)
+# Adapter contracts (steps B, D and G)
 
 Targets: net48 and net8.0. No Siemens or JSON dependency. Existing declarations keep
-their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. Hardware, VCI
-and HMI facets remain markers and return null. The worker still calls the existing engine.
+their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. The worker still calls the existing engine.
+Step G adds `IStudioSession` and fills hardware (device listing), VCI and HMI export
+facets for the opt-in `StudioAdapter`. The Foundation adapter continues returning
+null for these surfaces. [Adapter documentation](../TiaMcp.Adapters/README.md)
+describes the separate Studio policy, release capabilities and STA ownership.
+The `Studio/` values preserve the original Studio DTO shapes in a distinct
+namespace; Core and bridge keep using their original DTOs until the host switch.
 
 ## Moved declarations
 

@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,9 +13,20 @@ using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.ExternalSources;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Contracts.Studio;
+#else
 using TiaOpenness.Contracts.Models;
+#endif
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
+using ITiaSession = TiaMcp.Adapters.Contracts.IStudioSession;
+#else
 using TiaOpenness.Core.Abstractions;
+#endif
+#if !TIA_ADAPTER_INTERNAL_VERSIONING
 using TiaOpenness.Core.Inspection;
+#endif
 
 namespace TiaOpenness.Openness
 {
@@ -626,6 +638,13 @@ namespace TiaOpenness.Openness
 
         // ---- inspection ----------------------------------------------------
 
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+        public string FindPlcDeviceId(string deviceId)
+        {
+            PlcContext plc;
+            return TryGetPlc(deviceId, out plc) ? plc.DeviceId : null;
+        }
+#else
         public InspectionReport Inspect(string deviceId, InspectionOptions options)
         {
             PlcContext plc;
@@ -641,6 +660,8 @@ namespace TiaOpenness.Openness
 
             return InspectionEngine.Run(plc.DeviceId, blocks, options, referenced);
         }
+
+#endif
 
         // ---- plumbing ------------------------------------------------------
 

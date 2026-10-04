@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,11 @@ using Siemens.Engineering.SW;
 using Siemens.Engineering.SW.Blocks;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Types;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Contracts.Studio;
+#else
 using TiaOpenness.Contracts.Models;
+#endif
 
 namespace TiaOpenness.Openness
 {

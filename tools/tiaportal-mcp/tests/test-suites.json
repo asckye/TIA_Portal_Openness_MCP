@@ -33,7 +33,7 @@
   },
   "foundation": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 6594,
+    "minimumPassed": 6740,
     "maximumSkipped": 1,
     "arguments": [
       "--filter",
@@ -42,7 +42,7 @@
   },
   "foundation-api": {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/TiaMcpServer.LegacyHostTests.csproj",
-    "minimumPassed": 7660,
+    "minimumPassed": 7806,
     "maximumSkipped": 1,
     "arguments": []
   },
@@ -84,9 +84,21 @@
   },
   "adapter-contracts": {
     "project": "tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-    "minimumPassed": 232,
+    "minimumPassed": 329,
     "maximumSkipped": 0,
-    "arguments": []
+    "arguments": [],
+    "platforms": {
+      "linux": {
+        "minimumPassed": 326,
+        "maximumSkipped": 3,
+        "reason": "Three new Studio STA ownership/reentry checks require Windows."
+      },
+      "macos": {
+        "minimumPassed": 326,
+        "maximumSkipped": 3,
+        "reason": "Three new Studio STA ownership/reentry checks require Windows."
+      }
+    }
   },
   "worker-channel": {
     "project": "tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/TiaMcp.WorkerChannel.Tests.csproj",

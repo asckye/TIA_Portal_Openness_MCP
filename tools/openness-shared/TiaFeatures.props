@@ -1,7 +1,7 @@
 <Project>
   <!-- Exact release keys: 14sp1, 15.1, 16, 17, 18, 19, 20, 21.
-       Each row owns one feature's release range. Profiles preserve each consumer's
-       existing compiler symbols; a release key alone must not enable other profiles.
+       Each row owns one feature's release range. Profiles select each consumer's
+       compiler symbols; Adapter also compiles the Studio native sources.
        Pipe delimiters keep service/minor releases distinct from major-version aliases. -->
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|15.1|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_SOURCE_RESULTS</DefineConstants>
@@ -14,7 +14,7 @@
     <DefineConstants Condition="$([System.String]::Copy('|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_HARDWARE_CATALOG</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);PLC_DOCUMENT_EXPORT</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Studio'">
+  <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Studio' Or '$(TiaFeatureProfile)' == 'Adapter'">
     <DefineConstants Condition="$([System.String]::Copy('|16|17|18|19|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|16|17|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_INITIAL</DefineConstants>
     <DefineConstants Condition="$([System.String]::Copy('|20|21|').Contains('|$(TiaReleaseKey)|'))">$(DefineConstants);STUDIO_VCI_MODERN</DefineConstants>

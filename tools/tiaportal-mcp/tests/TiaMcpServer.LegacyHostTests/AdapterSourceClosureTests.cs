@@ -31,7 +31,8 @@ internal static class AdapterSourceClosureTests
             check(!code.Values.Any(text=>Regex.IsMatch(text,@"\b(?:class|enum)\s+"+Regex.Escape(type.Name)+@"\b")),"Moved DTO is not recompiled in adapters: "+type.Name);
         HashSet<string> Methods(IEnumerable<string> texts)=>Regex.Matches(string.Join("\n",texts),@"public\s+(?:[\w<>?\[\],]+\s+)+([A-Za-z]+)\s*\(").Select(m=>m.Groups[1].Value).ToHashSet(StringComparer.Ordinal);
         // Facade forwarding must not hide an omitted engine implementation.
-        var engineCode=code.Where(x=>!x.Key.EndsWith("/OpennessAdapter.cs",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
+        var engineCode=code.Where(x=>!x.Key.EndsWith("/OpennessAdapter.cs",StringComparison.Ordinal)
+            && !x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
         var all=Methods(engineCode.Values);
         foreach(var op in WorkerOperations.Names) check(all.Contains(op),"Worker operation exists in actual adapter source inventory: "+op);
         // Simulated source omissions must be caught for every operation-bearing module.
@@ -41,6 +42,18 @@ internal static class AdapterSourceClosureTests
             if(owned.Length==0) continue;
             var without=Methods(engineCode.Where(x=>x.Key!=entry.Key).Select(x=>x.Value));
             check(owned.Any(op=>!without.Contains(op)),"Omitting operation module is detected: "+entry.Key);
+        }
+        var studioCode=code.Where(x=>x.Key.Contains("/Native/Studio/",StringComparison.Ordinal)
+            && !x.Key.EndsWith("/StudioAdapter.cs",StringComparison.Ordinal)).ToDictionary(x=>x.Key,x=>x.Value);
+        foreach(var operation in new[]{"Connect","Disconnect","GetState","OpenProject","GetProjectInfo","SaveProject","CloseProject",
+            "ListDevices","FindPlcDeviceId","ListBlocks","ExportBlocks","ImportBlocks","ListTagTables","ListTags","CompileDevice",
+            "ListWorkspaces","CreateWorkspace","MapProject","GetStatus","Sync"})
+            check(Methods(studioCode.Values).Contains(operation),"Studio operation exists in native inventory: "+operation);
+        foreach(var entry in studioCode)
+        {
+            var owned=Methods(new[]{entry.Value});
+            var without=Methods(studioCode.Where(x=>x.Key!=entry.Key).Select(x=>x.Value));
+            check(owned.Except(without).Any(),"Omitting Studio native module is detected: "+entry.Key);
         }
     }
     // Evaluation only: no targets, restore, native compiler, worker, or Siemens assembly load.
@@ -82,6 +95,13 @@ internal static class AdapterSourceClosureTests
             check(Paths("ProjectReference").Count(path=>comparer.Equals(path,Path.Combine(contracts,"TiaMcp.Adapters.Contracts.csproj")))==1,"Adapter references Contracts exactly once: "+release);
             check(!compile.Any(path=>path.StartsWith(contracts+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase)),"Adapter does not source-link contract DTOs: "+release);
             check(result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';').Contains("TIA_ADAPTER_INTERNAL_VERSIONING"),"Adapter version catalog copies are internal: "+release);
+            check(!Paths("ProjectReference").Any(path=>path.Contains("TiaOpenness.Core",StringComparison.Ordinal)
+                || path.Contains("TiaOpenness.Contracts",StringComparison.Ordinal)),"Studio native code does not depend on legacy host/JSON contracts: "+release);
+            var key=release.Substring("Adapter.".Length).Replace(".csproj", "", StringComparison.Ordinal);
+            var defines=result.RootElement.GetProperty("Properties").GetProperty("DefineConstants").GetString()!.Split(';');
+            check(defines.Contains("STUDIO_VCI")==!new[]{"14sp1","15.1"}.Contains(key),"Studio VCI release support: "+release);
+            check(defines.Contains("STUDIO_VCI_INITIAL")==new[]{"16","17"}.Contains(key),"Studio initial VCI support: "+release);
+            check(defines.Contains("STUDIO_VCI_MODERN")==new[]{"20","21"}.Contains(key),"Studio modern VCI support: "+release);
             check(expected.SetEquals(sources),"Evaluated adapter inventory matches explicit allowlist: "+release);
             check(sources.Length==sources.Distinct(comparer).Count(),"Evaluated adapter inventory has no duplicates: "+release);
             foreach(var source in expected)
@@ -89,5 +109,16 @@ internal static class AdapterSourceClosureTests
             foreach(var name in new[]{"PlcDeviceAdd.cs","PlcDeviceAddPolicy.cs"})
                 check(compile.Any(path=>comparer.Equals(path,Path.Combine(src,"TiaMcp.Adapters","Native","Hardware",name))),"Device-add source survives MSBuild item evaluation: "+release+" / "+name);
         }
+        var studio=Path.GetFullPath(Path.Combine(src,"../../tia-openness-studio/src/TiaOpenness.Openness"));
+        var legacyProps=XDocument.Load(Path.Combine(studio,"Studio.Common.props"));
+        var legacySources=legacyProps.Descendants("Compile").Select(x=>(string)x.Attribute("Include")!).ToArray();
+        foreach(var name in new[]{"EngineeringExtensions","HmiNavigator","OpennessSession","OpennessVersionControl","PlcNavigator"})
+        {
+            check(!File.Exists(Path.Combine(studio,name+".cs")),"Studio native source has one owner: "+name);
+            check(legacySources.Count(path=>path.EndsWith("/TiaMcp.Adapters/Native/Studio/"+name+".cs",StringComparison.Ordinal))==1,
+                "Legacy Studio links the moved source exactly once: "+name);
+        }
+        check(legacySources.Contains("../OpennessSessionFactory.cs"),"Legacy Studio factory remains in the original assembly");
+        check(!legacySources.Any(path=>path.EndsWith("/StudioAdapter.cs",StringComparison.Ordinal)),"Legacy Studio does not switch to the woven profile yet");
     }
 }

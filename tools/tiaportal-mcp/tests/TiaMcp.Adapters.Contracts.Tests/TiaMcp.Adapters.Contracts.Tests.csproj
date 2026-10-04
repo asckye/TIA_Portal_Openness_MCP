@@ -3,8 +3,11 @@
   <PropertyGroup><TargetFramework>net8.0</TargetFramework><GenerateProgramFile>true</GenerateProgramFile><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
+    <ProjectReference Include="../../../tia-openness-studio/src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj" />
+    <Compile Include="../../src/TiaMcp.Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
     <None Update="GoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="StudioGoldenWire.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

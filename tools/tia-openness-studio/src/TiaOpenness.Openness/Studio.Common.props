@@ -14,7 +14,13 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../TiaOpenness.Core/TiaOpenness.Core.csproj" />
-    <Compile Include="../*.cs" /><Compile Include="StudioRelease.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/EngineeringExtensions.cs" Link="EngineeringExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/HmiNavigator.cs" Link="HmiNavigator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs" Link="OpennessSession.cs" />
+    <Compile Include="../OpennessSessionFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessVersionControl.cs" Link="OpennessVersionControl.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../../../tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/PlcNavigator.cs" Link="PlcNavigator.cs" />
+    <Compile Include="StudioRelease.cs" />
     <NativeApi Include="$(SiemensEngineeringDirectory)/Siemens.Engineering*.dll" />
     <Reference Include="@(NativeApi)"><Private>false</Private><SpecificVersion>true</SpecificVersion></Reference>
   </ItemGroup>

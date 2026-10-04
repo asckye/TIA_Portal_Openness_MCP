@@ -53,6 +53,13 @@
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Hardware/PlcDeviceAdd.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Hardware/PlcDeviceAddPolicy.cs" />
     <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Session/OpennessAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/EngineeringExtensions.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/HmiNavigator.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessSession.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/OpennessVersionControl.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/PlcNavigator.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Native/Studio/StudioAdapter.cs" />
+    <AdapterSource Include="$(AdapterSourceRoot)/TiaMcp.Adapters/Policy/StudioThreadGuard.cs" />
     <Compile Include="@(AdapterSource)" Link="NativeShared/%(Filename)%(Extension)" />
     <Compile Include="$(MSBuildThisFileDirectory)../../../../openness-shared/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.Shared.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)../Diagnostics/NativeCallDiagnostics.cs" Link="Diagnostics/NativeCallDiagnostics.cs" />

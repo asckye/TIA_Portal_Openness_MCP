@@ -1,7 +1,7 @@
 # Explicit release adapters and PLC foundation workers
 
-These eight peer projects compile the existing real PLC foundation subset into
-separate typed libraries. V20 and V21 have exactly the same project structure as
+These eight peer projects compile the PLC foundation subset and Studio native
+extension surfaces into separate typed libraries. V20 and V21 have exactly the same project structure as
 the earlier releases. The foundation host publishes the matching subset for V14 SP1–V19,
 while V20/V21 retain their full engines. Each worker references exactly one selected adapter.
 Use `scripts/build/Build-MultiVersion.ps1` from the repository root to build, test and deploy
@@ -9,9 +9,58 @@ the eight-version distribution. Native TIA acceptance remains pending.
 
 The native source allowlist is shared by source, not by an API-bound binary.
 It is intentionally transitional: `PlcReadContracts.cs` still contains typed
-implementation and the existing PLC feature constants remain internal to this
-subset. No full eight-copy source fork is introduced. Contract extraction and
-per-feature native implementation migration remain separate work.
+implementation. Version symbols come from `tools/openness-shared/TiaFeatures.props`.
+No full eight-copy source fork is introduced; plain DTOs and interfaces live in
+`TiaMcp.Adapters.Contracts`.
+
+## Studio extension surfaces (step G, part 1)
+
+`StudioAdapter` is an opt-in `IOpennessAdapter` implementation for the bridge's
+existing behavior. It owns one `Native/Studio/OpennessSession`; all its facets share
+that session and its project/index/VCI caches. The caller installs the exact SDK
+resolver before construction and creates/uses/disposes the adapter on the bridge's
+STA. Every operation and VCI access checks the owning thread and rejects reentry,
+including calls from synchronous progress callbacks. Nothing switches apartments.
+Construction and disconnected state reads do not attach to or launch TIA.
+
+| Surface | Studio operations |
+|---|---|
+| `IStudioSession` | Attach-or-launch, project lifecycle, PLC/HMI block listing and export, PLC import, tags and compile |
+| `IHardware` | Device listing only |
+| `IHmiExport` | Item listing and XML export through the existing device dispatch |
+| `IVersionControl` | Workspace listing/creation, mapping, status and synchronization |
+
+The separate session profile preserves Studio's device-name and block-path lookup,
+results, overwrite behavior, exception text and callback order; these differ from
+Foundation's `IPortalSession`, `IPlcProgram` and `IPlcData`. Those three facets are
+null on `StudioAdapter`. Conversely, the Foundation `OpennessAdapter` still has
+null Studio/hardware/HMI/VCI facets and unchanged capabilities. `ExportBlocks`
+with `ExportFormat.Source` keeps the original `GenerateSource` block/type overloads
+and `GenerateOptions.None`; `AdapterCapabilities.GenerateSource` advertises it.
+The host still owns error mapping, cancellation and timeouts.
+
+`StudioSession`, `Hardware`, `HmiExport` and `GenerateSource` are available in all
+eight builds. `VersionControl` is compiled for 16–21, `VersionControlInitial` for
+16–17, and `VersionControlModern` for 20–21. Versions 18–19 use the existing legacy
+VCI variant. The VCI facet is null until the open project supplies its service;
+the capability flag describes compiled support, not a native service probe.
+
+The five moved source files retain their native method bodies. Conditional imports
+select the new `Contracts.Studio` values inside adapters and the unchanged original
+Studio DTOs inside `StudioOpenness.V*`. The legacy `Studio.Common.props` explicitly
+links the moved files and retains `OpennessSessionFactory`/`StudioRelease` locally.
+Core, bridge, GUI and packaging still load the legacy, unwoven assemblies. No product
+path instantiates `StudioAdapter` yet. Inspection rules and Git workspace diff stay
+in Core; the legacy `Inspect` method is compiled only for that existing host. The
+new profile supplies `FindPlcDeviceId` followed by `ListBlocks(deviceId, false)`
+for inspection: these reuse the same `TryGetPlc` then `ListBlocks` sequence, return
+the canonical device name, and let the host retain empty inspection for non-PLCs.
+
+The 23 Studio DTO/enum types preserve their original member order, defaults and
+enum values in a distinct namespace. They have no Siemens, JSON or Studio host
+dependency. 68 frozen JSON samples come from the unchanged Studio DTOs with the
+bridge's existing string-enum/null settings. Foundation DTOs and wire fixtures are
+unchanged.
 
 ## Build
 
@@ -106,3 +155,38 @@ subdirectories. The journal directory must not already exist. These checks
 exercise diagnostic behavior and inspect eight worker/adapter PE files without
 loading them. The project contains no Siemens references, replacement SDK, or
 native tests.
+
+## Studio migration verification
+
+Run `foundation`, `foundation-api` (with `TIA_MCP_TEST_PUBLIC_API_ROOT`) and
+`adapter-contracts` through `scripts/checks/Test-DotnetSuites.py`. The new checks
+raise their minimums by 146, 146 and 97 respectively, to 6,740, 7,806 and 329.
+The Foundation minimum excludes the 16 optional SDK XSD checks. Source closure
+checks cover all eight evaluated allowlists, Studio VCI defines, missing native
+modules, and legacy source links. Contract tests cover shapes, golden JSON and STA
+ownership/reentry without loading Siemens.
+
+For the initial migration, the same weaver's `inventory` on each original Studio
+DLL and `verify` on each original/new adapter produced the following exact multisets.
+Each cell is **original adapter + original Studio = new adapter**. The full site
+comparison includes opcode/category/member and normalizes only the new DTO/delegate
+namespaces; the Siemens comparison needs no normalization. Every original adapter
+site retains its caller, offset, opcode, member and category.
+
+| Release | All woven sites | Siemens member references |
+|---|---|---|
+| 14sp1 | 1174 + 279 = 1453 | 393 + 106 = 499 |
+| 15.1 | 1201 + 279 = 1480 | 411 + 106 = 517 |
+| 16 | 1206 + 374 = 1580 | 416 + 162 = 578 |
+| 17 | 1233 + 374 = 1607 | 437 + 162 = 599 |
+| 18 | 1233 + 373 = 1606 | 437 + 161 = 598 |
+| 19 | 1289 + 373 = 1662 | 473 + 161 = 634 |
+| 20 | 1381 + 371 = 1752 | 522 + 157 = 679 |
+| 21 | 1378 + 371 = 1749 | 519 + 157 = 676 |
+
+`Build-Studio.ps1` preserves the legacy assembly identities and deployment layout.
+Comparing all legacy method bodies (instructions, operands, locals and exception
+handlers) gives zero differences: 207 methods for each of 14sp1/15.1 and 252 for
+each of 16–21. Moving source files changes build/debug identity and binary hashes;
+it does not imply byte-identical DLLs. Core and GUI retain 118 and 1,407 passing
+xunit tests. These are offline checks; native TIA acceptance remains pending.

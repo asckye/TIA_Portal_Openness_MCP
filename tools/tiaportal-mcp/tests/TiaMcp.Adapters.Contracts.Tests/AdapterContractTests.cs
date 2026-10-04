@@ -47,9 +47,11 @@ public sealed class AdapterContractTests
     {
         bool ContractValue(Type type) => type == typeof(void) || type.IsPrimitive || type == typeof(string)
             || (type.IsArray && ContractValue(type.GetElementType()!))
+            || (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyList<>)
+                && ContractValue(type.GetGenericArguments()[0]))
             || type.Assembly == typeof(IOpennessAdapter).Assembly;
         foreach(var facet in new[] { typeof(IPortalSession), typeof(IPlcProgram), typeof(IPlcData),
-            typeof(IHardware), typeof(IVersionControl), typeof(IHmiExport) })
+            typeof(IHardware), typeof(IVersionControl), typeof(IHmiExport), typeof(IStudioSession) })
         {
             Assert.True(facet.IsInterface);
             foreach(var method in facet.GetMethods())
@@ -61,9 +63,10 @@ public sealed class AdapterContractTests
         Assert.Equal(14, typeof(IPortalSession).GetMethods().Length);
         Assert.Equal(26, typeof(IPlcProgram).GetMethods().Length);
         Assert.Equal(16, typeof(IPlcData).GetMethods().Length);
-        Assert.Empty(typeof(IHardware).GetMembers());
-        Assert.Empty(typeof(IVersionControl).GetMembers());
-        Assert.Empty(typeof(IHmiExport).GetMembers());
+        Assert.Single(typeof(IHardware).GetMethods());
+        Assert.Equal(5, typeof(IVersionControl).GetMethods().Length);
+        Assert.Equal(2, typeof(IHmiExport).GetMethods().Length);
+        Assert.Equal(17, typeof(IStudioSession).GetMethods().Length);
         var capabilities = AdapterCapabilities.PortalSession | AdapterCapabilities.PlcProgram;
         Assert.True(capabilities.HasFlag(AdapterCapabilities.PlcProgram));
         Assert.False(capabilities.HasFlag(AdapterCapabilities.HmiExport));

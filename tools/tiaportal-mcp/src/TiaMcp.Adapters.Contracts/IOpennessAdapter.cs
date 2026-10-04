@@ -22,7 +22,11 @@ namespace TiaMcp.Adapters.Contracts
         Safety = 2048,
         TechnologyObjectGroups = 4096,
         HardwareCatalog = 8192,
-        PlcDocuments = 16384
+        PlcDocuments = 16384,
+        StudioSession = 32768,
+        GenerateSource = 65536,
+        VersionControlInitial = 131072,
+        VersionControlModern = 262144
     }
 
     // Facets preserve the engine's arguments, defaults, results and exceptions.
@@ -38,6 +42,7 @@ namespace TiaMcp.Adapters.Contracts
         IHardware? Hardware { get; }
         IVersionControl? VersionControl { get; }
         IHmiExport? HmiExport { get; }
+        IStudioSession? StudioSession { get; }
     }
 
     public interface IPortalSession
@@ -105,7 +110,4 @@ namespace TiaMcp.Adapters.Contracts
         PlcMutationResult CreateTag(string plc, string table, string name, string dataType, string address, bool dryRun = true);
         PlcMutationResult CreateUserConstant(string plc, string table, string name, string dataType, string value, bool dryRun = true);
     }
-    public interface IHardware { }
-    public interface IVersionControl { }
-    public interface IHmiExport { }
 }

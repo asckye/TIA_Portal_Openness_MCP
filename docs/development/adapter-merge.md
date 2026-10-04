@@ -3,7 +3,7 @@
 [重构计划](refactor-plan.md) · [引擎拆分设计](engine-decomposition.md) · [验证分层](validation.md) · [版本框架](unified-version-framework.md)
 
 本页是 P4-01 的设计结论。路径前缀：**E** = `tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Portal/`，
-**F** = `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/` 与 `Policy/`（第 D 步迁移后），**S** = `tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessSession.cs`。
+**F** = `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/` 与 `Policy/`（第 D 步迁移后），**S** = `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs`。
 数字为 2026-10-03 的源码统计。
 
 ## 现状：三套原生实现
@@ -230,4 +230,4 @@ A–G 不触及引擎路径（C 只改引擎 props），可以与阶段 3 并行
 - `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Session/PlcFoundationEngine.cs`
 - `tools/tiaportal-mcp/src/TiaMcpServer.PlcWorker/Program.cs`
 - `tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/WorkerClient.cs`
-- `tools/tia-openness-studio/src/TiaOpenness.Openness/OpennessSession.cs`
+- `tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Studio/OpennessSession.cs`

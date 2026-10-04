@@ -1,3 +1,4 @@
+#nullable disable
 #if STUDIO_VCI
 using System;
 using System.Collections.Generic;
@@ -13,8 +14,17 @@ using Siemens.Engineering.VersionControl;
 #if !STUDIO_VCI_MODERN
 using MappedObject = Siemens.Engineering.VersionControl.WorkspaceMapping;
 #endif
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Contracts.Studio;
+#else
 using TiaOpenness.Contracts.Models;
+#endif
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using IVersionControl = TiaMcp.Adapters.Contracts.IVersionControl;
+using ITiaSession = TiaMcp.Adapters.Contracts.IStudioSession;
+#else
 using TiaOpenness.Core.Abstractions;
+#endif
 
 namespace TiaOpenness.Openness
 {

@@ -53,6 +53,7 @@ namespace TiaMcp.Adapters
         public IHardware? Hardware => null;
         public IVersionControl? VersionControl => null;
         public IHmiExport? HmiExport => null;
+        public IStudioSession? StudioSession => null;
 
         private sealed class SessionFacet : IPortalSession
         {

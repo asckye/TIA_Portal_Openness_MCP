@@ -1,10 +1,15 @@
+#nullable disable
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+#if TIA_ADAPTER_INTERNAL_VERSIONING
+using TiaMcp.Adapters.Contracts.Studio;
+#else
 using TiaOpenness.Contracts.Models;
+#endif
 
 namespace TiaOpenness.Openness
 {
