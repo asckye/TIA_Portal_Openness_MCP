@@ -417,8 +417,13 @@ namespace TiaMcpConfigurator
             process.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { if (e.Data != null) Append(e.Data); };
             process.Exited += delegate {
-                Append(Loc.Current.T("Config.ServiceExited", process.ExitCode));
-                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false); }));
+                // Closing the window stops the service and then releases the process object; this event and the
+                // queued UI update can run after that release, so neither may touch a disposed Process.
+                int? exitCode = null;
+                try { exitCode = process.ExitCode; }
+                catch (InvalidOperationException) /* swallow(teardown): the window already released the service process while closing */ { }
+                if (exitCode.HasValue) Append(Loc.Current.T("Config.ServiceExited", exitCode.Value));
+                if (!closing) Window.Dispatcher.BeginInvoke(new Action(delegate { if (closing) return; Find<Button>("StartServer").IsEnabled = true; Find<Button>("StopServer").IsEnabled = false; Find<ComboBox>("Version").IsEnabled = true; SetStatus("Config.ServiceStopped"); ServiceStatus(false); }));
             };
             try { if (!process.Start()) throw new InvalidOperationException(Loc.Current["Config.ServiceNotStarted"]); }
             catch { process.Dispose(); throw; }
@@ -461,7 +466,7 @@ namespace TiaMcpConfigurator
             Window.Closing -= OnClosing;
             Loc.Current.LanguageChanged -= OnLanguageChanged;
             closing = true;
-            if (server != null && server.HasExited) server.Dispose();
+            if (server != null && server.HasExited) { server.Dispose(); server = null; }
         }
     }
 
