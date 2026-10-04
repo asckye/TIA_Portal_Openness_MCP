@@ -1,5 +1,5 @@
 {
-  "generator": "scripts/checks/Compare-VciNativePaths.py --evidence-from",
+  "generator": "scripts/checks/Compare-SharedNativePaths.py --evidence-from",
   "scope": "Static woven IL; labelled native paths, default bodies and exact physical native deltas. No live execution.",
   "acceptanceRule": {
     "id": "expanded-native-paths-exact-dedup-v1",

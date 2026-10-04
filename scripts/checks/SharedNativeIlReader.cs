@@ -11,16 +11,10 @@ using TypeReference = Mono.Cecil.TypeReference;
 using ParameterDefinition = Mono.Cecil.ParameterDefinition;
 using ModuleDefinition = Mono.Cecil.ModuleDefinition;
 
-internal static class VciIlReader
+internal static class SharedNativeIlReader
 {
     private static IEnumerable<TypeDefinition> Descend(TypeDefinition type)
         => new[] { type }.Concat(type.NestedTypes.SelectMany(Descend));
-
-    private static bool Scope(string owner) => owner.StartsWith("TiaMcpServer.Siemens.Services.VersionControlService")
-        || owner.StartsWith("TiaOpenness.Openness.")
-        || owner.StartsWith("TiaOpenness.Openness.VersionControlPrimitives")
-        || owner.StartsWith("TiaMcpServer.Siemens.LocalVci.VersionControlPrimitives")
-        || owner.StartsWith("TiaMcp.Adapters.PlcServices");
 
     private static string Hash(byte[] bytes) => Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
 
@@ -49,7 +43,23 @@ internal static class VciIlReader
 
     public static void Main(string[] args)
     {
-        if (args.Length != 3) throw new ArgumentException("assembly inventory output");
+        if (args.Length != 4) throw new ArgumentException("assembly inventory output domain-config");
+        using var config = JsonDocument.Parse(File.ReadAllText(args[3]));
+        var domain = config.RootElement;
+        if (domain.GetProperty("schemaVersion").GetInt32() != 1)
+            throw new ArgumentException("Unsupported domain configuration version");
+        static IEnumerable<string> Strings(JsonElement values) => values.EnumerateArray().Select(value => value.GetString()!);
+        var primitives = domain.GetProperty("primitives").EnumerateArray().ToArray();
+        var types = Strings(domain.GetProperty("engine").GetProperty("types"))
+            .Concat(domain.GetProperty("hosts").EnumerateArray().SelectMany(host => Strings(host.GetProperty("types"))))
+            .Concat(Strings(domain.GetProperty("adapter").GetProperty("mutableTypes")))
+            .Concat(Strings(domain.GetProperty("expansionTypes")))
+            .Concat(primitives.Select(p => p.GetProperty("adapterType").GetString()!))
+            .Concat(primitives.Select(p => p.GetProperty("engineNamespace").GetString()! + "."
+                + p.GetProperty("adapterType").GetString()!.Split('.').Last())).ToArray();
+        var namespaces = Strings(domain.GetProperty("expansionNamespaces")).ToArray();
+        bool Scope(string owner) => types.Any(type => owner == type || owner.StartsWith(type + "/", StringComparison.Ordinal))
+            || namespaces.Any(ns => owner.StartsWith(ns + ".", StringComparison.Ordinal));
         using var inventory = JsonDocument.Parse(File.ReadAllText(args[1]));
         var sites = inventory.RootElement.GetProperty("sites").EnumerateArray()
             .ToDictionary(row => row.GetProperty("wrapper").GetString()!, row => row.Clone());

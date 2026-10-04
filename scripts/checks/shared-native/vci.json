@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "domain": "vci",
+  "label": "VCI",
+  "engine": {
+    "types": ["TiaMcpServer.Siemens.Services.VersionControlService"],
+    "releases": ["20", "21"]
+  },
+  "adapter": {
+    "releases": ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"],
+    "mutableTypes": ["TiaMcp.Adapters.PlcServices"]
+  },
+  "hosts": [
+    {
+      "name": "studio",
+      "types": ["TiaOpenness.Openness.OpennessVersionControl"],
+      "releases": ["16", "17", "18", "19", "20", "21"]
+    }
+  ],
+  "primitives": [
+    {
+      "adapterType": "TiaOpenness.Openness.VersionControlPrimitives",
+      "engineNamespace": "TiaMcpServer.Siemens.LocalVci"
+    }
+  ],
+  "expansionTypes": [],
+  "expansionNamespaces": ["TiaOpenness.Openness"],
+  "tools": [
+    {"name": "GetVersionControlWorkspaces", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "GetVersionControlWorkspaces"}]},
+    {"name": "CreateVersionControlWorkspace", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "CreateVersionControlWorkspace"}]},
+    {"name": "GetVersionControlStatus", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "GetVersionControlStatus"}]},
+    {"name": "SyncVersionControlWorkspace", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "SyncVersionControlWorkspace"}]},
+    {"name": "ConnectProjectToWorkspace", "entryMethods": [{"type": "TiaMcpServer.Siemens.Services.VersionControlService", "method": "ConnectProjectToWorkspace"}]}
+  ],
+  "evidence": "docs/development/p4-i1-native-evidence.json"
+}

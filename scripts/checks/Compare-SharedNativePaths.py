@@ -1,4 +1,4 @@
-"""Compare woven VCI paths without loading Siemens or executing native code.
+"""Compare a configured domain's woven paths without executing native code.
 
 The IL reader resolves metadata only. This checker expands adapter calls, local
 functions, statically bound LINQ delegates and iterator/async MoveNext bodies.
@@ -13,26 +13,61 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import unittest
+import uuid
 from xml.sax.saxutils import escape
 
 ROOT = Path(__file__).resolve().parents[2]
-ENGINE = 'TiaMcpServer.Siemens.Services.VersionControlService'
-STUDIO = 'TiaOpenness.Openness.OpennessVersionControl'
-PRIMITIVE = 'TiaOpenness.Openness.VersionControlPrimitives'
-LOCAL_PRIMITIVE = 'TiaMcpServer.Siemens.LocalVci.VersionControlPrimitives'
-BORROWED = 'TiaMcp.Adapters.PlcServices'
 sys.setrecursionlimit(20000)
-TOOLS = ('GetVersionControlWorkspaces', 'CreateVersionControlWorkspace', 'GetVersionControlStatus',
-         'SyncVersionControlWorkspace', 'ConnectProjectToWorkspace')
-ACCEPTANCE_RULE = dict(
-    id='expanded-native-paths-exact-dedup-v1',
-    paths='Default and switched per-tool expanded native call graphs must equal the baseline.',
-    default='The full-category member multiset must equal the baseline after collapsing each direct VCI member into one local primitive site; no other delta is allowed.',
-    shared='Engine VCI direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside VCI.',
-    evidence='Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.')
+
+
+class Domain:
+    def __init__(self, data):
+        if data['schemaVersion'] != 1:
+            raise ValueError('Unsupported domain configuration version')
+        self.name, self.label = data['domain'], data['label']
+        self.engine = tuple(data['engine']['types'])
+        self.engine_releases = data['engine']['releases']
+        self.releases = data['adapter']['releases']
+        self.hosts = data['hosts']
+        self.adapter_hosts = tuple(t for host in self.hosts for t in host['types'])
+        self.mutable_adapter = tuple(data['adapter']['mutableTypes'])
+        self.primitives = tuple(p['adapterType'] for p in data['primitives'])
+        self.local_primitives = tuple(p['engineNamespace'] + '.' + p['adapterType'].rsplit('.', 1)[-1]
+                                      for p in data['primitives'])
+        self.tools = data['tools']
+        self.evidence = ROOT / data['evidence']
+        if not self.evidence.resolve().is_relative_to(ROOT):
+            raise ValueError('Evidence output must be inside this worktree')
+        if not re.fullmatch(r'[a-z][a-z0-9-]*', self.name):
+            raise ValueError('Invalid domain name')
+        if not self.engine or not self.primitives or not self.tools or not self.releases:
+            raise ValueError('Domain types, primitives, tools and releases must not be empty')
+        if len(set(self.releases)) != len(self.releases) or not set(self.engine_releases) <= set(self.releases):
+            raise ValueError('Invalid engine/adapter releases')
+        if not set(self.releases) <= {'14sp1', '15.1', '16', '17', '18', '19', '20', '21'} or not set(self.engine_releases) <= {'20', '21'}:
+            raise ValueError('Unsupported build release')
+        host_names = [h['name'] for h in self.hosts]
+        if len(set(host_names)) != len(host_names) or any(n in ('engine', 'defaultEngine') for n in host_names):
+            raise ValueError('Host names must be distinct from engine report keys')
+        for host in self.hosts:
+            if not host['types'] or not set(host['releases']) <= set(self.releases):
+                raise ValueError('Invalid host types/releases')
+        for tool in self.tools:
+            if not tool['entryMethods'] or any(entry['type'] not in self.engine for entry in tool['entryMethods']):
+                raise ValueError('Tool entry methods must belong to configured engine types')
+
+    @property
+    def acceptance_rule(self):
+        return dict(
+            id='expanded-native-paths-exact-dedup-v1',
+            paths='Default and switched per-tool expanded native call graphs must equal the baseline.',
+            default=f'The full-category member multiset must equal the baseline after collapsing each direct {self.label} member into one local primitive site; no other delta is allowed.',
+            shared=f'Engine {self.label} direct sites move to deduplicated adapter primitives; only engine-required new members may be gained, with no change outside {self.label}.',
+            evidence='Generate per-member counts and declaring-method moves; physical equality before deduplication is informational.')
 
 
 def read(path):
@@ -54,7 +89,16 @@ def normalize(name):
 
 
 def owner(row, prefix):
-    return row.get('owner', row.get('caller', '')).startswith(prefix) or (' ' + prefix) in row.get('caller', '')
+    name = row.get('owner') or row.get('caller', '').split('::')[0].rsplit(' ', 1)[-1]
+    return name == prefix or name.startswith(prefix + '/')
+
+
+def owned(row, prefixes):
+    return any(owner(row, prefix) for prefix in prefixes)
+
+
+def outside(sites, prefixes):
+    return Counter((s['caller'], s['category'], s['opcode'], s['member']) for s in sites if not owned(s, prefixes))
 
 
 def native_counts(sites):
@@ -79,9 +123,9 @@ def moved_members(before, after, prefixes):
         for category, opcode, member in keys]
 
 
-def expanded_engine_inventory(document, sites):
+def expanded_engine_inventory(document, sites, domain):
     methods = Paths([document]).methods
-    result = member_counts([row for row in sites if not owner(row, LOCAL_PRIMITIVE)])
+    result = member_counts([row for row in sites if not owned(row, domain.local_primitives)])
 
     def inline(key, active=()):
         if key in active:
@@ -95,31 +139,32 @@ def expanded_engine_inventory(document, sites):
             target = normalize(operand.get('definition') or '')
             if native:
                 counts[(native['category'], native['opcode'], native['member'])] += 1
-            elif target in methods and methods[target]['owner'].startswith(LOCAL_PRIMITIVE):
+            elif target in methods and owned(methods[target], domain.local_primitives):
                 counts.update(inline(target, (*active, key)))
         return counts
 
     # Expand each original service call site once, not every path from every
     # public tool; existing engine helper methods already have their own sites.
     for method in methods.values():
-        if not method['owner'].startswith(ENGINE):
+        if not owned(method, domain.engine):
             continue
         for instruction in method['il']:
             target = normalize(instruction['operand'].get('definition') or '')
-            if instruction['flow'] == 'Call' and target in methods and methods[target]['owner'].startswith(LOCAL_PRIMITIVE):
+            if instruction['flow'] == 'Call' and target in methods and owned(methods[target], domain.local_primitives):
                 result.update(inline(target))
     return result
 
 
-def expected_local_inventory(sites):
-    moved = member_counts([row for row in sites if owner(row, ENGINE) and row['category'] == 'direct'])
+def expected_local_inventory(sites, domain):
+    moved = member_counts([row for row in sites if owned(row, domain.engine) and row['category'] == 'direct'])
     return member_counts(sites) - moved + Counter({key: 1 for key in moved})
 
 
-def compare_default_inventory(before, after):
+def compare_default_inventory(before, after, domain):
     # Derive the only allowed delta from the baseline, never from current sites.
-    old, current, expected = member_counts(before), member_counts(after), expected_local_inventory(before)
-    moves = moved_members(before, after, (ENGINE, LOCAL_PRIMITIVE))
+    old, current, expected = member_counts(before), member_counts(after), expected_local_inventory(before, domain)
+    prefixes = domain.engine + domain.local_primitives
+    moves = moved_members(before, after, prefixes)
     report = dict(defaultFullInventoryEqual=old == current,
         defaultDeduplicatedInventoryEqual=expected == current,
         defaultPhysicalSiteCounts=dict(before=len(before), after=len(after)),
@@ -132,7 +177,15 @@ def compare_default_inventory(before, after):
             for key in sorted(expected.keys() | current.keys())
             for category, opcode, member in [key] if expected[key] != current[key]],
         defaultExpectedMemberMoves=moves)
-    errors = [] if expected == current else ['Default physical inventory differs from the exact VCI deduplication delta']
+    errors = [] if expected == current else [f'Default physical inventory differs from the exact {domain.label} deduplication delta']
+    # Check ownership as well as totals: one domain must never pay for another
+    # domain's missing or extra copy of the same Siemens member.
+    selected_before = [s for s in before if owned(s, prefixes)]
+    selected_after = [s for s in after if owned(s, prefixes)]
+    if expected_local_inventory(selected_before, domain) != member_counts(selected_after):
+        errors.append('Default domain inventory differs from its exact deduplication delta')
+    if outside(before, prefixes) != outside(after, prefixes):
+        errors.append('Default non-domain inventory changed')
     return errors, report
 
 
@@ -379,17 +432,38 @@ def compare_paths(before, after, prefix):
     return errors, evidence
 
 
+def compare_host_paths(before, after, types):
+    errors, evidence = [], []
+    for prefix in types:
+        failures, rows = compare_paths(before, after, prefix)
+        errors += failures
+        evidence += rows
+    return errors, evidence
+
+
+def check_tools(domain, rows):
+    errors = []
+    for tool in domain.tools:
+        for entry in tool['entryMethods']:
+            matches = [row for row in rows if owner(dict(caller=row['method']), entry['type'])
+                and '::' + entry['method'] + '(' in row['method']]
+            if len(matches) != 1:
+                errors.append('Tool entry missing or ambiguous: ' + tool['name'] + ' -> '
+                              + entry['type'] + '::' + entry['method'])
+    return errors
+
+
 def all_methods(before, after, raw=False, exclude=()):
     select = lambda doc: {m['name']: m['raw' if raw else 'semantic'] for m in doc['methods']
-        if not any(m['owner'].startswith(prefix) for prefix in exclude)}
+        if not owned(m, exclude)}
     old, new = select(before), select(after)
     return [key for key in sorted(old.keys() | new.keys()) if old.get(key) != new.get(key)], len(old), len(new)
 
 
-def dump(assembly, inventory, directory):
+def dump(assembly, inventory, directory, config):
     directory = Path(directory).resolve()
     directory.mkdir(parents=True, exist_ok=True)
-    tool = ROOT / 'bin-build/vci-il-reader'
+    tool = ROOT / 'bin-build/shared-native-il-reader'
     tool.mkdir(parents=True, exist_ok=True)
     cecil = ROOT / 'tools/native-call-weaver/bin/Release/net8.0/Mono.Cecil.dll'
     if not cecil.is_file():
@@ -399,21 +473,35 @@ def dump(assembly, inventory, directory):
         project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework>'
             '<OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>'
             '<EnableDefaultCompileItems>false</EnableDefaultCompileItems><NuGetAudit>false</NuGetAudit>'
-            '</PropertyGroup><ItemGroup><Compile Include="' + escape(str(ROOT / 'scripts/checks/VciIlReader.cs')) + '" />'
+            '</PropertyGroup><ItemGroup><Compile Include="' + escape(str(ROOT / 'scripts/checks/SharedNativeIlReader.cs')) + '" />'
             '<Reference Include="Mono.Cecil"><HintPath>' + escape(str(cecil)) + '</HintPath></Reference>'
             '</ItemGroup></Project>', encoding='utf-8')
     reader = tool / 'bin/Release/net8.0/Reader.dll'
     if not reader.exists() or reader.stat().st_mtime < max(project.stat().st_mtime,
-            (ROOT / 'scripts/checks/VciIlReader.cs').stat().st_mtime, cecil.stat().st_mtime):
+            (ROOT / 'scripts/checks/SharedNativeIlReader.cs').stat().st_mtime, cecil.stat().st_mtime):
         subprocess.run(['dotnet', 'build', str(project), '-c', 'Release', '-m:1', '-nr:false',
                         '-p:RestoreSources=' + str(tool), '-v:q'], check=True)
     output = directory / (Path(assembly).name + '.il.json')
     subprocess.run(['dotnet', str(reader), str(Path(assembly).resolve()),
-                    str(Path(inventory).resolve()), str(output)], check=True)
+                    str(Path(inventory).resolve()), str(output), str(config.resolve())], check=True)
     return output
 
 
 class SelfTests(unittest.TestCase):
+    @staticmethod
+    def config(name='sample'):
+        return dict(schemaVersion=1, domain=name, label=name.upper(),
+            engine=dict(types=[name + '.Engine'], releases=['20']),
+            adapter=dict(releases=['19', '20'], mutableTypes=[name + '.Borrowed']),
+            hosts=[dict(name='foundation', types=[name + '.Foundation'], releases=['19', '20'])],
+            primitives=[dict(adapterType=name + '.Primitives', engineNamespace=name + '.Local')],
+            expansionTypes=[name + '.Helper'], expansionNamespaces=[],
+            tools=[dict(name='PublicTool', entryMethods=[dict(type=name + '.Engine', method='Run')])],
+            evidence='bin-build/shared-native-self-test/' + name + '.json')
+
+    def setUp(self):
+        self.domain = Domain(self.config())
+
     @staticmethod
     def method(name, instructions, states=(), handlers=()):
         return dict(name=name, owner=name.split('::')[0], semantic=name, il=[dict(offset=i, **row)
@@ -470,7 +558,7 @@ class SelfTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Unresolved LINQ delegate'):
             Paths([dict(methods=[host])]).build(host['name'])
 
-    def test_default_non_vci_body_change_is_failure(self):
+    def test_default_non_domain_body_change_is_failure(self):
         old = dict(methods=[dict(name='Other::Write()', owner='Other', raw='before')])
         new = dict(methods=[dict(name='Other::Write()', owner='Other', raw='after')])
         self.assertEqual(['Other::Write()'], all_methods(old, new, raw=True)[0])
@@ -483,30 +571,30 @@ class SelfTests(unittest.TestCase):
         self.assertEqual(['Other::Write()'], all_methods(old, new)[0])
 
     def test_full_category_members_and_generated_move_counts(self):
-        row = dict(caller=ENGINE + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
-        moved = dict(row, caller=LOCAL_PRIMITIVE + '::Read()')
+        row = dict(caller=self.domain.engine[0] + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
+        moved = dict(row, caller=self.domain.local_primitives[0] + '::Read()')
         self.assertEqual(member_counts([row]), member_counts([moved]))
         self.assertNotEqual(member_counts([row, row]), member_counts([moved]))
         self.assertNotEqual(member_counts([row]), member_counts([dict(moved, category='interface-dispatch')]))
-        evidence = moved_members([row, row], [moved], (ENGINE, LOCAL_PRIMITIVE))
+        evidence = moved_members([row, row], [moved], (self.domain.engine[0], self.domain.local_primitives[0]))
         self.assertEqual(2, evidence[0]['before'][row['caller']])
         self.assertEqual(1, evidence[0]['after'][moved['caller']])
 
     def test_expanded_inventory_retains_each_engine_call_site(self):
-        primitive = self.method(LOCAL_PRIMITIVE + '::Read()', [self.call('Siemens::Read()', True), self.ret()])
-        host = self.method(ENGINE + '::Run()', [self.call(primitive['name'], definition=primitive['name']),
+        primitive = self.method(self.domain.local_primitives[0] + '::Read()', [self.call('Siemens::Read()', True), self.ret()])
+        host = self.method(self.domain.engine[0] + '::Run()', [self.call(primitive['name'], definition=primitive['name']),
             self.call(primitive['name'], definition=primitive['name']), self.ret()])
         site = dict(caller=primitive['name'], category='direct', opcode='callvirt', member='Siemens::Read()')
         physical = member_counts([site])
-        expanded = expanded_engine_inventory(dict(methods=[host, primitive]), [site])
+        expanded = expanded_engine_inventory(dict(methods=[host, primitive]), [site], self.domain)
         self.assertEqual(1, sum(physical.values()))
         self.assertEqual(2, sum(expanded.values()))
 
     def test_default_exact_dedup_delta_is_accepted(self):
-        site = dict(caller=ENGINE + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
-        moved = dict(site, caller=LOCAL_PRIMITIVE + '::Read()')
+        site = dict(caller=self.domain.engine[0] + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
+        moved = dict(site, caller=self.domain.local_primitives[0] + '::Read()')
         untouched = dict(site, caller='Other::Run()', category='interface-dispatch')
-        errors, report = compare_default_inventory([site, site, untouched], [moved, untouched])
+        errors, report = compare_default_inventory([site, site, untouched], [moved, untouched], self.domain)
         self.assertEqual([], errors)
         self.assertFalse(report['defaultFullInventoryEqual'])
         self.assertTrue(report['defaultDeduplicatedInventoryEqual'])
@@ -518,8 +606,8 @@ class SelfTests(unittest.TestCase):
         self.assertEqual({moved['caller']: 1}, move['after'])
 
     def test_default_unexpected_extra_or_missing_member_fails(self):
-        site = dict(caller=ENGINE + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
-        moved = dict(site, caller=LOCAL_PRIMITIVE + '::Read()')
+        site = dict(caller=self.domain.engine[0] + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
+        moved = dict(site, caller=self.domain.local_primitives[0] + '::Read()')
         untouched = dict(site, caller='Other::Run()', category='enumeration-input', member='Enumerable::ToList()')
         before, valid = [site, site, untouched], [moved, untouched]
         mutations = dict(extra=valid + [dict(moved, member='Siemens::Unexpected()')],
@@ -528,10 +616,115 @@ class SelfTests(unittest.TestCase):
             changed_dispatch=[dict(moved, opcode='call'), untouched])
         for mutation, after in mutations.items():
             with self.subTest(mutation=mutation):
-                errors, report = compare_default_inventory(before, after)
+                errors, report = compare_default_inventory(before, after, self.domain)
                 self.assertTrue(errors)
                 self.assertFalse(report['defaultDeduplicatedInventoryEqual'])
                 self.assertTrue(report['defaultUnexpectedPhysicalDelta'])
+
+    def test_domain_deltas_cannot_cancel(self):
+        other = Domain(self.config('second'))
+        site = dict(caller=self.domain.engine[0] + '::Run()', category='direct', opcode='callvirt', member='Siemens::Read()')
+        foreign = dict(site, caller=other.local_primitives[0] + '::Read()')
+        before = [site, site, foreign]
+        local = dict(site, caller=self.domain.local_primitives[0] + '::Read()')
+        self.assertEqual([], compare_default_inventory(before, [local, foreign], self.domain)[0])
+        # Both mutations satisfy the global exact dedup delta. Their owners do
+        # not: a missing copy in one domain pays for an extra in the other.
+        for after in ([local, local], [foreign, foreign]):
+            self.assertEqual(expected_local_inventory(before, self.domain), member_counts(after))
+            errors, _ = compare_default_inventory(before, after, self.domain)
+            self.assertIn('Default domain inventory differs from its exact deduplication delta', errors)
+            self.assertIn('Default non-domain inventory changed', errors)
+            self.assertTrue(compare_default_inventory(before, after, other)[0])
+
+    def test_type_prefix_does_not_swallow_another_domain(self):
+        self.assertTrue(owner(dict(caller='System.Void First/Closure::Run()'), 'First'))
+        self.assertFalse(owner(dict(caller='System.Void FirstOther::Run()'), 'First'))
+
+    def test_configured_tool_entry_is_required(self):
+        self.assertEqual([], check_tools(self.domain, [dict(method=self.domain.engine[0] + '::Run()')]))
+        self.assertTrue(check_tools(self.domain, [dict(method='Other::Run()')]))
+        self.assertTrue(check_tools(self.domain, [dict(method=self.domain.engine[0] + '::Run(System.Int32)'),
+                                                 dict(method=self.domain.engine[0] + '::Run()')]))
+
+    def test_second_domain_config_end_to_end(self):
+        # Exercise the actual CLI and JSON loader with Foundation, multiple
+        # engine services/primitives and a public tool whose method differs.
+        config = self.config('second')
+        config['engine']['types'].append('second.OtherEngine')
+        config['primitives'].append(dict(adapterType='second.MorePrimitives', engineNamespace='second.Local'))
+        config['tools'].append(dict(name='AnotherTool', entryMethods=[dict(type='second.OtherEngine', method='Execute')]))
+        domain = Domain(config)
+        old_engine, default_engine, shared_engine, primitives, local = [], [], [], [], []
+        old_sites, default_sites, new_sites = [], [], []
+        for engine, primitive, local_type, method in zip(domain.engine, domain.primitives, domain.local_primitives, ('Run', 'Execute')):
+            member = 'Siemens::' + method + '()'
+            entry = engine + '::' + method + '()'
+            target, local_target = primitive + '::Read()', local_type + '::Read()'
+            old_engine.append(self.method(entry, [self.call(member, True), self.call(member, True), self.ret()]))
+            default_engine.append(self.method(entry, [self.call(local_target, definition=local_target), self.call(local_target, definition=local_target), self.ret()]))
+            shared_engine.append(self.method(entry, [self.call(target, definition=target), self.call(target, definition=target), self.ret()]))
+            primitives.append(self.method(target, [self.call(member, True), self.ret()]))
+            local.append(self.method(local_target, [self.call(member, True), self.ret()]))
+            row = dict(caller=entry, category='direct', opcode='callvirt', member=member)
+            old_sites += [row, row]
+            default_sites.append(dict(row, caller=local_target))
+            new_sites.append(dict(row, caller=target))
+        host = self.method('second.Foundation::Read()', [self.ret()])
+        # Hosts without the domain surface remain explicit in evidence.
+        config['hosts'][0]['releases'] = ['20']
+        scratch = ROOT / 'bin-build/shared-native-self-test'
+        scratch.mkdir(parents=True, exist_ok=True)
+        path = (scratch / uuid.uuid4().hex).resolve()
+        path.mkdir()
+        try:
+            write(path / 'domain.json', config)
+            docs = dict(baseline_engine=old_engine, default_engine=default_engine + local,
+                        shared_engine=shared_engine, baseline_adapter=[host], current_adapter=[host] + primitives)
+            inventories = dict(baseline_engine=old_sites, default_engine=default_sites, shared_engine=[],
+                               baseline_adapter=[], current_adapter=new_sites)
+            arguments = [sys.executable, __file__, '--config', str(path / 'domain.json')]
+            compare = arguments + ['--release', '20', '--output', str(path / 'proof-v20.json')]
+            for name, methods in docs.items():
+                write(path / (name + '.json'), dict(methods=methods))
+                write(path / (name + '-inventory.json'), dict(sites=inventories[name]))
+                compare += ['--' + name.replace('_', '-'), str(path / (name + '.json')),
+                            '--' + name.replace('_', '-') + '-inventory', str(path / (name + '-inventory.json'))]
+            result = subprocess.run(compare, capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            proof = read(path / 'proof-v20.json')
+            self.assertEqual([], proof['errors'])
+            self.assertEqual(2, len(proof['enginePaths']))
+            self.assertEqual(1, len(proof['foundationPaths']))
+            write(path / 'empty.json', dict(methods=[], sites=[]))
+            older = arguments + ['--release', '19', '--output', str(path / 'proof-v19.json')]
+            for flag in ('baseline-adapter', 'current-adapter', 'baseline-adapter-inventory', 'current-adapter-inventory'):
+                older += ['--' + flag, str(path / 'empty.json')]
+            result = subprocess.run(older, capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertEqual('SECOND not compiled on this release', read(path / 'proof-v19.json')['foundationPaths'])
+            result = subprocess.run(arguments + ['--evidence-from', str(path), '--output', str(path / 'evidence.json')], capture_output=True, text=True)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            self.assertTrue(read(path / 'evidence.json')['accepted'])
+            # Shared totals also cannot conceal a loss in a different domain.
+            foreign = dict(new_sites[0], caller='first.Primitives::Read()')
+            write(path / 'baseline_adapter-inventory.json', dict(sites=[foreign]))
+            self.assertEqual(0, (native_counts(new_sites) - native_counts([foreign]))[foreign['member']])
+            result = subprocess.run(compare, capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertIn('Non-domain adapter inventory changed', read(path / 'proof-v20.json')['errors'])
+            # Failed evidence is never silently accepted, even when requested.
+            publish = arguments + ['--evidence-from', str(path), '--output', str(path / 'failed.json')]
+            result = subprocess.run(publish, capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertFalse((path / 'failed.json').exists())
+            result = subprocess.run(publish + ['--include-failed'], capture_output=True, text=True)
+            self.assertNotEqual(0, result.returncode)
+            self.assertFalse(read(path / 'failed.json')['accepted'])
+        finally:
+            if not path.is_relative_to(scratch.resolve()):
+                raise ValueError('Self-test directory leaves its scratch root')
+            shutil.rmtree(path)
 
     def test_option_branch_moved(self):
         host = self.method('Host::Run()', [
@@ -594,6 +787,9 @@ class SelfTests(unittest.TestCase):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--self-test', action='store_true')
+    parser.add_argument('--config', type=Path, help='Per-domain shared-native JSON configuration')
+    parser.add_argument('--release', help='Exact release key for comparison')
+    parser.add_argument('--validate-config', action='store_true')
     parser.add_argument('--evidence-from', type=Path, metavar='PROOF_DIRECTORY')
     parser.add_argument('--include-failed', action='store_true', help='Publish failing proof evidence explicitly; exit status remains nonzero')
     parser.add_argument('--dump', type=Path, metavar='ASSEMBLY')
@@ -613,80 +809,91 @@ def main():
     if args.self_test:
         result = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(SelfTests))
         return int(not result.wasSuccessful())
+    if not args.config:
+        parser.error('--config is required outside self-tests')
+    domain = Domain(read(args.config))
+    if args.validate_config:
+        print('PASS domain configuration: ' + domain.name)
+        return 0
     if args.evidence_from:
-        if not args.output:
-            parser.error('--evidence-from requires --output')
+        args.output = args.output or domain.evidence
         releases = {}
-        for release in ('14sp1', '15.1', '16', '17', '18', '19', '20', '21'):
+        for release in domain.releases:
             proof = read(args.evidence_from / ('proof-v' + release + '.json'))
-            if proof.get('acceptanceRule') != ACCEPTANCE_RULE:
+            if proof.get('acceptanceRule') != domain.acceptance_rule:
                 raise ValueError('Rerun proof with the current acceptance rule for V' + release)
             if proof.get('errors') != [] and not args.include_failed:
                 raise ValueError('Cannot publish failing proof for V' + release)
-            if release in ('20', '21') and (not proof.get('defaultEnginePaths') or not proof.get('enginePaths')):
+            if release in domain.engine_releases and (not proof.get('defaultEnginePaths') or not proof.get('enginePaths')):
                 raise ValueError('Incomplete engine proof for V' + release)
-            if release in ('20', '21') and not proof.get('errors') and (
+            if release in domain.engine_releases and not proof.get('errors') and (
                     proof.get('defaultDeduplicatedInventoryEqual') is not True or
                     proof.get('defaultExpandedFullInventoryEqual') is not True or
                     proof.get('defaultUnexpectedPhysicalDelta') != []):
                 raise ValueError('Default exact dedup delta was not verified for V' + release)
             releases[release] = proof
         failures = sum(bool(proof['errors']) for proof in releases.values())
-        write(args.output, dict(generator='scripts/checks/Compare-VciNativePaths.py --evidence-from',
+        write(args.output, dict(generator='scripts/checks/Compare-SharedNativePaths.py --evidence-from',
             scope='Static woven IL; labelled native paths, default bodies and exact physical native deltas. No live execution.',
-            acceptanceRule=ACCEPTANCE_RULE, accepted=failures == 0, releases=releases))
-        print(f'COMPLETE: evidence generated for 8 releases; {failures} failed')
+            acceptanceRule=domain.acceptance_rule, accepted=failures == 0, releases=releases))
+        print(f'COMPLETE: evidence generated for {len(releases)} releases; {failures} failed')
         return int(bool(failures))
     if args.dump:
         if not args.inventory or not args.output:
             parser.error('--dump requires --inventory and --output directory')
-        print(dump(args.dump, args.inventory, args.output))
+        print(dump(args.dump, args.inventory, args.output, args.config))
         return 0
     if not args.baseline_adapter or not args.current_adapter or not args.output:
         parser.error('comparison requires --baseline-adapter, --current-adapter and --output')
+    if args.release not in domain.releases:
+        parser.error('--release must name a configured adapter release')
+    if bool(args.baseline_engine) != (args.release in domain.engine_releases):
+        parser.error('Engine inputs must match the configured engine release surface')
     old_adapter, new_adapter = read(args.baseline_adapter), read(args.current_adapter)
     old_docs, new_docs = [old_adapter], [new_adapter]
-    report, errors = dict(acceptanceRule=ACCEPTANCE_RULE), []
+    report, errors = dict(acceptanceRule=domain.acceptance_rule), []
     if args.baseline_engine:
         old_engine, default_engine, new_engine = map(read, (args.baseline_engine, args.default_engine, args.shared_engine))
         old_docs.append(old_engine)
         new_docs.append(new_engine)
         differences, old_count, new_count = all_methods(old_engine, default_engine,
-                                                       exclude=(ENGINE, LOCAL_PRIMITIVE))
-        raw_differences, _, _ = all_methods(old_engine, default_engine, raw=True, exclude=(ENGINE, LOCAL_PRIMITIVE))
+                                                       exclude=domain.engine + domain.local_primitives)
+        raw_differences, _, _ = all_methods(old_engine, default_engine, raw=True, exclude=domain.engine + domain.local_primitives)
         report['defaultMethods'] = dict(before=old_count, after=new_count, differences=differences,
             rawBodyDifferences=len(raw_differences), comparison='IL with metadata references resolved to member/type identities; opcodes, operands, locals and exception regions unchanged')
         errors += ['Default method body differs: ' + name for name in differences]
         old_inv, default_inv = map(read, (args.baseline_engine_inventory, args.default_engine_inventory))
-        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'])
+        failures, inventory_report = compare_default_inventory(old_inv['sites'], default_inv['sites'], domain)
         errors += failures
         report.update(inventory_report)
-        report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'])
+        report['defaultExpandedFullInventoryEqual'] = member_counts(old_inv['sites']) == expanded_engine_inventory(default_engine, default_inv['sites'], domain)
         if not report['defaultExpandedFullInventoryEqual']:
             errors.append('Default expanded full-category weave member multiset changed')
     old, new = Paths(old_docs), Paths(new_docs)
     if args.baseline_engine:
         default_paths = Paths([default_engine, new_adapter])
-        failures, rows = compare_paths(old, default_paths, ENGINE)
+        failures, rows = compare_host_paths(old, default_paths, domain.engine)
         errors += ['Default path: ' + failure for failure in failures]
         report['defaultEnginePaths'] = rows
-        unused_local = {normalize(s['caller']) for s in default_inv['sites'] if owner(s, LOCAL_PRIMITIVE)
+        unused_local = {normalize(s['caller']) for s in default_inv['sites'] if owned(s, domain.local_primitives)
             and s['category'] == 'direct'} - default_paths.reached
         errors += ['Unexplained local primitive: ' + method for method in sorted(unused_local)]
-        failures, rows = compare_paths(old, new, ENGINE)
+        failures, rows = compare_host_paths(old, new, domain.engine)
         errors += failures
         report['enginePaths'] = rows
-        for tool in TOOLS:
-            if not any('::' + tool + '(' in row['method'] for row in rows):
-                errors.append('VCI tool was not checked: ' + tool)
-    if any(owner(m, STUDIO) for m in old_adapter['methods']):
-        failures, rows = compare_paths(old, new, STUDIO)
-        errors += failures
-        report['studioPaths'] = rows
-    else:
-        report['studioPaths'] = 'VCI not compiled on this release'
+        errors += check_tools(domain, rows)
+    for host in domain.hosts:
+        key = host['name'] + 'Paths'
+        if args.release in host['releases']:
+            failures, rows = compare_host_paths(old, new, host['types'])
+            errors += failures
+            report[key] = rows
+        else:
+            if any(owned(m, host['types']) for doc in (old_adapter, new_adapter) for m in doc['methods']):
+                errors.append('Host unexpectedly compiled: ' + host['name'])
+            report[key] = domain.label + ' not compiled on this release'
     old_sites, new_sites = [read(p)['sites'] for p in (args.baseline_adapter_inventory, args.current_adapter_inventory)]
-    unused = sorted({normalize(s['caller']) for s in new_sites if owner(s, PRIMITIVE) and s['category'] == 'direct'} - new.reached)
+    unused = sorted({normalize(s['caller']) for s in new_sites if owned(s, domain.primitives) and s['category'] == 'direct'} - new.reached)
     if unused:
         errors += ['Unexplained native primitive (not reached by either host): ' + method for method in unused]
     # Every pre-existing body outside this domain remains unchanged. Instrumented
@@ -694,30 +901,28 @@ def main():
     def unchanged_methods(old_document, new_document, allowed):
         existing = {m['name']: m for m in new_document['methods']}
         return [m['name'] for m in old_document['methods'] if '__TiaMcpNativeCall' not in m['owner']
-            and not any(m['owner'].startswith(prefix) for prefix in allowed)
+            and not owned(m, allowed)
             and (m['name'] not in existing or m['semantic'] != existing[m['name']]['semantic'])]
-    errors += ['Non-VCI adapter body changed: ' + method for method in unchanged_methods(old_adapter, new_adapter, (STUDIO, BORROWED))]
-    outside = lambda sites, prefixes: Counter((s['caller'], s['category'], s['opcode'], s['member']) for s in sites
-        if not any(owner(s, prefix) for prefix in prefixes))
-    if outside(old_sites, (STUDIO, PRIMITIVE)) != outside(new_sites, (STUDIO, PRIMITIVE)):
-        errors.append('Non-VCI adapter inventory changed')
+    errors += ['Non-domain adapter body changed: ' + method for method in unchanged_methods(old_adapter, new_adapter, domain.adapter_hosts + domain.mutable_adapter)]
+    if outside(old_sites, domain.adapter_hosts + domain.primitives) != outside(new_sites, domain.adapter_hosts + domain.primitives):
+        errors.append('Non-domain adapter inventory changed')
     if args.baseline_engine:
         old_engine_sites, new_engine_sites = [read(p)['sites'] for p in (args.baseline_engine_inventory, args.shared_engine_inventory)]
-        if outside(old_engine_sites, (ENGINE,)) != outside(new_engine_sites, (ENGINE,)):
-            errors.append('Non-VCI engine inventory changed')
-        errors += ['Non-VCI engine body changed: ' + method for method in unchanged_methods(old_engine, new_engine, (ENGINE,))]
-        if any(owner(s, ENGINE) and s['category'] == 'direct' for s in new_engine_sites):
-            errors.append('Direct Siemens VCI sites remain in the engine')
+        if outside(old_engine_sites, domain.engine) != outside(new_engine_sites, domain.engine):
+            errors.append('Non-domain engine inventory changed')
+        errors += ['Non-domain engine body changed: ' + method for method in unchanged_methods(old_engine, new_engine, domain.engine)]
+        if any(owned(s, domain.engine) and s['category'] == 'direct' for s in new_engine_sites):
+            errors.append('Direct Siemens domain sites remain in the engine')
         # A member moved into a primitive may not retain another physical copy
-        # in either VCI host. Existing Studio-only sites are outside this rule.
-        primitives = native_counts([s for s in new_sites if owner(s, PRIMITIVE)])
-        domain = native_counts([s for s in new_sites if owner(s, STUDIO) or owner(s, PRIMITIVE)])
-        errors += ['Duplicated shared primitive member: ' + member for member in primitives if domain[member] != 1]
+        # in any domain host. Existing host-only sites are outside this rule.
+        primitives = native_counts([s for s in new_sites if owned(s, domain.primitives)])
+        domain_counts = native_counts([s for s in new_sites if owned(s, domain.adapter_hosts + domain.primitives)])
+        errors += ['Duplicated shared primitive member: ' + member for member in primitives if domain_counts[member] != 1]
         engine_before, engine_after = native_counts(old_engine_sites), native_counts(new_engine_sites)
     else:
         engine_before = engine_after = Counter()
     adapter_before, adapter_after = native_counts(old_sites), native_counts(new_sites)
-    allowed_gains = native_counts([s for s in old_engine_sites if owner(s, ENGINE)]) if args.baseline_engine else Counter()
+    allowed_gains = native_counts([s for s in old_engine_sites if owned(s, domain.engine)]) if args.baseline_engine else Counter()
     errors += ['Unexplained adapter native gain: ' + member for member, count in (adapter_after - adapter_before).items()
                if member not in allowed_gains or count > allowed_gains[member]]
     members = sorted(engine_before.keys() | engine_after.keys() | adapter_before.keys() | adapter_after.keys())
@@ -732,7 +937,7 @@ def main():
     for error in errors:
         print('FAIL ' + error)
     print(f'COMPLETE: {len(report.get("enginePaths", []))} engine methods; '
-          f'{len(report["studioPaths"]) if isinstance(report["studioPaths"], list) else 0} Studio methods; {len(errors)} failed')
+          f'{sum(len(report[h["name"] + "Paths"]) for h in domain.hosts if isinstance(report[h["name"] + "Paths"], list))} host methods; {len(errors)} failed')
     return int(bool(errors))
 
 

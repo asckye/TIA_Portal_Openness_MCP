@@ -275,6 +275,24 @@ maxObjects/walkTrace、失败后重取句柄和继续处理的策略，以及按
 两个宿主分别传入现有选择。组合枚举用值类型包装保留原来的类型化 `GetEnumerator` 分派；引擎逐项枚举，
 Studio 仍在原位置 `ToList()`，不能为了共用代码提前物化或省掉重复读取。
 
+**领域扩展（P4-I0）**：证明工具统一为 [Compare-SharedNativePaths.py](../../scripts/checks/Compare-SharedNativePaths.py)、
+[SharedNativeIlReader.cs](../../scripts/checks/SharedNativeIlReader.cs) 和
+[Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1)。每个领域只新增
+`scripts/checks/shared-native/<domain>.json`，VCI 配置见 [vci.json](../../scripts/checks/shared-native/vci.json)。
+配置中的 `engine.types/releases` 声明引擎服务与编译版本，`adapter.releases` 列出需验证的适配器版本，
+`hosts` 按名称声明 Studio 和/或 Foundation 的类型与编译版本；每个类型的原有方法均须保持展开调用图。
+`primitives` 逐项指定适配器类型与 `engineNamespace`，本地类型沿用原语的短类型名；
+`tools` 分别声明 MCP 名称与 `entryMethods` 的类型、方法名，入口缺失或重载歧义会失败。
+`expansionTypes/expansionNamespaces` 仅决定读取器跨方法展开的范围，不豁免领域外方法体或清单检查；
+`adapter.mutableTypes` 只用于借用工程的接线类型，仍须保持其原生清单。
+`evidence` 是仓库内证据输出路径，版本键必须使用字符串。不同领域单独运行证明，不能合并差量后验收；
+默认变体同时核对领域内精确去重与领域外逐调用者清单，防止同一 Siemens 成员在两个领域一增一减互相抵消。
+
+原语链接也按领域拆分：[vci.props](../../tools/openness-shared/shared-native/vci.props) 显式列出
+`TiaEngineLocalPrimitive` 项及其 `Link` 路径。共享 props 只通配导入 `tools/openness-shared/shared-native/*.props`，
+仅默认引擎消费这些项；不通配收集 C# 源码。以后每个领域新增自己的小 props 文件即可，避免并行任务修改同一清单，
+审查者仍能逐行核对进入引擎的原语源码。默认开关与原语编译符号不变。
+
 VCI 的默认与共享变体均以“展开后的逐工具调用图相等 + 完整类别多重集的精确去重差量 + 响应”验收。
 默认变体将基线中每个直接 VCI 成员的重复调用点合并为一个本地原语调用点，完整类别多重集仅允许这一差量；
 预期次数由基线独立推导，任何非预期新增、缺失、重复、类别或分派变化都失败。物理多重集去重前后是否相等仅作记录，
@@ -296,13 +314,18 @@ Studio 有 VCI 的六个版本也按同一检查器比较原有每个方法；14
 复跑时先保存修改前八版织入适配器、两版引擎及对应 `*-inventory.json`，然后执行：
 
 ```powershell
-python scripts/checks/Compare-VciNativePaths.py --self-test
-pwsh -File scripts/checks/Test-EngineVciMigration.ps1 -PublicApiRoot <本机SDK父目录> -BaselineDirectory <基线目录> -OutputDirectory bin-build/vci-proof
-python scripts/checks/Compare-VciNativePaths.py --evidence-from bin-build/vci-proof --output docs/development/p4-i1-native-evidence.json
+python scripts/checks/Compare-SharedNativePaths.py --self-test
+pwsh -File scripts/checks/Test-SharedNativeMigration.ps1 -Config scripts/checks/shared-native/vci.json -PublicApiRoot <本机SDK父目录> -BaselineDirectory <基线目录> -OutputDirectory bin-build/vci-proof
+python scripts/checks/Compare-SharedNativePaths.py --config scripts/checks/shared-native/vci.json --evidence-from bin-build/vci-proof
 ```
 
 基线目录按 `v14sp1` 至 `v21` 分目录，使用 `adapter-inventory.json`；V20/V21 另有 `engine-inventory.json`。
 脚本顺序构建并保存默认/共享两种引擎，使用本机 NuGet 缓存与空还原源，不连接 TIA；IL 读取器仅解析元数据。
+驱动器从配置读取版本范围；`-Releases` 可选择其中的版本，`-SkipBuild` 可复核已保存的产物。
+完整版本运行还生成输出目录内的 `evidence.json`；最后一条命令才写入配置声明的证据路径，亦可用 `--output` 覆盖。
+逐版本手动比较须传 `--release`，读取器的 `--dump` 同样必须传 `--config`。
+自测保留 P4-I1 的 18 项，并覆盖第二个合成领域的多服务、多原语、Foundation 宿主、不同工具入口、
+未编译版本与证据生成，以及跨领域差量抵消和类型前缀混淆。
 随后跑离线 TRX 数量门禁、全部 HttpTests 模式、VersionControl 领域逐字节比较、P0-06 原始响应和契约快照、
 两种 Studio 的 Core/GUI 与 bridge smoke、八版织入，以及仓库、bundle、异常、注释、MCP 文本和信封门禁。
 真机新增项目见[验收台账](../reference/real-machine-ledger.md)：V20/V21 的五工具、参数与线程、句柄失效、部分失败和诊断关联均须回放；

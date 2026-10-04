@@ -1,12 +1,23 @@
 param(
+    [Parameter(Mandatory=$true)][string]$Config,
     [Parameter(Mandatory=$true)][string]$PublicApiRoot,
     [Parameter(Mandatory=$true)][string]$BaselineDirectory,
-    [string]$OutputDirectory = 'bin-build/engine-vci-migration',
-    [string[]]$Releases = @('14sp1','15.1','16','17','18','19','20','21'),
+    [string]$OutputDirectory,
+    [string[]]$Releases,
     [switch]$SkipBuild
 )
 $ErrorActionPreference = 'Stop'
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
+$configPath = (Resolve-Path -LiteralPath $Config).Path
+$domain = Get-Content -Raw -LiteralPath $configPath | ConvertFrom-Json
+$checker = Join-Path $repo 'scripts/checks/Compare-SharedNativePaths.py'
+& python $checker --config $configPath --validate-config
+if ($LASTEXITCODE -ne 0) { throw 'Invalid domain configuration' }
+if (!$OutputDirectory) { $OutputDirectory = "bin-build/shared-native/$($domain.domain)" }
+if (!$Releases) { $Releases = @($domain.adapter.releases) }
+foreach ($key in $Releases) {
+    if ($key -notin $domain.adapter.releases) { throw "Release not configured for $($domain.domain): $key" }
+}
 $out = [IO.Path]::GetFullPath((Join-Path $repo $OutputDirectory))
 if (!$out.StartsWith($repo + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
     throw 'OutputDirectory must be inside this worktree.'
@@ -15,14 +26,13 @@ $baseline = [IO.Path]::GetFullPath($BaselineDirectory)
 $sdkRoot = [IO.Path]::GetFullPath($PublicApiRoot)
 New-Item -ItemType Directory -Force $out,(Join-Path $out 'empty-feed') | Out-Null
 $weaver = Join-Path $repo 'tools/native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll'
-$checker = Join-Path $repo 'scripts/checks/Compare-VciNativePaths.py'
 $failedProofs = @()
 function Run([string]$Program, [string[]]$Arguments, [string]$Log) {
     & $Program @Arguments *> $Log
     if ($LASTEXITCODE -ne 0) { Get-Content $Log -Tail 20; throw "$Program failed: $Log" }
 }
 function Dump([string]$Assembly, [string]$Inventory, [string]$Directory, [string]$Label) {
-    Run 'python' @($checker,'--dump',$Assembly,'--inventory',$Inventory,'--output',$Directory) (Join-Path $out "$Label-dump.log")
+    Run 'python' @($checker,'--config',$configPath,'--dump',$Assembly,'--inventory',$Inventory,'--output',$Directory) (Join-Path $out "$Label-dump.log")
     return Join-Path $Directory ((Split-Path $Assembly -Leaf) + '.il.json')
 }
 Push-Location $repo
@@ -35,7 +45,7 @@ try {
             '21' {Join-Path $sdkRoot 'TIA_V21_PublicAPI/V21/net48'}
             default {Join-Path $sdkRoot "TIA_V${key}_PublicAPI/V$key"}
         }
-        $engine = $key -in '20','21'
+        $engine = $key -in $domain.engine.releases
         $variants = if ($engine) { @('default','shared') } else { @('shared') }
         foreach ($variant in $variants) {
             $destination = Join-Path $out "$variant/v$key"
@@ -64,7 +74,7 @@ try {
         $current = Join-Path $out "shared/v$key"
         $oldAdapter = Dump (Join-Path $old "TiaMcp.Adapter.$key.dll") (Join-Path $old 'adapter-inventory.json') (Join-Path $out "il/baseline-v$key") "baseline-v$key-adapter"
         $newAdapter = Dump (Join-Path $current "TiaMcp.Adapter.$key.dll") (Join-Path $current 'adapter-inventory.json') (Join-Path $out "il/shared-v$key") "shared-v$key-adapter"
-        $arguments = @($checker,'--baseline-adapter',$oldAdapter,'--current-adapter',$newAdapter,
+        $arguments = @($checker,'--config',$configPath,'--release',$key,'--baseline-adapter',$oldAdapter,'--current-adapter',$newAdapter,
             '--baseline-adapter-inventory',(Join-Path $old 'adapter-inventory.json'),
             '--current-adapter-inventory',(Join-Path $current 'adapter-inventory.json'),
             '--output',(Join-Path $out "proof-v$key.json"))
@@ -82,5 +92,10 @@ try {
         if ($LASTEXITCODE -ne 0) { $failedProofs += $key }
         Get-Content (Join-Path $out "proof-v$key.log") -Tail 4
     }
-    if ($failedProofs.Count) { throw "VCI proof failed for: $($failedProofs -join ', ')" }
+    if ($failedProofs.Count) { throw "$($domain.domain) proof failed for: $($failedProofs -join ', ')" }
+    if (@($domain.adapter.releases | Where-Object { $_ -notin $Releases }).Count -eq 0) {
+        Run 'python' @($checker,'--config',$configPath,'--evidence-from',$out,
+            '--output',(Join-Path $out 'evidence.json')) (Join-Path $out 'evidence.log')
+        Get-Content (Join-Path $out 'evidence.log')
+    }
 } finally { Pop-Location }

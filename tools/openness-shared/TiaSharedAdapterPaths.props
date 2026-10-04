@@ -7,8 +7,10 @@
   <PropertyGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
     <DefineConstants>$(DefineConstants);TIA_ENGINE_LOCAL_PRIMITIVES</DefineConstants>
   </PropertyGroup>
+  <!-- Each domain explicitly lists its primitives; only this dedicated folder is imported. -->
+  <Import Project="$(MSBuildThisFileDirectory)shared-native/*.props" Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'" />
   <ItemGroup Condition="'$(TiaFeatureProfile)' == 'Engine' and '$(TiaSharedAdapterPaths)' != 'true'">
-    <Compile Include="$(MSBuildThisFileDirectory)../tiaportal-mcp/src/TiaMcp.Adapters/Native/Vci/VersionControlPrimitives.cs" Link="Native/Vci/VersionControlPrimitives.cs" />
+    <Compile Include="@(TiaEngineLocalPrimitive)" />
   </ItemGroup>
   <Target Name="ReportSharedAdapterPaths" BeforeTargets="CoreCompile">
     <Message Importance="high" Text="$(MSBuildProjectName): TiaSharedAdapterPaths=$(TiaSharedAdapterPaths)" />
