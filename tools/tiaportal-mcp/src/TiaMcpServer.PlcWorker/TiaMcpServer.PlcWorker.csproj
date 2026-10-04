@@ -20,11 +20,12 @@
     <ProjectReference Include="../TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <Compile Include="$(WorkerSourceRoot)/Program.cs" Link="Program.cs" />
     <Compile Include="../../../openness-shared/SwallowedExceptions.cs" Link="Shared/SwallowedExceptions.cs" />
+    <Compile Include="$(WorkerSourceRoot)/WorkerJson.cs" Link="WorkerJson.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="$(WorkerSourceRoot)/WorkerSessionOutcomeState.cs" Link="WorkerSessionOutcomeState.cs" />
     <ProjectReference Include="$(SelectedAdapterProject)" Condition="'$(SelectedAdapterProject)' != ''"
                       GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;TargetFramework;RuntimeIdentifier" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Text.Json" Version="10.0.0-preview.4.25258.110" />
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies.net48" Version="1.0.3" PrivateAssets="all" Condition="'$(TargetFramework)' == 'net48' and '$(UseReferenceAssemblyPackage)' == 'true'" />
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>TiaReleaseKey</_Parameter1><_Parameter2>$(TiaReleaseKey)</_Parameter2></AssemblyAttribute>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute"><_Parameter1>NativeCallInstrumentation</_Parameter1><_Parameter2>adapter-weave-verify-required-production-blocked</_Parameter2></AssemblyAttribute>

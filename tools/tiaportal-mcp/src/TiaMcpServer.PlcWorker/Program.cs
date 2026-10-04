@@ -3,8 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 using TiaMcp.PlcFoundation;
 using TiaMcp.PlcWorker;
 using TiaMcp.WorkerChannel;
@@ -83,40 +82,26 @@ internal static class Program
                     var name = request.Method.Substring("adapter.".Length);
                     readOnly=WorkerOperations.IsReadOnly(name);
                     if (!methods.TryGetValue(name, out var method)) throw new NotSupportedException("Unknown foundation operation: " + name);
-                    var values = JObject.Parse(request.ArgumentsJson, new JsonLoadSettings { DuplicatePropertyNameHandling = DuplicatePropertyNameHandling.Error });
+                    var values = WorkerJson.ParseArguments(request.ArgumentsJson);
                     if(disconnectAttempted && name!="Disconnect") throw new InvalidOperationException("Disconnect ended this worker session; new explicit session required.");
-                    if(name=="Disconnect" && values.HasValues) throw new ArgumentException("Disconnect takes no arguments.");
-                    readOnly=readOnly || (values["dryRun"]?.Type==JTokenType.Boolean && (bool)values["dryRun"]!);
+                    if(name=="Disconnect" && values.Count!=0) throw new ArgumentException("Disconnect takes no arguments.");
+                    readOnly=readOnly || (WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.True);
                     sessionOutcome.RequireUsable(readOnly);
-                    var confirm=values["confirm"];
-                    var expected=values["expectedProjectFile"];
+                    var confirm=WorkerJson.Get(values,"confirm");
+                    var expected=WorkerJson.Get(values,"expectedProjectFile");
                     if(!method.GetParameters().Any(p=>p.Name=="confirm")) values.Remove("confirm");
                     if(!method.GetParameters().Any(p=>p.Name=="expectedProjectFile")) values.Remove("expectedProjectFile");
-                    if(values["dryRun"]?.Type==JTokenType.Boolean && !(bool)values["dryRun"]!)
+                    if(WorkerJson.Get(values,"dryRun").ValueKind==JsonValueKind.False)
                     {
-                        if(confirm?.Type!=JTokenType.Boolean || expected?.Type!=JTokenType.String)
+                        if(!WorkerJson.IsBoolean(confirm) || !WorkerJson.IsString(expected))
                             throw new ArgumentException("Execution requires confirmation and an absolute expected project file.");
-                        MutationIdentityPolicy.ValidateTarget(false,(bool)confirm,(string)expected!,name,releaseKey,
-                            values["path"]?.Type==JTokenType.String ? (string)values["path"]! : "",
-                            values["directoryPath"]?.Type==JTokenType.String ? (string)values["directoryPath"]! : "",
-                            values["projectName"]?.Type==JTokenType.String ? (string)values["projectName"]! : "",engine.RequireProjectIdentity);
+                        MutationIdentityPolicy.ValidateTarget(false,confirm.GetBoolean(),expected.GetString()!,name,releaseKey,
+                            WorkerJson.IsString(WorkerJson.Get(values,"path")) ? WorkerJson.Get(values,"path").GetString()! : "",
+                            WorkerJson.IsString(WorkerJson.Get(values,"directoryPath")) ? WorkerJson.Get(values,"directoryPath").GetString()! : "",
+                            WorkerJson.IsString(WorkerJson.Get(values,"projectName")) ? WorkerJson.Get(values,"projectName").GetString()! : "",engine.RequireProjectIdentity);
                     }
                     var parameters = method.GetParameters();
-                    if (values.Properties().Any(p => !parameters.Any(a => a.Name == p.Name))) throw new ArgumentException("Unknown worker argument.");
-                    var call = parameters.Select(p =>
-                    {
-                        if (!values.TryGetValue(p.Name!, StringComparison.Ordinal, out var value))
-                        {
-                            if (p.HasDefaultValue) return p.DefaultValue;
-                            throw new ArgumentException("Missing worker argument: " + p.Name);
-                        }
-                        if ((p.ParameterType == typeof(string) && value.Type != JTokenType.String) ||
-                            (p.ParameterType == typeof(bool) && value.Type != JTokenType.Boolean) ||
-                            (p.ParameterType == typeof(int) && value.Type != JTokenType.Integer) ||
-                            (p.ParameterType == typeof(string[]) && (value.Type != JTokenType.Array || value.Count()>256 || value.Any(x=>x.Type!=JTokenType.String))))
-                            throw new ArgumentException("Incorrect worker argument type: " + p.Name);
-                        return value.ToObject(p.ParameterType);
-                    }).ToArray();
+                    var call = WorkerJson.Arguments(parameters, values);
                     enteredOperation=true;
                     if(name=="Disconnect") disconnectAttempted=true;
                     var result = method.Invoke(engine, call);
@@ -131,15 +116,14 @@ internal static class Program
                     if(result is PlcBatchExportResult batch && batch.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(result is PlcBatchImportResult imported && imported.RequiresSessionReset) sessionOutcome.MarkUncertain();
                     if(name=="Disconnect") disconnected=true;
-                    return ChannelResponse.Success(JsonConvert.SerializeObject(result));
+                    return ChannelResponse.Success(WorkerJson.Serialize(result));
                 }
                 catch (Exception ex)
                 {
                     var cause = ex is TargetInvocationException && ex.InnerException != null ? ex.InnerException : ex;
-                    var evidence=cause.Data.Contains("inputSha256") || cause.Data.Contains("outputFile") || cause.Data.Contains("safetyCleanup") ? new { inputFile=cause.Data["inputFile"],inputSha256=cause.Data["inputSha256"],outputFile=cause.Data["outputFile"],stagedFile=cause.Data["stagedFile"],recoveryDirectory=cause.Data["recoveryDirectory"],exportPhase=cause.Data["exportPhase"],stagedSha256=cause.Data["stagedSha256"],safetyCleanup=cause.Data["safetyCleanup"] } : null;
                     return ChannelResponse.Error(new ChannelFailure(cause.Message,cause is ArgumentException ? -32602 : -32603,
                         !enteredOperation ? ChannelOutcome.RejectedBeforeNative : readOnly ? ChannelOutcome.ReadFailed : ChannelOutcome.Unknown,
-                        JsonConvert.SerializeObject(evidence)));
+                        WorkerJson.Evidence(cause)));
                 }
             });
             try { server.Run(); }

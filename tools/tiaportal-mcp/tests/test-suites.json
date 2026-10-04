@@ -84,17 +84,17 @@
   },
   "adapter-contracts": {
     "project": "tools/tiaportal-mcp/tests/TiaMcp.Adapters.Contracts.Tests/TiaMcp.Adapters.Contracts.Tests.csproj",
-    "minimumPassed": 329,
+    "minimumPassed": 673,
     "maximumSkipped": 0,
     "arguments": [],
     "platforms": {
       "linux": {
-        "minimumPassed": 326,
+        "minimumPassed": 670,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       },
       "macos": {
-        "minimumPassed": 326,
+        "minimumPassed": 670,
         "maximumSkipped": 3,
         "reason": "Three new Studio STA ownership/reentry checks require Windows."
       }

@@ -14,7 +14,8 @@ public sealed class GoldenWireTests
     {
         var sample = GoldenSamples.All().Single(s => s.Name == name).Value;
         using var golden = JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "GoldenWire.json")));
-        // Program.cs uses Newtonsoft defaults; LegacyHost uses the MCP SDK's STJ options.
+        // Frozen pre-P2-04b baseline: the worker used Newtonsoft defaults;
+        // LegacyHost uses the MCP SDK's STJ options. Do not regenerate these bytes.
         var actual = codec == "worker" ? JsonConvert.SerializeObject(sample)
             : System.Text.Json.JsonSerializer.Serialize(sample, McpJsonUtilities.DefaultOptions);
         Assert.Equal(golden.RootElement.GetProperty(name).GetProperty(codec).GetString(), actual);

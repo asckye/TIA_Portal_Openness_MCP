@@ -4,6 +4,8 @@
   <ItemGroup>
     <ProjectReference Include="../../src/TiaMcp.Adapters.Contracts/TiaMcp.Adapters.Contracts.csproj" GlobalPropertiesToRemove="BaseIntermediateOutputPath;MSBuildProjectExtensionsPath;BaseOutputPath;OutputPath;IntermediateOutputPath;AssemblyName;RuntimeIdentifier" />
     <ProjectReference Include="../../../tia-openness-studio/src/TiaOpenness.Contracts/TiaOpenness.Contracts.csproj" />
+    <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerJson.cs" Link="WorkerJson.cs" />
+    <Compile Include="../../src/TiaMcpServer.PlcWorker/WorkerOperations.cs" Link="WorkerOperations.cs" />
     <Compile Include="../../src/TiaMcp.Adapters/Policy/StudioThreadGuard.cs" Link="StudioThreadGuard.cs" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="ModelContextProtocol" Version="0.3.0-preview.4" />
