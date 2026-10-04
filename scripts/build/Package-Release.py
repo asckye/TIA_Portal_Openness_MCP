@@ -100,7 +100,7 @@ def main():
     require(runtime_names == {r['path'] for r in inventory}, 'Runtime file inventory changed after validation')
     for row in inventory:
         require(sha(files[row['path']]) == row['sha256'], f"Runtime changed: {row['path']}")
-    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/openness-shared/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')}
+    source_names = {n for n in files if n.startswith(('tools/tiaportal-mcp/src/', 'tools/tiaportal-mcp/tests/', 'tools/native-call-weaver/', 'tools/openness-shared/', 'tools/third-party/TiaGitAddIn.Core/', 'tools/third-party/SiemensOpcUaModelled/')) and Path(n).suffix in ('.cs', '.csproj', '.props', '.targets', '.xml', '.json')} | ({'Version.props'} & set(files))
     require(source_names == {r['path'] for r in metadata['sourceFiles']}, 'Compiler/test input inventory changed')
     for row in metadata['sourceFiles']:
         data = files[row['path']].decode('utf-8-sig').replace('\r\n', '\n').encode('utf-8')
