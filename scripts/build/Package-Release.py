@@ -79,6 +79,9 @@ def main():
     if multi is not None:
         required_exes += [f'runtime/v{key}/TiaMcpServer.exe' for key in multi['studioReleaseKeys'][:6]]
         required_exes += ['runtime/studio/TiaOpenness.exe']
+        pin = json.loads((root / 'scripts/build/bundled-dotnet.json').read_text(encoding='utf-8'))
+        required_exes += [f"runtime/dotnet/host/fxr/{pin['version']}/hostfxr.dll", 'runtime/dotnet/LICENSE.txt', 'runtime/dotnet/ThirdPartyNotices.txt']
+        required_exes += [f"runtime/dotnet/shared/{name}/{pin['version']}/{name}.deps.json" for name in pin['frameworks']]
         for key in multi['studioReleaseKeys']:
             require(f'runtime/studio/bridge/adapters/v{key}/TiaOpenness.Openness.dll' in files, 'Studio adapter missing: ' + key)
     require(all(name in files for name in required_exes), 'A required runtime executable is missing')

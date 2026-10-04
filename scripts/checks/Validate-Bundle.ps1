@@ -381,6 +381,9 @@ if ($Strict -and (Test-Path -LiteralPath (Join-Path $root 'manifest/release-buil
             $studio = Join-Path $root 'runtime/studio/TiaOpenness.exe'
             if (-not (Test-Path -LiteralPath $studio)) { Fail 'Studio executable missing' }
             elseif ((Get-Item -LiteralPath $studio).VersionInfo.FileVersion -ne $build.fileVersion) { Fail 'Studio version is stale' }
+            $pin = Get-Content -LiteralPath (Join-Path $root 'scripts/build/bundled-dotnet.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+            if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/host/fxr/$($pin.version)/hostfxr.dll"))) { Fail "Bundled .NET $($pin.version) host missing" }
+            foreach ($framework in $pin.frameworks) { if (-not (Test-Path -LiteralPath (Join-Path $root "runtime/dotnet/shared/$framework/$($pin.version)"))) { Fail "Bundled $framework $($pin.version) missing" } }
         }
     }
     if (-not $SkipSourceHashes) {

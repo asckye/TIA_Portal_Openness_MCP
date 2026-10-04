@@ -6,11 +6,13 @@
 
 3.3.0：统一桌面与内部重构后的首个发布版本，详见 [v3.3.0](docs/releases/v3.3.0.md)。除 G9 名称解析行为外，保持 3.2.0 的 MCP 工具名称、参数类型、返回结构和错误约定；八版工具数仍为 57 / 58 / 60 / 60 / 60 / 62 / 477 / 488，V20/V21 lite 均为 63 项。`TiaSharedAdapterPaths` 默认关闭，其后的试验路径不在本版范围内；阶段 6 属于 4.0。
 
-- MCP 配置器与 Openness Studio 合并为 WPF/.NET 10 工作台，根目录 `TiaMcpConfigurator.exe` 启动统一桌面；工程操作与 MCP/客户端配置保留页面状态，统一版本、语言和主题，支持 Ctrl+1 / Ctrl+2 切页。客户端配置合并、备份、密钥保护及后台进程隔离保持原有行为；需要 .NET 10 Desktop Runtime。
+- MCP 配置器与 Openness Studio 合并为 WPF/.NET 10 工作台，根目录 `TiaMcpConfigurator.exe` 启动统一桌面；工程操作与 MCP/客户端配置保留页面状态，统一版本、语言和主题，支持 Ctrl+1 / Ctrl+2 切页。客户端配置合并、备份、密钥保护及后台进程隔离保持原有行为。
 - 修复选项面板无法显示、面板主题不一致及英文模式下部分配置菜单仍为中文；统一菜单和应用内对话框，标题显示当前页面，两页均可从帮助菜单检查更新。
+- 菜单按对象划分为 项目 / 视图 / PLC / MCP / 工具 / 帮助：项目与 PLC 是工作台自己经桥接进程操作 TIA（新增 Ctrl+O 打开或连接、Ctrl+B 编译）；MCP 菜单执行配置页的服务与客户端操作，可用状态与按钮一致；语言和主题移入工具。标题栏常显 MCP 服务状态，点击进入配置页；摘要、日志与差异卡片统一样式，修复 Windows 10 图标显示为方框及关闭工作台时崩溃。
 - V20/V21 PLC 名称改为严格解析（G9，行为变化）：读写的非空 `softwarePath` 仅接受精确名称或唯一结构别名（CPU、所属站点/设备、带分组的设备/软件路径），忽略大小写和首尾空白；错误名与子串不再选中唯一 PLC。空名称仍选择唯一 PLC；错误名返回“未找到”及可用路径，歧义列出全部候选。已验证结果缓存，切换工程后重新解析；升级前需修正旧提示词和自动化中的占位名称。
 - 运行时资源由安装布局定位，完整交付包可在仓库外使用；V21 生态目录嵌入 V20/V21 引擎，查询不再依赖磁盘 JSON，原有资源覆盖及仓库探测保留为兼容回退至 4.0。
-- V14 SP1、V15.1、V16 Foundation worker 升为 .NET Framework 4.8，需安装相应运行时；基础宿主仍需 .NET 8 / ASP.NET Core 8。
+- 随包附带 Microsoft .NET 10.0.12 运行时（`runtime/dotnet`，含 ASP.NET Core 与 Windows 桌面运行时，按微软发布的 SHA-512 校验）：V14 SP1–V19 基础宿主由 .NET 8 升至 .NET 10，与工作台共用该运行时，目标电脑不再需要安装 .NET 8 / ASP.NET Core 或 .NET 10 Desktop Runtime。
+- V14 SP1、V15.1、V16 Foundation worker 升为 .NET Framework 4.8；.NET Framework 4.8 属于 Windows 组件，无法随包附带，Windows 10 1903 之前的系统需另行安装。
 - Foundation worker 与 Studio 桥接统一使用内部协议 2 和 System.Text.Json，校验进程身份及请求/会话关联，无需修改 MCP 客户端协议，失败请求不自动重放；Studio 已处理的操作错误保留原文及可继续使用的会话。
 - 引擎与同进程适配器共用一份调用诊断日志及关联 ID；独立 worker 各自记录，默认目录仍为 `%LOCALAPPDATA%\TiaMcp\diagnostics`。
 - 子进程标准输入统一为无 BOM UTF-8，修复控制台代码页导致的非 ASCII 请求损坏；基础宿主健康检查使用实际应用版本；更新器识别 worktree 的 `.git` 文件，避免把源码工作区当作安装包更新。

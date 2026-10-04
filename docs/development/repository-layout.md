@@ -9,7 +9,7 @@
 | `tools/openness-shared/TiaPublicApi.props` | 按精确版本查找本机 PublicAPI 的共享路径表；由需要 SDK 的工程显式导入并由发布脚本收录源码哈希 |
 | `Version.props` | 产品发布版本的唯一来源；引擎、基础宿主、Studio 显式导入，配置器构建脚本读取 |
 | `tools/tiaportal-mcp` | V20/V21 完整引擎、Foundation、精确版本 worker 和测试 |
-| `tools/tiaportal-mcp/src/TiaMcp.Logic` | net48/net8.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
+| `tools/tiaportal-mcp/src/TiaMcp.Logic` | net48/net10.0 纯逻辑库；共享 XML/JSON Builders、MCP 策略和运行通道数据转换，不引用 Siemens 或 MCP SDK |
 | `tools/tia-openness-studio/src/TiaOpenness.Launcher` | 仅保留兼容启动器 `Launcher.cs`，由 Framework csc 编译 |
 | `tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration` | 编译型 WPF 配置页、配置逻辑及中英资源字典；使用 Studio 调色板 |
 | `tools/tia-openness-studio/src/TiaOpenness.Gui/Themes/Glass.xaml`、`Controls/GlassLogView.cs`、`Fonts` | 工作台内的 Glass 样式、日志视图和字体；字体许可及来源记录与字体同目录 |
@@ -19,6 +19,7 @@
 | `tools/third-party` | 固定版本的第三方组件及其许可证 |
 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` | 构建生成的八个 MCP 运行目录 |
 | `runtime/studio` | 统一桌面程序及 `bridge/adapters` 内的八版适配器 |
+| `runtime/dotnet` | 构建时由 `scripts/build/Get-BundledDotnet.ps1` 从微软官方压缩包展开的 .NET 10 运行时，不入 Git |
 | `TiaMcpConfigurator.exe` | 统一工作台入口（保留原文件名），不再打开独立配置器窗口 |
 | `reference/tool-examples` | 可编辑的调用、语言文件、返回解释和调用顺序 |
 | `reference/siemens-openness`、`reference/siemens-code-snippets` | 固定来源的官方示例与授权记录 |
@@ -51,7 +52,7 @@ Siemens PublicAPI 是本机构建输入，默认查找仓库根目录下的八�
 ## 测试工程
 
 `tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
-是适配器的 net8.0 离线诊断控制台测试，程序集名保留为 `Diagnostics.Tests`，沿用逻辑库的
+是适配器的 net10.0 离线诊断控制台测试，程序集名保留为 `Diagnostics.Tests`，沿用逻辑库的
 `InternalsVisibleTo`。运行时需要 worker bin 根目录和一个尚不存在的日志目录；命令见
 [适配器说明](../../tools/tiaportal-mcp/src/TiaMcp.Adapters/README.md#input-regression-checks)。
 

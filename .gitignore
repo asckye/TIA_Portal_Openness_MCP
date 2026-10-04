@@ -64,6 +64,7 @@ TIA_V21_PublicAPI/
 /runtime/v18/
 /runtime/v19/
 /runtime/studio/
+/runtime/dotnet/
 /runtime/verification/
 *.ap14
 *.zap14

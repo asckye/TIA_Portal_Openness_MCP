@@ -1,0 +1,25 @@
+{
+  "description": "Microsoft .NET runtime shipped in runtime/dotnet; every .NET 10 apphost in the bundle searches ../dotnet first.",
+  "version": "10.0.12",
+  "releaseDate": "2026-09-08",
+  "rid": "win-x64",
+  "target": "runtime/dotnet",
+  "frameworks": [
+    "Microsoft.NETCore.App",
+    "Microsoft.AspNetCore.App",
+    "Microsoft.WindowsDesktop.App"
+  ],
+  "metadata": "https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json",
+  "archives": [
+    {
+      "name": "aspnetcore-runtime-10.0.12-win-x64.zip",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/10.0.12/aspnetcore-runtime-10.0.12-win-x64.zip",
+      "sha512": "b6958736bd42eff9c78a27a489d43eb0a39c6201039070ecb76a93cb96c519f07c86fa8b62034c6dd1a82a4c8ad0bd781e052008a7ec4cc48f9f792227d9c7ac"
+    },
+    {
+      "name": "windowsdesktop-runtime-10.0.12-win-x64.zip",
+      "url": "https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.12/windowsdesktop-runtime-10.0.12-win-x64.zip",
+      "sha512": "8b79f679c348aa08a10ee4e1ca75be54b135ae951b7328400fea8499f9eb8450ccb18f9f708af6182b2bcd88fcca719aa282939e907b017422f519de8dd42534"
+    }
+  ]
+}

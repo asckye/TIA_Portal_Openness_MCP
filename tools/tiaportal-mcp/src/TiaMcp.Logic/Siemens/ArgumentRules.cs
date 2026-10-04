@@ -10,7 +10,8 @@ namespace TiaMcpServer.Siemens
     {
         internal static string RequireOneOf(string value, string[] allowed, string parameter)
         {
-            if (string.IsNullOrWhiteSpace(value) || !allowed.Contains(value, StringComparer.Ordinal))
+            // Enumerable on purpose: on .NET 10 an array binds to the span overload, which reads a null list as empty instead of rejecting it.
+            if (string.IsNullOrWhiteSpace(value) || !Enumerable.Contains(allowed, value, StringComparer.Ordinal))
                 throw new ArgumentException(parameter + " must be one of: " + string.Join("/", allowed) + " (case-sensitive).");
             return value;
         }

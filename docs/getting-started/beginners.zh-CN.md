@@ -32,9 +32,8 @@
 | 使用内容 | 需要提前安装 |
 |---|---|
 | 所有真实工程操作 | 对应版本的 TIA Portal、TIA Openness，以及工程所需的 Siemens 产品和许可证 |
-| Openness 桥接进程、V20/V21 MCP 引擎 | .NET Framework 4.8 |
-| V14 SP1–V19 MCP 引擎 | .NET 8 Runtime、ASP.NET Core 8 Runtime，以及 .NET Framework 4.8 工作进程环境 |
-| 统一工作台（包含配置页面） | .NET 10 Desktop Runtime；实际工程操作还需要对应 TIA/Openness |
+| Openness 桥接进程、工作进程、V20/V21 MCP 引擎 | .NET Framework 4.8（Windows 10 1903 及以后已自带，更早的系统需安装） |
+| V14 SP1–V19 MCP 引擎、统一工作台（包含配置页面） | 无需安装：.NET 10 运行时已随包附带（`runtime/dotnet`）；实际工程操作还需要对应 TIA/Openness |
 
 如需检查下载完整性，在 ZIP 所在文件夹运行下面的命令，把 `Hash` 与 `.sha256` 文件中的哈希值比较：
 
@@ -78,7 +77,7 @@ V14 SP1–V19 提供 PLC 基础工具；V20/V21 提供完整引擎，包含更�
 
 **再在运行 AI 的宿主机上：**
 
-1. 在宿主机完整解压交付目录后打开 `TiaMcpConfigurator.exe`，通过 **视图 → MCP 与客户端**（Ctrl+2）进入配置页；不能只复制入口 EXE。此处需要 .NET 10 Desktop Runtime，不需要 TIA。
+1. 在宿主机完整解压交付目录后打开 `TiaMcpConfigurator.exe`，通过 **视图 → MCP 与客户端**（Ctrl+2）进入配置页；不能只复制入口 EXE。此处使用包内附带的 .NET 10 运行时，不需要 TIA。
 2. 同样选择 **虚拟机 ↔ 宿主机**，填写虚拟机的地址、端口和刚才生成的同一把密钥。这里填的是虚拟机地址，不是宿主机地址或 `localhost`。
 3. 选择 AI 客户端，点击 **测试连接**。成功表示网络、鉴权和 MCP 服务可用，下一步仍需连接 TIA 工程。
 4. 完全退出 AI 客户端，点击 **写入客户端配置**，再重启客户端并新建会话。服务名是 `tia-portal-vm`。
@@ -167,7 +166,7 @@ v3.2.0 已进行八版构建、离线功能及协议测试；新增能力的真�
 
 | 现象 | 先检查什么 |
 |---|---|
-| 双击程序提示缺少 .NET | 根据第 2 节安装对应 Runtime；Studio 需要 Desktop Runtime |
+| 双击程序提示缺少 .NET | 确认完整解压且保留 `runtime/dotnet`；提示缺少 .NET Framework 时按第 2 节安装 4.8 |
 | 找不到 Openness API、程序集版本不匹配 | 核对所选 TIA 版本、安装根目录和对应 Openness 安装，不混用另一个版本的 DLL |
 | 拒绝访问 TIA | 检查当前 Windows 用户的 Openness 用户组，添加后注销重登，并处理 TIA 中的访问提示 |
 | 虚拟机连接超时 | 虚拟机实际 IP、服务是否运行、端口、两台电脑是否能通信；用“网络权限”配置规则 |

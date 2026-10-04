@@ -28,6 +28,10 @@ Siemens PublicAPI（`Siemens.Engineering*.dll`）由用户本机已安装并取�
 
 `Siemens.Collaboration.Net.TiaPortal.Packages.Openness` 仅在编译时使用，不随包分发。2.7.18 引入 Webserver API 后，`Microsoft.Extensions.Logging.Abstractions`、`Microsoft.Extensions.DependencyInjection.Abstractions`、`System.Diagnostics.DiagnosticSource` 由传递依赖提升到 10.0.x 正式版（仍为 MIT），其余 Microsoft.Extensions.* 保持 10.0.0-preview.4；以 `manifest/release-build.json` 的逐文件记录为准。
 
+## 随包 .NET 运行时（`runtime/dotnet`）
+
+3.3.0 起随包分发 Microsoft .NET 10.0.12 运行时（Microsoft.NETCore.App、Microsoft.AspNetCore.App、Microsoft.WindowsDesktop.App），取自微软官方压缩包 `aspnetcore-runtime-10.0.12-win-x64.zip` 与 `windowsdesktop-runtime-10.0.12-win-x64.zip`，按 [scripts/build/bundled-dotnet.json](../../scripts/build/bundled-dotnet.json) 记录的 SHA-512 校验后原样展开，不做修改。许可证为 MIT（© .NET Foundation and Contributors），原文与第三方声明随运行时保留在 `runtime/dotnet/LICENSE.txt`、`runtime/dotnet/ThirdPartyNotices.txt`；参见 [DotNet-Foundation-MIT.txt](DotNet-Foundation-MIT.txt)。
+
 ## 仅构建期的诊断覆盖工具
 
 `tools/native-call-weaver` 使用 [Mono.Cecil 0.11.6](https://www.nuget.org/packages/Mono.Cecil/0.11.6)，作者 Jb Evain，MIT 许可证（[官方源码许可证](https://github.com/jbevain/cecil/blob/0.11.6/LICENSE.txt)）。通过 NuGet 还原，仅处理本项目的 Release 中间程序集；`Mono.Cecil.dll` 和构建工具二进制不随引擎运行目录分发，不修改 Siemens PublicAPI。

@@ -12,8 +12,8 @@
 
 Keep each runtime's dependencies and `worker` directory together. V14 SP1 and V15.1
 must retain their exact keys; original V14 and V15 are outside the target set.
-Foundation hosts require .NET 8 / ASP.NET Core 8 and the worker's .NET Framework;
-full engines require .NET Framework 4.8; the unified desktop needs .NET 10 Desktop Runtime. Keep the complete bundle together, including on an AI-only host.
+`dotnet` holds the bundled Microsoft .NET 10 runtime (base, ASP.NET Core and Windows Desktop) that the foundation hosts and
+the unified desktop load first; workers and full engines require .NET Framework 4.8. Keep the complete bundle together, including on an AI-only host.
 Matching licensed Siemens PublicAPI assemblies come from the installed TIA product.
 
 The configurator selects and registers the matching executable. Foundation hosts

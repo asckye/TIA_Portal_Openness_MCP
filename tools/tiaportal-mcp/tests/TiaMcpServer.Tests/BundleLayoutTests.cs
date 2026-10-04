@@ -5,7 +5,7 @@ using Xunit;
 
 namespace TiaOpenness.Shared.Tests
 {
-    // Linked into both test projects: exercises Logic/net8 and Core/net10 assemblies.
+    // Linked into both test projects: exercises Logic/net10 and Core/net10 assemblies.
     public sealed class BundleLayoutTests : IDisposable
     {
         private readonly string scratch = Path.Combine(Path.GetTempPath(), "bundle 空格 " + Guid.NewGuid().ToString("N"));
@@ -141,7 +141,7 @@ namespace TiaOpenness.Shared.Tests
         [InlineData("runtime/v22")]
         [InlineData("runtime/v21/plugins")]
         [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Custom/net48")]
-        [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net8.0")]
+        [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net10.0")]
         [InlineData("tools/other/bin/Release/net48")]
         public void Stray_ancestor_marker_does_not_authorize_unknown_layouts(string anchor)
         {

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)../../../../Version.props" />
   <PropertyGroup>
-    <TargetFrameworks>net48;net8.0</TargetFrameworks>
+    <TargetFrameworks>net48;net10.0</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <AutomaticallyUseReferenceAssemblyPackages>false</AutomaticallyUseReferenceAssemblyPackages>
@@ -14,7 +14,7 @@
   <!-- Include resolved references so transitive JSON/native dependencies also fail the build. -->
   <Target Name="RejectNativeAndJsonDependencies" BeforeTargets="CoreCompile" DependsOnTargets="ResolveReferences">
     <ItemGroup>
-      <!-- net8 supplies STJ implicitly. Remove that compiler input as well, so even
+      <!-- net10 supplies STJ implicitly. Remove that compiler input as well, so even
            an accidental source-level dependency cannot compile in this assembly. -->
       <ReferencePath Remove="@(ReferencePath)" Condition="'%(ReferencePath.Filename)' == 'System.Text.Json' and '%(ReferencePath.FrameworkReferenceName)' == 'Microsoft.NETCore.App'" />
       <ReferencePathWithRefAssemblies Remove="@(ReferencePathWithRefAssemblies)" Condition="'%(ReferencePathWithRefAssemblies.Filename)' == 'System.Text.Json' and '%(ReferencePathWithRefAssemblies.FrameworkReferenceName)' == 'Microsoft.NETCore.App'" />

@@ -35,7 +35,7 @@ AI 调用不熟悉的工具时，用 `GetToolUsage(toolName, operation)` 获取�
 
 ## 环境与验证
 
-按需安装对应版本的 TIA Portal、Openness 和许可证。统一桌面需要 .NET 10 Desktop Runtime；Openness 桥接进程及完整引擎需要 .NET Framework 4.8；基础引擎另外需要 .NET 8 和 ASP.NET Core 8。具体文件位置见[运行目录](runtime/README.md)。
+按需安装对应版本的 TIA Portal、Openness 和许可证。统一桌面和基础引擎所需的 .NET 10 运行时已随包附带（`runtime/dotnet`）；Openness 桥接进程、工作进程及完整引擎需要 .NET Framework 4.8（Windows 10 1903 及以后已自带）。具体文件位置见[运行目录](runtime/README.md)。
 
 八版本运行文件、Studio、协议、离线功能和官方 SDK/XSD 检查已有构建记录；新增功能的真实 TIA 工程验收仍为 **NOT RUN**。工具数量不等于完整覆盖所有 Siemens API，当前范围见[能力与验收说明](docs/reference/capabilities.md)。
 

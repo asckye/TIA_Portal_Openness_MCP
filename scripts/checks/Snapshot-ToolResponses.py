@@ -867,7 +867,7 @@ def main():
     capture_parser.add_argument('--harness', required=True, type=Path)
     capture_parser.add_argument('--public-api-root', type=Path)
     capture_parser.add_argument('--dotnet-root', type=Path,
-                                help='Private .NET/ASP.NET Core 8 root; sets DOTNET_ROOT and DOTNET_ROOT_X64 for Foundation only')
+                                help='Private .NET/ASP.NET Core 10 root; sets DOTNET_ROOT and DOTNET_ROOT_X64 for Foundation only')
     capture_parser.add_argument('--exe', action='append', default=[], metavar='RELEASE=PATH')
     capture_parser.add_argument('--releases', nargs='+', choices=RELEASES, default=RELEASES)
     capture_parser.add_argument('--output', required=True, type=Path)

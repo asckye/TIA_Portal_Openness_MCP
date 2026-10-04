@@ -65,7 +65,7 @@ function Build-Variant([string]$SourceRepo, [string]$Destination, [string]$Label
         # instrumenter used by this source tree for later replay.
         $savedWeaver = Join-Path $Destination 'weaver'
         New-Item -ItemType Directory -Force $savedWeaver | Out-Null
-        Copy-Item -Path 'tools/native-call-weaver/bin/Release/net8.0/*' -Destination $savedWeaver -Recurse -Force
+        Copy-Item -Path 'tools/native-call-weaver/bin/Release/net10.0/*' -Destination $savedWeaver -Recurse -Force
     } finally { Pop-Location }
 }
 Push-Location $repo

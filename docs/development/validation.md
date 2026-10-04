@@ -89,7 +89,7 @@ CommentHygiene、McpText、Inventory-ResponseEnvelopes 的 `--self-test`；吞�
 
 ### 需要本地 .NET 或工作目录的源码检查
 
-下列命令不进入 Python-only job。HMI/技术对象需要 .NET 8 引用包与运行时，外部源替身需要 .NET 10；
+下列命令不进入 Python-only job。HMI/技术对象与外部源替身需要 .NET 10；
 依赖须已缓存，替身项目只使用本地还原源。它们编译提取的实际方法体并运行托管替身，不连接 TIA。
 外部源的工作目录保留生成源码与构建证据；HMI/技术对象在 `bin-build` 创建并清理临时目录。
 另外两项仅用本地 MSBuild 求值八版编译常量，无需构建、还原或加载 Siemens。
@@ -293,14 +293,14 @@ pwsh -NoProfile -File tools/tiaportal-mcp/src/TiaMcp.Adapters/build/Test-Adapter
 逐项日志和 `input-results.json` 写入证据目录。本检查手动运行，未接入 CI。
 ## Foundation 协议 2
 
-`TiaMcp.WorkerChannel` 同时以 net48/net8.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
+`TiaMcp.WorkerChannel` 同时以 net48/net10.0 构建，无 Siemens 引用。其信封使用与 LegacyHost 相同的 STJ 包版本，DTO 编解码保持原样。[规则与预览测试对应表](../../tools/tiaportal-mcp/tests/TiaMcp.WorkerChannel.Tests/README.md)列出保留和不适用的规则。
 
 ```powershell
 python scripts/checks/Test-DotnetSuites.py --suite worker-channel
 dotnet publish tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj -c Release -o bin-build/foundation-host
 dotnet build tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj -c Release
 # 如 CI foundation-transport：将 publish 文件复制到 runtime/v14sp1、v15.1、v16、v17、v18、v19，并写入各自 release-key.txt。
-python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/bin/Release/net8.0/TransportFixture.exe --output bin-build/foundation-transport
+python scripts/checks/Test-FoundationTransport.py --fixture tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture.exe --output bin-build/foundation-transport
 ```
 
 `worker-channel` 最低 98 项通过、0 跳过，验证 hello 的全部身份字段、双向帧限制、绑定纪元、单次分派、取消、超时、管道故障、迟到进度、未知/重复回复和 ReadFailed。夹具用 `TIA_FIXTURE_FAULT` 注入故障；正常传输另验证六个 STDIO 版本、两个独立 HTTP 会话、nonce 隔离及中文往返。系统 TEMP 受限时可加 `--temp-root <新的 worktree 目录>`，保留可审查的夹具日志。HTTP 只连接该脚本启动的本地模拟服务，不连接 TIA。
@@ -344,8 +344,8 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 ```
 
 删除工具或 lite 条目、删除参数、新增必填、类型/枚举/默认值变化等破坏性变化返回 1；新增工具或可选参数
-只报告。基线只检查输入契约，不检查返回结构或原生语义。缺少 ASP.NET Core 8 时，抓取前把
-`DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
+只报告。基线只检查输入契约，不检查返回结构或原生语义。基础宿主优先加载 `runtime/dotnet` 中的随包运行时；
+只用开发输出且本机缺少 ASP.NET Core 10 时，抓取前把 `DOTNET_ROOT`/`DOTNET_ROOT_X64` 指向私有运行时。
 
 返回结构另用 `manifest/contracts/responses` 守护。先在当前 worktree 依次构建 Release 的 V20、V21
 （指定对应 `SiemensEngineeringDirectory`），再构建 HttpTests 和 LegacyHost；`--exe` 指向这些新产物：
@@ -353,7 +353,7 @@ python scripts/checks/Snapshot-ToolContracts.py compare --baseline manifest/cont
 ```powershell
 $engine = 'tools/tiaportal-mcp/src/TiaMcpServer'
 $harness = 'tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/bin/Release/net48/HttpTests.exe'
-$legacy = 'tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/bin/Release/net8.0/TiaMcpServer.exe'
+$legacy = 'tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/bin/Release/net10.0/TiaMcpServer.exe'
 python scripts/checks/Snapshot-ToolResponses.py capture --repo-root . --public-api-root <SDK-root> --harness $harness --dotnet-root <private-ASP.NET-Core-8-root> --exe "14sp1=$legacy" --exe "15.1=$legacy" --exe "16=$legacy" --exe "17=$legacy" --exe "18=$legacy" --exe "19=$legacy" --exe "20=$engine/bin-v20/Release/net48/TiaMcpServer.exe" --exe "21=$engine/bin/Release/net48/TiaMcpServer.exe" --temp-root TiaMcp_Output/responses-temp --output TiaMcp_Output/responses
 python scripts/checks/Snapshot-ToolResponses.py compare --baseline manifest/contracts/responses --current TiaMcp_Output/responses
 ```

@@ -9,7 +9,7 @@ the selected release. Closing the main window still handles its owned MCP servic
 
 Engineering operations continue to call Siemens Openness through the .NET Framework 4.8
 bridge. The MCP engines retain their existing process boundaries. The unified desktop
-requires the complete bundle and .NET 10 Desktop Runtime, including on an AI-only host.
+requires the complete bundle, whose `runtime/dotnet` supplies .NET 10, including on an AI-only host.
 This source change has not replaced the published v3.2.0 ZIP.
 
 Upstream: `asckye/tia-openness-studio`, commit `87099c576fbc06e6b6ac523ddbf763fe0aa2ce02`, MIT,

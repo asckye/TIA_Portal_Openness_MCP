@@ -569,18 +569,18 @@ def dump(assembly, inventory, directory, config):
     directory.mkdir(parents=True, exist_ok=True)
     tool = ROOT / 'bin-build/shared-native-il-reader'
     tool.mkdir(parents=True, exist_ok=True)
-    cecil = ROOT / 'tools/native-call-weaver/bin/Release/net8.0/Mono.Cecil.dll'
+    cecil = ROOT / 'tools/native-call-weaver/bin/Release/net10.0/Mono.Cecil.dll'
     if not cecil.is_file():
         raise ValueError('Build NativeCallWeaver first: ' + str(cecil))
     project = tool / 'Reader.csproj'
     if not project.exists():
-        project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net8.0</TargetFramework>'
+        project.write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework>'
             '<OutputType>Exe</OutputType><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable>'
             '<EnableDefaultCompileItems>false</EnableDefaultCompileItems><NuGetAudit>false</NuGetAudit>'
             '</PropertyGroup><ItemGroup><Compile Include="' + escape(str(ROOT / 'scripts/checks/SharedNativeIlReader.cs')) + '" />'
             '<Reference Include="Mono.Cecil"><HintPath>' + escape(str(cecil)) + '</HintPath></Reference>'
             '</ItemGroup></Project>', encoding='utf-8')
-    reader = tool / 'bin/Release/net8.0/Reader.dll'
+    reader = tool / 'bin/Release/net10.0/Reader.dll'
     if not reader.exists() or reader.stat().st_mtime < max(project.stat().st_mtime,
             (ROOT / 'scripts/checks/SharedNativeIlReader.cs').stat().st_mtime, cecil.stat().st_mtime):
         subprocess.run(['dotnet', 'build', str(project), '-c', 'Release', '-m:1', '-nr:false',

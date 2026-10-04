@@ -2,7 +2,7 @@
   <Import Project="../Shared/Xunit.props" />
   <!-- Actual MCP SDK boundary tests; no Siemens assemblies or native calls. -->
   <PropertyGroup>
-    <OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable><ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>

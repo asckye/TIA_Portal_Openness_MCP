@@ -2,7 +2,7 @@
 
 capture starts each built runtime without TIA: V20/V21 through the release host harness over STDIO
 (full and lite profiles), V14 SP1-V19 through `TiaMcpServer.exe --catalog`. The foundation host needs
-the ASP.NET Core 8 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
+the ASP.NET Core 10 runtime; when the machine lacks it, point DOTNET_ROOT and DOTNET_ROOT_X64 at a
 private runtime before running capture. compare exits 1 on any breaking change.
 """
 import argparse

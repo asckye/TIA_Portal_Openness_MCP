@@ -21,7 +21,7 @@ namespace TiaMcpServer.ModelContextProtocol
         /// <summary>
         /// 一律按类型名（含 InnerException 链）判断，不硬引用具体异常类型，原因有两条：
         /// 1) Openness 程序集是运行时按 TIA 版本解析进来的，异常类型随大版本变；
-        /// 2) 引擎编译到 net48、自检套件编译到 net8.0，RemotingException 只存在于前者，
+        /// 2) 引擎编译到 net48、自检套件编译到 net10.0，RemotingException 只存在于前者，
         ///    硬引用会让这个文件没法被两边同时编译，也就没法被测到。
         /// </summary>
         internal static bool IsPortalProcessLost(Exception? ex)

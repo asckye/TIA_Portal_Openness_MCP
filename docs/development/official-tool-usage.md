@@ -96,7 +96,7 @@ examples for eight XML/logic builders and dependency planning on every release.
 Full engines additionally execute the Unified button-action example. Tests inspect
 generated declarations, assignment tokens, call targets and dependency order.
 Language-file DB/UDT examples are checked separately. A .NET Framework
-harness retrieves all languages to catch differences from the .NET 8 unit suite.
+harness retrieves all languages to catch differences from the .NET 10 unit suite.
 When `TIA_MCP_TEST_PUBLIC_API_ROOT` points to the eight supplied SDK directories,
 the foundation tests additionally validate generated UDT/GlobalDB interface fragments
 against each release's official XSD. This does not validate a whole document or native import.

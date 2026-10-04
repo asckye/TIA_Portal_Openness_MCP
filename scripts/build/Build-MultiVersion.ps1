@@ -26,6 +26,8 @@ foreach ($major in @(20,21)) {
 $weaver=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
 & $Dotnet build $weaver -c Release -v:q *> (Join-Path $logs 'weaver.log')
 if($LASTEXITCODE){throw 'Native weaver build failed'}
+& (Join-Path $PSScriptRoot 'Get-BundledDotnet.ps1') *> (Join-Path $logs 'bundled-dotnet.log')
+if(!$?){throw 'Bundled .NET runtime layout failed'}
 & (Join-Path $PSScriptRoot 'Build-PlcAdapterWorkers.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -UseReferenceAssemblyPackage -EvidenceDirectory (Join-Path $logs 'adapters')
 & (Join-Path $PSScriptRoot 'Build-Studio.ps1') -PublicApiRoot $api -Dotnet $Dotnet -NuGetConfig $NuGetConfig -Test:$Test
 $hostProject=Join-Path $repo 'tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj'
@@ -55,6 +57,23 @@ $studioBuild=Join-Path $repo 'tools/tia-openness-studio/src/TiaOpenness.Gui/bin/
 $studioOutput=Join-Path $repo 'runtime/studio'
 New-Item -ItemType Directory -Force $studioOutput | Out-Null
 Get-ChildItem -LiteralPath $studioBuild | ForEach-Object {Copy-Item -LiteralPath $_.FullName -Destination $studioOutput -Recurse -Force}
+# The build apphost only knows installed .NET; the published one also searches the bundled ../dotnet.
+$studioApphost=Join-Path $logs 'studio-apphost'
+& $Dotnet publish (Join-Path $repo 'tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj') -c Release --no-build -o $studioApphost -v:q -p:TiaSharedAdapterPaths=false *> (Join-Path $logs 'studio-apphost.log')
+if($LASTEXITCODE){throw 'Studio apphost publication failed'}
+Copy-Item -LiteralPath (Join-Path $studioApphost 'TiaOpenness.exe') -Destination $studioOutput -Force
+function Assert-BundledRuntime([string]$Exe,[string[]]$Arguments,[string]$Name) {
+    $trace=Join-Path $logs "corehost-$Name.txt"
+    Remove-Item -LiteralPath $trace -Force -ErrorAction SilentlyContinue
+    $env:COREHOST_TRACE='1'; $env:COREHOST_TRACEFILE=$trace; $env:TIA_OPENNESS_NETWORK_NO_DIALOG='1'
+    try {Start-Process -FilePath $Exe -ArgumentList $Arguments -Wait -NoNewWindow -RedirectStandardOutput (Join-Path $logs "corehost-$Name.out") -RedirectStandardError (Join-Path $logs "corehost-$Name.err")}
+    finally {Remove-Item Env:COREHOST_TRACE,Env:COREHOST_TRACEFILE,Env:TIA_OPENNESS_NETWORK_NO_DIALOG -ErrorAction SilentlyContinue}
+    $fxr=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet/host/fxr'))
+    if(!(Select-String -LiteralPath $trace -SimpleMatch -Pattern "Resolved fxr [$fxr" -Quiet)){throw "$Name does not load the bundled .NET runtime; see $trace"}
+}
+Assert-BundledRuntime (Join-Path $repo 'runtime/v14sp1/TiaMcpServer.exe') @('--catalog') 'foundation-host'
+# The elevated network helper path exits at once with a handled error, so it proves the GUI host without a window.
+Assert-BundledRuntime (Join-Path $studioOutput 'TiaOpenness.exe') @('--network','127.0.0.1','not-a-port','S-1-5-18') 'studio'
 if(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File -Filter 'Siemens.Engineering*.dll'){throw 'Siemens PublicAPI redistribution is forbidden'}
 $validation=@{nativeTiaExecuted=$false;studioFunctionalTestsExecuted=[bool]$Test;configurationFunctionalTestsExecuted=[bool]$Test;foundationTransportExecuted=$false}
 if($Test) {
@@ -71,7 +90,7 @@ if($Test) {
     $fixture=Join-Path $repo 'tools/tiaportal-mcp/tests/TiaMcpServer.TransportFixture/TransportFixture.csproj'
     & $Dotnet build $fixture -c Release -v:q *> (Join-Path $logs 'fixture-build.log')
     if($LASTEXITCODE){throw 'Transport fixture build failed'}
-    $fixtureExe=Join-Path (Split-Path $fixture -Parent) 'bin/Release/net8.0/TransportFixture.exe'
+    $fixtureExe=Join-Path (Split-Path $fixture -Parent) 'bin/Release/net10.0/TransportFixture.exe'
     & $Python (Join-Path $repo 'scripts/checks/Test-FoundationTransport.py') --fixture $fixtureExe --output (Join-Path $logs 'transport') *> (Join-Path $logs 'transport.log')
     if($LASTEXITCODE){throw 'Foundation transport test failed'}
     $validation.foundationTransportExecuted=$true
@@ -83,7 +102,8 @@ if($Test) {
     if($LASTEXITCODE){throw 'All-release usage coverage failed'}
     $validation.toolUsageCoverageExecuted=$true
 }
-$files=@(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File | Where-Object {$_.Extension -in '.exe','.dll','.config','.json','.txt' -and $_.Name -ne 'README.md'} | Sort-Object FullName | ForEach-Object {
+$bundledDotnet=[IO.Path]::GetFullPath((Join-Path $repo 'runtime/dotnet'))+[IO.Path]::DirectorySeparatorChar
+$files=@(Get-ChildItem -LiteralPath (Join-Path $repo 'runtime') -Recurse -File | Where-Object {($_.Extension -in '.exe','.dll','.config','.json','.txt' -or $_.FullName.StartsWith($bundledDotnet,[StringComparison]::OrdinalIgnoreCase)) -and $_.Name -ne 'README.md'} | Sort-Object FullName | ForEach-Object {
     @{path=$_.FullName.Substring($repo.Length+1).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName).Hash.ToLowerInvariant()}
 })
 $sourceRoots=@('tools/tiaportal-mcp/src','tools/tiaportal-mcp/tests','tools/openness-shared','tools/tia-openness-studio','tools/native-call-weaver','scripts/build','scripts/checks','scripts/diagnostics','scripts/generate') | ForEach-Object {Join-Path $repo $_}
@@ -102,4 +122,4 @@ $delivery | Add-Member -Force NoteProperty configuratorBuildSha256 (Get-FileHash
 $delivery | Add-Member -Force NoteProperty multiVersionBuildSha256 (Get-FileHash -LiteralPath (Join-Path $repo 'manifest/multi-version-build.json')).Hash.ToLowerInvariant()
 $delivery | Add-Member -Force NoteProperty releaseKeys $record.studioReleaseKeys
 [IO.File]::WriteAllText($deliveryPath,($delivery | ConvertTo-Json -Depth 12),[Text.UTF8Encoding]::new($false))
-Write-Output 'Eight release adapters, six foundation runtimes and direct-Openness Studio deployed to runtime/. Native TIA acceptance NOT RUN.'
+Write-Output 'Eight release adapters, six foundation runtimes, direct-Openness Studio and the bundled .NET runtime deployed to runtime/. Native TIA acceptance NOT RUN.'

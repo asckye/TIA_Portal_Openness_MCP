@@ -1,6 +1,6 @@
 # Adapter contracts (steps B, D and G)
 
-Targets: net48 and net8.0. No Siemens or JSON dependency. Existing declarations keep
+Targets: net48 and net10.0. No Siemens or JSON dependency. Existing declarations keep
 their namespaces, member order, accessors and defaults. Step D implements session, PLC program and PLC data facets by delegation. The worker still calls the existing engine.
 Step G adds `IStudioSession` and fills hardware (device listing), VCI and HMI export
 facets for the opt-in `StudioAdapter`. The Foundation adapter continues returning

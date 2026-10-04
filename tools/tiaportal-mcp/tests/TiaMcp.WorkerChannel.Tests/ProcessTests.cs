@@ -99,7 +99,7 @@ public sealed class ProcessTests
         private readonly Task<string> diagnostics;
         internal Fixture(string mode,[CallerFilePath] string source="")
         {
-            string exe=Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!,"../TiaMcpServer.TransportFixture/bin/Release/net8.0/TransportFixture"+(OperatingSystem.IsWindows()?".exe":"")));
+            string exe=Path.GetFullPath(Path.Combine(Path.GetDirectoryName(source)!,"../TiaMcpServer.TransportFixture/bin/Release/net10.0/TransportFixture"+(OperatingSystem.IsWindows()?".exe":"")));
             string adapter=Path.Combine(Path.GetDirectoryName(exe)!,"TiaMcp.Adapter.19.dll");
             string Hash(string path) { using var stream=File.OpenRead(path); return Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant(); }
             string nonce=Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();

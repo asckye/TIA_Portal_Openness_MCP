@@ -32,7 +32,7 @@
     <UseReferenceAssemblyPackage Condition="'$(UseReferenceAssemblyPackage)' == ''">true</UseReferenceAssemblyPackage>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <NuGetAudit>false</NuGetAudit>
-    <NativeCallWeaverPath Condition="'$(NativeCallWeaverPath)' == ''">$(MSBuildThisFileDirectory)../../../../native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll</NativeCallWeaverPath>
+    <NativeCallWeaverPath Condition="'$(NativeCallWeaverPath)' == ''">$(MSBuildThisFileDirectory)../../../../native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll</NativeCallWeaverPath>
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>

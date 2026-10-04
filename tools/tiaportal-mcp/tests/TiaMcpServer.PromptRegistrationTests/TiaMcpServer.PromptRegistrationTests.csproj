@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Shared/Xunit.props" />
-  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings></PropertyGroup>
   <ItemGroup>
     <Compile Remove="Fixture/**/*.cs;OptionalDependency/**/*.cs" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0-preview.4.25258.110" />
@@ -8,7 +8,7 @@
     <ProjectReference Include="Fixture/Fixture.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <Target Name="CopyFixture" AfterTargets="Build">
-    <ItemGroup><FixtureFiles Include="Fixture/bin/$(Configuration)/net8.0/PromptTest.*.dll" /></ItemGroup>
+    <ItemGroup><FixtureFiles Include="Fixture/bin/$(Configuration)/net10.0/PromptTest.*.dll" /></ItemGroup>
     <Copy SourceFiles="@(FixtureFiles)" DestinationFolder="$(OutDir)fixtures" />
   </Target>
 </Project>

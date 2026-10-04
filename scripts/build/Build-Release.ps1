@@ -98,7 +98,7 @@ $harness=Join-Path (Split-Path $harnessProject) 'bin/Release/net48/HttpTests.exe
 $weaverProject=Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'
 Restore $weaverProject @()
 Run $Dotnet @('build',$weaverProject,'-c','Release','--no-restore','-v:q') 'native-weaver-build.log'
-$weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll'
+$weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
 $verifierDirectory=Join-Path $repo 'runtime/verification'
 New-Item -ItemType Directory -Force $verifierDirectory | Out-Null
 foreach ($name in @('NativeCallWeaver.dll','NativeCallWeaver.deps.json','NativeCallWeaver.runtimeconfig.json','Mono.Cecil.dll')) {

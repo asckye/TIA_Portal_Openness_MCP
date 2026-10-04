@@ -42,7 +42,7 @@ foreach ($name in @('TiaMcp.WorkerChannel.dll','System.Text.Json.dll','System.Te
 $native=@()
 if($shared){
     RunDotnet @('build',(Join-Path $repo 'tools/native-call-weaver/NativeCallWeaver.csproj'),'-c','Release','--nologo') 'weaver.log'
-    $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net8.0/NativeCallWeaver.dll'
+    $weaver=Join-Path $repo 'tools/native-call-weaver/bin/Release/net10.0/NativeCallWeaver.dll'
 }
 if(!$ReleaseKeys){$ReleaseKeys=if($PublicApiRoot){@('14sp1','15.1','16','17','18','19','20','21')}else{@('20','21')}}
 foreach($key in $ReleaseKeys) {

@@ -323,7 +323,7 @@
   {
     "project": "tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj",
     "properties": {},
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "JOURNAL_ADAPTER",
       "RELEASE",
@@ -421,7 +421,7 @@
   {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.DeviceAddTests/TiaMcpServer.DeviceAddTests.csproj",
     "properties": {},
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_HARDWARE_CATALOG",
       "RELEASE"
@@ -430,7 +430,7 @@
   {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.HardwareCatalogTests/TiaMcpServer.HardwareCatalogTests.csproj",
     "properties": {},
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_HARDWARE_CATALOG",
       "RELEASE",
@@ -459,7 +459,7 @@
   {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.SpecialExportShapeTests/TiaMcpServer.SpecialExportShapeTests.csproj",
     "properties": {},
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "PLC_WATCH_EXPORT",
       "PLC_WATCH_READ",
@@ -470,7 +470,7 @@
   {
     "project": "tools/tiaportal-mcp/tests/TiaMcpServer.Tests/TiaMcpServer.Tests.csproj",
     "properties": {},
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "RELEASE",
       "TRACE"
@@ -481,7 +481,7 @@
     "properties": {
       "DefineConstants": "TIA_V20"
     },
-    "targetFramework": "net8.0",
+    "targetFramework": "net10.0",
     "defineConstants": [
       "TIA_V20"
     ]

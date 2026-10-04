@@ -191,7 +191,7 @@ namespace TiaMcpServer.Tests
         [InlineData("runtime/v22")]
         [InlineData("runtime/v21/plugins")]
         [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Custom/net48")]
-        [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net8.0")]
+        [InlineData("tools/tiaportal-mcp/src/TiaMcpServer/bin/Release/net10.0")]
         [InlineData("tools/other/bin/Release/net48")]
         [InlineData("custom/a/b")]
         [InlineData("custom/a/b/c/d/e/f/g/h/i/j/k/l")]

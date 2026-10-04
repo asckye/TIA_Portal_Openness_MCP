@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exercise real host MCP stdio only; never launch a worker/TIA. Requires built net8 host."""
+"""Exercise real host MCP stdio only; never launch a worker/TIA. Requires built net10 host."""
 import argparse, json, os, pathlib, select, subprocess, tempfile
 
 p = argparse.ArgumentParser()

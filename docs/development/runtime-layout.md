@@ -29,6 +29,7 @@ G7-1…G7-7 已完成。完整交付包可放在仓库之外；安装根不需�
 |---|---|
 | MCP 安装输出 | `runtime/v14sp1`、`runtime/v15.1`、`runtime/v16`–`runtime/v21` |
 | Studio 安装输出 | `runtime/studio`、`runtime/studio/bridge` |
+| 随包 .NET 运行时 | `runtime/dotnet`（`scripts/build/bundled-dotnet.json` 固定版本与 SHA-512；基础宿主和统一桌面的发布 apphost 先找 `../dotnet`，再找 `DOTNET_ROOT` 和已安装的 .NET） |
 | 完整引擎开发输出 | `E/bin-v20/<configuration>/net48`（V20）、`E/bin/<configuration>/net48`（V21） |
 | Studio 开发输出 | `S/TiaOpenness.Gui/bin/<configuration>/net10.0-windows` 及其 `bridge` 子目录；`S/TiaOpenness.Bridge/bin/<configuration>/net48` |
 

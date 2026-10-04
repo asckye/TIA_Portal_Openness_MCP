@@ -21,7 +21,7 @@ does not translate XML, upgrade a project, or make its unavailable tools runnabl
 
 | Profile | Runtime contract |
 |---|---|
-| V14 SP1–V19 MCP | .NET 8 foundation host plus exact typed .NET Framework worker; advertises its supported subset |
+| V14 SP1–V19 MCP | .NET 10 foundation host (bundled runtime) plus exact typed .NET Framework worker; advertises its supported subset |
 | V20/V21 MCP | Full .NET Framework engines, full/lite catalogs and discovery bridge |
 | Studio, all eight releases | Desktop and bridge call the selected Openness adapter directly; no Studio MCP transport |
 

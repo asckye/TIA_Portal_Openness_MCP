@@ -70,7 +70,7 @@ jobs:
         run: python scripts/checks/Verify-ReleaseAsset.py "assets/${{ env.package }}.zip" --root tagtree
       - uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - name: Unpacked package passes the strict bundle validation
         # The packaged verifier reads IL only; no Siemens SDK or engine build is needed.
         shell: pwsh

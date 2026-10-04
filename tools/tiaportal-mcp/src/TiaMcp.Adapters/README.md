@@ -142,7 +142,7 @@ five deliberate coverage corruptions per release, invalid worker configurations,
 missing instrumentation tooling.
 
 `tools/tiaportal-mcp/tests/TiaMcp.Adapters.DiagnosticsTests/Diagnostics.Tests.csproj`
-builds only the API-independent runtime against net8.0, keeping the assembly name
+builds only the API-independent runtime against net10.0, keeping the assembly name
 `Diagnostics.Tests` for `InternalsVisibleTo`. From the repository root, run:
 
 ```powershell
