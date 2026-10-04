@@ -197,6 +197,7 @@
     "targetFramework": "net48",
     "defineConstants": [
       "PLC_DOCUMENT_EXPORT",
+      "PLC_EXTERNAL_SOURCE_GROUP_RENAME",
       "PLC_HARDWARE_CATALOG",
       "PLC_RH",
       "PLC_SAFETY",
@@ -315,6 +316,7 @@
     "properties": {},
     "targetFramework": "net48",
     "defineConstants": [
+      "PLC_EXTERNAL_SOURCE_GROUP_RENAME",
       "RELEASE",
       "TIA_ENGINE_LOCAL_PRIMITIVES",
       "TRACE"

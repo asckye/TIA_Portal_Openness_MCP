@@ -16,6 +16,9 @@ namespace TiaMcp.Adapters
 #if PLC_HARDWARE_CATALOG
             Hardware = new HardwareSurface(project);
 #endif
+#if PLC_DOCUMENT_EXPORT
+            Documents = new DocumentSurface(project);
+#endif
 #if STUDIO_VCI_MODERN
             VersionControl = new VersionControlSurface(project);
 #endif
@@ -41,6 +44,16 @@ namespace TiaMcp.Adapters
         {
             private readonly Func<ProjectBase> project;
             internal HardwareSurface(Func<ProjectBase> project) { this.project = project; }
+            public ProjectBase CurrentProject => project();
+        }
+#endif
+#if PLC_DOCUMENT_EXPORT
+        public DocumentSurface Documents { get; }
+
+        public sealed class DocumentSurface
+        {
+            private readonly Func<ProjectBase> project;
+            internal DocumentSurface(Func<ProjectBase> project) { this.project = project; }
             public ProjectBase CurrentProject => project();
         }
 #endif

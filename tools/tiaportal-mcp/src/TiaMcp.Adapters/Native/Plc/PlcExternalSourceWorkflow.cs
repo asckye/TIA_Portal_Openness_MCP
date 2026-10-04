@@ -1,3 +1,4 @@
+using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -32,14 +33,14 @@ namespace TiaMcp.PlcFoundation
             PlcExternalSourceWorkflowPolicy.RequireRoot(groupPath);
             var input=new FileInfo(MutationIdentityPolicy.AbsoluteFile(filePath));
             var check=ExternalSourceTargetCheck(softwarePath,out var software,out var projectFile,out var processId);
-            var sources=software.ExternalSourceGroup.ExternalSources;
+            var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
             var result=new PlcExternalSourceImportResult {Operation="ImportPlcExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=softwarePath,FilePath=input.FullName,RequestedSourceName=input.Name};
             using(var stream=new FileStream(input.FullName,FileMode.Open,FileAccess.Read,FileShare.Read))
-                PlcExternalSourceWorkflowPolicy.Import(result,stream,dryRun,expectedPlanHash,confirm,expectedProjectFile,()=>sources.Select(x=>x.Name),check,(name,path)=> {
+                PlcExternalSourceWorkflowPolicy.Import(result,stream,dryRun,expectedPlanHash,confirm,expectedProjectFile,()=>sources.Select(x=>Documents.Name(x)),check,(name,path)=> {
                     // Exact SDK signature on all eight releases: name first, full path second.
-                    var created=sources.CreateFromFile(name,path);
-                    if(created==null || !object.Equals(created.Parent,software.ExternalSourceGroup) || !object.Equals(sources.Find(created.Name),created)) throw new InvalidOperationException("CreateFromFile did not return a source in the selected PLC root.");
-                    return created.Name;
+                    var created=Documents.CreateFromFile(sources,name,path);
+                    if(created==null || !object.Equals(created.Parent,Documents.ExternalSourceGroup(software)) || !object.Equals(Documents.Find(sources,Documents.Name(created)),created)) throw new InvalidOperationException("CreateFromFile did not return a source in the selected PLC root.");
+                    return Documents.Name(created);
                 });
             if(result.RequiresSessionReset) externalSourceOutcomeUnknown=true;
             return result;
@@ -52,31 +53,31 @@ namespace TiaMcp.PlcFoundation
         private static ExternalSourceNativeObject[] ExternalSourceObjects(PlcSoftware software)
         {
             var objects=new List<ExternalSourceNativeObject>();
-            foreach(var group in BlockGroups(software.BlockGroup)) foreach(var block in group.Value.Blocks)
-                objects.Add(new ExternalSourceNativeObject {Native=block,Details=new PlcExternalSourceObject {Kind="block",Path=Child(group.Path,block.Name),Name=block.Name,TypeName=block.GetType().Name,ProgrammingLanguage=block.ProgrammingLanguage.ToString(),IsConsistent=block.IsConsistent,ModifiedDate=block.ModifiedDate}});
-            foreach(var group in TypeGroups(software.TypeGroup)) foreach(var type in group.Value.Types)
-                objects.Add(new ExternalSourceNativeObject {Native=type,Details=new PlcExternalSourceObject {Kind="type",Path=Child(group.Path,type.Name),Name=type.Name,TypeName=type.GetType().Name,IsConsistent=type.IsConsistent,ModifiedDate=type.ModifiedDate}});
+            foreach(var group in BlockGroups(Documents.BlockGroup(software))) foreach(var block in Documents.Blocks(group.Value))
+                objects.Add(new ExternalSourceNativeObject {Native=block,Details=new PlcExternalSourceObject {Kind="block",Path=Child(group.Path,Documents.Name(block)),Name=Documents.Name(block),TypeName=block.GetType().Name,ProgrammingLanguage=Documents.Language(block).ToString(),IsConsistent=Documents.IsConsistent(block),ModifiedDate=block.ModifiedDate}});
+            foreach(var group in TypeGroups(Documents.TypeGroup(software))) foreach(var type in group.Value.Types)
+                objects.Add(new ExternalSourceNativeObject {Native=type,Details=new PlcExternalSourceObject {Kind="type",Path=Child(group.Path,Documents.Name(type)),Name=Documents.Name(type),TypeName=type.GetType().Name,IsConsistent=type.IsConsistent,ModifiedDate=type.ModifiedDate}});
             return objects.OrderBy(x=>PlcExternalSourceWorkflowPolicy.ObjectKey(x.Details),StringComparer.Ordinal).ToArray();
         }
         public PlcExternalSourceGenerationResult GenerateBlocksFromExternalSource(string softwarePath,string externalSourceName,bool dryRun=true,string expectedPlanHash="",bool confirm=false,string expectedProjectFile="")
         {
             PlcExternalSourceWorkflowPolicy.RequireSourceName(externalSourceName);
             var checkTarget=ExternalSourceTargetCheck(softwarePath,out var software,out var projectFile,out var processId);
-            var sources=software.ExternalSourceGroup.ExternalSources;
-            var source=sources.Find(externalSourceName) ?? throw new ArgumentException("External source not found: "+externalSourceName);
-            if(source.Name!=externalSourceName) throw new ArgumentException("Use the exact external source name including its extension.");
-            var result=new PlcExternalSourceGenerationResult {Operation="GenerateBlocksFromExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=softwarePath,SourceName=source.Name,SourceIdentity=externalDeleteIdentities.Get(source)};
-            Action check=()=> { checkTarget(); if(!object.Equals(sources.Find(externalSourceName),source)) throw new InvalidOperationException("Selected external source changed."); };
+            var sources=Documents.Sources(Documents.ExternalSourceGroup(software));
+            var source=Documents.Find(sources,externalSourceName) ?? throw new ArgumentException("External source not found: "+externalSourceName);
+            if(Documents.Name(source)!=externalSourceName) throw new ArgumentException("Use the exact external source name including its extension.");
+            var result=new PlcExternalSourceGenerationResult {Operation="GenerateBlocksFromExternalSource",Release=ReleaseKey,ProjectFile=projectFile,ProcessId=processId,SoftwarePath=softwarePath,SourceName=Documents.Name(source),SourceIdentity=externalDeleteIdentities.Get(source)};
+            Action check=()=> { checkTarget(); if(!object.Equals(Documents.Find(sources,externalSourceName),source)) throw new InvalidOperationException("Selected external source changed."); };
 #if PLC_SOURCE_RESULTS
             IList<IEngineeringObject>? generated=null;
 #endif
             PlcExternalSourceWorkflowPolicy.Generate(result,dryRun,expectedPlanHash,confirm,expectedProjectFile,()=>ExternalSourceObjects(software).Select(x=>x.Details).ToArray(),check,()=> {
 #if PLC_SOURCE_RESULTS
-                generated=source.GenerateBlocksFromSource(GenerateBlockOption.None);
+                generated=Documents.Generate(source,GenerateBlockOption.None);
 #else
                 // V14 SP1 has only the void overload. Inventory observations cannot identify
                 // every generated object (e.g. overwriting a block without changed metadata).
-                source.GenerateBlocksFromSource();
+                Documents.Generate(source);
 #endif
             },()=> {
 #if PLC_SOURCE_RESULTS

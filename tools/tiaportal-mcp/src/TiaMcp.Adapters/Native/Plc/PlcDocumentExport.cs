@@ -1,3 +1,4 @@
+using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 using System;
 using System.Linq;
 using Siemens.Engineering.SW.Blocks;
@@ -16,15 +17,15 @@ namespace TiaMcp.PlcFoundation
             var selected=ReadSelection(softwarePath);
             if(softwarePath!=selected.ExactPath) throw new ArgumentException("Exact software path required.");
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
-            var blocks=BlockGroups(selected.Value.BlockGroup).Select(g=>g.Value.Blocks.Select(b=>new Located<PlcBlock>(Child(g.Path,b.Name),b)));
+            var blocks=BlockGroups(Documents.BlockGroup(selected.Value)).Select(g=>Documents.Blocks(g.Value).Select(b=>new Located<PlcBlock>(Child(g.Path,Documents.Name(b)),b)));
             var target=PlcDocumentExportPolicy.Exact(blocks,x=>x.Path,blockPath).Value;
             if(target.IsKnowHowProtected) throw new NotSupportedException("Protected blocks are outside this document export scope.");
-            return PlcDocumentExportPolicy.Run(ReleaseKey,Project().Path.FullName,softwarePath,blockPath,exportPath,target.ProgrammingLanguage.ToString(),target.IsConsistent,dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),(stage,name)=> {
+            return PlcDocumentExportPolicy.Run(ReleaseKey,Project().Path.FullName,softwarePath,blockPath,exportPath,Documents.Language(target).ToString(),Documents.IsConsistent(target),dryRun,expectedPlanHash,()=>RequireTargetOffline(selected),(stage,name)=> {
                 RequireTargetOffline(selected);
-                if(!target.IsConsistent || target.IsKnowHowProtected) throw new InvalidOperationException("Block eligibility changed after preview.");
+                if(!Documents.IsConsistent(target) || target.IsKnowHowProtected) throw new InvalidOperationException("Block eligibility changed after preview.");
                 // Same native overload and success criterion as the full V20/V21 engine; no old-file deletion.
-                var result=target.ExportAsDocuments(stage,name);
-                if(result==null || result.State!=DocumentResultState.Success) throw new InvalidOperationException("Native document export did not succeed.");
+                var result=Documents.Export(target,stage,name);
+                if(result==null || Documents.State(result)!=DocumentResultState.Success) throw new InvalidOperationException("Native document export did not succeed.");
                 return result.ExportedDocuments.Select(f=>f.FullName).Take(3).ToArray();
             });
 #else

@@ -1,3 +1,4 @@
+using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 using System;
 using System.Linq;
 
@@ -15,17 +16,17 @@ namespace TiaMcp.PlcFoundation
             PlcLifecyclePolicy.RequireLocalSessionExecution(lifecycle.IsLocalSession,false);
             request.Project=Project().Path.FullName;
             request.ProcessId=lifecycle.ProcessId ?? throw new InvalidOperationException("Explicit attached process required.");
-            var root=selected.Value.ExternalSourceGroup ?? throw new InvalidOperationException("External-source root unavailable.");
+            var root=Documents.ExternalSourceGroup(selected.Value) ?? throw new InvalidOperationException("External-source root unavailable.");
             Action check=()=> {
                 RequireProjectIdentity(request.Project);
                 if(lifecycle.ProcessId!=request.ProcessId) throw new InvalidOperationException("Process identity changed.");
                 var current=ReadSelection(softwarePath);
-                if(current.ExactPath!=selected.ExactPath || !ReferenceEquals(current.Value,selected.Value) || !ReferenceEquals(current.Context,selected.Context) || !ReferenceEquals(current.Value.ExternalSourceGroup,root)) throw new InvalidOperationException("PLC/root identity changed.");
+                if(current.ExactPath!=selected.ExactPath || !ReferenceEquals(current.Value,selected.Value) || !ReferenceEquals(current.Context,selected.Context) || !ReferenceEquals(Documents.ExternalSourceGroup(current.Value),root)) throw new InvalidOperationException("PLC/root identity changed.");
                 // Conservative wrapper restriction, not claimed as a CreateFromFile API prerequisite.
                 RequireTargetOffline(current);
             };
             check();
-            return PlcExternalSourceImportPolicy.Plan(request,PlcExternalSourceImportPolicy.OpenLocked,()=>root.ExternalSources.Select(source=>source.Name),check);
+            return PlcExternalSourceImportPolicy.Plan(request,PlcExternalSourceImportPolicy.OpenLocked,()=>Documents.Sources(root).Select(source=>Documents.Name(source)),check);
         }
     }
 }

@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "domain": "plc-documents",
+  "label": "PLC documents and external sources",
+  "engine": {
+    "types": [
+      "TiaMcpServer.Siemens.Services.DocumentsService",
+      "TiaMcpServer.Siemens.Services.PlcExternalSourcesService"
+    ],
+    "releases": [
+      "20",
+      "21"
+    ]
+  },
+  "adapter": {
+    "releases": [
+      "14sp1",
+      "15.1",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21"
+    ],
+    "mutableTypes": [
+      "TiaMcp.Adapters.PlcServices"
+    ]
+  },
+  "hosts": [
+    {
+      "name": "foundation",
+      "types": [
+        "TiaMcp.PlcFoundation.PlcFoundationEngine"
+      ],
+      "releases": [
+        "14sp1",
+        "15.1",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21"
+      ],
+      "methodScopes": {
+        "TiaMcp.PlcFoundation.PlcFoundationEngine": [
+          {
+            "method": "CreateDocumentImportContext",
+            "signature": "TiaMcp.PlcFoundation.PlcDocumentImportContext TiaMcp.PlcFoundation.PlcFoundationEngine::CreateDocumentImportContext(TiaMcp.PlcFoundation.PlcDocumentImportRequest)"
+          },
+          {
+            "method": "ExportAsDocuments",
+            "signature": "TiaMcp.PlcFoundation.PlcDocumentExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportAsDocuments(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean)"
+          },
+          {
+            "method": "ExportBlocksAsDocuments",
+            "signature": "TiaMcp.PlcFoundation.PlcBatchDocumentExportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ExportBlocksAsDocuments(System.String,System.String,System.String,System.Boolean,System.Int32,System.Boolean,System.String,System.Boolean)"
+          },
+          {
+            "method": "PlanPlcExternalSourceImport",
+            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceImportPlan TiaMcp.PlcFoundation.PlcFoundationEngine::PlanPlcExternalSourceImport(System.String,System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          },
+          {
+            "method": "DeletePlcExternalSource",
+            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceDeleteResult TiaMcp.PlcFoundation.PlcFoundationEngine::DeletePlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          },
+          {
+            "method": "ExternalSourceObjects",
+            "signature": "TiaMcp.PlcFoundation.PlcFoundationEngine/ExternalSourceNativeObject[] TiaMcp.PlcFoundation.PlcFoundationEngine::ExternalSourceObjects(Siemens.Engineering.SW.PlcSoftware)"
+          },
+          {
+            "method": "ImportPlcExternalSource",
+            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceImportResult TiaMcp.PlcFoundation.PlcFoundationEngine::ImportPlcExternalSource(System.String,System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          },
+          {
+            "method": "GenerateBlocksFromExternalSource",
+            "signature": "TiaMcp.PlcFoundation.PlcExternalSourceGenerationResult TiaMcp.PlcFoundation.PlcFoundationEngine::GenerateBlocksFromExternalSource(System.String,System.String,System.Boolean,System.String,System.Boolean,System.String)"
+          }
+        ]
+      }
+    }
+  ],
+  "primitives": [
+    {
+      "adapterType": "TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives",
+      "engineNamespace": "TiaMcpServer.Siemens.LocalDocuments"
+    }
+  ],
+  "expansionTypes": [
+    "TiaMcp.PlcFoundation.PlcExternalSourceDeleteIdentities"
+  ],
+  "expansionNamespaces": [],
+  "tools": [
+    {
+      "name": "ExportAsDocuments",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DocumentsService",
+          "method": "ExportAsDocuments"
+        }
+      ]
+    },
+    {
+      "name": "ExportBlocksAsDocuments",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DocumentsService",
+          "method": "ExportBlocksAsDocuments"
+        }
+      ]
+    },
+    {
+      "name": "ImportFromDocuments",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DocumentsService",
+          "method": "ImportFromDocuments"
+        },
+        {
+          "type": "TiaMcpServer.Siemens.Services.DocumentsService",
+          "method": "VerifyLastDocumentImport"
+        }
+      ]
+    },
+    {
+      "name": "ImportBlocksFromDocuments",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.DocumentsService",
+          "method": "ImportBlocksFromDocuments"
+        }
+      ]
+    },
+    {
+      "name": "GetPlcExternalSources",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "GetPlcExternalSources"
+        }
+      ]
+    },
+    {
+      "name": "DeletePlcExternalSource",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "DeletePlcExternalSource"
+        }
+      ]
+    },
+    {
+      "name": "ImportPlcExternalSource",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "ImportPlcExternalSource"
+        }
+      ]
+    },
+    {
+      "name": "GenerateBlocksFromExternalSource",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "GenerateBlocksFromExternalSource"
+        }
+      ]
+    },
+    {
+      "name": "ManagePlcExternalSources",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "ManagePlcExternalSources"
+        }
+      ]
+    },
+    {
+      "name": "ReadPlcSystemGroups",
+      "entryMethods": [
+        {
+          "type": "TiaMcpServer.Siemens.Services.PlcExternalSourcesService",
+          "method": "ReadPlcSystemGroups"
+        }
+      ]
+    }
+  ],
+  "evidence": "docs/development/p4-i4b-native-evidence.json"
+}

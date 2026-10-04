@@ -37,6 +37,12 @@ using static TiaMcpServer.Siemens.EngineeringSessionHelpers;
 using Siemens.Engineering.SW.Tags;
 using Siemens.Engineering.SW.Units;
 
+#if TIA_SHARED_ADAPTER_PATHS
+using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
+#else
+using Documents = TiaMcpServer.Siemens.LocalDocuments.PlcDocumentPrimitives;
+#endif
+
 namespace TiaMcpServer.Siemens.Services
 {
     internal sealed class DocumentsService
@@ -44,6 +50,16 @@ namespace TiaMcpServer.Siemens.Services
         private readonly IEngineeringSession _session;
 
         public DocumentsService(IEngineeringSession session) => _session = session;
+
+        private bool IsProjectNull()
+        {
+#if TIA_SHARED_ADAPTER_PATHS
+            if (_session.IsProjectNull()) return true;
+            return TiaMcp.Adapters.PlcServices.Over(() => _session.CurrentProject!).Documents.CurrentProject == null;
+#else
+            return _session.IsProjectNull();
+#endif
+        }
 
         // TIA portal crashes when exporting blocks as documents, :-(
         /// <summary>
@@ -74,7 +90,7 @@ namespace TiaMcpServer.Siemens.Services
             var success = false;
             try
             {
-                if (_session.IsProjectNull())
+                if (IsProjectNull())
                 {
                     throw new PortalException(PortalErrorCode.InvalidState, "No project is open. If a project is already open in the TIA Portal UI, call AttachToOpenProject(projectName); otherwise call OpenProject(path) for a local .apXX project, or CreateProject to start a new one. (Connect is attempted automatically.)");
                 }
@@ -82,7 +98,7 @@ namespace TiaMcpServer.Siemens.Services
                 Capability.RequireSupported(TiaFeature.DocumentExport);
 
                 var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-                if (softwareContainer?.Software is PlcSoftware plcSoftware)
+                if (Documents.Software(softwareContainer) is PlcSoftware plcSoftware)
                 {
                     if (plcSoftware != null)
                     {
@@ -124,9 +140,9 @@ namespace TiaMcpServer.Siemens.Services
                                 File.Delete(blockFiles7resPath);
                             }
 
-                            var result = group?.Blocks.Find(blockName)?.ExportAsDocuments(new DirectoryInfo(exportPath), blockName);
+                            var result = Documents.ExportOptional(group, exportPath, blockName);
 
-                            if (result != null && result.State == DocumentResultState.Success)
+                            if (result != null && Documents.State(result) == DocumentResultState.Success)
                             {
                                 success = true;
                             }
@@ -164,7 +180,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             _session.Logger?.LogInformation("Exporting blocks as documents...");
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 return null;
             }
@@ -186,18 +202,18 @@ namespace TiaMcpServer.Siemens.Services
             {
                 var block = list[i];
 
-                _session.Logger?.LogDebug($"- Exporting block as document {i}/{list.Count()} : {block.Name}");
+                _session.Logger?.LogDebug($"- Exporting block as document {i}/{list.Count()} : {Documents.Name(block)}");
 
                 // Skip inconsistent blocks (TIA generally won’t export them)
-                if (!block.IsConsistent)
+                if (!Documents.IsConsistent(block))
                 {
-                    _session.Logger?.LogWarning($"Skipping inconsistent block {block.Name}");
+                    _session.Logger?.LogWarning($"Skipping inconsistent block {Documents.Name(block)}");
                     continue;
                 }
 
                 // Determine base directory (preserve group path if requested)
                 string targetDir = exportPath;
-                if (preservePath && block.Parent is PlcBlockGroup parentGroup)
+                if (preservePath && Documents.Parent(block) is PlcBlockGroup parentGroup)
                 {
                     var groupPath = _session.GetPlcBlockGroupPath(parentGroup);
                     if (!string.IsNullOrWhiteSpace(groupPath))
@@ -215,13 +231,13 @@ namespace TiaMcpServer.Siemens.Services
                 }
                 catch (Exception ex)
                 {
-                    failures.Add($"{block.Name}: cannot create directory '{targetDir}' ({ex.Message})");
+                    failures.Add($"{Documents.Name(block)}: cannot create directory '{targetDir}' ({ex.Message})");
                     _session.Logger?.LogError(ex, $"Directory creation failed for {targetDir}");
                     continue;
                 }
 
-                var fileDcl = Path.Combine(targetDir, $"{block.Name}.s7dcl");
-                var fileRes = Path.Combine(targetDir, $"{block.Name}.s7res");
+                var fileDcl = Path.Combine(targetDir, $"{Documents.Name(block)}.s7dcl");
+                var fileRes = Path.Combine(targetDir, $"{Documents.Name(block)}.s7res");
 
                 // Clean previous artifacts
                 foreach (var f in new[] { fileDcl, fileRes })
@@ -235,7 +251,7 @@ namespace TiaMcpServer.Siemens.Services
                     }
                     catch (Exception ex)
                     {
-                        failures.Add($"{block.Name}: cannot delete existing '{Path.GetFileName(f)}' ({ex.Message})");
+                        failures.Add($"{Documents.Name(block)}: cannot delete existing '{Path.GetFileName(f)}' ({ex.Message})");
                         _session.Logger?.LogError(ex, $"Failed deleting existing file {f}");
                         // Continue anyway; export might overwrite.
                     }
@@ -246,46 +262,46 @@ namespace TiaMcpServer.Siemens.Services
                     DocumentExportResult? result = null;
                     try
                     {
-                        result = block.ExportAsDocuments(new DirectoryInfo(targetDir), block.Name);
+                        result = Documents.Export(block, new DirectoryInfo(targetDir), Documents.Name(block));
                     }
                     catch (EngineeringNotSupportedException ex)
                     {
-                        failures.Add($"{block.Name}: not supported ({ex.Message})");
-                        _session.Logger?.LogWarning(ex, $"EngineeringNotSupported exporting {block.Name}");
+                        failures.Add($"{Documents.Name(block)}: not supported ({ex.Message})");
+                        _session.Logger?.LogWarning(ex, $"EngineeringNotSupported exporting {Documents.Name(block)}");
                         continue;
                     }
                     catch (LicenseNotFoundException ex)
                     {
-                        failures.Add($"{block.Name}: license not found ({ex.Message})");
-                        _session.Logger?.LogError(ex, $"License issue exporting {block.Name}");
+                        failures.Add($"{Documents.Name(block)}: license not found ({ex.Message})");
+                        _session.Logger?.LogError(ex, $"License issue exporting {Documents.Name(block)}");
                         continue;
                     }
                     catch (Exception ex)
                     {
-                        failures.Add($"{block.Name}: export threw ({ex.Message})");
-                        _session.Logger?.LogError(ex, $"ExportAsDocuments failed for {block.Name}");
+                        failures.Add($"{Documents.Name(block)}: export threw ({ex.Message})");
+                        _session.Logger?.LogError(ex, $"ExportAsDocuments failed for {Documents.Name(block)}");
                         continue;
                     }
 
                     if (result == null)
                     {
-                        failures.Add($"{block.Name}: no result returned");
+                        failures.Add($"{Documents.Name(block)}: no result returned");
                         continue;
                     }
 
-                    if (result.State == DocumentResultState.Success)
+                    if (Documents.State(result) == DocumentResultState.Success)
                     {
                         exportList.Add(block);
                     }
                     else
                     {
-                        failures.Add($"{block.Name}: result state {result.State}");
+                        failures.Add($"{Documents.Name(block)}: result state {Documents.State(result)}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    failures.Add($"{block.Name}: unexpected exception ({ex.Message})");
-                    _session.Logger?.LogError(ex, $"Unexpected wrapper error for {block.Name}");
+                    failures.Add($"{Documents.Name(block)}: unexpected exception ({ex.Message})");
+                    _session.Logger?.LogError(ex, $"Unexpected wrapper error for {Documents.Name(block)}");
                 }
             }
 
@@ -309,7 +325,7 @@ namespace TiaMcpServer.Siemens.Services
             LastImportedDocumentBlocks = Array.Empty<string>();
             _session.Logger?.LogInformation($"Importing block from documents: {fileNameWithoutExtension} in {importPath}");
 
-            if (_session.IsProjectNull())
+            if (IsProjectNull())
             {
                 return false;
             }
@@ -321,7 +337,7 @@ namespace TiaMcpServer.Siemens.Services
             }
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (!(softwareContainer?.Software is PlcSoftware plcSoftware))
+            if (!(Documents.Software(softwareContainer) is PlcSoftware plcSoftware))
             {
                 throw new PortalException(PortalErrorCode.NotFound, $"PLC software '{softwarePath}' not found. Use GetProjectTree for the exact PLC name.");
             }
@@ -342,7 +358,7 @@ namespace TiaMcpServer.Siemens.Services
             PlcBlockGroup targetGroup;
             if (string.IsNullOrWhiteSpace(groupPath))
             {
-                targetGroup = plcSoftware.BlockGroup;
+                targetGroup = Documents.BlockGroup(plcSoftware);
             }
             else
             {
@@ -354,15 +370,15 @@ namespace TiaMcpServer.Siemens.Services
             // Preserve the existing Override-only number-restoration feature. These are additional
             // writes, not transactional rollback or proof that the import preserved all attributes.
             // Do not perform these writes for None or culture-only options.
-            var existing = targetGroup.Blocks.Find(fileNameWithoutExtension);
+            var existing = Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension);
             int? prevNumber = null;
             bool prevAutoNumber = false;
-            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = existing.Number; prevAutoNumber = existing.AutoNumber; } } catch { /* swallow(probe-optional): Unavailable previous numbering leaves the existing best-effort restoration disabled. */ }
+            try { if ((option & ImportDocumentOptions.Override) != 0 && existing != null) { prevNumber = Documents.Number(existing); prevAutoNumber = Documents.AutoNumber(existing); } } catch { /* swallow(probe-optional): Unavailable previous numbering leaves the existing best-effort restoration disabled. */ }
 
             DocumentImportResultForBlocks? result;
             try
             {
-                result = InvocationJournal.Native("ImportFromDocuments.import", () => targetGroup.Blocks.ImportFromDocuments(dir, fileNameWithoutExtension, option));
+                result = InvocationJournal.Native("ImportFromDocuments.import", () => Documents.Import(Documents.Blocks(targetGroup), dir, fileNameWithoutExtension, option));
             }
             catch (EngineeringNotSupportedException ex)
             {
@@ -379,14 +395,14 @@ namespace TiaMcpServer.Siemens.Services
 
             try
             {
-                if (result == null || result.State != DocumentResultState.Success || result.ImportedPlcBlocks == null)
+                if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                 {
                     throw new PortalException(PortalErrorCode.ImportFailed,
-                        $"ImportFromDocuments returned state '{result?.State.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
+                        $"ImportFromDocuments returned state '{Documents.OptionalState(result)?.ToString() ?? "null"}' for '{fileNameWithoutExtension}'. The project may have changed; do not retry automatically." + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                 }
                 try
                 {
-                    LastImportedDocumentBlocks = result.ImportedPlcBlocks == null ? Array.Empty<string>() : EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Select(b => b.Name).ToArray();
+                    LastImportedDocumentBlocks = Documents.ImportedBlocks(result) == null ? Array.Empty<string>() : EngineeringGroupOperations.Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Select(b => Documents.Name(b)).ToArray();
                 }
                 catch (Exception ex)
                 {
@@ -397,19 +413,19 @@ namespace TiaMcpServer.Siemens.Services
                 // Legacy Override-only post-import writes; preservation is best-effort, not verified.
                 if (prevNumber.HasValue)
                 {
-                    var imported = targetGroup.Blocks.Find(fileNameWithoutExtension);
+                    var imported = Documents.FindBlock(Documents.Blocks(targetGroup), fileNameWithoutExtension);
                     if (imported != null)
                     {
                         try
                         {
-                            if (imported.Number != prevNumber.Value)
+                            if (Documents.Number(imported) != prevNumber.Value)
                             {
-                                imported.AutoNumber = false;
-                                imported.Number = prevNumber.Value;
+                                Documents.SetAutoNumber(imported, false);
+                                Documents.SetNumber(imported, prevNumber.Value);
                             }
                             else
                             {
-                                imported.AutoNumber = prevAutoNumber;
+                                Documents.SetAutoNumber(imported, prevAutoNumber);
                             }
                         }
                         catch (Exception ex)
@@ -435,9 +451,9 @@ namespace TiaMcpServer.Siemens.Services
             var names = new List<string>();
             try
             {
-                if (result?.ImportedPlcBlocks != null)
-                    foreach (var block in result.ImportedPlcBlocks)
-                        if (block != null) names.Add(block.Name);
+                if (Documents.OptionalImportedBlocks(result) != null)
+                    foreach (var block in Documents.Enumerate(Documents.ImportedBlocks(result)))
+                        if (block != null) names.Add(Documents.Name(block));
                 return " Native reported imported names: [" + string.Join(", ", names) + "].";
             }
             catch (Exception ex)
@@ -451,7 +467,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             try
             {
-                var lines = _session.DocumentMessages(result?.Messages).Select(m => m?.ToString()).Where(m => !string.IsNullOrWhiteSpace(m)).ToArray();
+                var lines = _session.DocumentMessages(Documents.Messages(result)).Select(m => m?.ToString()).Where(m => !string.IsNullOrWhiteSpace(m)).ToArray();
                 return lines.Length == 0 ? "" : " Native messages: " + string.Join(" | ", lines);
             }
             catch { /* swallow(probe-optional): Unavailable native document messages must not replace the import result diagnostic. */ return ""; }
@@ -464,12 +480,12 @@ namespace TiaMcpServer.Siemens.Services
             {
                 return null;
             }
-            var here = group.Blocks.Find(blockName);
+            var here = Documents.FindBlock(Documents.Blocks(group), blockName);
             if (here != null)
             {
                 return here;
             }
-            foreach (var sub in group.Groups)
+            foreach (var sub in Documents.Enumerate(Documents.BlockGroups(group)))
             {
                 var found = FindBlockRecursive(sub, blockName);
                 if (found != null)
@@ -491,14 +507,14 @@ namespace TiaMcpServer.Siemens.Services
             LastImportFromDocumentsSucceeded = 0;
             LastImportFromDocumentsStopped = false;
 
-            if (_session.IsProjectNull()) return null;
+            if (IsProjectNull()) return null;
             if (Engineering.TiaMajorVersion < 20) return null;
 
             var softwareContainer = _session.GetSoftwareContainer(softwarePath);
-            if (!(softwareContainer?.Software is PlcSoftware plcSoftware))
+            if (!(Documents.Software(softwareContainer) is PlcSoftware plcSoftware))
                 throw new PortalException(PortalErrorCode.NotFound, $"PLC software '{softwarePath}' not found.");
             // Resolve before any native import. Only an explicitly empty path selects root.
-            var group = string.IsNullOrWhiteSpace(groupPath) ? plcSoftware.BlockGroup
+            var group = string.IsNullOrWhiteSpace(groupPath) ? Documents.BlockGroup(plcSoftware)
                 : _session.GetPlcBlockGroupByPath(softwarePath, groupPath)
                     ?? throw new PortalException(PortalErrorCode.NotFound, $"Group path '{groupPath}' not found under PLC '{softwarePath}'. No import attempted.");
             var dir = new DirectoryInfo(importPath);
@@ -518,16 +534,16 @@ namespace TiaMcpServer.Siemens.Services
                 try
                 {
                     LastImportFromDocumentsAttempted++;
-                    result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => group.Blocks.ImportFromDocuments(dir, name, option));
-                    if (result == null || result.State != DocumentResultState.Success || result.ImportedPlcBlocks == null)
+                    result = InvocationJournal.Native("ImportBlocksFromDocuments.import", () => Documents.Import(Documents.Blocks(group), dir, name, option));
+                    if (result == null || Documents.State(result) != DocumentResultState.Success || Documents.ImportedBlocks(result) == null)
                     {
-                        failures.Add($"{name}: native state={result?.State.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
+                        failures.Add($"{name}: native state={Documents.OptionalState(result)?.ToString() ?? "null"}. The project may have changed; batch stopped, remaining files not attempted. Do not retry automatically."
                             + DocumentImportedNamesSuffix(result) + DocumentMessageSuffix(result));
                         LastImportFromDocumentsStopped = true;
                         break;
                     }
                     // Materialize before adding: failed result enumeration must not masquerade as success.
-                    var blocks = EngineeringGroupOperations.Items(result.ImportedPlcBlocks).Cast<PlcBlock>().Where(block => block != null).ToArray();
+                    var blocks = EngineeringGroupOperations.Items(Documents.ImportedBlocks(result)).Cast<PlcBlock>().Where(block => block != null).ToArray();
                     imported.AddRange(blocks);
                     LastImportFromDocumentsSucceeded++;
                 }
@@ -546,7 +562,7 @@ namespace TiaMcpServer.Siemens.Services
         {
             var group = _session.GetPlcBlockGroupByPath(softwarePath, groupPath) ?? throw new PortalException(PortalErrorCode.NotFound, "Import target group not found.");
             return InvocationJournal.Native("ImportFromDocuments.exactReadback", () => EngineeringAuditLogic.ExactNamesPresent(LastImportedDocumentBlocks,
-                EngineeringGroupOperations.Items(group.Blocks).Cast<PlcBlock>().Select(b => b.Name)));
+                EngineeringGroupOperations.Items(Documents.Blocks(group)).Cast<PlcBlock>().Select(b => Documents.Name(b))));
         }
     }
 }

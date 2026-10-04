@@ -19,14 +19,36 @@ def main():
     methods = '\n'.join(sources.member(name, signature='public void') for name in
                         ('ImportPlcExternalSource', 'GenerateBlocksFromExternalSource'))
     methods += '\n' + sources.member('ExternalSourceNameMatches')
+    primitive_source = (ROOT / 'tools/tiaportal-mcp/src/TiaMcp.Adapters/Native/Plc/PlcDocumentPrimitives.cs').read_text(encoding='utf-8')
+    declarations = ('Software(SoftwareContainer container)', 'Sources(PlcExternalSourceGroup group)',
+                    'CreateFromFile(PlcExternalSourceComposition sources, string name, string path)',
+                    'Generate(PlcExternalSource source)')
+    primitive_methods = []
+    for declaration in declarations:
+        matches = [line for line in primitive_source.splitlines() if declaration in line and 'public static' in line]
+        if len(matches) != 1:
+            raise ValueError('Missing or ambiguous dispatch primitive: ' + declaration)
+        primitive_methods.append(matches[0])
     code = r'''
 using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using Siemens.Engineering.HW;
+using Siemens.Engineering.HW.Features;
 using Siemens.Engineering.SW;
+using Documents = TiaMcp.Adapters.Native.Plc.PlcDocumentPrimitives;
 using Siemens.Engineering.SW.ExternalSources;
 
+namespace TiaMcp.Adapters.Native.Plc {
+    public static class PlcDocumentPrimitives {
+'''+ '\n'.join(primitive_methods) +r'''
+    }
+}
+namespace Siemens.Engineering.HW { public abstract class Software { } }
+namespace Siemens.Engineering.HW.Features {
+    public sealed class SoftwareContainer { public Software Software { get; } = new PlcSoftware(); }
+}
 namespace Siemens.Engineering.SW.ExternalSources {
     public abstract class PlcExternalSourceGroup { public PlcExternalSourceComposition ExternalSources { get; } = new(); }
     public sealed class PlcExternalSourceSystemGroup : PlcExternalSourceGroup { }
@@ -46,16 +68,15 @@ namespace Siemens.Engineering.SW.ExternalSources {
     }
 }
 namespace Siemens.Engineering.SW {
-    public sealed class PlcSoftware { public PlcExternalSourceSystemGroup ExternalSourceGroup { get; } = new(); public PlcExternalSourceUserGroup UserGroup { get; } = new(); }
+    public sealed class PlcSoftware : Software { public PlcExternalSourceSystemGroup ExternalSourceGroup { get; } = new(); public PlcExternalSourceUserGroup UserGroup { get; } = new(); }
 }
 public enum PortalErrorCode { InvalidState, NotFound, InvalidParams, OpennessError }
 public sealed class PortalException : Exception { public PortalException(PortalErrorCode code,string text,Exception? inner=null):base(text,inner){} }
-public sealed class Container { public PlcSoftware Software { get; } = new(); }
 public sealed class Portal {
-    public Container Container { get; } = new();
+    public SoftwareContainer Container { get; } = new();
     private Portal _session => this;
     private bool IsProjectNull()=>false;
-    private Container GetSoftwareContainer(string path)=>Container;
+    private SoftwareContainer GetSoftwareContainer(string path)=>Container;
     private object TryGetExternalSourceGroupByPath(PlcSoftware plc,string path)=>path=="sub" ? plc.UserGroup : plc.ExternalSourceGroup;
     private static IEnumerable<object> TryGetExternalSourcesCollection(PlcSoftware plc)=>plc.ExternalSourceGroup.ExternalSources;
 '''+methods+r'''
@@ -70,7 +91,7 @@ internal static class Program {
     }
     private static void RunChecks() {
         var path=Path.Combine(AppContext.BaseDirectory,"source.scl"); File.WriteAllText(path,"FUNCTION Test : Void\nBEGIN\nEND_FUNCTION");
-        var p=new Portal(); var plc=p.Container.Software;
+        var p=new Portal(); var plc=(PlcSoftware)p.Container.Software;
         p.ImportPlcExternalSource("PLC", "", path);
         Check(plc.ExternalSourceGroup.ExternalSources.Calls==1,"system group imports once");
         Check(plc.ExternalSourceGroup.ExternalSources.Name=="source.scl","source name argument");
