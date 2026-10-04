@@ -1,0 +1,553 @@
+"""Generate the reviewed V4 proposal, without building or loading product binaries.
+
+Run --check in a clean checkout; --self-test also exercises rejection cases.
+Only this script's proposal JSON and the marked documentation block are outputs.
+"""
+import argparse
+import collections, json, pathlib, re, subprocess, sys, xml.etree.ElementTree as ET
+sys.dont_write_bytecode = True
+root = pathlib.Path(__file__).resolve().parents[2]
+read = lambda p: (root / p).read_text(encoding="utf-8-sig")
+files = subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode("utf-8").rstrip("\0").split("\0")
+keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
+snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
+tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
+names = sorted(set().union(*(set(t) for t in tools.values())))
+catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96) + r" \| ([^|]+) \|$", read("docs/reference/version-tool-catalog.md"), re.M))
+assert set(catalog) == set(names)
+for n in names:
+    assert catalog[n].strip().split(", ") == [k for k in keys if n in tools[k]], n
+E = "tools/tiaportal-mcp/src/TiaMcpServer/"
+L = "tools/tiaportal-mcp/src/TiaMcp.Logic/"
+F = "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/"
+S = "tools/tia-openness-studio/src/"
+sys.path.insert(0, str(root / "scripts/checks"))
+import engine_sources
+engine = engine_sources.EngineSources(root)
+source_tools = {}
+for p, text in engine.sources.items():
+    for m in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', text):
+        decl = re.search(r"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", text[m.end():], re.M)
+        assert decl and m[1] not in source_tools
+        source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
+assert set(source_tools) == set(tools["21"])
+policy = read(E + "Siemens/ToolVersionPolicy.cs")
+only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
+assert set(tools["20"]) == set(source_tools) - only21
+profile = read(E + "ModelContextProtocol/Tools/McpServer.Profile.cs")
+profile = profile.split("private static readonly HashSet<string> LiteToolNames", 1)[1].split("};", 1)[0]
+lite = set(re.findall(r'"(\w+)"', profile))
+assert all(lite == set(snap[k]["liteTools"]) for k in ["20", "21"])
+foundation = "\n".join(read(f) for f in files if f.startswith(F) and f.endswith(".cs"))
+definitions = {}
+for line in read(F+"FoundationTools.cs").splitlines():
+    m=re.match(r'\s*new\("([^"]+)"',line)
+    if m:
+        response=re.search(r',\s*"([^"]+)"\),?\s*$',line)
+        definitions[m[1]]=response[1] if response else ""
+helpers=set()
+for f in files:
+    if f.startswith(F) and f.endswith(".cs") and not f.endswith("FoundationTools.cs"):
+        source=read(f)
+        helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
+        helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
+helpers &= set(names)
+for k in keys[:6]:
+    major = 14 if k=="14sp1" else int(k.split(".")[0])
+    accepted={n for n,r in definitions.items()
+        if not (r in ("HardwareCatalog","DeviceAdd") and major<19)
+        and not (r=="SpecialExport" and major<16)
+        and not (r in ("DocumentExport","BatchDocumentExport","DocumentImport","BatchDocumentImport") and major<20)
+        and not (n=="GetPlcWatchTables" and k=="14sp1")}
+    assert accepted | helpers == set(tools[k]), (k, (accepted | helpers) ^ set(tools[k]))
+for k in keys[:6]:
+    for n, t in tools[k].items():
+        assert '"' + n + '"' in foundation, n
+        for p in t["inputSchema"]["properties"]:
+            assert '"' + p + '"' in foundation, (n, p)
+calls = json.loads(read("reference/tool-examples/calls.json"))["profiles"]
+for k in keys:
+    assert set(tools[k]) <= set(calls[snap[k]["profile"]]), k
+typed = {}
+for n in names:
+    for k in keys:
+        if n not in tools[k]: continue
+        for p, schema in tools[k][n]["inputSchema"]["properties"].items():
+            if p.endswith("Json") or (n == "PlcBuildAndImport" and p == "json"):
+                typed.setdefault(n, {}).setdefault(p, set()).add(k)
+for n, (_, method) in source_tools.items():
+    member = engine.member(method, tool=True)
+    tokens, _ = engine_sources.lexer.Lexer(member).scan()
+    pairs = engine_sources.lexer.matching_pairs(tokens)
+    op = next(i for i,t in enumerate(tokens) if t.value == "(")
+    sig = member[:tokens[pairs[op]].end]
+    actual = set(re.findall(r"\bstring\??\s+(\w*Json)\b", sig))
+    expected = {p for p,v in tools["21"][n]["inputSchema"]["properties"].items() if p.endswith("Json") and "string" in str(v.get("type"))}
+    assert actual == expected, (n, actual, expected)
+family_groups = {
+ "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
+ "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
+ "N":"numbers",
+ "R":"objectPath",
+ "M":"attributes changes customAttributes entry properties scriptProperties settings",
+ "L":"accessLevels comments promptAnswers texts",
+ "V":"value",
+ "C":"arguments calls operations",
+ "W":"values writes",
+ "B":"fbBlock fcBlock flgNet globalDb ladFcBlock structuredText tagTable udt",
+ "H":"design layout package spec table theme",
+ "D":"artifacts plan rows scenario",
+ "X":"afterPages beforePages deviceSelection harmonizeOptions itemDetails mappingEntries options partner references request revisionDetails rules scope selection target templateIntent",
+}
+families = {p+"Json":f for f,ps in family_groups.items() for p in ps.split()}
+def family(n,p):
+    if p == "json": return "B"
+    if (n,p) == ("RunPlcCompanionTool","argumentsJson"): return "S"
+    if (n,p) == ("PatchPlcBlockDocument","changesJson"): return "D"
+    if p == "harmonizeOptionsJson": return "S"
+    assert p in families, (n,p)
+    return families[p]
+
+# One spelling per operation. List is reserved for enumerations; Get includes
+# compound snapshots (tree, diagnostics, properties) even when they contain arrays.
+VERBS = set("Analyze Apply Archive Attach Audit Bind Build Call Check Clear Close Compare Compile Configure Connect Create Decode Delete Describe Disconnect Download Ensure Exchange Export Extract Find Generate Get Import Initialize Inspect Instantiate Invoke List Manage Monitor Move Open Patch Plan Plug Preview Probe Release Render Repair Resolve Restart Retrieve Run Sample Save Scan Search Seed Set Show Synchronize Trace Upgrade Upload Validate Write".split())
+VERB_RENAMES = {"Read": "Get", "Compose": "Build", "Update": "Set", "Sync": "Synchronize", "Preflight": "Preview", "Dump": "Get", "Add": "Create"}
+SPECIAL_NAMES = {
+    "AddDevice": "CreateDevice", "AddDeviceWithFallback": "CreateHardwareDevice",
+    "AddGsdDeviceWithProbe": "CreateGsdDevice", "AddHardwareCatalogDeviceWithProbe": "CreateHardwareCatalogDevice",
+    "Bootstrap": "InitializeEnvironment", "Doctor": "GetEnvironmentDiagnostics",
+    "DiagnosePortalConnectReadiness": "GetPortalConnectionReadiness",
+    "LintPlcSclSource": "AnalyzePlcSclSource",
+    "ScaffoldProject": "BuildProjectScaffold",
+    "ReadPlcTags": "ListPlcTags", "ReadPlcSystemConstants": "ListPlcSystemConstants", "ReadPlcUserConstants": "ListPlcUserConstants",
+    "Connect": "ConnectPortal", "Disconnect": "DisconnectPortal", "ConnectIsolated": "ConnectIsolatedPortal",
+    "ConnectToProject": "ConnectProject", "AttachToOpenProject": "AttachOpenProject",
+    "CompileSoftware": "CompilePlcSoftware", "CompileAndDiagnosePlc": "CompilePlcDiagnostics",
+    "CompileAndDiagnoseHmi": "CompileHmiDiagnostics",
+    "PlcBuildAndImport": "BuildAndImportPlcArtifact", "UnifiedOpenPipeRequest": "InvokeUnifiedOpenPipe",
+    "CheckForUpdate": "CheckProductUpdate", "SaveAsProject": "SaveProjectCopy",
+    "GoOnline": "ConnectOnlinePlc", "GoOffline": "DisconnectOnlinePlc", "GoOfflineAll": "DisconnectOnlinePlcs",
+    "EnsureStartStopUnifiedHmi": "SetUnifiedHmiRuntimeState", "DownloadToPlc": "DownloadPlc",
+    "ExportAsDocuments": "ExportPlcBlockDocuments", "ExportBlocksAsDocuments": "ExportPlcBlocksDocuments",
+    "ImportFromDocuments": "ImportPlcBlockDocuments", "ImportBlocksFromDocuments": "ImportPlcBlocksDocuments",
+    "GetState": "GetSessionState", "GetProject": "GetProjectInfo",
+    "GetBlockInfo": "GetPlcBlockInfo", "GetBlocks": "ListPlcBlocks", "GetBlocksWithHierarchy": "GetPlcBlockHierarchy",
+    "GetTypeInfo": "GetPlcTypeInfo", "GetTypes": "ListPlcTypes", "GetCrossReferences": "GetPlcCrossReferences",
+    "MoveBlockToGroup": "MovePlcBlockToGroup", "DescribeBlockLogic": "DescribePlcBlockLogic",
+    "ImportBlock": "ImportPlcBlock", "ExportBlock": "ExportPlcBlock", "ExportBlocks": "ExportPlcBlocks",
+    "ImportType": "ImportPlcType", "ExportType": "ExportPlcType", "ExportTypes": "ExportPlcTypes",
+    "ImportBlocksFromDirectory": "ImportPlcBlocksFromDirectory", "RepairAndReimportBlock": "RepairAndReimportPlcBlock",
+    "GetExport": "GetExportContent", "ListExports": "ListExportHandles", "ClearExports": "ClearExportHandles",
+    "DeleteExport": "DeleteExportHandle", "SaveExport": "SaveExportContent",
+    "GetPutGetAccess": "GetPlcPutGetAccess", "SetPutGetAccess": "SetPlcPutGetAccess",
+    "SetCpuCommonSettings": "SetPlcCpuSettings", "GetOpcUaConfig": "GetPlcOpcUaConfiguration",
+    "ReadToolBatch": "RunReadOnlyToolBatch", "RunToolsInTransaction": "RunToolTransaction",
+    "MonitorWatchTableLiveS7": "MonitorPlcWatchTableS7", "SetWatchTableModifyValue": "SetPlcWatchTableModifyValue",
+    "GetAuthoringGuide": "GetToolUsage", "GetRecipe": "GetToolUsage",
+    "ListUnifiedLibraryFolder": "ListUnifiedLibraryFolderEntries",
+    "RebuildReleaseHandoffArtifacts": "BuildReleaseHandoffArtifacts",
+    "ValidatePlcXmlSchemas": "ValidatePlcDocumentSchemas",
+    "BuildPlcSymbolManifestFromXmlPath": "BuildPlcSymbolManifestFromPath",
+    "InstantiatePlcXmlTemplates": "InstantiatePlcTemplates",
+}
+COLLECTIONS = set("GetDevices GetHmiConnections GetHmiScreens GetHmiTagTables GetHmiTags GetPlcExternalSources GetPlcForceTables GetPlcTagTables GetPlcWatchTables GetTechnologyObjects GetVersionControlWorkspaces ReadClassicHmiFaceplates ReadClassicHmiScripts ReadCommunicationConnections ReadDccCharts ReadDeviceItemChannels ReadDriveObjects ReadIoSystems ReadNetworkDomains ReadPlcSimAdvancedInstances ReadPlcSoftwareUnits ReadPlcSystemGroups ReadSafetyActivationTests ReadSiVArcRules ReadSivarcBlockDefinitions ReadTestSuiteCases ReadTransferAreas ReadTransferRoutes ReadUnifiedEngineeringObjects ReadUnifiedTagDefinitions".split())
+
+def rename(n):
+    if n in SPECIAL_NAMES:
+        target = SPECIAL_NAMES[n]
+    elif n in COLLECTIONS:
+        target = re.sub(r"^(Get|Read)", "List", n)
+    else:
+        verb = re.match(r"[A-Z][a-z]*", n)[0]
+        target = VERB_RENAMES.get(verb, verb) + n[len(verb):]
+    return target.replace("SiVArc", "Sivarc").replace("Json", "").replace("Xml", "").replace("Xlsx", "")
+
+# These are documentation mappings, never executable redirects. Merge proof is
+# deliberately closed; native compile/connect paths do not qualify.
+MERGES = {"GetToolUsage": {"GetToolUsage", "GetAuthoringGuide", "GetRecipe"}}
+MERGE_PROOF = {
+    "GetToolUsage": "同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。",
+}
+MERGE_PARAMETERS = {
+    "GetAuthoringGuide": "topic trim/lower 后：workflow→exampleId=sequence/connect-project；openness-workflow→query=openness-base；startdrive-bico→toolName=ManageStartdriveParameter,operation=read；hmi→language=hmi-javascript；errors→空选择；其余→language=原 topic。offset=0,limit=80。",
+    "GetRecipe": "topic trim 后非空→exampleId=sequence/<精确目录 topic>；空→exampleKind=sequence（新增可选枚举过滤器，默认 all）；按当前发布版过滤目录；保留 purpose/preconditions/steps/expect/notes；未知 topic→NOT_FOUND。",
+    "GetToolUsage": "toolName 按 A 表转换；query/documentId/offset/limit/operation/language/exampleId 同名；新增 exampleKind=all|sequence|language 默认 all；旧默认列表仍含 tools、languages、examples。",
+}
+assert '_usage.GetToolUsage' in read(E + "ModelContextProtocol/Tools/GuideTools.cs")
+assert 'ToolUsageCatalog.Sequences()' in read(L + "ModelContextProtocol/ToolRecipes.cs")
+assert 'ToolRecipes.Find(topic)' in read(E + "ModelContextProtocol/Tools/McpServer.ToolBridge.cs")
+assert 'exampleId' in read(E + "ModelContextProtocol/Tools/ToolUsageTools.cs")
+assert all(n in names for n in SPECIAL_NAMES | dict.fromkeys(COLLECTIONS))
+renames = {n: rename(n) for n in names}
+
+def validate_mapping(mapping, release_tools, merge_groups=MERGES):
+    assert set(mapping) == set(names), "every current tool must be mapped exactly once"
+    groups = collections.defaultdict(set)
+    for n, target in mapping.items():
+        assert re.fullmatch(r"[A-Z][A-Za-z0-9]+", target), target
+        assert re.match(r"[A-Z][a-z]*", target)[0] in VERBS, target
+        assert not any(word in target for word in ("Json", "Xml", "Xlsx", "SiVArc")), target
+        groups[target.casefold()].add(n)
+    for group in groups.values():
+        if len(group) > 1:
+            target = mapping[next(iter(group))]
+            assert group == merge_groups.get(target), ("unproven duplicate target", target, group)
+            assert target in MERGE_PROOF and all(n in MERGE_PARAMETERS for n in group)
+    # Availability is computed within each release, never from the global union.
+    targets = {k: sorted({mapping[n] for n in release_tools[k]}) for k in keys}
+    for k in keys:
+        for target in targets[k]:
+            assert any(mapping[n] == target for n in release_tools[k])
+    return targets
+
+target_tools = validate_mapping(renames, tools)
+
+SHAPES = {
+    "P": "string[]（路径段）", "S": "string[]", "N": "int32[]", "R": "PropertyStep[]",
+    "M": "AttributeMap<Scalar>", "L": "map<string,string>", "V": "NativeValue",
+    "C": "ToolCall[]", "W": "WriteValue[]", "B": "BuilderSpec", "H": "HmiDesign",
+    "D": "DomainSpec", "X": "DomainSelection",
+}
+PARAM_SHAPES = {
+    "fbBlockJson":"FbBlockSpec", "fcBlockJson":"FcBlockSpec", "flgNetJson":"FlgNetCallSpec",
+    "globalDbJson":"GlobalDbSpec", "ladFcBlockJson":"LadFcBlockSpec", "structuredTextJson":"StructuredTextSpec",
+    "tagTableJson":"PlcTagTableSpec", "udtJson":"UdtSpec", "json":"PlcArtifactSpec(kind)",
+    "layoutJson":"UnifiedLayoutSpec", "themeJson":"UnifiedThemeSpec", "specJson":"DeviceAmlSpec",
+    "afterPagesJson":"GraphicSelectionPage[]", "beforePagesJson":"GraphicSelectionPage[]",
+    "deviceSelectionJson":"map<string,bool>", "itemDetailsJson":"TeamcenterItemSpec",
+    "revisionDetailsJson":"TeamcenterRevisionSpec", "mappingEntriesJson":"DynamizationMapping[]",
+    "optionsJson":"MonitoringOptions", "partnerJson":"DccPartnerSpec(action)",
+    "referencesJson":"map<string,SivarcReference|null>", "requestJson":"OpenPipeRequest(message)",
+    "scopeJson":"TestScope[]", "selectionJson":"LibrarySelection[]", "targetJson":"MotionTarget",
+    "templateIntentJson":"TemplateIntent", "accessLevelsJson":"map<string,int32>",
+    "artifactsJson":"Artifact[]", "planJson":"NetworkPlan", "scenarioJson":"PlcSimScenario",
+    "settingsJson":"CpuSettings{exactAttributes:AttributeMap<Scalar>}",
+}
+EXACT_SHAPES = {
+    ("CallTool","argumentsJson"): "ToolArguments(target inputSchema)",
+    ("PreflightToolCall","argumentsJson"): "ToolArguments(target inputSchema)",
+    ("RunPlcCompanionTool","argumentsJson"): "string[]",
+    ("AuditEngineeringExports","rulesJson"): "XPathRule[]",
+    ("LintPlcSclSource","rulesJson"): "LintRules",
+    ("ComposePlcAliasAlarmLad","rowsJson"): "PlcAliasRow[]",
+    ("InstantiatePlcXmlTemplates","rowsJson"): "TemplateRow[]",
+    ("PatchPlcBlockDocument","changesJson"): "BlockEdit[]",
+}
+
+def shape(n, p):
+    if (n, p) in EXACT_SHAPES: return EXACT_SHAPES[n, p]
+    if p == "designJson": return "ClassicScreenSpec" if "Classic" in n else "UnifiedScreenSpec"
+    if p == "packageJson": return "ClassicPackageSpec"
+    if p == "tableJson": return "ClassicTagTableSpec"
+    result = PARAM_SHAPES.get(p, SHAPES[family(n, p)])
+    assert result not in ("BuilderSpec", "HmiDesign", "DomainSpec", "DomainSelection"), (n, p)
+    return result
+
+# Re-selected by user workflow, not inherited from the current lite roster.
+LITE_GROUPS = {
+    "发现、用法与完整目录调用": "FindTools GetToolUsage ListToolCategories CallTool PreflightToolCall",
+    "环境与会话诊断": "Bootstrap Doctor GetState ReadOpennessWorkerStatus RestartOpennessWorker ValidateAutomationContext",
+    "工程生命周期": "ListPortalProcessProjects ConnectToProject Connect AttachToOpenProject Disconnect OpenProject CloseProject SaveProject CreateProject ArchiveSavedProject",
+    "工程和 PLC 定位": "GetProject GetProjectTree GetDevices GetSoftwareTree GetSoftwareInfo GetBlocksWithHierarchy GetBlocks GetBlockInfo GetTypes GetTypeInfo GetPlcTagTables",
+    "常用 PLC 交换与编译": "ImportBlock ExportBlock ImportType ExportType ImportPlcTagTable ExportPlcTagTable ImportPlcExternalSource GenerateBlocksFromExternalSource CompileAndDiagnosePlc WritePlcSclSourceFile",
+    "离线构造与规划": "BuildPlcUdtXml BuildPlcGlobalDbXml BuildPlcTagTableXml PlanArtifactImportOrder ValidatePlcXmlSchemas",
+    "硬件查找和精确创建": "SearchHardwareCatalog AddDeviceWithFallback",
+    "HMI 定位和诊断": "GetHmiScreens DescribeHmiScreen GetHmiTagTables GetHmiTags CompileAndDiagnoseHmi",
+    "大结果分页与文件交付": "ListExports GetExport SaveExport DeleteExport ClearExports",
+    "诊断收尾": "GenerateErrorReport",
+}
+lite_proposal = {"schemaVersion": 1, "contractVersion": 4, "status": "proposal-not-runtime", "foundationLite": False, "releases": {}}
+for k in keys[-2:]:
+    rows = []
+    for reason, members in LITE_GROUPS.items():
+        for n in members.split():
+            assert n in tools[k] and n in calls[snap[k]["profile"]], (k, n)
+            example = calls[snap[k]["profile"]][n]
+            assert isinstance(example.get("arguments"), dict), (k, n, "missing call example")
+            rows.append({"name": renames[n], "currentName": n, "reason": reason,
+                         "example": "reference/tool-examples/calls.json#/profiles/" + snap[k]["profile"] + "/" + n})
+    assert len({r["name"] for r in rows}) == len(rows)
+    assert 55 <= len(rows) <= 65
+    lite_proposal["releases"][k] = sorted(rows, key=lambda r: r["name"])
+
+out = []
+tick = lambda s: "`" + str(s) + "`"
+def table(headers, rows):
+    out.extend(["| " + " | ".join(headers) + " |", "|" + "|".join("---" for _ in headers) + "|"])
+    out.extend("| " + " | ".join(str(x).replace("|", r"\|").replace("\n", " ") for x in row) + " |" for row in rows)
+    out.append("")
+def link(p, label=None):
+    assert (root / p).is_file() or p == "scripts/generate/phase6-lite.proposal.json", p
+    return "[" + (label or p.removeprefix(E).removeprefix(L).removeprefix(F).removeprefix(S)) + "](../../" + p + ")"
+def section(title):
+    out.extend(["<details>", "<summary>" + title + "</summary>", ""])
+def end(): out.extend(["</details>", ""])
+def availability(n): return ", ".join(k for k in keys if n in tools[k])
+def source(n):
+    if n in source_tools: return source_tools[n][0]
+    if n in definitions: return F + "FoundationTools.cs"
+    candidates = [f for f in files if f.startswith(F) and f.endswith('.cs') and '"' + n + '"' in read(f)]
+    assert candidates, n
+    return sorted(candidates)[0]
+
+MIGRATION_GROUPS = {
+    "P6-07": "McpServer.ToolBridge McpServer.Batch McpServer.CallDiscipline McpServer.Exports GuideTools ToolUsageTools",
+    "P6-09": "EcosystemTools V21EcosystemTools EngineeringAuditTools GitWorkflowTools ImportOrderTools OfflineAnalysisTools OfflineSuiteTools QualityAuditTools TemplateTools XmlBuilderTools PlcBuildTools PlcDocumentationTools",
+    "P6-10": "PlcBlocksTools PlcSoftwareTools TypesTools PlcTablesTools McpServer.BlockLogic McpServer.BlockImportVerification",
+    "P6-11": "DocumentsTools NativeExchangeTools PlcExternalSourcesTools McpServer.Patch ExportTools",
+    "P6-12": "DevicesTools HardwareAmlTools HardwareManagementTools ModulesTools AddressesTools",
+    "P6-13": "HardwareNetworkTools HardwareServicesTools",
+    "P6-14": "CertificateManagementTools ProjectSecurityTools SafetyManagementTools SafetyValidationTools SecurityDeepTools",
+    "P6-15": "AlarmsTools OpcUaTools TechnologyObjectsTools SoftwareUnitDeepTools SoftwareUnitManagementTools",
+    "P6-16": "ClassicHmiFoldersTools MotionProDiagClassicHmiTools",
+    "P6-17": "UnifiedHmiTools UnifiedHmiGroupsTools UnifiedScreenItemsTools UnifiedUiModelTools",
+    "P6-18": "HmiExchangeTools UnifiedExchangeTools HmiTagDeletionTools",
+    "P6-19": "HmiDescribeTools HmiInspectionTools GlobalScriptEditTools GraphicSelectionTools UnifiedEngineeringTools UnifiedEventsTools UnifiedObjectServicesTools MigrationReadTools ReflectionTools",
+    "P6-20": "CfcTools TestSuiteTools V20OptionsTools OptionalEngineeringTools SpecializedExchangeTools",
+    "P6-21": "DccTools StartdriveTools TeamcenterTools",
+    "P6-22": "LibraryTools SivarcTools VersionControlTools",
+    "P6-23": "RuntimeChannelTools RuntimeTools RuntimeSettingsTools PlcSimAdvancedTools OnlineDownloadTools",
+    "P6-24": "SessionTools ProjectSessionTools DiagnosticsTools EngineeringDiagnosticsTools McpServer.Doctor McpServer.Maintenance McpServer.Worker",
+}
+owners = {}
+for task, stems in MIGRATION_GROUPS.items():
+    for stem in stems.split():
+        path = E + "ModelContextProtocol/Tools/" + stem + ".cs"
+        assert path not in owners
+        assert (root / path).is_file(), path
+        owners[path] = task
+assert set(p for p,m in source_tools.values()) <= set(owners), sorted(set(p for p,m in source_tools.values()) - set(owners))
+
+out.append("### 当前基线与 V4 提案计数\n")
+rows = []
+for k in keys:
+    pairs = [(n,p,s) for n,t in tools[k].items() for p,s in t["inputSchema"]["properties"].items() if p.endswith("Json")]
+    strings = [(n,p) for n,p,s in pairs if "string" in str(s.get("type"))]
+    rows.append([k, len(tools[k]), len(snap[k].get("liteTools", [])) or "不设",
+                 len(strings), len(set(n for n,p in strings)), len(target_tools[k]),
+                 len(lite_proposal["releases"].get(k, [])) or "不设"])
+table(["发布键", "当前广告工具", "当前 lite", "string …Json", "涉及工具", "V4 工具", "V4 lite 提案"], rows)
+out.append(f"八版当前名称并集 {len(names)}；V4 名称并集 {len(set(renames.values()))}；改名/合并入口 {sum(n != t for n,t in renames.items())}；不变 {sum(n == t for n,t in renames.items())}。数字只指目录，不代表原生能力验收。\n")
+
+section("A. 全量 current name → 4.0 name（包括不变项）")
+rows = []
+for n in names:
+    reason = "不变；符合命名规则" if n == renames[n] else "规则：动词、对象、领域、复数或大小写/表示规范化"
+    if renames[n] in MERGE_PROOF: reason = MERGE_PROOF[renames[n]]
+    if n in {"Connect", "ConnectToProject", "AttachToOpenProject", "CompileSoftware", "CompileAndDiagnosePlc", "CompileAndDiagnoseHmi"}:
+        reason += "；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义"
+    if n.startswith("Add"): reason += "；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态"
+    rows.append([tick(n), tick(renames[n]), availability(n), reason + "；" + link(source(n), "源码")])
+table(["当前名称", "4.0 名称", "保留发布键", "依据/合并证明"], rows)
+table(["合并来源", "参数映射（仅文档）"], [[tick(n), MERGE_PARAMETERS[n]] for n in sorted(MERGE_PARAMETERS)])
+out.append("每版仅以该版已有来源构造目标目录；每个来源的 action、targetKind、输出版本门禁逐项保留。Compile/Connect 的相似名字不构成同义证明。合并后的 data 由现有目录记录投影；空配方列表须按 exampleKind=sequence 过滤，不把所有示例当配方。\n")
+end()
+
+section("B. 全部 …Json 与 PlcBuildAndImport.json 的类型目标")
+rows = []
+for n, ps in sorted(typed.items()):
+    for p, releases in sorted(ps.items()):
+        oldtypes = sorted({str(tools[k][n]["inputSchema"]["properties"][p].get("type")) for k in releases})
+        rows.append([tick(n), ", ".join(k for k in keys if k in releases), tick(p) + " → " + tick("spec" if p == "json" else p[:-4]),
+                     "/".join(oldtypes), family(n,p), tick(shape(n,p)), link(source(n), "入口及校验调用")])
+table(["当前工具", "发布键", "参数", "当前 schema 类型", "族", "4.0 类型", "来源"], rows)
+totals = collections.Counter(family(n,p) for n,ps in typed.items() for p in ps)
+out.append("按 (当前工具,参数) 去重：" + "；".join(f"{f}={c}" for f,c in sorted(totals.items())) + f"；共 {sum(totals.values())} 项 / {len(typed)} 个工具。argumentsJson 的 JsonElement 输入也迁名；…JsonPath 仍为文件路径。\n")
+end()
+
+section("B1. 当前输入限制原文（生成提取；迁移不得放宽）")
+# Exact original contract text keeps differing release limits visible. Source
+# numeric guards supplement schemas which historically described strings only.
+rows = []
+for n, ps in sorted(typed.items()):
+    for p, releases in sorted(ps.items()):
+        variants = collections.defaultdict(list)
+        for k in keys:
+            if k in releases:
+                schema = tools[k][n]["inputSchema"]["properties"][p]
+                description = schema.get("description", "")
+                bounds = {key:v for key,v in schema.items() if key not in ("type", "description", "default")}
+                variants[(description, json.dumps(bounds, ensure_ascii=False, sort_keys=True))].append(k)
+        for (description, bounds), ks in variants.items():
+            if description or bounds != "{}": rows.append([n + "." + p, ", ".join(ks), description, bounds])
+table(["输入", "发布键", "当前参数约束原文", "其他 schema 约束"], rows)
+guard_paths = [f for f in files if f.endswith('.cs') and (
+    (f.startswith(F) and pathlib.PurePosixPath(f).name.startswith("Offline") and "Builder" in f)
+    or f.startswith(L) or f in {p for p,m in source_tools.values()}
+    or f.startswith(E + 'Siemens/') and (f.endswith('Logic.cs') or f.endswith('Rules.cs')))]
+guard_rows = []
+for f in sorted(guard_paths):
+    for i, line in enumerate(read(f).splitlines(), 1):
+        if re.search(r"(?:const int Max|MaxDepth\s*=|MaxCharactersInDocument\s*=|if.*(?:Length|Count|count|maxItems).*(?:\d{2}|Max)|Require.*(?:Length|Count|count).*(?:\d{2}|Max)|RequireText\(.*\d{2}|ParseNames\(.*\d|Parse.*Path\(.*\d)", line):
+            guard_rows.append([link(f) + ":" + str(i), tick(line.strip())])
+assert guard_rows
+table(["parser/策略来源:行", "原始边界表达式"], guard_rows)
+end()
+
+section("C. 当前响应族 → V4 与保留的标记事实")
+marks = collections.defaultdict(collections.Counter)
+sites = collections.defaultdict(list)
+for p, content in engine.sources.items():
+    rel = p.relative_to(root).as_posix()
+    for m in re.finditer(r"// envelope: (legacy-[\w-]+)", content):
+        fam = "CLI" if "/Cli/" in rel else "F4" if rel.endswith("McpServer.ToolBridge.cs") else "F3" if "/Siemens/Services/" in rel or rel.endswith("PlcSimAdvancedTools.cs") else "F2"
+        marks[fam][m[1]] += 1
+        sites[m[1]].append(rel)
+shapes = [
+    ("F1", "VersionPolicyTool 的 isError 文本/preflight", "准入→rejected-before-operation，error.code/details；无原生动作"),
+    ("F2", "POCO/Meta、McpException、success=false", "领域字段→data；异常由错误分类器生成 error；message 不判断成功"),
+    ("F3", "operationSuccess/status/error、执行器", "按执行证据确定 outcome；逐项结果→data.items；保留完整性与原生 verdict"),
+    ("F4", "Message 中序列化 JSON/failed 文本", "CallTool 透传目标 envelope；批次逐项 envelope；无二次编码"),
+    ("F5", "导出句柄 ok/InvalidParams", "data.export 与 meta.paging；缺句柄 NOT_FOUND，覆盖 ALREADY_EXISTS"),
+    ("F6", "Portal 文本失败，无 meta", "按实际分支判定，边界生成 error/outcome；无法证实写入结果则 unknown"),
+    ("F7", "Foundation PascalCase DTO/裸数组/V17 envelope", "data 保留原领域数据及 evidence；Executed→meta.execution，RequiresSessionReset→meta；裸数组→data.items"),
+    ("CLI", "报告 ok/roundtrip/后写判定", "同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data"),
+]
+table(["族", "当前形状", "V4 映射", "标记站点（非工具数）", "variant"],
+      [[f, old, new, sum(marks[f].values()), "; ".join(v+":"+str(c) for v,c in sorted(marks[f].items())) or "0"] for f,old,new in shapes])
+out.append(f"共 {sum(sum(v.values()) for v in marks.values())} 个注释站点、{len(sites)} 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。\n")
+table(["variant", "源码文件"], [[v, "<br>".join(link(p) for p in sorted(set(ps)))] for v,ps in sorted(sites.items())])
+end()
+
+section("D. 产品输出与程序集（读取项目属性）")
+rows = []
+for p, target, ks, directory in [
+    (F+"TiaMcpServer.LegacyHost.csproj", "TiaMcp.FoundationHost", "14sp1–19", "runtime/v<key>/"),
+    (E+"TiaMcpServer.V20.csproj", "TiaMcp.Engine.V20", "20", "runtime/v20/"),
+    (E+"TiaMcpServer.V21.csproj", "TiaMcp.Engine.V21", "21", "runtime/v21/"),
+]:
+    tree = ET.fromstring(read(p))
+    old = tree.findtext('.//AssemblyName')
+    assert old == "TiaMcpServer"
+    rows.append([link(p), ks, old+" → "+target, directory+target+".exe", tree.findtext('.//TargetFramework')])
+table(["项目", "发布键", "AssemblyName", "4.0 安装 EXE", "框架不变"], rows)
+config_specs = [
+    (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", r'"(TIA_MCP_REPOSITORY_ROOT)"', "替换为 --bundle-root / TIA_MCP_BUNDLE_ROOT"),
+    (E+"ModelContextProtocol/Tools/McpServer.Profile.cs", r"(TIA_MCP_PROFILE)", "lite/full 名称保留，名单改为 V4 数据"),
+    (S+"TiaOpenness.Gui/Configuration/ClientProfiles.cs", r'"(tia-portal(?:-vm)?)"', "server key 保留，command/args 改用新产品表"),
+    (E+"Cli/McpConfigInstaller.cs", r'"(mcpServers|servers|tia-portal)"', "JSON/TOML 根及 server key 保留，command/args 更新"),
+    (F+"HostOptions.cs", r'"(--worker-exe|--tia-release|--tia-version|--tia-portal-location)"', "精确版本与显式 worker 输入继续支持"),
+    (E+"ModelContextProtocol/Tools/EcosystemTools.cs", r'"(TIA_MCP_PLC_TOOLS_PYTHON)"', "显式 Python 优先；缺省环境改到 LocalAppData"),
+]
+config_rows = []
+for path, pattern, change in config_specs:
+    values = sorted(set(re.findall(pattern, read(path))))
+    assert values, path
+    config_rows.append([link(path), ", ".join(tick(v) for v in values), change])
+table(["配置来源", "当前键/变量（源码提取）", "4.0 处理"], config_rows)
+end()
+
+section("E1. 当前资源定位/私有默认值与目标政策（源码定位生成）")
+layout_policies = [
+    (L+"ModelContextProtocol/Builders/EcosystemFiles.cs", "RepositoryRoot", "R1 祖先桥接脚本探测、旧 root 变量", "严格 bundle-root；缺资源拒绝"),
+    (E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs", "FindInstallRoot", "R2 四层 delivery 探测", "已知安装根 + delivery 标记"),
+    (E+"Cli/SpecLoader.cs", "FindBundleRoot", "R3 十二层 templates/tools 探测", "显式根/已知锚点；未解析 __BUNDLE__ 报错"),
+    (E+"Siemens/EngineRouter.cs", "FindSiblingExe", "R7 bin/bin-v20/v数字候选", "版本目录表 + 精确新产品名"),
+    (E+"Cli/McpConfigInstaller.cs", "FindSiblingExe", "目标引擎缺失时使用自身", "缺版本引擎报 RESOURCE_UNAVAILABLE"),
+    (S+"TiaOpenness.Gui/ConfigurationPage.cs", "FindBundleRoot", "R11 向祖先寻找包标记", "显式根或已知锚点"),
+    (S+"TiaOpenness.Gui/Configuration/ConfigCore.cs", "TiaMcpServer.exe", "根无标记仍保留候选", "严格根校验、新产品目录"),
+    (S+"TiaOpenness.Gui/Configuration/UpdateCheck.cs", "FindResource", "解析失败仍拼传入根", "严格资源解析，worktree 更新保护保留"),
+    (S+"TiaOpenness.Client/BridgeClient.cs", "BundleLayout", "R13 相对开发 Debug/Release 猜测", "仅正式相邻部署/已知开发锚点/显式 bridgeExePath"),
+    (S+"TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs", "TiaOpenness.Openness", "R14 当前 Studio adapter 路径", "仍由 G3/J 验收控制，不随布局变更切换"),
+    (S+"TiaOpenness.Launcher/Launcher.cs", "TiaOpenness.exe", "R12 根启动器目标", "正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe"),
+    (E+"Program.cs", "DiagLogPathLocal", "安装目录启动日志/TEMP 共用日志", "LocalAppData/TiaMcp/logs/<releaseKey>"),
+    (S+"TiaOpenness.Gui/App.xaml.cs", ".crash.log", "Studio 安装目录崩溃日志", "LocalAppData/TiaMcp/logs/studio"),
+    (E+"ModelContextProtocol/Tools/EcosystemTools.cs", "ecosystem-python", "包根下私有 Python 缺省", "显式解释器或 LocalAppData 环境"),
+    (E+"Cli/ReportBuilders.cs", "GetWorkspaceRoot", "TMP_EXPORT/tools/cwd 探测", "显式 workspace/fixture 根"),
+    (E+"Cli/HmiTemplateBuilder.cs", "TIA_MCP_AI_PACK", "私有 HMI 模板默认输入", "显式模板路径"),
+    (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs", "TMP_EXPORT", "私有套件夹具探测", "显式 fixture 根，workspaceRoot 不猜测"),
+    (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs", "WithAutoOffline", "错误文本触发下线再执行", "D1/L5 后 OFFLINE_REQUIRED，不重试"),
+    (E+"Siemens/Services/OnlineDownloadService.cs", "ApplyConfiguration", "配置失败/候选路线继续", "D1/L5 后显式路线，失败/未知即停止"),
+]
+policy_rows = []
+for path, needle, current, target in layout_policies:
+    lines = read(path).splitlines()
+    line = next(i for i,l in enumerate(lines, 1) if needle in l)
+    policy_rows.append([link(path)+":"+str(line)+" "+tick(needle), current, target])
+table(["当前位置/定位词", "当前事实", "4.0 目标"], policy_rows)
+end()
+
+section("E. 布局、构建、打包、校验、Studio 和文档修改位置（生成扫描）")
+# Scan tracked first-party text, including tests/metadata needing regeneration.
+# Exclude this proposal to avoid self-referential line churn and historical data.
+SCAN_TERMS = {
+    "产品": r"TiaMcpServer(?:\.exe|\.dll|\.exe\.config|\.deps\.json|\.runtimeconfig\.json|[\"'<])|TiaMcpConfigurator",
+    "根定位": r"TIA_MCP_REPOSITORY_ROOT|FindBundleRoot|FindInstallRoot|FindSiblingExe|BundleLayout|RepositoryRoot",
+    "写入/工作区": r"ecosystem-python|DiagLogPathLocal|startup\.log|\.crash\.log|GetWorkspaceRoot|TMP_EXPORT|TIA_MCP_AI_PACK",
+}
+scan = []
+excluded = ("manifest/history/", "reference/siemens-openness/", "docs/development/phase6-review.md", "scripts/generate/Generate-Phase6Plan.py")
+for f in sorted(files):
+    if f.startswith(excluded) or f == "CHANGELOG.md" or "/third-party/" in f: continue
+    if pathlib.PurePosixPath(f).suffix.lower() not in {".cs", ".csproj", ".props", ".targets", ".ps1", ".psm1", ".py", ".md", ".json", ".yml", ".yaml", ".slnx", ".config", ".gitignore", ".bat", ".cmd", ".sh", ".toml", ".xml", ".xaml"}: continue
+    content = read(f)
+    hits = {kind: [str(i) for i,l in enumerate(content.splitlines(), 1) if re.search(pattern, l)] for kind,pattern in SCAN_TERMS.items()}
+    hits = {k:v for k,v in hits.items() if v}
+    if not hits: continue
+    treatment = "修改引用并回归"
+    if f.startswith("manifest/") or f.endswith("ToolUsageData.json") or f.endswith("tool-matrix.md"): treatment = "仅运行所属生成器更新；历史契约归档，不手改哈希"
+    elif f.startswith("docs/development/"): treatment = "更新现行说明；历史阶段证据保留并注明被 V4 决策取代"
+    scan.append([link(f, f), "; ".join(k+":"+",".join(v) for k,v in hits.items()), treatment])
+assert any("Package-Release.py" in r[0] for r in scan)
+assert any("Validate-Bundle.ps1" in r[0] for r in scan)
+assert any("ClientProfiles.cs" in r[0] or "ConfigCore.cs" in r[0] for r in scan)
+table(["文件", "类别:全部命中行", "实施方式"], scan)
+out.append(f"共 {len(scan)} 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。\n")
+end()
+
+section("F. V20/V21 lite 数据提案（每项均有现有调用示例）")
+table(["4.0 名称", "当前示例入口", "选择理由", "版本"],
+      [[tick(r["name"]), tick(r["currentName"]), r["reason"], "20, 21"] for r in lite_proposal["releases"]["21"]])
+assert lite_proposal["releases"]["20"] == lite_proposal["releases"]["21"]
+out.append("数据文件：" + link("scripts/generate/phase6-lite.proposal.json", "phase6-lite.proposal.json") + "。每项 example 为 reference/tool-examples/calls.json 的 JSON Pointer；生成器逐版验证 arguments 对象存在。Foundation 继续不设 lite。\n")
+end()
+
+section("G. 完整引擎契约迁移任务的工具文件所有权")
+table(["任务", "工具源文件", "当前注册入口数"],
+      [[task, "<br>".join(link(p) for p in sorted(owners) if owners[p] == task),
+        sum(owners[p] == task for p,m in source_tools.values())] for task in MIGRATION_GROUPS])
+out.append("每个完整引擎注册入口恰有一个文件所有者；同 stem 的 Service 与本领域独占规则随该任务，公共 Portal/基础设施由 P6-24 串行集成。Foundation 由 P6-08 单独负责；公共 DTO 与项目文件不归并行领域任务编辑。\n")
+end()
+
+def self_test():
+    rejected = 0
+    for mutate in (
+        lambda m: m.pop(names[0]),
+        lambda m: m.update({names[0]: m[names[1]]}),
+        lambda m: m.update({names[0]: "GetJsonResult"}),
+        lambda m: m.update({"CompileSoftware": m["CompileAndDiagnosePlc"]}),
+    ):
+        broken = dict(renames)
+        mutate(broken)
+        try: validate_mapping(broken, tools)
+        except AssertionError: rejected += 1
+        else: raise AssertionError("negative mapping check unexpectedly passed")
+    assert rejected == 4
+    for k in keys:
+        assert set(target_tools[k]) == {renames[n] for n in tools[k]}
+    for n,ps in typed.items():
+        for p in ps: assert shape(n,p)
+    print("Self-check: 4 negative cases rejected; 8 release mappings, typed coverage and lite examples passed.")
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--check', action='store_true', help='compare generated text without writing (ignore checkout CRLF)')
+    parser.add_argument('--self-test', action='store_true', help='exercise coverage and invalid-map rejection')
+    args = parser.parse_args()
+    if args.self_test: self_test()
+    doc = root / 'docs/development/phase6-review.md'
+    content = doc.read_text(encoding='utf-8')
+    begin, endmark = '<!-- phase6-generated:start -->', '<!-- phase6-generated:end -->'
+    a = content.index(begin) + len(begin)
+    b = content.index(endmark, a)
+    generated = content[:a] + '\n\n' + '\n'.join(out) + '\n' + content[b:]
+    outputs = {doc: generated, root / 'scripts/generate/phase6-lite.proposal.json': json.dumps(lite_proposal, ensure_ascii=False, indent=2) + '\n'}
+    for path, value in outputs.items():
+        expected = value.encode('utf-8')
+        if args.check:
+            assert path.read_bytes().replace(b'\r\n', b'\n') == expected, 'stale generated output: ' + str(path.relative_to(root))
+        else:
+            path.write_bytes(expected)
+    print(f"{'Checked' if args.check else 'Generated'}: {len(names)} current names, {len(set(renames.values()))} V4 names, {sum(totals.values())} typed inputs, {len(lite_proposal['releases']['21'])} lite tools per full release, {len(scan)} layout files.")
+
+if __name__ == '__main__': main()

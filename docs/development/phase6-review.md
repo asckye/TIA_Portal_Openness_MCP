@@ -1,755 +1,1910 @@
-# 阶段 6（4.0）评审：契约与迁移
+# 阶段 6：4.0 契约规范与实施计划
 
-[重构计划](refactor-plan.md) · [响应与异常](response-and-errors.md) · [适配器决策 D1](adapter-merge.md#待维护者决定) · [运行时布局](runtime-layout.md)
+[重构计划](refactor-plan.md) · [当前响应族](response-and-errors.md) · [D1 行为边界](adapter-merge.md) · [当前布局](runtime-layout.md) · [真机台账](../reference/real-machine-ledger.md)
 
-**状态：待维护者选择；本文不是实施授权或已发布契约。** 建议采用独立 `compat3` 配置档保留一个主版本周期，4.0 默认使用新契约；兼容档只转换表示，不能恢复隐式覆盖、升级或重试写入。需要旧原生行为的用户固定使用最后一个 3.x 包。先审正文决策，再按需展开机器生成的明细。
+**状态：维护者已决定的 4.0 目标规范；尚未实现。** 2026-10-03 决定硬切，4.0 只提供新名称、类型输入、V4 信封和新产品入口。需要 3.x 的部署固定使用最后一个 3.x 包。本文中的调用为目标示例，不能向当前运行程序发送。第 I 步仍在进行；本任务仅修改文档和生成器，不修改产品、测试或构建文件，也不进行原生调用。
 
-取样于任务开始时的本地 master / 本任务 HEAD `e4e434f34a237777de50f96a43aff9c249e15b81`。执行期间 master 前进到 `3e082b6e86c939559ddbf3ef95e38df265c1800f`：只读核对全部表输入及标记涉及的 162 个源文件内容相同，三个项目的 AssemblyName/TargetFramework 相同，新增引擎文件无工具或 legacy 标记，所以下表仍适用；第 H 步已合并，P4-I1 不假定完成。进入实施前仍应在合并后的 master 重跑清点。仅修改本页和计划入口，不改源码、快照、示例或 manifest，不连接 TIA、PLC、VM 或网络。
+八版以发布键 `14sp1, 15.1, 16, 17, 18, 19, 20, 21` 为准。附表的输入是契约基线、当前源码、版本策略、版本目录和示例库；生成器交叉检查后输出计数，不把广告能力当作真机验收。重新合并第 I 步后必须重新生成。
 
-## 1. 范围与建议
+## 1. 命名与合并规则
 
-| 候选 / 目标 | 可选方案与建议 | 受影响者；风险；真机门槛 |
+工具名为 PascalCase 的“动词 + 领域对象 + 必要限定”，参数和 DTO 字段为 camelCase。缩写统一为 `Plc/Hmi/OpcUa/Sivarc/Gsd/Cpu/Db/Udt/Cfc/Dcc` 等单词形式，版本限定仅在能力确实绑定该版本时保留。名字不暴露 `Json/Xml/Xlsx` 序列化表示；`SimaticMl/Aml/Scl/FlgNet` 指独立领域语言或交换标准，保留以避免把不同能力混同。格式仍在参数 schema、结果 mediaType 和描述中明确。
+
+统一动词表以生成器 `VERBS` 为闭集：`Get` 读取一个值或复合快照，`List` 枚举对象；`Describe` 返回结构解释，`Find/Search/Scan/Probe` 分别用于工具发现、目录查询、环境扫描和能力探测。`Create` 新建、`Ensure` 确保状态、`Set` 修改属性、`Manage` 为已有 action 判别的多操作入口；`Build` 离线构造、`Generate` 从工程生成、`Compile` 原生编译。其余领域动作（Import/Export/Connect 等）各用一个拼写。统一 `Read→Get/List`、`Compose→Build`、`Update→Set`、`Sync→Synchronize`、`Preflight→Preview`、`Add→Create`，每个例外在生成器 `SPECIAL_NAMES` 中列明。
+
+单项使用对象单数，批量使用被操作对象复数（如 `ExportPlcBlock` / `ExportPlcBlocks`）；单个块的多份文档为 `ExportPlcBlockDocuments`，多个块的文档为 `ExportPlcBlocksDocuments`。Tree/Hierarchy/Settings/Diagnostics 是一个复合结果，不因含数组改成 List。只读批次和事务批次分别命名，不能合并。
+
+附表 A **覆盖全部当前名称，包含不变项**。同一目标只允许一份目录定义；多个来源必须属于封闭的已证明同义合并组，参数映射和源码证明均在表中。指南/配方读取同一个示例库，可以合并到 `GetToolUsage`；编译的诊断范围、连接的进程选择/绑定/启动不同，保留独立工具。任何新合并都必须补证明并通过重复目标检查，不能通过扩大允许名单掩盖冲突。
+
+可用性按每个发布键独立计算：只映射该版已广告的入口。合并不引入该版原本没有的 action、对象类型或 native API；Foundation 的候选 XML 输出版本、普通 PLC 限制和完整引擎的 `ToolVersionPolicy.CallProblem` 门禁继续有效。
+
+## 2. 强类型输入
+
+附表 B 对每个 `…Json`（包括已为 JsonElement 的参数）和 `PlcBuildAndImport.json` 给出目标类型；后者改名为 `spec`，其余只去掉后缀。`…JsonPath` 是文件路径，保持 string。以下 `?` 表示可省略；只有显式包含 null 的联合允许 null。封闭 DTO 拒绝未知字段、重复字段、错误大小写与二次 JSON 编码；动态字典的键遵从 SDK 的精确拼写，不做 camelCase 转换。缺省、空值、空数组不相互代替。顶层必填性及业务缺省值取当前逐版 inputSchema，D1 表明确改动的缺省值除外。
+
+| 族 | 目标结构与一个完整参数例子 | 必须保留的校验 |
 |---|---|---|
-| 工具合并、名称一致（G1/G5） | A 全面改为领域化名称；**B 仅合并可证明同义的入口、消除误导名称**。具体映射见附表 A；其他名称保持。批量与单项、预览与执行保留区分 | MCP 客户端、prompts/skills、示例和脚本；中；纯别名离线，合并原生行为须 L5 |
-| 字符串 JSON → schema 类型（G5） | A 保留字符串并补描述；**B 数组、领域 DTO、受约束字典**。去掉参数名末尾 `Json`；禁止二次 JSON 编码和逗号列表。动态原生属性保留有值类型限制的字典，不伪造固定 SDK 字段 | MCP、桥接、prompts/skills；高；解析等价离线，导入/写入族 L5 |
-| 响应与错误（G5/G10） | A 只统一 meta；**B 一个信封、机器码与明确 outcome**。直接调用、桥接、Foundation 同形；旧堆栈仅入诊断日志 | 所有结果解析器、Studio 错误映射、CLI 报告；高；序列化离线，未知结果/部分写入 L5 |
-| lite 数据化（G1） | **A 版本化内嵌名单，首批成员不变**；B 按描述标签推断。名单按发布键、契约版本、profile 选择；别名不同时广告，发现/调用/分页入口必须齐全 | MCP 工具缓存、prompts/skills、Studio 配置；中；离线 |
-| 同名产品输出改名（G6/G7） | **A Foundation / V20 / V21 分别命名**；B 统一启动器隐藏后端。优先 A，既有版本目录不动；程序集名与文件同步，源命名空间暂不重命名 | CLI、Studio、启动/更新/打包脚本、织入及反射测试、客户配置；高；重定位离线，启动并连接的发布冒烟 L5 |
-| 旧探测、私有默认值、安装目录写入（G7） | **A 严格包根 + 显式工作区 + LocalAppData**；B 继续探测并告警。删除附表 E 的不受支持布局回退；开发锚点与正式相邻部署继续支持 | CLI、Studio、搬包用户、伴随 Python、日志采集；中；离线（模板导入另须 L5） |
-| 冻结 MCP 文本（G5/G10） | 已决定 4.0 统一英文；**先迁机器码消费者，再改文本**。TIA 原文/工程名仍是数据，Studio Loc 和 CLI doctor 本地化继续保留 | 错误匹配脚本、FindTools 检索、prompts/skills；高；文本离线，原生异常分类 L5 |
-| 同名异义、线程与会话（G2/G9） | **显式安全策略、按版本能力拒绝**；另一选择是保留两个具名行为入口。具体见下节；本轮不统一 MTA/STA，不把“不支持”伪装成空结果 | MCP、Studio、工程脚本；最高；逐受影响版本 L5 |
-| 吞异常后继续原生调用（G2/G5） | **逐点决策：失败可证明未执行才允许继续**；另一选择是保持行为并延后。删除自动下线再执行等隐式动作；未知写入结果必须要求重建会话，不自动重放 | 自动化、在线操作、现场工程；最高；故障注入 + L5 |
+| P 路径段 | `string[]`；`{"devicePath":["PLC_1"]}` | 段边界、转义、大小写、深度及根路径含义；不按斜杠/逗号重新拆分 |
+| S 名称/文件列表 | `string[]`；`{"extensions":[".scl"]}` | 逐操作允许值、重复项、长度、数量；harmonizeOptions 是名称数组而非对象 |
+| N 数字列表 | `int32[]`；`{"numbers":[1000]}` | 拒绝小数和溢出，原有参数号范围保持 |
+| R 反射路径 | `PropertyStep{property:string,name?:string,index?:int32}[]`；`{"objectPath":[{"property":"TagTables","name":"Table"}]}` | name/index 选择规则、原有属性准入和遍历预算；不开放任意 CLR 类型 |
+| M 属性字典 | `AttributeMap<Scalar>`，`Scalar=string\|number\|bool\|null`；`{"properties":{"ExternalWritable":true}}` | 按动作/版本限制属性、可写性、值类型和范围；CPU 使用 `{"settings":{"exactAttributes":{"Name":"PLC_1"}}}`，键须来自该操作支持的原生属性；不把这个形状当成所有 CPU 都支持 Name 的证明 |
+| L 文本/回答 | `map<string,string>`；`{"comments":{"en-US":"Motor"}}`；accessLevels 特例为 `map<string,int32>` | culture、提示 ID/选项及访问等级枚举；凭据不回显 |
+| V 原生值 | `NativeValue=Scalar\|NativeValue[]\|map<string,NativeValue>`，每个 action 收窄为其 parser 已允许的分支；`{"value":42.5}` | 数组/对象只在原操作支持时接收，原有深度和数据类型检查保留 |
+| C 调用 | `ToolCall{name:string,arguments:ToolArguments}[]`；`{"operations":[{"name":"GetSessionState","arguments":{}}]}` | arguments 按目标 V4 inputSchema 校验；直接 CallTool 的 arguments 是对象；读批次、预览和事务各保留 allowlist、数量和嵌套限制 |
+| W 写入 | `WriteValue{name:string,value:NativeValue}[]`；`{"writes":[{"name":"Ready","value":true}]}` | 值分支按通道收窄、数量/唯一名及在线保护；PLCSIM values 的键值对象改为同样数组 |
+| B PLC 构造 | `UdtSpec{name?:string,members:Member[]}`；`{"udt":{"name":"UDT_Status","members":[{"name":"Ready","datatype":"Bool"}]}}` | 不放宽 Foundation 边界；不能将“可构造候选”解释为“可导入主机版本” |
+| H HMI/AML | `UnifiedThemeSpec{name?:string,palette:map<string,string>}`；`{"theme":{"name":"Example","palette":{"Text":"0xFF202020"}}}` | Classic/Unified 是不同 DTO；颜色、尺寸、控件类型及原白名单保持 |
+| D 领域计划 | `Artifact{id:string,dependencies?:string[],target?:string,priority?:int32}[]`；`{"artifacts":[{"id":"UDT_A"},{"id":"FB_A","dependencies":["UDT_A"]}]}` | DAG/重复 ID、选择器、预期旧值、顺序、路径及执行确认 |
+| X 可选包/快照 | `DccPartnerSpec={block:string,pin:string}\|{chartInterface:string}`；`{"partner":{"block":"Block_1","pin":"IN1"}}` | 判别 action；互斥字段、现有可选包/版本能力及只读限制 |
 
-阶段 4 的 `TiaSharedAdapterPaths` 及旧 Studio 原生路径由 G3/J 的 L5 控制，不因“到 4.0”自动删除。WorkerChannel 协议 2 的 nonce、绑定纪元、不重放约束继续保留；worker 合并、框架升级和第三方 JSON 库替换不随产品改名捆绑。G3/G4/G6 已完成的构建/桌面端工作不重新展开，G8 运行时库也不重新并回引擎。
+B 的其余封闭 DTO：`Member{name,datatype,externalWritable?,comment?,commentZhCn?,startValue?}` 按各 builder 允许字段收窄；`GlobalDbSpec{dbName,dbNumber,staticMembers:Member[]}`；`PlcTagTableSpec{tableName,tags:[{name,dataTypeName,logicalAddress}]}`；`StructuredTextSpec{firstUid?,operations:Statement[]}`（Statement 按 op 判别，仅沿用现有赋值、条件、符号、literal、token、空白和换行语法）；`FlgNetCallSpec{callName,parameters:CallParameter[]}`，参数 `{name,section,dataType,sourceKind?,symbolPath?,constantValue?}` 按现有 global/local/constant 分支校验；`FcBlockSpec/FbBlockSpec{blockName,blockNumber,inputs?,outputs?,inouts?,statics?,temps?,structuredText}`，FC 的 inputs/outputs 必填；`LadFcBlockSpec{blockName,blockNumber,inputs?,outputs?,networks:[{call:FlgNetCallSpec}]}`。嵌套 callJson 同时改为 call。`PlcArtifactSpec` 由外层 kind=udt/tagtable/globaldb/fc/fb 选择对应类型，不接受其他构造器类型或任意对象。
 
-## 2. D1 行为决策及验收边界
+H 的其余类型：`ClassicScreenSpec/UnifiedScreenSpec{screen?:{name,width?,height?},items:ScreenItem[]}`，ScreenItem 按 type 区分已支持的控件，公共位置字段为 name/left/top/width/height，其余字段取对应 builder；`ClassicTagTableSpec{name,tags:[{name,dataType,length?}]}`；`ClassicPackageSpec{name,screenDesign,tagTable}`；`UnifiedLayoutSpec{columns?,cellWidth?,cellHeight?,grid?,items:LayoutItem[]}`（name/type/row/col 等）；`DeviceAmlSpec{projectName,devices:[{name,typeIdentifier,deviceItems:DeviceItemSpec[]}]}`。这些类型分别从现有 parser 定义生成 schema，不能用统一的无约束 object 代替控件联合。
 
-以下均为建议的新行为，不能由别名自动选择旧的危险默认值。
+D 的其他结构为 `NetworkPlan{operations:NetworkOperation[]}`（type 判别现有网络操作）、`BlockEdit[]`（action 判别现有精确 selector、field/culture、expectedValue/value）、`TemplateRow{fileName,values:map<string,string>}[]`、`PlcAliasRow{source:string[],destination:string[]}[]`、`PlcSimScenario{instance,mode,steps:({write:map<string,Scalar>}|{waitMs:int32}|{assert:map<string,Scalar>})[]}`。步骤次序原样保留，不合并写入。
 
-| 决策族 | 当前依据与差异 | 建议 4.0；另一选择；证明 |
-|---|---|---|
-| 设备创建 | 引擎 `DevicesService.AddDeviceWithFallback` 遍历 MLFB×版本并多次尝试创建；Foundation `PlcDeviceAddPolicy` 精确预览/哈希、单次创建，且硬件型号范围有界 | `CreateHardwareDevice` 使用精确 TypeIdentifier，先 preview、后带相同计划/工程身份 apply；不得丢失 Foundation 型号限制。另选保留显式 `ProbeAndCreate…` 高风险入口。L5 核对原生 create 次数、冲突、失败后状态 |
-| 块/类型/表导入与导出 | 引擎单块导入固定 Override，副本改版本/BOM，导出可先删文件；Foundation None 默认、不改版本、暂存发布；目录导入继续/遇错停止不同；Studio 还有根组、文本识别及 WithDefaults 差异 | 显式 `overwrite=false`、`versionPolicy=exact`、`onError=stop`，preview/confirm/expectedProjectFile 及计划哈希；统一返回逐项结果，无法覆盖的版本拒绝 `overwrite=true`。另选保持分族入口。L5 覆盖拒绝覆盖、显式覆盖、原文件保全、部分批次与内容回读；SD 文档/软件单元能力不得扩张 |
-| 连接、打开、保存、关闭 | Foundation 显式 PID、不启动；引擎可按工程选择/启动并 OpenWithUpgrade，反射回退 Open；Studio 首个可接受进程或启动、复用工程；借用/已修改工程关闭保护与 LocalSession 保存不同 | PID/进程身份与工程身份显式；`upgrade=reject` 默认，`upgrade=allow` 独立确认且版本支持；`reuseOpen=false`，借用/已修改对象拒绝隐式关闭，不自动保存。另选宿主具名策略。L5 逐版本旧工程、副本升级、借用对象及 LocalSession；连接不等于绑定 |
-| PLC 路径、外部源、编译 | G9 已拒绝非空未知名称；Foundation 转义路径、Studio 设备名规则仍不同；外部源名称去扩展/删除幂等、批次次序和生成返回值不同；Safety 登录/登出、自动下线不同 | 使用查询返回的精确路径；空值选唯一目标是否保留单独选择。删除需核实、生成返回原生结果或明确 observation；编译显式离线前提并对称结束 Safety 会话。另选保持有说明的策略差异。L5 对别名/歧义、源删除/生成、Safety、失败清理回放；不统一线程 |
-| 原生回退 | `OnlineToolPolicy.WithAutoOffline` 在匹配错误文本后下线再重试；`OnlineDownloadService` 可吞 ApplyConfiguration 失败后继续或换路线；VCI 失败后重新获取 workspace | 显式前置条件/路线选择；未知结果立即停止；VCI 仅在已证明只读且对象失效时重新获取。另选逐点延期。L5 注入中断并记录前后调用序列；保留探测可选 API、日志失败、隐私 stderr 等必要吞异常 |
+X 的其他具名类型如下；封闭字段及枚举以表中对应工具的现有 parser 为输入生成，下面明确需要维持的区别：
 
-4.0 不能靠移除版本判断“统一能力”。例如 V20 广告的混合 action 工具仍受 `ToolVersionPolicy.CallProblem` 约束；Foundation 的普通 PLC、文件大小、批次数、ASCII/格式与计划校验限制必须保留并进入类型 schema。合并工具要求语义等价证明；做不到就保留独立入口。
-
-## 3. 输入与输出目标
-
-输入族代码供附表 B 使用。所有 DTO 字段采用 camelCase；必填、null、空集合、缺省值分别建模；保留当前长度/深度/数量和枚举限制。兼容档负责旧拼写与字符串解析，新档不同时接收 `x` 和 `xJson`。
-
-| 族 | 建议类型 / 例子（均为提案，不是现在可调用的参数） |
+| 类型 | V4 结构/判别 |
 |---|---|
-| P 路径段 | `string[]`，`devicePath:["PLC_1"]`；保留大小写与段边界，空数组的根/CPU 含义按工具定义 |
-| S 名称/文件列表 | `string[]`，`extensions:[".scl"]`；harmonizeOptions 实际 parser 也读名称数组（描述称 object，迁移时修正）；数字参数列表为 `int[]`（N），`numbers:[1000]`；拒绝逗号字符串 |
-| R 反射路径 | `PropertyStep[]`，`objectPath:[{property:"TagTables",name:"Table"}]`；每步 `property:string,name?:string,index?:int`，沿用准入限制 |
-| M 属性值字典 | `Dictionary<string,Scalar>`，`properties:{ExternalWritable:true}`；`Scalar=string/number/bool/null`，逐操作校验准确属性名；CPU settings 为 `{exactAttributes:…}` |
-| L 语言/回答字典 | `Dictionary<string,string>`，`comments:{"en-US":"Motor"}`；promptAnswers 的键和值必须命中该版本提示选项；accessLevels 为 `Dictionary<string,int>` 且保持现有安全值限制 |
-| V 动态值 | 有 schema 的 JSON 值联合，`value:42.5`；仅原有工具允许时可为对象，按读回类型验证，拒绝任意 CLR 类型名 |
-| C 调用组合 | `ToolCall{name:string,arguments:object}[]`，`operations:[{name:"GetState",arguments:{}}]`；CallTool/Preflight 的 arguments 依据目标 schema 验证，事务及只读批次各保留自己的 allowlist/上限；伴随 CLI arguments 属 S |
-| W 写入项 | `WriteValue{name:string,value:Scalar}[]`，`writes:[{name:"Tag_1",value:50}]`；旧对象简写由兼容档转成数组；保留数量与在线写入保护 |
-| B 构造 DTO | 按参数建立不同 DTO：UDT `{members:[{name,datatype}]}`、GlobalDB `{dbName,dbNumber,staticMembers:Member[]}`、tagTable `{tableName,tags:[{name,dataTypeName,logicalAddress}]}`、ST `{operations:Statement[]}`、FlgNet `{callName,parameters:CallParameter[]}`、FC/FB `{blockName,blockNumber,inputs/outputs/inouts/statics/temps:Member[],structuredText}`、LAD `{blockName,blockNumber,networks:[{call:FlgNetCall}]}`。例：`udt:{members:[{name:"Ready",datatype:"Bool"}]}`。嵌套 `callJson` 同步迁为 `call`；Foundation `outputReleaseKey` 必填与 V21-only 输出约束保留 |
-| H HMI/AML 设计 DTO | Screen `{screen?,items:ScreenItem[]}`、TagTable `{name,tags:HmiTag[]}`、Package `{name,screenDesign,tagTable}`、Layout `{grid?,columns?,items:LayoutItem[]}`、Theme `{name?,palette:Dictionary<string,string>}`、AML 使用 `DeviceAmlSpec`；例 `theme:{palette:{Text:"0xFF000000"}}`。不能把 Classic 与 Unified 的 Screen DTO 当同型 |
-| D 领域结构 | 按 action 的封闭 DTO/联合：网络 `{operations:NetworkOperation[]}`；补丁 `BlockEdit[]`（action、精确 selector、expectedValue、value）；依赖 `Artifact{id,dependencies?,target?,priority?}[]`；模板 `TemplateRow{fileName,values}[]`；梯形别名 `AliasRow{source:string[],destination:string[]}[]`；PLCSIM `{instance,mode,steps:Write/Wait/Assert[]}`。例 `artifacts:[{id:"UDT_A"},{id:"FB_A",dependencies:["UDT_A"]}]` |
-| X 可选包/快照结构 | `DccPartner{block,pin}`（updateParameter 使用独立参数 DTO）；MotionTarget 为设备项/通道/DB 成员/PLC tag/地址的互斥联合；TestScope 为 `{kind,softwarePath,groupPath,name}[]`；TeamcenterItem 为 `{itemId?,itemName,revisionId?,teamcenterItemType,comment?,teamcenterFolder?,teamcenterProject?:string[]}`、Revision 为 `{revisionId?,comment?}`；SiVArcDeviceSelection 为 `Dictionary<string,bool>`、References 为 `Dictionary<string,{kind,softwarePath?,path?,libraryName?}或null>`；LibrarySelection 为 `{folder:string}或{type:string}[]`；DynamizationMapping 为 `{kind:Simple/Range/Bitmask,properties:受约束属性字典}[]`。例 `partner:{block:"Block_1",pin:"IN1"}` |
+| MotionTarget | 以字段组合互斥判别：`{devicePath,itemPath}`、另加 secondItemPath 或 channelIndex 或完整 channelType/channelIoType/channelNumber、`{dbMemberPath}`、`{plcTagPath}`、`{inputBitAddress,outputBitAddress}`、`{address}`；connectOption 仅用于双设备/双地址分支；无额外 kind/mode 输入，保留 `MotionProDiagClassicHmiLogic.ParseConnectionTarget` 的推导与限制 |
+| TestScope | `{kind,softwarePath?,groupPath?,name?}[]`；softwarePath 仅 plc/blocks/tags/types/units，name 仅 deviceGroup，groupPath 仅 blocks/tags/types |
+| TeamcenterItemSpec / RevisionSpec | `{itemId?,itemName,revisionId?,teamcenterItemType,comment?,teamcenterFolder?,teamcenterProject?:string[]}` / `{revisionId?,comment?}` |
+| SivarcReference / deviceSelection | `{kind,softwarePath?,path?,libraryName?}\|null` 的具名字典 / bool 字典；不把空引用变为自动选择 |
+| LibrarySelection | `({folder:string}\|{type:string})[]`；harmonizeOptions 另为 string[] |
+| DynamizationMapping | `{kind,properties:AttributeMap<Scalar>}[]`；kind 为现有 Simple/Range/Bitmask 分支 |
+| GraphicSelectionPage | 当前读回页逐字段类型化，保留 pageIndex、身份、完整性和逐项值；before/after 都要求完整有序页，不接受摘要代替 |
+| XPathRule / LintRules | `{id,files?,xpath,minCount?,maxCount?,valuePattern?,severity?}[]` / `{disabled?:string[],maxLineLength?:int32,maxNesting?:int32,markers?:string[]}`；`rules:[]` / `rules:{}` 表示当前默认策略，不是字符串 |
+| MonitoringOptions / TemplateIntent | `{pollMs?:int32,source?:string}` / `{screenType?,targetRuntime?,preferredComponents?:string[]}` |
+| OpenPipeRequest | `{message:string,params:MessageParams,clientCookie?:string}`；params 按 message 的现有协议 schema 选择，只有协议指定的扩展字段为受约束字典；发送时恢复 Message/Params 大小写 |
 
-X 的只读/分析子族：GraphicSelectionPage[] 直接类型化现有读回页（保留 pageIndex、身份、完整性与逐项值），例 `beforePages:[原始读回页对象]`；XPathRule[] 和 LintRules 分别从审计与 lint parser 生成 schema，例 `rules:[]` / `rules:{}` 表示现有默认策略；MonitoringOptions `{pollMs?:int,source?:string}`，例 `options:{pollMs:1000,source:"watch-table-export"}`；TemplateIntent `{screenType?:string,targetRuntime?:string,preferredComponents?:string[]}`，例 `templateIntent:{targetRuntime:"Unified"}`。这些类型沿用现有 parser 的字段与枚举，不扩大原生反射范围；其余未列出的 SDK 动态属性必须落入 M 的显式边界，不能用无约束 object 代替 DTO。
+附表 B1 保留逐版参数约束原文及 parser 的数值边界，作为迁移验收输入。Foundation 的 [OfflineCompositionBuilders](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs)、[OfflineXmlBuilders](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs) 和 [OfflineLadderBuilders](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs) 限制包括 JSON 字符预算 262144、深度 16、字符串 4096、项目 1000、XML 字符预算 1048576、LAD 网络 64。类型化后仍按无缩进规范化 JSON 计算字符预算，并保留输出预算；不得借移除字符串参数去掉预算。普通 PLC/ASCII 标识符、禁 raw XML/DTD/外部解析、路径与格式、重复字段、显式 outputReleaseKey 和 V21-only 构造器的限制逐项保持。
 
-附表 B 的每个参数都有族；`rulesJson`、`changesJson`、`argumentsJson` 按工具区分，不能仅按参数名机械替换类型。`PlcBuildAndImport.json` 另迁为 `spec`，以已有 `kind` 选择 B 的具体 DTO；`…JsonPath` 仍为文件路径。对象属性字典和开放协议请求是明确的动态边界；`UnifiedOpenPipeRequest.request` 用 `{message:string,params:object,clientCookie?:string}`，params 依 message 校验，内部向 Open Pipe 序列化时才恢复协议要求的大小写。
+实施时每族必须提供旧 parser 接受/拒绝样本与新 DTO 的等价测试；旧大小写/同义字段按本页规范转换后的样本才能用于等价比较。原来只在 parser 内执行的限制必须仍在业务验证层执行，并把能表达的部分放入 schema。不能仅有 schema 而绕过 native 前的校验。
 
-推荐统一结果如下（字段始终存在，未知值为 null；时间统一 UTC RFC3339）。业务/执行失败以 MCP `isError=true` 返回同一结构，成功为 false；JSON-RPC 协议级错误保持协议错误，不能冒充工具结果。为只读文本客户端同时返回等价的 JSON 文本与结构内容，不在 Message 里再包一层序列化结果。
+## 3. V4 信封、错误与退出码
+
+全部宿主及直接/桥接/批次/CLI 工具结果共用以下形状。下列字段均始终存在，未知或不适用时为 null；字典和数组分别用 `{}`、`[]`。属性名精确区分大小写，JSON 数字不得为 NaN/Infinity；timestamp 为 UTC RFC3339。schemaVersion 固定为整数 4。
 
 ```json
-{"schemaVersion":4,"ok":false,"data":null,"error":{"code":"PROJECT_NOT_BOUND","message":"No project is bound.","details":{}},"meta":{"timestamp":"2026-10-03T00:00:00Z","releaseKey":"21","outcome":"rejected-before-operation","requiresSessionReset":false,"warnings":[]}}
+{
+  "schemaVersion": 4,
+  "ok": false,
+  "data": null,
+  "error": {"code": "PROJECT_NOT_BOUND", "message": "No project is bound.", "details": {}},
+  "meta": {
+    "timestamp": "2026-10-03T00:00:00Z",
+    "releaseKey": "21",
+    "tool": "GetPlcBlockInfo",
+    "requestId": "request-1",
+    "outcome": "rejected-before-operation",
+    "execution": "not-started",
+    "requiresSessionReset": false,
+    "behaviorPolicy": "not-applicable",
+    "completeness": "none",
+    "paging": null,
+    "warnings": []
+  }
+}
 ```
 
-成功 `error:null`，领域字段移入 data；`success`/`ok`/`operationSuccess`/`status` 不再互相代替，批量的 data.items 保存每项结果。outcome 区分 `succeeded`、`rejected-before-operation`、`read-failed`、`partial`、`unknown`；后两者不能表示“未执行”，unknown 必须设置 requiresSessionReset。原 Foundation evidence、Executed、数据完整性与计划哈希必须映射保留，不能只留 message。分页使用显式 data.export 句柄，保持列表、读取、保存、删除能力。
+`data` 是工具 outputSchema 定义的对象或 null；原领域数组放入 data.items，原 message 信息按语义放入 data.summary 或 error.message，不保留第二个结果字符串。`error` 为 null 或 `{code,message,details}`；details 是该错误码规定的受约束对象，可携带脱敏 nativeCode/nativeMessage、目标、候选与证据，不能包含堆栈或凭据。requestId 使用调用日志关联 ID（没有上游 ID 时本地生成）；tool 是最终被执行的 V4 工具名。releaseKey 在早期无法识别时为 null，不猜版本。
 
-错误码首批建议：参数/枚举/重复参数 → `INVALID_ARGUMENT`（details.parameter、allowedValues）；版本/action → `UNSUPPORTED_CAPABILITY`；未绑定/歧义 → `PROJECT_NOT_BOUND` / `TARGET_AMBIGUOUS`；拒绝覆盖 → `ALREADY_EXISTS`；下线前提 → `OFFLINE_REQUIRED`；执行失败 → `NATIVE_OPERATION_FAILED`；结果未知 → `OUTCOME_UNKNOWN`。附表 C 保留当前族和标记计数，不能把历史约数当作互斥工具数。
-
-文本迁移必须同时替换 `TryCanonicalizeEnumArgument` 的消息解析、`OnlineToolPolicy.IsOnlineModeError` 的字串分支、响应快照拒绝标记、`Test-LocalStability.py` stderr 匹配及 Studio 类型/子串映射。每一旧消息先绑定码和 details，再写英文模板；TIA 原始错误保留为 details 中的数据并脱敏，堆栈只进本地诊断。兼容档保留旧文本快照，新档建立独立黄金字节。
-
-## 4. 兼容策略与实施顺序
-
-| 方案 | 收益 / 成本 | 结论 |
+| outcome（闭集） | ok / error / execution | 含义与 CLI 退出码 |
 |---|---|---|
-| 硬切 4.0 | 无双契约成本；所有 prompts/skills、客户端缓存和脚本同步迁移 | 可选，适合所有部署均受控 |
-| 同一名单保留旧名一个发布期 | 易发现 alias；同名参数/响应变化仍无法兼容，工具数增加 | 只适合纯改名，不作全局方案 |
-| 工具名加 V4 | 可并存；每个名字永久携版本，发现和示例成倍维护 | 不建议 |
-| 独立 `compat3` 档（建议） | 单会话只广告一套 schema；旧参数/结果可测试转换，不增加默认名单 | 4.x 保留，5.0 删除；迁移 notice 放 profile 元数据/stderr，不污染旧响应字节。通过拟增 `--contract-profile v4\|compat3` 选择，和 `--profile lite\|full` 正交 |
+| succeeded | true / null / read-only 或 completed | 已完成，preview 仅表示计划已生成；CLI 0 |
+| rejected-before-operation | false / 非 null / not-started | 准入或前置条件拒绝，尚未执行领域动作；CLI 2 |
+| read-failed | false / 非 null / read-only | 只读执行失败，不能宣称空结果；CLI 3 |
+| failed | false / 非 null / completed | 已执行的动作确定失败，后置状态已确认且没有成功项；CLI 3 |
+| partial | false / PARTIAL_FAILURE / partial | 有确定成功及失败/未执行项，或已知部分副作用，没有未知写入；CLI 4 |
+| unknown | false / OUTCOME_UNKNOWN / unknown | 任何已发出的写入无法确认结果；CLI 5；requiresSessionReset=true |
 
-不允许 compat3 默默把旧的危险调用翻译成新的 apply，也不能删除 Foundation 的确认要求；此类调用应在建会话时明确列为不兼容，客户端固定 3.x 或人工迁移。文档与启动器的旧环境变量/旧 EXE 别名保留同一周期；旧 root 变量与新变量同时指定且不同应拒绝，优先级明确为 CLI 显式根 → 新环境变量 → 旧别名 → 已知锚点。
+优先级 unknown > partial > failed；失败是否产生副作用由证据决定，不按异常文本猜测。`completeness=complete|partial|none|unknown` 表示观察的数据完整性；成功读取但字段受版本限制可以为 partial，必须警告。`behaviorPolicy=not-applicable|current|safe-v4` 表示该行为族实际实现，未真机验收的族为 current，不能报告 safe-v4。preview 的 execution=read-only；计划可完整但尚未执行，data.plan 明确说明。
 
-1. 固定合并后 master 的八版目录、输入/原始响应、lite 名单与示例；审定本页问题。证明：重跑本页生成器、源码/目录一致，更新 D1 真机台账；P4-I1/G3/J 的未验收状态显式保留。
-2. 引入类型与错误码的纯逻辑层及 compat3 转换器，每次只迁一个输入/响应族。证明：边界、空值、大小写、字节、双编码拒绝、未知结果保全；八版构建、离线 TRX 门禁；旧档 P0-02/P0-06 零差异（明确拒绝的危险行为另立迁移用例）。
-3. 将 lite 名单生成到单一内嵌数据，接入发现、CallTool 与直接路径；随后逐组改名。证明：附表 A/B 逐项无丢失、无重名、不可用 action 仍拒绝、分页可达、profile 与契约快照一致；Foundation 不凭空获得桥接或完整引擎工具。
-4. 分开实施硬件、交换、生命周期、PLC 路径/外部源/编译行为，每族独立审查。证明：列出前后 Siemens 调用顺序、参数、线程；旧失败基线、模拟故障及逐受影响版本 L5。没有 L5 的原生行为不进入发布。
-5. 产品输出/配置路径 → 包根回退 → 日志/Python/工作区逐步迁移。证明：构建输出、程序集反射和织入清单、安装/开发路径、旧启动别名、客户配置备份迁移；仓库外完整包及只读安装目录离线验收；必需文件清单/生成 manifest 由生成器同步。
-6. 从 `reference/tool-examples` 更新 calls、metadata、sequences、语言/操作示例；重新生成嵌入目录及工具矩阵，逐版检索。更新内置 prompts/skills、CLI/Studio 配置和客户端迁移说明；冻结机器码后统一英文。证明：契约与示例参数匹配、英中文 Studio UI、指南/FindTools 搜索、直接/桥接/批次响应一致。
-7. 发布前完整八版 L3、两个契约档快照、L5 台账、严格验包；明确 3.x 固定使用与回滚方法。回滚只换产品/配置，不自动降级工程、恢复已写工程或重放调用。
+批次 `data.items=[{index:int32,target:string|null,result:Envelope}]`，顺序与输入一致；未执行项 result 为 rejected-before-operation / NOT_EXECUTED。父结果保留成功子项、失败项、原 Foundation evidence、Executed 的逐项证据、观察来源及计划哈希。V14 SP1 外部源生成只得到 observation 时，data.observation 明示来源，data.nativeResult=null，不把观察推断为原生返回。已知副作用和不完整快照均不得在聚合时丢失。
 
-客户端迁移说明按以下顺序发布：支持版本及新能力边界 → EXE/命令/配置键与环境变量替换 → 名称表 → 去 JSON 字符串编码及新例子 → 新响应/错误码/部分与未知结果 → 隐式覆盖/升级/下线行为变化 → lite/发现与缓存刷新 → compat3 的期限、限制及固定 3.x/回滚方法。每条破坏性变化链接到本页对应表及可执行示例。
+| error.code（V4 初始闭集） | 意义 / details 的专用字段 |
+|---|---|
+| INVALID_ARGUMENT | 类型、枚举、重复/未知字段、双编码；parameter、allowedValues（可选） |
+| LIMIT_EXCEEDED | 数量/长度/深度/字节预算；parameter、limit、actual |
+| UNSUPPORTED_CAPABILITY | 该版本/action/对象不支持；releaseKey、capability、action |
+| TOOL_NOT_FOUND | 目标工具不在该版完整目录；tool |
+| PROJECT_NOT_BOUND | 无工程绑定；无专用字段 |
+| NOT_FOUND | 对象/文件/句柄不存在；target |
+| TARGET_AMBIGUOUS | 非唯一目标；target、candidates |
+| IDENTITY_MISMATCH | PID/start time、工程或绑定纪元不一致；target、expected、actual（脱敏） |
+| ALREADY_EXISTS | 拒绝覆盖；target |
+| CONFIRMATION_REQUIRED | 执行缺少确认；planHash |
+| PLAN_STALE | 计划、输入文件、目录库存或状态已变化；planHash、reason |
+| PRECONDITION_FAILED | 借用、脏工程、所有权等前提；condition、target |
+| OFFLINE_REQUIRED | 目标或受影响设备需离线；targets |
+| AUTHENTICATION_REQUIRED | 缺少必要认证；capability（不回显凭据） |
+| ACCESS_DENIED | 权限拒绝；operation、target |
+| SESSION_RESET_REQUIRED | 会话已失效，拒绝新操作；reason |
+| RESOURCE_UNAVAILABLE | SDK、可选服务、bundle 资源或通道缺失；resource |
+| IO_FAILED | 本地文件读写失败；operation、path（脱敏） |
+| NATIVE_OPERATION_FAILED | 已知原生失败；nativeCode、nativeMessage、evidence |
+| CANCELLED | 确认取消且未发生未知写入；stage |
+| TIMEOUT | 只读或可证明未发出动作的超时；stage |
+| NOT_EXECUTED | 批次前序停止导致本项未执行；causeIndex |
+| PARTIAL_FAILURE | 有已知成功和失败；succeeded、failed、notExecuted |
+| OUTCOME_UNKNOWN | 写入/传输/通道中断导致结果未知；stage、evidence；禁止自动重放 |
+| INTERNAL_ERROR | 非原生未分类故障；diagnosticId；堆栈仅入日志 |
 
-## 5. 维护者选择
+`meta.warnings` 为 `{code,message,details}[]`，code 初始闭集为 `INCOMPLETE_DATA`（不完整观察）、`NATIVE_WARNING`（原生诊断）、`CANDIDATE_ONLY`（构造候选未验证导入）、`UNVERIFIED_BEHAVIOR`（current 政策）、`CLEANUP_FAILED`（清理失败）、`NATIVE_CAPABILITY_LIMIT`（SDK 能力自身限制）、`DIAGNOSTIC_WRITE_FAILED`（日志不可写）。警告不把工程失败转为成功；cleanup 若使状态未知则仍为 unknown。
 
-**维护者决定（2026-10-03）：4.0 硬切，放弃 3.x 兼容。** 不提供 `compat3` 配置档，不保留旧工具名、旧参数、旧响应格式、旧 EXE 启动 shim、旧环境变量别名和根目录兼容启动器；仓库探测等兼容回退在 4.0 删除；冻结的 MCP 文本在 4.0 统一改为英文。需要 3.x 行为的用户固定使用最后一个 3.x 包。第 4 节的 compat3 方案及下列问题中与兼容期相关的选项因此作废，其余问题按此前提重新提出，答复后重写本页。
+分页时 `meta.paging={mode:"offset"|"cursor",offset:int32|null,limit:int32,nextOffset:int32|null,cursor:string|null,nextCursor:string|null,total:int32|null,complete:bool}`；不用分页则 null。页大小上限取原工具，offset 非负，游标限定于同一 release/session/binding/查询/快照，不得跨工程复用。complete 表示该快照已读完，next 字段为 null；不能用它代替工程结果完整性。大结果缓存另给 `data.export={id:string,mediaType:string,byteLength:int64,sha256:string,expiresUtc:string|null}`，由 ListExportHandles/GetExportContent/SaveExportContent/DeleteExportHandle/ClearExportHandles 提供完整生命周期。原来的页身份和校验信息放入 data，过期/缺失返回 NOT_FOUND，不偷偷创建新快照。
 
-**维护者决定（2026-10-03，硬切前提下重新提出的问题全部采用建议）：**
+MCP `structuredContent` **就是上述 Envelope**；同时提供一个 TextContent，其 text 为同一 Envelope 的 JSON（为了文本客户端），`isError=!ok`。`CallTool` 成功分派后原样返回目标的同一个信封，meta.tool/requestId 也保持目标值；分派前失败则 meta.tool=CallTool。禁止把目标 JSON 再放入 Message/data.result 字符串。真正 JSON-RPC 协议错误仍为协议错误，不伪造成工具结果。批次只有 result 属性嵌套对象，不嵌套字符串。
 
-1. 命名：制定统一命名规则（动词 + 对象，合并同义入口），不符合规则的工具全部改名，数量由生成器统计；示例与文档重新生成。
-2. 输入：强类型 DTO，参数名去掉 `Json`，只有真正动态的属性使用受约束字典。
-3. 输出：全部宿主与调用方式使用同一 V4 信封（data、机器错误码、成功/失败/未知 outcome），直接调用与 `CallTool` 同形。
-4. D1 同名异义：统一为显式安全策略（默认不覆盖、默认拒绝升级、精确创建，写操作 preview 后确认）。
-5. PLC 空路径：仅工程内唯一 PLC 时自动选择，多个时报错并列出候选（保持 G9）。
-6. lite：按明确标准重新筛选，名单为数据文件，约 60 个，每个工具必须有调用示例。
-7. 程序名：`TiaMcp.FoundationHost.exe`（V14 SP1–V19）、`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`。
-8. 根目录入口：以新产品名命名的启动器（如 `TiaOpenness.exe`）打开 Studio 工作台，删除 `TiaMcpConfigurator.exe`。
-9. 运行目录：`--bundle-root` / `TIA_MCP_BUNDLE_ROOT`；日志与生态 Python 迁至 `%LOCALAPPDATA%\TiaMcp`；私有工作区显式指定。
-10. 原生行为：按行为族分别完成真机验收后进入 4.0，未验收的族保持原行为。
-11. 发布说明附生成的新旧名称/参数对照表（仅文档，程序不做兼容）。
+CLI 的工具命令 stdout 输出一份相同 JSON，stderr 仅诊断；上述 0/2/3/4/5 为结果退出码。CLI 语法错误退出 64，无法创建工具上下文的进程级故障退出 70；这两者不得输出假成功信封。用户要求的人类报告属于 data 内文件或内容，不能改变机器退出码。错误码落地后再把冻结 MCP 文本统一为英文，并同时迁移 `TryCanonicalizeEnumArgument`、`OnlineToolPolicy.IsOnlineModeError`、Studio 错误映射、快照及 `Test-LocalStability.py` 的文本消费者。
 
-1. 兼容期限：**A compat3 保留整个 4.x、5.0 删除（建议）** / B 仅 4.0、4.1 删除 / C 4.0 硬切？
-2. 改名范围：**A 仅附表 A 的建议项（建议）** / B 全量领域前缀改名 / C 只改误导的设备创建名、其他延期？
-3. 输入：**A 强 DTO + 明确动态字典边界（建议）** / B 所有 JSON 仅改为 JsonNode（少约束）？
-4. 结果：**A 全宿主同一 V4 信封且直接/桥接同形（建议）** / B 保留宿主外壳只统一 error？
-5. D1：**A 采用显式覆盖/升级/创建与确认策略（建议）** / B 保留具名双行为入口？尚无实现的覆盖模式保持不支持。
-6. PLC 空路径：**A 保留“仅唯一 PLC 时可选”并在 schema 说明（建议）** / B V4 一律显式路径？
-7. lite：**A 首批保留现有成员，仅通过名称映射更新（建议）** / B 与改名同时重新筛选名单？
-8. 产品：**A 附表 D 三个输出名（建议）** / B 新增统一启动器；旧 GUI 兼容启动器 A 保留一个周期 / B 4.0 删除？
-9. 运行目录：**A 新 bundle-root 输入，日志/Python 迁 LocalAppData，私有工作区显式（建议）** / B 延期其中一项（需指明）？
-10. 原生行为发布：**A 按族完成 L5 才进 4.0（建议）** / B 所有族一起验收后一次发布？线程统一和 worker 合并均另立任务。
+## 4. D1 安全策略和验收
 
-## 附表：当前事实与提案
+所有写操作统一 `mode="preview"|"apply"`（默认 preview）、`confirm=false`；apply 要求 confirm=true、expectedPlanHash 和 expectedProjectFile。过程身份使用 `{processId,processStartUtc}`，工程身份还包括绑定纪元；离线文件操作用显式 workspaceRoot 和输入/输出文件身份代替工程身份。preview 可读目标/目录，但不得创建、导入、编译、下线、保存或重试写入。
 
-以下区块由末尾的一次性 Python 命令生成。当前名字、参数、版本取自源码核对后的契约快照，并与完整目录逐行比较；提案由脚本中的显式映射生成，**不会被误认为代码已有实现**。`全` 表示 V14 SP1、V15.1、V16、V17、V18、V19、V20、V21；`E` 为 V20/V21 完整引擎，`F` 为 V14 SP1–V19 Foundation。可用仅指广告，不证明原生能力/action 或真机验收。
+preview 的 `data.plan` 固定包含 `{hash,releaseKey,tool,argumentsHash,identity,inputHashes,inventoryHash,operations,warnings}`；hash 基于排序键、保序数组、规范化数值/路径和完整目标身份的 SHA-256，排除密码明文、时间戳与 confirm/mode。敏感输入变化仍须通过会话内不可逆摘要令计划失效。apply 重读身份与文件/库存并比对；任何差异返回 PLAN_STALE 或 IDENTITY_MISMATCH。确认令牌只允许一次执行尝试，未知结果消耗令牌，不重放；重新 preview 不等于允许再次写入，先核实实际状态并重建会话。批次默认遇错停止，不承诺原子回滚。
+
+| 行为族 | 4.0 参数和缺省值 | preview / apply 和必须验收的行为 |
+|---|---|---|
+| 设备创建 | typeIdentifier 必填且精确；deviceName、family；不提供候选轮询缺省 | preview 返回命中的单一目录项、能力范围、名称冲突和计划；apply 只调用一次 Create。Foundation 型号范围继续限制；验证失败后无残留/未知状态 |
+| 导入 | overwrite=false、versionPolicy=exact、onError=stop、compileAfter=false；目录顺序显式 importOrder，保留各版 maxItems 上限 | 预览文件哈希、目标组、库存、可覆盖能力；apply 使用原内容，不修版本/BOM。overwrite=true 仅在该版本/对象已支持且本族验收时可用；否则 UNSUPPORTED_CAPABILITY |
+| 导出 | overwrite=false、onError=stop、preservePath 保留原支持边界；输出绝对路径或 workspaceRoot 下路径 | 预览目的文件/目录、对象清单和哈希；暂存后发布，发布失败保留原文件与逐项证据；不先删除目的文件。批次/SD/软件单元不扩张为普通块能力 |
+| connect / open | 进程必须显式选择；startNew=false、reuseOpen=false、upgrade=reject；upgrade=allow 需独立确认及 copyPath | 连接不等于绑定；列出并校验 PID/start time/工程文件；旧工程升级只针对副本，缺原生支持即拒绝；不关闭陌生或借用工程，不隐式启动 |
+| save / close | 保存为显式操作；close 的 saveChanges=false，discardChanges=false；不隐式保存 | 借用工程拒绝关闭；脏工程要求先保存，或显式 discardChanges=true 重新预览确认；LocalSession 使用对应本地保存路径，不替换成普通 Project.Save |
+| PLC 路径 | softwarePath="" 仅在工程内唯一 PLC 时选中，否则 TARGET_AMBIGUOUS 并列候选；非空精确匹配 | 使用查询返回的完整路径/结构名称映射，未知非空路径 NOT_FOUND；读取和写入同规则；保留 G9 缓存失效行为，不扩大路径匹配 |
+| 外部源 | overwrite=false、onError=stop；sourceName/groupPath 精确；删除 missingPolicy=reject | 预览文件、源身份、生成/删除清单；apply 逐项核实；V14 SP1 observation 与原生结果分列，不按去扩展名猜源、不吞删除错误 |
+| 编译 | offlinePolicy=require、password 可选，target kind/软件对象保持各入口边界 | 预览能力、离线前提及 Safety 权限；apply 不自动下线；仅结束本次建立的 Safety 登录，清理失败保留证据；编译诊断不能只看根 ErrorCount |
+| 原生回退 | route 必须取已发现的精确路线；retryPolicy=never；refreshReadHandle=false | ApplyConfiguration 失败不继续下载；写入未知立即停止并要求会话重建。VCI 仅在显式 refreshReadHandle=true 且证据证明只读未执行时重取句柄一次；不得换路线重放 |
+
+本表为 **验收后的目标行为**。维护者决定按族推进：未完成该版本/行为族真机验收时保持原行为，工具描述、能力查询和 meta.behaviorPolicy=current / UNVERIFIED_BEHAVIOR 明确披露；不得广告尚未支持的策略参数或伪装已生效的安全缺省。对应参数 schema 在本族切换时一次更新，生成的发布契约记录实际状态。4.0 的名称/类型/信封仍统一；原生政策是否切换是独立能力事实。第 I 步和 G3/J 的开关及发布门槛不因进入阶段 6 自动解除，MTA/STA 归属不改变。
+
+每族先在测试构建完成离线故障证明与前后 Siemens 调用顺序/参数/线程表，再在明确授权的测试工程副本上验收，最后切换该族的发布能力。真机登记见[台账的 P6 项目](../reference/real-machine-ledger.md)；本任务全部为 **NOT RUN**。
+
+## 5. lite、产品与运行目录
+
+lite 的准入标准：覆盖“发现与示例→环境/绑定→定位→常见 PLC 交换和编译→HMI 定位→结果导出”的最短工作流程；低频可选包、在线写入/下载、通用反射、深层 HMI 编辑及自测通过完整目录发现后按需 CallTool。每个候选必须在 V20/V21 都存在，且 `reference/tool-examples/calls.json` 各版 profile 有 arguments 示例；不能仅因为在旧 lite 中就入选。附表 F 和数据提案逐项给出理由，精确数量由生成器输出。
+
+名单按 releaseKey + contractVersion + profile 内嵌；直接调用、FindTools、GetToolUsage、CallTool 使用同一完整目录及版本门禁，lite 只控制 tools/list 的广告成员。发现和分页/导出入口始终可达。Foundation **继续不设 lite**，也不新增它今天没有的 CallTool 或完整引擎能力。提案文件尚不被运行时读取；实施任务将其移动至正式资源路径并接线。
+
+产品输出采用 `TiaMcp.FoundationHost.exe`、`TiaMcp.Engine.V20.exe`、`TiaMcp.Engine.V21.exe`；AssemblyName 同步，关联 .dll/.exe.config/.deps.json/.runtimeconfig.json 按实际构建产物同步。发布键目录与开发输出目录不变，源命名空间不为这次改名批量移动。根 `TiaOpenness.exe` 为正式 Studio 启动器，启动 `runtime/studio/TiaOpenness.exe`；根启动器的 AssemblyName 为 TiaOpenness.Launcher，构建复制为根 EXE，避免同基名程序集身份混淆。删除根 `TiaMcpConfigurator.exe`；Bridge、worker、adapter 名称保持现有职责。
+
+所有入口接受 `--bundle-root <absolute-path>` / `TIA_MCP_BUNDLE_ROOT`。选择顺序：显式 CLI → 环境变量 → BundleLayout 的已知安装/开发锚点；CLI 与环境变量并存时 CLI 优先。显式值无效立即报错，不向别处查找。根必须含 manifest/package-manifest.json，资源必须在该根，缺失返回 RESOURCE_UNAVAILABLE；删除任意祖先仓库、templates/tools、TMP_EXPORT、同级引擎找不到时改用自身等探测。Foundation 的 release-key.txt、显式 --worker-exe、正式相邻 bridge/adapters 部署继续支持；Studio 新旧原生路径的选择仍服从 G3/J 真机验收。
+
+日志迁到 `%LOCALAPPDATA%\TiaMcp\logs\<releaseKey>` 与 `logs\studio`，已有 diagnostics 目录仍为诊断证据专用；并发进程使用 request/session/PID 区分文件。Python 默认环境为 `%LOCALAPPDATA%\TiaMcp\ecosystem-python`，显式 `TIA_MCP_PLC_TOOLS_PYTHON` 仍优先。不自动复制执行旧私有环境、不写安装目录；缺 LocalAppData 或目录不可写按用途报 IO_FAILED/DIAGNOSTIC_WRITE_FAILED，不能回退安装目录。私人模板、报告、fixture 用显式 `--workspace-root` / 已有 workspaceRoot 参数及具体模板输入，缺失即 INVALID_ARGUMENT，不猜 cwd 或私人目录。
+
+附表 E 生成全部相关第一方文本命中位置，覆盖构建/Package-Release/Validate-Bundle/Check-Repository 必需清单、织入与反射、Studio ConfigCore/ClientProfiles、CLI 配置器、操作脚本和文档。实施先改生成源，再运行产物生成器；不手改 manifest 哈希。客户端配置的 server key、HTTP /mcp 和鉴权键不因 EXE 改名变化，命令/参数由新的产品表生成；已有用户配置先备份再显式迁移。验收包括仓库外完整包、只读安装目录、空格/中文路径、无效显式根、不同 cwd、缺引擎及 worktree 禁止安装更新。
+
+## 6. 决策记录（2026-10-03）
+
+维护者决定：4.0 硬切，放弃 3.x 兼容；硬切前提下重新提出的问题 1–11 全部采用建议。
+
+1. 统一“动词 + 对象”命名，全部不符合项改名，合并证明同义的入口，数量由生成器统计。
+2. 输入使用强类型 DTO；参数去 Json，真正动态属性使用受约束字典。
+3. 全宿主/调用方式使用同一个 V4 信封，CallTool 与直接调用同形。
+4. D1 统一显式安全政策：默认不覆盖、拒绝升级、精确创建、写操作预览后确认。
+5. PLC 空路径仅在工程内唯一 PLC 时选择，多 PLC 列候选并拒绝。
+6. 按明确标准重新筛选约 60 个 lite 工具，以数据文件维护，每个成员有示例。
+7. 三个同名程序改为 FoundationHost / Engine.V20 / Engine.V21。
+8. 根目录使用新产品名启动器打开 Studio，删除 TiaMcpConfigurator.exe。
+9. 使用 bundle-root 输入，日志/Python 移至 LocalAppData，私人工作区显式指定。
+10. 原生行为按族完成真机验收后进入 4.0，未验收的族保持原行为。
+11. 发布说明最后附生成的新旧名称/参数对照表，仅作为文档。
+
+## 7. 实施与生成证明
+
+任务顺序、依赖、文件所有权及每项验收见[重构计划阶段 6](refactor-plan.md#阶段-6破坏性变更40)。本文的每项未实现内容都有对应任务；最后一个任务生成发布说明的新旧名称/参数对照。改名、类型化、响应以及安全政策分别证明，不把离线测试称为原生验收。
+
+生成器仅用 Python 标准库和仓库检查器，不加载二进制、不访问网络、无需 SDK。可从任意 cwd 对干净 checkout 运行；只写本页标记块和 lite 提案文件。运行两遍必须字节完全相同，`--check` 不写文件。源码目录与八版基线、当前 lite、示例覆盖、闭合类型族、合并证明和目标唯一性任何一项不符都失败。四个负例自检拒绝漏映射、未证明重名、表示词和未经证明的编译合并。
+
+```powershell
+python -B scripts/generate/Generate-Phase6Plan.py --self-test
+python -B scripts/generate/Generate-Phase6Plan.py
+python -B scripts/generate/Generate-Phase6Plan.py --check
+python scripts/checks/Check-Repository.py --no-binaries
+python scripts/checks/Check-DeadToolReferences.py
+pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes
+```
+
+并执行 [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) 中 source-contracts 的每一个 run 步骤；该任务均为纯源码检查。schema/产品/原生实现阶段另按[验证分层](validation.md)运行 TRX 最低数量门禁、八版构建、V4 快照与相应 L5。现在的生成表为提案事实，不替换 3.x 的契约或生成资源。
+
+## 附表：机器生成的当前事实与 V4 提案
+
 
 <!-- phase6-generated:start -->
 
-### 基线与计数
+### 当前基线与 V4 提案计数
 
-| 发布键 | 广告工具 | lite | string …Json 参数 | 涉及工具 |
-|---|---|---|---|---|
-| 14sp1 | 57 | 不设 lite | 9 | 9 |
-| 15.1 | 58 | 不设 lite | 9 | 9 |
-| 16 | 60 | 不设 lite | 9 | 9 |
-| 17 | 60 | 不设 lite | 9 | 9 |
-| 18 | 60 | 不设 lite | 9 | 9 |
-| 19 | 62 | 不设 lite | 9 | 9 |
-| 20 | 477 | 63 | 272 | 156 |
-| 21 | 488 | 63 | 289 | 164 |
+| 发布键 | 当前广告工具 | 当前 lite | string …Json | 涉及工具 | V4 工具 | V4 lite 提案 |
+|---|---|---|---|---|---|---|
+| 14sp1 | 57 | 不设 | 9 | 9 | 57 | 不设 |
+| 15.1 | 58 | 不设 | 9 | 9 | 58 | 不设 |
+| 16 | 60 | 不设 | 9 | 9 | 60 | 不设 |
+| 17 | 60 | 不设 | 9 | 9 | 60 | 不设 |
+| 18 | 60 | 不设 | 9 | 9 | 60 | 不设 |
+| 19 | 62 | 不设 | 9 | 9 | 62 | 不设 |
+| 20 | 477 | 63 | 272 | 156 | 475 | 60 |
+| 21 | 488 | 63 | 289 | 164 | 486 | 60 |
 
-八版名称并集 496；V21 后缀 Json 输入 291 个，其中 CallTool/PreflightToolCall.argumentsJson 已为 JsonElement?；另有 PlcBuildAndImport.json。不能把它们统称为 string 参数。源码工具名、V21 字符串参数、V20 差集、lite、八版目录及示例覆盖断言均通过。
-
-<details>
-<summary>A. 工具改名 / 合并 / 行为迁移（当前参数自动读取）</summary>
-
-| 当前名称 | 建议名称/合并目标 | 当前发布键 | 当前参数名 | 拟议变化 |
-|---|---|---|---|---|
-| `AddDeviceWithFallback` | `CreateHardwareDevice` | 19, 20, 21 | 19: `confirm, deviceName, dryRun, expectedPlanHash, expectedProjectFile, family, preferredMlfb, preferredVersion`<br>20/21: `deviceName, family, preferredMlfb, preferredVersion` | 精确 TypeIdentifier + preview/confirm/计划与工程身份；D1 |
-| `ApplyUnifiedHmiScreenDesignJson` | `ApplyUnifiedHmiScreenDesign` | 20, 21 | 20/21: `designJson, hmiSoftwarePath, screenName, strict` | Json 表示从工具名去掉；设计对象直接返回 data |
-| `BuildUnifiedHmiLayoutDesignJson` | `BuildUnifiedHmiLayoutDesign` | 20, 21 | 20/21: `layoutJson` | Json 表示从工具名去掉；设计对象直接返回 data |
-| `BuildUnifiedHmiTemplateApplyDesignJson` | `BuildUnifiedHmiTemplateApplyDesign` | 20, 21 | 20/21: `fallbackHeight, fallbackWidth, templateFile` | Json 表示从工具名去掉；设计对象直接返回 data |
-| `BuildUnifiedHmiThemeDesignJson` | `BuildUnifiedHmiThemeDesign` | 20, 21 | 20/21: `themeJson` | Json 表示从工具名去掉；设计对象直接返回 data |
-| `CloseProject` | `CloseProject` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile`<br>20/21: `无` | 拒绝借用/已修改对象隐式关闭；D1 |
-| `CompileAndDiagnoseHmi` | `CompileSoftware` | 20, 21 | 20/21: `softwarePath` | targetKind=hmi；仅 E，祖先软件查找不得丢失 |
-| `CompileAndDiagnosePlc` | `CompileSoftware` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, password, softwarePath`<br>20/21: `password, softwarePath` | targetKind=plc；仅在诊断/离线/Safety 等价后合并 |
-| `CompileSoftware` | `CompileSoftware` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, password, softwarePath`<br>20/21: `password, softwarePath` | 保留 softwarePath/password；统一 diagnostics 与 preview/confirm；D1 |
-| `Connect` | `Connect` | 全 | 14sp1/15.1/16/17/18/19: `processId`<br>20/21: `allowStart, projectName` | 统一 processId/进程与工程身份；启动显式选择；D1 |
-| `ConnectIsolated` | `ConnectIsolated` | 20, 21 | 20/21: `无` | 隔离生命周期保留独立入口 |
-| `ConnectToProject` | `Connect` | 20, 21 | 20/21: `processId, processStartUtc, projectPath` | 保留 processId/processStartUtc/projectPath 校验 |
-| `DeletePlcExternalSource` | `DeletePlcExternalSource` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedPlanHash, expectedProjectFile, externalSourceName, groupPath, softwarePath`<br>20/21: `externalSourceName, softwarePath` | 精确路径，核实删除；不靠扩展名或幂等吞错 |
-| `ExportAsDocuments` | `ExportBlockDocuments` | 20, 21 | 20/21: `blockPath, exportPath, preservePath, softwarePath` | 参数保留，D1 显式发布策略；不放开普通块/GlobalDB 限制 |
-| `ExportBlock` | `ExportBlock` | 全 | 14sp1/15.1/16/17/18/19: `blockPath, confirm, dryRun, expectedProjectFile, exportPath, preservePath, softwarePath`<br>20/21: `blockPath, exportPath, preservePath, softwarePath` | overwrite=false、preview/confirm，暂存发布；D1 |
-| `ExportBlocks` | `ExportBlocks` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedInventoryHash, expectedProjectFile, exportPath, groupPath, maxItems, recursive, softwarePath`<br>20/21: `exportPath, preservePath, regexName, softwarePath` | 同导出策略；保留 inventoryHash/逐项结果 |
-| `ExportBlocksAsDocuments` | `ExportBlockDocumentsBatch` | 20, 21 | 20/21: `exportPath, preservePath, regexName, softwarePath` | 批次保留，不改为循环调用单项工具 |
-| `ExportPlcTagTable` | `ExportPlcTagTable` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, exportPath, softwarePath, tagTableName`<br>20/21: `exportPath, softwarePath, tagTableName` | 同导出策略；不合并 XML 与 SD |
-| `ExportType` | `ExportType` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, exportPath, preservePath, softwarePath, typePath`<br>20/21: `exportPath, preservePath, softwarePath, typePath` | 同导出策略；保留 preservePath |
-| `ExportTypes` | `ExportTypes` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedInventoryHash, expectedProjectFile, exportPath, groupPath, maxItems, recursive, softwarePath`<br>20/21: `exportPath, preservePath, regexName, softwarePath` | 同导出策略；保留 inventoryHash/逐项结果 |
-| `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedPlanHash, expectedProjectFile, externalSourceName, softwarePath`<br>20/21: `externalSourceName, softwarePath` | 保留 14sp1 observation 与其他版原生结果区别 |
-| `ImportBlock` | `ImportBlock` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, groupPath, importPath, overwrite, softwarePath`<br>20/21: `groupPath, importPath, softwarePath` | overwrite=false、versionPolicy=exact、preview/confirm；D1 |
-| `ImportBlocksFromDirectory` | `ImportBlocksFromDirectory` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dir, dryRun, expectedPlanHash, expectedProjectFile, groupPath, importOrder, maxItems, overwrite, regexName, softwarePath`<br>20/21: `dir, groupPath, overwrite, regexName, softwarePath` | onError=stop，保留顺序/计划/数量；D1 |
-| `ImportBlocksFromDocuments` | `ImportBlockDocumentsBatch` | 20, 21 | 20/21: `groupPath, importOption, importPath, regexName, softwarePath` | 保留逐项结果/停止与未知结果 |
-| `ImportFromDocuments` | `ImportBlockDocuments` | 20, 21 | 20/21: `fileNameWithoutExtension, groupPath, importOption, importPath, softwarePath` | 参数保留，overwrite=false；不支持覆盖的版本拒绝 true |
-| `ImportPlcExternalSource` | `ImportPlcExternalSource` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedPlanHash, expectedProjectFile, filePath, groupPath, softwarePath`<br>20/21: `filePath, groupPath, softwarePath` | 精确源名/文件；preview/confirm 与计划；D1 |
-| `ImportPlcProgramFromDirectory` | `ImportPlcProgramFromDirectory` | 全 | 14sp1/15.1/16/17/18/19: `blockGroupPath, compileAfter, confirm, dryRun, expectedPlanHash, expectedProjectFile, importOrder, maxItems, overwrite, regexName, softwarePath, sourceDir, stopOnImportFailure, tagFolderPath, technologyFolderPath, typeGroupPath`<br>20/21: `blockGroupPath, compileAfter, dryRun, regexName, softwarePath, sourceDir, stopOnImportFailure, tagFolderPath, technologyFolderPath, typeGroupPath` | 同批次策略；块/类型/表目的地仍独立 |
-| `ImportPlcTagTable` | `ImportPlcTagTable` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, folderPath, importPath, overwrite, softwarePath`<br>20/21: `folderPath, importPath, softwarePath` | 同导入策略；保留 folderPath |
-| `ImportType` | `ImportType` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, groupPath, importPath, overwrite, softwarePath`<br>20/21: `groupPath, importPath, softwarePath` | 同导入策略；保留目标组与原生类型限制 |
-| `OpenProject` | `OpenProject` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile, path`<br>20/21: `closeForeignProject, path, umacPassword, umacUserName, umacUserType` | upgrade=reject、reuseOpen=false；明确确认与工程身份；D1 |
-| `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | 14sp1, 15.1, 16, 17, 18, 19 | 14sp1/15.1/16/17/18/19: `allowedFilePath, confirm, dryRun, expectedPlanHash, expectedProjectFile, filePath, groupPath, softwarePath` | 保持只预览；不别名到可执行导入 |
-| `SaveProject` | `SaveProject` | 全 | 14sp1/15.1/16/17/18/19: `confirm, dryRun, expectedProjectFile`<br>20/21: `无` | 显式 preview/confirm 与工程身份；LocalSession 本地保存 |
-
-此表以外的工具名保持；输入变化另见 B，统一响应影响全部广告工具。合并后可用版本为原入口的并集，具体 action/目标能力保留原门禁。大小写风格（例如 SiVArc/Sivarc）不单独批量改名。
-
-</details>
+八版当前名称并集 496；V4 名称并集 494；改名/合并入口 183；不变 313。数字只指目录，不代表原生能力验收。
 
 <details>
-<summary>B. 全部 JSON 输入逐工具清单（计数为每个签名的 string …Json 数，不跨版本相加）</summary>
+<summary>A. 全量 current name → 4.0 name（包括不变项）</summary>
 
-| 当前工具 | 发布键 | string 数 | 旧参数 → 新参数（族） |
+| 当前名称 | 4.0 名称 | 保留发布键 | 依据/合并证明 |
 |---|---|---|---|
-| `ApplyUnifiedHmiLayout` | 20, 21 | 1 | `layoutJson` → `layout` (H) |
-| `ApplyUnifiedHmiScreenDesignJson` | 20, 21 | 1 | `designJson` → `design` (H) |
-| `ApplyUnifiedHmiTheme` | 20, 21 | 1 | `themeJson` → `theme` (H) |
-| `AuditEngineeringExports` | 20, 21 | 1 | `rulesJson` → `rules` (X) |
-| `BuildClassicHmiMinimalPackage` | 20, 21 | 1 | `packageJson` → `package` (H) |
-| `BuildClassicHmiScreenXml` | 20, 21 | 1 | `designJson` → `design` (H) |
-| `BuildClassicHmiTagTableXml` | 20, 21 | 1 | `tableJson` → `table` (H) |
-| `BuildDeviceAmlDocument` | 20, 21 | 1 | `specJson` → `spec` (H) |
-| `BuildFlgNetCallXml` | 全 | 1 | `flgNetJson` → `flgNet` (B) |
-| `BuildPlcGlobalDbXml` | 全 | 1 | `globalDbJson` → `globalDb` (B) |
-| `BuildPlcTagTableXml` | 全 | 1 | `tagTableJson` → `tagTable` (B) |
-| `BuildPlcUdtXml` | 全 | 1 | `udtJson` → `udt` (B) |
-| `BuildStructuredTextXml` | 全 | 1 | `structuredTextJson` → `structuredText` (B) |
-| `BuildUnifiedHmiLayoutDesignJson` | 20, 21 | 1 | `layoutJson` → `layout` (H) |
-| `BuildUnifiedHmiThemeDesignJson` | 20, 21 | 1 | `themeJson` → `theme` (H) |
-| `CallTool` | 20, 21 | 0 | `argumentsJson` → `arguments` (C) |
-| `CompareProjects` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `targetDevicePathJson` → `targetDevicePath` (P); `targetItemPathJson` → `targetItemPath` (P) |
-| `CompareUnifiedGraphicSelections` | 20, 21 | 2 | `afterPagesJson` → `afterPages` (X); `beforePagesJson` → `beforePages` (X) |
-| `CompileDevice` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ComposePlcAliasAlarmLad` | 20, 21 | 1 | `rowsJson` → `rows` (D) |
-| `ComposePlcFbBlockXml` | 全 | 1 | `fbBlockJson` → `fbBlock` (B) |
-| `ComposePlcFcBlockXml` | 全 | 1 | `fcBlockJson` → `fcBlock` (B) |
-| `ComposePlcLadFcBlockXml` | 全 | 1 | `ladFcBlockJson` → `ladFcBlock` (B) |
-| `DownloadPlcToFolder` | 20, 21 | 1 | `promptAnswersJson` → `promptAnswers` (L) |
-| `DownloadToPlc` | 20, 21 | 1 | `promptAnswersJson` → `promptAnswers` (L) |
-| `ExchangeCfcCharts` | 20, 21 | 1 | `chartNamesJson` → `chartNames` (S) |
-| `ExchangePlcAlarmTextListsXlsx` | 20, 21 | 2 | `culturesJson` → `cultures` (S); `textListNamesJson` → `textListNames` (S) |
-| `ExchangeSystemDiagnosticsSettings` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ExchangeUnifiedTags` | 20, 21 | 1 | `expectedTagNamesJson` → `expectedTagNames` (S) |
-| `ExtractPlcBlockMetrics` | 20, 21 | 1 | `extensionsJson` → `extensions` (S) |
-| `GenerateOpcUaModelledInterface` | 20, 21 | 1 | `accessLevelsJson` → `accessLevels` (L) |
-| `GeneratePlcDocumentation` | 20, 21 | 1 | `extensionsJson` → `extensions` (S) |
-| `GeneratePlcLoadableFile` | 20, 21 | 1 | `objectPathsJson` → `objectPaths` (S) |
-| `GeneratePlcSourceFromBlocks` | 20, 21 | 1 | `blockPathsJson` → `blockPaths` (S) |
-| `GenerateSiVArc` | 20, 21 | 2 | `additionalHmiDeviceNamesJson` → `additionalHmiDeviceNames` (S); `plcSoftwarePathsJson` → `plcSoftwarePaths` (S) |
-| `GetUnifiedCrossReferences` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `ImportPlcAlarmInstanceTexts` | 20, 21 | 1 | `culturesJson` → `cultures` (S) |
-| `ImportSinumerikAlarmTexts` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `filesJson` → `files` (S) |
-| `ImportUnifiedEngineeringList` | 20, 21 | 1 | `expectedNamesJson` → `expectedNames` (S) |
-| `InstantiatePlcXmlTemplates` | 20, 21 | 1 | `rowsJson` → `rows` (D) |
-| `LintPlcSclSource` | 20, 21 | 1 | `rulesJson` → `rules` (X) |
-| `ManageClassicHmiCycle` | 20, 21 | 1 | `attributesJson` → `attributes` (M) |
-| `ManageClassicHmiScript` | 20, 21 | 1 | `attributesJson` → `attributes` (M) |
-| `ManageClassicHmiTextGraphicList` | 20, 21 | 1 | `attributesJson` → `attributes` (M) |
-| `ManageCommunicationConnection` | 21 | 6 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `localInterfaceItemPathJson` → `localInterfaceItemPath` (P); `partnerDevicePathJson` → `partnerDevicePath` (P); `partnerInterfaceItemPathJson` → `partnerInterfaceItemPath` (P); `partnerItemPathJson` → `partnerItemPath` (P) |
-| `ManageDcbLibraries` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageDccBlock` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageDccChart` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageDccChartInterface` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageDccChartPartition` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageDccPin` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `partnerJson` → `partner` (X); `propertiesJson` → `properties` (M) |
-| `ManageDeviceServiceObjects` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageDeviceUsers` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `permissionsJson` → `permissions` (S) |
-| `ManageDriveFunctions` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `valueJson` → `value` (V) |
-| `ManageDriveHardwareModule` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageDriveSafetyAcceptanceTest` | 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageDriveSecurity` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageDriveTelegrams` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageHardwareObject` | 20, 21 | 4 | `destinationDevicePathJson` → `destinationDevicePath` (P); `destinationItemPathJson` → `destinationItemPath` (P); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageHardwareUtilities` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageIoSystem` | 20, 21 | 4 | `attributesJson` → `attributes` (M); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageLibraryType` | 20, 21 | 2 | `propertiesJson` → `properties` (M); `scopeSoftwarePathsJson` → `scopeSoftwarePaths` (S) |
-| `ManageMotionAxis` | 20, 21 | 2 | `propertiesJson` → `properties` (M); `targetJson` → `target` (X) |
-| `ManageNetworkDomain` | 20, 21 | 4 | `attributesJson` → `attributes` (M); `participantDevicePathJson` → `participantDevicePath` (P); `participantItemPathJson` → `participantItemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageOnlineDriveFunctions` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageOpcUaAccessControl` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManagePasswordPolicy` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManagePlcCertificate` | 20, 21 | 5 | `assignmentItemPathJson` → `assignmentItemPath` (P); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M); `subjectAlternativeNamesJson` → `subjectAlternativeNames` (S) |
-| `ManagePlcGitRepository` | 20, 21 | 1 | `filesJson` → `files` (S) |
-| `ManagePlcProtection` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManagePlcSafety` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManagePlcSoftwareUnit` | 20, 21 | 2 | `commentsJson` → `comments` (L); `propertiesJson` → `properties` (M) |
-| `ManagePlcSupervision` | 20, 21 | 1 | `attributesJson` → `attributes` (M) |
-| `ManagePlcTagDefinition` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManagePortInterconnection` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `partnerDevicePathJson` → `partnerDevicePath` (P); `partnerItemPathJson` → `partnerItemPath` (P) |
-| `ManageProjectCompilationSettings` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManageProjectUserManagement` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageSafetyActivationTest` | 21 | 1 | `groupPathJson` → `groupPath` (P) |
-| `ManageSafetyActivationTestGroup` | 21 | 1 | `groupPathJson` → `groupPath` (P) |
-| `ManageSafetyFunction` | 21 | 2 | `groupPathJson` → `groupPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageSafetyFunctionCondition` | 21 | 2 | `groupPathJson` → `groupPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageSafetyGlobalSettings` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManageSiVArcRule` | 20, 21 | 2 | `collectionPathJson` → `collectionPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageSinumerikArchive` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `modifiedDevicePathJson` → `modifiedDevicePath` (P); `modifiedItemPathJson` → `modifiedItemPath` (P) |
-| `ManageSinumerikSafetyMode` | 20, 21 | 1 | `devicePathJson` → `devicePath` (P) |
-| `ManageSivarcBlockDefinition` | 20, 21 | 2 | `propertiesJson` → `properties` (M); `textsJson` → `texts` (L) |
-| `ManageSivarcTableRule` | 20, 21 | 4 | `deviceNamesJson` → `deviceNames` (S); `deviceSelectionJson` → `deviceSelection` (X); `propertiesJson` → `properties` (M); `referencesJson` → `references` (X) |
-| `ManageStartdriveParameter` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `valueJson` → `value` (V) |
-| `ManageSyslogServers` | 20, 21 | 4 | `attributesJson` → `attributes` (M); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `ManageTeamcenterWorkflow` | 20, 21 | 3 | `customAttributesJson` → `customAttributes` (M); `itemDetailsJson` → `itemDetails` (X); `revisionDetailsJson` → `revisionDetails` (X) |
-| `ManageTechnologyExtensions` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ManageTechnologyObject` | 20, 21 | 1 | `valueJson` → `value` (V) |
-| `ManageTestSuiteCase` | 20, 21 | 1 | `scopeJson` → `scope` (X) |
-| `ManageTransferArea` | 20, 21 | 8 | `attributesJson` → `attributes` (M); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `partnerDevicePathJson` → `partnerDevicePath` (P); `partnerItemPathJson` → `partnerItemPath` (P); `propertiesJson` → `properties` (M); `targetDevicePathJson` → `targetDevicePath` (P); `targetItemPathJson` → `targetItemPath` (P) |
-| `ManageUnifiedDynamization` | 20, 21 | 3 | `mappingEntriesJson` → `mappingEntries` (X); `objectPathJson` → `objectPath` (R); `propertiesJson` → `properties` (M) |
-| `ManageUnifiedEngineeringObject` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManageUnifiedEvent` | 20, 21 | 2 | `objectPathJson` → `objectPath` (R); `scriptPropertiesJson` → `scriptProperties` (M) |
-| `ManageUnifiedListEntries` | 20, 21 | 1 | `entryJson` → `entry` (M) |
-| `ManageUnifiedLoggingTag` | 20, 21 | 2 | `propertiesJson` → `properties` (M); `tagPathJson` → `tagPath` (P) |
-| `ManageUnifiedObjectParts` | 20, 21 | 2 | `objectPathJson` → `objectPath` (R); `propertiesJson` → `properties` (M) |
-| `ManageUnifiedPlantNode` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManageUnifiedScreenItem` | 20, 21 | 1 | `propertiesJson` → `properties` (M) |
-| `ManageUnifiedScreenLayout` | 20, 21 | 2 | `objectPathJson` → `objectPath` (R); `propertiesJson` → `properties` (M) |
-| `ManageWatchForceTableWebAccess` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `PatchPlcBlockDocument` | 20, 21 | 1 | `changesJson` → `changes` (D) |
-| `PlanArtifactImportOrder` | 全 | 1 | `artifactsJson` → `artifacts` (D) |
-| `PlanGlobalLibraryTemplateReuse` | 20, 21 | 1 | `templateIntentJson` → `templateIntent` (X) |
-| `PlanHardwareNetworkConfiguration` | 20, 21 | 1 | `planJson` → `plan` (D) |
-| `PlanOnlineReadOnlyDataProvider` | 20, 21 | 2 | `optionsJson` → `options` (X); `tagPathsJson` → `tagPaths` (S) |
-| `PlanOnlineReadOnlyMonitoring` | 20, 21 | 1 | `tagPathsJson` → `tagPaths` (S) |
-| `PlcBuildAndImport` | 20, 21 | 0 | `json` → `spec` (B) |
-| `PreflightToolCall` | 20, 21 | 0 | `argumentsJson` → `arguments` (C) |
-| `PreviewToolBatch` | 20, 21 | 1 | `operationsJson` → `operations` (C) |
-| `ReadCommunicationConnections` | 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadDccCharts` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadDccObject` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `objectPathJson` → `objectPath` (R) |
-| `ReadDeviceAddressing` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadDeviceItemChannels` | 20, 21 | 3 | `attributeNamesJson` → `attributeNames` (S); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadDriveObjects` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadDriveParameters` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `namesJson` → `names` (S); `numbersJson` → `numbers` (N) |
-| `ReadHardwareFeatures` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadIoSystems` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadObjectIdentifier` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadOnlineDriveParameters` | 20, 21 | 4 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `namesJson` → `names` (S); `numbersJson` → `numbers` (N) |
-| `ReadPlcLiveValuesOpcUa` | 20, 21 | 1 | `nodeIdsJson` → `nodeIds` (S) |
-| `ReadPlcLiveValuesS7` | 20, 21 | 1 | `itemsJson` → `items` (S) |
-| `ReadPlcSimAdvancedTags` | 20, 21 | 1 | `namesJson` → `names` (S) |
-| `ReadPlcWebVars` | 20, 21 | 1 | `varsJson` → `vars` (S) |
-| `ReadProjectUserManagement` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadSafetyActivationTests` | 21 | 1 | `groupPathJson` → `groupPath` (P) |
-| `ReadSiVArcRules` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `ReadToolBatch` | 20, 21 | 1 | `operationsJson` → `operations` (C) |
-| `ReadTransferAreas` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `ReadUnifiedGraphicSelection` | 20, 21 | 1 | `itemNamesJson` → `itemNames` (S) |
-| `ReadUnifiedObjectEvents` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `ReadUnifiedObjectProperties` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `ReadUnifiedPlantObject` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `ReadUnifiedRuntimeAlarms` | 20, 21 | 1 | `systemNamesJson` → `systemNames` (S) |
-| `ReadUnifiedRuntimeSettings` | 20, 21 | 1 | `fieldsJson` → `fields` (S) |
-| `ReadUnifiedRuntimeTags` | 20, 21 | 1 | `tagsJson` → `tags` (S) |
-| `ReadUnifiedScreenBranch` | 20, 21 | 1 | `branchJson` → `branch` (P) |
-| `ResolveSivarcExpression` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `RunPlcCompanionTool` | 20, 21 | 1 | `argumentsJson` → `arguments` (S) |
-| `RunPlcSimAdvancedTestScenario` | 20, 21 | 1 | `scenarioJson` → `scenario` (D) |
-| `RunTestSuiteCase` | 20, 21 | 1 | `namesJson` → `names` (S) |
-| `RunToolsInTransaction` | 20, 21 | 1 | `callsJson` → `calls` (C) |
-| `SamplePlcLiveValuesS7` | 20, 21 | 1 | `itemsJson` → `items` (S) |
-| `ScanPlcSourceAnnotations` | 20, 21 | 2 | `extensionsJson` → `extensions` (S); `markersJson` → `markers` (S) |
-| `SetCpuCommonSettings` | 20, 21 | 1 | `settingsJson` → `settings` (M) |
-| `SetUnifiedLogDuration` | 20, 21 | 1 | `durationPathJson` → `durationPath` (P) |
-| `ShowObjectInEditor` | 20, 21 | 2 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `SynchronizeLibrary` | 20, 21 | 3 | `harmonizeOptionsJson` → `harmonizeOptions` (X); `scopeSoftwarePathsJson` → `scopeSoftwarePaths` (S); `selectionJson` → `selection` (X) |
-| `UnifiedOpenPipeRequest` | 20, 21 | 1 | `requestJson` → `request` (X) |
-| `UpdateDeviceAddress` | 20, 21 | 4 | `attributesJson` → `attributes` (M); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `propertiesJson` → `properties` (M) |
-| `UpdateDeviceItemChannel` | 20, 21 | 3 | `attributesJson` → `attributes` (M); `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P) |
-| `UpdateUnifiedMultilingualProperty` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `UpdateUnifiedObjectProperties` | 20, 21 | 2 | `objectPathJson` → `objectPath` (R); `propertiesJson` → `properties` (M) |
-| `UpdateUnifiedPlantObject` | 20, 21 | 2 | `objectPathJson` → `objectPath` (R); `propertiesJson` → `properties` (M) |
-| `UpdateUnifiedRuntimeSettings` | 20, 21 | 1 | `changesJson` → `changes` (M) |
-| `UploadDeviceParameters` | 20, 21 | 3 | `devicePathJson` → `devicePath` (P); `itemPathJson` → `itemPath` (P); `promptAnswersJson` → `promptAnswers` (L) |
-| `UploadStationFromPlc` | 20, 21 | 1 | `promptAnswersJson` → `promptAnswers` (L) |
-| `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 | 1 | `plcSymbolsJson` → `plcSymbols` (S) |
-| `ValidateUnifiedObject` | 20, 21 | 1 | `objectPathJson` → `objectPath` (R) |
-| `WriteClassicHmiMinimalPackageFiles` | 20, 21 | 1 | `packageJson` → `package` (H) |
-| `WritePlcSimAdvancedTags` | 20, 21 | 1 | `valuesJson` → `values` (W) |
-| `WritePlcWebVars` | 20, 21 | 1 | `writesJson` → `writes` (W) |
-| `WriteUnifiedRuntimeTags` | 20, 21 | 1 | `writesJson` → `writes` (W) |
+| `AddDevice` | `CreateDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `AddDeviceWithFallback` | `CreateHardwareDevice` | 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `AddGsdDeviceWithProbe` | `CreateGsdDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `AddHardwareCatalogDeviceWithProbe` | `CreateHardwareCatalogDevice` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；精确创建政策须 D1/L5，未验收前保持原行为并披露能力状态；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `AnalyzeGlobalLibraryPackage` | `AnalyzeGlobalLibraryPackage` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `AnalyzeHmiTemplateReference` | `AnalyzeHmiTemplateReference` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `AnalyzePlcReferences` | `AnalyzePlcReferences` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `AnalyzeUnifiedHmiTemplateLayout` | `AnalyzeUnifiedHmiTemplateLayout` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ApplyToolBatch` | `ApplyToolBatch` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs) |
+| `ApplyUnifiedHmiLayout` | `ApplyUnifiedHmiLayout` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ApplyUnifiedHmiScreenDesignJson` | `ApplyUnifiedHmiScreenDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ApplyUnifiedHmiTheme` | `ApplyUnifiedHmiTheme` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ArchiveSavedProject` | `ArchiveSavedProject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `AttachDeviceNodeToSubnet` | `AttachDeviceNodeToSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `AttachToOpenProject` | `AttachOpenProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `AuditEngineeringExports` | `AuditEngineeringExports` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs) |
+| `BindUnifiedHmiButtonPressedTag` | `BindUnifiedHmiButtonPressedTag` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `BindUnifiedHmiTagDynamization` | `BindUnifiedHmiTagDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `Bootstrap` | `InitializeEnvironment` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `BuildClassicHmiMinimalPackage` | `BuildClassicHmiMinimalPackage` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildClassicHmiScreenXml` | `BuildClassicHmiScreen` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildClassicHmiTagTableXml` | `BuildClassicHmiTagTable` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildDeviceAmlDocument` | `BuildDeviceAmlDocument` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `BuildFlgNetCallXml` | `BuildFlgNetCall` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcGlobalDbXml` | `BuildPlcGlobalDb` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcSymbolManifestFromXmlPath` | `BuildPlcSymbolManifestFromPath` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildPlcTagTableXml` | `BuildPlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcUdtXml` | `BuildPlcUdt` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildReleaseDiagnosticReport` | `BuildReleaseDiagnosticReport` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildReleaseManifest` | `BuildReleaseManifest` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildReleaseRunbook` | `BuildReleaseRunbook` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildStructuredTextXml` | `BuildStructuredText` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildUnifiedHmiButtonActionScript` | `BuildUnifiedHmiButtonActionScript` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `BuildUnifiedHmiLayoutDesignJson` | `BuildUnifiedHmiLayoutDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `BuildUnifiedHmiTemplateApplyDesignJson` | `BuildUnifiedHmiTemplateApplyDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildUnifiedHmiTemplateApplyDesignManifest` | `BuildUnifiedHmiTemplateApplyDesignManifest` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildUnifiedHmiThemeDesignJson` | `BuildUnifiedHmiThemeDesign` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `CallTool` | `CallTool` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `CheckDownloadReadiness` | `CheckDownloadReadiness` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `CheckForUpdate` | `CheckProductUpdate` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs) |
+| `CheckLibraryUpdates` | `CheckLibraryUpdates` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ClearExports` | `ClearExportHandles` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs) |
+| `CloseProject` | `CloseProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `CompareLibraries` | `CompareLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareLibraryObjects` | `CompareLibraryObjects` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ComparePlcBlockDocuments` | `ComparePlcBlockDocuments` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `CompareProjects` | `CompareProjects` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareSoftwareToOnline` | `CompareSoftwareToOnline` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `CompareUnifiedGraphicSelections` | `CompareUnifiedGraphicSelections` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
+| `CompileAndDiagnoseHmi` | `CompileHmiDiagnostics` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `CompileAndDiagnosePlc` | `CompilePlcDiagnostics` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `CompileDevice` | `CompileDevice` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `CompileSoftware` | `CompilePlcSoftware` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
+| `ComposePlcAliasAlarmLad` | `BuildPlcAliasAlarmLad` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) |
+| `ComposePlcFbBlockXml` | `BuildPlcFbBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `ComposePlcFcBlockXml` | `BuildPlcFcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `ComposePlcLadFcBlockXml` | `BuildPlcLadFcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `ConfigureMotionHardwareConnection` | `ConfigureMotionHardwareConnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `Connect` | `ConnectPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `ConnectDeviceNodesToProfinetSubnet` | `ConnectDeviceNodesToProfinetSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ConnectIsolated` | `ConnectIsolatedPortal` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `ConnectProjectToWorkspace` | `ConnectProjectToWorkspace` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) |
+| `ConnectToProject` | `ConnectProject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；不合并：绑定/启动、诊断范围或目标不同，源码未证明同义；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `CreateLibraryMasterCopy` | `CreateLibraryMasterCopy` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `CreatePlcBlockGroup` | `CreatePlcBlockGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `CreatePlcInstanceDb` | `CreatePlcInstanceDb` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `CreatePlcTag` | `CreatePlcTag` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `CreatePlcTagTable` | `CreatePlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `CreatePlcTypeGroup` | `CreatePlcTypeGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `CreatePlcUserConstant` | `CreatePlcUserConstant` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `CreateProject` | `CreateProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `CreateVersionControlWorkspace` | `CreateVersionControlWorkspace` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) |
+| `DecodePlcSimaticMl` | `DecodePlcSimaticMl` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) |
+| `DeleteEmptyPlcBlockGroup` | `DeleteEmptyPlcBlockGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `DeleteEmptyUnifiedHmiScreenGroup` | `DeleteEmptyUnifiedHmiScreenGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `DeleteExport` | `DeleteExportHandle` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs) |
+| `DeleteHmiTag` | `DeleteHmiTag` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiTagDeletionTools.cs) |
+| `DeletePlcBlock` | `DeletePlcBlock` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `DeletePlcExternalSource` | `DeletePlcExternalSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `DeletePlcTagTable` | `DeletePlcTagTable` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `DeletePlcType` | `DeletePlcType` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `DeleteUnifiedHmiButtonEvent` | `DeleteUnifiedHmiButtonEvent` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `DeleteUnifiedHmiDynamization` | `DeleteUnifiedHmiDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `DescribeBlockLogic` | `DescribePlcBlockLogic` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `DescribeHmiScreen` | `DescribeHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `DescribeHmiScreenItem` | `DescribeHmiScreenItem` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `DescribeHmiSoftware` | `DescribeHmiSoftware` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `DescribeHmiTag` | `DescribeHmiTag` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `DescribeHmiTagTable` | `DescribeHmiTagTable` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `DescribeObject` | `DescribeObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `DescribeObjectProperty` | `DescribeObjectProperty` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `DescribeService` | `DescribeService` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `DescribeUnifiedHmiButtonEventScript` | `DescribeUnifiedHmiButtonEventScript` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `DescribeUnifiedScreenItemType` | `DescribeUnifiedScreenItemType` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
+| `DiagnosePortalConnectReadiness` | `GetPortalConnectionReadiness` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `Disconnect` | `DisconnectPortal` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `Doctor` | `GetEnvironmentDiagnostics` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Doctor.cs) |
+| `DownloadPlcToFolder` | `DownloadPlcToFolder` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `DownloadToPlc` | `DownloadPlc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `DumpDeviceAttributes` | `GetDeviceAttributes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `EnsureOpennessUserGroup` | `EnsureOpennessUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `EnsureStartStopUnifiedHmi` | `SetUnifiedHmiRuntimeState` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureSubnet` | `EnsureSubnet` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `EnsureUnifiedHmiButtonAction` | `EnsureUnifiedHmiButtonAction` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiButtonEventHandler` | `EnsureUnifiedHmiButtonEventHandler` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiConnection` | `EnsureUnifiedHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiDynamization` | `EnsureUnifiedHmiDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiScreen` | `EnsureUnifiedHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiScreenItem` | `EnsureUnifiedHmiScreenItem` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiTag` | `EnsureUnifiedHmiTag` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `EnsureUnifiedHmiTagTable` | `EnsureUnifiedHmiTagTable` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ExchangeCfcCharts` | `ExchangeCfcCharts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs) |
+| `ExchangeMotionCamData` | `ExchangeMotionCamData` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ExchangePlcAlarmTextListsXlsx` | `ExchangePlcAlarmTextLists` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExchangePlcSupervisions` | `ExchangePlcSupervisions` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SpecializedExchangeTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | `ExchangeSystemDiagnosticsSettings` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ExchangeTestSuiteCase` | `ExchangeTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `ExchangeUnifiedScriptModules` | `ExchangeUnifiedScriptModules` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
+| `ExchangeUnifiedTags` | `ExchangeUnifiedTags` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
+| `ExportAlarmClasses` | `ExportAlarmClasses` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExportAlarmInstanceTexts` | `ExportAlarmInstanceTexts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExportAlarmTextLists` | `ExportAlarmTextLists` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExportAsDocuments` | `ExportPlcBlockDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs) |
+| `ExportBlock` | `ExportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ExportBlocks` | `ExportPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ExportBlocksAsDocuments` | `ExportPlcBlocksDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs) |
+| `ExportDeviceAml` | `ExportDeviceAml` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `ExportHmiConnection` | `ExportHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ExportHmiProgram` | `ExportHmiProgram` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ExportHmiScreen` | `ExportHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ExportHmiTagTable` | `ExportHmiTagTable` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ExportOpcUaInterface` | `ExportOpcUaInterface` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ExportPlcProDiagInfo` | `ExportPlcProDiagInfo` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ExportPlcTagTable` | `ExportPlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ExportPlcWatchTable` | `ExportPlcWatchTable` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ExportPlcWatchTablesToDirectory` | `ExportPlcWatchTablesToDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ExportProjectTexts` | `ExportProjectTexts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `ExportSafetyPrintout` | `ExportSafetyPrintout` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ExportScadaData` | `ExportScadaData` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ExportTechnologyObject` | `ExportTechnologyObject` | 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ExportTechnologyObjectsToDirectory` | `ExportTechnologyObjectsToDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ExportType` | `ExportPlcType` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `ExportTypes` | `ExportPlcTypes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `ExportUnifiedEngineeringList` | `ExportUnifiedEngineeringList` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ExtractPlcBlockMetrics` | `ExtractPlcBlockMetrics` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `FindTools` | `FindTools` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `GenerateAcceptanceReport` | `GenerateAcceptanceReport` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
+| `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `GenerateErrorReport` | `GenerateErrorReport` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
+| `GenerateOpcUaModelledInterface` | `GenerateOpcUaModelledInterface` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `GeneratePlcDocumentation` | `GeneratePlcDocumentation` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `GeneratePlcLoadableFile` | `GeneratePlcLoadableFile` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `GeneratePlcSourceFromBlocks` | `GeneratePlcSourceFromBlocks` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `GenerateSiVArc` | `GenerateSivarc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `GetAuthoringGuide` | `GetToolUsage` | 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GuideTools.cs) |
+| `GetBlockInfo` | `GetPlcBlockInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `GetBlocks` | `ListPlcBlocks` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `GetBlocksWithHierarchy` | `GetPlcBlockHierarchy` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `GetCrossReferences` | `GetPlcCrossReferences` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `GetDeviceInfo` | `GetDeviceInfo` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDeviceIpAddress` | `GetDeviceIpAddress` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `GetDeviceItemInfo` | `GetDeviceItemInfo` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDeviceItemIoAddresses` | `GetDeviceItemIoAddresses` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `GetDeviceItemNetworkInfo` | `GetDeviceItemNetworkInfo` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `GetDeviceItemTree` | `GetDeviceItemTree` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetDevicePlugLocations` | `GetDevicePlugLocations` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) |
+| `GetDevices` | `ListDevices` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetExport` | `GetExportContent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs) |
+| `GetHmiConnections` | `ListHmiConnections` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `GetHmiProgramInfo` | `GetHmiProgramInfo` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs) |
+| `GetHmiScreens` | `ListHmiScreens` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `GetHmiTagTables` | `ListHmiTagTables` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `GetHmiTags` | `ListHmiTags` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `GetObjectProperty` | `GetObjectProperty` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `GetOnlineState` | `GetOnlineState` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `GetOpcUaConfig` | `GetPlcOpcUaConfiguration` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `GetPlcExternalSources` | `ListPlcExternalSources` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `GetPlcForceTables` | `ListPlcForceTables` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `GetPlcRunStateS7` | `GetPlcRunStateS7` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `GetPlcTagTables` | `ListPlcTagTables` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `GetPlcWatchTables` | `ListPlcWatchTables` | 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `GetProject` | `GetProjectInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `GetProjectTopology` | `GetProjectTopology` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `GetProjectTree` | `GetProjectTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `GetPutGetAccess` | `GetPlcPutGetAccess` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `GetRecipe` | `GetToolUsage` | 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `GetSoftwareInfo` | `GetSoftwareInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
+| `GetSoftwareTree` | `GetSoftwareTree` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
+| `GetState` | `GetSessionState` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `GetTechnologyObjects` | `ListTechnologyObjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `GetToolUsage` | `GetToolUsage` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 同一 ToolUsageCatalog 示例库；GuideTools 直接委托 GetToolUsage；ToolRecipes.Rows 从 Sequences 构造，只投影目的、前置条件、步骤、预期与说明，无原生动作。V4 data 保留这些字段。；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ToolUsageTools.cs) |
+| `GetTypeInfo` | `GetPlcTypeInfo` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `GetTypes` | `ListPlcTypes` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `GetUnifiedCrossReferences` | `GetUnifiedCrossReferences` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `GetVersionControlStatus` | `GetVersionControlStatus` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) |
+| `GetVersionControlWorkspaces` | `ListVersionControlWorkspaces` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) |
+| `GoOffline` | `DisconnectOnlinePlc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `GoOfflineAll` | `DisconnectOnlinePlcs` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `GoOnline` | `ConnectOnlinePlc` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ImportAlarmClasses` | `ImportAlarmClasses` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ImportAlarmTextLists` | `ImportAlarmTextLists` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ImportBlock` | `ImportPlcBlock` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ImportBlocksFromDirectory` | `ImportPlcBlocksFromDirectory` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ImportBlocksFromDocuments` | `ImportPlcBlocksDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs) |
+| `ImportDeviceAml` | `ImportDeviceAml` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `ImportFromDocuments` | `ImportPlcBlockDocuments` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs) |
+| `ImportHmiConnection` | `ImportHmiConnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ImportHmiScreen` | `ImportHmiScreen` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ImportHmiScreensFromDirectory` | `ImportHmiScreensFromDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ImportHmiTagTable` | `ImportHmiTagTable` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ImportHmiTagTablesFromDirectory` | `ImportHmiTagTablesFromDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs) |
+| `ImportLibraryTypeDocuments` | `ImportLibraryTypeDocuments` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ImportMasterCopyFromGlobalLibrary` | `ImportMasterCopyFromGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ImportOpcUaInterface` | `ImportOpcUaInterface` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ImportPlcAlarmInstanceTexts` | `ImportPlcAlarmInstanceTexts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ImportPlcBlockVerified` | `ImportPlcBlockVerified` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ImportPlcExternalSource` | `ImportPlcExternalSource` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `ImportPlcProgramFromDirectory` | `ImportPlcProgramFromDirectory` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ImportPlcTagTable` | `ImportPlcTagTable` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ImportPlcTagTablesFromDirectory` | `ImportPlcTagTablesFromDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ImportPlcWatchTableOffline` | `ImportPlcWatchTableOffline` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ImportProjectTexts` | `ImportProjectTexts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `ImportSinumerikAlarmTexts` | `ImportSinumerikAlarmTexts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ImportTechnologyObject` | `ImportTechnologyObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ImportTechnologyObjectsFromDirectory` | `ImportTechnologyObjectsFromDirectory` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ImportType` | `ImportPlcType` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `ImportUnifiedEngineeringList` | `ImportUnifiedEngineeringList` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
+| `ImportUnifiedOpcUaAlarms` | `ImportUnifiedOpcUaAlarms` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
+| `InitializeSimotionScripting` | `InitializeSimotionScripting` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `InspectSimaticSdCompatibility` | `InspectSimaticSdCompatibility` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs) |
+| `InstantiatePlcXmlTemplates` | `InstantiatePlcTemplates` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) |
+| `InvokeObject` | `InvokeObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `InvokeService` | `InvokeService` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `LintPlcSclSource` | `AnalyzePlcSclSource` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `ListExports` | `ListExportHandles` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs) |
+| `ListHmiScreenPaths` | `ListHmiScreenPaths` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `ListObjectChildren` | `ListObjectChildren` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs) |
+| `ListPortalProcessProjects` | `ListPortalProcessProjects` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `ListToolCategories` | `ListToolCategories` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `ListUnifiedGlobalScripts` | `ListUnifiedGlobalScripts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ListUnifiedHmiApiTypes` | `ListUnifiedHmiApiTypes` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ListUnifiedLibraryFolder` | `ListUnifiedLibraryFolderEntries` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ManageCfcChartProtection` | `ManageCfcChartProtection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs) |
+| `ManageClassicHmiCycle` | `ManageClassicHmiCycle` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageClassicHmiFolder` | `ManageClassicHmiFolder` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
+| `ManageClassicHmiGraphic` | `ManageClassicHmiGraphic` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
+| `ManageClassicHmiScreenObject` | `ManageClassicHmiScreenObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
+| `ManageClassicHmiScript` | `ManageClassicHmiScript` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageClassicHmiTextGraphicList` | `ManageClassicHmiTextGraphicList` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageCommunicationConnection` | `ManageCommunicationConnection` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDcbLibraries` | `ManageDcbLibraries` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccBlock` | `ManageDccBlock` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChart` | `ManageDccChart` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartInterface` | `ManageDccChartInterface` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartPartition` | `ManageDccChartPartition` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccPin` | `ManageDccPin` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDeviceServiceObjects` | `ManageDeviceServiceObjects` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDeviceUserGroup` | `ManageDeviceUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDeviceUsers` | `ManageDeviceUsers` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDriveFunctions` | `ManageDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | `ManageDriveHardwareModule` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | `ManageDriveSafetyAcceptanceTest` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSecurity` | `ManageDriveSecurity` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | `ManageDriveTelegrams` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageGlobalLibrary` | `ManageGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageHardwareObject` | `ManageHardwareObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
+| `ManageHardwareUtilities` | `ManageHardwareUtilities` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageIoSystem` | `ManageIoSystem` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageLibraryFolder` | `ManageLibraryFolder` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageLibraryMasterCopy` | `ManageLibraryMasterCopy` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageLibraryType` | `ManageLibraryType` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageLibraryTypeVersion` | `ManageLibraryTypeVersion` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageMotionAxis` | `ManageMotionAxis` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageMultiuserSession` | `ManageMultiuserSession` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ManageNetworkDomain` | `ManageNetworkDomain` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageOnlineDriveFunctions` | `ManageOnlineDriveFunctions` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageOpcUaAccessControl` | `ManageOpcUaAccessControl` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ManageOpcUaInterface` | `ManageOpcUaInterface` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ManagePasswordPolicy` | `ManagePasswordPolicy` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManagePlcAlarmTextList` | `ManagePlcAlarmTextList` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ManagePlcBlockDocuments` | `ManagePlcBlockDocuments` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringAuditTools.cs) |
+| `ManagePlcBlockProtection` | `ManagePlcBlockProtection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ManagePlcBlockWriteProtection` | `ManagePlcBlockWriteProtection` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManagePlcCertificate` | `ManagePlcCertificate` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcDataBlockSnapshot` | `ManagePlcDataBlockSnapshot` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ManagePlcDocuments` | `ManagePlcDocuments` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManagePlcExternalSources` | `ManagePlcExternalSources` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `ManagePlcGitRepository` | `ManagePlcGitRepository` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs) |
+| `ManagePlcProtection` | `ManagePlcProtection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManagePlcSafety` | `ManagePlcSafety` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManagePlcSimAdvancedInstance` | `ManagePlcSimAdvancedInstance` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `ManagePlcSoftwareUnit` | `ManagePlcSoftwareUnit` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManagePlcSupervision` | `ManagePlcSupervision` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManagePlcTableEntries` | `ManagePlcTableEntries` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ManagePlcTagDefinition` | `ManagePlcTagDefinition` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `ManagePlcUserGroup` | `ManagePlcUserGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ManagePortInterconnection` | `ManagePortInterconnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageProjectCompilationSettings` | `ManageProjectCompilationSettings` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManageProjectLanguage` | `ManageProjectLanguage` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `ManageProjectUserManagement` | `ManageProjectUserManagement` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ManageSafetyActivationTest` | `ManageSafetyActivationTest` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyActivationTestGroup` | `ManageSafetyActivationTestGroup` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | `ManageSafetyFunction` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | `ManageSafetyFunctionCondition` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyGlobalSettings` | `ManageSafetyGlobalSettings` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManageSiVArcRule` | `ManageSivarcRule` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSinumerikArchive` | `ManageSinumerikArchive` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSinumerikSafetyMode` | `ManageSinumerikSafetyMode` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSivarcBlockDefinition` | `ManageSivarcBlockDefinition` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcRuleContainer` | `ManageSivarcRuleContainer` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcScreenLayout` | `ManageSivarcScreenLayout` | 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcTableRule` | `ManageSivarcTableRule` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageStartdriveParameter` | `ManageStartdriveParameter` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageSyslogServers` | `ManageSyslogServers` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageTeamcenterConnection` | `ManageTeamcenterConnection` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTeamcenterDataset` | `ManageTeamcenterDataset` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTeamcenterWorkflow` | `ManageTeamcenterWorkflow` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTechnologyExtensions` | `ManageTechnologyExtensions` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageTechnologyObject` | `ManageTechnologyObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ManageTestSuiteCase` | `ManageTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `ManageTransferArea` | `ManageTransferArea` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageUmcUsers` | `ManageUmcUsers` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageUnifiedCwcPackage` | `ManageUnifiedCwcPackage` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) |
+| `ManageUnifiedDynamization` | `ManageUnifiedDynamization` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedEngineeringObject` | `ManageUnifiedEngineeringObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
+| `ManageUnifiedEvent` | `ManageUnifiedEvent` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEventsTools.cs) |
+| `ManageUnifiedHmiGroup` | `ManageUnifiedHmiGroup` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs) |
+| `ManageUnifiedListEntries` | `ManageUnifiedListEntries` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedLoggingTag` | `ManageUnifiedLoggingTag` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedObjectParts` | `ManageUnifiedObjectParts` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedOpcUaAlarmType` | `ManageUnifiedOpcUaAlarmType` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedPlantNode` | `ManageUnifiedPlantNode` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedScreenItem` | `ManageUnifiedScreenItem` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
+| `ManageUnifiedScreenLayout` | `ManageUnifiedScreenLayout` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageWatchForceTableWebAccess` | `ManageWatchForceTableWebAccess` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `MonitorWatchTableLiveS7` | `MonitorPlcWatchTableS7` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `MoveBlockToGroup` | `MovePlcBlockToGroup` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `OpenProject` | `OpenProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `PatchPlcBlockDocument` | `PatchPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs) |
+| `PlanGlobalLibraryTemplateReuse` | `PlanGlobalLibraryTemplateReuse` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `PlanHardwareNetworkConfiguration` | `PlanHardwareNetworkConfiguration` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `PlanOnlineReadOnlyDataProvider` | `PlanOnlineReadOnlyDataProvider` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `PlanOnlineReadOnlyMonitoring` | `PlanOnlineReadOnlyMonitoring` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `PlanPlcExternalSourceImport` | `PlanPlcExternalSourceImport` | 14sp1, 15.1, 16, 17, 18, 19 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `PlcBuildAndImport` | `BuildAndImportPlcArtifact` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBuildTools.cs) |
+| `PlugDeviceItem` | `PlugDeviceItem` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) |
+| `PreflightToolCall` | `PreviewToolCall` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `PreviewToolBatch` | `PreviewToolBatch` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs) |
+| `ProbeGlobalLibrary` | `ProbeGlobalLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ProbeHardwareHmiConnectionOwnerCandidates` | `ProbeHardwareHmiConnectionOwnerCandidates` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ProbeHardwareHmiConnectionWhitelistedServices` | `ProbeHardwareHmiConnectionWhitelistedServices` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ProbePlcMonitorOnlineCapabilities` | `ProbePlcMonitorOnlineCapabilities` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ProbeS7CpuIdentity` | `ProbeS7CpuIdentity` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ReadClassicHmiFaceplates` | `ListClassicHmiFaceplates` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ReadClassicHmiGlobalization` | `GetClassicHmiGlobalization` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ReadClassicHmiScreenTree` | `GetClassicHmiScreenTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs) |
+| `ReadClassicHmiScripts` | `ListClassicHmiScripts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ReadCommunicationConnections` | `ListCommunicationConnections` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadDccCharts` | `ListDccCharts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccObject` | `GetDccObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDeviceAddressing` | `GetDeviceAddressing` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `ReadDeviceItemChannels` | `ListDeviceItemChannels` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDriveObjects` | `ListDriveObjects` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | `GetDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadHardwareFeatures` | `GetHardwareFeatures` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadHmiScreenSnapshot` | `GetHmiScreenSnapshot` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `ReadIoSystems` | `ListIoSystems` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadLibraryOverview` | `GetLibraryOverview` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ReadLibraryType` | `GetLibraryType` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ReadMotionAxisConfiguration` | `GetMotionAxisConfiguration` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ReadNativeInvocationLog` | `GetNativeInvocationLog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs) |
+| `ReadNetworkDomains` | `ListNetworkDomains` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadObjectIdentifier` | `GetObjectIdentifier` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ReadOnlineDriveParameters` | `GetOnlineDriveParameters` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOpcUaAccessControl` | `GetOpcUaAccessControl` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ReadOpennessCompatibility` | `GetOpennessCompatibility` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs) |
+| `ReadOpennessGuidance` | `GetOpennessGuidance` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) |
+| `ReadOpennessWorkerStatus` | `GetOpennessWorkerStatus` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Worker.cs) |
+| `ReadPlcBlockEditCapabilities` | `GetPlcBlockEditCapabilities` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ReadPlcBlockFingerprints` | `GetPlcBlockFingerprints` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ReadPlcBlockScopes` | `GetPlcBlockScopes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringAuditTools.cs) |
+| `ReadPlcChecksums` | `GetPlcChecksums` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ReadPlcLiveValuesOpcUa` | `GetPlcLiveValuesOpcUa` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ReadPlcLiveValuesS7` | `GetPlcLiveValuesS7` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ReadPlcObjectFingerprints` | `GetPlcObjectFingerprints` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ReadPlcSimAdvancedInstances` | `ListPlcSimAdvancedInstances` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `ReadPlcSimAdvancedTags` | `GetPlcSimAdvancedTags` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `ReadPlcSoftwareUnits` | `ListPlcSoftwareUnits` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ReadPlcSystemConstants` | `ListPlcSystemConstants` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `ReadPlcSystemGroups` | `ListPlcSystemGroups` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `ReadPlcTagTableConstants` | `GetPlcTagTableConstants` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ReadPlcTags` | `ListPlcTags` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `ReadPlcUserConstants` | `ListPlcUserConstants` | 14sp1, 15.1, 16, 17, 18, 19 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/FoundationTools.cs) |
+| `ReadPlcWatchTableCurrentValuesReadOnly` | `GetPlcWatchTableCurrentValuesReadOnly` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ReadPlcWebDiagnostics` | `GetPlcWebDiagnostics` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadPlcWebVars` | `GetPlcWebVars` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadPortalInfo` | `GetPortalInfo` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| `ReadProjectProtection` | `GetProjectProtection` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ReadProjectSettings` | `GetProjectSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ReadProjectUserManagement` | `GetProjectUserManagement` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ReadSafetyActivationTests` | `ListSafetyActivationTests` | 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ReadSafetyBlockSignatures` | `GetSafetyBlockSignatures` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ReadSiVArcRules` | `ListSivarcRules` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ReadSivarcBlockDefinitions` | `ListSivarcBlockDefinitions` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ReadSivarcRuleTree` | `GetSivarcRuleTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ReadTechnologyObjectTree` | `GetTechnologyObjectTree` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ReadTestSuiteCases` | `ListTestSuiteCases` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `ReadToolBatch` | `RunReadOnlyToolBatch` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs) |
+| `ReadTransferAreas` | `ListTransferAreas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadTransferRoutes` | `ListTransferRoutes` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ReadUnifiedAlarmCommon` | `GetUnifiedAlarmCommon` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ReadUnifiedAuditSettings` | `GetUnifiedAuditSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ReadUnifiedEngineeringObjects` | `ListUnifiedEngineeringObjects` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
+| `ReadUnifiedFaceplateInstance` | `GetUnifiedFaceplateInstance` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ReadUnifiedGlobalScript` | `GetUnifiedGlobalScript` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ReadUnifiedGraphicSelection` | `GetUnifiedGraphicSelection` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
+| `ReadUnifiedHmiButtonEvent` | `GetUnifiedHmiButtonEvent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `ReadUnifiedHmiDynamization` | `GetUnifiedHmiDynamization` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs) |
+| `ReadUnifiedHmiTexts` | `GetUnifiedHmiTexts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ReadUnifiedLibraryType` | `GetUnifiedLibraryType` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ReadUnifiedObjectEvents` | `GetUnifiedObjectEvents` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ReadUnifiedObjectProperties` | `GetUnifiedObjectProperties` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ReadUnifiedPlantObject` | `GetUnifiedPlantObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ReadUnifiedRuntimeAlarms` | `GetUnifiedRuntimeAlarms` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadUnifiedRuntimeSettings` | `GetUnifiedRuntimeSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
+| `ReadUnifiedRuntimeTags` | `GetUnifiedRuntimeTags` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadUnifiedScreenBranch` | `GetUnifiedScreenBranch` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ReadUnifiedTagDefinitions` | `ListUnifiedTagDefinitions` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ReadV21EcosystemCatalog` | `GetV21EcosystemCatalog` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) |
+| `RebuildReleaseHandoffArtifacts` | `BuildReleaseHandoffArtifacts` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `ReleaseUnifiedReadCursor` | `ReleaseUnifiedReadCursor` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `RenderPlcBlockDocument` | `RenderPlcBlockDocument` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `RenderPlcVisualDiff` | `RenderPlcVisualDiff` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) |
+| `RepairAndReimportBlock` | `RepairAndReimportPlcBlock` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `ResolveSivarcExpression` | `ResolveSivarcExpression` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `RestartOpennessWorker` | `RestartOpennessWorker` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Worker.cs) |
+| `RetrieveProjectArchive` | `RetrieveProjectArchive` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `RunCapabilitySelfTest` | `RunCapabilitySelfTest` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
+| `RunClassicHmiOfflineValidationSuite` | `RunClassicHmiOfflineValidationSuite` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `RunClassicHmiTemporaryImportPreflight` | `RunClassicHmiTemporaryImportPreflight` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `RunHmiActionScriptRecipeSafetySelfTest` | `RunHmiActionScriptRecipeSafetySelfTest` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `RunHmiTemplatePlcSyncPrecheckSuite` | `RunHmiTemplatePlcSyncPrecheckSuite` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `RunOfflineReleaseValidationSuite` | `RunOfflineReleaseValidationSuite` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `RunOnlineMonitoringSafetySelfTest` | `RunOnlineMonitoringSafetySelfTest` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs) |
+| `RunPlcCompanionTool` | `RunPlcCompanionTool` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) |
+| `RunPlcSimAdvancedTestScenario` | `RunPlcSimAdvancedTestScenario` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `RunTestSuiteCase` | `RunTestSuiteCase` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `RunToolsInTransaction` | `RunToolTransaction` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `SamplePlcLiveValuesS7` | `SamplePlcLiveValuesS7` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `SaveAsProject` | `SaveProjectCopy` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `SaveExport` | `SaveExportContent` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs) |
+| `SaveProject` | `SaveProject` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ScaffoldProject` | `BuildProjectScaffold` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ScanAccessibleDevices` | `ScanAccessibleDevices` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ScanPlcSourceAnnotations` | `ScanPlcSourceAnnotations` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `SearchHardwareCatalog` | `SearchHardwareCatalog` | 19, 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SearchInstalledGsdDevices` | `SearchInstalledGsdDevices` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SeedProjectFromReference` | `SeedProjectFromReference` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| `SetCpuCommonSettings` | `SetPlcCpuSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SetDeviceItemAttribute` | `SetDeviceItemAttribute` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SetDeviceItemIoAddress` | `SetDeviceItemIoAddress` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `SetOpcUaInterfaceEnabled` | `SetOpcUaInterfaceEnabled` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `SetPlcUnitObjectAccess` | `SetPlcUnitObjectAccess` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs) |
+| `SetPlcWebOperatingMode` | `SetPlcWebOperatingMode` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `SetPutGetAccess` | `SetPlcPutGetAccess` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `SetUnifiedHmiButtonEventScriptCode` | `SetUnifiedHmiButtonEventScriptCode` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `SetUnifiedLogDuration` | `SetUnifiedLogDuration` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `SetWatchTableModifyValue` | `SetPlcWatchTableModifyValue` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `ShowObjectInEditor` | `ShowObjectInEditor` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `SyncVersionControlWorkspace` | `SynchronizeVersionControlWorkspace` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) |
+| `SynchronizeLibrary` | `SynchronizeLibrary` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `TraceTagCause` | `TraceTagCause` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `TraceTagCauseLive` | `TraceTagCauseLive` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `UnifiedOpenPipeRequest` | `InvokeUnifiedOpenPipe` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `UpdateDeviceAddress` | `SetDeviceAddress` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `UpdateDeviceItemChannel` | `SetDeviceItemChannel` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdatePlcProgram` | `SetPlcProgram` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `UpdateUnifiedGlobalScript` | `SetUnifiedGlobalScript` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GlobalScriptEditTools.cs) |
+| `UpdateUnifiedMultilingualProperty` | `SetUnifiedMultilingualProperty` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedObjectProperties` | `SetUnifiedObjectProperties` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedPlantObject` | `SetUnifiedPlantObject` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedRuntimeSettings` | `SetUnifiedRuntimeSettings` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
+| `UpgradeSivarcDefinitions` | `UpgradeSivarcDefinitions` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `UploadDeviceParameters` | `UploadDeviceParameters` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `UploadStationFromPlc` | `UploadStationFromPlc` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ValidateAutomationContext` | `ValidateAutomationContext` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `ValidateClassicHmiMinimalPackageFiles` | `ValidateClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `ValidateClassicHmiMinimalPackagePlcSync` | `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `ValidatePlcXmlSchemas` | `ValidatePlcDocumentSchemas` | 20, 21 | 规则：动词、对象、领域、复数或大小写/表示规范化；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) |
+| `ValidateUnifiedObject` | `ValidateUnifiedObject` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `WriteClassicHmiMinimalPackageFiles` | `WriteClassicHmiMinimalPackageFiles` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) |
+| `WritePlcSimAdvancedTags` | `WritePlcSimAdvancedTags` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `WritePlcWebVars` | `WritePlcWebVars` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `WriteUnifiedRuntimeTags` | `WriteUnifiedRuntimeTags` | 20, 21 | 不变；符合命名规则；[源码](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
 
-按 (工具名,参数名) 去重的族计数：B=9；C=5；D=6；H=10；L=7；M=50；N=2；P=128；R=14；S=38；V=3；W=3；X=17；共 292 项 / 167 个工具。Foundation 的同名参数具有更窄的 parser/schema，不因共用 DTO 放宽。详见 [现有调用与操作示例](../../reference/tool-examples/calls.json)。
-
-</details>
-
-<details>
-<summary>C. 响应/错误族 → V4 与 legacy 标记</summary>
-
-| 族 | 当前形状/错误 | 建议目标 | 标记站点数（非工具数） | variant 数量 |
-|---|---|---|---|---|
-| F1 | VersionPolicyTool：isError 文本 + preflight | error.code/details；准入拒绝的 outcome | 0 | 0 |
-| F2 | POCO + Meta；McpException 或 success=false | data + ok/error；消除直接 camelCase/桥接 PascalCase 差异 | 25 | `legacy-existing-meta`:2; `legacy-independent-verdicts`:2; `legacy-late-stamp`:1; `legacy-late-verdict`:2; `legacy-multiple-dynamic-fields`:8; `legacy-roundtrip-data-stamp`:2; `legacy-single-verdict`:3; `legacy-stamp-then-verdict`:2; `legacy-stamp-without-verdict`:2; `legacy-verdict-last`:1 |
-| F3 | 执行器/领域服务：operationSuccess/status/error，含旧 meta | 逐项 data + outcome/完整性；未知 verdict 不转为 true | 20 | `legacy-independent-verdicts`:1; `legacy-migration-page`:1; `legacy-multiple-dynamic-fields`:5; `legacy-ok-only`:1; `legacy-plcsim-complete`:1; `legacy-plcsim-failure`:1; `legacy-roundtrip-data-stamp`:2; `legacy-runtime-settings`:1; `legacy-single-verdict`:5; `legacy-success-last`:1; `legacy-verdict-last`:1 |
-| F4 | 桥接 Message 内序列化 JSON 或 failed 文本 | 直接透传同一信封；禁止二次字符串 JSON | 2 | `legacy-independent-verdicts`:1; `legacy-stamp-then-verdict`:1 |
-| F5 | 导出句柄 ok=true；InvalidParams 异常 | data.export；INVALID_ARGUMENT/ALREADY_EXISTS 等码 | 0 | 0 |
-| F6 | 旧 Portal 文本失败且无 meta | 在调用边界补 outcome/error；不能靠 Message 判成功 | 0 | 0 |
-| F7 | Foundation PascalCase DTO/裸数组、V17 envelopes、McpException 或 isError 文本 | 保留原 evidence/Executed/RequiresSessionReset，转换为同一信封 | 0 | 0 |
-| CLI | 报告 roundtrip/ok/后写判定 | 报告适配 V4；CLI 成功/失败退出码另有黄金样本 | 3 | `legacy-late-verdict`:1; `legacy-ok-report`:1; `legacy-roundtrip-report`:1 |
-
-共 50 个实际注释站点、18 个 variant。F2/F3 按注释所在工具边界/服务或执行器归属计数，混合工具不推断唯一运行时族；F6 无标记不等于不存在无 meta 失败。未标注的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。
-
-| variant | 当前源码（同文件可含多个站点） |
+| 合并来源 | 参数映射（仅文档） |
 |---|---|
-| `legacy-existing-meta` | [ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
-| `legacy-independent-verdicts` | [ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[Siemens/Services/HardwareServicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareServicesService.cs) |
-| `legacy-late-stamp` | [ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
-| `legacy-late-verdict` | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
-| `legacy-migration-page` | [Siemens/Services/MigrationReadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/MigrationReadService.cs) |
-| `legacy-multiple-dynamic-fields` | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/DocumentsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/DevicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OpcUaService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/VersionControlService.cs) |
-| `legacy-ok-only` | [Siemens/Services/HardwareServicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareServicesService.cs) |
-| `legacy-ok-report` | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
-| `legacy-plcsim-complete` | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
-| `legacy-plcsim-failure` | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
-| `legacy-roundtrip-data-stamp` | [ModelContextProtocol/Tools/LibraryTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[Siemens/Services/OpcUaService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcTablesService.cs) |
-| `legacy-roundtrip-report` | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
-| `legacy-runtime-settings` | [Siemens/Services/RuntimeSettingsService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/RuntimeSettingsService.cs) |
-| `legacy-single-verdict` | [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[Siemens/Services/DevicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OnlineDownloadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcTablesService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs) |
-| `legacy-stamp-then-verdict` | [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
-| `legacy-stamp-without-verdict` | [ModelContextProtocol/Tools/AddressesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs)<br>[ModelContextProtocol/Tools/ModulesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) |
-| `legacy-success-last` | [Siemens/Services/AlarmsService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AlarmsService.cs) |
-| `legacy-verdict-last` | [ModelContextProtocol/Tools/DevicesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs) |
+| `GetAuthoringGuide` | topic trim/lower 后：workflow→exampleId=sequence/connect-project；openness-workflow→query=openness-base；startdrive-bico→toolName=ManageStartdriveParameter,operation=read；hmi→language=hmi-javascript；errors→空选择；其余→language=原 topic。offset=0,limit=80。 |
+| `GetRecipe` | topic trim 后非空→exampleId=sequence/<精确目录 topic>；空→exampleKind=sequence（新增可选枚举过滤器，默认 all）；按当前发布版过滤目录；保留 purpose/preconditions/steps/expect/notes；未知 topic→NOT_FOUND。 |
+| `GetToolUsage` | toolName 按 A 表转换；query/documentId/offset/limit/operation/language/exampleId 同名；新增 exampleKind=all\|sequence\|language 默认 all；旧默认列表仍含 tools、languages、examples。 |
+
+每版仅以该版已有来源构造目标目录；每个来源的 action、targetKind、输出版本门禁逐项保留。Compile/Connect 的相似名字不构成同义证明。合并后的 data 由现有目录记录投影；空配方列表须按 exampleKind=sequence 过滤，不把所有示例当配方。
 
 </details>
 
 <details>
-<summary>D. 可执行文件 / 程序集 / 路径与配置</summary>
+<summary>B. 全部 …Json 与 PlcBuildAndImport.json 的类型目标</summary>
 
-| 项目 | 版本 | 当前 AssemblyName | 建议 AssemblyName | 安装路径迁移 | 目标框架保持 |
-|---|---|---|---|---|---|
-| [TiaMcpServer.LegacyHost.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj) | 14sp1–19 | `TiaMcpServer` | `TiaMcp.FoundationHost` | `runtime/v<key>/TiaMcpServer.exe` → `runtime/v<key>/TiaMcp.FoundationHost.exe` | net8.0 |
-| [TiaMcpServer.V20.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj) | 20 | `TiaMcpServer` | `TiaMcp.Engine.V20` | `runtime/v20/TiaMcpServer.exe` → `runtime/v20/TiaMcp.Engine.V20.exe` | net48 |
-| [TiaMcpServer.V21.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj) | 21 | `TiaMcpServer` | `TiaMcp.Engine.V21` | `runtime/v21/TiaMcpServer.exe` → `runtime/v21/TiaMcp.Engine.V21.exe` | net48 |
+| 当前工具 | 发布键 | 参数 | 当前 schema 类型 | 族 | 4.0 类型 | 来源 |
+|---|---|---|---|---|---|---|
+| `ApplyUnifiedHmiLayout` | 20, 21 | `layoutJson` → `layout` | string | H | `UnifiedLayoutSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ApplyUnifiedHmiScreenDesignJson` | 20, 21 | `designJson` → `design` | string | H | `UnifiedScreenSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `ApplyUnifiedHmiTheme` | 20, 21 | `themeJson` → `theme` | string | H | `UnifiedThemeSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `AuditEngineeringExports` | 20, 21 | `rulesJson` → `rules` | string | X | `XPathRule[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs) |
+| `BuildClassicHmiMinimalPackage` | 20, 21 | `packageJson` → `package` | string | H | `ClassicPackageSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildClassicHmiScreenXml` | 20, 21 | `designJson` → `design` | string | H | `ClassicScreenSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildClassicHmiTagTableXml` | 20, 21 | `tableJson` → `table` | string | H | `ClassicTagTableSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `BuildDeviceAmlDocument` | 20, 21 | `specJson` → `spec` | string | H | `DeviceAmlSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs) |
+| `BuildFlgNetCallXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `flgNetJson` → `flgNet` | string | B | `FlgNetCallSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcGlobalDbXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `globalDbJson` → `globalDb` | string | B | `GlobalDbSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcTagTableXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `tagTableJson` → `tagTable` | string | B | `PlcTagTableSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildPlcUdtXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `udtJson` → `udt` | string | B | `UdtSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildStructuredTextXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `structuredTextJson` → `structuredText` | string | B | `StructuredTextSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `BuildUnifiedHmiLayoutDesignJson` | 20, 21 | `layoutJson` → `layout` | string | H | `UnifiedLayoutSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `BuildUnifiedHmiThemeDesignJson` | 20, 21 | `themeJson` → `theme` | string | H | `UnifiedThemeSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs) |
+| `CallTool` | 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `CompareProjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareProjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareProjects` | 20, 21 | `targetDevicePathJson` → `targetDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareProjects` | 20, 21 | `targetItemPathJson` → `targetItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `CompareUnifiedGraphicSelections` | 20, 21 | `afterPagesJson` → `afterPages` | string | X | `GraphicSelectionPage[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
+| `CompareUnifiedGraphicSelections` | 20, 21 | `beforePagesJson` → `beforePages` | string | X | `GraphicSelectionPage[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
+| `CompileDevice` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `CompileDevice` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ComposePlcAliasAlarmLad` | 20, 21 | `rowsJson` → `rows` | string | D | `PlcAliasRow[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) |
+| `ComposePlcFbBlockXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `fbBlockJson` → `fbBlock` | string | B | `FbBlockSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `ComposePlcFcBlockXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `fcBlockJson` → `fcBlock` | string | B | `FcBlockSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `ComposePlcLadFcBlockXml` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `ladFcBlockJson` → `ladFcBlock` | string | B | `LadFcBlockSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) |
+| `DownloadPlcToFolder` | 20, 21 | `promptAnswersJson` → `promptAnswers` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `DownloadToPlc` | 20, 21 | `promptAnswersJson` → `promptAnswers` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ExchangeCfcCharts` | 20, 21 | `chartNamesJson` → `chartNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs) |
+| `ExchangePlcAlarmTextListsXlsx` | 20, 21 | `culturesJson` → `cultures` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExchangePlcAlarmTextListsXlsx` | 20, 21 | `textListNamesJson` → `textListNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ExchangeSystemDiagnosticsSettings` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ExchangeUnifiedTags` | 20, 21 | `expectedTagNamesJson` → `expectedTagNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) |
+| `ExtractPlcBlockMetrics` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `GenerateOpcUaModelledInterface` | 20, 21 | `accessLevelsJson` → `accessLevels` | string | L | `map<string,int32>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `GeneratePlcDocumentation` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `GeneratePlcLoadableFile` | 20, 21 | `objectPathsJson` → `objectPaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `GeneratePlcSourceFromBlocks` | 20, 21 | `blockPathsJson` → `blockPaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `GenerateSiVArc` | 20, 21 | `additionalHmiDeviceNamesJson` → `additionalHmiDeviceNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `GenerateSiVArc` | 20, 21 | `plcSoftwarePathsJson` → `plcSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `GetUnifiedCrossReferences` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ImportPlcAlarmInstanceTexts` | 20, 21 | `culturesJson` → `cultures` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs) |
+| `ImportSinumerikAlarmTexts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ImportSinumerikAlarmTexts` | 20, 21 | `filesJson` → `files` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ImportUnifiedEngineeringList` | 20, 21 | `expectedNamesJson` → `expectedNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
+| `InstantiatePlcXmlTemplates` | 20, 21 | `rowsJson` → `rows` | string | D | `TemplateRow[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs) |
+| `LintPlcSclSource` | 20, 21 | `rulesJson` → `rules` | string | X | `LintRules` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs) |
+| `ManageClassicHmiCycle` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageClassicHmiScript` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageClassicHmiTextGraphicList` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageCommunicationConnection` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `localInterfaceItemPathJson` → `localInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerInterfaceItemPathJson` → `partnerInterfaceItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageCommunicationConnection` | 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDcbLibraries` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDcbLibraries` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccBlock` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChart` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartInterface` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccChartPartition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `partnerJson` → `partner` | string | X | `DccPartnerSpec(action)` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDccPin` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ManageDeviceServiceObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDeviceServiceObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDeviceServiceObjects` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageDeviceUsers` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDeviceUsers` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDeviceUsers` | 20, 21 | `permissionsJson` → `permissions` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveFunctions` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveHardwareModule` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSafetyAcceptanceTest` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSecurity` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveSecurity` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageDriveTelegrams` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageHardwareObject` | 20, 21 | `destinationDevicePathJson` → `destinationDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 20, 21 | `destinationItemPathJson` → `destinationItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
+| `ManageHardwareObject` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs) |
+| `ManageHardwareUtilities` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageHardwareUtilities` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageIoSystem` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageIoSystem` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageLibraryType` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageLibraryType` | 20, 21 | `scopeSoftwarePathsJson` → `scopeSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `ManageMotionAxis` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageMotionAxis` | 20, 21 | `targetJson` → `target` | string | X | `MotionTarget` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManageNetworkDomain` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 20, 21 | `participantDevicePathJson` → `participantDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 20, 21 | `participantItemPathJson` → `participantItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageNetworkDomain` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageOnlineDriveFunctions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageOnlineDriveFunctions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageOpcUaAccessControl` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs) |
+| `ManagePasswordPolicy` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManagePlcCertificate` | 20, 21 | `assignmentItemPathJson` → `assignmentItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcCertificate` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcCertificate` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcCertificate` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcCertificate` | 20, 21 | `subjectAlternativeNamesJson` → `subjectAlternativeNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs) |
+| `ManagePlcGitRepository` | 20, 21 | `filesJson` → `files` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs) |
+| `ManagePlcProtection` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManagePlcProtection` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManagePlcSafety` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManagePlcSoftwareUnit` | 20, 21 | `commentsJson` → `comments` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManagePlcSoftwareUnit` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManagePlcSupervision` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) |
+| `ManagePlcTagDefinition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs) |
+| `ManagePortInterconnection` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManagePortInterconnection` | 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageProjectCompilationSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs) |
+| `ManageProjectUserManagement` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ManageProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ManageSafetyActivationTest` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyActivationTestGroup` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunction` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyFunctionCondition` | 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ManageSafetyGlobalSettings` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs) |
+| `ManageSiVArcRule` | 20, 21 | `collectionPathJson` → `collectionPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSiVArcRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ManageSinumerikArchive` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSinumerikArchive` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSinumerikArchive` | 20, 21 | `modifiedDevicePathJson` → `modifiedDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSinumerikArchive` | 20, 21 | `modifiedItemPathJson` → `modifiedItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSinumerikSafetyMode` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) |
+| `ManageSivarcBlockDefinition` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcBlockDefinition` | 20, 21 | `textsJson` → `texts` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `deviceNamesJson` → `deviceNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `deviceSelectionJson` → `deviceSelection` | string | X | `map<string,bool>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageSivarcTableRule` | 20, 21 | `referencesJson` → `references` | string | X | `map<string,SivarcReference\|null>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageStartdriveParameter` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageSyslogServers` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageSyslogServers` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageSyslogServers` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageSyslogServers` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) |
+| `ManageTeamcenterWorkflow` | 20, 21 | `customAttributesJson` → `customAttributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTeamcenterWorkflow` | 20, 21 | `itemDetailsJson` → `itemDetails` | string | X | `TeamcenterItemSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTeamcenterWorkflow` | 20, 21 | `revisionDetailsJson` → `revisionDetails` | string | X | `TeamcenterRevisionSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) |
+| `ManageTechnologyExtensions` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageTechnologyExtensions` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ManageTechnologyObject` | 20, 21 | `valueJson` → `value` | string | V | `NativeValue` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) |
+| `ManageTestSuiteCase` | 20, 21 | `scopeJson` → `scope` | string | X | `TestScope[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `ManageTransferArea` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `partnerDevicePathJson` → `partnerDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `partnerItemPathJson` → `partnerItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `targetDevicePathJson` → `targetDevicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageTransferArea` | 20, 21 | `targetItemPathJson` → `targetItemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ManageUnifiedDynamization` | 20, 21 | `mappingEntriesJson` → `mappingEntries` | string | X | `DynamizationMapping[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedDynamization` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedDynamization` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedEngineeringObject` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs) |
+| `ManageUnifiedEvent` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEventsTools.cs) |
+| `ManageUnifiedEvent` | 20, 21 | `scriptPropertiesJson` → `scriptProperties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEventsTools.cs) |
+| `ManageUnifiedListEntries` | 20, 21 | `entryJson` → `entry` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedLoggingTag` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedLoggingTag` | 20, 21 | `tagPathJson` → `tagPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedObjectParts` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedObjectParts` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedPlantNode` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ManageUnifiedScreenItem` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs) |
+| `ManageUnifiedScreenLayout` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageUnifiedScreenLayout` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ManageWatchForceTableWebAccess` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ManageWatchForceTableWebAccess` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `PatchPlcBlockDocument` | 20, 21 | `changesJson` → `changes` | string | D | `BlockEdit[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs) |
+| `PlanArtifactImportOrder` | 14sp1, 15.1, 16, 17, 18, 19, 20, 21 | `artifactsJson` → `artifacts` | string | D | `Artifact[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs) |
+| `PlanGlobalLibraryTemplateReuse` | 20, 21 | `templateIntentJson` → `templateIntent` | string | X | `TemplateIntent` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `PlanHardwareNetworkConfiguration` | 20, 21 | `planJson` → `plan` | string | D | `NetworkPlan` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `PlanOnlineReadOnlyDataProvider` | 20, 21 | `optionsJson` → `options` | string | X | `MonitoringOptions` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `PlanOnlineReadOnlyDataProvider` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `PlanOnlineReadOnlyMonitoring` | 20, 21 | `tagPathsJson` → `tagPaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs) |
+| `PlcBuildAndImport` | 20, 21 | `json` → `spec` | string | B | `PlcArtifactSpec(kind)` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBuildTools.cs) |
+| `PreflightToolCall` | 20, 21 | `argumentsJson` → `arguments` | None | C | `ToolArguments(target inputSchema)` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs) |
+| `PreviewToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs) |
+| `ReadCommunicationConnections` | 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadCommunicationConnections` | 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadDccCharts` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccCharts` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDccObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs) |
+| `ReadDeviceAddressing` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `ReadDeviceAddressing` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `ReadDeviceItemChannels` | 20, 21 | `attributeNamesJson` → `attributeNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDeviceItemChannels` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadDriveObjects` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveObjects` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `int32[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadHardwareFeatures` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadHardwareFeatures` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) |
+| `ReadIoSystems` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadIoSystems` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadObjectIdentifier` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ReadObjectIdentifier` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadOnlineDriveParameters` | 20, 21 | `numbersJson` → `numbers` | string | N | `int32[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs) |
+| `ReadPlcLiveValuesOpcUa` | 20, 21 | `nodeIdsJson` → `nodeIds` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ReadPlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ReadPlcSimAdvancedTags` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `ReadPlcWebVars` | 20, 21 | `varsJson` → `vars` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadProjectUserManagement` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ReadProjectUserManagement` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs) |
+| `ReadSafetyActivationTests` | 21 | `groupPathJson` → `groupPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs) |
+| `ReadSiVArcRules` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs) |
+| `ReadToolBatch` | 20, 21 | `operationsJson` → `operations` | string | C | `ToolCall[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs) |
+| `ReadTransferAreas` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadTransferAreas` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `ReadUnifiedGraphicSelection` | 20, 21 | `itemNamesJson` → `itemNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs) |
+| `ReadUnifiedObjectEvents` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) |
+| `ReadUnifiedObjectProperties` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ReadUnifiedPlantObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ReadUnifiedRuntimeAlarms` | 20, 21 | `systemNamesJson` → `systemNames` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadUnifiedRuntimeSettings` | 20, 21 | `fieldsJson` → `fields` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
+| `ReadUnifiedRuntimeTags` | 20, 21 | `tagsJson` → `tags` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `ReadUnifiedScreenBranch` | 20, 21 | `branchJson` → `branch` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs) |
+| `ResolveSivarcExpression` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `ResolveSivarcExpression` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs) |
+| `RunPlcCompanionTool` | 20, 21 | `argumentsJson` → `arguments` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) |
+| `RunPlcSimAdvancedTestScenario` | 20, 21 | `scenarioJson` → `scenario` | string | D | `PlcSimScenario` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `RunTestSuiteCase` | 20, 21 | `namesJson` → `names` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs) |
+| `RunToolsInTransaction` | 20, 21 | `callsJson` → `calls` | string | C | `ToolCall[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `SamplePlcLiveValuesS7` | 20, 21 | `itemsJson` → `items` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) |
+| `ScanPlcSourceAnnotations` | 20, 21 | `extensionsJson` → `extensions` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `ScanPlcSourceAnnotations` | 20, 21 | `markersJson` → `markers` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs) |
+| `SetCpuCommonSettings` | 20, 21 | `settingsJson` → `settings` | string | M | `CpuSettings{exactAttributes:AttributeMap<Scalar>}` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs) |
+| `SetUnifiedLogDuration` | 20, 21 | `durationPathJson` → `durationPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `ShowObjectInEditor` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `ShowObjectInEditor` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs) |
+| `SynchronizeLibrary` | 20, 21 | `harmonizeOptionsJson` → `harmonizeOptions` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `SynchronizeLibrary` | 20, 21 | `scopeSoftwarePathsJson` → `scopeSoftwarePaths` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `SynchronizeLibrary` | 20, 21 | `selectionJson` → `selection` | string | X | `LibrarySelection[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs) |
+| `UnifiedOpenPipeRequest` | 20, 21 | `requestJson` → `request` | string | X | `OpenPipeRequest(message)` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `UpdateDeviceAddress` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `UpdateDeviceAddress` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `UpdateDeviceAddress` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `UpdateDeviceAddress` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs) |
+| `UpdateDeviceItemChannel` | 20, 21 | `attributesJson` → `attributes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdateDeviceItemChannel` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs) |
+| `UpdateUnifiedMultilingualProperty` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedObjectProperties` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedObjectProperties` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedPlantObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedPlantObject` | 20, 21 | `propertiesJson` → `properties` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `UpdateUnifiedRuntimeSettings` | 20, 21 | `changesJson` → `changes` | string | M | `AttributeMap<Scalar>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeSettingsTools.cs) |
+| `UploadDeviceParameters` | 20, 21 | `devicePathJson` → `devicePath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `UploadDeviceParameters` | 20, 21 | `itemPathJson` → `itemPath` | string | P | `string[]（路径段）` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `UploadDeviceParameters` | 20, 21 | `promptAnswersJson` → `promptAnswers` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `UploadStationFromPlc` | 20, 21 | `promptAnswersJson` → `promptAnswers` | string | L | `map<string,string>` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs) |
+| `ValidateClassicHmiMinimalPackagePlcSync` | 20, 21 | `plcSymbolsJson` → `plcSymbols` | string | S | `string[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `ValidateUnifiedObject` | 20, 21 | `objectPathJson` → `objectPath` | string | R | `PropertyStep[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) |
+| `WriteClassicHmiMinimalPackageFiles` | 20, 21 | `packageJson` → `package` | string | H | `ClassicPackageSpec` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) |
+| `WritePlcSimAdvancedTags` | 20, 21 | `valuesJson` → `values` | string | W | `WriteValue[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| `WritePlcWebVars` | 20, 21 | `writesJson` → `writes` | string | W | `WriteValue[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
+| `WriteUnifiedRuntimeTags` | 20, 21 | `writesJson` → `writes` | string | W | `WriteValue[]` | [入口及校验调用](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs) |
 
-同基名的 .dll/.exe.config/.deps.json/.runtimeconfig.json（以实际构建输出为准）同步改名；旧 EXE 仅作启动 shim。开发输出保留 bin-v20/Release/net48、bin/Release/net48 与 Foundation bin/Release/net8.0 的目录，仅变基名。程序集友元、反射加载、织入目标、worker 启动与构建/打包/更新脚本均需按新名生成，不能仅重命名磁盘文件。
-
-| 来源 | 当前键/变量（源码提取） | 迁移建议 |
-|---|---|---|
-| [ModelContextProtocol/Builders/EcosystemFiles.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs) | `TIA_MCP_REPOSITORY_ROOT` | TIA_MCP_BUNDLE_ROOT / --bundle-root；旧名限期别名 |
-| [ModelContextProtocol/Tools/McpServer.Profile.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Profile.cs) | `TIA_MCP_PROFILE` | 名称和值 lite/full 保留；与新增 contract-profile 正交 |
-| [TiaOpenness.Gui/Configuration/ClientProfiles.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs) | `tia-portal`, `tia-portal-vm` | 配置 entry key 保留，仅 command/args 中产品路径更新 |
-| [Cli/McpConfigInstaller.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs) | `mcpServers`, `servers`, `tia-portal` | JSON/TOML 根及 server key 保留，更新 command/args |
-| [HostOptions.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/HostOptions.cs) | `--tia-portal-location`, `--worker-exe` | 名称保留；worker-exe 若显式设置则按对应产物迁移 |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) | `TIA_MCP_PLC_TOOLS_PYTHON` | 名称保留；默认 Python 环境改到 LocalAppData/TiaMcp/ecosystem-python |
-
-Studio TiaOpenness.exe、Bridge 与 TiaMcp.PlcWorker.<key>.exe 不属于上述三个同名程序，建议保持；根目录 TiaMcpConfigurator.exe 为已存在的兼容启动器，选择一周期后移除（替代 runtime/studio/TiaOpenness.exe）。HTTP /mcp 与鉴权键不因 EXE 改名改变。
+按 (当前工具,参数) 去重：B=9；C=5；D=6；H=10；L=7；M=50；N=2；P=128；R=14；S=39；V=3；W=3；X=16；共 292 项 / 167 个工具。argumentsJson 的 JsonElement 输入也迁名；…JsonPath 仍为文件路径。
 
 </details>
 
 <details>
-<summary>E. 兼容回退 / 垫片 → 替代（源码定位生成）</summary>
+<summary>B1. 当前输入限制原文（生成提取；迁移不得放宽）</summary>
 
-| 当前位置 / 定位词 | 拟删除/收紧的行为 | 替代 |
+| 输入 | 发布键 | 当前参数约束原文 | 其他 schema 约束 |
+|---|---|---|---|
+| ApplyUnifiedHmiLayout.layoutJson | 20, 21 | layoutJson: JSON accepted by BuildUnifiedHmiLayoutDesignJson. | {} |
+| ApplyUnifiedHmiScreenDesignJson.designJson | 20, 21 | designJson: JSON object with optional screen properties and items array | {} |
+| ApplyUnifiedHmiTheme.themeJson | 20, 21 | themeJson: JSON accepted by BuildUnifiedHmiThemeDesignJson. | {} |
+| AuditEngineeringExports.rulesJson | 20, 21 | JSON array of explicit XPath count/value policies; unmatched rules are unevaluated. | {} |
+| BuildClassicHmiMinimalPackage.packageJson | 20, 21 | packageJson: JSON object with Name, ScreenDesign, and TagTable. Screen items may reference HMI tags through Tag/HmiTag/ProcessValueTag or Properties.*Tag. | {} |
+| BuildClassicHmiScreenXml.designJson | 20, 21 | designJson: JSON object with Screen/Items. Items support Type=Text/Button/IOField/Lamp/Rectangle plus Name/Left/Top/Width/Height/Text/Properties. | {} |
+| BuildClassicHmiTagTableXml.tableJson | 20, 21 | tableJson: JSON object with Name/TableName and Tags[]. Tag fields: Name, DataType, Length, optional Connection and ControllerTag/PlcTag. | {} |
+| BuildDeviceAmlDocument.specJson | 20, 21 | specJson: JSON object describing the document to build (see the tool description). | {} |
+| BuildFlgNetCallXml.flgNetJson | 14sp1, 15.1, 16, 17, 18, 19 | Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md. | {"maxLength": 262144} |
+| BuildFlgNetCallXml.flgNetJson | 20, 21 | flgNetJson: JSON object with callName/name and parameters[]. Global parameters use symbolPath[] or dotted symbol; constants use sourceKind='constant' and value. | {} |
+| BuildPlcGlobalDbXml.globalDbJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {dbName,dbNumber:positive integer,staticMembers:[{name,datatype,externalWritable?:boolean,commentZhCn?:string,startValue?:string}]}; flat members, 1..1000 rows, strings <=4096. Aliases documented in legacy-offline-composition-candidate.md. | {"maxLength": 262144} |
+| BuildPlcGlobalDbXml.globalDbJson | 20, 21 | globalDbJson: JSON object with dbName/name, dbNumber/number, and staticMembers[] or members[]. | {} |
+| BuildPlcTagTableXml.tagTableJson | 14sp1, 15.1, 16, 17, 18, 19 |  | {"maxLength": 262144} |
+| BuildPlcTagTableXml.tagTableJson | 20, 21 | tagTableJson: JSON object with tableName/name and tags[]. Required tag fields: name, dataTypeName/datatype, logicalAddress/address. | {} |
+| BuildPlcUdtXml.udtJson | 14sp1, 15.1, 16, 17, 18, 19 |  | {"maxLength": 262144} |
+| BuildPlcUdtXml.udtJson | 20, 21 | udtJson: JSON object with members[]. Required member fields: name, datatype. Optional: externalWritable, commentZhCn/comment. | {} |
+| BuildStructuredTextXml.structuredTextJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {firstUid?:1..1000000000,operations:[{op,...}]}; if/elsif/else/endif, assignment (target and exactly one source or value), token, blank, newline, global/local/symbol/literal, line items. 1..1000 rows; strings <=4096; no unknown, duplicate or conflicting fields. Candidate generation, not SCL validation. | {"maxLength": 262144} |
+| BuildStructuredTextXml.structuredTextJson | 20, 21 | structuredTextJson: JSON object with operations[]. assignment uses target + literalValue/value; if uses condition/variable; token uses text. | {} |
+| BuildUnifiedHmiLayoutDesignJson.layoutJson | 20, 21 | layoutJson: JSON {grid?,left?,top?,gap?,columns?,cellWidth?,cellHeight?,items:[{name,type?,row?,col?,rowSpan?,colSpan?,text?,properties?}]}. | {} |
+| BuildUnifiedHmiThemeDesignJson.themeJson | 20, 21 | themeJson: JSON {name?, palette:{Page?,Surface?,Text?,Border?,...}} with TIA ARGB colors like 0xFFF4F6F8. | {} |
+| CallTool.argumentsJson | 20, 21 | argumentsJson: the tool's arguments as a JSON object - either the object itself ({"softwarePath":"PLC_1"}) or that object as a JSON string. Omit for a no-argument tool. Parameters ending in Json (devicePathJson, propertiesJson, ...) may likewise be given as the object/array itself; enum-like values (action, kind, ...) are matched case-insensitively; numbers and booleans are accepted as strings. | {"examples": [{}]} |
+| CompareProjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| CompareProjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| CompareProjects.targetDevicePathJson | 20, 21 | targetDevicePathJson: JSON array naming the target station. | {} |
+| CompareProjects.targetItemPathJson | 20, 21 | targetItemPathJson: JSON array of device-item names on the target. | {} |
+| CompareUnifiedGraphicSelections.afterPagesJson | 20, 21 | afterPagesJson: JSON array of the pages read after the change. | {} |
+| CompareUnifiedGraphicSelections.beforePagesJson | 20, 21 | beforePagesJson: JSON array of the pages read before the change. | {} |
+| CompileDevice.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station to compile, e.g. ["PLC_1"]. | {"examples": ["[\"PLC_1\"]"]} |
+| CompileDevice.itemPathJson | 20, 21 | itemPathJson: JSON array of device-item names when one item (e.g. the CPU) is to be compiled; [] = the whole station. | {} |
+| ComposePlcAliasAlarmLad.rowsJson | 20, 21 | Structured JSON rows; exact shape is specified in the tool description. | {} |
+| ComposePlcFbBlockXml.fbBlockJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md. | {"maxLength": 262144} |
+| ComposePlcFbBlockXml.fbBlockJson | 20, 21 | fbBlockJson: JSON object with blockName/name, blockNumber/number, optional inputs/outputs/inouts/statics/temps arrays, and structuredTextInnerXml or structuredText.operations[]. | {} |
+| ComposePlcFcBlockXml.fcBlockJson | 14sp1, 15.1, 16, 17, 18, 19 | JSON {blockName,blockNumber,inputs:[],outputs:[],structuredText:{operations:[...]}}; FB also allows optional inouts/statics/temps. FC requires inputs/outputs arrays (empty allowed); FB interface arrays optional. Flat members {name,datatype,commentZhCn?}; 1000 members total; strings <=4096. Raw XML rejected. Exact aliases and comments documented in legacy-offline-block-composition-candidate.md. | {"maxLength": 262144} |
+| ComposePlcFcBlockXml.fcBlockJson | 20, 21 | fcBlockJson: JSON object with blockName/name, blockNumber/number, inputs[], outputs[], and structuredTextInnerXml or structuredText.operations[]. | {} |
+| ComposePlcLadFcBlockXml.ladFcBlockJson | 14sp1, 15.1, 16, 17, 18, 19 | Bounded call {callName,parameters:[]} or block {blockName,blockNumber,networks:[{callJson:call}]}; optional inputs/outputs. Exact Input/Output directions; constant source must be explicit; omitted sourceKind means global; simple symbol components. 64 networks, 1000 total parameters, 1000 interface members, strings <=4096. No raw XML, paths, caller UIds or other LAD elements. See legacy-offline-ladder-candidate.md. | {"maxLength": 262144} |
+| ComposePlcLadFcBlockXml.ladFcBlockJson | 20, 21 | ladFcBlockJson: JSON object with blockName, blockNumber, networks[] (each with callJson{callName,parameters[]}, optional titleZhCn/commentZhCn), optional inputs[]/outputs[] interface members with commentZhCn, optional commentZhCn/titleZhCn block-level. | {} |
+| DownloadPlcToFolder.promptAnswersJson | 20, 21 | promptAnswersJson: JSON object of explicit answers to TIA prompts by prompt type name. | {} |
+| DownloadToPlc.promptAnswersJson | 20, 21 | promptAnswersJson: optional JSON object of explicit answers for download prompts by type name, e.g. {"ResetModule":"DeleteAll","OverwriteHmiData":true}. Selection prompts take an enum name, checkbox prompts take true/false. Without an entry, destructive prompts (InitializeMemory, OverwriteOnMemoryCard, OverwriteSystemData, ResetModule, SwitchBackupToPrimary, ProtectionLevelChanged) default to NoAction/NoChange and prompts without a known default stay unanswered; Meta.promptsAnswered / Meta.promptsUnanswered list what happened. | {} |
+| ExchangeCfcCharts.chartNamesJson | 20, 21 | chartNamesJson: JSON array of chart paths. | {} |
+| ExchangePlcAlarmTextListsXlsx.culturesJson | 20, 21 | culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages). | {} |
+| ExchangePlcAlarmTextListsXlsx.textListNamesJson | 20, 21 | textListNamesJson: JSON array of text list names ('[]' = all). | {} |
+| ExchangeSystemDiagnosticsSettings.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ExchangeSystemDiagnosticsSettings.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ExchangeUnifiedTags.expectedTagNamesJson | 20, 21 | expectedTagNamesJson: JSON array of tag names expected after the import (verified). | {} |
+| ExtractPlcBlockMetrics.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| GenerateOpcUaModelledInterface.accessLevelsJson | 20, 21 | JSON area-to-level map; see tool description; safety permits only 0 or 1. | {} |
+| GeneratePlcDocumentation.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| GeneratePlcLoadableFile.objectPathsJson | 20, 21 | objectPathsJson: JSON array of object paths. | {} |
+| GeneratePlcSourceFromBlocks.blockPathsJson | 20, 21 | blockPathsJson: JSON array of block paths. | {} |
+| GenerateSiVArc.additionalHmiDeviceNamesJson | 20, 21 | additionalHmiDeviceNamesJson: JSON array of further HMI device names. | {} |
+| GenerateSiVArc.plcSoftwarePathsJson | 20, 21 | plcSoftwarePathsJson: JSON array of PLC software paths included in the generation. | {} |
+| GetUnifiedCrossReferences.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ImportPlcAlarmInstanceTexts.culturesJson | 20, 21 | culturesJson: JSON array of language tags, e.g. ['en-US','zh-CN'] ('[]' = all active languages). | {} |
+| ImportSinumerikAlarmTexts.devicePathJson | 20, 21 | JSON array of exact device-group/device names. | {} |
+| ImportSinumerikAlarmTexts.filesJson | 20, 21 | JSON array of 1..200 existing absolute .ts/.csv alarm-text files. | {} |
+| ImportUnifiedEngineeringList.expectedNamesJson | 20, 21 | expectedNamesJson: JSON array of names expected after the import (verified). | {} |
+| InstantiatePlcXmlTemplates.rowsJson | 20, 21 | Structured JSON rows; exact shape is specified in the tool description. | {} |
+| LintPlcSclSource.rulesJson | 20, 21 | rulesJson: JSON object of lint rules to enable / disable ('{}' = defaults). | {} |
+| ManageClassicHmiCycle.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageClassicHmiScript.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageClassicHmiTextGraphicList.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageCommunicationConnection.devicePathJson | 21 | devicePathJson: JSON array naming the station that owns the connections, e.g. ["PLC_1"]. | {} |
+| ManageCommunicationConnection.itemPathJson | 21 | itemPathJson: JSON array of device-item names down to the item carrying the CommunicationConnections service (usually the CPU); [] = the station. | {} |
+| ManageCommunicationConnection.localInterfaceItemPathJson | 21 | localInterfaceItemPathJson: JSON array path of the local interface item, e.g. ["PROFINET interface_1"]. | {} |
+| ManageCommunicationConnection.partnerDevicePathJson | 21 | partnerDevicePathJson: JSON array naming the partner station. | {} |
+| ManageCommunicationConnection.partnerInterfaceItemPathJson | 21 | partnerInterfaceItemPathJson: JSON array path of the partner's interface item. | {} |
+| ManageCommunicationConnection.partnerItemPathJson | 21 | partnerItemPathJson: JSON array of device-item names on the partner. | {} |
+| ManageDcbLibraries.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDcbLibraries.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccBlock.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDccBlock.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccBlock.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDccChart.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDccChart.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccChart.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDccChartInterface.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDccChartInterface.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccChartInterface.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDccChartPartition.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDccChartPartition.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccChartPartition.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDccPin.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDccPin.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDccPin.partnerJson | 20, 21 | partnerJson: JSON object naming the partner pin {block, pin} (or the parameter for updateParameter). | {} |
+| ManageDccPin.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDeviceServiceObjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDeviceServiceObjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDeviceServiceObjects.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageDeviceUsers.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDeviceUsers.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDeviceUsers.permissionsJson | 20, 21 | permissionsJson: JSON array of permission names (see the tool description). | {} |
+| ManageDriveFunctions.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDriveFunctions.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDriveFunctions.valueJson | 20, 21 | valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects). | {} |
+| ManageDriveHardwareModule.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDriveHardwareModule.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDriveSafetyAcceptanceTest.devicePathJson | 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDriveSafetyAcceptanceTest.itemPathJson | 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDriveSecurity.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDriveSecurity.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageDriveTelegrams.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageDriveTelegrams.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageHardwareObject.destinationDevicePathJson | 20, 21 | destinationDevicePathJson: for moveItem / copyItem - JSON array naming the destination station. | {} |
+| ManageHardwareObject.destinationItemPathJson | 20, 21 | destinationItemPathJson: for moveItem / copyItem - JSON array of device-item names of the destination container. | {} |
+| ManageHardwareObject.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name, e.g. ["PLC_2"]. | {"examples": ["[\"PLC_2\"]"]} |
+| ManageHardwareObject.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names (deleteItem / moveItem / copyItem); [] for deleteDevice. | {} |
+| ManageHardwareUtilities.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageHardwareUtilities.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageIoSystem.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageIoSystem.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageIoSystem.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageIoSystem.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageLibraryType.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageLibraryType.scopeSoftwarePathsJson | 20, 21 | scopeSoftwarePathsJson: JSON array of software paths that limit the update scope ('[]' = whole project). | {} |
+| ManageMotionAxis.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageMotionAxis.targetJson | 20, 21 | targetJson: JSON object naming the target (see the tool description). | {} |
+| ManageNetworkDomain.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageNetworkDomain.participantDevicePathJson | 20, 21 | participantDevicePathJson: JSON array naming the station to add to the domain. | {} |
+| ManageNetworkDomain.participantItemPathJson | 20, 21 | participantItemPathJson: JSON array of device-item names of the participant's interface. | {} |
+| ManageNetworkDomain.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageOnlineDriveFunctions.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageOnlineDriveFunctions.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageOpcUaAccessControl.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManagePasswordPolicy.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManagePlcCertificate.assignmentItemPathJson | 20, 21 | assignmentItemPathJson: JSON array of device-item names the certificate is assigned to. | {} |
+| ManagePlcCertificate.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManagePlcCertificate.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManagePlcCertificate.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManagePlcCertificate.subjectAlternativeNamesJson | 20, 21 | subjectAlternativeNamesJson: JSON array of subject alternative names for the certificate. | {} |
+| ManagePlcGitRepository.filesJson | 20, 21 | JSON array of explicit repository-relative file paths. | {} |
+| ManagePlcProtection.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station, e.g. ["PLC_1"] (or [group, ..., station]). | {"examples": ["[\"PLC_1\"]"]} |
+| ManagePlcProtection.itemPathJson | 20, 21 | itemPathJson: JSON array of device-item names down to the CPU; [] (default) resolves the station's CPU. | {} |
+| ManagePlcSafety.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManagePlcSoftwareUnit.commentsJson | 20, 21 | commentsJson: JSON object language tag -> comment text. | {} |
+| ManagePlcSoftwareUnit.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManagePlcSupervision.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManagePlcTagDefinition.propertiesJson | 20, 21 | propertiesJson: JSON object of further scalar properties (ExternalAccessible / ExternalVisible / ExternalWritable / LogicalAddress / DataTypeName; Comment as text or per culture). | {} |
+| ManagePortInterconnection.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManagePortInterconnection.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManagePortInterconnection.partnerDevicePathJson | 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
+| ManagePortInterconnection.partnerItemPathJson | 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
+| ManageProjectCompilationSettings.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageProjectUserManagement.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageProjectUserManagement.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageSafetyActivationTest.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
+| ManageSafetyActivationTestGroup.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
+| ManageSafetyFunction.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
+| ManageSafetyFunction.propertiesJson | 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSafetyFunctionCondition.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
+| ManageSafetyFunctionCondition.propertiesJson | 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSafetyGlobalSettings.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSiVArcRule.collectionPathJson | 20, 21 | collectionPathJson: JSON array path of the rule collection. | {} |
+| ManageSiVArcRule.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSinumerikArchive.devicePathJson | 20, 21 | JSON array of exact device-group/device names. | {} |
+| ManageSinumerikArchive.itemPathJson | 20, 21 | JSON array of exact PLC device-item names below the selected device. | {} |
+| ManageSinumerikArchive.modifiedDevicePathJson | 20, 21 | JSON array of exact modified PLC device-group/device names. | {} |
+| ManageSinumerikArchive.modifiedItemPathJson | 20, 21 | JSON array selecting the modified PLC item for F-address archive. | {} |
+| ManageSinumerikSafetyMode.devicePathJson | 20, 21 | JSON array of exact device-group/device names. | {} |
+| ManageSivarcBlockDefinition.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSivarcBlockDefinition.textsJson | 20, 21 | textsJson: JSON object language tag -> text. | {} |
+| ManageSivarcTableRule.deviceNamesJson | 20, 21 | deviceNamesJson: JSON array of device names. | {} |
+| ManageSivarcTableRule.deviceSelectionJson | 20, 21 | deviceSelectionJson: JSON object selecting PLC / HMI devices for the rule. | {} |
+| ManageSivarcTableRule.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageSivarcTableRule.referencesJson | 20, 21 | referencesJson: JSON object of library references for the rule (see the tool description). | {} |
+| ManageStartdriveParameter.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {"examples": ["[\"<exact drive device>\"]"]} |
+| ManageStartdriveParameter.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {"examples": ["[\"<exact drive/control unit item>\"]"]} |
+| ManageStartdriveParameter.valueJson | 20, 21 | valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects). | {} |
+| ManageSyslogServers.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageSyslogServers.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageSyslogServers.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageSyslogServers.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageTeamcenterWorkflow.customAttributesJson | 20, 21 | customAttributesJson: JSON object attribute name -> value. | {} |
+| ManageTeamcenterWorkflow.itemDetailsJson | 20, 21 | itemDetailsJson: JSON object of item details (see the tool description). | {} |
+| ManageTeamcenterWorkflow.revisionDetailsJson | 20, 21 | revisionDetailsJson: JSON object of revision details. | {} |
+| ManageTechnologyExtensions.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageTechnologyExtensions.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageTechnologyObject.valueJson | 20, 21 | valueJson: the value to write, as JSON (number, string, boolean or object as the parameter expects). | {} |
+| ManageTestSuiteCase.scopeJson | 20, 21 | scopeJson: JSON object describing the test scope (see the tool description). | {} |
+| ManageTransferArea.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| ManageTransferArea.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageTransferArea.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ManageTransferArea.partnerDevicePathJson | 20, 21 | partnerDevicePathJson: JSON array naming the partner station, like devicePathJson. | {} |
+| ManageTransferArea.partnerItemPathJson | 20, 21 | partnerItemPathJson: JSON array of exact device-item names on the partner, like itemPathJson. | {} |
+| ManageTransferArea.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageTransferArea.targetDevicePathJson | 20, 21 | targetDevicePathJson: JSON array naming the target station. | {} |
+| ManageTransferArea.targetItemPathJson | 20, 21 | targetItemPathJson: JSON array of device-item names on the target. | {} |
+| ManageUnifiedDynamization.mappingEntriesJson | 20, 21 | mappingEntriesJson: JSON array of mapping entries. | {} |
+| ManageUnifiedDynamization.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ManageUnifiedDynamization.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedEngineeringObject.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedEvent.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ManageUnifiedEvent.scriptPropertiesJson | 20, 21 | scriptPropertiesJson: JSON object of script properties to set. | {} |
+| ManageUnifiedListEntries.entryJson | 20, 21 | entryJson: JSON object of the entry's properties. | {} |
+| ManageUnifiedLoggingTag.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedLoggingTag.tagPathJson | 20, 21 | tagPathJson: JSON array path of the logging tag. | {} |
+| ManageUnifiedObjectParts.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ManageUnifiedObjectParts.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedPlantNode.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedScreenItem.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageUnifiedScreenLayout.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ManageUnifiedScreenLayout.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| ManageWatchForceTableWebAccess.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ManageWatchForceTableWebAccess.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| PatchPlcBlockDocument.changesJson | 20, 21 | JSON array of objects with action=setBlockText/setNetworkText/setMemberStartValue, exact target fields, expectedValue and value. The selector key is action. Example: [{"action":"setBlockText","field":"Title","culture":"en-US","expectedValue":"Old title","value":"Example"}]. | {} |
+| PlanArtifactImportOrder.artifactsJson | 14sp1, 15.1, 16, 17, 18, 19 |  | {"maxLength": 1048576} |
+| PlanArtifactImportOrder.artifactsJson | 20, 21 | JSON array, e.g. [{"Id":"UDT_A"},{"Id":"FB_A","Dependencies":["UDT_A"]}]. IDs are unique ignoring case; dependency IDs must be included. Optional Target and integer Priority order independent artifacts. | {} |
+| PlanGlobalLibraryTemplateReuse.templateIntentJson | 20, 21 | templateIntentJson: optional JSON {"screenType":"overview","targetRuntime":"Unified","preferredComponents":[...]}. | {} |
+| PlanHardwareNetworkConfiguration.planJson | 20, 21 | planJson: JSON with operations[]. Supported operation types: EnsureSubnet, AttachDeviceNodeToSubnet, SetCpuCommonSettings. This is offline-only and performs validation only. | {} |
+| PlanOnlineReadOnlyDataProvider.optionsJson | 20, 21 | optionsJson: optional JSON object such as {"pollMs":1000,"source":"watch-table-export"}. | {} |
+| PlanOnlineReadOnlyDataProvider.tagPathsJson | 20, 21 | tagPathsJson: JSON array of declared symbolic PLC tags/DB members. Guessed M bits and unsafe intent names are rejected. | {} |
+| PlanOnlineReadOnlyMonitoring.tagPathsJson | 20, 21 | tagPathsJson: JSON array of symbolic PLC tag/member paths, for example ["DB_HMI.MotorRun","DB_HMI.SpeedSet"]. Do not pass guessed M bits. | {} |
+| PlcBuildAndImport.json | 20, 21 | json: structured JSON matching the corresponding BuildPlc* tool. | {"examples": ["{\"blockName\":\"FC_DryRun\",\"blockNumber\":12,\"inputs\":[{\"name\":\"Start\",\"datatype\":\"Bool\"}],\"outputs\":[{\"name\":\"Run\",\"datatype\":\"Bool\"}],\"structuredText\":{\"operations\":[{\"op\":\"if\",\"condition\":\"Start\"},{\"op\":\"assignment\",\"target\":\"Run\",\"value\":\"TRUE\",\"indent\":2},{\"op\":\"endif\"}]}}"]} |
+| PreflightToolCall.argumentsJson | 20, 21 | argumentsJson: the arguments you intend to send - the JSON object itself or that object as a JSON string. Omit to see the signature, example and prerequisites only. | {"examples": [{"softwarePath": "PLC_1"}]} |
+| PreviewToolBatch.operationsJson | 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
+| ReadCommunicationConnections.devicePathJson | 21 | devicePathJson: JSON array naming the station, e.g. ["PLC_1"]. | {} |
+| ReadCommunicationConnections.itemPathJson | 21 | itemPathJson: JSON array of device-item names down to the item with the service; [] = the station. | {} |
+| ReadDccCharts.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadDccCharts.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadDccObject.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadDccObject.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadDccObject.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ReadDeviceAddressing.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadDeviceAddressing.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadDeviceItemChannels.attributeNamesJson | 20, 21 | attributeNamesJson: JSON array of attribute names to read ('[]' = the documented set). | {} |
+| ReadDeviceItemChannels.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadDeviceItemChannels.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadDriveObjects.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {"examples": ["[\"<exact drive device>\"]"]} |
+| ReadDriveObjects.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {"examples": ["[\"<exact drive/control unit item>\"]"]} |
+| ReadDriveParameters.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {"examples": ["[\"<exact drive device>\"]"]} |
+| ReadDriveParameters.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {"examples": ["[\"<exact drive/control unit item>\"]"]} |
+| ReadDriveParameters.namesJson | 20, 21 | namesJson: JSON array of exact names (or a comma-separated list where the tool says so). | {"examples": ["[\"p1070[0]\"]"]} |
+| ReadDriveParameters.numbersJson | 20, 21 | numbersJson: JSON array of parameter numbers. | {} |
+| ReadHardwareFeatures.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadHardwareFeatures.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadIoSystems.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadIoSystems.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadObjectIdentifier.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadObjectIdentifier.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadOnlineDriveParameters.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadOnlineDriveParameters.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadOnlineDriveParameters.namesJson | 20, 21 | namesJson: JSON array of exact names (or a comma-separated list where the tool says so). | {} |
+| ReadOnlineDriveParameters.numbersJson | 20, 21 | numbersJson: JSON array of parameter numbers. | {} |
+| ReadPlcLiveValuesOpcUa.nodeIdsJson | 20, 21 | nodeIdsJson: JSON array or comma-separated list of OPC UA NodeIds, e.g. ["ns=3;s=\"DB10\".\"X\"","ns=3;s=\"DB10\".\"Y\""]. | {} |
+| ReadPlcLiveValuesS7.itemsJson | 20, 21 | itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. ["DB10.DBD0:REAL","DB10.DBD4:REAL","M0.0"]. | {} |
+| ReadPlcSimAdvancedTags.namesJson | 20, 21 | namesJson: tag names to read (JSON array or comma-separated). Empty = list tags instead. | {"examples": ["[\"MCP_SimDB.Cycles\",\"MCP_SimDB.Running\"]"]} |
+| ReadPlcWebVars.varsJson | 20, 21 | varsJson: JSON array of symbolic names, e.g. ["\"DB1\".\"Speed\"", "\"Motor_On\""], or a comma-separated list. Max 500. | {} |
+| ReadProjectUserManagement.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadProjectUserManagement.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadSafetyActivationTests.groupPathJson | 21 | groupPathJson: JSON array path of the group, e.g. ["Folder","Subfolder"]; [] = the root. | {} |
+| ReadSiVArcRules.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ReadToolBatch.operationsJson | 20, 21 | Ordered JSON array of {name,arguments:{...}}; 1..50 operations. | {} |
+| ReadTransferAreas.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ReadTransferAreas.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| ReadUnifiedGraphicSelection.itemNamesJson | 20, 21 | itemNamesJson: JSON array of screen item names. | {} |
+| ReadUnifiedObjectEvents.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ReadUnifiedObjectProperties.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ReadUnifiedPlantObject.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| ReadUnifiedRuntimeAlarms.systemNamesJson | 20, 21 | systemNamesJson: JSON array of runtime system names, e.g. ["HMI_RT_1"]; empty array or empty string = all systems. | {} |
+| ReadUnifiedRuntimeSettings.fieldsJson | 20, 21 | fieldsJson: JSON array of field names to read ('[]' = all). | {} |
+| ReadUnifiedRuntimeTags.tagsJson | 20, 21 | tagsJson: JSON array of runtime tag names, e.g. ["Tag_1","Motor.Speed"], or a comma-separated list. Max 500. | {} |
+| ReadUnifiedScreenBranch.branchJson | 20, 21 | branchJson: JSON array path of the screen branch to read. | {} |
+| ResolveSivarcExpression.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ResolveSivarcExpression.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| RunPlcCompanionTool.argumentsJson | 20, 21 | JSON string array of exact CLI arguments; no shell syntax. | {} |
+| RunPlcSimAdvancedTestScenario.scenarioJson | 20, 21 | scenarioJson: scenario object (see description). Max 500 steps. | {"examples": ["{\"instance\":\"MCP_SIM\",\"mode\":\"default\",\"steps\":[{\"write\":{\"MCP_SimDB.Start\":true}},{\"waitMs\":300},{\"assert\":{\"MCP_SimDB.Running\":true}}]}"]} |
+| RunTestSuiteCase.namesJson | 20, 21 | namesJson: JSON array of exact names (or a comma-separated list where the tool says so). | {} |
+| RunToolsInTransaction.callsJson | 20, 21 | callsJson: JSON array of {name, arguments:{...}} supported tool calls to run inside one transaction. | {} |
+| SamplePlcLiveValuesS7.itemsJson | 20, 21 | itemsJson: JSON array or comma-separated list of absolute S7 addresses, e.g. ["DB10.DBD0:REAL","M0.0"]. | {} |
+| ScanPlcSourceAnnotations.extensionsJson | 20, 21 | extensionsJson: JSON array of file extensions to include, e.g. ['.scl','.s7dcl']. | {} |
+| ScanPlcSourceAnnotations.markersJson | 20, 21 | markersJson: JSON array of annotation markers to look for, e.g. ['TODO','FIXME']. | {} |
+| SetCpuCommonSettings.settingsJson | 20, 21 | settingsJson: JSON object { "exactAttributes": { "ExactAttributeNameFromReadback": "value" } }. No aliases or guessed attribute names are accepted. | {} |
+| SetUnifiedLogDuration.durationPathJson | 20, 21 | durationPathJson: JSON array path of the duration property. | {} |
+| ShowObjectInEditor.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| ShowObjectInEditor.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| SynchronizeLibrary.harmonizeOptionsJson | 20, 21 | harmonizeOptionsJson: JSON object of harmonisation options (see the tool description). | {} |
+| SynchronizeLibrary.scopeSoftwarePathsJson | 20, 21 | scopeSoftwarePathsJson: JSON array of software paths that limit the update scope ('[]' = whole project). | {} |
+| SynchronizeLibrary.selectionJson | 20, 21 | selectionJson: JSON array selecting the types / instances to synchronise ('[]' = all). | {} |
+| UnifiedOpenPipeRequest.requestJson | 20, 21 | requestJson: single-line JSON object, e.g. {"Message":"BrowseTags","Params":{"Filter":"*Motor*","PageSize":50}}. A ClientCookie is generated when missing. | {} |
+| UpdateDeviceAddress.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| UpdateDeviceAddress.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| UpdateDeviceAddress.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| UpdateDeviceAddress.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| UpdateDeviceItemChannel.attributesJson | 20, 21 | attributesJson: JSON object attribute name -> value to write. | {} |
+| UpdateDeviceItemChannel.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| UpdateDeviceItemChannel.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| UpdateUnifiedMultilingualProperty.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| UpdateUnifiedObjectProperties.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| UpdateUnifiedObjectProperties.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| UpdateUnifiedPlantObject.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| UpdateUnifiedPlantObject.propertiesJson | 20, 21 | propertiesJson: JSON object property name -> value to write (scalars; the tool description lists the supported names). | {} |
+| UpdateUnifiedRuntimeSettings.changesJson | 20, 21 | changesJson: JSON object field name -> new value. | {} |
+| UploadDeviceParameters.devicePathJson | 20, 21 | devicePathJson: JSON array naming the station - [group, ..., station] or the unique station name alone, e.g. ["PLC_1"] (the array itself or its JSON text). | {} |
+| UploadDeviceParameters.itemPathJson | 20, 21 | itemPathJson: JSON array of exact device-item names below the station, e.g. ["PROFINET interface_1"]; [] means the station itself (or its CPU where the tool says so). | {} |
+| UploadDeviceParameters.promptAnswersJson | 20, 21 | promptAnswersJson: JSON object of explicit answers to TIA prompts by prompt type name. | {} |
+| UploadStationFromPlc.promptAnswersJson | 20, 21 | promptAnswersJson: JSON object of explicit answers to upload prompts by prompt type name. | {} |
+| ValidateClassicHmiMinimalPackagePlcSync.plcSymbolsJson | 20, 21 | plcSymbolsJson: JSON array of exact PLC symbols, or object with Symbols[]. Example: ["DB1_MotorData.Motor.Start"]. | {} |
+| ValidateUnifiedObject.objectPathJson | 20, 21 | objectPathJson: JSON string containing property steps [{"property":"TagTables","name":"Table"},{"property":"Tags","name":"Tag"}]. property selects a public property; optional name selects an exact collection member. [] selects the root. No parent/backlinks. | {} |
+| WriteClassicHmiMinimalPackageFiles.packageJson | 20, 21 | packageJson: JSON object with Name, ScreenDesign, and TagTable. | {} |
+| WritePlcSimAdvancedTags.valuesJson | 20, 21 | valuesJson: JSON object tag name -> value, or array of {name, value}. Max 500. | {"examples": ["{\"MCP_SimDB.Start\":true}"]} |
+| WritePlcWebVars.writesJson | 20, 21 | writesJson: JSON array of {"name":"\"DB1\".\"Setpoint\"","value":42.5} objects, or a JSON object {"\"Tag_1\"":true}. Max 500. | {} |
+| WriteUnifiedRuntimeTags.writesJson | 20, 21 | writesJson: JSON array of {"name":"Tag_1","value":50} objects, or a JSON object {"Tag_1":50,"Flag":true}. Max 500. | {} |
+
+| parser/策略来源:行 | 原始边界表达式 |
+|---|---|
+| [CliOptions.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/CliOptions.cs):143 | `if (++i >= args.Length \|\| !int.TryParse(args[i], out int workerTimeout) \|\| workerTimeout < 10 \|\| workerTimeout > 180)` |
+| [ModelContextProtocol/BatchPlanStore.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/BatchPlanStore.cs):24 | `if (_plans.Count >= 32) throw new InvalidOperationException("Too many pending previews; use or wait for expiry.");` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):24 | `if (rules.Count > 50) throw new ArgumentException("At most 50 XML rules.");` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):33 | `if (xpath.Length == 0 \|\| xpath.Length > 1024) throw new ArgumentException("Each rule needs an XPath selecting elements (max 1024 chars).");` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):44 | `{ totalFindings++; if (findings.Count < 2000) findings.Add(new JsonObject { ["file"] = file, ["rule"] = rule, ["severity"] = severity, ["message"] = detail }); }` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):49 | `if (new FileInfo(file).Length > 16 * 1024 * 1024) throw new InvalidDataException("Export exceeds 16 MiB audit limit.");` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):54 | `using (var reader = XmlReader.Create(file, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 })) xml = XDocument.Load(reader);` |
+| [ModelContextProtocol/Builders/EngineeringQualityAudit.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EngineeringQualityAudit.cs):60 | `if (selected.Count < (rule["minCount"]?.GetValue<int>() ?? 0) \|\| selected.Count > (rule["maxCount"]?.GetValue<int>() ?? int.MaxValue)) Finding(file, id, rule["severity"]?.GetValue<string>() ?? "warning", "XPath match count: " + selected.Count);` |
+| [ModelContextProtocol/Builders/HmiTemplateLayoutAnalyzer.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/HmiTemplateLayoutAnalyzer.cs):196 | `if (severeOverlapCount <= 20) warnings.Add("layout-overlap: " + boxes[i]["name"] + " overlaps " + boxes[j]["name"]);` |
+| [ModelContextProtocol/Builders/HmiTemplateReferenceAnalyzer.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/HmiTemplateReferenceAnalyzer.cs):255 | `if (count > 0 && sampleStrings.Count < 80)` |
+| [ModelContextProtocol/Builders/OfflineAnalysisLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/OfflineAnalysisLogic.cs):29 | `public const int MaxLimit = 500;` |
+| [ModelContextProtocol/Builders/OfflineAnalysisLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/OfflineAnalysisLogic.cs):30 | `public const int MaxDiffLinesPerSide = 60000;` |
+| [ModelContextProtocol/Builders/OfflineAnalysisLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/OfflineAnalysisLogic.cs):31 | `private const int MaxLineLength = 400;` |
+| [ModelContextProtocol/Builders/OfflineAnalysisLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/OfflineAnalysisLogic.cs):32 | `private const int MaxAnnotationText = 300;` |
+| [ModelContextProtocol/Builders/OfflineAnalysisLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/OfflineAnalysisLogic.cs):697 | `if (a.Count > MaxDiffLinesPerSide \|\| b.Count > MaxDiffLinesPerSide)` |
+| [ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs):15 | `if (rows.Count < 1 \|\| rows.Count > 500) throw new ArgumentException("Use 1..500 Boolean mapping/alarm rows.");` |
+| [ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs):36 | `if (array.Count < 1 \|\| array.Count > 32) throw new ArgumentException("Use 1..32 symbol components.");` |
+| [ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcAliasAlarmBuilder.cs):38 | `if (parts.Any(p => string.IsNullOrWhiteSpace(p) \|\| p.Length > 128 \|\| p.Contains("[") \|\| p.Contains("]"))) throw new ArgumentException("Empty/oversized components and array-index syntax are unsupported; use an exported XML template for indexed operands.");` |
+| [ModelContextProtocol/Builders/PlcDocumentEditing.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs):15 | `public const int MaxBytes = 16 * 1024 * 1024;` |
+| [ModelContextProtocol/Builders/PlcDocumentEditing.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs):22 | `if (!f.Exists \|\| f.Length > MaxBytes) throw new ArgumentException("XML file is missing or exceeds 16 MiB.");` |
+| [ModelContextProtocol/Builders/PlcDocumentEditing.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs):30 | `if (Encoding.UTF8.GetByteCount(xml) > MaxBytes) throw new ArgumentException("XML exceeds 16 MiB.");` |
+| [ModelContextProtocol/Builders/PlcDocumentEditing.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs):31 | `using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxBytes });` |
+| [ModelContextProtocol/Builders/PlcDocumentEditing.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentEditing.cs):126 | `if (changes.Count < 1 \|\| changes.Count > 100) throw new ArgumentException("Supply 1..100 changes.");` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):25 | `public const int MaxNetworksPerBlock = 2000;` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):26 | `public const int MaxHandbookFiles = 2000;` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):130 | `if (doc.Networks.Count > MaxNetworksPerBlock) throw new InvalidDataException("Block has " + doc.Networks.Count + " networks; limit is " + MaxNetworksPerBlock + ".");` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):431 | `if (files.Count > MaxHandbookFiles) throw new InvalidDataException(files.Count + " documents exceed the handbook limit of " + MaxHandbookFiles + ".");` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):533 | `if (!(node is JsonObject obj)) throw new ArgumentException("rulesJson must be a JSON object, e.g. {\"disable\":[\"SCL007\"],\"maxLineLength\":120,\"maxNesting\":5}.");` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):535 | `if (obj["maxLineLength"] != null) o.MaxLineLength = obj["maxLineLength"]!.GetValue<int>();` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):538 | `if (o.MaxLineLength < 40 \|\| o.MaxLineLength > 1000) throw new ArgumentException("maxLineLength must be between 40 and 1000.");` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):564 | `if (raw.Length > options.MaxLineLength) Add("SCL007", "info", lineNo, "Line longer than " + options.MaxLineLength + " characters (" + raw.Length + ").", raw);` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):603 | `if (stack.Count == 0) { Add("SCL001", "error", lineNo, upper + " without a matching opener.", raw.Trim()); continue; }` |
+| [ModelContextProtocol/Builders/PlcDocumentationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcDocumentationLogic.cs):621 | `if (firstWord == "REGION" && words.Count == 1 && code.Trim().Equals("REGION", StringComparison.OrdinalIgnoreCase)) Add("SCL012", "info", lineNo, "REGION without a name.", raw.Trim());` |
+| [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):37 | `files.Add(file); if (files.Count > 2000) throw new ArgumentException("Maximum 2000 export documents.");` |
+| [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):39 | `foreach (var sub in Directory.EnumerateDirectories(folder)) { pending.Push(sub); if (pending.Count > 2000) throw new ArgumentException("Directory traversal limit exceeded."); }` |
+| [ModelContextProtocol/Builders/PlcOfflineReferences.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcOfflineReferences.cs):124 | `if (++visits > 10000 \|\| rows.Count >= 2000) { truncated = true; return; }` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):19 | `if (bytes.Length > 16 * 1024 * 1024) throw new ArgumentException("XML exceeds 16 MiB.");` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):21 | `using var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):59 | `if (!file.Exists \|\| file.Length > 16 * 1024 * 1024) throw new ArgumentException("Existing XML <=16 MiB required.");` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):64 | `if (paths.Length == 0 \|\| paths.Length > 128) throw new ArgumentException("Schema directory must contain 1..128 XSD files.");` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):70 | `if ((total += bytes.Length) > 32 * 1024 * 1024) throw new ArgumentException("XSD byte budget exceeded.");` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):77 | `if (nodes.Length > 2000) throw new ArgumentException("Fragment budget exceeded.");` |
+| [ModelContextProtocol/Builders/PlcSchemaValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcSchemaValidation.cs):97 | `if (issues.Count < 200) issues.Add(new JsonObject { ["severity"] = args.Severity.ToString(), ["element"] = node.Name.ToString(), ["message"] = args.Message });` |
+| [ModelContextProtocol/Builders/PlcTemplateExpansion.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcTemplateExpansion.cs):20 | `using (var reader = XmlReader.Create(templatePath, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 4 * 1024 * 1024 })) template = XDocument.Load(reader, LoadOptions.PreserveWhitespace);` |
+| [ModelContextProtocol/Builders/PlcTemplateExpansion.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcTemplateExpansion.cs):22 | `if (rows.Count < 1 \|\| rows.Count > 100) throw new ArgumentException("Use 1..100 rows.");` |
+| [ModelContextProtocol/Builders/UnifiedCwcPackage.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/UnifiedCwcPackage.cs):39 | `if (item is DirectoryInfo child) { if (queue.Count >= 256) throw new ArgumentException("CWC directory budget exceeded."); queue.Enqueue(child); continue; }` |
+| [ModelContextProtocol/Builders/UnifiedCwcPackage.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/UnifiedCwcPackage.cs):41 | `if (files.Count >= 1024 \|\| file.Length > 16 * 1024 * 1024 \|\| total + file.Length > 64 * 1024 * 1024) throw new ArgumentException("CWC supports <=1024 files, <=16 MiB each and <=64 MiB total.");` |
+| [ModelContextProtocol/Builders/UnifiedCwcPackage.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/UnifiedCwcPackage.cs):44 | `while ((n = input.Read(buffer, 0, buffer.Length)) > 0) { total += n; if (content.Length + n > 16 * 1024 * 1024 \|\| total > 64 * 1024 * 1024) throw new ArgumentException("CWC byte budget exceeded while reading."); content.Write(buffer, 0, n); }` |
+| [ModelContextProtocol/Builders/UnifiedCwcPackage.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/UnifiedCwcPackage.cs):48 | `if (!files.TryGetValue("manifest.json", out var manifest) \|\| manifest.Length > 1024 * 1024) throw new ArgumentException("Root manifest.json <=1 MiB required.");` |
+| [ModelContextProtocol/ExportStore.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/ExportStore.cs):66 | `public const int MaxSliceChars = 20000;` |
+| [ModelContextProtocol/ExportStore.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/ExportStore.cs):70 | `private const int MaxEntries = 32;` |
+| [ModelContextProtocol/ExportStore.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/ExportStore.cs):71 | `private const int MaxTotalChars = 8_000_000;` |
+| [ModelContextProtocol/ExportStore.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/ExportStore.cs):82 | `private const int MaxTombstones = 512;` |
+| [ModelContextProtocol/PreflightLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/PreflightLogic.cs):156 | `if (list.Count < 2 \|\| list.Any(x => x.Length > 40)) continue;` |
+| [ModelContextProtocol/PreflightLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/PreflightLogic.cs):202 | `if (tail.Length >= 4 && string.Equals(tail, givenTail, StringComparison.OrdinalIgnoreCase)) score = Math.Max(score, 50);` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):18 | `public const int MaxScenarioSteps = 500;` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):19 | `public const int MaxTagsPerCall = 500;` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):114 | `if (n.Length > 64 \|\| n.IndexOfAny(new[] { '\\', '/', ':', '*', '?', '"', '<', '>', '\|', '\0' }) >= 0) throw new ArgumentException("instanceName must be 1..64 characters without path separators or wildcard characters.");` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):142 | `if (list.Count > MaxTagsPerCall) throw new ArgumentException(parameterName + " has " + list.Count + " entries; limit is " + MaxTagsPerCall + ".");` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):161 | `if (names.Count > MaxTagsPerCall) throw new ArgumentException(parameterName + " has " + names.Count + " names; limit is " + MaxTagsPerCall + ".");` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):290 | `if (steps.Count > MaxScenarioSteps) throw new ArgumentException("scenarioJson has " + steps.Count + " steps; limit is " + MaxScenarioSteps + ".");` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):301 | `if (o["cycles"] != null) { kinds.Add("cycles"); step.Count = o["cycles"]!.GetValue<int>(); if (step.Count < 1 \|\| step.Count > 100000) throw new ArgumentException("Step " + index + ": cycles must be 1..100000."); }` |
+| [Runtime/PlcSimAdvancedLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/PlcSimAdvancedLogic.cs):302 | `if (o["waitMs"] != null) { kinds.Add("wait"); step.Count = o["waitMs"]!.GetValue<int>(); if (step.Count < 1 \|\| step.Count > 60000) throw new ArgumentException("Step " + index + ": waitMs must be 1..60000."); }` |
+| [Runtime/RuntimeChannelsLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/RuntimeChannelsLogic.cs):54 | `public const int MaxItemsPerCall = 500;` |
+| [Runtime/RuntimeChannelsLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/RuntimeChannelsLogic.cs):102 | `if (list.Count > MaxItemsPerCall) throw new ArgumentException($"{paramName} has {list.Count} entries; at most {MaxItemsPerCall} per call.");` |
+| [Runtime/RuntimeChannelsLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/RuntimeChannelsLogic.cs):144 | `if (items.Count > MaxItemsPerCall) throw new ArgumentException($"{paramName} has {items.Count} entries; at most {MaxItemsPerCall} per call.");` |
+| [Runtime/RuntimeChannelsLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Runtime/RuntimeChannelsLogic.cs):225 | `if (h.Length == 0) throw new ArgumentException("host is empty; give the CPU web server address, e.g. '192.168.0.1' or 'plc.local:443'.");` |
+| [Siemens/ArgumentRules.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/ArgumentRules.cs):56 | `if (empty \|\| json.Length > 16384) throw new ArgumentException("propertiesJson must be a JSON object (<= 16 KB).");` |
+| [Siemens/ArgumentRules.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/ArgumentRules.cs):65 | `if (rule == ObjectRule.HardwareNetwork && json.Length > 32768) throw new ArgumentException(parameter + " exceeds 32 KiB.");` |
+| [Siemens/ArgumentRules.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/ArgumentRules.cs):76 | `if (rule == ObjectRule.Safety && obj.Count > 50) throw new ArgumentException("At most 50 properties per request.");` |
+| [Siemens/ArgumentRules.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/ArgumentRules.cs):79 | `if (obj.Count > 50) throw new ArgumentException(parameter + ": at most 50 entries.");` |
+| [Siemens/CfcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/CfcLogic.cs):15 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/CfcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/CfcLogic.cs):45 | `if (elements.Count < 200) elements.Add(reader.LocalName);` |
+| [Siemens/CfcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/CfcLogic.cs):63 | `else RequireText(modelVersion, "modelVersion", 32);                                     // official example: "V2.0" (S7TIA exchange model version)` |
+| [Siemens/CfcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/CfcLogic.cs):80 | `if (action == "add" \|\| action == "change") RequireText(newHashedPassword, "newHashedPassword", 4096);` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):14 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):21 | `internal static string[] ChartParts(string chartPath) { RequireText(chartPath, "chartPath", 1024); return EngineeringPath.Parts(chartPath); }` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):55 | `RequireText(filePath, "filePath", 1024);` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):77 | `if ((action != "create" && action != "read") \|\| !string.IsNullOrEmpty(blockName)) RequireText(blockName, "blockName", 128);   // read lists all blocks, create may auto-name` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):79 | `if (action == "create") { RequireText(blockType, "blockType", 128); r.BlockType = blockType; r.LibraryName = libraryName ?? ""; if (!string.IsNullOrEmpty(libraryName)) RequireText(libraryName, "libraryName", 128); }` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):102 | `RequireText(blockName, "blockName", 128); RequireText(pinName, "pinName", 128);` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):109 | `if (partner.ContainsKey("chartInterface")) { if (partner.ContainsKey("block") \|\| partner.ContainsKey("pin")) throw new ArgumentException("partnerJson: give chartInterface or block + pin, not both."); r.PartnerInterface = Str("chartInterface"); RequireText(r.PartnerInterface, "partnerJson.chartInterface", 128); }` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):110 | `else { r.PartnerBlock = Str("block"); r.PartnerPin = Str("pin"); RequireText(r.PartnerBlock, "partnerJson.block", 128); RequireText(r.PartnerPin, "partnerJson.pin", 128); }` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):134 | `if (action != "read" && action != "create") RequireText(interfaceName, "interfaceName", 128);` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):135 | `if (action == "create") { RequireText(sourceBlock, "sourceBlock", 128); RequireText(sourcePin, "sourcePin", 128); r.SourceBlock = sourceBlock; r.SourcePin = sourcePin; Refuse(interfaceName, "interfaceName", "is not accepted on create: DccChartInterfaceComposition.Create(DccPin) names the interface after the pin."); }` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):149 | `if (action != "read") RequireText(partitionName, "partitionName", 128);` |
+| [Siemens/DccLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DccLogic.cs):164 | `RequireText(filePath, "filePath", 1024);` |
+| [Siemens/DownloadPromptPolicy.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/DownloadPromptPolicy.cs):54 | `if (string.IsNullOrWhiteSpace(text) \|\| text.Length > 64) throw new ArgumentException("Prompt answer out of range: " + kv.Key);` |
+| [Siemens/EngineeringPath.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/EngineeringPath.cs):12 | `if (parts.Length > 64 \|\| parts.Any(x => string.IsNullOrWhiteSpace(x) \|\| x == "." \|\| x == ".."))` |
+| [Siemens/HardwareAmlLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareAmlLogic.cs):30 | `public const int MaxElements = 5000;` |
+| [Siemens/HardwareAmlLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareAmlLogic.cs):107 | `if (dev.TypeIdentifier.Length == 0) throw new ArgumentException("Device '" + dev.Name + "' needs a typeIdentifier such as 'System:Device.S71500'.");` |
+| [Siemens/HardwareAmlLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareAmlLogic.cs):127 | `if (++count > MaxElements) throw new ArgumentException("More than " + MaxElements + " device items.");` |
+| [Siemens/HardwareAmlLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareAmlLogic.cs):140 | `if ((item.Role == "DeviceItem" \|\| item.Role == "Rack") && !item.BuiltIn && item.TypeIdentifier.Length == 0) throw new ArgumentException("Item '" + item.Name + "' needs a typeIdentifier (e.g. 'OrderNumber:6ES7 521-1BL00-0AB0/V2.0') unless builtIn=true.");` |
+| [Siemens/HardwareNetworkLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareNetworkLogic.cs):51 | `internal static string[] ParseNames(string json, string parameter, int max = 64)` |
+| [Siemens/HardwareNetworkLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareNetworkLogic.cs):72 | `if (string.IsNullOrEmpty(password) \|\| password.Length > 128 \|\| password.Trim().Length == 0) throw new ArgumentException(parameter + " must be 1-128 characters (never echoed).");` |
+| [Siemens/HardwareNetworkLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/HardwareNetworkLogic.cs):132 | `if (action == "create" && name.Length > 256) throw new ArgumentException("name too long.");` |
+| [Siemens/Hmi/HmiReadSafety.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/Hmi/HmiReadSafety.cs):80 | `if (Writer != null && Writer.BaseStream.Length > 8 * 1024 * 1024)` |
+| [Siemens/LibraryDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/LibraryDeepLogic.cs):84 | `if (array.Count > 200) throw new ArgumentException("selectionJson: at most 200 entries.");` |
+| [Siemens/LibraryDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/LibraryDeepLogic.cs):101 | `var scopes = HardwareNetworkLogic.ParseNames(string.IsNullOrWhiteSpace(json) ? "[]" : json, "scopeSoftwarePathsJson", 32);` |
+| [Siemens/LibraryDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/LibraryDeepLogic.cs):146 | `if (string.IsNullOrWhiteSpace(archiveName) \|\| archiveName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0 \|\| archiveName.Length > 128) throw new ArgumentException("archiveName must be a plain file name (extension optional; TIA adds .zalXX for compressed modes when none is given).");` |
+| [Siemens/LibraryDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/LibraryDeepLogic.cs):151 | `if (maxItems < 1 \|\| maxItems > 5000) throw new ArgumentException("maxItems must be 1..5000.");` |
+| [Siemens/PlcBlockServicesLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/PlcBlockServicesLogic.cs):33 | `if (password.Length > 256) throw new ArgumentException("Password exceeds 256 characters.");` |
+| [Siemens/PlcBlockServicesLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/PlcBlockServicesLogic.cs):78 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > 4096) throw new ArgumentException("culturesJson must be a JSON array of 1..64 culture names.");` |
+| [Siemens/PlcBlockServicesLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/PlcBlockServicesLogic.cs):81 | `if (names.Length < 1 \|\| names.Length > 64 \|\| names.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException("Provide 1..64 nonempty culture names.");` |
+| [Siemens/PlcTagEditingLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/PlcTagEditingLogic.cs):57 | `if (string.IsNullOrWhiteSpace(pair.Key) \|\| pair.Key.Length > 16) throw new ArgumentException("Comment culture names look like \"zh-CN\" / \"en-US\": " + pair.Key);` |
+| [Siemens/SafetyLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyLogic.cs):45 | `if (password.Length > 256) throw new ArgumentException("Password exceeds 256 characters.");` |
+| [Siemens/SafetyLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyLogic.cs):143 | `if (text.Length > 256) throw new ArgumentException("UsernameForFChangeHistory is limited to 256 characters by TIA; longer input is refused rather than silently cut.");` |
+| [Siemens/SafetyLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyLogic.cs):165 | `if (layout.Length > 128 \|\| layout.Any(c => char.IsControl(c) \|\| c == '"')) throw new ArgumentException("documentLayout must be a plain layout name such as DocuInfo_ISO_A4_Portrait.");` |
+| [Siemens/SafetyValidationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyValidationLogic.cs):14 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/SafetyValidationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyValidationLogic.cs):65 | `if (action == "createFromMasterCopy") RequireText(masterCopyPath, "masterCopyPath", 1024); else Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only.");` |
+| [Siemens/SafetyValidationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyValidationLogic.cs):67 | `if (action == "generateReport" \|\| action == "export" \|\| action == "import") RequireText(filePath, "filePath", 1024); else Refuse(filePath, "filePath", "applies to generateReport / export / import only.");` |
+| [Siemens/SafetyValidationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyValidationLogic.cs):82 | `if (action == "createFromMasterCopy") RequireText(masterCopyPath, "masterCopyPath", 1024); else Refuse(masterCopyPath, "masterCopyPath", "applies to createFromMasterCopy only.");` |
+| [Siemens/SafetyValidationLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SafetyValidationLogic.cs):106 | `if (action == "export" \|\| action == "import") RequireText(filePath, "filePath", 1024); else Refuse(filePath, "filePath", "applies to export / import only.");` |
+| [Siemens/SivarcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SivarcLogic.cs):136 | `if ((pair.Key == "Condition" \|\| pair.Key == "Comment") && (pair.Value?.GetValue<string>() ?? "").Length > 500) throw new ArgumentException(pair.Key + " exceeds the 500 character limit SiVArc enforces.");` |
+| [Siemens/SivarcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SivarcLogic.cs):137 | `if (pair.Key == "Name" && (pair.Value?.GetValue<string>() ?? "").Length > 128) throw new ArgumentException("Name exceeds the 128 character limit SiVArc enforces.");` |
+| [Siemens/SivarcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SivarcLogic.cs):219 | `if (ParseNames(devicePathJson, "devicePathJson").Length == 0 \|\| ParseNames(itemPathJson, "itemPathJson").Length == 0) throw new ArgumentException("devicePathJson and itemPathJson identify the HMI device item (the PNV HMI device).");` |
+| [Siemens/SivarcLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SivarcLogic.cs):221 | `if (string.IsNullOrWhiteSpace(expression) \|\| expression.Length > 4000) throw new ArgumentException("expression (SiVArc expression text, max 4000 chars) required.");` |
+| [Siemens/SoftwareUnitDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/SoftwareUnitDeepLogic.cs):134 | `if (file.Exists && file.Length > 0) { using var stream = file.OpenRead(); row["sha256"] = ArgumentRules.Hash(stream); }` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):15 | `private static void RequireText(string value, string parameter, int max = 1024)` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):40 | `RequireText(userName, "userName", 256); if (string.IsNullOrEmpty(password)) throw new ArgumentException("password is required for connect (official: TeamcenterConnectionProvider.Connect takes a SecureString; it is never logged).");` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):41 | `RequireText(hostUrl, "hostUrl"); RequireText(instance, "instance", 256);` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):46 | `RequireText(hostUrl, "hostUrl"); RequireText(instance, "instance", 256); RequireText(loginUrl, "loginUrl"); RequireText(applicationId, "applicationId", 256);` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):66 | `RequireText(itemId, "itemId", 256); RequireText(revisionId, "revisionId", 256); r.DatasetType = RequireOneOf(datasetType, DatasetTypes, "datasetType"); RequireText(datasetName, "datasetName", 256);` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):80 | `RequireText(itemId, "itemId", 256); RequireText(revisionId, "revisionId", 256); r.LocalCacheOption = RequireOneOf(localCacheOption, LocalCacheOptions, "localCacheOption");` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):100 | `RequireText(r.ItemName, "itemDetailsJson.itemName", 256); RequireText(r.TeamcenterItemType, "itemDetailsJson.teamcenterItemType", 256);   // official: ItemName and TeamcenterItemType are required` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):134 | `if (r.Target == "globalLibrary") RequireText(libraryName, "libraryName", 256); else Refuse(libraryName, "libraryName", "applies to target globalLibrary only.");` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):139 | `if (action == "readCustomAttributes") RequireText(itemType, "itemType", 256);` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):140 | `else if (newRevision) { if (!string.IsNullOrEmpty(itemType)) RequireText(itemType, "itemType", 256); }` |
+| [Siemens/TeamcenterLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TeamcenterLogic.cs):142 | `if (toItem) { RequireText(itemId, "itemId", 256); RequireText(revisionId, "revisionId", 256); } else { Refuse(itemId, "itemId", "applies to saveToItem* only."); Refuse(revisionId, "revisionId", "applies to saveToItem* only."); }` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):14 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):71 | `if (action != "delete") RequireText(filePath, "filePath", 1024); else Refuse(filePath, "filePath", "does not apply to delete.");` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):107 | `if (needsSoftware) RequireText(e.SoftwarePath, "scopeJson.softwarePath", 1024); else Refuse(e.SoftwarePath, "scopeJson.softwarePath", "applies to plc / blocks / tags / types / units entries only.");` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):124 | `if (action == "createFromMasterCopy") { RequireText(masterCopyPath, "masterCopyPath", 1024); if (r.Kind == "testSet") throw new ArgumentException("ApplicationTestSetComposition has no CreateFrom(MasterCopy); kind case only."); }` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):135 | `RequireText(softwarePath, "softwarePath", 1024);` |
+| [Siemens/TestSuiteLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/TestSuiteLogic.cs):141 | `RequireText(opcUaServerAddress, "opcUaServerAddress", 1024);` |
+| [Siemens/WatchTableImportValidation.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Siemens/WatchTableImportValidation.cs):13 | `using var reader = XmlReader.Create(file, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 16 * 1024 * 1024 });` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):19 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > OfflineCompositionBuilders.MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):20 | `using var parsed = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):36 | `if (value.Value.ValueKind != JsonValueKind.Array \|\| value.Value.GetArrayLength() > OfflineCompositionBuilders.MaxItems) throw new ArgumentException("Bounded array required.");` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):39 | `if (++count > OfflineCompositionBuilders.MaxItems) throw new ArgumentException("Total interface member limit exceeded.");` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):67 | `if (xml.Length > OfflineCompositionBuilders.MaxXmlCharacters) throw new ArgumentException("Output size limit exceeded.");` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):68 | `using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = OfflineCompositionBuilders.MaxXmlCharacters });` |
+| [OfflineBlockCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineBlockCompositionBuilders.cs):119 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > OfflineCompositionBuilders.MaxStringCharacters) throw new ArgumentException("Invalid string size.");` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):12 | `internal const int MaxJsonCharacters = 262144;` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):13 | `internal const int MaxXmlCharacters = 1048576;` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):14 | `internal const int MaxItems = 1000;` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):15 | `internal const int MaxStringCharacters = 4096;` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):23 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):24 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):148 | `DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters + 256` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):180 | `if (xml.Length > MaxXmlCharacters) throw new ArgumentException("Output size limit exceeded.");` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):200 | `if (value.ValueKind != JsonValueKind.Array \|\| value.GetArrayLength() is < 1 or > MaxItems) throw new ArgumentException("Invalid array size.");` |
+| [OfflineCompositionBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineCompositionBuilders.cs):209 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > MaxStringCharacters) throw new ArgumentException("Invalid string size.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):14 | `internal const int MaxNetworks = 64;` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):20 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > OfflineCompositionBuilders.MaxJsonCharacters) throw new ArgumentException("Invalid JSON size.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):21 | `using var parsed = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):45 | `if (++memberCount > OfflineCompositionBuilders.MaxItems) throw new ArgumentException("Member limit exceeded.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):71 | `if (xml.Length > OfflineCompositionBuilders.MaxXmlCharacters) throw new ArgumentException("Output limit exceeded.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):72 | `using var reader = XmlReader.Create(new StringReader(xml), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = OfflineCompositionBuilders.MaxXmlCharacters });` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):125 | `if (array.ValueKind != JsonValueKind.Array \|\| array.GetArrayLength() is < 1 or > 32) throw new ArgumentException("Bounded symbol path required.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):129 | `if (components.Length > 32) throw new ArgumentException("Symbol depth exceeded.");` |
+| [OfflineLadderBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineLadderBuilders.cs):200 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > OfflineCompositionBuilders.MaxStringCharacters) throw new ArgumentException("Invalid string size.");` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):12 | `internal const int MaxJsonCharacters = 262144;` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):13 | `internal const int MaxItems = 1000;` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):14 | `internal const int MaxStringCharacters = 4096;` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):15 | `internal const int MaxXmlCharacters = 1048576;` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):23 | `if (string.IsNullOrWhiteSpace(json) \|\| json.Length > MaxJsonCharacters)` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):25 | `using var document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 16 });` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):60 | `if (xml.Length > MaxXmlCharacters) throw new ArgumentException("Generated XML exceeds one Mi character.");` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):63 | `DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = MaxXmlCharacters` |
+| [OfflineXmlBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/OfflineXmlBuilders.cs):120 | `if ((required && string.IsNullOrWhiteSpace(text)) \|\| text.Length > MaxStringCharacters)` |
+| [ModelContextProtocol/Tools/AddressesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs):248 | `[McpServerTool(Name="UpdateDeviceAddress"), Description("[L2][Hardware][WRITE] Edit one exact Address of a device item, identified by ioType (Input/Output/Diagnosis/Substitute) and its current startAddress: propertiesJson StartAddress/Length and attributesJson ProcessImage/IsochronousMode/InterruptObNumber, each read back. processImageObName (with softwarePath) assigns the process image partition to that OB: Address.AssignProcessImageToOrganizationBlock on V20, the address's ProcessImageProvider service on V21. Changing StartAddress may move the opposite IoType of the module and never rewires tags. Default dryRun=true; no save/compile/download.")]` |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs):41 | `if (args.Count > 100 \|\| args.Any(a => !(a is JsonValue v) \|\| !v.TryGetValue<string>(out _))) throw new ArgumentException("Use at most 100 string arguments.");` |
+| [ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs):23 | `if (!Path.IsPathRooted(filePath) \|\| !file.Exists \|\| !file.Extension.Equals(".s7dcl", StringComparison.OrdinalIgnoreCase) \|\| file.Length > 20 * 1024 * 1024)` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs):24 | `if (nodes.Count > 500) throw new ArgumentException("At most 500 selected files.");` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs):37 | `if (paths.Count != 1 \|\| revision.Length > 128 \|\| !System.Text.RegularExpressions.Regex.IsMatch(revision, @"\A[A-Za-z0-9][A-Za-z0-9_./~^{}@-]*\z")) throw new ArgumentException("show needs exactly one file and a safe revision name/hash.");` |
+| [ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs):41 | `if (action == "commit" && (string.IsNullOrWhiteSpace(message) \|\| message.Length > 10000)) throw new ArgumentException("A commit message of 1..10000 characters is required.");` |
+| [ModelContextProtocol/Tools/ImportOrderTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs):16 | `if (artifactsJson == null \|\| artifactsJson.Length > 1024 * 1024) throw new ArgumentException("Provide at most one MiB of JSON.");` |
+| [ModelContextProtocol/Tools/McpServer.Batch.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs):76 | `if (array.Count < 1 \|\| array.Count > 50) throw new ArgumentException("Use 1..50 operations.");` |
+| [ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs):19 | `[McpServerTool(Name = "ComparePlcBlockDocuments"), Description("[L2][Validation][READ] Semantic diff of two exported PLC block documents (SimaticML .xml, SIMATIC SD .s7dcl with sibling .s7res, or external .scl) with volatile noise removed (ID/UId/IId/RefId, DocumentInfo timestamps and product versions, GUIDs, ISO timestamps, MLC_* ids). Each side is EITHER an existing absolute file path (leftFilePath/rightFilePath; no TIA Portal needed) OR an exact block path in the open project (leftBlockPath/rightBlockPath + softwarePath; the block is exported to a temp directory that is deleted afterwards). Returns identicalAfterNormalization, a structural report (block attributes, interface members added/removed/type-changed, network count/titles/languages) and paginated Myers line hunks over the canonical form. Both sides must be given; mixing a file and a block is allowed. Diff refused above 60000 normalized lines per side. Nothing is saved, compiled or downloaded.")]` |
+| [ModelContextProtocol/Tools/PlcBlocksTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs):466 | `if (conflicts.Count > 16)` |
+| [ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs):122 | `if (source.Length > 4_000_000) throw new ArgumentException("Source exceeds 4 MB.");` |
+| [ModelContextProtocol/Tools/SivarcTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs):37 | `[McpServerTool(Name="ManageSivarcTableRule"), Description("[L2][HMI][WRITE] One SiVArc rule or rule group (kind rule / group) inside a rule table (typed; the older path-based ManageSiVArcRule differs only in case and stays for arbitrary sub-paths): rulePath is Group/Sub/Name relative to tablePath. Actions read, create (Create(name)), createFromMasterCopy (CreateFrom(MasterCopy, CreateOptions Replace\|Rename) with masterCopyPath in the project or an open global library; rulePath is then the target group path, empty = the table), update, delete (confirmDelete when real). propertiesJson holds typed scalars (Name, Comment, Condition, ConditionOperator None\|And\|Equal\|..., Enabled, screens: LayoutField / LoopCount, tags: TagGroupHierarchy / TagTable, copies: FolderStructure). referencesJson assigns library objects or PLC blocks: {ProgramBlock:{kind:plcBlock,softwarePath,path} \| {kind:masterCopy\|libraryType\|masterCopyFolder\|typeFolder,path,libraryName}, LibraryScreen, ScreenObjectLibraryItem, TagLibraryItem, AlarmLibraryItem, TextlistLibraryItem, LibraryObject; null is passed through, but TIA refuses it for ProgramBlock ('may not be null', 2.7.39 real project) - assign another block instead}. deviceSelectionJson {PLC_1:true, HMI_RT_1:false} writes the PLC / HMI device columns (SetAttributes), deviceNamesJson reads them. Screen rules also report GetLayoutFields(). Default preview; never generates or saves.")]` |
+| [ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs):20 | `[McpServerTool(Name="ManageUnifiedScreenItem"), Description("[L2][HMI-Unified][WRITE] Any screen item type on one exact Unified screen (screenPath = unique screen name or /Group/Screen): list (name/type/geometry, paged), read (scalars, #AARRGGBB colors, parts and collections to depth, every MultilingualText language, features, event/dynamization counts), create (itemType from DescribeUnifiedScreenItemType via native Create<T>(name) or Create<T>(name, containedType) for faceplate/custom widget containers, with initial propertiesJson), update, delete (confirmDelete=true). propertiesJson nests parts as objects ({\"Font\":{\"Size\":14},\"BackColor\":\"#FF0000FF\"}) and multilingual texts per culture ({\"Text\":{\"en-US\":\"Start\"}}); every leaf is read back. Default preview; no save/compile/download. Events: ManageUnifiedEvent; dynamizations: ManageUnifiedDynamization.")]` |
+| [Siemens/DeviceServiceObjectRules.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/DeviceServiceObjectRules.cs):42 | `if ((properties["ServiceGroupName"]!.ToString()).Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters.");` |
+| [Siemens/DeviceServiceObjectRules.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/DeviceServiceObjectRules.cs):53 | `if (value.Length > ServiceGroupNameMaxLength) throw new ArgumentException("ServiceGroupName is limited to " + ServiceGroupNameMaxLength + " characters (TIA throws EngineeringTargetInvocationException above it).");` |
+| [Siemens/Hmi/UnifiedExchangeLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedExchangeLogic.cs):34 | `if (name.Length > 128 \|\| name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 \|\| name.IndexOfAny(new[] { '/', '\\' }) >= 0 \|\| name == "." \|\| name == "..")` |
+| [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedScreenItemLogic.cs):27 | `if (!string.IsNullOrEmpty(itemName) && (itemName.Length > 128 \|\| itemName.IndexOfAny(new[] { '/', '\\' }) >= 0)) throw new ArgumentException("itemName must be 1..128 characters without path separators.");` |
+| [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedScreenItemLogic.cs):39 | `if (string.IsNullOrWhiteSpace(propertiesJson) \|\| propertiesJson.Length > 65536) throw new ArgumentException("propertiesJson must be a JSON object (<= 64 KB).");` |
+| [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedScreenItemLogic.cs):156 | `if (texts.Count > 50) throw new ArgumentException("At most 50 multilingual entries per request.");` |
+| [Siemens/Hmi/UnifiedScreenItemLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedScreenItemLogic.cs):173 | `if (string.IsNullOrWhiteSpace(language.Key) \|\| language.Key.Length > 16) throw new ArgumentException("Culture name required for " + name + ".");` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):59 | `if (text.Length == 7) argb = unchecked((int)0xFF000000) \| argb;` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):99 | `foreach (var item in sequence) { if (item == null) continue; if (++count > 500) { row["dataComplete"] = false; items.Add(new JsonObject { ["truncated"] = true }); break; } items.Add(Tree(item, depth - 1)); }` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):284 | `if (array.Count > 100) throw new ArgumentException("At most 100 mapping entries per request.");` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):307 | `if (string.IsNullOrWhiteSpace(name) \|\| name.Length > 128 \|\| name.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("Exact screen name of 1..128 characters without path separators required.");` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):320 | `foreach (var info in attributes) { if (((JsonArray)result["attributes"]!).Count >= 512) break; ((JsonArray)result["attributes"]!).Add(new JsonObject { ["name"] = info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString(), ["accessMode"] = info?.GetType().GetProperty("AccessMode")?.GetValue(info)?.ToString() }); }` |
+| [Siemens/Hmi/UnifiedUiModelLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedUiModelLogic.cs):322 | `foreach (var info in compositions) { if (((JsonArray)result["compositions"]!).Count >= 128) break; ((JsonArray)result["compositions"]!).Add(info?.GetType().GetProperty("Name")?.GetValue(info)?.ToString()); }` |
+| [Siemens/MotionProDiagClassicHmiLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MotionProDiagClassicHmiLogic.cs):113 | `if (json == null \|\| json.Length > 16384) throw new ArgumentException("targetJson exceeds 16 KiB.");` |
+| [Siemens/MotionProDiagClassicHmiLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MotionProDiagClassicHmiLogic.cs):122 | `if (names.Length == 0 \|\| names.Length > 64 \|\| names.Any(string.IsNullOrWhiteSpace)) throw new ArgumentException(key + " must contain 1-64 nonempty exact names.");` |
+| [Siemens/MotionProDiagClassicHmiLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MotionProDiagClassicHmiLogic.cs):180 | `if (string.IsNullOrWhiteSpace(value) \|\| value.Length > 256 \|\| value.IndexOfAny(new[] { '/', '\\' }) >= 0) throw new ArgumentException("Exact " + what + " (single nonempty segment) required.");` |
+| [Siemens/MotionProDiagClassicHmiLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MotionProDiagClassicHmiLogic.cs):189 | `if (json == null \|\| json.Length > 65536) throw new ArgumentException("attributesJson exceeds 64 KiB.");` |
+| [Siemens/MotionProDiagClassicHmiLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/MotionProDiagClassicHmiLogic.cs):191 | `if (obj.Count > 50) throw new ArgumentException("At most 50 attributes per request.");` |
+| [Siemens/ObjectIdentityRules.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ObjectIdentityRules.cs):18 | `if (!string.IsNullOrEmpty(identifier)) { if (identifier.Length > 4096) throw new ArgumentException("identifier too long."); return; }` |
+| [Siemens/ProjectSecurityLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ProjectSecurityLogic.cs):47 | `else if (string.IsNullOrWhiteSpace(name) \|\| name.Length > 256) throw new ArgumentException("Exact nonempty " + request.Target + " name required (max 256 chars).");` |
+| [Siemens/ProjectSecurityLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ProjectSecurityLogic.cs):62 | `if (names.Count < 1 \|\| names.Count > 64 \|\| names.Any(n => n is not JsonValue \|\| string.IsNullOrWhiteSpace(n!.GetValue<string>()))) throw new ArgumentException("devicePathJson needs 1-64 exact nonempty names.");` |
+| [Siemens/SecurityDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SecurityDeepLogic.cs):155 | `if (array.Count > 64) throw new ArgumentException("At most 64 subject alternative names.");` |
+| [Siemens/SecurityDeepLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/SecurityDeepLogic.cs):161 | `if (string.IsNullOrWhiteSpace(value) \|\| value.Length > 255) throw new ArgumentException("Subject alternative name value must be 1..255 chars.");` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):16 | `private static void RequireText(string value, string parameter, int max = 256)` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):91 | `if (selector.Names.Any(n => string.IsNullOrWhiteSpace(n) \|\| n.Length > 64) \|\| selector.Names.Distinct(StringComparer.Ordinal).Count() != selector.Names.Length) throw new ArgumentException("namesJson needs distinct nonempty parameter names such as p1000[0], r47 or p2080[0].6.");` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):104 | `if (selector.Names.Length + selector.Numbers.Length > 200) throw new ArgumentException("At most 200 parameters per call.");` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):117 | `if (string.IsNullOrEmpty(name) \|\| name.Length > 64) return false;` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):179 | `RequireText(softwarePath, "softwarePath"); RequireText(objectPath, "objectPath", 1024); EngineeringGroupOperations.Parts(objectPath);` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):260 | `if (entries.Count == 0 \|\| entries.Count > 200) throw new ArgumentException("valueJson.entries needs 1..200 entries.");` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):296 | `RequireText(filePath, "filePath", 1024);` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):310 | `if (action == "changeType") { RequireText(typeIdentifier, "typeIdentifier"); if (!typeIdentifier.StartsWith("OrderNumber:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("GSD:", StringComparison.Ordinal) && !typeIdentifier.StartsWith("System:", StringComparison.Ordinal)) throw new ArgumentException("typeIdentifier must be an official TypeIdentifier such as OrderNumber:6SL3120-2TE21-8Axx//10014."); }` |
+| [Siemens/StartdriveLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/StartdriveLogic.cs):323 | `if (action == "createProtocol") { RequireText(filePath, "filePath", 1024); RequireOneOf(fileOperation, FileOperations, "fileOperation"); }` |
+| [Siemens/ToolTransactionRules.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolTransactionRules.cs):17 | `if (array.Count < 1 \|\| array.Count > 20) throw new ArgumentException("callsJson needs 1..20 tool calls.");` |
+| [Siemens/ToolTransactionRules.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/ToolTransactionRules.cs):33 | `if (string.IsNullOrWhiteSpace(text) \|\| text.Length > 200) throw new ArgumentException("text (the undo description shown in TIA) must be 1..200 characters; TIA refuses an empty one.");` |
+
+</details>
+
+<details>
+<summary>C. 当前响应族 → V4 与保留的标记事实</summary>
+
+| 族 | 当前形状 | V4 映射 | 标记站点（非工具数） | variant |
+|---|---|---|---|---|
+| F1 | VersionPolicyTool 的 isError 文本/preflight | 准入→rejected-before-operation，error.code/details；无原生动作 | 0 | 0 |
+| F2 | POCO/Meta、McpException、success=false | 领域字段→data；异常由错误分类器生成 error；message 不判断成功 | 25 | legacy-existing-meta:2; legacy-independent-verdicts:2; legacy-late-stamp:1; legacy-late-verdict:2; legacy-multiple-dynamic-fields:8; legacy-roundtrip-data-stamp:2; legacy-single-verdict:3; legacy-stamp-then-verdict:2; legacy-stamp-without-verdict:2; legacy-verdict-last:1 |
+| F3 | operationSuccess/status/error、执行器 | 按执行证据确定 outcome；逐项结果→data.items；保留完整性与原生 verdict | 20 | legacy-independent-verdicts:1; legacy-migration-page:1; legacy-multiple-dynamic-fields:5; legacy-ok-only:1; legacy-plcsim-complete:1; legacy-plcsim-failure:1; legacy-roundtrip-data-stamp:2; legacy-runtime-settings:1; legacy-single-verdict:5; legacy-success-last:1; legacy-verdict-last:1 |
+| F4 | Message 中序列化 JSON/failed 文本 | CallTool 透传目标 envelope；批次逐项 envelope；无二次编码 | 2 | legacy-independent-verdicts:1; legacy-stamp-then-verdict:1 |
+| F5 | 导出句柄 ok/InvalidParams | data.export 与 meta.paging；缺句柄 NOT_FOUND，覆盖 ALREADY_EXISTS | 0 | 0 |
+| F6 | Portal 文本失败，无 meta | 按实际分支判定，边界生成 error/outcome；无法证实写入结果则 unknown | 0 | 0 |
+| F7 | Foundation PascalCase DTO/裸数组/V17 envelope | data 保留原领域数据及 evidence；Executed→meta.execution，RequiresSessionReset→meta；裸数组→data.items | 0 | 0 |
+| CLI | 报告 ok/roundtrip/后写判定 | 同 envelope、同 outcome；退出码见正文；报告正文/路径进入 data | 3 | legacy-late-verdict:1; legacy-ok-report:1; legacy-roundtrip-report:1 |
+
+共 50 个注释站点、18 个 variant；未标记的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。F6 无标记不代表无此类结果。
+
+| variant | 源码文件 |
+|---|---|
+| legacy-existing-meta | [ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) |
+| legacy-independent-verdicts | [ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[Siemens/Services/HardwareServicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareServicesService.cs) |
+| legacy-late-stamp | [ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs) |
+| legacy-late-verdict | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| legacy-migration-page | [Siemens/Services/MigrationReadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/MigrationReadService.cs) |
+| legacy-multiple-dynamic-fields | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/DocumentsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs)<br>[Siemens/Services/DevicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OpcUaService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs)<br>[Siemens/Services/VersionControlService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/VersionControlService.cs) |
+| legacy-ok-only | [Siemens/Services/HardwareServicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareServicesService.cs) |
+| legacy-ok-report | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
+| legacy-plcsim-complete | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| legacy-plcsim-failure | [ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs) |
+| legacy-roundtrip-data-stamp | [ModelContextProtocol/Tools/LibraryTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[Siemens/Services/OpcUaService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OpcUaService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcTablesService.cs) |
+| legacy-roundtrip-report | [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) |
+| legacy-runtime-settings | [Siemens/Services/RuntimeSettingsService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/RuntimeSettingsService.cs) |
+| legacy-single-verdict | [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[Siemens/Services/DevicesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/DevicesService.cs)<br>[Siemens/Services/HardwareNetworkService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/HardwareNetworkService.cs)<br>[Siemens/Services/OnlineDownloadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs)<br>[Siemens/Services/PlcTablesService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/PlcTablesService.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs) |
+| legacy-stamp-then-verdict | [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) |
+| legacy-stamp-without-verdict | [ModelContextProtocol/Tools/AddressesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs)<br>[ModelContextProtocol/Tools/ModulesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) |
+| legacy-success-last | [Siemens/Services/AlarmsService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/AlarmsService.cs) |
+| legacy-verdict-last | [ModelContextProtocol/Tools/DevicesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs)<br>[Siemens/Services/UnifiedHmiService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/UnifiedHmiService.cs) |
+
+</details>
+
+<details>
+<summary>D. 产品输出与程序集（读取项目属性）</summary>
+
+| 项目 | 发布键 | AssemblyName | 4.0 安装 EXE | 框架不变 |
+|---|---|---|---|---|
+| [TiaMcpServer.LegacyHost.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj) | 14sp1–19 | TiaMcpServer → TiaMcp.FoundationHost | runtime/v<key>/TiaMcp.FoundationHost.exe | net8.0 |
+| [TiaMcpServer.V20.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj) | 20 | TiaMcpServer → TiaMcp.Engine.V20 | runtime/v20/TiaMcp.Engine.V20.exe | net48 |
+| [TiaMcpServer.V21.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj) | 21 | TiaMcpServer → TiaMcp.Engine.V21 | runtime/v21/TiaMcp.Engine.V21.exe | net48 |
+
+| 配置来源 | 当前键/变量（源码提取） | 4.0 处理 |
 |---|---|---|
-| [ModelContextProtocol/Builders/EcosystemFiles.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs):12 `RepositoryRoot` | R1 任意祖先找桥接脚本/旧 root 覆盖 | BundleLayout + 新 bundle-root；缺资源即失败，旧变量只做别名 |
-| [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs):46 `FindInstallRoot` | R2 最多 4 层 delivery 探测 | 只接受正式安装锚点与 delivery |
-| [Cli/SpecLoader.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/SpecLoader.cs):48 `FindBundleRoot` | R3 最多 12 层 templates/tools 探测 | 显式包根或已知锚点；__BUNDLE__ 未解报参数错误 |
-| [Siemens/EngineRouter.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineRouter.cs):35 `FindSiblingExe` | R7 bin/bin-v20/v数字相对回退 | TiaVersionCatalog + 明确布局/新 EXE 名；目标缺失报错 |
-| [Cli/McpConfigInstaller.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs):88 `FindSiblingExe` | 跨版本找不到引擎时回退自身 EXE | 禁止给目标版本写错引擎，返回缺失版本路径 |
-| [TiaOpenness.Gui/ConfigurationPage.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/ConfigurationPage.cs):27 `FindBundleRoot` | R11 祖先包标记探测 | 显式根或 BundleLayout |
-| [TiaOpenness.Gui/Configuration/ConfigCore.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs):79 `TiaMcpServer.exe` | R11 根标记缺失仍使用原候选 | 严格根校验 + 版本到新输出名映射 |
-| [TiaOpenness.Gui/Configuration/UpdateCheck.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs):45 `FindResource` | R11 解析失败仍拼接传入根路径 | 严格资源解析；保留 worktree 禁止安装更新 |
-| [TiaOpenness.Client/BridgeClient.cs](../../tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs):156 `BundleLayout` | R13 相对开发 Debug/Release 回退 | 保留正式安装/开发锚点与显式 bridgeExePath；删除任意布局回退 |
-| [TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs](../../tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 旧 Studio adapter 加载路径 | 仅 G3/J 真机通过后移除；替代 TiaMcp.Adapter.<key>，非到期强删 |
-| [TiaOpenness.Launcher/Launcher.cs](../../tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs):17 `TiaOpenness.exe` | R12 TiaMcpConfigurator 兼容启动器 | 正式 Studio EXE；按问题 8 决定删除时点 |
-| [Program.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Program.cs):26 `DiagLogPathLocal` | 安装目录 startup.log 与 TEMP 共用日志 | LocalAppData/TiaMcp/logs/<releaseKey>，明确日志路径 |
+| [ModelContextProtocol/Builders/EcosystemFiles.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs) | `TIA_MCP_REPOSITORY_ROOT` | 替换为 --bundle-root / TIA_MCP_BUNDLE_ROOT |
+| [ModelContextProtocol/Tools/McpServer.Profile.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Profile.cs) | `TIA_MCP_PROFILE` | lite/full 名称保留，名单改为 V4 数据 |
+| [TiaOpenness.Gui/Configuration/ClientProfiles.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs) | `tia-portal`, `tia-portal-vm` | server key 保留，command/args 改用新产品表 |
+| [Cli/McpConfigInstaller.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs) | `mcpServers`, `servers`, `tia-portal` | JSON/TOML 根及 server key 保留，command/args 更新 |
+| [HostOptions.cs](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/HostOptions.cs) | `--tia-portal-location`, `--worker-exe` | 精确版本与显式 worker 输入继续支持 |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) | `TIA_MCP_PLC_TOOLS_PYTHON` | 显式 Python 优先；缺省环境改到 LocalAppData |
+
+</details>
+
+<details>
+<summary>E1. 当前资源定位/私有默认值与目标政策（源码定位生成）</summary>
+
+| 当前位置/定位词 | 当前事实 | 4.0 目标 |
+|---|---|---|
+| [ModelContextProtocol/Builders/EcosystemFiles.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs):12 `RepositoryRoot` | R1 祖先桥接脚本探测、旧 root 变量 | 严格 bundle-root；缺资源拒绝 |
+| [ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs):46 `FindInstallRoot` | R2 四层 delivery 探测 | 已知安装根 + delivery 标记 |
+| [Cli/SpecLoader.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/SpecLoader.cs):48 `FindBundleRoot` | R3 十二层 templates/tools 探测 | 显式根/已知锚点；未解析 __BUNDLE__ 报错 |
+| [Siemens/EngineRouter.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineRouter.cs):35 `FindSiblingExe` | R7 bin/bin-v20/v数字候选 | 版本目录表 + 精确新产品名 |
+| [Cli/McpConfigInstaller.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs):88 `FindSiblingExe` | 目标引擎缺失时使用自身 | 缺版本引擎报 RESOURCE_UNAVAILABLE |
+| [TiaOpenness.Gui/ConfigurationPage.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/ConfigurationPage.cs):27 `FindBundleRoot` | R11 向祖先寻找包标记 | 显式根或已知锚点 |
+| [TiaOpenness.Gui/Configuration/ConfigCore.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs):79 `TiaMcpServer.exe` | 根无标记仍保留候选 | 严格根校验、新产品目录 |
+| [TiaOpenness.Gui/Configuration/UpdateCheck.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs):45 `FindResource` | 解析失败仍拼传入根 | 严格资源解析，worktree 更新保护保留 |
+| [TiaOpenness.Client/BridgeClient.cs](../../tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs):156 `BundleLayout` | R13 相对开发 Debug/Release 猜测 | 仅正式相邻部署/已知开发锚点/显式 bridgeExePath |
+| [TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs](../../tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs):23 `TiaOpenness.Openness` | R14 当前 Studio adapter 路径 | 仍由 G3/J 验收控制，不随布局变更切换 |
+| [TiaOpenness.Launcher/Launcher.cs](../../tools/tia-openness-studio/src/TiaOpenness.Launcher/Launcher.cs):17 `TiaOpenness.exe` | R12 根启动器目标 | 正式根 TiaOpenness.exe 启动 runtime/studio/TiaOpenness.exe |
+| [Program.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Program.cs):26 `DiagLogPathLocal` | 安装目录启动日志/TEMP 共用日志 | LocalAppData/TiaMcp/logs/<releaseKey> |
 | [TiaOpenness.Gui/App.xaml.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/App.xaml.cs):16 `.crash.log` | Studio 安装目录崩溃日志 | LocalAppData/TiaMcp/logs/studio |
-| [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs):44 `ecosystem-python` | 包根下的私有 Python 环境默认值 | 显式 TIA_MCP_PLC_TOOLS_PYTHON 或 LocalAppData 环境 |
-| [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs):53 `GetWorkspaceRoot` | TMP_EXPORT/tools 向上探测与 cwd 兜底 | 新增显式 --workspace-root/fixture 根；缺输入报错 |
-| [Cli/HmiTemplateBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs):63 `TIA_MCP_AI_PACK` | 私有 HMI 模板路径默认值 | 显式模板输入，不能把私人 fixture 当随包资源 |
-| [ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs):55 `TMP_EXPORT` | suite 私有夹具探测 | 显式 fixture 根；workspaceRoot 既有 MCP 必填不再猜 |
-| [ModelContextProtocol/Tools/OnlineToolPolicy.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineToolPolicy.cs):33 `WithAutoOffline` | 按错误字串自动下线后再次调用 | OFFLINE_REQUIRED；显式下线后由用户发起新操作；L5 |
-| [Siemens/Services/OnlineDownloadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs):115 `ApplyConfiguration` | 吞配置失败/换候选/原配置回退 | 显式路线，失败/未知结果停止；L5 |
+| [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs):44 `ecosystem-python` | 包根下私有 Python 缺省 | 显式解释器或 LocalAppData 环境 |
+| [Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs):53 `GetWorkspaceRoot` | TMP_EXPORT/tools/cwd 探测 | 显式 workspace/fixture 根 |
+| [Cli/HmiTemplateBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs):63 `TIA_MCP_AI_PACK` | 私有 HMI 模板默认输入 | 显式模板路径 |
+| [ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs):55 `TMP_EXPORT` | 私有套件夹具探测 | 显式 fixture 根，workspaceRoot 不猜测 |
+| [ModelContextProtocol/Tools/OnlineToolPolicy.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineToolPolicy.cs):33 `WithAutoOffline` | 错误文本触发下线再执行 | D1/L5 后 OFFLINE_REQUIRED，不重试 |
+| [Siemens/Services/OnlineDownloadService.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Services/OnlineDownloadService.cs):115 `ApplyConfiguration` | 配置失败/候选路线继续 | D1/L5 后显式路线，失败/未知即停止 |
 
-正常部署的 release-key.txt、--worker-exe、已知开发锚点及相邻 adapters/v<key> 不属于无条件删除项。所有候选逐项评审；privacy、可选 API 探测和未知结果保护不能误删。
+</details>
+
+<details>
+<summary>E. 布局、构建、打包、校验、Studio 和文档修改位置（生成扫描）</summary>
+
+| 文件 | 类别:全部命中行 | 实施方式 |
+|---|---|---|
+| [.claude-plugin/plugin.json](../../.claude-plugin/plugin.json) | 产品:12 | 修改引用并回归 |
+| [.github/SUPPORT.md](../../.github/SUPPORT.md) | 产品:10 | 修改引用并回归 |
+| [.github/workflows/offline-checks.yml](../../.github/workflows/offline-checks.yml) | 根定位:48 | 修改引用并回归 |
+| [.github/workflows/validate.yml](../../.github/workflows/validate.yml) | 产品:8 | 修改引用并回归 |
+| [README.md](../../README.md) | 产品:15,16,17 | 修改引用并回归 |
+| [README.zh-CN.md](../../README.zh-CN.md) | 产品:15,16,17 | 修改引用并回归 |
+| [docs/development/engine-decomposition.md](../../docs/development/engine-decomposition.md) | 产品:16; 根定位:312 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/handoff.md](../../docs/development/handoff.md) | 产品:6; 根定位:54 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/native-mcp-session-tests.md](../../docs/development/native-mcp-session-tests.md) | 产品:8 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/refactor-plan.md](../../docs/development/refactor-plan.md) | 产品:81; 根定位:119,199 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/repository-layout.md](../../docs/development/repository-layout.md) | 产品:22; 根定位:41,44 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/runtime-layout.md](../../docs/development/runtime-layout.md) | 产品:66,68; 根定位:17,59,61,62,63,64,65,97,105,107,108,109,126,190,191; 写入/工作区:76,91 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/tool-development.md](../../docs/development/tool-development.md) | 根定位:11 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/development/validation.md](../../docs/development/validation.md) | 产品:354,356,357,378; 根定位:61,67,81,119,120,130 | 更新现行说明；历史阶段证据保留并注明被 V4 决策取代 |
+| [docs/getting-started/beginners.zh-CN.md](../../docs/getting-started/beginners.zh-CN.md) | 产品:13,14,20,28,62,81,139 | 修改引用并回归 |
+| [docs/getting-started/cli.md](../../docs/getting-started/cli.md) | 产品:7,10,11,12,13 | 修改引用并回归 |
+| [docs/getting-started/configuration.md](../../docs/getting-started/configuration.md) | 产品:5 | 修改引用并回归 |
+| [docs/getting-started/cursor.example.json](../../docs/getting-started/cursor.example.json) | 产品:4,5 | 修改引用并回归 |
+| [docs/licenses/THIRD-PARTY-NOTICES.md](../../docs/licenses/THIRD-PARTY-NOTICES.md) | 产品:35 | 修改引用并回归 |
+| [docs/reference/ecosystem-tools.md](../../docs/reference/ecosystem-tools.md) | 根定位:50 | 修改引用并回归 |
+| [docs/reference/tool-matrix.md](../../docs/reference/tool-matrix.md) | 产品:89 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [docs/releases/v3.2.0.md](../../docs/releases/v3.2.0.md) | 产品:48 | 修改引用并回归 |
+| [manifest/configurator-build.json](../../manifest/configurator-build.json) | 产品:6 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/baseline/20.json](../../manifest/contracts/baseline/20.json) | 写入/工作区:16609 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/baseline/21.json](../../manifest/contracts/baseline/21.json) | 写入/工作区:17306 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/responses/20.json](../../manifest/contracts/responses/20.json) | 产品:66 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/contracts/responses/21.json](../../manifest/contracts/responses/21.json) | 产品:55 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/ecosystem-validation.json](../../manifest/ecosystem-validation.json) | 产品:31,37 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/multi-version-build.json](../../manifest/multi-version-build.json) | 产品:4013,4017,4021,4025,4197,4201,4205,4209,4381,4385,4389,4393,4565,4569,4573,4577,4749,4753,4757,4761,4933,4937,4941,4945,5217,5221,5485,5489 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/package-manifest.json](../../manifest/package-manifest.json) | 产品:59,76,79,80 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/release-build.json](../../manifest/release-build.json) | 产品:2061,2066,2396,2401 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [manifest/tools-list.json](../../manifest/tools-list.json) | 产品:4090 | 仅运行所属生成器更新；历史契约归档，不手改哈希 |
+| [runtime/README.md](../../runtime/README.md) | 产品:7,8,9,10,11 | 修改引用并回归 |
+| [scripts/README.md](../../scripts/README.md) | 产品:3 | 修改引用并回归 |
+| [scripts/build/Build-Configurator.ps1](../../scripts/build/Build-Configurator.ps1) | 产品:30,66; 根定位:11 | 修改引用并回归 |
+| [scripts/build/Build-MultiVersion.ps1](../../scripts/build/Build-MultiVersion.ps1) | 产品:49 | 修改引用并回归 |
+| [scripts/build/Build-Release.ps1](../../scripts/build/Build-Release.ps1) | 产品:50,159 | 修改引用并回归 |
+| [scripts/build/Package-MultiVersion.py](../../scripts/build/Package-MultiVersion.py) | 产品:50 | 修改引用并回归 |
+| [scripts/build/Package-Release.py](../../scripts/build/Package-Release.py) | 产品:3,45,46,66,78,80,147,190,240; 根定位:173,185,186,187; 写入/工作区:48 | 修改引用并回归 |
+| [scripts/build/Prepare-Delivery.ps1](../../scripts/build/Prepare-Delivery.ps1) | 产品:31 | 修改引用并回归 |
+| [scripts/build/Release.ps1](../../scripts/build/Release.ps1) | 产品:12,19,51,144,145,240 | 修改引用并回归 |
+| [scripts/checks/Check-BundleLayout.py](../../scripts/checks/Check-BundleLayout.py) | 根定位:12,63,67 | 修改引用并回归 |
+| [scripts/checks/Check-DeadToolReferences.py](../../scripts/checks/Check-DeadToolReferences.py) | 产品:24 | 修改引用并回归 |
+| [scripts/checks/Check-LiteProfile.py](../../scripts/checks/Check-LiteProfile.py) | 产品:14,24 | 修改引用并回归 |
+| [scripts/checks/Check-McpText.py](../../scripts/checks/Check-McpText.py) | 产品:316 | 修改引用并回归 |
+| [scripts/checks/Check-Repository.py](../../scripts/checks/Check-Repository.py) | 产品:103,128; 根定位:71,72,73,117 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolContracts.py](../../scripts/checks/Snapshot-ToolContracts.py) | 产品:4,48 | 修改引用并回归 |
+| [scripts/checks/Snapshot-ToolResponses.py](../../scripts/checks/Snapshot-ToolResponses.py) | 产品:607 | 修改引用并回归 |
+| [scripts/checks/Test-CrashEvidence.ps1](../../scripts/checks/Test-CrashEvidence.ps1) | 产品:22,30 | 修改引用并回归 |
+| [scripts/checks/Test-DownloadRouteSelection.ps1](../../scripts/checks/Test-DownloadRouteSelection.ps1) | 产品:16,17,99 | 修改引用并回归 |
+| [scripts/checks/Test-Ecosystem.py](../../scripts/checks/Test-Ecosystem.py) | 写入/工作区:3 | 修改引用并回归 |
+| [scripts/checks/Test-EcosystemAssembly.ps1](../../scripts/checks/Test-EcosystemAssembly.ps1) | 根定位:7 | 修改引用并回归 |
+| [scripts/checks/Test-FoundationTransport.py](../../scripts/checks/Test-FoundationTransport.py) | 产品:133,157 | 修改引用并回归 |
+| [scripts/checks/Test-ImportSelectionSources.py](../../scripts/checks/Test-ImportSelectionSources.py) | 产品:8 | 修改引用并回归 |
+| [scripts/checks/Test-MatchPlcName.ps1](../../scripts/checks/Test-MatchPlcName.ps1) | 产品:11 | 修改引用并回归 |
+| [scripts/checks/Test-SharedNativeMigration.ps1](../../scripts/checks/Test-SharedNativeMigration.ps1) | 产品:69,83,84,85 | 修改引用并回归 |
+| [scripts/checks/Test-V21Ecosystem.py](../../scripts/checks/Test-V21Ecosystem.py) | 根定位:69 | 修改引用并回归 |
+| [scripts/checks/Test-VersionCatalogWiring.py](../../scripts/checks/Test-VersionCatalogWiring.py) | 产品:9,103 | 修改引用并回归 |
+| [scripts/checks/Validate-Bundle.ps1](../../scripts/checks/Validate-Bundle.ps1) | 产品:14,60,87,113,166,169,185,337,376,401; 根定位:61,79,80,81 | 修改引用并回归 |
+| [scripts/checks/Verify-ReleaseAsset.py](../../scripts/checks/Verify-ReleaseAsset.py) | 产品:9,107 | 修改引用并回归 |
+| [scripts/checks/engine_sources.py](../../scripts/checks/engine_sources.py) | 产品:13 | 修改引用并回归 |
+| [scripts/checks/mcp-text-baseline.json](../../scripts/checks/mcp-text-baseline.json) | 产品:5144; 写入/工作区:3834,3843,3852,3861,3870,3879,4042,4859,4868,4877,4886,4895,4904,5157,5319,5461 | 修改引用并回归 |
+| [scripts/diagnostics/Audit-OpennessCoverage.ps1](../../scripts/diagnostics/Audit-OpennessCoverage.ps1) | 产品:45 | 修改引用并回归 |
+| [scripts/diagnostics/Collect-TiaCrashEvidence.ps1](../../scripts/diagnostics/Collect-TiaCrashEvidence.ps1) | 产品:32 | 修改引用并回归 |
+| [scripts/diagnostics/Sweep-WrongPathHonesty.py](../../scripts/diagnostics/Sweep-WrongPathHonesty.py) | 产品:35 | 修改引用并回归 |
+| [scripts/ecosystem/Install-PlcTools.ps1](../../scripts/ecosystem/Install-PlcTools.ps1) | 写入/工作区:4 | 修改引用并回归 |
+| [scripts/operations/Update-Engine.ps1](../../scripts/operations/Update-Engine.ps1) | 产品:7,11,27,54,78,223,246,247 | 修改引用并回归 |
+| [scripts/operations/生成工程.bat](../../scripts/operations/生成工程.bat) | 产品:6,7 | 修改引用并回归 |
+| [scripts/operations/预热.bat](../../scripts/operations/预热.bat) | 产品:6,7 | 修改引用并回归 |
+| [templates/project-blueprints/full_plc_hmi_project.json](../../templates/project-blueprints/full_plc_hmi_project.json) | 产品:50 | 修改引用并回归 |
+| [tools/README.md](../../tools/README.md) | 产品:5 | 修改引用并回归 |
+| [tools/openness-shared/BundleLayout.cs](../../tools/openness-shared/BundleLayout.cs) | 根定位:24,26 | 修改引用并回归 |
+| [tools/openness-shared/README.md](../../tools/openness-shared/README.md) | 根定位:10,26,40 | 修改引用并回归 |
+| [tools/tia-openness-studio/README.md](../../tools/tia-openness-studio/README.md) | 产品:4 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs](../../tools/tia-openness-studio/src/TiaOpenness.Client/BridgeClient.cs) | 根定位:156 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Client/TiaOpenness.Client.csproj](../../tools/tia-openness-studio/src/TiaOpenness.Client/TiaOpenness.Client.csproj) | 根定位:5 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs](../../tools/tia-openness-studio/src/TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs) | 根定位:31 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/SessionFactoryLoader.cs](../../tools/tia-openness-studio/src/TiaOpenness.Core/Adapters/SessionFactoryLoader.cs) | 根定位:38 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Core/TiaOpenness.Core.csproj](../../tools/tia-openness-studio/src/TiaOpenness.Core/TiaOpenness.Core.csproj) | 根定位:21 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/App.xaml.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/App.xaml.cs) | 产品:29; 写入/工作区:16 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ClientProfiles.cs) | 产品:12 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigCore.cs) | 产品:18,79,80,81; 根定位:77 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml) | 产品:1 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ConfigurationView.xaml.cs) | 产品:21 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/ModernJson.cs) | 产品:8 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/Configuration/UpdateCheck.cs) | 产品:11,16,144,150,153; 根定位:45,57 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/ConfigurationPage.cs](../../tools/tia-openness-studio/src/TiaOpenness.Gui/ConfigurationPage.cs) | 产品:7; 根定位:27,29,48 | 修改引用并回归 |
+| [tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj](../../tools/tia-openness-studio/src/TiaOpenness.Gui/TiaOpenness.Gui.csproj) | 根定位:14 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/Tests.cs) | 产品:16,56,60,220,236,238,266 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj](../../tools/tia-openness-studio/tests/TiaOpenness.Configuration.Tests/TiaOpenness.Configuration.Tests.csproj) | 产品:8 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/StudioBundleLayoutTests.cs) | 根定位:10,17 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj](../../tools/tia-openness-studio/tests/TiaOpenness.Core.Tests/TiaOpenness.Core.Tests.csproj) | 根定位:6 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/SourceConsistencyTests.cs) | 产品:6 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StringsTests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StringsTests.cs) | 产品:9 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StudioBundleLayoutTests.cs) | 产品:7,34,36; 根定位:14,74,164 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/StudioLookupBaseline.cs) | 产品:6,26,27,28; 根定位:15 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/UnifiedDesktopTests.Menu.cs) | 产品:149 | 修改引用并回归 |
+| [tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs](../../tools/tia-openness-studio/tests/TiaOpenness.Gui.Tests/UnifiedDesktopTests.cs) | 产品:7; 根定位:90,243,275,276,277 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/EcosystemFiles.cs) | 根定位:12,14,17,22,25,30 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/FlgNetCallXmlBuilder.cs) | 写入/工作区:102,137,276 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderFixtureReadinessAnalyzer.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderFixtureReadinessAnalyzer.cs) | 写入/工作区:15,44,90 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs) | 写入/工作区:55,93,113 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcFcBlockXmlComposer.cs) | 写入/工作区:135,253 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcGlobalDbXmlBuilder.cs) | 写入/工作区:96,252 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcTagTableXmlBuilder.cs) | 写入/工作区:90,195 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/PlcUdtXmlBuilder.cs) | 写入/工作区:97,230 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/Builders/StructuredTextXmlBuilder.cs) | 写入/工作区:271,368 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/UpdateLogic.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/ModelContextProtocol/UpdateLogic.cs) | 产品:11,139 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/Properties/AssemblyInfo.cs](../../tools/tiaportal-mcp/src/TiaMcp.Logic/Properties/AssemblyInfo.cs) | 产品:3 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj](../../tools/tiaportal-mcp/src/TiaMcp.Logic/TiaMcp.Logic.csproj) | 根定位:13 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcp.Runtime/OpcUaLiveReader.cs](../../tools/tiaportal-mcp/src/TiaMcp.Runtime/OpcUaLiveReader.cs) | 产品:47 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/TiaMcpServer.LegacyHost.csproj) | 产品:3 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/CliProbes.cs) | 写入/工作区:433 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/HmiTemplateBuilder.cs) | 写入/工作区:63 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/McpConfigInstaller.cs) | 根定位:88 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/ReportBuilders.cs) | 写入/工作区:53,58,70,84,129,223,256,334,336,353,474,487,500,522,538,543,557,621,623,638,640,655,657,672,674,689,691,706,708,723,737,954,1404,2161 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Cli/SpecLoader.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Cli/SpecLoader.cs) | 根定位:48,55,56,59,61 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Builders/ClassicHmiTemporaryImportPreflightSuite.cs) | 产品:152 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Builders/OfflineReleaseValidationSuite.cs) | 写入/工作区:30 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs) | 产品:497 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs) | 根定位:31,43; 写入/工作区:44 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs) | 产品:70; 根定位:46,47,50,55,81 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs) | 写入/工作区:188 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs) | 根定位:27; 写入/工作区:28 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs) | 根定位:47; 写入/工作区:48 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Program.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Program.cs) | 产品:643; 写入/工作区:26,861 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Runtime/EnvironmentDoctor.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Runtime/EnvironmentDoctor.cs) | 产品:111,112; 根定位:93 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineRouter.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/EngineRouter.cs) | 产品:59; 根定位:35,36,39,49,111 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedGlobalScriptEdit.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/Siemens/Hmi/UnifiedGlobalScriptEdit.cs) | 产品:122 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V20.csproj) | 产品:10 | 修改引用并回归 |
+| [tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj](../../tools/tiaportal-mcp/src/TiaMcpServer/TiaMcpServer.V21.csproj) | 产品:8,9 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/DomainShapeChecks.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/DomainShapeChecks.cs) | 产品:48 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/README.md](../../tools/tiaportal-mcp/tests/TiaMcpServer.HttpTests/README.md) | 产品:14,16 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/AdapterSourceClosureTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.LegacyHostTests/AdapterSourceClosureTests.cs) | 产品:81 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/BundleLayoutTests.cs) | 根定位:9,13,66,67,68,87,99,101,102,103,104,116,117,120,124,126,135,136,150,151,161,164,168,171,179,180,182,183,184,185,186,187,188,191,193,198,203 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EcosystemTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EcosystemTests.cs) | 根定位:66,75,79,112,113,204,205,210,215 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EngineBundleLayoutTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/EngineBundleLayoutTests.cs) | 产品:36,43,75; 根定位:12,16,65,73,74,80,86,87,89,95 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PreflightAndUpdateTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/PreflightAndUpdateTests.cs) | 产品:156 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedGlobalScriptEditTests.cs) | 产品:159 | 修改引用并回归 |
+| [tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedScriptSyntaxCheckTests.cs](../../tools/tiaportal-mcp/tests/TiaMcpServer.Tests/UnifiedScriptSyntaxCheckTests.cs) | 产品:119 | 修改引用并回归 |
+| [tools/vci-watch/config.example.json](../../tools/vci-watch/config.example.json) | 产品:2 | 修改引用并回归 |
+
+共 141 个候选文件。扫描覆盖 git ls-files 中第一方文本的产品基名、根解析及写入/工作区定位词；历史发布记录、第三方资料和本页自身不作改写目标。间接引用由每个路径任务的构建、布局矩阵和必需文件清单验收补足，不能把文本命中当成自动替换授权。
+
+</details>
+
+<details>
+<summary>F. V20/V21 lite 数据提案（每项均有现有调用示例）</summary>
+
+| 4.0 名称 | 当前示例入口 | 选择理由 | 版本 |
+|---|---|---|---|
+| `ArchiveSavedProject` | `ArchiveSavedProject` | 工程生命周期 | 20, 21 |
+| `AttachOpenProject` | `AttachToOpenProject` | 工程生命周期 | 20, 21 |
+| `BuildPlcGlobalDb` | `BuildPlcGlobalDbXml` | 离线构造与规划 | 20, 21 |
+| `BuildPlcTagTable` | `BuildPlcTagTableXml` | 离线构造与规划 | 20, 21 |
+| `BuildPlcUdt` | `BuildPlcUdtXml` | 离线构造与规划 | 20, 21 |
+| `CallTool` | `CallTool` | 发现、用法与完整目录调用 | 20, 21 |
+| `ClearExportHandles` | `ClearExports` | 大结果分页与文件交付 | 20, 21 |
+| `CloseProject` | `CloseProject` | 工程生命周期 | 20, 21 |
+| `CompileHmiDiagnostics` | `CompileAndDiagnoseHmi` | HMI 定位和诊断 | 20, 21 |
+| `CompilePlcDiagnostics` | `CompileAndDiagnosePlc` | 常用 PLC 交换与编译 | 20, 21 |
+| `ConnectPortal` | `Connect` | 工程生命周期 | 20, 21 |
+| `ConnectProject` | `ConnectToProject` | 工程生命周期 | 20, 21 |
+| `CreateHardwareDevice` | `AddDeviceWithFallback` | 硬件查找和精确创建 | 20, 21 |
+| `CreateProject` | `CreateProject` | 工程生命周期 | 20, 21 |
+| `DeleteExportHandle` | `DeleteExport` | 大结果分页与文件交付 | 20, 21 |
+| `DescribeHmiScreen` | `DescribeHmiScreen` | HMI 定位和诊断 | 20, 21 |
+| `DisconnectPortal` | `Disconnect` | 工程生命周期 | 20, 21 |
+| `ExportPlcBlock` | `ExportBlock` | 常用 PLC 交换与编译 | 20, 21 |
+| `ExportPlcTagTable` | `ExportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
+| `ExportPlcType` | `ExportType` | 常用 PLC 交换与编译 | 20, 21 |
+| `FindTools` | `FindTools` | 发现、用法与完整目录调用 | 20, 21 |
+| `GenerateBlocksFromExternalSource` | `GenerateBlocksFromExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
+| `GenerateErrorReport` | `GenerateErrorReport` | 诊断收尾 | 20, 21 |
+| `GetEnvironmentDiagnostics` | `Doctor` | 环境与会话诊断 | 20, 21 |
+| `GetExportContent` | `GetExport` | 大结果分页与文件交付 | 20, 21 |
+| `GetOpennessWorkerStatus` | `ReadOpennessWorkerStatus` | 环境与会话诊断 | 20, 21 |
+| `GetPlcBlockHierarchy` | `GetBlocksWithHierarchy` | 工程和 PLC 定位 | 20, 21 |
+| `GetPlcBlockInfo` | `GetBlockInfo` | 工程和 PLC 定位 | 20, 21 |
+| `GetPlcTypeInfo` | `GetTypeInfo` | 工程和 PLC 定位 | 20, 21 |
+| `GetProjectInfo` | `GetProject` | 工程和 PLC 定位 | 20, 21 |
+| `GetProjectTree` | `GetProjectTree` | 工程和 PLC 定位 | 20, 21 |
+| `GetSessionState` | `GetState` | 环境与会话诊断 | 20, 21 |
+| `GetSoftwareInfo` | `GetSoftwareInfo` | 工程和 PLC 定位 | 20, 21 |
+| `GetSoftwareTree` | `GetSoftwareTree` | 工程和 PLC 定位 | 20, 21 |
+| `GetToolUsage` | `GetToolUsage` | 发现、用法与完整目录调用 | 20, 21 |
+| `ImportPlcBlock` | `ImportBlock` | 常用 PLC 交换与编译 | 20, 21 |
+| `ImportPlcExternalSource` | `ImportPlcExternalSource` | 常用 PLC 交换与编译 | 20, 21 |
+| `ImportPlcTagTable` | `ImportPlcTagTable` | 常用 PLC 交换与编译 | 20, 21 |
+| `ImportPlcType` | `ImportType` | 常用 PLC 交换与编译 | 20, 21 |
+| `InitializeEnvironment` | `Bootstrap` | 环境与会话诊断 | 20, 21 |
+| `ListDevices` | `GetDevices` | 工程和 PLC 定位 | 20, 21 |
+| `ListExportHandles` | `ListExports` | 大结果分页与文件交付 | 20, 21 |
+| `ListHmiScreens` | `GetHmiScreens` | HMI 定位和诊断 | 20, 21 |
+| `ListHmiTagTables` | `GetHmiTagTables` | HMI 定位和诊断 | 20, 21 |
+| `ListHmiTags` | `GetHmiTags` | HMI 定位和诊断 | 20, 21 |
+| `ListPlcBlocks` | `GetBlocks` | 工程和 PLC 定位 | 20, 21 |
+| `ListPlcTagTables` | `GetPlcTagTables` | 工程和 PLC 定位 | 20, 21 |
+| `ListPlcTypes` | `GetTypes` | 工程和 PLC 定位 | 20, 21 |
+| `ListPortalProcessProjects` | `ListPortalProcessProjects` | 工程生命周期 | 20, 21 |
+| `ListToolCategories` | `ListToolCategories` | 发现、用法与完整目录调用 | 20, 21 |
+| `OpenProject` | `OpenProject` | 工程生命周期 | 20, 21 |
+| `PlanArtifactImportOrder` | `PlanArtifactImportOrder` | 离线构造与规划 | 20, 21 |
+| `PreviewToolCall` | `PreflightToolCall` | 发现、用法与完整目录调用 | 20, 21 |
+| `RestartOpennessWorker` | `RestartOpennessWorker` | 环境与会话诊断 | 20, 21 |
+| `SaveExportContent` | `SaveExport` | 大结果分页与文件交付 | 20, 21 |
+| `SaveProject` | `SaveProject` | 工程生命周期 | 20, 21 |
+| `SearchHardwareCatalog` | `SearchHardwareCatalog` | 硬件查找和精确创建 | 20, 21 |
+| `ValidateAutomationContext` | `ValidateAutomationContext` | 环境与会话诊断 | 20, 21 |
+| `ValidatePlcDocumentSchemas` | `ValidatePlcXmlSchemas` | 离线构造与规划 | 20, 21 |
+| `WritePlcSclSourceFile` | `WritePlcSclSourceFile` | 常用 PLC 交换与编译 | 20, 21 |
+
+数据文件：[phase6-lite.proposal.json](../../scripts/generate/phase6-lite.proposal.json)。每项 example 为 reference/tool-examples/calls.json 的 JSON Pointer；生成器逐版验证 arguments 对象存在。Foundation 继续不设 lite。
+
+</details>
+
+<details>
+<summary>G. 完整引擎契约迁移任务的工具文件所有权</summary>
+
+| 任务 | 工具源文件 | 当前注册入口数 |
+|---|---|---|
+| P6-07 | [ModelContextProtocol/Tools/GuideTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GuideTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Batch.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Batch.cs)<br>[ModelContextProtocol/Tools/McpServer.CallDiscipline.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.CallDiscipline.cs)<br>[ModelContextProtocol/Tools/McpServer.Exports.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Exports.cs)<br>[ModelContextProtocol/Tools/McpServer.ToolBridge.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.ToolBridge.cs)<br>[ModelContextProtocol/Tools/ToolUsageTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ToolUsageTools.cs) | 10 |
+| P6-09 | [ModelContextProtocol/Tools/EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EcosystemTools.cs)<br>[ModelContextProtocol/Tools/EngineeringAuditTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringAuditTools.cs)<br>[ModelContextProtocol/Tools/GitWorkflowTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GitWorkflowTools.cs)<br>[ModelContextProtocol/Tools/ImportOrderTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ImportOrderTools.cs)<br>[ModelContextProtocol/Tools/OfflineAnalysisTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineAnalysisTools.cs)<br>[ModelContextProtocol/Tools/OfflineSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OfflineSuiteTools.cs)<br>[ModelContextProtocol/Tools/PlcBuildTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBuildTools.cs)<br>[ModelContextProtocol/Tools/PlcDocumentationTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcDocumentationTools.cs)<br>[ModelContextProtocol/Tools/QualityAuditTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/QualityAuditTools.cs)<br>[ModelContextProtocol/Tools/TemplateTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TemplateTools.cs)<br>[ModelContextProtocol/Tools/V21EcosystemTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V21EcosystemTools.cs)<br>[ModelContextProtocol/Tools/XmlBuilderTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/XmlBuilderTools.cs) | 46 |
+| P6-10 | [ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BlockImportVerification.cs)<br>[ModelContextProtocol/Tools/McpServer.BlockLogic.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.BlockLogic.cs)<br>[ModelContextProtocol/Tools/PlcBlocksTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcBlocksTools.cs)<br>[ModelContextProtocol/Tools/PlcSoftwareTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSoftwareTools.cs)<br>[ModelContextProtocol/Tools/PlcTablesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcTablesTools.cs)<br>[ModelContextProtocol/Tools/TypesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TypesTools.cs) | 53 |
+| P6-11 | [ModelContextProtocol/Tools/DocumentsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DocumentsTools.cs)<br>[ModelContextProtocol/Tools/ExportTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ExportTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Patch.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Patch.cs)<br>[ModelContextProtocol/Tools/NativeExchangeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/NativeExchangeTools.cs)<br>[ModelContextProtocol/Tools/PlcExternalSourcesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcExternalSourcesTools.cs) | 25 |
+| P6-12 | [ModelContextProtocol/Tools/AddressesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AddressesTools.cs)<br>[ModelContextProtocol/Tools/DevicesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DevicesTools.cs)<br>[ModelContextProtocol/Tools/HardwareAmlTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareAmlTools.cs)<br>[ModelContextProtocol/Tools/HardwareManagementTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareManagementTools.cs)<br>[ModelContextProtocol/Tools/ModulesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ModulesTools.cs) | 26 |
+| P6-13 | [ModelContextProtocol/Tools/HardwareNetworkTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareNetworkTools.cs)<br>[ModelContextProtocol/Tools/HardwareServicesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HardwareServicesTools.cs) | 30 |
+| P6-14 | [ModelContextProtocol/Tools/CertificateManagementTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CertificateManagementTools.cs)<br>[ModelContextProtocol/Tools/ProjectSecurityTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSecurityTools.cs)<br>[ModelContextProtocol/Tools/SafetyManagementTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyManagementTools.cs)<br>[ModelContextProtocol/Tools/SafetyValidationTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SafetyValidationTools.cs)<br>[ModelContextProtocol/Tools/SecurityDeepTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SecurityDeepTools.cs) | 20 |
+| P6-15 | [ModelContextProtocol/Tools/AlarmsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/AlarmsTools.cs)<br>[ModelContextProtocol/Tools/OpcUaTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OpcUaTools.cs)<br>[ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitDeepTools.cs)<br>[ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SoftwareUnitManagementTools.cs)<br>[ModelContextProtocol/Tools/TechnologyObjectsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TechnologyObjectsTools.cs) | 31 |
+| P6-16 | [ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ClassicHmiFoldersTools.cs)<br>[ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MotionProDiagClassicHmiTools.cs) | 16 |
+| P6-17 | [ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiGroupsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedHmiTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedHmiTools.cs)<br>[ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedScreenItemsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedUiModelTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedUiModelTools.cs) | 32 |
+| P6-18 | [ModelContextProtocol/Tools/HmiExchangeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiExchangeTools.cs)<br>[ModelContextProtocol/Tools/HmiTagDeletionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiTagDeletionTools.cs)<br>[ModelContextProtocol/Tools/UnifiedExchangeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedExchangeTools.cs) | 17 |
+| P6-19 | [ModelContextProtocol/Tools/GlobalScriptEditTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GlobalScriptEditTools.cs)<br>[ModelContextProtocol/Tools/GraphicSelectionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/GraphicSelectionTools.cs)<br>[ModelContextProtocol/Tools/HmiDescribeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiDescribeTools.cs)<br>[ModelContextProtocol/Tools/HmiInspectionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/HmiInspectionTools.cs)<br>[ModelContextProtocol/Tools/MigrationReadTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/MigrationReadTools.cs)<br>[ModelContextProtocol/Tools/ReflectionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ReflectionTools.cs)<br>[ModelContextProtocol/Tools/UnifiedEngineeringTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEngineeringTools.cs)<br>[ModelContextProtocol/Tools/UnifiedEventsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedEventsTools.cs)<br>[ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/UnifiedObjectServicesTools.cs) | 49 |
+| P6-20 | [ModelContextProtocol/Tools/CfcTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/CfcTools.cs)<br>[ModelContextProtocol/Tools/OptionalEngineeringTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OptionalEngineeringTools.cs)<br>[ModelContextProtocol/Tools/SpecializedExchangeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SpecializedExchangeTools.cs)<br>[ModelContextProtocol/Tools/TestSuiteTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TestSuiteTools.cs)<br>[ModelContextProtocol/Tools/V20OptionsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/V20OptionsTools.cs) | 14 |
+| P6-21 | [ModelContextProtocol/Tools/DccTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DccTools.cs)<br>[ModelContextProtocol/Tools/StartdriveTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/StartdriveTools.cs)<br>[ModelContextProtocol/Tools/TeamcenterTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/TeamcenterTools.cs) | 22 |
+| P6-22 | [ModelContextProtocol/Tools/LibraryTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/LibraryTools.cs)<br>[ModelContextProtocol/Tools/SivarcTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SivarcTools.cs)<br>[ModelContextProtocol/Tools/VersionControlTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/VersionControlTools.cs) | 32 |
+| P6-23 | [ModelContextProtocol/Tools/OnlineDownloadTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/OnlineDownloadTools.cs)<br>[ModelContextProtocol/Tools/PlcSimAdvancedTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/PlcSimAdvancedTools.cs)<br>[ModelContextProtocol/Tools/RuntimeChannelTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeChannelTools.cs)<br>[ModelContextProtocol/Tools/RuntimeSettingsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeSettingsTools.cs)<br>[ModelContextProtocol/Tools/RuntimeTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/RuntimeTools.cs) | 34 |
+| P6-24 | [ModelContextProtocol/Tools/DiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/DiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/EngineeringDiagnosticsTools.cs)<br>[ModelContextProtocol/Tools/McpServer.Doctor.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Doctor.cs)<br>[ModelContextProtocol/Tools/McpServer.Maintenance.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Maintenance.cs)<br>[ModelContextProtocol/Tools/McpServer.Worker.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/McpServer.Worker.cs)<br>[ModelContextProtocol/Tools/ProjectSessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/ProjectSessionTools.cs)<br>[ModelContextProtocol/Tools/SessionTools.cs](../../tools/tiaportal-mcp/src/TiaMcpServer/ModelContextProtocol/Tools/SessionTools.cs) | 31 |
+
+每个完整引擎注册入口恰有一个文件所有者；同 stem 的 Service 与本领域独占规则随该任务，公共 Portal/基础设施由 P6-24 串行集成。Foundation 由 P6-08 单独负责；公共 DTO 与项目文件不归并行领域任务编辑。
 
 </details>
 
 <!-- phase6-generated:end -->
-
-## 清点与复跑
-
-本任务不新增 scripts 文件。下面是实际用于生成上表的一次性命令正文；只读取当前 Git 源码/契约并替换本页的 generated 区块，没有编译、启动宿主或网络访问。提案映射是评审输入，事实项由代码读取且带断言；不同 master 的统计必须重新评审。在仓库根复跑：
-
-```powershell
-@'
-from pathlib import Path
-s = Path('docs/development/phase6-review.md').read_text(encoding='utf-8')
-code = s.split('```python\n', 1)[1].split('\n```', 1)[0]
-exec(compile(code, '<phase6-review generator>', 'exec'))
-'@ | python -B -
-```
-
-<details>
-<summary>一次性生成器正文（事实读取、提案映射与一致性断言）</summary>
-
-```python
-import collections, json, pathlib, re, subprocess, sys, xml.etree.ElementTree as ET
-sys.dont_write_bytecode = True
-root = pathlib.Path.cwd()
-read = lambda p: (root / p).read_text(encoding="utf-8-sig")
-files = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
-keys = ["14sp1", "15.1", "16", "17", "18", "19", "20", "21"]
-snap = {k: json.loads(read(f"manifest/contracts/baseline/{k}.json")) for k in keys}
-tools = {k: {t["name"]: t for t in d["tools"]} for k, d in snap.items()}
-names = sorted(set().union(*(set(t) for t in tools.values())))
-catalog = dict(re.findall(r"^\| " + chr(96) + r"([^" + chr(96) + r"]+)" + chr(96) + r" \| ([^|]+) \|$", read("docs/reference/version-tool-catalog.md"), re.M))
-assert set(catalog) == set(names)
-for n in names:
-    assert catalog[n].strip().split(", ") == [k for k in keys if n in tools[k]], n
-E = "tools/tiaportal-mcp/src/TiaMcpServer/"
-L = "tools/tiaportal-mcp/src/TiaMcp.Logic/"
-F = "tools/tiaportal-mcp/src/TiaMcpServer.LegacyHost/"
-S = "tools/tia-openness-studio/src/"
-sys.path.insert(0, str(root / "scripts/checks"))
-import engine_sources
-engine = engine_sources.EngineSources(root)
-source_tools = {}
-for p, text in engine.sources.items():
-    for m in re.finditer(r'\[McpServerTool\(Name\s*=\s*"([^"]+)"', text):
-        decl = re.search(r"^\s*public\s+(?:static\s+)?(?:async\s+)?[\w<>?,\[\] .]+?\s+(\w+)\s*\(", text[m.end():], re.M)
-        assert decl and m[1] not in source_tools
-        source_tools[m[1]] = (p.relative_to(root).as_posix(), decl[1])
-assert set(source_tools) == set(tools["21"])
-policy = read(E + "Siemens/ToolVersionPolicy.cs")
-only21 = set(re.findall(r'\["([^"]+)"\]\s*=', policy.split("internal static string ToolProblem")[0]))
-assert set(tools["20"]) == set(source_tools) - only21
-profile = read(E + "ModelContextProtocol/Tools/McpServer.Profile.cs")
-profile = profile.split("private static readonly HashSet<string> LiteToolNames", 1)[1].split("};", 1)[0]
-lite = set(re.findall(r'"(\w+)"', profile))
-assert all(lite == set(snap[k]["liteTools"]) for k in ["20", "21"])
-foundation = "\n".join(read(f) for f in files if f.startswith(F) and f.endswith(".cs"))
-definitions = {}
-for line in read(F+"FoundationTools.cs").splitlines():
-    m=re.match(r'\s*new\("([^"]+)"',line)
-    if m:
-        response=re.search(r',\s*"([^"]+)"\),?\s*$',line)
-        definitions[m[1]]=response[1] if response else ""
-helpers=set()
-for f in files:
-    if f.startswith(F) and f.endswith(".cs") and not f.endswith("FoundationTools.cs"):
-        source=read(f)
-        helpers.update(re.findall(r'new (?:Offline\w+Tool|PassiveDiagnosticTool)\("([^"]+)"',source))
-        helpers.update(re.findall(r'\bName\s*=\s*"([^"]+)"',source))
-helpers &= set(names)
-for k in keys[:6]:
-    major = 14 if k=="14sp1" else int(k.split(".")[0])
-    accepted={n for n,r in definitions.items()
-        if not (r in ("HardwareCatalog","DeviceAdd") and major<19)
-        and not (r=="SpecialExport" and major<16)
-        and not (r in ("DocumentExport","BatchDocumentExport","DocumentImport","BatchDocumentImport") and major<20)
-        and not (n=="GetPlcWatchTables" and k=="14sp1")}
-    assert accepted | helpers == set(tools[k]), (k, (accepted | helpers) ^ set(tools[k]))
-for k in keys[:6]:
-    for n, t in tools[k].items():
-        assert '"' + n + '"' in foundation, n
-        for p in t["inputSchema"]["properties"]:
-            assert '"' + p + '"' in foundation, (n, p)
-calls = json.loads(read("reference/tool-examples/calls.json"))["profiles"]
-for k in keys:
-    assert set(tools[k]) <= set(calls[snap[k]["profile"]]), k
-typed = {}
-for n in names:
-    for k in keys:
-        if n not in tools[k]: continue
-        for p, schema in tools[k][n]["inputSchema"]["properties"].items():
-            if p.endswith("Json") or (n == "PlcBuildAndImport" and p == "json"):
-                typed.setdefault(n, {}).setdefault(p, set()).add(k)
-for n, (_, method) in source_tools.items():
-    member = engine.member(method, tool=True)
-    tokens, _ = engine_sources.lexer.Lexer(member).scan()
-    pairs = engine_sources.lexer.matching_pairs(tokens)
-    op = next(i for i,t in enumerate(tokens) if t.value == "(")
-    sig = member[:tokens[pairs[op]].end]
-    actual = set(re.findall(r"\bstring\??\s+(\w*Json)\b", sig))
-    expected = {p for p,v in tools["21"][n]["inputSchema"]["properties"].items() if p.endswith("Json") and "string" in str(v.get("type"))}
-    assert actual == expected, (n, actual, expected)
-out = []
-tick = lambda s: chr(96) + str(s) + chr(96)
-def table(headers, rows):
-    out.extend(["| " + " | ".join(headers) + " |", "|" + "|".join("---" for _ in headers) + "|"])
-    out.extend("| " + " | ".join(str(x).replace("|", r"\|").replace("\n", " ") for x in row) + " |" for row in rows)
-    out.append("")
-def availability(n):
-    ks = [k for k in keys if n in tools[k]]
-    return "全" if ks == keys else "20, 21" if ks == keys[-2:] else ", ".join(ks)
-def link(p, label=None):
-    assert p in files or (root / p).is_file(), p
-    return "[" + (label or p.removeprefix(E).removeprefix(S).removeprefix(L).removeprefix(F)) + "](../../" + p + ")"
-def section(title):
-    out.extend(["<details>", "<summary>" + title + "</summary>", ""])
-def end():
-    out.extend(["</details>", ""])
-out.append("### 基线与计数\n")
-rows = []
-for k in keys:
-    pairs = [(t["name"],p,v) for t in tools[k].values() for p,v in t["inputSchema"]["properties"].items() if p.endswith("Json")]
-    strings = [(n,p) for n,p,v in pairs if "string" in str(v.get("type"))]
-    rows.append([k, len(tools[k]), len(snap[k].get("liteTools", [])) or "不设 lite", len(strings), len(set(n for n,p in strings))])
-table(["发布键","广告工具","lite","string …Json 参数","涉及工具"], rows)
-out.append(f"八版名称并集 {len(names)}；V21 后缀 Json 输入 {sum(len([p for p in t['inputSchema']['properties'] if p.endswith('Json')]) for t in tools['21'].values())} 个，其中 CallTool/PreflightToolCall.argumentsJson 已为 JsonElement?；另有 PlcBuildAndImport.json。不能把它们统称为 string 参数。源码工具名、V21 字符串参数、V20 差集、lite、八版目录及示例覆盖断言均通过。\n")
-# Proposal entries: current keys are asserted, current signatures come from snapshots.
-renames = {
- "AddDeviceWithFallback": ("CreateHardwareDevice", "精确 TypeIdentifier + preview/confirm/计划与工程身份；D1"),
- "CompileSoftware": ("CompileSoftware", "保留 softwarePath/password；统一 diagnostics 与 preview/confirm；D1"),
- "CompileAndDiagnosePlc": ("CompileSoftware", "targetKind=plc；仅在诊断/离线/Safety 等价后合并"),
- "CompileAndDiagnoseHmi": ("CompileSoftware", "targetKind=hmi；仅 E，祖先软件查找不得丢失"),
- "Connect": ("Connect", "统一 processId/进程与工程身份；启动显式选择；D1"),
- "ConnectToProject": ("Connect", "保留 processId/processStartUtc/projectPath 校验"),
- "ConnectIsolated": ("ConnectIsolated", "隔离生命周期保留独立入口"),
- "OpenProject": ("OpenProject", "upgrade=reject、reuseOpen=false；明确确认与工程身份；D1"),
- "SaveProject": ("SaveProject", "显式 preview/confirm 与工程身份；LocalSession 本地保存"),
- "CloseProject": ("CloseProject", "拒绝借用/已修改对象隐式关闭；D1"),
- "ImportBlock": ("ImportBlock", "overwrite=false、versionPolicy=exact、preview/confirm；D1"),
- "ImportType": ("ImportType", "同导入策略；保留目标组与原生类型限制"),
- "ImportPlcTagTable": ("ImportPlcTagTable", "同导入策略；保留 folderPath"),
- "ExportBlock": ("ExportBlock", "overwrite=false、preview/confirm，暂存发布；D1"),
- "ExportType": ("ExportType", "同导出策略；保留 preservePath"),
- "ExportPlcTagTable": ("ExportPlcTagTable", "同导出策略；不合并 XML 与 SD"),
- "ImportBlocksFromDirectory": ("ImportBlocksFromDirectory", "onError=stop，保留顺序/计划/数量；D1"),
- "ImportPlcProgramFromDirectory": ("ImportPlcProgramFromDirectory", "同批次策略；块/类型/表目的地仍独立"),
- "ExportBlocks": ("ExportBlocks", "同导出策略；保留 inventoryHash/逐项结果"),
- "ExportTypes": ("ExportTypes", "同导出策略；保留 inventoryHash/逐项结果"),
- "ExportAsDocuments": ("ExportBlockDocuments", "参数保留，D1 显式发布策略；不放开普通块/GlobalDB 限制"),
- "ExportBlocksAsDocuments": ("ExportBlockDocumentsBatch", "批次保留，不改为循环调用单项工具"),
- "ImportFromDocuments": ("ImportBlockDocuments", "参数保留，overwrite=false；不支持覆盖的版本拒绝 true"),
- "ImportBlocksFromDocuments": ("ImportBlockDocumentsBatch", "保留逐项结果/停止与未知结果"),
- "PlanPlcExternalSourceImport": ("PlanPlcExternalSourceImport", "保持只预览；不别名到可执行导入"),
- "ImportPlcExternalSource": ("ImportPlcExternalSource", "精确源名/文件；preview/confirm 与计划；D1"),
- "DeletePlcExternalSource": ("DeletePlcExternalSource", "精确路径，核实删除；不靠扩展名或幂等吞错"),
- "GenerateBlocksFromExternalSource": ("GenerateBlocksFromExternalSource", "保留 14sp1 observation 与其他版原生结果区别"),
-}
-for n in source_tools:
-    if n.endswith("DesignJson"):
-        renames[n] = (n[:-4], "Json 表示从工具名去掉；设计对象直接返回 data")
-section("A. 工具改名 / 合并 / 行为迁移（当前参数自动读取）")
-rows = []
-for n,(target,change) in sorted(renames.items()):
-    assert n in names
-    signatures = collections.defaultdict(list)
-    for k in keys:
-        if n in tools[k]:
-            signatures[", ".join(tools[k][n]["inputSchema"]["properties"]) or "无"].append(k)
-    current = "<br>".join("/".join(ks) + ": " + tick(ps) for ps,ks in signatures.items())
-    rows.append([tick(n),tick(target),availability(n),current,change])
-table(["当前名称","建议名称/合并目标","当前发布键","当前参数名","拟议变化"],rows)
-out.append("此表以外的工具名保持；输入变化另见 B，统一响应影响全部广告工具。合并后可用版本为原入口的并集，具体 action/目标能力保留原门禁。大小写风格（例如 SiVArc/Sivarc）不单独批量改名。\n")
-end()
-# Closed family map: an unclassified parameter fails instead of falling into a catch-all.
-family_groups = {
- "P":"assignmentItemPath branch collectionPath destinationDevicePath destinationItemPath devicePath durationPath groupPath itemPath localInterfaceItemPath modifiedDevicePath modifiedItemPath participantDevicePath participantItemPath partnerDevicePath partnerInterfaceItemPath partnerItemPath tagPath targetDevicePath targetItemPath",
- "S":"additionalHmiDeviceNames attributeNames blockPaths chartNames cultures deviceNames expectedNames expectedTagNames extensions fields files itemNames items markers names nodeIds objectPaths permissions plcSoftwarePaths plcSymbols scopeSoftwarePaths subjectAlternativeNames systemNames tagPaths tags textListNames vars",
- "N":"numbers",
- "R":"objectPath",
- "M":"attributes changes customAttributes entry properties scriptProperties settings",
- "L":"accessLevels comments promptAnswers texts",
- "V":"value",
- "C":"arguments calls operations",
- "W":"values writes",
- "B":"fbBlock fcBlock flgNet globalDb ladFcBlock structuredText tagTable udt",
- "H":"design layout package spec table theme",
- "D":"artifacts plan rows scenario",
- "X":"afterPages beforePages deviceSelection harmonizeOptions itemDetails mappingEntries options partner references request revisionDetails rules scope selection target templateIntent",
-}
-families = {p+"Json":f for f,ps in family_groups.items() for p in ps.split()}
-def family(n,p):
-    if p == "json": return "B"
-    if (n,p) == ("RunPlcCompanionTool","argumentsJson"): return "S"
-    if (n,p) == ("PatchPlcBlockDocument","changesJson"): return "D"
-    assert p in families, (n,p)
-    return families[p]
-section("B. 全部 JSON 输入逐工具清单（计数为每个签名的 string …Json 数，不跨版本相加）")
-rows = []
-for n,ps in sorted(typed.items()):
-    k = next(k for k in reversed(keys) if n in tools[k])
-    string_count = sum(p.endswith("Json") and "string" in str(tools[k][n]["inputSchema"]["properties"][p].get("type")) for p in ps)
-    changes = "; ".join(tick(p)+" → "+tick("spec" if p=="json" else p[:-4])+" ("+family(n,p)+")" for p in sorted(ps))
-    rows.append([tick(n),availability(n),string_count,changes])
-table(["当前工具","发布键","string 数","旧参数 → 新参数（族）"],rows)
-totals = collections.Counter(family(n,p) for n,ps in typed.items() for p in ps)
-out.append("按 (工具名,参数名) 去重的族计数：" + "；".join(f"{f}={n}" for f,n in sorted(totals.items())) + f"；共 {sum(totals.values())} 项 / {len(typed)} 个工具。Foundation 的同名参数具有更窄的 parser/schema，不因共用 DTO 放宽。详见 "+link("reference/tool-examples/calls.json","现有调用与操作示例")+"。\n")
-end()
-# Count annotation sites, not tools or all response construction statements.
-marks = collections.defaultdict(collections.Counter)
-sites = collections.defaultdict(list)
-for p,text in engine.sources.items():
-    rel = p.relative_to(root).as_posix()
-    for m in re.finditer(r"// envelope: (legacy-[\w-]+)",text):
-        if "/Cli/" in rel: fam = "CLI"
-        elif rel.endswith("McpServer.ToolBridge.cs"): fam = "F4"
-        elif "/Siemens/Services/" in rel or rel.endswith("PlcSimAdvancedTools.cs"): fam = "F3"
-        else: fam = "F2"
-        marks[fam][m[1]] += 1
-        sites[m[1]].append(rel)
-section("C. 响应/错误族 → V4 与 legacy 标记")
-shapes = [
- ("F1","VersionPolicyTool：isError 文本 + preflight","error.code/details；准入拒绝的 outcome"),
- ("F2","POCO + Meta；McpException 或 success=false","data + ok/error；消除直接 camelCase/桥接 PascalCase 差异"),
- ("F3","执行器/领域服务：operationSuccess/status/error，含旧 meta","逐项 data + outcome/完整性；未知 verdict 不转为 true"),
- ("F4","桥接 Message 内序列化 JSON 或 failed 文本","直接透传同一信封；禁止二次字符串 JSON"),
- ("F5","导出句柄 ok=true；InvalidParams 异常","data.export；INVALID_ARGUMENT/ALREADY_EXISTS 等码"),
- ("F6","旧 Portal 文本失败且无 meta","在调用边界补 outcome/error；不能靠 Message 判成功"),
- ("F7","Foundation PascalCase DTO/裸数组、V17 envelopes、McpException 或 isError 文本","保留原 evidence/Executed/RequiresSessionReset，转换为同一信封"),
- ("CLI","报告 roundtrip/ok/后写判定","报告适配 V4；CLI 成功/失败退出码另有黄金样本"),
-]
-table(["族","当前形状/错误","建议目标","标记站点数（非工具数）","variant 数量"], [
- [fam,old,new,sum(marks[fam].values()),"; ".join(tick(v)+":"+str(c) for v,c in sorted(marks[fam].items())) or "0"] for fam,old,new in shapes])
-out.append(f"共 {sum(sum(v.values()) for v in marks.values())} 个实际注释站点、{len(sites)} 个 variant。F2/F3 按注释所在工具边界/服务或执行器归属计数，混合工具不推断唯一运行时族；F6 无标记不等于不存在无 meta 失败。未标注的手写形状仍由 Inventory-ResponseEnvelopes.py 管理。\n")
-table(["variant","当前源码（同文件可含多个站点）"],[[tick(v),"<br>".join(link(p) for p in sorted(set(ps)))] for v,ps in sorted(sites.items())])
-end()
-section("D. 可执行文件 / 程序集 / 路径与配置")
-assemblies = []
-for p,target,ks,oldpath in [
- (F+"TiaMcpServer.LegacyHost.csproj","TiaMcp.FoundationHost","14sp1–19","runtime/v<key>/"),
- (E+"TiaMcpServer.V20.csproj","TiaMcp.Engine.V20","20","runtime/v20/"),
- (E+"TiaMcpServer.V21.csproj","TiaMcp.Engine.V21","21","runtime/v21/")]:
-    tree=ET.fromstring(read(p)); old=tree.findtext(".//AssemblyName"); tf=tree.findtext(".//TargetFramework")
-    assert old == "TiaMcpServer"
-    assemblies.append([link(p),ks,tick(old),tick(target),tick(oldpath+old+".exe")+" → "+tick(oldpath+target+".exe"),tf])
-table(["项目","版本","当前 AssemblyName","建议 AssemblyName","安装路径迁移","目标框架保持"],assemblies)
-out.append("同基名的 .dll/.exe.config/.deps.json/.runtimeconfig.json（以实际构建输出为准）同步改名；旧 EXE 仅作启动 shim。开发输出保留 bin-v20/Release/net48、bin/Release/net48 与 Foundation bin/Release/net8.0 的目录，仅变基名。程序集友元、反射加载、织入目标、worker 启动与构建/打包/更新脚本均需按新名生成，不能仅重命名磁盘文件。\n")
-config_specs = [
- (L+"ModelContextProtocol/Builders/EcosystemFiles.cs",r'"(TIA_MCP_REPOSITORY_ROOT)"',"TIA_MCP_BUNDLE_ROOT / --bundle-root；旧名限期别名"),
- (E+"ModelContextProtocol/Tools/McpServer.Profile.cs",r"(TIA_MCP_PROFILE)","名称和值 lite/full 保留；与新增 contract-profile 正交"),
- (S+"TiaOpenness.Gui/Configuration/ClientProfiles.cs",r'"(tia-portal(?:-vm)?)"',"配置 entry key 保留，仅 command/args 中产品路径更新"),
- (E+"Cli/McpConfigInstaller.cs",r'"(mcpServers|servers|tia-portal)"',"JSON/TOML 根及 server key 保留，更新 command/args"),
- (F+"HostOptions.cs",r'"(--worker-exe|--tia-release|--tia-version|--tia-portal-location)"',"名称保留；worker-exe 若显式设置则按对应产物迁移"),
- (E+"ModelContextProtocol/Tools/EcosystemTools.cs",r'"(TIA_MCP_PLC_TOOLS_PYTHON)"',"名称保留；默认 Python 环境改到 LocalAppData/TiaMcp/ecosystem-python"),
-]
-table(["来源","当前键/变量（源码提取）","迁移建议"],[[link(p),", ".join(tick(v) for v in sorted(set(re.findall(pattern,read(p))))),target] for p,pattern,target in config_specs])
-out.append("Studio TiaOpenness.exe、Bridge 与 TiaMcp.PlcWorker.<key>.exe 不属于上述三个同名程序，建议保持；根目录 TiaMcpConfigurator.exe 为已存在的兼容启动器，选择一周期后移除（替代 runtime/studio/TiaOpenness.exe）。HTTP /mcp 与鉴权键不因 EXE 改名改变。\n")
-end()
-section("E. 兼容回退 / 垫片 → 替代（源码定位生成）")
-shims = [
- (L+"ModelContextProtocol/Builders/EcosystemFiles.cs","RepositoryRoot","R1 任意祖先找桥接脚本/旧 root 覆盖","BundleLayout + 新 bundle-root；缺资源即失败，旧变量只做别名"),
- (E+"ModelContextProtocol/Tools/McpServer.Maintenance.cs","FindInstallRoot","R2 最多 4 层 delivery 探测","只接受正式安装锚点与 delivery"),
- (E+"Cli/SpecLoader.cs","FindBundleRoot","R3 最多 12 层 templates/tools 探测","显式包根或已知锚点；__BUNDLE__ 未解报参数错误"),
- (E+"Siemens/EngineRouter.cs","FindSiblingExe","R7 bin/bin-v20/v数字相对回退","TiaVersionCatalog + 明确布局/新 EXE 名；目标缺失报错"),
- (E+"Cli/McpConfigInstaller.cs","FindSiblingExe","跨版本找不到引擎时回退自身 EXE","禁止给目标版本写错引擎，返回缺失版本路径"),
- (S+"TiaOpenness.Gui/ConfigurationPage.cs","FindBundleRoot","R11 祖先包标记探测","显式根或 BundleLayout"),
- (S+"TiaOpenness.Gui/Configuration/ConfigCore.cs","TiaMcpServer.exe","R11 根标记缺失仍使用原候选","严格根校验 + 版本到新输出名映射"),
- (S+"TiaOpenness.Gui/Configuration/UpdateCheck.cs","FindResource","R11 解析失败仍拼接传入根路径","严格资源解析；保留 worktree 禁止安装更新"),
- (S+"TiaOpenness.Client/BridgeClient.cs","BundleLayout","R13 相对开发 Debug/Release 回退","保留正式安装/开发锚点与显式 bridgeExePath；删除任意布局回退"),
- (S+"TiaOpenness.Core/Abstractions/SessionFactoryLoader.cs","TiaOpenness.Openness","R14 旧 Studio adapter 加载路径","仅 G3/J 真机通过后移除；替代 TiaMcp.Adapter.<key>，非到期强删"),
- (S+"TiaOpenness.Launcher/Launcher.cs","TiaOpenness.exe","R12 TiaMcpConfigurator 兼容启动器","正式 Studio EXE；按问题 8 决定删除时点"),
- (E+"Program.cs","DiagLogPathLocal","安装目录 startup.log 与 TEMP 共用日志","LocalAppData/TiaMcp/logs/<releaseKey>，明确日志路径"),
- (S+"TiaOpenness.Gui/App.xaml.cs",".crash.log","Studio 安装目录崩溃日志","LocalAppData/TiaMcp/logs/studio"),
- (E+"ModelContextProtocol/Tools/EcosystemTools.cs","ecosystem-python","包根下的私有 Python 环境默认值","显式 TIA_MCP_PLC_TOOLS_PYTHON 或 LocalAppData 环境"),
- (E+"Cli/ReportBuilders.cs","GetWorkspaceRoot","TMP_EXPORT/tools 向上探测与 cwd 兜底","新增显式 --workspace-root/fixture 根；缺输入报错"),
- (E+"Cli/HmiTemplateBuilder.cs","TIA_MCP_AI_PACK","私有 HMI 模板路径默认值","显式模板输入，不能把私人 fixture 当随包资源"),
- (L+"ModelContextProtocol/Builders/PlcBuilderOfflineValidationSuite.cs","TMP_EXPORT","suite 私有夹具探测","显式 fixture 根；workspaceRoot 既有 MCP 必填不再猜"),
- (E+"ModelContextProtocol/Tools/OnlineToolPolicy.cs","WithAutoOffline","按错误字串自动下线后再次调用","OFFLINE_REQUIRED；显式下线后由用户发起新操作；L5"),
- (E+"Siemens/Services/OnlineDownloadService.cs","ApplyConfiguration","吞配置失败/换候选/原配置回退","显式路线，失败/未知结果停止；L5"),
-]
-rows=[]
-for p,needle,old,new in shims:
-    text=read(p); assert needle in text,(p,needle)
-    line=next(i for i,l in enumerate(text.splitlines(),1) if needle in l)
-    rows.append([link(p)+":"+str(line)+" "+tick(needle),old,new])
-table(["当前位置 / 定位词","拟删除/收紧的行为","替代"],rows)
-out.append("正常部署的 release-key.txt、--worker-exe、已知开发锚点及相邻 adapters/v<key> 不属于无条件删除项。所有候选逐项评审；privacy、可选 API 探测和未知结果保护不能误删。\n")
-end()
-doc = root / "docs/development/phase6-review.md"
-text=doc.read_text(encoding="utf-8")
-begin,endmark="<!-- phase6-generated:start -->","<!-- phase6-generated:end -->"
-a=text.index(begin)+len(begin); b=text.index(endmark,a)
-text=text[:a]+"\n\n"+"\n".join(out)+"\n"+text[b:]
-doc.write_text(text,encoding="utf-8",newline="\n")
-print(f"Generated: {len(names)} names, {len(typed)} JSON-input tools, {sum(totals.values())} input occurrences; source/catalog assertions passed.")
-```
-
-</details>
-
-补充只读检索使用 `git ls-files` 加 Python UTF-8 逐行匹配 `4\.0|until 4|through 4|阶段\s*6|phase.?6|envelope: legacy-`，覆盖产品源码、脚本与开发文档，排除生成目录/第三方和历史发布记录中的产品版本号。结果已纳入 D-G7-2/3/6/8、D-P5-3/5、响应族、C6 原生回退与 D1；未发现另一个未列的明确“到 4.0”承诺。SDK `14.0.1.0`、NuGet 版本及历史 CHANGELOG 不作候选；第三方授权、参考数据和现有安全限制不因清理删除。
-
-后移 master 的核对命令为 `git log --oneline HEAD..master`、`git diff --name-only HEAD master`，以及 Python 对上述生成器的 source_tools、shims、config_specs、sites、Foundation 源码、八版 baseline、版本策略、目录和 calls 取路径并集，逐项将 `git show 3e082b6e86c939559ddbf3ef95e38df265c1800f:<path>` 与 worktree 的 UTF-8/LF 内容断言相等；三个 csproj 只比较上述两个 XML 字段，新增引擎文件断言无注册属性/legacy 标记。均通过，不变基、不复制并行源码，也不把新 master 的验证结果当成本 worktree 的运行结果。
-
-文档门禁：`python scripts/checks/Check-Repository.py --no-binaries`（180 份 Markdown，0 问题）、`pwsh -NoProfile -File scripts/checks/Validate-Bundle.ps1 -Strict -NoBinaries -SkipSourceHashes`（通过）、`python scripts/checks/Check-DeadToolReferences.py`（488 个注册工具、398 个扫描文件，通过）。本次仅文档，无 C# 构建/运行测试或 L5；离线清点不替代实施后的原生验收。

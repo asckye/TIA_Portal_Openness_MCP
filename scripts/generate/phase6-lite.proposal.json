@@ -1,0 +1,732 @@
+{
+  "schemaVersion": 1,
+  "contractVersion": 4,
+  "status": "proposal-not-runtime",
+  "foundationLite": false,
+  "releases": {
+    "20": [
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ArchiveSavedProject"
+      },
+      {
+        "name": "AttachOpenProject",
+        "currentName": "AttachToOpenProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/AttachToOpenProject"
+      },
+      {
+        "name": "BuildPlcGlobalDb",
+        "currentName": "BuildPlcGlobalDbXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcGlobalDbXml"
+      },
+      {
+        "name": "BuildPlcTagTable",
+        "currentName": "BuildPlcTagTableXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcTagTableXml"
+      },
+      {
+        "name": "BuildPlcUdt",
+        "currentName": "BuildPlcUdtXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcUdtXml"
+      },
+      {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CallTool"
+      },
+      {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExports",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ClearExports"
+      },
+      {
+        "name": "CloseProject",
+        "currentName": "CloseProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CloseProject"
+      },
+      {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileAndDiagnoseHmi",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CompileAndDiagnoseHmi"
+      },
+      {
+        "name": "CompilePlcDiagnostics",
+        "currentName": "CompileAndDiagnosePlc",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CompileAndDiagnosePlc"
+      },
+      {
+        "name": "ConnectPortal",
+        "currentName": "Connect",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Connect"
+      },
+      {
+        "name": "ConnectProject",
+        "currentName": "ConnectToProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ConnectToProject"
+      },
+      {
+        "name": "CreateHardwareDevice",
+        "currentName": "AddDeviceWithFallback",
+        "reason": "硬件查找和精确创建",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/AddDeviceWithFallback"
+      },
+      {
+        "name": "CreateProject",
+        "currentName": "CreateProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CreateProject"
+      },
+      {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/DeleteExport"
+      },
+      {
+        "name": "DescribeHmiScreen",
+        "currentName": "DescribeHmiScreen",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/DescribeHmiScreen"
+      },
+      {
+        "name": "DisconnectPortal",
+        "currentName": "Disconnect",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Disconnect"
+      },
+      {
+        "name": "ExportPlcBlock",
+        "currentName": "ExportBlock",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportBlock"
+      },
+      {
+        "name": "ExportPlcTagTable",
+        "currentName": "ExportPlcTagTable",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportPlcTagTable"
+      },
+      {
+        "name": "ExportPlcType",
+        "currentName": "ExportType",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportType"
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/FindTools"
+      },
+      {
+        "name": "GenerateBlocksFromExternalSource",
+        "currentName": "GenerateBlocksFromExternalSource",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GenerateBlocksFromExternalSource"
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "reason": "诊断收尾",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GenerateErrorReport"
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "Doctor",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Doctor"
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetExport"
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "ReadOpennessWorkerStatus",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ReadOpennessWorkerStatus"
+      },
+      {
+        "name": "GetPlcBlockHierarchy",
+        "currentName": "GetBlocksWithHierarchy",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlocksWithHierarchy"
+      },
+      {
+        "name": "GetPlcBlockInfo",
+        "currentName": "GetBlockInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlockInfo"
+      },
+      {
+        "name": "GetPlcTypeInfo",
+        "currentName": "GetTypeInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetTypeInfo"
+      },
+      {
+        "name": "GetProjectInfo",
+        "currentName": "GetProject",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetProject"
+      },
+      {
+        "name": "GetProjectTree",
+        "currentName": "GetProjectTree",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetProjectTree"
+      },
+      {
+        "name": "GetSessionState",
+        "currentName": "GetState",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetState"
+      },
+      {
+        "name": "GetSoftwareInfo",
+        "currentName": "GetSoftwareInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetSoftwareInfo"
+      },
+      {
+        "name": "GetSoftwareTree",
+        "currentName": "GetSoftwareTree",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetSoftwareTree"
+      },
+      {
+        "name": "GetToolUsage",
+        "currentName": "GetToolUsage",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetToolUsage"
+      },
+      {
+        "name": "ImportPlcBlock",
+        "currentName": "ImportBlock",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportBlock"
+      },
+      {
+        "name": "ImportPlcExternalSource",
+        "currentName": "ImportPlcExternalSource",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportPlcExternalSource"
+      },
+      {
+        "name": "ImportPlcTagTable",
+        "currentName": "ImportPlcTagTable",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportPlcTagTable"
+      },
+      {
+        "name": "ImportPlcType",
+        "currentName": "ImportType",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportType"
+      },
+      {
+        "name": "InitializeEnvironment",
+        "currentName": "Bootstrap",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Bootstrap"
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "GetDevices",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetDevices"
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExports",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListExports"
+      },
+      {
+        "name": "ListHmiScreens",
+        "currentName": "GetHmiScreens",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiScreens"
+      },
+      {
+        "name": "ListHmiTagTables",
+        "currentName": "GetHmiTagTables",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiTagTables"
+      },
+      {
+        "name": "ListHmiTags",
+        "currentName": "GetHmiTags",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiTags"
+      },
+      {
+        "name": "ListPlcBlocks",
+        "currentName": "GetBlocks",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlocks"
+      },
+      {
+        "name": "ListPlcTagTables",
+        "currentName": "GetPlcTagTables",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetPlcTagTables"
+      },
+      {
+        "name": "ListPlcTypes",
+        "currentName": "GetTypes",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetTypes"
+      },
+      {
+        "name": "ListPortalProcessProjects",
+        "currentName": "ListPortalProcessProjects",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListPortalProcessProjects"
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListToolCategories"
+      },
+      {
+        "name": "OpenProject",
+        "currentName": "OpenProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/OpenProject"
+      },
+      {
+        "name": "PlanArtifactImportOrder",
+        "currentName": "PlanArtifactImportOrder",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/PlanArtifactImportOrder"
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreflightToolCall",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/PreflightToolCall"
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/RestartOpennessWorker"
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SaveExport"
+      },
+      {
+        "name": "SaveProject",
+        "currentName": "SaveProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SaveProject"
+      },
+      {
+        "name": "SearchHardwareCatalog",
+        "currentName": "SearchHardwareCatalog",
+        "reason": "硬件查找和精确创建",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SearchHardwareCatalog"
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ValidateAutomationContext"
+      },
+      {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcXmlSchemas",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ValidatePlcXmlSchemas"
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/WritePlcSclSourceFile"
+      }
+    ],
+    "21": [
+      {
+        "name": "ArchiveSavedProject",
+        "currentName": "ArchiveSavedProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ArchiveSavedProject"
+      },
+      {
+        "name": "AttachOpenProject",
+        "currentName": "AttachToOpenProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/AttachToOpenProject"
+      },
+      {
+        "name": "BuildPlcGlobalDb",
+        "currentName": "BuildPlcGlobalDbXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcGlobalDbXml"
+      },
+      {
+        "name": "BuildPlcTagTable",
+        "currentName": "BuildPlcTagTableXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcTagTableXml"
+      },
+      {
+        "name": "BuildPlcUdt",
+        "currentName": "BuildPlcUdtXml",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/BuildPlcUdtXml"
+      },
+      {
+        "name": "CallTool",
+        "currentName": "CallTool",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CallTool"
+      },
+      {
+        "name": "ClearExportHandles",
+        "currentName": "ClearExports",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ClearExports"
+      },
+      {
+        "name": "CloseProject",
+        "currentName": "CloseProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CloseProject"
+      },
+      {
+        "name": "CompileHmiDiagnostics",
+        "currentName": "CompileAndDiagnoseHmi",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CompileAndDiagnoseHmi"
+      },
+      {
+        "name": "CompilePlcDiagnostics",
+        "currentName": "CompileAndDiagnosePlc",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CompileAndDiagnosePlc"
+      },
+      {
+        "name": "ConnectPortal",
+        "currentName": "Connect",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Connect"
+      },
+      {
+        "name": "ConnectProject",
+        "currentName": "ConnectToProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ConnectToProject"
+      },
+      {
+        "name": "CreateHardwareDevice",
+        "currentName": "AddDeviceWithFallback",
+        "reason": "硬件查找和精确创建",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/AddDeviceWithFallback"
+      },
+      {
+        "name": "CreateProject",
+        "currentName": "CreateProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/CreateProject"
+      },
+      {
+        "name": "DeleteExportHandle",
+        "currentName": "DeleteExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/DeleteExport"
+      },
+      {
+        "name": "DescribeHmiScreen",
+        "currentName": "DescribeHmiScreen",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/DescribeHmiScreen"
+      },
+      {
+        "name": "DisconnectPortal",
+        "currentName": "Disconnect",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Disconnect"
+      },
+      {
+        "name": "ExportPlcBlock",
+        "currentName": "ExportBlock",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportBlock"
+      },
+      {
+        "name": "ExportPlcTagTable",
+        "currentName": "ExportPlcTagTable",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportPlcTagTable"
+      },
+      {
+        "name": "ExportPlcType",
+        "currentName": "ExportType",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ExportType"
+      },
+      {
+        "name": "FindTools",
+        "currentName": "FindTools",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/FindTools"
+      },
+      {
+        "name": "GenerateBlocksFromExternalSource",
+        "currentName": "GenerateBlocksFromExternalSource",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GenerateBlocksFromExternalSource"
+      },
+      {
+        "name": "GenerateErrorReport",
+        "currentName": "GenerateErrorReport",
+        "reason": "诊断收尾",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GenerateErrorReport"
+      },
+      {
+        "name": "GetEnvironmentDiagnostics",
+        "currentName": "Doctor",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Doctor"
+      },
+      {
+        "name": "GetExportContent",
+        "currentName": "GetExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetExport"
+      },
+      {
+        "name": "GetOpennessWorkerStatus",
+        "currentName": "ReadOpennessWorkerStatus",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ReadOpennessWorkerStatus"
+      },
+      {
+        "name": "GetPlcBlockHierarchy",
+        "currentName": "GetBlocksWithHierarchy",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlocksWithHierarchy"
+      },
+      {
+        "name": "GetPlcBlockInfo",
+        "currentName": "GetBlockInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlockInfo"
+      },
+      {
+        "name": "GetPlcTypeInfo",
+        "currentName": "GetTypeInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetTypeInfo"
+      },
+      {
+        "name": "GetProjectInfo",
+        "currentName": "GetProject",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetProject"
+      },
+      {
+        "name": "GetProjectTree",
+        "currentName": "GetProjectTree",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetProjectTree"
+      },
+      {
+        "name": "GetSessionState",
+        "currentName": "GetState",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetState"
+      },
+      {
+        "name": "GetSoftwareInfo",
+        "currentName": "GetSoftwareInfo",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetSoftwareInfo"
+      },
+      {
+        "name": "GetSoftwareTree",
+        "currentName": "GetSoftwareTree",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetSoftwareTree"
+      },
+      {
+        "name": "GetToolUsage",
+        "currentName": "GetToolUsage",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetToolUsage"
+      },
+      {
+        "name": "ImportPlcBlock",
+        "currentName": "ImportBlock",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportBlock"
+      },
+      {
+        "name": "ImportPlcExternalSource",
+        "currentName": "ImportPlcExternalSource",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportPlcExternalSource"
+      },
+      {
+        "name": "ImportPlcTagTable",
+        "currentName": "ImportPlcTagTable",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportPlcTagTable"
+      },
+      {
+        "name": "ImportPlcType",
+        "currentName": "ImportType",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ImportType"
+      },
+      {
+        "name": "InitializeEnvironment",
+        "currentName": "Bootstrap",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/Bootstrap"
+      },
+      {
+        "name": "ListDevices",
+        "currentName": "GetDevices",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetDevices"
+      },
+      {
+        "name": "ListExportHandles",
+        "currentName": "ListExports",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListExports"
+      },
+      {
+        "name": "ListHmiScreens",
+        "currentName": "GetHmiScreens",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiScreens"
+      },
+      {
+        "name": "ListHmiTagTables",
+        "currentName": "GetHmiTagTables",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiTagTables"
+      },
+      {
+        "name": "ListHmiTags",
+        "currentName": "GetHmiTags",
+        "reason": "HMI 定位和诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetHmiTags"
+      },
+      {
+        "name": "ListPlcBlocks",
+        "currentName": "GetBlocks",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetBlocks"
+      },
+      {
+        "name": "ListPlcTagTables",
+        "currentName": "GetPlcTagTables",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetPlcTagTables"
+      },
+      {
+        "name": "ListPlcTypes",
+        "currentName": "GetTypes",
+        "reason": "工程和 PLC 定位",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/GetTypes"
+      },
+      {
+        "name": "ListPortalProcessProjects",
+        "currentName": "ListPortalProcessProjects",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListPortalProcessProjects"
+      },
+      {
+        "name": "ListToolCategories",
+        "currentName": "ListToolCategories",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ListToolCategories"
+      },
+      {
+        "name": "OpenProject",
+        "currentName": "OpenProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/OpenProject"
+      },
+      {
+        "name": "PlanArtifactImportOrder",
+        "currentName": "PlanArtifactImportOrder",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/PlanArtifactImportOrder"
+      },
+      {
+        "name": "PreviewToolCall",
+        "currentName": "PreflightToolCall",
+        "reason": "发现、用法与完整目录调用",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/PreflightToolCall"
+      },
+      {
+        "name": "RestartOpennessWorker",
+        "currentName": "RestartOpennessWorker",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/RestartOpennessWorker"
+      },
+      {
+        "name": "SaveExportContent",
+        "currentName": "SaveExport",
+        "reason": "大结果分页与文件交付",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SaveExport"
+      },
+      {
+        "name": "SaveProject",
+        "currentName": "SaveProject",
+        "reason": "工程生命周期",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SaveProject"
+      },
+      {
+        "name": "SearchHardwareCatalog",
+        "currentName": "SearchHardwareCatalog",
+        "reason": "硬件查找和精确创建",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/SearchHardwareCatalog"
+      },
+      {
+        "name": "ValidateAutomationContext",
+        "currentName": "ValidateAutomationContext",
+        "reason": "环境与会话诊断",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ValidateAutomationContext"
+      },
+      {
+        "name": "ValidatePlcDocumentSchemas",
+        "currentName": "ValidatePlcXmlSchemas",
+        "reason": "离线构造与规划",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/ValidatePlcXmlSchemas"
+      },
+      {
+        "name": "WritePlcSclSourceFile",
+        "currentName": "WritePlcSclSourceFile",
+        "reason": "常用 PLC 交换与编译",
+        "example": "reference/tool-examples/calls.json#/profiles/full-engine/WritePlcSclSourceFile"
+      }
+    ]
+  }
+}
