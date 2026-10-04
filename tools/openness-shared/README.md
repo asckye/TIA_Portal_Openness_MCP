@@ -8,11 +8,14 @@ These files are source-linked by their consumers. They have no MCP or Siemens AP
 | `LocalProcess.cs` | MCP ecosystem tools, Studio Git | UTF-8 streams, concurrent output draining, existing command timeouts and output limits; .NET 4.8 and modern .NET |
 | `OpennessEnvironment.cs` | Configurator, engine/Foundation/adapters, Studio Doctor/locator | Read-only Windows facts; C# 5 compatible; caller owns search order and runtime admission |
 | `BundleLayout.cs` | Logic (engine resource, CLI and router lookup), Studio Client, Core and GUI | BCL resource table and bounded root lookup; net48, net8.0 and net10.0-windows; excluded from the woven engine EXE |
-| `NativeCallDiagnostics.cs` | Full engines, version adapters, diagnostic fixtures | Shared weak object lineage, call state, and enumeration adapters; each consumer supplies a partial serializer |
+| `NativeCallDiagnostics.cs` | Full engines, version adapters, diagnostic fixtures | Shared weak object lineage, call state, and enumeration adapters |
+| `NativeCallDiagnostics.Journal.cs` | Full engines, version adapters, diagnostic fixtures | Native span rows written through the shared invocation journal |
+| `InvocationJournal.cs` | Full engines, version adapters, diagnostic fixtures | Library-free JSON line writer with the bytes of the engine's former System.Text.Json rows; per-process file sink, or a callback sink and correlation source set by the host |
 
 The native diagnostics class keeps its original namespace and type name for generated instrumentation.
-Newtonsoft and System.Text.Json serialization remain local to their runtime. Do not add a second
-copy of the tracking implementation when adding an adapter.
+Each host keeps only a thin `InvocationJournal` facade for its own JSON types (the engine keeps
+`JsonObject` for `Health()` and the binding snapshot). Do not add a second copy of the tracking or
+journal implementation when adding an adapter.
 
 Studio calls Openness through its native bridge. Sharing these utilities does not introduce an MCP
 dependency. V14 SP1–V19 use foundation runtimes; V20/V21 use full engines. The exact-version adapters and both profiles are built and checked by Build-MultiVersion.
