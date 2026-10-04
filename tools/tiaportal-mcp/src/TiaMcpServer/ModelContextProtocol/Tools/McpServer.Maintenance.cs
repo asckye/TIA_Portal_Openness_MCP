@@ -73,6 +73,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("repository: GitHub owner/name to query (default the project's repository).")] string repository = UpdateLogic.DefaultRepository,
             [Description("timeoutSeconds: HTTP timeout for the GitHub API call (default 15).")] int timeoutSeconds = 15)
         {
+            // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
             string current = typeof(McpServer).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
             meta["currentVersion"] = current;

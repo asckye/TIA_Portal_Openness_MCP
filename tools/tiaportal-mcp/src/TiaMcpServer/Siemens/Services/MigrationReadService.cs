@@ -120,6 +120,6 @@ namespace TiaMcpServer.Siemens.Services
             foreach (var row in UnifiedNativeRead.LibraryType(library, typePath, version)) yield return row;
         }
         public ResponseMessage ReleaseUnifiedReadCursor(string cursor)
-            => new ResponseMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = new JsonObject { ["success"] = true, ["readOnly"] = true, ["released"] = _session.MigrationPages.Cancel(cursor) } };
+            => new ResponseMessage { Message = "Collection state released; no TIA project or process was closed.", Meta = ResponseMeta.Unstamped(true, ("readOnly", true), ("released", _session.MigrationPages.Cancel(cursor))) };
     }
 }

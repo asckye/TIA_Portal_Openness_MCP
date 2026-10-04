@@ -101,6 +101,7 @@ namespace TiaMcpServer
             var libraryInfo = AnalyzeReferenceLibrary(referenceLibrary);
             var recommendations = BuildReferenceRecommendations(projectInfo, libraryInfo);
 
+            // envelope: legacy-roundtrip-report
             var root = new JsonObject
             {
                 ["timestamp"] = DateTime.Now.ToString("O"),
@@ -771,6 +772,7 @@ namespace TiaMcpServer
             try
             {
                 var connect = EngineServices.Get<SessionTools>().Connect();
+                // envelope: legacy-late-verdict
                 root["connect"] = new JsonObject
                 {
                     ["message"] = connect.Message ?? "",
@@ -779,11 +781,7 @@ namespace TiaMcpServer
             }
             catch (Exception ex)
             {
-                root["connect"] = new JsonObject
-                {
-                    ["success"] = false,
-                    ["error"] = ex.InnerException?.Message ?? ex.Message
-                };
+                root["connect"] = ResponseMeta.Unstamped(false, ("error", ex.InnerException?.Message ?? ex.Message));
             }
 
             if (!string.IsNullOrWhiteSpace(options.ProjectName))
@@ -984,19 +982,11 @@ namespace TiaMcpServer
             try
             {
                 var connect = EngineServices.Get<SessionTools>().Connect();
-                root["connect"] = new JsonObject
-                {
-                    ["success"] = connect.Meta?["success"]?.GetValue<bool>() == true,
-                    ["message"] = connect.Message ?? ""
-                };
+                root["connect"] = ResponseMeta.Unstamped(connect.Meta?["success"]?.GetValue<bool>() == true, ("message", connect.Message ?? ""));
             }
             catch (Exception ex)
             {
-                root["connect"] = new JsonObject
-                {
-                    ["success"] = false,
-                    ["error"] = ex.InnerException?.Message ?? ex.Message
-                };
+                root["connect"] = ResponseMeta.Unstamped(false, ("error", ex.InnerException?.Message ?? ex.Message));
             }
 
             try
@@ -1007,6 +997,7 @@ namespace TiaMcpServer
             }
             catch (Exception ex)
             {
+                // envelope: legacy-ok-report
                 root["probe"] = new JsonObject
                 {
                     ["ok"] = false,
@@ -1313,15 +1304,11 @@ namespace TiaMcpServer
                 try
                 {
                     var connect = EngineServices.Get<SessionTools>().Connect();
-                    root["connect"] = new JsonObject
-                    {
-                        ["success"] = connect.Meta?["success"]?.GetValue<bool>() == true,
-                        ["message"] = connect.Message ?? ""
-                    };
+                    root["connect"] = ResponseMeta.Unstamped(connect.Meta?["success"]?.GetValue<bool>() == true, ("message", connect.Message ?? ""));
                 }
                 catch (Exception ex)
                 {
-                    root["connect"] = new JsonObject { ["success"] = false, ["error"] = ex.InnerException?.Message ?? ex.Message };
+                    root["connect"] = ResponseMeta.Unstamped(false, ("error", ex.InnerException?.Message ?? ex.Message));
                 }
 
                 try
@@ -1364,7 +1351,7 @@ namespace TiaMcpServer
             }
             else
             {
-                root["connect"] = new JsonObject { ["success"] = false, ["skipped"] = true };
+                root["connect"] = ResponseMeta.Unstamped(false, ("skipped", true));
                 root["plcTagTables"] = new JsonArray();
                 root["selectedPlcTagTablesForExport"] = new JsonArray();
                 root["tagExportMode"] = "offline template contract check only";

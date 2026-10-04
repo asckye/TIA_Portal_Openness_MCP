@@ -85,7 +85,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = ok ? $"S7 CPU at {ip}: {idText}" : (id.Error ?? "Could not connect to CPU."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -124,7 +124,7 @@ namespace TiaMcpServer.ModelContextProtocol
                                 Message = $"PUT/GET access is DISABLED on '{devicePath}' (attribute '{pg["attributeName"]}'). S7 absolute DB reads will fail. " +
                                           $"Enable it: SetPutGetAccess(devicePath:'{devicePath}', enable:true) then DownloadToPlc — or read M/I/Q which are unrestricted.",
                                 Data = new JsonObject { ["putGetAccess"] = pg, ["precheck"] = "putget-disabled" },
-                                Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = false }
+                                Meta = ResponseMeta.Basic(DateTime.Now, false)
                             };
                         }
                     }
@@ -183,7 +183,7 @@ namespace TiaMcpServer.ModelContextProtocol
                             : $"Connected to {ip}, but one or more items failed — a DB read failing here usually means the DB is OPTIMIZED " +
                               "(no absolute access) or PUT/GET is disabled; M/I/Q are unrestricted. See items[].error."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -250,7 +250,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = r.Error ?? $"Sampled {r.Series.Count} signal(s) x {r.SampleCount} samples over {r.ActualElapsedMs} ms from {ip}.",
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -268,7 +268,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _session.TraceTagCause(softwarePath, tag, blockScope);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -290,7 +290,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 var result = _session.TraceTagCauseLive(softwarePath, tag, ip, rack, slot, blockScope, expectModuleContains);
-                result.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = result.Ok == true };
+                result.Meta = ResponseMeta.Basic(DateTime.Now, result.Ok == true);
                 return result;
             }
             catch (Exception ex) when (ex is not McpException)
@@ -341,7 +341,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? $"Read {r.Items.Count} node(s) from {endpointUrl} in {r.ElapsedMs} ms."
                         : $"Connected to {endpointUrl}, but one or more nodes failed (see items[].error)."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -389,7 +389,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Ok = ok,
                     Message = r.Error ?? $"CPU at {ip} is {r.Status}" + (r.DiagRecordCount > 0 ? $"; {r.DiagRecordCount} diagnostic record(s)." : "."),
                     Data = data,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

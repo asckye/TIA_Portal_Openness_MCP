@@ -476,6 +476,7 @@ namespace TiaMcpServer.ModelContextProtocol
         public static ResponseStringList PreflightToolCall(string name, string argumentsJson)
         {
             string target = (name ?? "").Trim();
+            // envelope: legacy-stamp-then-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now };
             if (target.Length == 0)
                 return new ResponseStringList { Message = "PreflightToolCall: 'name' is required.", Meta = BridgeMeta(false) };
@@ -588,6 +589,7 @@ namespace TiaMcpServer.ModelContextProtocol
             lines.Add("Description: " + description);
 
             bool ready = report.Ok && prerequisitesOk != false;
+            // envelope: legacy-independent-verdicts
             meta["success"] = ready; meta["ok"] = report.Ok; meta["toolFound"] = true; meta["tool"] = canonical;
             meta["signature"] = RenderSignature(canonical, method);
             meta["layer"] = tag.Layer; meta["domain"] = tag.Domain; meta["operation"] = op.Operation;

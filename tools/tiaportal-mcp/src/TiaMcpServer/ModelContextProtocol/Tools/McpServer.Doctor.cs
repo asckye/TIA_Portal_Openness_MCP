@@ -97,7 +97,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     RecommendedNextTool = next,
                     Summary = summary,
                     Message = summary,
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)

@@ -62,11 +62,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = "Open projects and sessions retrieved",
                     Items = responseList,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -126,11 +122,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseOpenProject
                     {
                         Message = $"Project '{path}' opened",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -161,7 +153,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseMessage
                     {
                         Message = $"Attached to open project '{projectName}'",
-                        Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = true }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
 
@@ -202,11 +194,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = $"Project '{projectName}' created in '{directoryPath}'",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -281,7 +269,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 var failN = resp.Steps.Count(s => s.Status == "failed");
                 resp.Message = $"ScaffoldProject dryRun '{projectName}': {okN} ok, {failN} failed (offline validation, nothing created)." +
                     (failN == 0 ? " Spec is valid — call ScaffoldProject again with dryRun=false to actually create the project." : " Fix the failed steps, then re-run.");
-                resp.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = resp.Ok, ["dryRun"] = true };
+                resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok, ("dryRun", true));
                 return resp;
             }
 
@@ -352,7 +340,7 @@ namespace TiaMcpServer.ModelContextProtocol
             var okCount = resp.Steps.Count(s => s.Status == "ok");
             var failCount = resp.Steps.Count(s => s.Status == "failed");
             resp.Message = $"ScaffoldProject '{projectName}': {okCount} ok, {failCount} failed; compile state={resp.CompileState ?? "(skipped)"} errors={resp.CompileErrorCount}.";
-            resp.Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = resp.Ok };
+            resp.Meta = ResponseMeta.Basic(DateTime.Now, resp.Ok);
             return resp;
         }
 
@@ -368,11 +356,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseSaveProject
                         {
                             Message = "Local session saved",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
+                            Meta = ResponseMeta.Basic(DateTime.Now, true)
                         };
                     }
                     else
@@ -387,11 +371,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseSaveProject
                         {
                             Message = "Local project saved",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
+                            Meta = ResponseMeta.Basic(DateTime.Now, true)
                         };
                     }
                     else
@@ -423,11 +403,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseSaveAsProject
                         {
                             Message = $"Local project saved as '{newProjectPath}'",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
+                            Meta = ResponseMeta.Basic(DateTime.Now, true)
                         };
                     }
                     else
@@ -458,11 +434,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseCloseProject
                         {
                             Message = "Local session closed",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
+                            Meta = ResponseMeta.Basic(DateTime.Now, true)
                         };
                     }
                     else
@@ -478,11 +450,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         return new ResponseCloseProject
                         {
                             Message = "Local project closed",
-                            Meta = new JsonObject
-                            {
-                                ["timestamp"] = DateTime.Now,
-                                ["success"] = true
-                            }
+                            Meta = ResponseMeta.Basic(DateTime.Now, true)
                         };
                     }
                     else
@@ -525,6 +493,7 @@ namespace TiaMcpServer.ModelContextProtocol
             bool confirmChange=false,
             bool dryRun=true)
         {
+            // envelope: legacy-late-verdict
             var meta = new JsonObject { ["timestamp"] = DateTime.Now, ["tool"] = "RunToolsInTransaction", ["success"] = false, ["dryRun"] = dryRun, ["mayHaveChanged"] = false };
             try
             {
@@ -554,6 +523,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     if (!ok) meta["stoppedAt"] = call.Name;
                     return ok;
                 }, meta);
+                // envelope: legacy-independent-verdicts
                 meta["success"] = committed; meta["operationSuccess"] = committed; meta["apiCallSuccess"] = true;
                 return new ResponseMessage { Message = committed ? "Transaction committed as one undo unit (" + calls.Length + " call(s)). No save." : "Transaction not committed; project transaction disposed with rollback. Inspect results and commit/cancellation state.", Meta = meta };
             }

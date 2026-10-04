@@ -130,6 +130,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Items = items,
                     ProjectTree = projectTree,
                     Message = ok ? "Capability self-test completed" : "Capability self-test completed with failures",
+                    // envelope: legacy-multiple-dynamic-fields
                     Meta = new JsonObject
                     {
                         ["timestamp"] = DateTime.Now,
@@ -256,12 +257,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     Items = items,
                     Policy = policy,
                     Message = ok ? "Online monitoring safety self-test passed" : "Online monitoring safety self-test failed",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = ok,
-                        ["checkedTools"] = toolNameList.Count
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok, ("checkedTools", toolNameList.Count))
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -309,11 +305,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     SelfTest = selfTest,
                     SafetySelfTest = safetySelfTest,
                     Message = selfTest.Ok == true && safetySelfTest.Ok == true ? "Acceptance report generated" : "Acceptance report generated with failures",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = selfTest.Ok == true && safetySelfTest.Ok == true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, selfTest.Ok == true && safetySelfTest.Ok == true)
                 };
 
                 var json = System.Text.Json.JsonSerializer.Serialize(response, new System.Text.Json.JsonSerializerOptions
@@ -370,11 +362,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     JsonPath = jsonPath,
                     RecommendedNextActions = actions,
                     Message = "Error report generated",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
 
                 File.WriteAllText(markdownPath, BuildErrorReportMarkdown(response, detail));

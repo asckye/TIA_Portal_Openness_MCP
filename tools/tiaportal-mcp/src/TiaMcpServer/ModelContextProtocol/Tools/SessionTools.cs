@@ -31,6 +31,7 @@ namespace TiaMcpServer.ModelContextProtocol
             try
             {
                 // ConnectPortal 失败时抛 PortalException（结构化错误码），下方 catch 统一映射到 McpException
+                // envelope: legacy-stamp-then-verdict
                 var info = new JsonObject { ["timestamp"] = DateTime.Now };
                 _session.ConnectPortal(string.IsNullOrWhiteSpace(projectName) ? null : projectName, allowStart, info);
                 info["success"] = true;
@@ -75,13 +76,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         ? "Connected to isolated headless TIA Portal (no existing TIA window or project was touched)."
                         : "⚠ 未验证：ConnectIsolated 没有报错，但读不回 portal 句柄，"
                           + "隔离实例到底起没起来**无法确认**。用 GetState 核对之后再往下走。",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = connected,
-                        ["verified"] = connected,
-                        ["isolated"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, connected, ("verified", connected), ("isolated", true))
                 };
             }
             catch (PortalException pex)
@@ -105,11 +100,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     Message = "TIA Portal processes inspected",
                     Items = items,
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -127,7 +118,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 return new ResponseMessage
                 {
                     Message = ok ? "Openness user group OK" : "Openness user group NOT OK",
-                    Meta = new JsonObject { ["timestamp"] = DateTime.Now, ["success"] = ok }
+                    Meta = ResponseMeta.Basic(DateTime.Now, ok)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -146,11 +137,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     return new ResponseDisconnect
                     {
                         Message = "Disconnected from TIA-Portal",
-                        Meta = new JsonObject
-                        {
-                            ["timestamp"] = DateTime.Now,
-                            ["success"] = true
-                        }
+                        Meta = ResponseMeta.Basic(DateTime.Now, true)
                     };
                 }
                 else
@@ -179,6 +166,7 @@ namespace TiaMcpServer.ModelContextProtocol
                         IsConnected = state.IsConnected,
                         Project = state.Project,
                         Session = state.Session,
+                        // envelope: legacy-late-verdict
                         Meta = new JsonObject
                         {
                             ["timestamp"] = DateTime.Now,
@@ -291,11 +279,7 @@ namespace TiaMcpServer.ModelContextProtocol
                     ServerVersion = typeof(McpServer).Assembly.GetName().Version?.ToString(),
                     Capabilities = Capability.Snapshot(),
                     Message = ready ? "TIA Portal MCP ready" : "TIA Portal MCP not ready — see RecommendedNextTool",
-                    Meta = new JsonObject
-                    {
-                        ["timestamp"] = DateTime.Now,
-                        ["success"] = true,
-                    }
+                    Meta = ResponseMeta.Basic(DateTime.Now, true)
                 };
             }
             catch (Exception ex) when (ex is not McpException)
@@ -311,7 +295,7 @@ namespace TiaMcpServer.ModelContextProtocol
             [Description("projectPath: absolute project file path from that process listing; another path is refused.")] string projectPath)
         {
             _session.ConnectToProject(processId, processStartUtc, projectPath);
-            return new ResponseMessage { Message = "Exact TIA project binding established.", Meta = new JsonObject { ["success"] = true, ["binding"] = _session.GetBindingIdentity() } };
+            return new ResponseMessage { Message = "Exact TIA project binding established.", Meta = ResponseMeta.Unstamped(true, ("binding", _session.GetBindingIdentity())) };
         }
 
         [McpServerTool(Name="ReadPortalInfo"), Description("[L2][Portal][READ] Diagnostic snapshot of every running TIA Portal process (TiaPortalProcess: Id, Mode WithUserInterface/WithoutUserInterface, Path, ProjectPath, AcquisitionTime; AttachedSessions with Id/Version/IsActive/AttachTime/UtilizationTime/AccessLevel/TrustAuthority/ProcessPath/ProcessId; InstalledSoftware = TiaPortalProduct Name/Version/Options), the bound process, the bound project's TextCategories (Identifier/Name) and HwUtilities (Identifier, class), ObjectIdentifierProvider availability and the explicitly bound project name. Non-blocking, read-only; works without a project.")]

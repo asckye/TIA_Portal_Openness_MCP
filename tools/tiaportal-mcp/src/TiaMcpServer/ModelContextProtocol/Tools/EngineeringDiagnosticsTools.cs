@@ -38,6 +38,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 catch (Exception ex) { row["metadataError"] = ex.GetType().Name; }
                 assemblies.Add(row);
             }
+            // envelope: legacy-multiple-dynamic-fields
             return new ResponseMessage { Message = "Local API metadata read. Actual installed patch and device option support need installation/project evidence.", Meta = new JsonObject {
                 ["success"] = true, ["engineMajor"] = Engineering.TiaMajorVersion, ["installedPatch"] = null, ["assemblies"] = assemblies,
                 ["nativeCrossReferencesEnabled"] = CrossReferenceGuardLogic.PolicyRefusal(Environment.GetEnvironmentVariable(CrossReferenceGuardLogic.NativeQueryOptInVariable)) == null,

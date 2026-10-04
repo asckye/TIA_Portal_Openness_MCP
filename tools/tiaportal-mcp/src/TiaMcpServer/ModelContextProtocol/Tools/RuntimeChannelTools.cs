@@ -426,6 +426,7 @@ namespace TiaMcpServer.ModelContextProtocol
                 {
                     data["requestLine"] = RuntimeChannelsLogic.BuildWriteTagRequest(writes, "<cookie>");
                     bool allKnown = writes.All(w => beforeTags.TryGetValue(w.Name, out var t) && t.Ok);
+                    // envelope: legacy-single-verdict
                     meta["success"] = allKnown;
                     return new ResponseJsonReport
                     {
